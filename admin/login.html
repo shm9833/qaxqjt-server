@@ -1,0 +1,889 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <script src="../js/favicon-inject.js" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>后台登录 - 秦安县秦剧团云端预约管理系统 {year}</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #fdf8f0 0%, #f5e6cc 100%);
+      padding: 20px;
+      font-family: "Microsoft YaHei", "PingFang SC", serif;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 1100px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #fffaf0;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(139, 0, 0, 0.2);
+      border: 1px solid #e8d5b7;
+      min-height: 620px;
+    }
+
+    .login-brand {
+      position: relative;
+      background: linear-gradient(135deg, #8b0000 0%, #6b0000 50%, #4a0000 100%);
+      padding: 60px 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      color: #fffaf0;
+      overflow: hidden;
+    }
+
+    .login-brand::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      opacity: 0.6;
+    }
+
+    .login-brand::after {
+      content: '';
+      position: absolute;
+      top: 10%;
+      right: -80px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .login-brand-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .login-brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .login-brand-logo .logo-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #d4af37, #b8941f);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b0000;
+      font-size: 1.8rem;
+      font-weight: 700;
+      font-family: "KaiTi", "STKaiti", serif;
+      box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+    }
+
+    .login-brand-logo .logo-text {
+      font-size: 1.4rem;
+      font-weight: 700;
+      font-family: "KaiTi", "STKaiti", serif;
+      letter-spacing: 2px;
+      line-height: 1.3;
+    }
+
+    .login-brand h2 {
+      font-size: 2.2rem;
+      font-family: "KaiTi", "STKaiti", serif;
+      color: #fffaf0;
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+
+    .login-brand h2 .highlight {
+      color: #d4af37;
+    }
+
+    .login-brand-desc {
+      color: rgba(255, 250, 240, 0.85);
+      font-size: 0.98rem;
+      line-height: 1.9;
+      margin-bottom: 35px;
+    }
+
+    .login-brand-features {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .brand-feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.92rem;
+      color: rgba(255, 250, 240, 0.9);
+    }
+
+    .brand-feature .feature-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(212, 175, 55, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #d4af37;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      border: 1px solid rgba(212, 175, 55, 0.3);
+    }
+
+    .login-brand-footer {
+      position: absolute;
+      bottom: 30px;
+      left: 50px;
+      right: 50px;
+      z-index: 2;
+      color: rgba(255, 250, 240, 0.5);
+      font-size: 0.85rem;
+    }
+
+    .login-form-section {
+      padding: 60px 55px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: linear-gradient(180deg, #fffaf0 0%, #fdf8f0 100%);
+    }
+
+    .login-form-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .login-form-header h1 {
+      font-size: 1.8rem;
+      color: #6b0000;
+      font-family: "KaiTi", "STKaiti", serif;
+      margin-bottom: 10px;
+    }
+
+    .login-form-header .subtitle {
+      color: #5c4033;
+      font-size: 0.95rem;
+    }
+
+    .login-form {
+      width: 100%;
+    }
+
+    .login-form .form-group {
+      margin-bottom: 20px;
+    }
+
+    .login-form .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #6b0000;
+      font-weight: 600;
+      font-size: 0.92rem;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #b8941f;
+      font-size: 1.1rem;
+      z-index: 2;
+    }
+
+    .login-form .form-control {
+      padding-left: 46px;
+      padding-top: 13px;
+      padding-bottom: 13px;
+      border: 2px solid #e8d5b7;
+      border-radius: 10px;
+      background: #fff;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+
+    .login-form .form-control:hover {
+      border-color: #d4af37;
+    }
+
+    .login-form .form-control:focus {
+      outline: none;
+      border-color: #8b0000;
+      box-shadow: 0 0 0 4px rgba(139, 0, 0, 0.08);
+      background: #fff;
+    }
+
+    .captcha-wrapper {
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .captcha-wrapper .input-wrapper {
+      flex: 1;
+    }
+
+    .captcha-image {
+      width: 120px;
+      height: auto;
+      min-height: 48px;
+      border: 2px solid #e8d5b7;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #fffaf0, #f5e6cc);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Arial Black", sans-serif;
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: #8b0000;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .captcha-image:hover {
+      border-color: #d4af37;
+      transform: scale(1.02);
+    }
+
+    .captcha-image .captcha-text {
+      position: relative;
+      z-index: 2;
+      font-style: italic;
+      text-shadow: 1px 1px 0 #d4af37;
+    }
+
+    .captcha-image::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 3px,
+        rgba(212, 175, 55, 0.15) 3px,
+        rgba(212, 175, 55, 0.15) 6px
+      );
+    }
+
+    .captcha-image::after {
+      content: '';
+      position: absolute;
+      top: 20%;
+      left: 10%;
+      width: 80%;
+      height: 2px;
+      background: rgba(139, 0, 0, 0.2);
+      transform: rotate(-5deg);
+    }
+
+    .login-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .remember-me input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #8b0000;
+      cursor: pointer;
+    }
+
+    .remember-me span {
+      color: #5c4033;
+      font-size: 0.9rem;
+    }
+
+    .forgot-link {
+      color: #8b0000;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .forgot-link:hover {
+      color: #6b0000;
+      text-decoration: underline;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #8b0000 0%, #6b0000 100%);
+      color: #fffaf0;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-login::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(139, 0, 0, 0.4);
+    }
+
+    .btn-login:hover::before {
+      left: 100%;
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .login-divider {
+      display: flex;
+      align-items: center;
+      margin: 28px 0;
+      color: #b8941f;
+      font-size: 0.85rem;
+    }
+
+    .login-divider::before,
+    .login-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e8d5b7;
+    }
+
+    .login-divider span {
+      padding: 0 15px;
+    }
+
+    .back-home {
+      text-align: center;
+    }
+
+    .back-home a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #8b0000;
+      font-size: 0.95rem;
+      font-weight: 500;
+      padding: 10px 22px;
+      border: 2px solid #d4af37;
+      border-radius: 25px;
+      transition: all 0.3s ease;
+    }
+
+    .back-home a:hover {
+      background: linear-gradient(135deg, #d4af37, #b8941f);
+      color: #6b0000;
+      border-color: #d4af37;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+    }
+
+    .login-year {
+      text-align: center;
+      margin-top: 25px;
+      color: #999;
+      font-size: 0.82rem;
+    }
+
+    .login-tips {
+      margin-top: 18px;
+      padding: 14px 18px;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(139, 0, 0, 0.04));
+      border: 1px dashed #d4af37;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: #5c4033;
+      line-height: 1.8;
+    }
+
+    .login-tips strong {
+      color: #8b0000;
+    }
+
+    @media (max-width: 860px) {
+      .login-container {
+        grid-template-columns: 1fr;
+        max-width: 480px;
+        min-height: auto;
+      }
+
+      .login-brand {
+        padding: 40px 35px;
+        min-height: 280px;
+      }
+
+      .login-brand-footer {
+        display: none;
+      }
+
+      .login-form-section {
+        padding: 40px 30px;
+      }
+
+      .captcha-wrapper {
+        flex-direction: column;
+      }
+
+      .captcha-image {
+        width: 100%;
+        min-height: 50px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-brand h2 {
+        font-size: 1.6rem;
+      }
+
+      .login-form-section {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-container">
+      <div class="login-brand">
+        <div class="login-brand-content">
+          <div class="login-brand-logo">
+            <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+            <div class="logo-text">秦安县<br/>秦剧团</div>
+          </div>
+          <h2>云端预约<span class="highlight">管理系统</span></h2>
+          <p class="login-brand-desc">
+            传承秦腔艺术精粹，弘扬西北戏曲文化。<br/>
+            专业的剧团演出预约与档期管理平台，助力传统文化数字化运营。
+          </p>
+          <div class="login-brand-features">
+            <div class="brand-feature">
+              <div class="feature-icon">📅</div>
+              <span>智能档期排班，高效预约管理</span>
+            </div>
+            <div class="brand-feature">
+              <div class="feature-icon">💰</div>
+              <span>阶梯优惠定价，财务收支清晰</span>
+            </div>
+            <div class="brand-feature">
+              <div class="feature-icon">🎭</div>
+              <span>剧目资源库，演职人员统筹</span>
+            </div>
+            <div class="brand-feature">
+              <div class="feature-icon">📊</div>
+              <span>多维度数据统计，智能决策支持</span>
+            </div>
+          </div>
+        </div>
+        <div class="login-brand-footer">
+          © {year} 秦安县秦剧团. 版权所有 | 戏曲文化传承者
+        </div>
+      </div>
+
+      <div class="login-form-section">
+        <div class="login-form-header">
+          <h1>后台管理登录</h1>
+          <p class="subtitle">请输入您的账号信息以访问管理系统</p>
+        </div>
+
+        <form id="adminLoginForm" class="login-form" autocomplete="off">
+          <div class="form-group">
+            <label for="admin-username">账号</label>
+            <div class="input-wrapper">
+              <span class="input-icon">👤</span>
+              <input
+                type="text"
+                id="admin-username"
+                data-admin-username
+                class="form-control"
+                placeholder="请输入管理员账号"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="admin-password">密码</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input
+                type="password"
+                id="admin-password"
+                data-admin-password
+                class="form-control"
+                placeholder="请输入登录密码"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="admin-captcha">验证码</label>
+            <div class="captcha-wrapper">
+              <div class="input-wrapper">
+                <span class="input-icon">🔑</span>
+                <input
+                  type="text"
+                  id="admin-captcha"
+                  data-admin-captcha
+                  class="form-control"
+                  placeholder="请输入右侧验证码"
+                  maxlength="4"
+                  required
+                />
+              </div>
+              <div class="captcha-image" id="captchaImage" title="点击刷新验证码">
+                <span class="captcha-text" id="captchaText">A3B9</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="login-options">
+            <label class="remember-me">
+              <input type="checkbox" id="rememberMe" data-admin-remember />
+              <span>记住密码</span>
+            </label>
+            <a href="javascript:;" class="forgot-link" onclick="alert('请联系系统管理员重置密码');">忘记密码？</a>
+          </div>
+
+          <button type="submit" class="btn-login" id="loginBtn">登 录 系 统</button>
+
+          <div class="login-tips">
+            <strong>演示账号：</strong><br/>
+            🔴 管理员：admin / admin123<br/>
+            🟡 财务岗：caiwu / 123456<br/>
+            🟢 员工岗：yuangong / 123456
+          </div>
+
+          <div class="login-divider"><span>更多操作</span></div>
+
+          <div class="back-home">
+            <a href="../index.html">
+              <span>🏠</span>
+              <span>返回官网首页</span>
+            </a>
+          </div>
+
+          <div class="login-year">
+            © {year} 秦安县秦剧团云端预约管理系统 · All Rights Reserved
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/year-lite.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    (function() {
+      'use strict';
+
+      var captchaChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      var currentCaptcha = '';
+
+      function generateCaptcha() {
+        var result = '';
+        for (var i = 0; i < 4; i++) {
+          result += captchaChars.charAt(Math.floor(Math.random() * captchaChars.length));
+        }
+        currentCaptcha = result;
+        var textEl = document.getElementById('captchaText');
+        if (textEl) textEl.textContent = result;
+        return result;
+      }
+
+      function rotateCaptcha() {
+        var angle = Math.random() * 20 - 10;
+        var textEl = document.getElementById('captchaText');
+        if (textEl) {
+          textEl.style.transform = 'rotate(' + angle + 'deg) skewX(' + (Math.random() * 6 - 3) + 'deg)';
+        }
+      }
+
+      function refreshCaptcha() {
+        generateCaptcha();
+        rotateCaptcha();
+        var captchaInput = document.querySelector('[data-admin-captcha]');
+        if (captchaInput) captchaInput.value = '';
+      }
+
+      var captchaImage = document.getElementById('captchaImage');
+      if (captchaImage) {
+        captchaImage.addEventListener('click', refreshCaptcha);
+      }
+
+      generateCaptcha();
+      rotateCaptcha();
+
+      var REMEMBER_KEY = 'qaxqjt_admin_remember';
+
+      function loadRemembered() {
+        try {
+          var saved = localStorage.getItem(REMEMBER_KEY);
+          if (saved) {
+            var data = JSON.parse(saved);
+            var u = document.querySelector('[data-admin-username]');
+            var p = document.querySelector('[data-admin-password]');
+            var r = document.querySelector('[data-admin-remember]');
+            if (u && data.username) u.value = data.username;
+            if (p && data.password) p.value = data.password;
+            if (r) r.checked = true;
+          }
+        } catch (e) {}
+      }
+
+      function saveRemembered(username, password, remember) {
+        try {
+          if (remember) {
+            localStorage.setItem(REMEMBER_KEY, JSON.stringify({ username: username, password: password }));
+          } else {
+            localStorage.removeItem(REMEMBER_KEY);
+          }
+        } catch (e) {}
+      }
+
+      loadRemembered();
+
+      var PRESET_USERS = [
+        { username: 'admin', password: 'admin123', role: 'admin', name: '系统管理员', roleName: '超级管理员' },
+        { username: 'caiwu', password: '123456', role: 'finance', name: '财务人员', roleName: '财务岗' },
+        { username: 'yuangong', password: '123456', role: 'staff', name: '剧团员工', roleName: '员工岗' }
+      ];
+
+      var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
+
+      function loginUser(username, password) {
+        for (var i = 0; i < PRESET_USERS.length; i++) {
+          var u = PRESET_USERS[i];
+          if (u.username === username && u.password === password) {
+            var session = {
+              id: 'sess_' + Date.now(),
+              username: u.username,
+              name: u.name,
+              role: u.role,
+              roleName: u.roleName,
+              loginAt: new Date().toISOString()
+            };
+            localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(session));
+            return session;
+          }
+        }
+        if (window.QinApp && window.QinApp.Admin) {
+          var result = window.QinApp.Admin.login(username, password);
+          if (result) {
+            var sess = {
+              id: 'sess_' + Date.now(),
+              username: result.username,
+              name: result.name || '管理员',
+              role: 'admin',
+              roleName: '系统管理员',
+              loginAt: new Date().toISOString()
+            };
+            localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(sess));
+            return sess;
+          }
+        }
+        return null;
+      }
+
+      var loginForm = document.getElementById('adminLoginForm');
+      if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+
+          var usernameEl = document.querySelector('[data-admin-username]');
+          var passwordEl = document.querySelector('[data-admin-password]');
+          var captchaEl = document.querySelector('[data-admin-captcha]');
+          var rememberEl = document.querySelector('[data-admin-remember]');
+          var btn = document.getElementById('loginBtn');
+
+          var username = usernameEl ? usernameEl.value.trim() : '';
+          var password = passwordEl ? passwordEl.value : '';
+          var captcha = captchaEl ? captchaEl.value.trim().toUpperCase() : '';
+          var remember = rememberEl ? rememberEl.checked : false;
+
+          if (!username) {
+            if (window.QinApp && window.QinApp.Utils) {
+              window.QinApp.Utils.toast('请输入账号', 'warn');
+            } else {
+              alert('请输入账号');
+            }
+            usernameEl && usernameEl.focus();
+            return;
+          }
+          if (!password) {
+            if (window.QinApp && window.QinApp.Utils) {
+              window.QinApp.Utils.toast('请输入密码', 'warn');
+            } else {
+              alert('请输入密码');
+            }
+            passwordEl && passwordEl.focus();
+            return;
+          }
+          if (!captcha) {
+            if (window.QinApp && window.QinApp.Utils) {
+              window.QinApp.Utils.toast('请输入验证码', 'warn');
+            } else {
+              alert('请输入验证码');
+            }
+            captchaEl && captchaEl.focus();
+            return;
+          }
+          if (captcha !== currentCaptcha) {
+            if (window.QinApp && window.QinApp.Utils) {
+              window.QinApp.Utils.toast('验证码错误，请重新输入', 'error');
+            } else {
+              alert('验证码错误，请重新输入');
+            }
+            captchaEl && captchaEl.select();
+            refreshCaptcha();
+            return;
+          }
+
+          btn.disabled = true;
+          btn.textContent = '登录中...';
+
+          setTimeout(function() {
+            try {
+              var session = loginUser(username, password);
+              if (session) {
+                try { saveRemembered(username, password, remember); } catch (e) {}
+                try {
+                  if (window.QinApp && window.QinApp.Utils) {
+                    window.QinApp.Utils.toast('登录成功！正在跳转...', 'success');
+                  }
+                } catch (e) {}
+                setTimeout(function() {
+                  try {
+                    window.location.assign('index.html');
+                  } catch (e) {
+                    window.location.href = 'index.html';
+                  }
+                }, 600);
+              } else {
+                try {
+                  if (window.QinApp && window.QinApp.Utils) {
+                    window.QinApp.Utils.toast('账号或密码错误', 'error');
+                  } else {
+                    alert('账号或密码错误');
+                  }
+                } catch (e) {
+                  alert('账号或密码错误');
+                }
+                refreshCaptcha();
+                btn.disabled = false;
+                btn.textContent = '登 录 系 统';
+              }
+            } catch (err) {
+              try {
+                if (window.QinApp && window.QinApp.Utils) {
+                  window.QinApp.Utils.toast('登录异常，请重试', 'error');
+                } else {
+                  alert('登录异常，请重试');
+                }
+              } catch (e) {}
+              btn.disabled = false;
+              btn.textContent = '登 录 系 统';
+            }
+          }, 500);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

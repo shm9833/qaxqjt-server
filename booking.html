@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="js/favicon-inject.js" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="秦安县秦剧团在线预约系统，阶梯优惠自动计算，乡村庙会、惠民下乡、节庆专场、企业庆典等各类戏曲演出预约，电话：13993839833">
+  <meta name="keywords" content="秦安秦剧团,秦安县秦剧团文化演出有限公司,在线预约,阶梯优惠,秦腔演出预约,戏曲演出">
+  <title>在线预约 - 秦安县秦剧团文化演出有限公司 | {year}</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header data-header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+          <div class="logo-text">
+            <h1>秦安县秦剧团</h1>
+            <p>文化演出有限公司 · 始于2014</p>
+          </div>
+        </div>
+        <button class="menu-toggle" aria-label="菜单" data-nav-toggle>
+          <span>☰</span>
+        </button>
+        <nav data-nav-menu>
+          <ul>
+            <li><a href="index.html">首页</a></li>
+            <li><a href="index.html#about">剧团简介</a></li>
+            <li><a href="index.html#repertoire">剧目中心</a></li>
+            <li><a href="index.html#services">演出业务</a></li>
+            <li><a href="index.html#news">新闻动态</a></li>
+            <li><a href="booking.html" class="active">在线预约</a></li>
+            <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
+            <li><a href="contact.html">联系我们</a></li>
+            <li><a href="admin/login.html" class="admin-link">后台管理</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-banner">
+      <div class="page-banner-content">
+        <h1>🎫 在线预约</h1>
+        <div class="breadcrumb">
+          <a href="index.html">首页</a>
+          <span class="separator">/</span>
+          <span>在线预约</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">预约须知</h2>
+          <p class="section-subtitle">提交前请仔细阅读以下说明</p>
+        </div>
+        <div class="service-grid">
+          <div class="service-item">
+            <div class="service-icon">📅</div>
+            <h3>确认档期信息</h3>
+            <p>预约前请确认演出日期、地点、场次数量，以便我们为您精准匹配排期方案</p>
+          </div>
+          <div class="service-item">
+            <div class="service-icon">📞</div>
+            <h3>24小时对接</h3>
+            <p>提交后24小时内专人电话对接确认，核实演出细节与合作意向</p>
+          </div>
+          <div class="service-item">
+            <div class="service-icon">💰</div>
+            <h3>阶梯优惠</h3>
+            <p>阶梯优惠自动计算，系统判定最优方案，场次越多折扣越大</p>
+          </div>
+          <div class="service-item">
+            <div class="service-icon">📝</div>
+            <h3>合同为准</h3>
+            <p>档期以双方确认签订合同为准，确保双方权益得到保障</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pricing-section">
+      <div class="container">
+        <div class="pricing-header">
+          <h2 class="section-title">阶梯优惠说明</h2>
+          <p class="section-subtitle">场次越多，优惠越大，系统自动判定最优方案</p>
+        </div>
+        <div class="pricing-grid">
+          <div class="pricing-card" data-reveal>
+            <div class="pricing-tier">第一阶梯</div>
+            <div class="pricing-name">基础预约</div>
+            <div class="pricing-desc">1-3场次 · 适配零散单次预约</div>
+            <div class="pricing-price">
+              <div class="amount">
+                <span class="currency">¥</span>
+                <span class="number">6,800</span>
+              </div>
+              <div class="period">单场官方标准定价</div>
+              <div class="save-tag">无阶梯折扣</div>
+            </div>
+            <div class="pricing-features">
+              <ul class="footer-links">
+                <li>✓ 官方标准定价</li>
+                <li>✓ 无阶梯折扣</li>
+                <li>✓ 基础配套服务</li>
+                <li>✓ 适配零散单次预约</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="pricing-card featured" data-reveal>
+            <div class="pricing-badge">🔥 热门推荐</div>
+            <div class="pricing-tier">第二阶梯</div>
+            <div class="pricing-name">批量预约</div>
+            <div class="pricing-desc">4-8场次 · 适配中小型月度固定合作</div>
+            <div class="pricing-price">
+              <div class="amount">
+                <span class="currency">¥</span>
+                <span class="number">6,120</span>
+              </div>
+              <div class="period">单场折后价</div>
+              <div class="original-price">原价 ¥6,800</div>
+              <div class="save-tag">单价9折优惠</div>
+            </div>
+            <div class="pricing-features">
+              <ul class="footer-links">
+                <li>✓ 单价9折优惠</li>
+                <li>✓ 杂费全免（舞台搭建、运输费）</li>
+                <li>✓ 优先排期权</li>
+                <li>✓ 适配中小型月度固定合作</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="pricing-card" data-reveal>
+            <div class="pricing-tier">第三阶梯</div>
+            <div class="pricing-name">战略合作预约</div>
+            <div class="pricing-desc">9场次及以上 · 适配长期政企全年合作</div>
+            <div class="pricing-price">
+              <div class="amount">
+                <span class="currency">¥</span>
+                <span class="number">5,440</span>
+              </div>
+              <div class="period">单场折后底价</div>
+              <div class="original-price">原价 ¥6,800</div>
+              <div class="save-tag">单价8折底价</div>
+            </div>
+            <div class="pricing-features">
+              <ul class="footer-links">
+                <li>✓ 单价8折底价</li>
+                <li>✓ 杂费+道具使用费全免</li>
+                <li>✓ 优先排期+专属对接人</li>
+                <li>✓ 免费演出策划指导</li>
+                <li>✓ 适配长期政企全年合作</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact-section section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">完整预约表单</h2>
+          <p class="section-subtitle">填写以下信息，提交后24小时内专人与您联系</p>
+        </div>
+        <div class="form-container booking-form">
+          <div class="form-title">
+            <h3>🎭 演出预约登记表</h3>
+            <p>带 <span class="required">*</span> 为必填项，请如实填写</p>
+          </div>
+
+          <form data-appointment-form id="appointmentForm">
+            <div data-form-errors style="display:none;margin-bottom:20px;padding:15px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;"></div>
+
+            <div class="booking-section-title">
+              <div class="step-num">1</div>
+              <h4>联系信息</h4>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group" data-field="customerName">
+                <label for="customerName">联系人姓名 <span class="required">*</span></label>
+                <input type="text" id="customerName" name="customerName" class="form-control" placeholder="请输入您的姓名">
+                <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
+              </div>
+              <div class="form-group" data-field="phone">
+                <label for="phone">联系电话 <span class="required">*</span></label>
+                <input type="tel" id="phone" name="phone" class="form-control" placeholder="请输入手机号码">
+                <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
+              </div>
+            </div>
+
+            <div class="form-group" data-field="organization">
+              <label for="organization">合作单位/组织机构</label>
+              <input type="text" id="organization" name="organization" class="form-control" placeholder="如：XX镇文化站、XX村委会、XX企业等">
+              <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
+            </div>
+
+            <div class="booking-section-title">
+              <div class="step-num">2</div>
+              <h4>演出信息</h4>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group" data-field="serviceType">
+                <label for="serviceType">演出类型 <span class="required">*</span></label>
+                <select id="serviceType" name="serviceType" class="form-control">
+                  <option value="">请选择演出类型</option>
+                  <option value="乡村庙会戏曲演出">乡村庙会戏曲演出</option>
+                  <option value="政府惠民下乡巡演">政府惠民下乡巡演</option>
+                  <option value="节庆专场文艺演出">节庆专场文艺演出</option>
+                  <option value="企业商户庆典演出">企业商户庆典演出</option>
+                  <option value="天水文旅合作演出">天水文旅合作演出</option>
+                  <option value="校园戏曲研学">校园戏曲研学</option>
+                  <option value="网络直播与数字演出">网络直播与数字演出</option>
+                  <option value="定制剧创作与专项排演">定制剧创作与专项排演</option>
+                  <option value="其他">其他</option>
+                </select>
+              </div>
+              <div class="form-group" data-field="shows">
+                <label for="shows">预约场次数量 <span class="required">*</span></label>
+                <input type="number" id="shows" name="shows" class="form-control" data-shows-input placeholder="请输入场次数量（1-100）" min="1" max="100" value="1">
+                <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group" data-field="preferredStartDate">
+                <label for="preferredStartDate">演出日期 <span class="required">*</span></label>
+                <input type="date" id="preferredStartDate" name="preferredStartDate" class="form-control">
+                <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
+              </div>
+              <div class="form-group" data-field="venue">
+                <label for="venue">演出地点 <span class="required">*</span></label>
+                <input type="text" id="venue" name="venue" class="form-control" placeholder="省/市/县/乡镇/村（详细地址）">
+                <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>意向剧目（可多选）</label>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:15px;background:var(--bg-light);border-radius:8px;border:1px solid var(--border-light);">
+                <label class="form-check">
+                  <input type="checkbox" name="selectedPlays" value="《火焰驹》">
+                  <span>《火焰驹》</span>
+                </label>
+                <label class="form-check">
+                  <input type="checkbox" name="selectedPlays" value="《窦娥冤》">
+                  <span>《窦娥冤》</span>
+                </label>
+                <label class="form-check">
+                  <input type="checkbox" name="selectedPlays" value="《大升官》">
+                  <span>《大升官》</span>
+                </label>
+                <label class="form-check">
+                  <input type="checkbox" name="selectedPlays" value="《三滴血》">
+                  <span>《三滴血》</span>
+                </label>
+                <label class="form-check">
+                  <input type="checkbox" name="selectedPlays" value="《五典坡》">
+                  <span>《五典坡》</span>
+                </label>
+                <label class="form-check">
+                  <input type="checkbox" name="selectedPlays" value="《铡美案》">
+                  <span>《铡美案》</span>
+                </label>
+                <label class="form-check">
+                  <input type="checkbox" name="selectedPlays" value="《金沙滩》">
+                  <span>《金沙滩》</span>
+                </label>
+                <label class="form-check">
+                  <input type="checkbox" name="selectedPlays" value="《周仁回府》">
+                  <span>《周仁回府》</span>
+                </label>
+              </div>
+              <span class="form-hint">可多选，或在下方备注中填写其他剧目需求</span>
+            </div>
+
+            <div class="booking-section-title">
+              <div class="step-num">3</div>
+              <h4>价格实时预览</h4>
+            </div>
+
+            <div class="booking-summary" data-pricing-detail>
+            </div>
+
+            <div class="booking-section-title">
+              <div class="step-num">4</div>
+              <h4>补充说明</h4>
+            </div>
+
+            <div class="form-group" data-field="remarks">
+              <label for="remarks">特殊需求/备注说明</label>
+              <textarea id="remarks" name="remarks" class="form-control" rows="4" placeholder="请填写其他特殊要求、演出预算、附加服务需求等信息..."></textarea>
+              <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
+            </div>
+
+            <div class="form-actions">
+              <button type="reset" class="btn btn-secondary">重置表单</button>
+              <button type="submit" class="btn btn-primary btn-lg">
+                🎫 提交预约申请
+              </button>
+            </div>
+          </form>
+
+          <div id="formSuccessMsg" style="display:none;margin-top:30px;padding:30px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;border-radius:16px;text-align:center;">
+            <div style="font-size:4rem;margin-bottom:15px;">🎉</div>
+            <h3 style="color:#166534;margin-bottom:10px;font-size:1.5rem;">预约提交成功！</h3>
+            <p style="color:#15803d;margin:0;font-size:1rem;">感谢您的信任！我们将在 <strong>24小时内</strong> 安排专人与您电话联系确认演出详情。<br>如有紧急需求，请直接拨打 <a href="tel:13993839833" style="color:#166534;font-weight:600;">13993839833</a>。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>🎭 秦安县秦剧团文化演出有限公司</h3>
+          <p>传承陇原秦韵，唱响乡土华章。扎根秦安、服务乡村的专业秦腔演出团体，{year}年初心不改，致力传承西北非遗戏曲文化。</p>
+          <p>电话：13993839833<br>地址：甘肃省天水市秦安县陇城镇张沟村</p>
+        </div>
+        <div class="footer-col">
+          <h4>快速导航</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">网站首页</a></li>
+            <li><a href="index.html#about">剧团简介</a></li>
+            <li><a href="index.html#repertoire">剧目中心</a></li>
+            <li><a href="index.html#services">演出业务</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>演出服务</h4>
+          <ul class="footer-links">
+            <li><a href="index.html#services">乡村庙会演出</a></li>
+            <li><a href="index.html#services">惠民下乡巡演</a></li>
+            <li><a href="index.html#services">节庆专场演出</a></li>
+            <li><a href="index.html#services">企业庆典定制</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>联系我们</h4>
+          <ul class="footer-links">
+            <li><a href="tel:13993839833">📞 13993839833</a></li>
+            <li><a href="booking.html">🎫 在线预约</a></li>
+            <li><a href="contact.html">📍 联系我们</a></li>
+            <li><a href="admin/login.html">🔐 后台管理</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© {year} 秦安县秦剧团文化演出有限公司 版权所有 | 陇ICP备（秦安戏曲文化号）</p>
+        <div class="footer-bottom-links">
+          <a href="qualifications.html">企业资质</a>
+          <span>|</span>
+          <a href="copyright.html">版权声明</a>
+          <span>|</span>
+          <a href="minor-policy.html">未成年预约</a>
+          <span>|</span>
+          <a href="breach-liability.html">违约民事责任</a>
+          <span>|</span>
+          <a href="qr-booking.html">二维码预约</a>
+          <span>|</span>
+          <a href="live-api.html">直播接口</a>
+          <span>|</span>
+          <a href="admin/login.html">管理入口</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <button data-back-to-top style="display:none;position:fixed;bottom:30px;right:30px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#8B0000,#6B0000);color:#fff;border:none;box-shadow:0 4px 15px rgba(139,0,0,0.4);cursor:pointer;font-size:1.3rem;z-index:999;transition:all .3s ease;" aria-label="回到顶部">
+    ↑
+  </button>
+
+  <script src="js/year-lite.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    (function() {
+      var form = document.getElementById('appointmentForm');
+      var successMsg = document.getElementById('formSuccessMsg');
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          setTimeout(function() {
+            if (successMsg && form.querySelector('[data-field="customerName"] .field-error') === null) {
+              var errBox = form.querySelector('[data-form-errors]');
+              if (!errBox || errBox.style.display === 'none') {
+                successMsg.style.display = 'block';
+                successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }
+          }, 500);
+        });
+        form.addEventListener('reset', function() {
+          if (successMsg) successMsg.style.display = 'none';
+          setTimeout(function() {
+            var previewBox = document.querySelector('[data-pricing-detail]');
+            var showInput = document.querySelector('[data-shows-input]');
+            if (previewBox && showInput) {
+              showInput.value = '1';
+              showInput.dispatchEvent(new Event('input'));
+            }
+          }, 100);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

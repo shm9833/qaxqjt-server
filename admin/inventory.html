@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <script src="../js/favicon-inject.js" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>道具服装设备库存管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .admin-sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 90;
+    }
+    .admin-sidebar-overlay.active { display: block; }
+    @media (max-width: 900px) {
+      .admin-sidebar { transform: translateX(-100%); }
+      .admin-sidebar.mobile-open { transform: translateX(0); }
+      .admin-main { margin-left: 0 !important; }
+      .admin-sidebar-toggle { display: flex !important; }
+      .admin-search { display: none; }
+      .admin-content { padding: 20px 15px !important; }
+    }
+    .admin-user-dropdown { position: relative; }
+    .admin-user-dropdown .user-toggle {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 12px 6px 6px; border-radius: 25px;
+      background: var(--bg-light); cursor: pointer;
+      transition: var(--transition); border: 1px solid transparent;
+    }
+    .admin-user-dropdown .user-toggle:hover { background: var(--cream); border-color: var(--gold); }
+    .admin-user-dropdown .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex; align-items: center; justify-content: center;
+      color: var(--primary-dark); font-weight: 700; font-size: 0.95rem; flex-shrink: 0;
+    }
+    .admin-user-dropdown .user-name-text { font-size: 0.88rem; font-weight: 600; color: var(--text-dark); }
+    .admin-user-dropdown .user-role-text { font-size: 0.75rem; color: var(--gold-dark); }
+    .admin-user-dropdown .dropdown-arrow { font-size: 0.7rem; color: var(--text-light); transition: transform 0.3s ease; }
+    .admin-user-dropdown.open .dropdown-arrow { transform: rotate(180deg); }
+    .admin-user-dropdown .dropdown-menu {
+      position: absolute; top: calc(100% + 8px); right: 0; min-width: 200px;
+      background: var(--cream); border: 1px solid var(--border-light);
+      border-radius: var(--radius); box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+      overflow: hidden; opacity: 0; visibility: hidden;
+      transform: translateY(-8px); transition: all 0.25s ease; z-index: 200;
+    }
+    .admin-user-dropdown.open .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-menu .dropdown-header { padding: 15px 18px; border-bottom: 1px solid var(--border-light);
+      background: linear-gradient(135deg, rgba(139,0,0,0.05), rgba(212,175,55,0.05)); }
+    .dropdown-menu .dh-name { font-weight: 600; color: var(--primary-dark); font-size: 0.95rem; margin-bottom: 3px; }
+    .dropdown-menu .dh-email { font-size: 0.8rem; color: var(--text-light); }
+    .dropdown-menu .dropdown-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 18px; font-size: 0.88rem; color: var(--text-dark);
+      cursor: pointer; transition: var(--transition);
+    }
+    .dropdown-menu .dropdown-item:hover { background: rgba(139,0,0,0.05); color: var(--primary); padding-left: 22px; }
+    .dropdown-menu .di-icon { width: 18px; text-align: center; color: var(--gold-dark); }
+    .dropdown-menu .dropdown-divider { height: 1px; background: var(--border-light); margin: 4px 0; }
+
+    .inv-tabs {
+      display: flex; gap: 0; border-bottom: 2px solid var(--border-light);
+      background: var(--bg-light); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: 0 20px; overflow-x: auto;
+    }
+    .inv-tab {
+      padding: 16px 24px; cursor: pointer; font-size: 0.92rem;
+      color: var(--text-light); font-weight: 500; position: relative;
+      white-space: nowrap; transition: var(--transition);
+      border-bottom: 3px solid transparent;
+    }
+    .inv-tab:hover { color: var(--primary); }
+    .inv-tab.active {
+      color: var(--primary); font-weight: 700;
+      border-bottom-color: var(--primary);
+    }
+    .inv-tab .tab-badge {
+      display: inline-block; margin-left: 6px; padding: 2px 8px;
+      border-radius: 10px; font-size: 0.72rem; font-weight: 600;
+      background: rgba(139,0,0,0.08); color: var(--primary);
+    }
+    .inv-tab.active .tab-badge { background: var(--primary); color: var(--cream); }
+    .inv-tab-content { display: none; }
+    .inv-tab-content.active { display: block; }
+
+    .filter-bar {
+      display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+      padding: 18px 22px; background: var(--bg-light);
+      border-radius: var(--radius); margin-bottom: 20px;
+      border: 1px solid var(--border-light);
+    }
+    .filter-bar .form-group { display: flex; align-items: center; gap: 8px; }
+    .filter-bar .form-group label {
+      font-size: 0.85rem; color: var(--text-light); font-weight: 500; white-space: nowrap;
+    }
+    .filter-bar .form-control {
+      padding: 8px 14px; border: 1.5px solid var(--border-light);
+      border-radius: 20px; font-size: 0.85rem; background: var(--cream);
+      color: var(--text-dark); font-family: inherit; outline: none;
+      transition: var(--transition);
+    }
+    .filter-bar .form-control:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.1); }
+    .filter-bar .search-box { position: relative; flex: 1; min-width: 240px; }
+    .filter-bar .search-box input {
+      width: 100%; padding: 9px 16px 9px 40px;
+      border: 1.5px solid var(--border-light); border-radius: 25px;
+      background: var(--cream); font-family: inherit; font-size: 0.88rem;
+      outline: none; transition: var(--transition);
+    }
+    .filter-bar .search-box input:focus { border-color: var(--gold); }
+    .filter-bar .search-box .search-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--text-light);
+    }
+
+    .status-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 12px;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    .status-badge.stock { background: rgba(40,167,69,0.12); color: #28a745; }
+    .status-badge.borrowed { background: rgba(23,162,184,0.12); color: #17a2b8; }
+    .status-badge.repair { background: rgba(255,152,0,0.15); color: #ff9800; }
+    .status-badge.scrapped { background: rgba(220,53,69,0.12); color: #dc3545; }
+
+    .cat-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 10px;
+      font-size: 0.78rem; font-weight: 500;
+    }
+    .cat-badge.costume { background: rgba(139,0,0,0.08); color: var(--primary); }
+    .cat-badge.helmet { background: rgba(212,175,55,0.15); color: var(--gold-dark); }
+    .cat-badge.audio { background: rgba(23,162,184,0.12); color: #17a2b8; }
+    .cat-badge.stage { background: rgba(124,58,237,0.12); color: #7c3aed; }
+
+    .qty-low {
+      color: #dc3545 !important;
+      font-weight: 700;
+    }
+
+    .warning-section {
+      margin-top: 25px;
+      background: linear-gradient(135deg, rgba(220,53,69,0.06), rgba(220,53,69,0.03));
+      border: 1.5px solid rgba(220,53,69,0.25);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .warning-header {
+      padding: 16px 22px;
+      background: linear-gradient(135deg, rgba(220,53,69,0.12), rgba(220,53,69,0.08));
+      border-bottom: 1px solid rgba(220,53,69,0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .warning-header h4 {
+      margin: 0;
+      font-size: 1.05rem;
+      color: #b02a37;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: "KaiTi", "STKaiti", serif;
+    }
+    .warning-header h4 .warn-icon {
+      width: 32px;
+      height: 32px;
+      background: #dc3545;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      box-shadow: 0 2px 8px rgba(220,53,69,0.35);
+    }
+    .warning-count {
+      padding: 5px 14px;
+      background: #dc3545;
+      color: #fff;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .warning-body { padding: 18px 22px; }
+    .warning-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .warning-card {
+      background: #fff;
+      border: 1px solid rgba(220,53,69,0.2);
+      border-left: 4px solid #dc3545;
+      border-radius: 10px;
+      padding: 14px 16px;
+      transition: var(--transition);
+      position: relative;
+    }
+    .warning-card:hover {
+      box-shadow: 0 4px 14px rgba(220,53,69,0.15);
+      transform: translateY(-2px);
+    }
+    .warning-card.damage {
+      border-left-color: #ff9800;
+    }
+    .warning-card .wc-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .warning-card .wc-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+    .warning-card .wc-code {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      font-family: monospace;
+    }
+    .warning-card .wc-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      font-size: 0.82rem;
+      margin-bottom: 10px;
+    }
+    .warning-card .wc-info-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-light);
+    }
+    .warning-card .wc-info-item strong {
+      color: #dc3545;
+      font-weight: 700;
+    }
+    .warning-card.damage .wc-info-item strong {
+      color: #ff9800;
+    }
+    .warning-card .wc-reason {
+      padding: 6px 10px;
+      background: rgba(220,53,69,0.08);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      color: #b02a37;
+      font-weight: 500;
+      display: inline-block;
+    }
+    .warning-card.damage .wc-reason {
+      background: rgba(255,152,0,0.12);
+      color: #e68900;
+    }
+    .warning-card .wc-action {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+    }
+    .warning-card .wc-btn {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid rgba(220,53,69,0.3);
+      background: rgba(220,53,69,0.04);
+      color: #b02a37;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+    .warning-card .wc-btn:hover {
+      background: #dc3545;
+      color: #fff;
+      border-color: #dc3545;
+    }
+    .warning-card.damage .wc-btn {
+      border-color: rgba(255,152,0,0.3);
+      background: rgba(255,152,0,0.06);
+      color: #e68900;
+    }
+    .warning-card.damage .wc-btn:hover {
+      background: #ff9800;
+      color: #fff;
+      border-color: #ff9800;
+    }
+
+    .flow-section {
+      margin-top: 25px;
+    }
+    .flow-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .flow-header h4 {
+      margin: 0;
+      font-size: 1.05rem;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: "KaiTi", "STKaiti", serif;
+    }
+    .flow-header h4::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background: linear-gradient(180deg, var(--gold), var(--primary));
+      border-radius: 2px;
+    }
+    .flow-status-filter {
+      display: flex;
+      gap: 8px;
+    }
+    .flow-status-filter .fs-btn {
+      padding: 6px 14px;
+      border: 1px solid var(--border-light);
+      background: var(--cream);
+      border-radius: 16px;
+      font-size: 0.82rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-light);
+      font-weight: 500;
+    }
+    .flow-status-filter .fs-btn.active {
+      background: var(--primary);
+      color: var(--cream);
+      border-color: var(--primary);
+    }
+    .flow-status-filter .fs-btn:hover:not(.active) {
+      border-color: var(--gold);
+      color: var(--primary);
+    }
+
+    .flow-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .flow-badge.borrowing { background: rgba(23,162,184,0.12); color: #17a2b8; }
+    .flow-badge.returned { background: rgba(40,167,69,0.12); color: #28a745; }
+    .flow-badge.overdue { background: rgba(220,53,69,0.12); color: #dc3545; }
+    .flow-badge.pending { background: rgba(255,193,7,0.18); color: #e6a800; }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <div class="logo-text">秦安县秦剧团<br/>文化演出管理系统</div>
+      </div>
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <a href="index.html" class="admin-menu-item">
+            <span class="menu-icon">📊</span>
+            <span>数据看板</span>
+          </a>
+          <a href="accounts.html" class="admin-menu-item">
+            <span class="menu-icon">👥</span>
+            <span>账号权限管理</span>
+          </a>
+          <a href="schedule.html" class="admin-menu-item">
+            <span class="menu-icon">📅</span>
+            <span>演出档期排班</span>
+            <span class="menu-badge">8</span>
+          </a>
+          <a href="orders.html" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>订单预约管理</span>
+            <span class="menu-badge">5</span>
+          </a>
+          <a href="operas.html" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>剧目资源管理</span>
+          </a>
+          <a href="staff.html" class="admin-menu-item">
+            <span class="menu-icon">👨‍🎤</span>
+            <span>演职人员管理</span>
+          </a>
+          <a href="inventory.html" class="admin-menu-item active">
+            <span class="menu-icon">📦</span>
+            <span>道具服装库存</span>
+            <span class="menu-badge">!</span>
+          </a>
+          <a href="finance.html" class="admin-menu-item">
+            <span class="menu-icon">💰</span>
+            <span>财务收支台账</span>
+          </a>
+          <a href="content.html" class="admin-menu-item">
+            <span class="menu-icon">📝</span>
+            <span>官网内容管理</span>
+          </a>
+          <a href="reports.html" class="admin-menu-item">
+            <span class="menu-icon">📈</span>
+            <span>数据统计报表</span>
+          </a>
+          <a href="system.html" class="admin-menu-item">
+            <span class="menu-icon">🔧</span>
+            <span>系统日志备份</span>
+          </a>
+        </div>
+      </nav>
+      <div class="admin-sidebar-footer">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
+            <span>🚪</span><span>退出登录</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" id="sidebarToggle" aria-label="菜单">
+            <span>☰</span>
+          </button>
+          <div class="admin-breadcrumb">
+            <a href="index.html">首页</a>
+            <span class="separator">/</span>
+            <a href="#">资产管理</a>
+            <span class="separator">/</span>
+            <span class="current">道具服装设备库存管理</span>
+          </div>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="搜索物品、编号..." />
+          </div>
+          <button class="admin-header-btn" title="通知">
+            <span>🔔</span>
+            <span class="notify-dot"></span>
+          </button>
+          <button class="admin-header-btn" title="消息">
+            <span>✉️</span>
+          </button>
+          <button class="admin-header-btn" title="全屏" onclick="toggleFullscreen()">
+            <span>⛶</span>
+          </button>
+          <div class="admin-user-dropdown" id="userDropdown">
+            <div class="user-toggle" id="userToggle">
+              <div class="user-avatar" id="userAvatar">A</div>
+              <div>
+                <div class="user-name-text" id="userName">管理员</div>
+                <div class="user-role-text" id="userRole">超级管理员</div>
+              </div>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+              <div class="dropdown-header">
+                <div class="dh-name" id="dhName">系统管理员</div>
+                <div class="dh-email">admin@qinxian-opera.com</div>
+              </div>
+              <div class="dropdown-item" onclick="location.href='accounts.html'">
+                <span class="di-icon">👤</span><span>个人资料</span>
+              </div>
+              <div class="dropdown-item" onclick="location.href='system.html'">
+                <span class="di-icon">⚙️</span><span>系统设置</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" id="logoutBtnDropdown" style="color:var(--primary);">
+                <span class="di-icon">🚪</span><span>退出登录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="admin-content">
+        <div class="admin-page-header">
+          <div class="admin-page-title">
+            <h1>道具服装设备库存管理</h1>
+            <p class="page-desc">统一管理剧团戏曲服装、盔头道具、灯光音响及舞台设备的入库、借用与盘点</p>
+          </div>
+          <div class="admin-page-actions">
+            <button class="btn btn-primary">
+              ➕ 新购入库
+            </button>
+            <button class="btn btn-secondary">
+              📤 借用登记
+            </button>
+            <button class="btn btn-outline-dark">
+              ✅ 归还登记
+            </button>
+            <button class="btn btn-gold">
+              📋 库存盘点
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card stat-card--primary">
+            <div class="stat-card-header">
+              <div class="stat-card-icon">📦</div>
+              <div class="stat-card-trend up">
+                <span>↑</span><span>2</span>
+              </div>
+            </div>
+            <div class="stat-card-title">库存总件数</div>
+            <div class="stat-card-value">486<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">件</span></div>
+            <div class="stat-card-sub">
+              <span>服装186</span>
+              <span class="divider"></span>
+              <span>道具212</span>
+              <span class="divider"></span>
+              <span>设备88</span>
+            </div>
+          </div>
+          <div class="stat-card stat-card--info">
+            <div class="stat-card-header">
+              <div class="stat-card-icon">🔄</div>
+              <div class="stat-card-trend up">
+                <span>↑</span><span>12</span>
+              </div>
+            </div>
+            <div class="stat-card-title">本月借用</div>
+            <div class="stat-card-value">68<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">次</span></div>
+            <div class="stat-card-sub">
+              <span>已归还52</span>
+              <span class="divider"></span>
+              <span style="color:#17a2b8;">借用中16</span>
+            </div>
+          </div>
+          <div class="stat-card stat-card--danger">
+            <div class="stat-card-header">
+              <div class="stat-card-icon">⚠️</div>
+              <div class="stat-card-trend up">
+                <span>↑</span><span>2项</span>
+              </div>
+            </div>
+            <div class="stat-card-title">库存预警</div>
+            <div class="stat-card-value">5<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">项</span></div>
+            <div class="stat-card-sub">
+              <span style="color:#dc3545;">不足3</span>
+              <span class="divider"></span>
+              <span style="color:#ff9800;">损坏2</span>
+            </div>
+          </div>
+          <div class="stat-card stat-card--gold">
+            <div class="stat-card-header">
+              <div class="stat-card-icon">🛒</div>
+              <div class="stat-card-trend" style="background:rgba(139,0,0,0.08);color:var(--text-light);">
+                <span>—</span><span>计划</span>
+              </div>
+            </div>
+            <div class="stat-card-title">{year}年新增采购</div>
+            <div class="stat-card-value">18<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">件</span></div>
+            <div class="stat-card-sub">
+              <span>服装8</span>
+              <span class="divider"></span>
+              <span>设备6</span>
+              <span class="divider"></span>
+              <span>道具4</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-card" style="padding:0;overflow:hidden;">
+          <div class="inv-tabs" id="invTabs">
+            <div class="inv-tab active" data-tab="all">
+              📦 全部库存 <span class="tab-badge">486</span>
+            </div>
+            <div class="inv-tab" data-tab="costume">
+              👘 戏曲服装 <span class="tab-badge">186</span>
+            </div>
+            <div class="inv-tab" data-tab="helmet">
+              🎩 盔头道具 <span class="tab-badge">212</span>
+            </div>
+            <div class="inv-tab" data-tab="audio">
+              🎤 灯光音响设备 <span class="tab-badge">58</span>
+            </div>
+            <div class="inv-tab" data-tab="stage">
+              🎪 布景舞台 <span class="tab-badge">30</span>
+            </div>
+          </div>
+
+          <div class="admin-card-body">
+            <div class="filter-bar">
+              <div class="form-group">
+                <label>分类：</label>
+                <select class="form-control">
+                  <option value="">全部分类</option>
+                  <option>蟒袍</option>
+                  <option>女帔</option>
+                  <option>靠</option>
+                  <option>褶子</option>
+                  <option>盔头</option>
+                  <option>髯口</option>
+                  <option>把子</option>
+                  <option>线阵音响</option>
+                  <option>灯光设备</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>状态：</label>
+                <select class="form-control">
+                  <option value="">全部状态</option>
+                  <option>在库</option>
+                  <option>借出</option>
+                  <option>维修中</option>
+                  <option>报废</option>
+                </select>
+              </div>
+              <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="搜索物品编号、名称、规格型号、借用人..." />
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-secondary btn-sm">🔄 刷新</button>
+                <button class="btn btn-outline-dark btn-sm">📥 导出清单</button>
+              </div>
+            </div>
+
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>物品编号</th>
+                    <th>物品名称</th>
+                    <th>分类</th>
+                    <th>规格型号</th>
+                    <th>数量</th>
+                    <th>安全库存</th>
+                    <th>单位</th>
+                    <th>入库日期</th>
+                    <th>当前状态</th>
+                    <th>借用人</th>
+                    <th>预计归还</th>
+                    <th>上次盘点</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody data-paginate="list" data-page-size="10">
+                  <tr>
+                    <td><strong style="color:var(--primary);">FZ001</strong></td>
+                    <td><strong>红色男蟒</strong></td>
+                    <td><span class="cat-badge costume">戏曲服装 · 蟒袍</span></td>
+                    <td>大缎 · 手工刺绣</td>
+                    <td><span class="qty-low">2</span></td>
+                    <td>1件</td>
+                    <td>件</td>
+                    <td>2014-08-15</td>
+                    <td><span class="status-badge stock">● 在库</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm" title="查看">👁</button>
+                        <button class="btn btn-primary btn-sm" title="编辑">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;" title="借用">📤</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;" title="报修">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" title="报废">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">FZ002</strong></td>
+                    <td><strong>青色女帔</strong></td>
+                    <td><span class="cat-badge costume">戏曲服装 · 女帔</span></td>
+                    <td>软缎 · 团花刺绣</td>
+                    <td><span class="qty-low">3</span></td>
+                    <td><span style="color:#dc3545;font-weight:700;">2件</span></td>
+                    <td>件</td>
+                    <td>2015-03-20</td>
+                    <td><span class="status-badge borrowed">● 借出</span></td>
+                    <td>GH002 李秀兰</td>
+                    <td style="color:var(--primary);font-weight:600;">{year}-07-30</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 10px;">✅</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">FZ008</strong></td>
+                    <td><strong>白色女靠</strong></td>
+                    <td><span class="cat-badge costume">戏曲服装 · 靠</span></td>
+                    <td>大缎 · 镶边刺绣</td>
+                    <td>4</td>
+                    <td>2件</td>
+                    <td>件</td>
+                    <td>2016-09-10</td>
+                    <td><span class="status-badge stock">● 在库</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">FZ015</strong></td>
+                    <td><strong>黑色男褶子</strong></td>
+                    <td><span class="cat-badge costume">戏曲服装 · 褶子</span></td>
+                    <td>杭绸 · 素面</td>
+                    <td>6</td>
+                    <td>3件</td>
+                    <td>件</td>
+                    <td>2017-05-22</td>
+                    <td><span class="status-badge borrowed">● 借出</span></td>
+                    <td>GH001 张建国</td>
+                    <td>{year}-08-05</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 10px;">✅</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">KT003</strong></td>
+                    <td><strong>夫子盔</strong></td>
+                    <td><span class="cat-badge helmet">盔头道具 · 盔头</span></td>
+                    <td>贴金点绸 · 标准款</td>
+                    <td>8</td>
+                    <td>4顶</td>
+                    <td>顶</td>
+                    <td>2015-11-08</td>
+                    <td><span class="status-badge stock">● 在库</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">KT012</strong></td>
+                    <td><strong>黑三髯口</strong></td>
+                    <td><span class="cat-badge helmet">盔头道具 · 髯口</span></td>
+                    <td>牦牛毛 · 加长款</td>
+                    <td><span class="qty-low">2</span></td>
+                    <td><span style="color:#dc3545;font-weight:700;">3副</span></td>
+                    <td>副</td>
+                    <td>2018-04-15</td>
+                    <td><span class="status-badge stock">● 在库</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">KT025</strong></td>
+                    <td><strong>红缨枪把子</strong></td>
+                    <td><span class="cat-badge helmet">盔头道具 · 把子</span></td>
+                    <td>白蜡杆 · 标准长度</td>
+                    <td>12</td>
+                    <td>6根</td>
+                    <td>根</td>
+                    <td>2019-07-20</td>
+                    <td><span class="status-badge borrowed">● 借出</span></td>
+                    <td>GH003 王志强</td>
+                    <td>{year}-08-10</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 10px;">✅</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">KT038</strong></td>
+                    <td><strong>龙头拐杖</strong></td>
+                    <td><span class="cat-badge helmet">盔头道具 · 道具</span></td>
+                    <td>实木雕刻 · 鎏金</td>
+                    <td><span class="qty-low">1</span></td>
+                    <td><span style="color:#dc3545;font-weight:700;">2根</span></td>
+                    <td>根</td>
+                    <td>2016-02-28</td>
+                    <td><span class="status-badge repair">● 维修中</span></td>
+                    <td>—</td>
+                    <td>{year}-08-01</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">SB015</strong></td>
+                    <td><strong>专业线阵音响</strong></td>
+                    <td><span class="cat-badge audio">灯光音响 · 音响</span></td>
+                    <td>LAX · AT110-V2</td>
+                    <td>8</td>
+                    <td>4只</td>
+                    <td>只</td>
+                    <td>{year-2}-01-10</td>
+                    <td><span class="status-badge stock">● 在库</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">SB022</strong></td>
+                    <td><strong>数字调音台</strong></td>
+                    <td><span class="cat-badge audio">灯光音响 · 音响</span></td>
+                    <td>YAMAHA · TF5</td>
+                    <td>2</td>
+                    <td>1台</td>
+                    <td>台</td>
+                    <td>{year-1}-05-18</td>
+                    <td><span class="status-badge borrowed">● 借出</span></td>
+                    <td>GH013 林志远</td>
+                    <td>{year}-07-29</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 10px;">✅</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">DG009</strong></td>
+                    <td><strong>LED摇头染色灯</strong></td>
+                    <td><span class="cat-badge audio">灯光音响 · 灯光</span></td>
+                    <td>珠江 · PR-2344</td>
+                    <td><span class="qty-low">6</span></td>
+                    <td><span style="color:#dc3545;font-weight:700;">8台</span></td>
+                    <td>台</td>
+                    <td>{year-2}-11-25</td>
+                    <td><span class="status-badge stock">● 在库</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">DG015</strong></td>
+                    <td><strong>追光灯</strong></td>
+                    <td><span class="cat-badge audio">灯光音响 · 灯光</span></td>
+                    <td>彩熠 · FINE 2500</td>
+                    <td>4</td>
+                    <td>2台</td>
+                    <td>台</td>
+                    <td>2020-08-03</td>
+                    <td><span class="status-badge repair">● 维修中</span></td>
+                    <td>—</td>
+                    <td>{year}-08-15</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">BJ005</strong></td>
+                    <td><strong>公堂布景</strong></td>
+                    <td><span class="cat-badge stage">布景舞台 · 布景</span></td>
+                    <td>立体框架 · 喷绘</td>
+                    <td>3</td>
+                    <td>1套</td>
+                    <td>套</td>
+                    <td>2017-12-10</td>
+                    <td><span class="status-badge stock">● 在库</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">BJ012</strong></td>
+                    <td><strong>折叠舞台板</strong></td>
+                    <td><span class="cat-badge stage">布景舞台 · 舞台</span></td>
+                    <td>铝合金 · 1m×2m</td>
+                    <td>24</td>
+                    <td>16块</td>
+                    <td>块</td>
+                    <td>2019-03-22</td>
+                    <td><span class="status-badge borrowed">● 借出</span></td>
+                    <td>舞美队</td>
+                    <td>{year}-08-02</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 10px;">✅</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">WT021</strong></td>
+                    <td><strong>无线手持麦</strong></td>
+                    <td><span class="cat-badge audio">灯光音响 · 音响</span></td>
+                    <td>SHURE · SLX24/SM58</td>
+                    <td>10</td>
+                    <td>6套</td>
+                    <td>套</td>
+                    <td>{year-1}-02-14</td>
+                    <td><span class="status-badge stock">● 在库</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">FZ032</strong></td>
+                    <td><strong>绿色女褶子</strong></td>
+                    <td><span class="cat-badge costume">戏曲服装 · 褶子</span></td>
+                    <td>杭绸 · 绣花边</td>
+                    <td>5</td>
+                    <td>3件</td>
+                    <td>件</td>
+                    <td>2018-06-30</td>
+                    <td><span class="status-badge stock">● 在库</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">KT056</strong></td>
+                    <td><strong>尚方宝剑</strong></td>
+                    <td><span class="cat-badge helmet">盔头道具 · 道具</span></td>
+                    <td>木质 · 银色漆</td>
+                    <td>4</td>
+                    <td>2把</td>
+                    <td>把</td>
+                    <td>2017-09-05</td>
+                    <td><span class="status-badge stock">● 在库</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>{year}-06-15</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-primary btn-sm">✏️</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
+                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong style="color:var(--primary);">FZ044</strong></td>
+                    <td><strong>黄色太监衣</strong></td>
+                    <td><span class="cat-badge costume">戏曲服装 · 宫装</span></td>
+                    <td>软缎 · 彩绣</td>
+                    <td>8</td>
+                    <td>4件</td>
+                    <td>件</td>
+                    <td>2019-10-18</td>
+                    <td><span class="status-badge scrapped">● 报废</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>{year}-03-20</td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">👁</button>
+                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination" style="margin-top:24px;">
+              <button class="page-btn" disabled>« 上一页</button>
+              <button class="page-btn active">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">3</button>
+              <button class="page-btn">4</button>
+              <span class="page-info">共 486 条 / 28 页</span>
+              <button class="page-btn">下一页 »</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="warning-section">
+          <div class="warning-header">
+            <h4>
+              <span class="warn-icon">⚠️</span>
+              库存预警提醒
+            </h4>
+            <div class="warning-count">5 项预警待处理</div>
+          </div>
+          <div class="warning-body">
+            <div class="warning-grid">
+              <div class="warning-card">
+                <div class="wc-title">
+                  <div>
+                    <div class="wc-name">黑三髯口</div>
+                    <div class="wc-code">KT012 · 盔头/髯口</div>
+                  </div>
+                </div>
+                <div class="wc-info">
+                  <div class="wc-info-item">当前库存：<strong>2 副</strong></div>
+                  <div class="wc-info-item">安全库存：<strong>3 副</strong></div>
+                  <div class="wc-info-item">缺额：<strong>-1 副</strong></div>
+                </div>
+                <span class="wc-reason">⚠ 库存低于安全阈值</span>
+                <div class="wc-action">
+                  <button class="wc-btn">📦 立即补货</button>
+                </div>
+              </div>
+              <div class="warning-card">
+                <div class="wc-title">
+                  <div>
+                    <div class="wc-name">龙头拐杖</div>
+                    <div class="wc-code">KT038 · 道具</div>
+                  </div>
+                </div>
+                <div class="wc-info">
+                  <div class="wc-info-item">当前库存：<strong>1 根</strong></div>
+                  <div class="wc-info-item">安全库存：<strong>2 根</strong></div>
+                  <div class="wc-info-item">缺额：<strong>-1 根</strong></div>
+                </div>
+                <span class="wc-reason">⚠ 库存不足 + 维修中</span>
+                <div class="wc-action">
+                  <button class="wc-btn">📦 立即补货</button>
+                </div>
+              </div>
+              <div class="warning-card">
+                <div class="wc-title">
+                  <div>
+                    <div class="wc-name">LED摇头染色灯</div>
+                    <div class="wc-code">DG009 · 灯光设备</div>
+                  </div>
+                </div>
+                <div class="wc-info">
+                  <div class="wc-info-item">当前库存：<strong>6 台</strong></div>
+                  <div class="wc-info-item">安全库存：<strong>8 台</strong></div>
+                  <div class="wc-info-item">缺额：<strong>-2 台</strong></div>
+                </div>
+                <span class="wc-reason">⚠ 库存低于安全阈值</span>
+                <div class="wc-action">
+                  <button class="wc-btn">📦 立即补货</button>
+                </div>
+              </div>
+              <div class="warning-card damage">
+                <div class="wc-title">
+                  <div>
+                    <div class="wc-name">追光灯</div>
+                    <div class="wc-code">DG015 · 灯光设备</div>
+                  </div>
+                </div>
+                <div class="wc-info">
+                  <div class="wc-info-item">送修日期：<strong>{year}-07-10</strong></div>
+                  <div class="wc-info-item">维修时长：<strong>17天</strong></div>
+                  <div class="wc-info-item">预计完成：<strong>{year}-08-15</strong></div>
+                </div>
+                <span class="wc-reason">🔧 维修超期（预计10天）</span>
+                <div class="wc-action">
+                  <button class="wc-btn">📞 催促维修</button>
+                </div>
+              </div>
+              <div class="warning-card damage">
+                <div class="wc-title">
+                  <div>
+                    <div class="wc-name">红色男蟒（1件）</div>
+                    <div class="wc-code">FZ001 · 戏曲服装</div>
+                  </div>
+                </div>
+                <div class="wc-info">
+                  <div class="wc-info-item">损坏程度：<strong>中度</strong></div>
+                  <div class="wc-info-item">损坏部位：<strong>下摆磨损</strong></div>
+                  <div class="wc-info-item">入库使用：<strong>12年</strong></div>
+                </div>
+                <span class="wc-reason">🔧 损耗待修 · 刺绣磨损严重</span>
+                <div class="wc-action">
+                  <button class="wc-btn">🔧 安排维修</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-section">
+          <div class="flow-header">
+            <h4>🔁 借用归还流水记录</h4>
+            <div class="flow-status-filter">
+              <button class="fs-btn active" data-flow="all">全部 (68)</button>
+              <button class="fs-btn" data-flow="borrowing">借用中 (16)</button>
+              <button class="fs-btn" data-flow="returned">已归还 (52)</button>
+              <button class="fs-btn" data-flow="overdue">已逾期 (2)</button>
+            </div>
+          </div>
+          <div class="admin-card" style="box-shadow:none;border:1px solid var(--border-light);">
+            <div class="table-wrapper" style="box-shadow:none;border:none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>序号</th>
+                    <th>物品</th>
+                    <th>借用人</th>
+                    <th>借出日期</th>
+                    <th>用途</th>
+                    <th>演出剧目</th>
+                    <th>预计归还</th>
+                    <th>实际归还</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="font-weight:600;">001</td>
+                    <td>
+                      <div><strong>青色女帔 × 2件</strong></div>
+                      <div style="font-size:0.75rem;color:var(--text-light);">FZ002</div>
+                    </td>
+                    <td>GH002 李秀兰</td>
+                    <td>{year}-07-20</td>
+                    <td><span class="badge badge-gold">商演</span></td>
+                    <td>《窦娥冤》</td>
+                    <td style="font-weight:600;">{year}-07-30</td>
+                    <td><span style="color:var(--text-light);">—</span></td>
+                    <td><span class="flow-badge borrowing">📤 借用中</span></td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">详情</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 12px;">归还</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:600;">002</td>
+                    <td>
+                      <div><strong>数字调音台</strong></div>
+                      <div style="font-size:0.75rem;color:var(--text-light);">SB022</div>
+                    </td>
+                    <td>GH013 林志远</td>
+                    <td>{year}-07-22</td>
+                    <td><span class="badge badge-info">惠民</span></td>
+                    <td>《铡美案》《三滴血》</td>
+                    <td style="font-weight:600;">{year}-07-29</td>
+                    <td><span style="color:var(--text-light);">—</span></td>
+                    <td><span class="flow-badge borrowing">📤 借用中</span></td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">详情</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 12px;">归还</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:600;">003</td>
+                    <td>
+                      <div><strong>折叠舞台板 × 12块</strong></div>
+                      <div style="font-size:0.75rem;color:var(--text-light);">BJ012</div>
+                    </td>
+                    <td>舞美队（黄春林）</td>
+                    <td>{year}-07-24</td>
+                    <td><span class="badge badge-warning">庙会</span></td>
+                    <td>陇城镇庙会5场</td>
+                    <td style="font-weight:600;">{year}-08-02</td>
+                    <td><span style="color:var(--text-light);">—</span></td>
+                    <td><span class="flow-badge borrowing">📤 借用中</span></td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">详情</button>
+                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 12px;">归还</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:600;">004</td>
+                    <td>
+                      <div><strong>黑色男褶子 × 3件</strong></div>
+                      <div style="font-size:0.75rem;color:var(--text-light);">FZ015</div>
+                    </td>
+                    <td>GH001 张建国</td>
+                    <td>{year}-07-18</td>
+                    <td><span class="badge badge-gold">商演</span></td>
+                    <td>《打金枝》《三滴血》</td>
+                    <td style="color:#dc3545;font-weight:700;">{year}-07-25 ⚠</td>
+                    <td><span style="color:var(--text-light);">—</span></td>
+                    <td><span class="flow-badge overdue">⏰ 已逾期2天</span></td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">详情</button>
+                        <button class="btn btn-primary btn-sm">催还</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:600;">005</td>
+                    <td>
+                      <div><strong>红缨枪把子 × 6根</strong></div>
+                      <div style="font-size:0.75rem;color:var(--text-light);">KT025</div>
+                    </td>
+                    <td>GH003 王志强</td>
+                    <td>{year}-07-15</td>
+                    <td><span class="badge badge-warning">庙会</span></td>
+                    <td>《长坂坡》等武戏</td>
+                    <td style="color:#dc3545;font-weight:700;">{year}-07-26 ⚠</td>
+                    <td><span style="color:var(--text-light);">—</span></td>
+                    <td><span class="flow-badge overdue">⏰ 已逾期1天</span></td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">详情</button>
+                        <button class="btn btn-primary btn-sm">催还</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:600;">006</td>
+                    <td>
+                      <div><strong>夫子盔 × 2顶</strong></div>
+                      <div style="font-size:0.75rem;color:var(--text-light);">KT003</div>
+                    </td>
+                    <td>GH007 周德胜</td>
+                    <td>{year}-07-10</td>
+                    <td><span class="badge badge-info">惠民</span></td>
+                    <td>《下河东》</td>
+                    <td>{year}-07-18</td>
+                    <td style="color:#28a745;font-weight:600;">{year}-07-17 ✓</td>
+                    <td><span class="flow-badge returned">✅ 已归还</span></td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">详情</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:600;">007</td>
+                    <td>
+                      <div><strong>专业线阵音响 × 4只</strong></div>
+                      <div style="font-size:0.75rem;color:var(--text-light);">SB015</div>
+                    </td>
+                    <td>GH012 黄春林</td>
+                    <td>{year}-07-08</td>
+                    <td><span class="badge badge-gold">商演</span></td>
+                    <td>《火焰驹》专场</td>
+                    <td>{year}-07-15</td>
+                    <td style="color:#28a745;font-weight:600;">{year}-07-15 ✓</td>
+                    <td><span class="flow-badge returned">✅ 已归还</span></td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">详情</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:600;">008</td>
+                    <td>
+                      <div><strong>白色女靠 × 2件</strong></div>
+                      <div style="font-size:0.75rem;color:var(--text-light);">FZ008</div>
+                    </td>
+                    <td>GH004 赵丽华</td>
+                    <td>{year}-07-05</td>
+                    <td><span class="badge badge-info">惠民</span></td>
+                    <td>《穆桂英挂帅》</td>
+                    <td>{year}-07-12</td>
+                    <td style="color:#28a745;font-weight:600;">{year}-07-12 ✓</td>
+                    <td><span class="flow-badge returned">✅ 已归还</span></td>
+                    <td>
+                      <div class="admin-table-actions">
+                        <button class="btn btn-secondary btn-sm">详情</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination" style="margin-top:20px;">
+              <button class="page-btn" disabled>« 上一页</button>
+              <button class="page-btn active">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">3</button>
+              <span class="page-info">共 68 条 / 9 页</span>
+              <button class="page-btn">下一页 »</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center;padding:30px 0 10px;color:#999;font-size:0.82rem;">
+          © {year} 秦安县秦剧团云端预约管理系统 · 版本 v2.0.0 · 戏曲文化传承者
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../js/year-lite.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/pagination.js"></script>
+  <script>
+    (function() {
+      'use strict';
+      var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
+      function checkAuth() {
+        var session = null;
+        try { var raw = localStorage.getItem(ADMIN_STORAGE_KEY); if (raw) session = JSON.parse(raw); } catch (e) {}
+        if (!session) { window.location.href = 'login.html'; return null; }
+        return session;
+      }
+      var currentSession = checkAuth();
+      function initUserInfo() {
+        if (!currentSession) return;
+        var name = currentSession.name || '管理员';
+        var role = currentSession.roleName || '管理员';
+        var username = currentSession.username || 'a';
+        var initial = name.charAt(0) || username.charAt(0).toUpperCase();
+        var avatar = document.getElementById('userAvatar');
+        if (avatar) avatar.textContent = initial;
+        var nameEl = document.getElementById('userName'); if (nameEl) nameEl.textContent = name;
+        var roleEl = document.getElementById('userRole'); if (roleEl) roleEl.textContent = role;
+        var dhName = document.getElementById('dhName'); if (dhName) dhName.textContent = name;
+      }
+      initUserInfo();
+      var userDropdown = document.getElementById('userDropdown');
+      var userToggle = document.getElementById('userToggle');
+      function closeUserDropdown() { if (userDropdown) userDropdown.classList.remove('open'); }
+      if (userToggle) {
+        userToggle.addEventListener('click', function(e) { e.stopPropagation(); userDropdown.classList.toggle('open'); });
+      }
+      document.addEventListener('click', function(e) {
+        if (userDropdown && !userDropdown.contains(e.target)) closeUserDropdown();
+      });
+      function logout() {
+        if (window.confirm('确定要退出登录吗？')) {
+          localStorage.removeItem(ADMIN_STORAGE_KEY);
+          if (window.QinApp && window.QinApp.Admin) window.QinApp.Admin.logout();
+          window.location.href = 'login.html';
+        }
+      }
+      var l1 = document.getElementById('logoutBtnSidebar');
+      var l2 = document.getElementById('logoutBtnDropdown');
+      if (l1) l1.addEventListener('click', logout);
+      if (l2) l2.addEventListener('click', logout);
+      var sidebar = document.getElementById('adminSidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+      var toggle = document.getElementById('sidebarToggle');
+      function openSidebar() { sidebar.classList.add('mobile-open'); overlay.classList.add('active'); }
+      function closeSidebar() { sidebar.classList.remove('mobile-open'); overlay.classList.remove('active'); }
+      if (toggle) {
+        toggle.addEventListener('click', function() {
+          if (sidebar.classList.contains('mobile-open')) closeSidebar(); else openSidebar();
+        });
+      }
+      if (overlay) overlay.addEventListener('click', closeSidebar);
+      window.toggleFullscreen = function() {
+        if (!document.fullscreenElement) { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
+        else { document.exitFullscreen && document.exitFullscreen(); }
+      };
+
+      var invTabs = document.querySelectorAll('#invTabs .inv-tab');
+      invTabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          invTabs.forEach(function(t) { t.classList.remove('active'); });
+          tab.classList.add('active');
+        });
+      });
+
+      var fsBtns = document.querySelectorAll('.flow-status-filter .fs-btn');
+      fsBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          fsBtns.forEach(function(b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

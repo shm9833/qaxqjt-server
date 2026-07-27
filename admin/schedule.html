@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <script src="../js/favicon-inject.js" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>演出档期排班管理 - 秦安县秦剧团云端预约系统后台管理 | {year}</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .view-toggle {
+      display: inline-flex;
+      background: var(--cream);
+      border: 2px solid var(--gold);
+      border-radius: 30px;
+      padding: 4px;
+    }
+    .view-toggle button {
+      padding: 8px 20px;
+      border: none;
+      background: transparent;
+      border-radius: 25px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-light);
+      transition: var(--transition);
+    }
+    .view-toggle button.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--gold-light);
+      box-shadow: 0 2px 10px rgba(139, 0, 0, 0.3);
+    }
+    .schedule-alert {
+      padding: 15px 20px;
+      border-radius: var(--radius);
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.92rem;
+    }
+    .schedule-alert.danger {
+      background: rgba(220, 53, 69, 0.1);
+      border: 1px solid rgba(220, 53, 69, 0.3);
+      color: #b91c1c;
+    }
+    .schedule-alert.info {
+      background: rgba(23, 162, 184, 0.1);
+      border: 1px solid rgba(23, 162, 184, 0.3);
+      color: #0e7490;
+    }
+    .schedule-alert .alert-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .schedule-alert .alert-content {
+      flex: 1;
+    }
+    .schedule-alert .alert-actions {
+      flex-shrink: 0;
+    }
+    .calendar-wrapper {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+      margin-bottom: 25px;
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 25px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: var(--cream);
+    }
+    .calendar-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      font-family: "KaiTi", "STKaiti", serif;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .calendar-nav {
+      display: flex;
+      gap: 8px;
+    }
+    .calendar-nav button {
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(212, 175, 55, 0.5);
+      background: rgba(255, 250, 240, 0.1);
+      color: var(--cream);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 1rem;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .calendar-nav button:hover {
+      background: var(--gold);
+      color: var(--primary-dark);
+    }
+    .calendar-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .calendar-table thead th {
+      background: var(--cream-dark);
+      color: var(--primary-dark);
+      padding: 14px 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-bottom: 2px solid var(--gold);
+      text-align: center;
+    }
+    .calendar-table thead th.weekend {
+      color: var(--primary);
+    }
+    .calendar-table tbody td {
+      border: 1px solid var(--border-light);
+      vertical-align: top;
+      padding: 0;
+      height: 130px;
+      transition: var(--transition);
+    }
+    .calendar-table tbody td:hover {
+      background: rgba(212, 175, 55, 0.08);
+    }
+    .calendar-day {
+      height: 100%;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .calendar-day.empty {
+      background: rgba(245, 230, 204, 0.3);
+    }
+    .calendar-day.today {
+      background: rgba(212, 175, 55, 0.1);
+    }
+    .calendar-day.today .day-number {
+      background: var(--primary);
+      color: var(--cream);
+    }
+    .day-number {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      color: var(--text-dark);
+      flex-shrink: 0;
+    }
+    .calendar-day.weekend .day-number {
+      color: var(--primary);
+    }
+    .day-events {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .day-events::-webkit-scrollbar {
+      width: 3px;
+    }
+    .day-events::-webkit-scrollbar-thumb {
+      background: var(--gold);
+      border-radius: 3px;
+    }
+    .mini-event {
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      color: var(--cream);
+      line-height: 1.3;
+      cursor: pointer;
+      transition: var(--transition);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .mini-event:hover {
+      transform: scale(1.02);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .mini-event.type-miaohui { background: linear-gradient(135deg, #8B0000, #A52A2A); }
+    .mini-event.type-huimin { background: linear-gradient(135deg, #28a745, #20c997); }
+    .mini-event.type-jieqing { background: linear-gradient(135deg, #D4AF37, #e6c84d); color: var(--primary-dark); }
+    .mini-event.type-shangyan { background: linear-gradient(135deg, #17a2b8, #3ab0c3); }
+    .mini-event.conflict {
+      background: linear-gradient(135deg, #dc3545, #e86570) !important;
+      animation: pulse-conflict 2s infinite;
+    }
+    @keyframes pulse-conflict {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+      50% { box-shadow: 0 0 0 4px rgba(220, 53, 69, 0); }
+    }
+    .day-count-badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: var(--primary);
+      color: var(--cream);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--cream);
+    }
+    .legend-bar {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      padding: 15px 25px;
+      background: var(--cream-dark);
+      border-top: 1px solid var(--border-light);
+      font-size: 0.85rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+    }
+    .action-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    .action-link:hover {
+      text-decoration: underline;
+    }
+    .action-link.danger {
+      color: #dc3545;
+    }
+    .schedule-card {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+    .schedule-card-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--gold);
+    }
+    .schedule-card-title h3 {
+      margin: 0;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .history-quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    .history-link-card {
+      padding: 18px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: var(--bg-light);
+    }
+    .history-link-card:hover {
+      border-color: var(--gold);
+      background: var(--cream);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
+    .history-link-card .icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    .history-link-card .label {
+      color: var(--primary-dark);
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+    .history-link-card .desc {
+      color: var(--text-light);
+      font-size: 0.82rem;
+    }
+    @media (max-width: 768px) {
+      .calendar-table thead th,
+      .calendar-table tbody td {
+        min-width: 100px;
+      }
+      .calendar-wrapper {
+        overflow-x: auto;
+      }
+      .calendar-table {
+        min-width: 700px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <div class="logo-text">秦安县秦剧团<br/>文化演出管理系统</div>
+      </div>
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <div class="admin-menu-title">核心管理</div>
+          <a class="admin-menu-item" href="index.html">
+            <span class="menu-icon">📊</span>
+            <span>数据概览</span>
+          </a>
+          <a class="admin-menu-item" href="orders.html">
+            <span class="menu-icon">📋</span>
+            <span>预约订单管理</span>
+          </a>
+          <a class="admin-menu-item active" href="schedule.html">
+            <span class="menu-icon">📅</span>
+            <span>演出档期排班</span>
+          </a>
+          <a class="admin-menu-item" href="operas.html">
+            <span class="menu-icon">🎭</span>
+            <span>剧目曲目管理</span>
+          </a>
+          <a class="admin-menu-item" href="finance.html">
+            <span class="menu-icon">💰</span>
+            <span>财务收支管理</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-title">系统设置</div>
+          <a class="admin-menu-item" href="accounts.html">
+            <span class="menu-icon">👥</span>
+            <span>账号权限管理</span>
+          </a>
+          <a class="admin-menu-item" href="accounts.html">
+            <span class="menu-icon">🎪</span>
+            <span>演职人员管理</span>
+          </a>
+          <a class="admin-menu-item" href="system.html">
+            <span class="menu-icon">⚙️</span>
+            <span>系统配置设置</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-title">内容维护</div>
+          <a class="admin-menu-item" href="content.html">
+            <span class="menu-icon">📰</span>
+            <span>新闻资讯发布</span>
+          </a>
+          <a class="admin-menu-item" href="content.html">
+            <span class="menu-icon">🖼️</span>
+            <span>演出图库管理</span>
+          </a>
+        </div>
+      </nav>
+      <div class="admin-sidebar-footer">
+        <div class="admin-user-card">
+          <div class="user-avatar">管</div>
+          <div class="user-info">
+            <div class="user-name">超级管理员</div>
+            <div class="user-role">admin@qaxqjt</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" aria-label="菜单">
+            <span>☰</span>
+          </button>
+          <div class="admin-breadcrumb">
+            <a href="index.html">首页</a>
+            <span class="separator">/</span>
+            <a href="#">核心管理</a>
+            <span class="separator">/</span>
+            <span class="current">演出档期排班</span>
+          </div>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-search">
+            <input type="text" placeholder="搜索档期、地点、剧目...">
+            <span class="search-icon">🔍</span>
+          </div>
+          <button class="admin-header-btn" title="通知">
+            🔔
+            <span class="notify-dot"></span>
+          </button>
+          <button class="admin-header-btn" title="消息">
+            💬
+          </button>
+          <button class="admin-header-btn" title="退出登录" onclick="location.href='login.html'">
+            🚪
+          </button>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <div class="admin-page-header">
+          <div class="admin-page-title">
+            <h1>演出档期排班管理</h1>
+            <p class="page-desc">日历化排期管理 · 自动冲突检测 · 多维度视图切换</p>
+          </div>
+          <div class="admin-page-actions">
+            <div class="view-toggle">
+              <button class="active" data-view="month">📆 月度视图</button>
+              <button data-view="week">📋 周视图</button>
+              <button data-view="list">📑 列表视图</button>
+            </div>
+            <button class="btn btn-primary btn-sm">
+              <span>➕</span>
+              <span>新增排期</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-body">
+            <div class="admin-filter-bar">
+              <div class="form-group" style="margin-bottom:0;min-width:130px;">
+                <label>年份</label>
+                <select class="form-control">
+                  <option value="{year}" selected>{year}年</option>
+                  <option value="2025">2025年</option>
+                  <option value="2024">2024年</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;min-width:130px;">
+                <label>月份</label>
+                <select class="form-control">
+                  <option value="1">1月</option>
+                  <option value="2">2月</option>
+                  <option value="3">3月</option>
+                  <option value="4">4月</option>
+                  <option value="5">5月</option>
+                  <option value="6">6月</option>
+                  <option value="7" selected>7月</option>
+                  <option value="8">8月</option>
+                  <option value="9">9月</option>
+                  <option value="10">10月</option>
+                  <option value="11">11月</option>
+                  <option value="12">12月</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;min-width:150px;">
+                <label>演出类型</label>
+                <select class="form-control">
+                  <option value="">全部类型</option>
+                  <option value="miaohui">🏮 庙会演出</option>
+                  <option value="huimin">🎪 惠民巡演</option>
+                  <option value="jieqing">🎉 节庆专场</option>
+                  <option value="shangyan">🎊 商演定制</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;min-width:140px;">
+                <label>排期状态</label>
+                <select class="form-control">
+                  <option value="">全部状态</option>
+                  <option value="confirmed">已确认</option>
+                  <option value="pending">待确认</option>
+                  <option value="conflict">档期冲突</option>
+                  <option value="cancelled">已取消</option>
+                </select>
+              </div>
+              <div style="display:flex;gap:8px;align-items:flex-end;">
+                <button class="btn btn-gold btn-sm">📅 今日</button>
+                <button class="btn btn-primary btn-sm">🔍 查询</button>
+                <button class="btn btn-secondary btn-sm">↻ 重置</button>
+              </div>
+            </div>
+
+            <div class="schedule-alert danger">
+              <div class="alert-icon">⚠️</div>
+              <div class="alert-content">
+                <strong>档期冲突预警：</strong>
+                检测到 1 处档期冲突 —— {year}年7月15日，企业开业庆典《三滴血》与千户乡庙会连台排期存在人员重叠风险，建议立即处理。
+              </div>
+              <div class="alert-actions">
+                <button class="btn btn-sm" style="background:#b91c1c;color:#fff;">🚨 查看冲突</button>
+              </div>
+            </div>
+
+            <div class="schedule-alert info">
+              <div class="alert-icon">💡</div>
+              <div class="alert-content">
+                <strong>排期提示：</strong>
+                {year}年7月已排 12 场演出，累计 38 场次。建议合理安排演职人员轮休，避免高强度连台演出造成疲劳。
+              </div>
+            </div>
+
+            <div class="calendar-wrapper">
+              <div class="calendar-header">
+                <div class="calendar-title">
+                  📅 {year}年 7月 演出排期日历
+                </div>
+                <div class="calendar-nav">
+                  <button title="上一年">«</button>
+                  <button title="上个月">‹</button>
+                  <button title="今天">今天</button>
+                  <button title="下个月">›</button>
+                  <button title="下一年">»</button>
+                </div>
+              </div>
+              <table class="calendar-table">
+                <thead>
+                  <tr>
+                    <th>周日</th>
+                    <th>周一</th>
+                    <th>周二</th>
+                    <th>周三</th>
+                    <th>周四</th>
+                    <th>周五</th>
+                    <th class="weekend">周六</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div class="calendar-day empty">
+                        <div class="day-number">29</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day empty">
+                        <div class="day-number">30</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">1</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">2</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">3</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">4</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day weekend">
+                        <div class="day-number">5</div>
+                        <span class="day-count-badge">1</span>
+                        <div class="day-events">
+                          <div class="mini-event type-miaohui" title="陇城镇庙会《火焰驹》· 已确认">
+                            🏮 陇城庙会《火焰驹》
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">6</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">7</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">8</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">9</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">10</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">11</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day weekend">
+                        <div class="day-number">12</div>
+                        <span class="day-count-badge">1</span>
+                        <div class="day-events">
+                          <div class="mini-event type-huimin" title="兴国镇惠民巡演 · 待确认">
+                            🎪 兴国镇惠民巡演
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">13</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">14</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day today">
+                        <div class="day-number">15</div>
+                        <span class="day-count-badge" style="background:#dc3545;">2</span>
+                        <div class="day-events">
+                          <div class="mini-event type-shangyan conflict" title="企业开业庆典《三滴血》· 已确认【冲突】">
+                            🎊 开业《三滴血》⚠️
+                          </div>
+                          <div class="mini-event type-miaohui conflict" title="千户乡庙会连台 · 已确认【冲突】">
+                            🏮 千户庙会⚠️
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">16</div>
+                        <div class="day-count-badge">1</div>
+                        <div class="day-events">
+                          <div class="mini-event type-miaohui" title="千户乡庙会连台第2天 · 已确认">
+                            🏮 千户庙会 第2天
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">17</div>
+                        <div class="day-count-badge">1</div>
+                        <div class="day-events">
+                          <div class="mini-event type-miaohui" title="千户乡庙会连台第3天 · 已确认">
+                            🏮 千户庙会 第3天
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">18</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day weekend">
+                        <div class="day-number">19</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">20</div>
+                        <div class="day-count-badge">1</div>
+                        <div class="day-events">
+                          <div class="mini-event type-jieqing" title="节庆专场活动 · 筹备中">
+                            🎉 节庆专场排期
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">21</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">22</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">23</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">24</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">25</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day weekend">
+                        <div class="day-number">26</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">27</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">28</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">29</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">30</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day">
+                        <div class="day-number">31</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day empty">
+                        <div class="day-number">1</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="calendar-day empty weekend">
+                        <div class="day-number">2</div>
+                        <div class="day-events"></div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="legend-bar">
+                <div class="legend-item">
+                  <span class="legend-dot" style="background:linear-gradient(135deg,#8B0000,#A52A2A);"></span>
+                  <span>🏮 庙会演出</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background:linear-gradient(135deg,#28a745,#20c997);"></span>
+                  <span>🎪 惠民巡演</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background:linear-gradient(135deg,#D4AF37,#e6c84d);"></span>
+                  <span>🎉 节庆专场</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background:linear-gradient(135deg,#17a2b8,#3ab0c3);"></span>
+                  <span>🎊 商演定制</span>
+                </div>
+                <div class="legend-item">
+                  <span class="badge badge-success">● 已确认</span>
+                </div>
+                <div class="legend-item">
+                  <span class="badge badge-warning">● 待确认</span>
+                </div>
+                <div class="legend-item">
+                  <span class="badge badge-danger">● 档期冲突</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="schedule-card">
+          <div class="schedule-card-title">
+            <h3>📋 档期详情列表</h3>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm btn-secondary">⬇ 导出排期表</button>
+              <button class="btn btn-sm btn-gold">🖨️ 打印月历</button>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>档期ID</th>
+                  <th>日期</th>
+                  <th>星期</th>
+                  <th>演出单位</th>
+                  <th>地点</th>
+                  <th>演出类型</th>
+                  <th>剧目</th>
+                  <th>场次</th>
+                  <th>负责人</th>
+                  <th>状态</th>
+                  <th style="min-width:220px;">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>SCH-{year}0705001</strong></td>
+                  <td>{year}-07-05</td>
+                  <td>星期六</td>
+                  <td>陇城镇庙会管委会</td>
+                  <td>陇城镇文化广场</td>
+                  <td><span class="badge badge-danger">🏮 庙会</span></td>
+                  <td>《火焰驹》</td>
+                  <td>午场+晚场</td>
+                  <td>王建军</td>
+                  <td><span class="badge badge-success">✓ 已确认</span></td>
+                  <td>
+                    <a class="action-link">👁️ 查看</a>
+                    <a class="action-link">✏️ 编辑</a>
+                    <a class="action-link">🔍 检测</a>
+                    <a class="action-link danger">🗑️ 删除</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>SCH-{year}0712001</strong></td>
+                  <td>{year}-07-12</td>
+                  <td>星期六</td>
+                  <td>兴国镇文化站</td>
+                  <td>兴国镇社区活动中心</td>
+                  <td><span class="badge badge-success">🎪 惠民</span></td>
+                  <td>惠民巡演专场</td>
+                  <td>1场</td>
+                  <td>王建军</td>
+                  <td><span class="badge badge-warning">⏳ 待确认</span></td>
+                  <td>
+                    <a class="action-link">👁️ 查看</a>
+                    <a class="action-link">✏️ 编辑</a>
+                    <a class="action-link">🔍 检测</a>
+                    <a class="action-link danger">🗑️ 删除</a>
+                  </td>
+                </tr>
+                <tr style="background: rgba(220, 53, 69, 0.06);">
+                  <td><strong>SCH-{year}0715001</strong></td>
+                  <td>{year}-07-15</td>
+                  <td>星期二</td>
+                  <td>秦安某某商贸公司</td>
+                  <td>兴国镇建材城广场</td>
+                  <td><span class="badge badge-info">🎊 商演</span></td>
+                  <td>《三滴血》</td>
+                  <td>午场</td>
+                  <td>李小明</td>
+                  <td><span class="badge badge-danger">⚠️ 冲突</span></td>
+                  <td>
+                    <a class="action-link">👁️ 查看</a>
+                    <a class="action-link">✏️ 编辑</a>
+                    <a class="action-link" style="color:#b91c1c;font-weight:600;">🚨 处理冲突</a>
+                    <a class="action-link danger">🗑️ 删除</a>
+                  </td>
+                </tr>
+                <tr style="background: rgba(220, 53, 69, 0.06);">
+                  <td><strong>SCH-{year}0715002</strong></td>
+                  <td>{year}-07-15</td>
+                  <td>星期二</td>
+                  <td>千户乡庙会理事会</td>
+                  <td>千户乡文化广场</td>
+                  <td><span class="badge badge-danger">🏮 庙会</span></td>
+                  <td>庙会连台专场</td>
+                  <td>午场+晚场</td>
+                  <td>王建军</td>
+                  <td><span class="badge badge-danger">⚠️ 冲突</span></td>
+                  <td>
+                    <a class="action-link">👁️ 查看</a>
+                    <a class="action-link">✏️ 编辑</a>
+                    <a class="action-link" style="color:#b91c1c;font-weight:600;">🚨 处理冲突</a>
+                    <a class="action-link danger">🗑️ 删除</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>SCH-{year}0716001</strong></td>
+                  <td>{year}-07-16</td>
+                  <td>星期三</td>
+                  <td>千户乡庙会理事会</td>
+                  <td>千户乡文化广场</td>
+                  <td><span class="badge badge-danger">🏮 庙会</span></td>
+                  <td>连台第2天</td>
+                  <td>午场+晚场</td>
+                  <td>王建军</td>
+                  <td><span class="badge badge-success">✓ 已确认</span></td>
+                  <td>
+                    <a class="action-link">👁️ 查看</a>
+                    <a class="action-link">✏️ 编辑</a>
+                    <a class="action-link">🔍 检测</a>
+                    <a class="action-link danger">🗑️ 删除</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>SCH-{year}0717001</strong></td>
+                  <td>{year}-07-17</td>
+                  <td>星期四</td>
+                  <td>千户乡庙会理事会</td>
+                  <td>千户乡文化广场</td>
+                  <td><span class="badge badge-danger">🏮 庙会</span></td>
+                  <td>连台第3天</td>
+                  <td>午场+晚场</td>
+                  <td>王建军</td>
+                  <td><span class="badge badge-success">✓ 已确认</span></td>
+                  <td>
+                    <a class="action-link">👁️ 查看</a>
+                    <a class="action-link">✏️ 编辑</a>
+                    <a class="action-link">🔍 检测</a>
+                    <a class="action-link danger">🗑️ 删除</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>SCH-{year}0720001</strong></td>
+                  <td>{year}-07-20</td>
+                  <td>星期日</td>
+                  <td>县文旅局</td>
+                  <td>县文化艺术中心</td>
+                  <td><span class="badge badge-gold">🎉 节庆</span></td>
+                  <td>乡村文化节专场</td>
+                  <td>2场</td>
+                  <td>王建军</td>
+                  <td><span class="badge badge-warning">⏳ 待确认</span></td>
+                  <td>
+                    <a class="action-link">👁️ 查看</a>
+                    <a class="action-link">✏️ 编辑</a>
+                    <a class="action-link">🔍 检测</a>
+                    <a class="action-link danger">🗑️ 删除</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>SCH-{year}0725001</strong></td>
+                  <td>{year}-07-25</td>
+                  <td>星期五</td>
+                  <td>莲花镇寿宴预订</td>
+                  <td>莲花镇某村民家中</td>
+                  <td><span class="badge badge-info">🎊 商演</span></td>
+                  <td>折子戏专场</td>
+                  <td>1场</td>
+                  <td>李小明</td>
+                  <td><span class="badge badge-success">✓ 已确认</span></td>
+                  <td>
+                    <a class="action-link">👁️ 查看</a>
+                    <a class="action-link">✏️ 编辑</a>
+                    <a class="action-link">🔍 检测</a>
+                    <a class="action-link danger">🗑️ 删除</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <button class="page-btn" disabled>‹ 上一页</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">下一页 ›</button>
+            <span class="page-info">共 15 条排期记录</span>
+          </div>
+        </div>
+
+        <div class="schedule-card">
+          <div class="schedule-card-title">
+            <h3>📚 历史记录查询</h3>
+          </div>
+          <div class="history-quick-links">
+            <div class="history-link-card">
+              <div class="icon">📖</div>
+              <div class="label">本季度排期</div>
+              <div class="desc">{year}年Q2 · 查看4-6月</div>
+            </div>
+            <div class="history-link-card">
+              <div class="icon">📗</div>
+              <div class="label">上季度排期</div>
+              <div class="desc">{year}年Q1 · 查看1-3月</div>
+            </div>
+            <div class="history-link-card">
+              <div class="icon">📕</div>
+              <div class="label">{year}年度排期</div>
+              <div class="desc">全年演出汇总 · 12个月</div>
+            </div>
+            <div class="history-link-card">
+              <div class="icon">📘</div>
+              <div class="label">往年档案</div>
+              <div class="desc">2024年度及以前</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/year-lite.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    (function() {
+      var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
+      try { var __raw = localStorage.getItem(ADMIN_STORAGE_KEY); if (!__raw || !JSON.parse(__raw)) { window.location.href = 'login.html'; } } catch (e) { window.location.href = 'login.html'; }
+      var viewBtns = document.querySelectorAll('.view-toggle button');
+      viewBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          viewBtns.forEach(function(b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          if (btn.getAttribute('data-view') !== 'month') {
+            if (window.QinApp && window.QinApp.Utils) {
+              window.QinApp.Utils.toast('当前展示月度视图，周视图/列表视图功能开发中', 'info');
+            }
+          }
+        });
+      });
+
+      var miniEvents = document.querySelectorAll('.mini-event');
+      miniEvents.forEach(function(ev) {
+        ev.addEventListener('click', function() {
+          if (window.QinApp && window.QinApp.Utils) {
+            window.QinApp.Utils.toast('查看档期详情：' + (ev.getAttribute('title') || ev.textContent), 'info');
+          }
+        });
+      });
+
+      var todayBtn = document.querySelector('.calendar-nav button:nth-child(3)');
+      if (todayBtn) {
+        todayBtn.addEventListener('click', function() {
+          if (window.QinApp && window.QinApp.Utils) {
+            window.QinApp.Utils.toast('已定位到今日：{year}年7月15日', 'success');
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

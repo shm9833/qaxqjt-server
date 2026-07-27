@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <script src="../js/favicon-inject.js" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>账号权限管理 - 秦安县秦剧团云端预约系统后台管理 | {year}</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .tab-nav {
+      display: flex;
+      gap: 4px;
+      border-bottom: 2px solid var(--border-light);
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 12px 24px;
+      border: none;
+      background: transparent;
+      color: var(--text-light);
+      font-size: 0.95rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 8px 8px 0 0;
+      position: relative;
+      transition: var(--transition);
+    }
+    .tab-btn:hover {
+      color: var(--primary);
+      background: rgba(139, 0, 0, 0.05);
+    }
+    .tab-btn.active {
+      color: var(--primary);
+      background: var(--cream);
+    }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--gold);
+      border-radius: 3px 3px 0 0;
+    }
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+    .role-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 25px;
+    }
+    .role-card {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      padding: 25px;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .role-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--gold);
+    }
+    .role-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--role-accent, var(--primary));
+    }
+    .role-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 18px;
+      padding-bottom: 15px;
+      border-bottom: 1px dashed var(--border-light);
+    }
+    .role-card-title h4 {
+      color: var(--primary-dark);
+      font-size: 1.2rem;
+      margin: 0 0 6px 0;
+    }
+    .role-card-title .role-count {
+      color: var(--gold-dark);
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .role-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--role-accent, var(--primary)), rgba(139,0,0,0.7));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: var(--cream);
+    }
+    .role-perm-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 18px 0;
+    }
+    .role-perm-list li {
+      padding: 8px 0;
+      font-size: 0.9rem;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px dashed rgba(232, 213, 183, 0.5);
+    }
+    .role-perm-list li:last-child {
+      border-bottom: none;
+    }
+    .role-perm-list .perm-check {
+      color: #28a745;
+      font-weight: 700;
+    }
+    .role-card-footer {
+      display: flex;
+      gap: 10px;
+    }
+    .action-btn-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .action-btn-group .btn {
+      padding: 5px 10px;
+      font-size: 0.8rem;
+    }
+    .text-danger { color: var(--primary) !important; }
+    .text-warning { color: #e6a800 !important; }
+    .text-success { color: #28a745 !important; }
+    .checkbox-cell {
+      width: 40px;
+      text-align: center;
+    }
+    .admin-table-checkbox {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+    @media (max-width: 768px) {
+      .role-card-grid {
+        grid-template-columns: 1fr;
+      }
+      .tab-btn {
+        padding: 10px 16px;
+        font-size: 0.88rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <div class="logo-text">秦安县秦剧团<br/>文化演出管理系统</div>
+      </div>
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <div class="admin-menu-title">核心管理</div>
+          <a class="admin-menu-item" href="index.html">
+            <span class="menu-icon">📊</span>
+            <span>数据概览</span>
+          </a>
+          <a class="admin-menu-item" href="orders.html">
+            <span class="menu-icon">📋</span>
+            <span>预约订单管理</span>
+          </a>
+          <a class="admin-menu-item" href="schedule.html">
+            <span class="menu-icon">📅</span>
+            <span>演出档期排班</span>
+          </a>
+          <a class="admin-menu-item" href="operas.html">
+            <span class="menu-icon">🎭</span>
+            <span>剧目曲目管理</span>
+          </a>
+          <a class="admin-menu-item" href="finance.html">
+            <span class="menu-icon">💰</span>
+            <span>财务收支管理</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-title">系统设置</div>
+          <a class="admin-menu-item active" href="accounts.html">
+            <span class="menu-icon">👥</span>
+            <span>账号权限管理</span>
+          </a>
+          <a class="admin-menu-item" href="accounts.html">
+            <span class="menu-icon">🎪</span>
+            <span>演职人员管理</span>
+          </a>
+          <a class="admin-menu-item" href="system.html">
+            <span class="menu-icon">⚙️</span>
+            <span>系统配置设置</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-title">内容维护</div>
+          <a class="admin-menu-item" href="content.html">
+            <span class="menu-icon">📰</span>
+            <span>新闻资讯发布</span>
+          </a>
+          <a class="admin-menu-item" href="content.html">
+            <span class="menu-icon">🖼️</span>
+            <span>演出图库管理</span>
+          </a>
+        </div>
+      </nav>
+      <div class="admin-sidebar-footer">
+        <div class="admin-user-card">
+          <div class="user-avatar">管</div>
+          <div class="user-info">
+            <div class="user-name">超级管理员</div>
+            <div class="user-role">admin@qaxqjt</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" aria-label="菜单">
+            <span>☰</span>
+          </button>
+          <div class="admin-breadcrumb">
+            <a href="index.html">首页</a>
+            <span class="separator">/</span>
+            <a href="#">系统设置</a>
+            <span class="separator">/</span>
+            <span class="current">账号权限管理</span>
+          </div>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-search">
+            <input type="text" placeholder="全局搜索...">
+            <span class="search-icon">🔍</span>
+          </div>
+          <button class="admin-header-btn" title="通知">
+            🔔
+            <span class="notify-dot"></span>
+          </button>
+          <button class="admin-header-btn" title="消息">
+            💬
+          </button>
+          <button class="admin-header-btn" title="退出登录" onclick="location.href='login.html'">
+            🚪
+          </button>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <div class="admin-page-header">
+          <div class="admin-page-title">
+            <h1>账号权限管理</h1>
+            <p class="page-desc">管理系统账号、角色权限及操作审计日志</p>
+          </div>
+          <div class="admin-page-actions">
+            <button class="btn btn-gold btn-sm">
+              <span>🔧</span>
+              <span>权限配置</span>
+            </button>
+            <button class="btn btn-primary btn-sm">
+              <span>➕</span>
+              <span>新增账号</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <div class="tab-nav" data-tabs>
+            <button class="tab-btn active" data-tab-btn="accounts">👤 账号列表</button>
+            <button class="tab-btn" data-tab-btn="roles">🎭 角色管理</button>
+            <button class="tab-btn" data-tab-btn="logs">📝 操作日志</button>
+          </div>
+
+          <div class="tab-panel active" data-tab-panel="accounts">
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group" style="margin-bottom:0;flex:1;min-width:220px;">
+                  <label>关键词搜索</label>
+                  <input type="text" class="form-control" placeholder="输入账号/姓名/手机号...">
+                </div>
+                <div class="form-group" style="margin-bottom:0;min-width:160px;">
+                  <label>角色筛选</label>
+                  <select class="form-control">
+                    <option value="">全部角色</option>
+                    <option value="admin">超级管理员</option>
+                    <option value="finance">财务人员</option>
+                    <option value="scheduler">演出调度</option>
+                    <option value="staff">普通员工</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;min-width:140px;">
+                  <label>状态筛选</label>
+                  <select class="form-control">
+                    <option value="">全部状态</option>
+                    <option value="1">启用</option>
+                    <option value="0">禁用</option>
+                  </select>
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-end;">
+                  <button class="btn btn-primary btn-sm">🔍 查询</button>
+                  <button class="btn btn-secondary btn-sm">↻ 重置</button>
+                </div>
+              </div>
+
+              <div class="admin-table-actions" style="margin-bottom:15px;">
+                <button class="btn btn-success btn-sm">✓ 批量启用</button>
+                <button class="btn btn-warning btn-sm">✕ 批量禁用</button>
+                <button class="btn btn-gold btn-sm">⬇ 导出数据</button>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th class="checkbox-cell">
+                        <input type="checkbox" class="admin-table-checkbox" id="checkAll">
+                      </th>
+                      <th>序号</th>
+                      <th>账号</th>
+                      <th>姓名</th>
+                      <th>角色</th>
+                      <th>手机号</th>
+                      <th>邮箱</th>
+                      <th>状态</th>
+                      <th>最后登录</th>
+                      <th>创建时间</th>
+                      <th style="min-width:200px;">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>1</td>
+                      <td><strong>admin</strong></td>
+                      <td>超级管理员</td>
+                      <td><span class="badge badge-danger">超级管理员</span></td>
+                      <td>13909380000</td>
+                      <td>admin@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-27 09:15</td>
+                      <td>2024-01-01</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm" disabled>禁用</button>
+                          <button class="btn btn-danger btn-sm" disabled>删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>2</td>
+                      <td><strong>finance01</strong></td>
+                      <td>张惠芳</td>
+                      <td><span class="badge badge-gold">财务人员</span></td>
+                      <td>13993839001</td>
+                      <td>zhanghf@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-26 16:42</td>
+                      <td>2024-03-15</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>3</td>
+                      <td><strong>scheduler01</strong></td>
+                      <td>王建军</td>
+                      <td><span class="badge badge-info">演出调度</span></td>
+                      <td>13993839002</td>
+                      <td>wangjj@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-27 08:30</td>
+                      <td>2024-04-20</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>4</td>
+                      <td><strong>scheduler02</strong></td>
+                      <td>李小明</td>
+                      <td><span class="badge badge-info">演出调度</span></td>
+                      <td>13993839003</td>
+                      <td>lixm@qaxqjt.com</td>
+                      <td><span class="badge badge-warning">⏸ 禁用</span></td>
+                      <td>2026-06-10 11:20</td>
+                      <td>2024-05-08</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-success btn-sm">启用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>5</td>
+                      <td><strong>finance02</strong></td>
+                      <td>赵婷婷</td>
+                      <td><span class="badge badge-gold">财务人员</span></td>
+                      <td>13993839004</td>
+                      <td>zhaott@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-25 14:05</td>
+                      <td>2024-06-12</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>6</td>
+                      <td><strong>staff01</strong></td>
+                      <td>陈大伟</td>
+                      <td><span class="badge badge-info">普通员工</span></td>
+                      <td>13993839005</td>
+                      <td>chendw@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-26 19:30</td>
+                      <td>2024-07-01</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>7</td>
+                      <td><strong>staff02</strong></td>
+                      <td>刘桂花</td>
+                      <td><span class="badge badge-info">普通员工</span></td>
+                      <td>13993839006</td>
+                      <td>liugh@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-24 08:10</td>
+                      <td>2024-08-18</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>8</td>
+                      <td><strong>staff03</strong></td>
+                      <td>孙志强</td>
+                      <td><span class="badge badge-info">普通员工</span></td>
+                      <td>13993839007</td>
+                      <td>sunzq@qaxqjt.com</td>
+                      <td><span class="badge badge-warning">⏸ 禁用</span></td>
+                      <td>2026-05-20 15:40</td>
+                      <td>2024-09-25</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-success btn-sm">启用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>9</td>
+                      <td><strong>staff04</strong></td>
+                      <td>周文斌</td>
+                      <td><span class="badge badge-info">普通员工</span></td>
+                      <td>13993839008</td>
+                      <td>zhouwb@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-27 10:00</td>
+                      <td>2025-01-10</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>10</td>
+                      <td><strong>staff05</strong></td>
+                      <td>吴丽娟</td>
+                      <td><span class="badge badge-info">普通员工</span></td>
+                      <td>13993839009</td>
+                      <td>wulj@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-26 17:20</td>
+                      <td>2025-03-22</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="pagination">
+                <button class="page-btn" disabled>‹ 上一页</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">下一页 ›</button>
+                <span class="page-info">共 28 条记录，当前第 1/3 页</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" data-tab-panel="roles">
+            <div class="admin-card-body">
+              <div class="role-card-grid">
+                <div class="role-card" style="--role-accent: #8B0000;">
+                  <div class="role-card-header">
+                    <div class="role-card-title">
+                      <h4>超级管理员</h4>
+                      <div class="role-count"><span>👥</span> 1人</div>
+                    </div>
+                    <div class="role-icon">👑</div>
+                  </div>
+                  <ul class="role-perm-list">
+                    <li><span class="perm-check">✓</span> 系统全部管理权限</li>
+                    <li><span class="perm-check">✓</span> 账号创建与权限分配</li>
+                    <li><span class="perm-check">✓</span> 预约审核与订单管理</li>
+                    <li><span class="perm-check">✓</span> 档期排期与冲突处理</li>
+                    <li><span class="perm-check">✓</span> 财务收支与报表查看</li>
+                    <li><span class="perm-check">✓</span> 剧目人员内容维护</li>
+                    <li><span class="perm-check">✓</span> 系统配置与日志审计</li>
+                  </ul>
+                  <div class="role-card-footer">
+                    <button class="btn btn-primary btn-sm" style="width:100%;">🛡️ 编辑权限</button>
+                  </div>
+                </div>
+
+                <div class="role-card" style="--role-accent: #D4AF37;">
+                  <div class="role-card-header">
+                    <div class="role-card-title">
+                      <h4>财务人员</h4>
+                      <div class="role-count"><span>👥</span> 2人</div>
+                    </div>
+                    <div class="role-icon">💰</div>
+                  </div>
+                  <ul class="role-perm-list">
+                    <li><span class="perm-check">✓</span> 财务收支录入管理</li>
+                    <li><span class="perm-check">✓</span> 收款确认与发票登记</li>
+                    <li><span class="perm-check">✓</span> 预约订单查看权限</li>
+                    <li><span class="perm-check">✓</span> 财务统计报表导出</li>
+                    <li><span class="perm-check">✓</span> 演出成本核算管理</li>
+                    <li style="opacity:0.5;"><span class="perm-check">—</span> 账号权限管理（无）</li>
+                    <li style="opacity:0.5;"><span class="perm-check">—</span> 系统配置（无）</li>
+                  </ul>
+                  <div class="role-card-footer">
+                    <button class="btn btn-gold btn-sm" style="width:100%;">🛡️ 编辑权限</button>
+                  </div>
+                </div>
+
+                <div class="role-card" style="--role-accent: #17a2b8;">
+                  <div class="role-card-header">
+                    <div class="role-card-title">
+                      <h4>演出调度</h4>
+                      <div class="role-count"><span>👥</span> 2人</div>
+                    </div>
+                    <div class="role-icon">📅</div>
+                  </div>
+                  <ul class="role-perm-list">
+                    <li><span class="perm-check">✓</span> 演出档期排班管理</li>
+                    <li><span class="perm-check">✓</span> 档期冲突检测处理</li>
+                    <li><span class="perm-check">✓</span> 剧目曲目库维护</li>
+                    <li><span class="perm-check">✓</span> 演职人员调度安排</li>
+                    <li><span class="perm-check">✓</span> 预约单审核确认</li>
+                    <li><span class="perm-check">✓</span> 演出设备道具管理</li>
+                    <li style="opacity:0.5;"><span class="perm-check">—</span> 财务数据（只读）</li>
+                  </ul>
+                  <div class="role-card-footer">
+                    <button class="btn btn-gold btn-sm" style="width:100%;">🛡️ 编辑权限</button>
+                  </div>
+                </div>
+
+                <div class="role-card" style="--role-accent: #28a745;">
+                  <div class="role-card-header">
+                    <div class="role-card-title">
+                      <h4>普通员工</h4>
+                      <div class="role-count"><span>👥</span> 23人</div>
+                    </div>
+                    <div class="role-icon">👤</div>
+                  </div>
+                  <ul class="role-perm-list">
+                    <li><span class="perm-check">✓</span> 个人信息维护修改</li>
+                    <li><span class="perm-check">✓</span> 个人考勤打卡登记</li>
+                    <li><span class="perm-check">✓</span> 查看个人演出排期</li>
+                    <li><span class="perm-check">✓</span> 工资条查看下载</li>
+                    <li><span class="perm-check">✓</span> 请假申请提交审批</li>
+                    <li style="opacity:0.5;"><span class="perm-check">—</span> 订单财务（无）</li>
+                    <li style="opacity:0.5;"><span class="perm-check">—</span> 排期管理（无）</li>
+                  </ul>
+                  <div class="role-card-footer">
+                    <button class="btn btn-gold btn-sm" style="width:100%;">🛡️ 编辑权限</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" data-tab-panel="logs">
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group" style="margin-bottom:0;flex:1;min-width:200px;">
+                  <label>操作人</label>
+                  <input type="text" class="form-control" placeholder="输入操作人姓名...">
+                </div>
+                <div class="form-group" style="margin-bottom:0;min-width:160px;">
+                  <label>操作类型</label>
+                  <select class="form-control">
+                    <option value="">全部类型</option>
+                    <option value="create">新增操作</option>
+                    <option value="update">修改操作</option>
+                    <option value="delete">删除操作</option>
+                    <option value="login">登录登出</option>
+                    <option value="export">导出操作</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;min-width:180px;">
+                  <label>时间范围</label>
+                  <input type="date" class="form-control" value="{year}-07-01">
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-end;">
+                  <button class="btn btn-primary btn-sm">🔍 查询</button>
+                  <button class="btn btn-gold btn-sm">⬇ 导出日志</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th>操作人</th>
+                      <th>角色</th>
+                      <th>操作类型</th>
+                      <th>操作内容</th>
+                      <th>IP地址</th>
+                      <th>操作时间</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1</td>
+                      <td><strong>超级管理员</strong></td>
+                      <td><span class="badge badge-danger">超级管理员</span></td>
+                      <td><span class="badge badge-warning">登录</span></td>
+                      <td>管理员后台登录成功</td>
+                      <td>192.168.1.100</td>
+                      <td>{year}-07-27 09:15:32</td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td><strong>张惠芳</strong></td>
+                      <td><span class="badge badge-gold">财务人员</span></td>
+                      <td><span class="badge badge-success">修改</span></td>
+                      <td>修改订单 #QAX20260726001 收款状态为已收款</td>
+                      <td>192.168.1.105</td>
+                      <td>{year}-07-26 16:42:18</td>
+                    </tr>
+                    <tr>
+                      <td>3</td>
+                      <td><strong>王建军</strong></td>
+                      <td><span class="badge badge-info">演出调度</span></td>
+                      <td><span class="badge badge-info">新增</span></td>
+                      <td>新增演出排期：陇城镇庙会 - 《火焰驹》</td>
+                      <td>192.168.1.108</td>
+                      <td>{year}-07-26 14:30:05</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="pagination">
+                <button class="page-btn" disabled>‹ 上一页</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn" disabled>下一页 ›</button>
+                <span class="page-info">共 3 条日志记录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/year-lite.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    (function() {
+      var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
+      try { var __raw = localStorage.getItem(ADMIN_STORAGE_KEY); if (!__raw || !JSON.parse(__raw)) { window.location.href = 'login.html'; } } catch (e) { window.location.href = 'login.html'; }
+      var tabBtns = document.querySelectorAll('[data-tab-btn]');
+      var tabPanels = document.querySelectorAll('[data-tab-panel]');
+      tabBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var key = btn.getAttribute('data-tab-btn');
+          tabBtns.forEach(function(b) {
+            b.classList.toggle('active', b === btn);
+          });
+          tabPanels.forEach(function(p) {
+            p.classList.toggle('active', p.getAttribute('data-tab-panel') === key);
+          });
+        });
+      });
+
+      var checkAll = document.getElementById('checkAll');
+      if (checkAll) {
+        checkAll.addEventListener('change', function() {
+          var boxes = document.querySelectorAll('.admin-table-checkbox');
+          boxes.forEach(function(b) {
+            if (b !== checkAll) b.checked = checkAll.checked;
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

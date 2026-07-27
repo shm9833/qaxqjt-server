@@ -1,0 +1,524 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="js/favicon-inject.js" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="秦安县秦剧团未成年观众观演与预约声明，未成年人保护，监护人陪同原则，校园研学服务规范，未成年人个人信息保护政策">
+  <meta name="keywords" content="未成年预约,未成年人保护,观演安全,未成年人声明,校园研学,未成年观众">
+  <title>未成年预约声明及细则 - 秦安县秦剧团文化演出有限公司 | {year}</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .page-banner {
+      background: linear-gradient(135deg, rgba(15, 76, 129, 0.92) 0%, rgba(30, 111, 181, 0.88) 100%),
+        radial-gradient(circle at 30% 50%, rgba(201, 169, 98, 0.2) 0%, transparent 50%);
+      padding: 90px 0 70px;
+      color: #fff;
+      text-align: center;
+      position: relative;
+    }
+    .page-banner h1 {
+      color: #fff;
+      font-size: 2.4rem;
+      margin-bottom: 12px;
+    }
+    .breadcrumb {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      font-size: 0.95rem;
+      color: var(--gold-light);
+    }
+    .breadcrumb a { color: #fff; }
+    .breadcrumb .separator { color: rgba(255,255,255,0.5); }
+    .policy-section {
+      padding: 70px 0;
+      background: var(--bg-light);
+    }
+    .policy-section:nth-child(even) {
+      background: linear-gradient(180deg, var(--cream) 0%, var(--bg-light) 100%);
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 45px;
+    }
+    .section-header h2 {
+      color: var(--primary-dark);
+      font-size: 2rem;
+      margin-bottom: 10px;
+      letter-spacing: 3px;
+    }
+    .section-header p {
+      color: var(--text-light);
+      font-size: 1rem;
+      letter-spacing: 3px;
+    }
+    .scroll-card h3 {
+      color: var(--primary-dark);
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--gold-light);
+      letter-spacing: 2px;
+    }
+    .scroll-card h3 .section-num {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      border-radius: 50%;
+      line-height: 40px;
+      text-align: center;
+      margin-right: 14px;
+      font-size: 1.1rem;
+      box-shadow: inset 0 0 0 2px var(--gold);
+    }
+    .scroll-card p {
+      color: var(--text-light);
+      line-height: 2.1;
+      text-indent: 2em;
+      margin-bottom: 14px;
+      font-family: "SimSun", "STSong", "Microsoft YaHei", serif;
+    }
+    .scroll-card ul {
+      margin: 15px 0;
+      padding-left: 2.5em;
+    }
+    .scroll-card ul li {
+      margin-bottom: 10px;
+      color: var(--text-light);
+      font-family: "SimSun", "STSong", serif;
+      line-height: 2;
+      position: relative;
+      padding-left: 8px;
+    }
+    .scroll-card ol {
+      margin: 15px 0;
+      padding-left: 2.5em;
+      list-style: none;
+      counter-reset: li-counter;
+    }
+    .scroll-card ol li {
+      counter-increment: li-counter;
+      margin-bottom: 10px;
+      color: var(--text-light);
+      font-family: "SimSun", "STSong", serif;
+      line-height: 2;
+      position: relative;
+      padding-left: 8px;
+    }
+    .scroll-card ol li::before {
+      content: counter(li-counter);
+      position: absolute;
+      left: -2.2em;
+      top: 2px;
+      width: 26px;
+      height: 26px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--primary-dark);
+      border-radius: 50%;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: center;
+      line-height: 26px;
+      font-family: "KaiTi", "STKaiti", serif;
+      box-shadow: 0 2px 6px rgba(201, 169, 98, 0.3);
+    }
+    .scroll-card ul li::before {
+      content: '◆';
+      position: absolute;
+      left: -1.6em;
+      color: var(--gold);
+      font-size: 0.6rem;
+      top: 0.7em;
+    }
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(201, 169, 98, 0.08), rgba(15, 76, 129, 0.04));
+      border: 1px solid var(--gold-light);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin: 20px 0;
+    }
+    .highlight-box strong {
+      color: var(--primary-dark);
+    }
+    .contact-inline {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .age-tag {
+      display: inline-block;
+      padding: 3px 12px;
+      background: linear-gradient(135deg, var(--bamboo), #6BA37A);
+      color: #fff;
+      border-radius: 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin: 0 4px;
+      font-family: "KaiTi", "STKaiti", serif;
+      letter-spacing: 1px;
+    }
+    .age-tag.warn {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--primary-dark);
+    }
+    .age-tag.danger {
+      background: linear-gradient(135deg, var(--cinnabar), #922D2D);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+          <div class="logo-text">
+            <h1>秦安县秦剧团</h1>
+            <p>文化演出有限公司 · 始于2014</p>
+          </div>
+        </div>
+        <button class="menu-toggle" aria-label="菜单">
+          <span>☰</span>
+        </button>
+        <nav>
+          <ul>
+            <li><a href="index.html">首页</a></li>
+            <li><a href="index.html#about">剧团简介</a></li>
+            <li><a href="index.html#repertoire">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html">新闻动态</a></li>
+            <li><a href="booking.html">在线预约</a></li>
+            <li><a href="contact.html">联系我们</a></li>
+            <li><a href="admin/login.html" class="admin-link">后台管理</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-banner">
+      <div class="container">
+        <h1>👶 未成年预约声明及细则</h1>
+        <div class="breadcrumb">
+          <a href="index.html">首页</a>
+          <span class="separator">/</span>
+          <span>未成年预约</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="scroll-card">
+          <div class="scroll-rod-top"></div>
+          <div class="scroll-rod-bottom"></div>
+          <h3><span class="section-num">一</span>适用范围与定义</h3>
+          <p>本声明依据《中华人民共和国未成年人保护法》《中华人民共和国预防未成年人犯罪法》《中华人民共和国个人信息保护法》等法律法规制定，旨在保障未成年观众的合法权益与人身安全，规范涉及未成年人的演出服务与预约行为。本声明的适用范围与相关定义如下：</p>
+          <ol>
+            <li><strong>未成年人定义：</strong>本声明所称"未成年人"，系指年龄未满 18 周岁的自然人（含 18 周岁生日当天）。以身份证件登记的出生日期为准进行年龄计算。</li>
+            <li><strong>适用服务场景：</strong>本声明适用于秦安县秦剧团文化演出有限公司提供的所有涉及未成年人的服务场景，包括但不限于：
+              <ul style="margin-top:8px; padding-left: 1.5em;">
+                <li>未成年观众现场观看各类营业性演出、惠民演出、庙会演出、节庆专场等；</li>
+                <li>未成年人作为预约方主体或受益方的演出服务预约（含商业演出、私人定制演出等）；</li>
+                <li>面向中小学生、幼儿园开展的校园研学、戏曲进校园、非遗传承教学、文化实践活动等；</li>
+                <li>通过学校、培训机构、社会团体等组织的未成年人集体观演或集体活动；</li>
+                <li>其他涉及未成年人参与的演出服务、文化活动及相关衍生服务。</li>
+              </ul>
+            </li>
+            <li><strong>特殊年龄分层：</strong>为便于精细化管理与服务，本声明将未成年人进一步细分为：
+              <span class="age-tag danger">0-13周岁（儿童）</span>
+              <span class="age-tag warn">14-17周岁（青少年）</span>
+              两个年龄阶段，分别适用不同的管理规范。
+            </li>
+            <li><strong>监护人定义：</strong>本声明所称"监护人"，包括未成年人的父母、祖父母、外祖父母、兄姐，以及其他经法定程序确认的具有监护资格的个人或组织。陪同未成年人观演的其他成年亲属、老师、委托监护人等，视同"临时陪同人员"，参照监护人条款管理。</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="scroll-card">
+          <div class="scroll-rod-top"></div>
+          <div class="scroll-rod-bottom"></div>
+          <h3><span class="section-num">二</span>监护人陪同原则</h3>
+          <p>未成年人身心发育尚未成熟，观演期间需要监护人的全程陪护与正确引导。本公司严格执行"未成年人观演监护人陪同"原则，具体规定如下：</p>
+          <ul>
+            <li><span class="age-tag danger">14 周岁以下</span>的未成年观众，<strong>必须由监护人或经监护人书面委托的成年陪同人员全程陪同入场并观演</strong>，陪同人员与未成年人人数比例原则上不低于 1:1。无监护人陪同的 14 周岁以下未成年人，剧团工作人员有权拒绝其入场。</li>
+            <li><span class="age-tag warn">14 周岁至 17 周岁</span>的未成年观众，<strong>建议由监护人陪同观演</strong>；确因客观原因无法陪同的，应由监护人出具书面同意书（可通过电子方式签署），明确同意未成年人独立观演并自行承担相应风险，现场工作人员核验后方可入场。</li>
+            <li>监护人或陪同人员对未成年人在观演期间的<strong>人身安全、行为举止、财产保管</strong>承担全部责任，应全程看管好未成年人，不使其脱离视线范围，及时制止未成年人的危险行为与不文明行为。</li>
+            <li>入场检票时，陪同人员需主动出示未成年人与本人的有效身份证件（或可证明亲属/委托关系的材料），配合工作人员进行年龄核验与身份登记。</li>
+            <li>对于学校、培训机构等集体组织未成年人观演的，组织方应确保陪同老师与未成年人数比例不低于 1:10，并指派专人负责现场秩序维护与应急处置。</li>
+          </ul>
+          <div class="highlight-box">
+            <p><strong>🛡️ 安全提示：</strong>演出场所人员密集、灯光音响音量较大，为确保未成年人身心安全，请监护人务必全程陪同，不要让未成年人独自前往洗手间、过道、后台等区域。如遇突发情况，请第一时间联系现场工作人员。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="scroll-card">
+          <div class="scroll-rod-top"></div>
+          <div class="scroll-rod-bottom"></div>
+          <h3><span class="section-num">三</span>未成年人预约规则</h3>
+          <p>为规范演出服务预约流程，防范未成年人未经监护人同意擅自预约商业演出服务的风险，本公司制定以下预约管理规则：</p>
+          <ol>
+            <li><strong>商业演出预约：</strong>各类商业性质的演出服务（含乡村庙会演出、企业庆典定制、私人寿宴婚庆演出等），<strong>未成年人不得作为独立预约主体签订合同或下单预约</strong>，必须由其监护人作为预约方进行实名预约。</li>
+            <li><strong>监护人实名核验：</strong>监护人代为预约时，需提供真实准确的以下信息进行实名认证：
+              <ul style="margin-top:8px; padding-left: 1.5em;">
+                <li>监护人本人姓名、居民身份证号码、手机号码；</li>
+                <li>监护人身份证正反面照片或扫描件（用于核验，严格保密）；</li>
+                <li>确认知悉并同意本《未成年预约声明及细则》全部条款；</li>
+                <li>如预约服务涉及未成年人参与的，还需提供未成年人姓名、身份证号等信息。</li>
+              </ul>
+            </li>
+            <li><strong>校园研学服务：</strong>学校、教育机构组织未成年人开展校园研学、戏曲进校园、非遗研学等活动的，<strong>须由学校作为主体统一办理预约手续</strong>，并提交以下材料：
+              <ul style="margin-top:8px; padding-left: 1.5em;">
+                <li>加盖学校公章的活动预约申请书与同意书；</li>
+                <li>参与活动的全部未成年人名单（姓名、性别、年级）；</li>
+                <li>陪同老师名单及联系方式（附老师身份证信息）；</li>
+                <li>学校出具的负责人员授权委托书。</li>
+              </ul>
+            </li>
+            <li><strong>预约效力确认：</strong>未经监护人追认的未成年人独立商业预约行为，本公司有权认定为无效预约，已收取的费用在核实情况后全额无息原路退还。</li>
+            <li><strong>演出前二次确认：</strong>对于涉及未成年人参与的预约，剧团工作人员将在演出前 24-72 小时内通过电话方式与监护人再次确认预约信息、活动安排与注意事项，确保监护人完全知情并同意。</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="scroll-card">
+          <div class="scroll-rod-top"></div>
+          <div class="scroll-rod-bottom"></div>
+          <h3><span class="section-num">四</span>观演安全与行为规范</h3>
+          <p>保障未成年人观演安全是本公司的核心责任之一。为营造安全、文明、有序的观演环境，请未成年人及其监护人严格遵守以下安全管理与行为规范：</p>
+          <ul>
+            <li><strong>文明观演行为要求：</strong>未成年人在观演期间应遵守公共秩序，禁止以下不文明或危险行为：
+              <ul style="margin-top:8px; padding-left: 1.5em;">
+                <li>站立踩踏座椅、在座位上蹦跳打闹、跨越栏杆或攀爬隔离设施；</li>
+                <li>在观众席、过道、出入口追逐奔跑、推搡拥挤、大声喧哗；</li>
+                <li>向舞台、乐池或其他观众投掷任何物品（含鲜花、玩具、食品、饮料瓶等）；</li>
+                <li>擅自进入后台、演员化妆间、设备机房、灯光音响控制台等非开放区域；</li>
+                <li>触碰舞台设备、灯光架、音箱、电缆线等专业设施。</li>
+              </ul>
+            </li>
+            <li><strong>危险品严禁入场：</strong>严禁未成年人（及陪同人员）携带以下物品进入演出场所：
+              <ul style="margin-top:8px; padding-left: 1.5em;">
+                <li>易燃易爆物品（鞭炮、烟花、打火机、汽油、酒精等）；</li>
+                <li>尖锐利器、管制刀具、金属棍棒等危险器具；</li>
+                <li>玻璃制品、罐装喷雾及其他可能造成人身伤害的物品；</li>
+                <li>体积过大的行李、背包（应寄存于指定区域）。</li>
+              </ul>
+            </li>
+            <li><strong>违规行为处置：</strong>对于未成年人违反上述规定的行为，剧团现场工作人员有权当场予以劝阻、制止和批评教育；拒不改正、情节严重或可能造成安全隐患的，工作人员有权要求监护人带领未成年人立即离场，已付票款或服务费用不予退还。</li>
+            <li><strong>应急通道与急救公示：</strong>演出场所将在显著位置（观众席入口、舞台两侧、休息区等）张贴<strong>应急疏散通道示意图</strong>与<strong>急救联系人公示牌</strong>，标注应急出口位置、疏散路线、急救电话、现场急救员联系方式等信息。请监护人提前告知并引导未成年人熟悉应急通道位置。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="scroll-card">
+          <div class="scroll-rod-top"></div>
+          <div class="scroll-rod-bottom"></div>
+          <h3><span class="section-num">五</span>节目内容分级提示</h3>
+          <p>秦安县秦剧团始终坚持"内容为王、健康向上"的剧目创作与演出原则，自觉践行社会主义核心价值观，弘扬中华优秀传统文化。关于演出节目内容的适配性提示如下：</p>
+          <ol>
+            <li><strong>整体内容导向：</strong>剧团演出剧目以传统秦腔经典本戏、折子戏为主，内容取材于历史故事、神话传说、民间文学、红色经典等，整体基调<strong>积极健康、向善向美</strong>，弘扬忠孝节义、家国情怀、惩恶扬善等中华传统美德，适合全年龄段观众欣赏。</li>
+            <li><strong>内容提示分级公示：</strong>鉴于个别传统剧目可能涉及部分需要家长引导的场景，剧团将建立<strong>"内容提示"制度</strong>。如某场演出剧目包含以下内容，将在购票页面、预约页面、演出门票、演出场所入口显著位置进行醒目公示：
+              <ul style="margin-top:8px; padding-left: 1.5em;">
+                <li>涉及历史战争、古代征战的金戈铁马、打斗场面（无血腥渲染）；</li>
+                <li>涉及神话故事中的神仙斗法、妖怪形象等奇幻元素；</li>
+                <li>涉及冤案悲情、生离死别等情感冲击较强的剧情片段；</li>
+                <li>其他根据剧情需要家长协助未成年人理解或进行引导的内容。</li>
+              </ul>
+            </li>
+            <li><strong>家长自主决定权：</strong>本公司提供内容提示的目的是帮助家长做出合理判断。对于已公示内容提示的剧目，<strong>是否允许未成年人观看的最终决定权在监护人</strong>。监护人应根据未成年人的年龄、心理成熟度、接受能力等实际情况，自行决定是否带领未成年人观看。</li>
+            <li><strong>校园定制内容适配：</strong>对于面向学校、幼儿园的"戏曲进校园"、研学等定制演出，剧团将根据受众年龄段对剧目内容、表演形式、唱词道白进行适幼化/适青化调整，确保内容积极正面、符合未成年人认知特点。</li>
+            <li><strong>内容反馈渠道：</strong>如监护人认为某场演出内容对未成年人存在不适宜之处，欢迎通过本声明末尾提供的联系方式向本公司反馈建议，本公司将认真听取并持续优化剧目的内容呈现。</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="scroll-card">
+          <div class="scroll-rod-top"></div>
+          <div class="scroll-rod-bottom"></div>
+          <h3><span class="section-num">六</span>个人信息保护</h3>
+          <p>保护未成年人的个人信息安全是本公司的法定义务与道德责任。本公司严格遵守《中华人民共和国未成年人保护法》第七十二条及《中华人民共和国个人信息保护法》关于未成年人个人信息保护的特别规定，具体保护措施如下：</p>
+          <ul>
+            <li><strong>收集范围最小必要原则：</strong>本公司仅在提供演出预约核验、安全保障、研学服务、应急联系等必需场景下，方收集未成年人的以下个人信息，绝不收集与服务目的无关的信息：
+              <ul style="margin-top:8px; padding-left: 1.5em;">
+                <li>基本身份信息：姓名、性别、居民身份证号码（用于年龄核验与身份确认）；</li>
+                <li>影像资料：仅在研学活动、集体合影等未成年人参与的公开活动中拍摄，且用于活动记录与宣传展示（如需对外公开使用将另行征得监护人同意）；</li>
+                <li>紧急联系信息：监护人姓名、手机号码（用于突发情况联系）。</li>
+              </ul>
+            </li>
+            <li><strong>使用目的严格限定：</strong>未成年人个人信息<strong>仅用于</strong>演出预约核验、入场身份核对、观演期间安全保障、研学服务提供、突发应急事件联系等直接相关用途，<strong>绝不用于任何形式的商业营销、广告推送、用户画像分析、第三方共享（法律法规另有规定除外）</strong>。</li>
+            <li><strong>监护人知情同意：</strong>收集未成年人个人信息前，本公司将通过弹窗提示、书面告知、电话确认等方式，<strong>确保监护人完全知情并明确表示同意</strong>后方可收集。监护人有权随时撤回同意并要求删除未成年人个人信息（法律法规要求留存的除外）。</li>
+            <li><strong>信息存储与安全保护：</strong>未成年人个人信息存储于中国大陆境内的加密服务器，采用 SSL/TLS 传输加密、数据库字段加密存储、访问权限严格分级控制、操作日志审计等技术与管理措施，防止信息泄露、篡改或丢失。接触未成年人信息的工作人员均签署保密协议。</li>
+            <li><strong>信息保留与删除机制：</strong>未成年人个人信息保留期限严格遵循"最小必要期限"原则：
+              <ul style="margin-top:8px; padding-left: 1.5em;">
+                <li>演出预约与核验信息：自演出结束之日起保留 180 天后自动删除或匿名化处理；</li>
+                <li>研学服务相关信息：自活动结束之日起保留 1 年后删除（如法律法规或教育主管部门要求更长留存期的从其规定）；</li>
+                <li>影像资料用于公开宣传的，保留至监护人书面要求删除时止。</li>
+              </ul>
+            </li>
+            <li><strong>监护人权利保障：</strong>监护人有权随时向本公司提出查询、复制、更正、补充、删除未成年人个人信息，或撤回同意授权的请求，本公司将在 15 个工作日内响应并依法处理。</li>
+          </ul>
+          <div class="highlight-box">
+            <p><strong>📖 法律依据：</strong>本条款严格遵循《中华人民共和国未成年人保护法》第七十二条："信息处理者通过网络处理未成年人个人信息的，应当遵循合法、正当和必要的原则。处理不满十四周岁未成年人个人信息的，应当征得未成年人的父母或者其他监护人同意，但法律、行政法规另有规定的除外。"</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="scroll-card">
+          <div class="scroll-rod-top"></div>
+          <div class="scroll-rod-bottom"></div>
+          <h3><span class="section-num">七</span>应急处置与投诉</h3>
+          <p>为有效应对演出期间可能发生的未成年人突发安全事件，保障未成年人生命健康安全，畅通投诉建议渠道，本公司建立以下应急处置机制与投诉受理制度：</p>
+          <ol>
+            <li><strong>急救与应急物资配备：</strong>所有室内演出场所与主要户外演出场地均按标准配备<strong>急救箱</strong>（含止血绷带、消毒棉片、创可贴、冰袋、退热贴、晕车药、急救药品等），并根据季节与天气特点配备防暑降温或防寒保暖物资。演出前急救物资由专人检查确认。</li>
+            <li><strong>应急联系人公开公示：</strong>演出场所显著位置将公示以下<strong>应急联系方式</strong>，同时所有现场工作人员佩戴统一工牌，工牌背面印有应急号码：
+              <ul style="margin-top:8px; padding-left: 1.5em;">
+                <li>现场总负责人：13993839833（24 小时开机）；</li>
+                <li>现场安全与急救员：随演出团队在岗；</li>
+                <li>紧急医疗救助：120；</li>
+                <li>报警电话：110。</li>
+              </ul>
+            </li>
+            <li><strong>突发安全事件处置流程：</strong>演出期间发生未成年人突发疾病、意外伤害、走失走散等安全事件时，按以下流程处置：
+              <ul style="margin-top:8px; padding-left: 1.5em;">
+                <li>第一步：第一发现人（工作人员或其他观众）立即联系现场工作人员或拨打现场应急电话 13993839833；</li>
+                <li>第二步：现场急救员在 3 分钟内到达现场进行初步评估与必要急救处置；</li>
+                <li>第三步：工作人员<strong>立即联系未成年人监护人</strong>，如实告知事件情况；</li>
+                <li>第四步：如需送医，立即拨打 120 急救电话，由专人陪同前往医院；情况紧急危及生命的，同步拨打 110 报警；</li>
+                <li>第五步：事件处置完毕后 3 个工作日内，向监护人出具书面事件说明与处理结果。</li>
+              </ul>
+            </li>
+            <li><strong>投诉与建议受理：</strong>欢迎未成年人监护人及社会各界对本公司未成年人保护工作进行监督，提出宝贵意见与建议。<strong>投诉建议邮箱：</strong><a href="mailto:qinanqinjutuan@163.com" class="contact-inline">qinanqinjutuan@163.com</a>，<strong>监督投诉电话：</strong><a href="tel:13993839833" class="contact-inline">13993839833</a>。本公司承诺：<strong>所有投诉建议在 24 小时内响应，5 个工作日内给出明确处理结果。</strong></li>
+            <li><strong>未成年人权益专线：</strong>如涉及未成年人合法权益受侵害的重大事项，监护人除向本公司投诉外，还可向天水市/秦安县未成年人保护热线 12345 转未成年人保护专席、秦安县文化和旅游局、共青团秦安县委等政府主管部门反映。</li>
+          </ol>
+          <div class="highlight-box">
+            <p style="text-align:center; margin-bottom:0;"><strong>💚 秦安县秦剧团与您共同守护每一位未成年人的健康成长</strong></p>
+            <p style="text-align:center; margin-bottom:0; text-indent:0; font-size:0.9rem; color:var(--gold-dark); margin-top:8px;">本声明最后更新日期：{year}年1月 | 解释权归秦安县秦剧团文化演出有限公司</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>🎭 秦安县秦剧团文化演出有限公司</h3>
+          <p>传承陇原秦韵，唱响乡土华章。扎根秦安、服务乡村的专业秦腔演出团体，{year}年初心不改，致力传承西北非遗戏曲文化。</p>
+          <p>电话：13993839833<br>地址：甘肃省天水市秦安县陇城镇张沟村</p>
+        </div>
+        <div class="footer-col">
+          <h4>快速导航</h4>
+          <ul>
+            <li><a href="index.html">网站首页</a></li>
+            <li><a href="index.html#about">剧团简介</a></li>
+            <li><a href="index.html#repertoire">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>演出服务</h4>
+          <ul>
+            <li><a href="services.html">乡村庙会演出</a></li>
+            <li><a href="services.html">惠民下乡巡演</a></li>
+            <li><a href="services.html">节庆专场演出</a></li>
+            <li><a href="services.html">企业庆典定制</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>联系我们</h4>
+          <ul>
+            <li><a href="tel:13993839833">📞 13993839833</a></li>
+            <li><a href="booking.html">🎫 在线预约</a></li>
+            <li><a href="news.html">📰 新闻动态</a></li>
+            <li><a href="admin/login.html">🔐 后台管理</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© {year} 秦安县秦剧团文化演出有限公司 版权所有 | 陇ICP备（秦安戏曲文化号）</p>
+        <div class="footer-bottom-links">
+          <a href="qualifications.html">企业资质</a>
+          <span>|</span>
+          <a href="copyright.html">版权声明</a>
+          <span>|</span>
+          <a href="minor-policy.html">未成年预约</a>
+          <span>|</span>
+          <a href="breach-liability.html">违约民事责任</a>
+          <span>|</span>
+          <a href="qr-booking.html">二维码预约</a>
+          <span>|</span>
+          <a href="live-api.html">直播接口</a>
+          <span>|</span>
+          <a href="admin/login.html">管理入口</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/year-lite.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="js/favicon-inject.js" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="秦安县秦剧团文化演出有限公司新闻动态，惠民演出资讯、剧团活动、行业通知、政策公示">
+  <meta name="keywords" content="秦安秦剧团,秦安县秦剧团文化演出有限公司,新闻动态,惠民演出,剧团资讯,文化下乡">
+  <title>新闻动态 - 秦安县秦剧团文化演出有限公司 | {year}</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .news-page-section {
+      padding: 60px 0;
+      background: var(--bg-light);
+    }
+    .news-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 40px;
+    }
+    .category-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 35px;
+      padding-bottom: 25px;
+      border-bottom: 1px dashed var(--border-light);
+    }
+    .category-tab {
+      padding: 10px 22px;
+      background: var(--cream);
+      border: 1.5px solid var(--border-light);
+      border-radius: 30px;
+      font-size: 0.92rem;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    .category-tab:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(139, 0, 0, 0.04);
+    }
+    .category-tab.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--cream);
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(139, 0, 0, 0.2);
+    }
+    .news-list {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+    .news-item-card {
+      display: flex;
+      gap: 25px;
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      padding: 25px;
+      border: 1px solid var(--border-light);
+      transition: var(--transition);
+    }
+    .news-item-card:hover {
+      box-shadow: var(--shadow);
+      border-color: var(--gold);
+      transform: translateY(-3px);
+    }
+    .news-date-box {
+      flex-shrink: 0;
+      width: 85px;
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: var(--radius);
+      padding: 15px 10px;
+      color: var(--cream);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .news-date-box .date-day {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: "KaiTi", "STKaiti", serif;
+      line-height: 1;
+    }
+    .news-date-box .date-month {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      margin-top: 5px;
+    }
+    .news-date-box .date-year {
+      font-size: 0.72rem;
+      opacity: 0.7;
+      margin-top: 3px;
+    }
+    .news-content-box {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .news-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .news-cat-tag {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(212, 175, 55, 0.15);
+      color: var(--gold-dark);
+      border-radius: 15px;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+    .news-cat-tag.cat-huimin { background: rgba(40, 167, 69, 0.12); color: #218838; }
+    .news-cat-tag.cat-activity { background: rgba(139, 0, 0, 0.1); color: var(--primary); }
+    .news-cat-tag.cat-notice { background: rgba(23, 162, 184, 0.12); color: #138496; }
+    .news-cat-tag.cat-policy { background: rgba(230, 168, 0, 0.15); color: #c79600; }
+    .news-cat-tag.cat-annual { background: rgba(111, 66, 193, 0.12); color: #6f42c1; }
+    .news-title {
+      color: var(--primary-dark);
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      line-height: 1.4;
+      font-family: "KaiTi", "STKaiti", serif;
+    }
+    .news-title:hover {
+      color: var(--primary);
+    }
+    .news-summary {
+      color: var(--text-light);
+      font-size: 0.92rem;
+      line-height: 1.8;
+      margin-bottom: 15px;
+      display: -webkit-box;
+      line-clamp: 2;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
+    }
+    .news-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border-light);
+    }
+    .news-stats {
+      display: flex;
+      gap: 18px;
+      font-size: 0.82rem;
+      color: var(--text-light);
+    }
+    .news-stats span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .read-more-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 16px;
+      background: transparent;
+      border: 1.5px solid var(--primary);
+      color: var(--primary);
+      border-radius: 20px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+      text-decoration: none;
+    }
+    .read-more-btn:hover {
+      background: var(--primary);
+      color: var(--cream);
+    }
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      position: sticky;
+      top: 90px;
+      align-self: flex-start;
+    }
+    .sidebar-card {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      padding: 25px;
+      border: 1px solid var(--border-light);
+    }
+    .sidebar-title {
+      color: var(--primary-dark);
+      font-size: 1.15rem;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-title::before {
+      content: '';
+      width: 6px;
+      height: 20px;
+      background: linear-gradient(180deg, var(--primary), var(--gold));
+      border-radius: 3px;
+    }
+    .hot-news-list {
+      list-style: none;
+      padding: 0;
+    }
+    .hot-news-item {
+      padding: 12px 0;
+      border-bottom: 1px dashed var(--border-light);
+    }
+    .hot-news-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .hot-news-item:first-child {
+      padding-top: 0;
+    }
+    .hot-news-link {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: var(--text-dark);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .hot-news-link:hover {
+      color: var(--primary);
+    }
+    .hot-news-rank {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(139, 0, 0, 0.08);
+      color: var(--text-light);
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hot-news-item:nth-child(1) .hot-news-rank { background: #dc3545; color: #fff; }
+    .hot-news-item:nth-child(2) .hot-news-rank { background: #fd7e14; color: #fff; }
+    .hot-news-item:nth-child(3) .hot-news-rank { background: #ffc107; color: var(--primary-dark); }
+    .hot-news-text {
+      flex: 1;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      display: -webkit-box;
+      line-clamp: 2;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .hot-news-date {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--text-light);
+      margin-top: 4px;
+      opacity: 0.8;
+    }
+    .showcase-list {
+      list-style: none;
+      padding: 0;
+    }
+    .showcase-item {
+      padding: 14px 0;
+      border-bottom: 1px dashed var(--border-light);
+    }
+    .showcase-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .showcase-item:first-child {
+      padding-top: 0;
+    }
+    .showcase-date {
+      display: inline-block;
+      padding: 2px 10px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--cream);
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .showcase-title {
+      color: var(--text-dark);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin-bottom: 4px;
+    }
+    .showcase-place {
+      color: var(--text-light);
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .contact-sidebar {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border-radius: var(--radius-lg);
+      padding: 25px;
+      color: var(--cream);
+      position: relative;
+      overflow: hidden;
+    }
+    .contact-sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .contact-sidebar > * {
+      position: relative;
+      z-index: 2;
+    }
+    .contact-sidebar h4 {
+      color: var(--gold);
+      font-size: 1.15rem;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    }
+    .contact-item-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .contact-item-row:last-child {
+      margin-bottom: 0;
+    }
+    .contact-icon-box {
+      width: 36px;
+      height: 36px;
+      background: rgba(212, 175, 55, 0.15);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .contact-item-info h5 {
+      color: var(--gold);
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .contact-item-info p,
+    .contact-item-info a {
+      color: rgba(255, 250, 240, 0.9);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    .section-header h2 {
+      display: inline-block;
+      position: relative;
+      padding: 0 60px;
+      font-size: 2.2rem;
+    }
+    .section-header h2::before,
+    .section-header h2::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold), transparent);
+    }
+    .section-header h2::before {
+      left: 0;
+    }
+    .section-header h2::after {
+      right: 0;
+      background: linear-gradient(90deg, transparent, var(--gold));
+    }
+    .section-header p {
+      display: block;
+      color: var(--text-light);
+      font-size: 1rem;
+      margin-top: 12px;
+      letter-spacing: 4px;
+    }
+    @media (max-width: 992px) {
+      .news-layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        position: static;
+      }
+    }
+    @media (max-width: 576px) {
+      .news-item-card {
+        flex-direction: column;
+        gap: 18px;
+      }
+      .news-date-box {
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+        gap: 15px;
+        padding: 12px;
+      }
+      .news-date-box .date-day,
+      .news-date-box .date-month,
+      .news-date-box .date-year {
+        margin: 0;
+      }
+      .section-header h2 {
+        padding: 0 30px;
+        font-size: 1.6rem;
+      }
+      .section-header h2::before,
+      .section-header h2::after {
+        width: 20px;
+      }
+      .category-tabs {
+        gap: 8px;
+      }
+      .category-tab {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+          <div class="logo-text">
+            <h1>秦安县秦剧团</h1>
+            <p>文化演出有限公司 · 始于2014</p>
+          </div>
+        </div>
+        <button class="menu-toggle" aria-label="菜单">
+          <span>☰</span>
+        </button>
+        <nav>
+          <ul>
+            <li><a href="index.html">首页</a></li>
+            <li><a href="index.html#about">剧团简介</a></li>
+            <li><a href="index.html#repertoire">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html" class="active">新闻动态</a></li>
+            <li><a href="index.html#booking">在线预约</a></li>
+            <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
+            <li><a href="index.html#contact">联系我们</a></li>
+            <li><a href="admin/login.html" class="admin-link">后台管理</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-banner">
+      <div class="page-banner-content">
+        <h1>📰 新闻动态</h1>
+        <div class="breadcrumb">
+          <a href="index.html">首页</a>
+          <span class="separator">/</span>
+          <span>新闻动态</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="news-page-section">
+      <div class="container">
+        <div class="news-layout">
+          <div class="news-main">
+            <div class="category-tabs">
+              <button class="category-tab active" data-cat="all">全部资讯</button>
+              <button class="category-tab" data-cat="huimin">惠民演出资讯</button>
+              <button class="category-tab" data-cat="activity">剧团活动</button>
+              <button class="category-tab" data-cat="notice">行业通知</button>
+              <button class="category-tab" data-cat="policy">政策公示</button>
+              <button class="category-tab" data-cat="annual">年度动态</button>
+            </div>
+
+            <div class="news-list" data-paginate="list" data-page-size="6">
+              <article class="news-item-card">
+                <div class="news-date-box">
+                  <span class="date-day">28</span>
+                  <span class="date-month">02月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-huimin">惠民演出资讯</span>
+                  </div>
+                  <h3 class="news-title">{year}年春节惠民巡演圆满落幕 - 20场演出覆盖15乡镇</h3>
+                  <p class="news-summary">历时22天的{year}年春节文化惠民巡演活动圆满落下帷幕。剧团演职团队奔赴秦安县15个乡镇，为基层群众献上20场精彩纷呈的秦腔演出，累计观众达8万余人次，用传统戏曲为新春佳节增添了浓厚的文化氛围。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 2,356 阅读</span>
+                      <span>💬 15 评论</span>
+                    </div>
+                    <a href="#" class="read-more-btn">阅读全文 →</a>
+                  </div>
+                </div>
+              </article>
+
+              <article class="news-item-card">
+                <div class="news-date-box">
+                  <span class="date-day">15</span>
+                  <span class="date-month">03月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-activity">剧团活动</span>
+                  </div>
+                  <h3 class="news-title">喜讯！我团荣获秦安县{year}年度"基层文化先进集体"称号</h3>
+                  <p class="news-summary">在秦安县{year}年度文化工作表彰大会上，我团因在基层文化服务、惠民演出等方面的突出贡献，被县文旅局授予"基层文化先进集体"荣誉称号。剧团负责人代表全体演职人员上台领奖并作交流发言。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,892 阅读</span>
+                      <span>💬 23 评论</span>
+                    </div>
+                    <a href="#" class="read-more-btn">阅读全文 →</a>
+                  </div>
+                </div>
+              </article>
+
+              <article class="news-item-card">
+                <div class="news-date-box">
+                  <span class="date-day">08</span>
+                  <span class="date-month">04月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-huimin">惠民演出资讯</span>
+                  </div>
+                  <h3 class="news-title">{year}年"乡村振兴·文化先行"惠民巡演正式启动</h3>
+                  <p class="news-summary">配合县乡村振兴局、文旅局开展的"乡村振兴·文化先行"主题惠民巡演活动在陇城镇文化广场正式启动。{year}全年计划完成80场惠民演出，覆盖全县17个乡镇，助力乡村文化振兴，丰富群众精神文化生活。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,567 阅读</span>
+                      <span>💬 18 评论</span>
+                    </div>
+                    <a href="#" class="read-more-btn">阅读全文 →</a>
+                  </div>
+                </div>
+              </article>
+
+              <article class="news-item-card">
+                <div class="news-date-box">
+                  <span class="date-day">22</span>
+                  <span class="date-month">05月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-activity">剧团活动</span>
+                  </div>
+                  <h3 class="news-title">我团参加天水市{year}年戏曲调演荣获优秀表演奖</h3>
+                  <p class="news-summary">天水市{year}年专业戏曲院团调演活动在市文化艺术中心圆满举办。我团参演的《火焰驹》选段凭借精湛的表演、地道的唱腔和细腻的人物塑造，从全市12支参赛队伍中脱颖而出，荣获优秀表演奖。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 2,103 阅读</span>
+                      <span>💬 31 评论</span>
+                    </div>
+                    <a href="#" class="read-more-btn">阅读全文 →</a>
+                  </div>
+                </div>
+              </article>
+
+              <article class="news-item-card">
+                <div class="news-date-box">
+                  <span class="date-day">01</span>
+                  <span class="date-month">06月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-notice">行业通知</span>
+                  </div>
+                  <h3 class="news-title">关于{year}年度庙会演出档期开放预约的通知</h3>
+                  <p class="news-summary">即日起，秦安县秦剧团{year}年度秋末冬初庙会演出档期正式开放预约。各乡村庙会负责人、村集体及相关单位可通过电话13993839833或在线预约系统提前锁定演出档期，档期有限，先约先得。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 3,241 阅读</span>
+                      <span>💬 45 评论</span>
+                    </div>
+                    <a href="#" class="read-more-btn">阅读全文 →</a>
+                  </div>
+                </div>
+              </article>
+
+              <article class="news-item-card">
+                <div class="news-date-box">
+                  <span class="date-day">20</span>
+                  <span class="date-month">06月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-huimin">惠民演出资讯</span>
+                  </div>
+                  <h3 class="news-title">{year}年端午节陇城古镇民俗戏曲专场圆满举办</h3>
+                  <p class="news-summary">端午节期间，陇城古镇民俗文化节盛大开幕。我团在古镇文化舞台献上连续3天的秦腔专场演出，《白蛇传》《五典坡》等经典剧目轮番上演，吸引了周边县区众多戏迷观众，现场气氛热烈。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,789 阅读</span>
+                      <span>💬 19 评论</span>
+                    </div>
+                    <a href="#" class="read-more-btn">阅读全文 →</a>
+                  </div>
+                </div>
+              </article>
+
+              <article class="news-item-card">
+                <div class="news-date-box">
+                  <span class="date-day">10</span>
+                  <span class="date-month">07月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-activity">剧团活动</span>
+                  </div>
+                  <h3 class="news-title">剧团新购专业线阵音响设备，演出品质全面升级</h3>
+                  <p class="news-summary">为进一步提升演出品质，剧团斥资新购入一套专业级线阵音响系统及配套灯光设备。新设备已完成安装调试并投入使用，音效清晰度和覆盖面大幅提升，将为观众带来更加震撼的现场视听体验。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,456 阅读</span>
+                      <span>💬 12 评论</span>
+                    </div>
+                    <a href="#" class="read-more-btn">阅读全文 →</a>
+                  </div>
+                </div>
+              </article>
+
+              <article class="news-item-card">
+                <div class="news-date-box">
+                  <span class="date-day">25</span>
+                  <span class="date-month">07月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-annual">年度动态</span>
+                  </div>
+                  <h3 class="news-title">{year}年度演员业务考核圆满完成，青年演员脱颖而出</h3>
+                  <p class="news-summary">剧团{year}年度演职人员业务考核工作顺利完成，全体演员逐一登台展示基本功和剧目片段。本次考核涌现出一批优秀青年演员，在唱念做打等方面表现突出，为剧团可持续发展注入了新鲜活力。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,123 阅读</span>
+                      <span>💬 8 评论</span>
+                    </div>
+                    <a href="#" class="read-more-btn">阅读全文 →</a>
+                  </div>
+                </div>
+              </article>
+
+              <article class="news-item-card">
+                <div class="news-date-box">
+                  <span class="date-day">05</span>
+                  <span class="date-month">08月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-policy">政策公示</span>
+                  </div>
+                  <h3 class="news-title">关于做好{year}年暑期乡村文化演出安全工作的通知</h3>
+                  <p class="news-summary">根据县文旅局相关文件精神，现就{year}年暑期乡村文化演出安全工作提出要求：严格落实安全生产主体责任，做好防汛防暑、用电安全、人员疏散等预案，确保暑期各类演出活动安全有序开展。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 987 阅读</span>
+                      <span>💬 5 评论</span>
+                    </div>
+                    <a href="#" class="read-more-btn">阅读全文 →</a>
+                  </div>
+                </div>
+              </article>
+
+              <article class="news-item-card">
+                <div class="news-date-box">
+                  <span class="date-day">18</span>
+                  <span class="date-month">08月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-annual">年度动态</span>
+                  </div>
+                  <h3 class="news-title">回顾{year}年上半年：120场演出惠及群众10万余人次</h3>
+                  <p class="news-summary">{year}年上半年，剧团累计完成各类演出120场，其中惠民演出68场、庙会演出32场、节庆及商业演出20场，足迹遍布秦安及周边县区40余个村镇，惠及群众超过10万人次，演出场次较去年同期增长15%。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 2,567 阅读</span>
+                      <span>💬 28 评论</span>
+                    </div>
+                    <a href="#" class="read-more-btn">阅读全文 →</a>
+                  </div>
+                </div>
+              </article>
+
+              <article class="news-item-card">
+                <div class="news-date-box">
+                  <span class="date-day">02</span>
+                  <span class="date-month">09月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-policy">政策公示</span>
+                  </div>
+                  <h3 class="news-title">我团与县文旅局签订{year}年度惠民演出采购协议</h3>
+                  <p class="news-summary">近日，我团与秦安县文旅局正式签订{year}年度政府购买文化惠民演出服务采购协议。根据协议，剧团将于年内完成40场指定乡镇的文化惠民演出任务，为基层群众送去优质的秦腔艺术服务。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,345 阅读</span>
+                      <span>💬 9 评论</span>
+                    </div>
+                    <a href="#" class="read-more-btn">阅读全文 →</a>
+                  </div>
+                </div>
+              </article>
+
+              <article class="news-item-card">
+                <div class="news-date-box">
+                  <span class="date-day">15</span>
+                  <span class="date-month">09月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-huimin">惠民演出资讯</span>
+                  </div>
+                  <h3 class="news-title">"文化进万家"活动走进X乡镇，群众家门口看大戏</h3>
+                  <p class="news-summary">{year}"我们的中国梦——文化进万家"活动走进X乡镇，我团为当地村民带来了精心编排的秦腔经典剧目选段和综艺节目。闻讯赶来的乡亲们将文化广场围得水泄不通，在家门口过足了戏瘾。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,234 阅读</span>
+                      <span>💬 11 评论</span>
+                    </div>
+                    <a href="#" class="read-more-btn">阅读全文 →</a>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <aside class="sidebar">
+            <div class="sidebar-card">
+              <h4 class="sidebar-title">🔥 热门新闻</h4>
+              <ul class="hot-news-list">
+                <li class="hot-news-item">
+                  <a href="#" class="hot-news-link">
+                    <span class="hot-news-rank">1</span>
+                    <div>
+                      <span class="hot-news-text">关于{year}年度庙会演出档期开放预约的通知</span>
+                      <span class="hot-news-date">{year}-06-01</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="hot-news-item">
+                  <a href="#" class="hot-news-link">
+                    <span class="hot-news-rank">2</span>
+                    <div>
+                      <span class="hot-news-text">回顾{year}年上半年：120场演出惠及群众10万余人次</span>
+                      <span class="hot-news-date">{year}-08-18</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="hot-news-item">
+                  <a href="#" class="hot-news-link">
+                    <span class="hot-news-rank">3</span>
+                    <div>
+                      <span class="hot-news-text">{year}年春节惠民巡演圆满落幕 - 20场演出覆盖15乡镇</span>
+                      <span class="hot-news-date">{year}-02-28</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="hot-news-item">
+                  <a href="#" class="hot-news-link">
+                    <span class="hot-news-rank">4</span>
+                    <div>
+                      <span class="hot-news-text">我团参加天水市{year}年戏曲调演荣获优秀表演奖</span>
+                      <span class="hot-news-date">{year}-05-22</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="hot-news-item">
+                  <a href="#" class="hot-news-link">
+                    <span class="hot-news-rank">5</span>
+                    <div>
+                      <span class="hot-news-text">喜讯！我团荣获秦安县{year}年度"基层文化先进集体"称号</span>
+                      <span class="hot-news-date">{year}-03-15</span>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div class="sidebar-card">
+              <h4 class="sidebar-title">🎪 演出预告</h4>
+              <ul class="showcase-list">
+                <li class="showcase-item">
+                  <span class="showcase-date">{year}-10-01 ~ 03</span>
+                  <div class="showcase-title">国庆节陇城文化广场戏曲专场</div>
+                  <div class="showcase-place">📍 陇城镇文化广场</div>
+                </li>
+                <li class="showcase-item">
+                  <span class="showcase-date">{year}-10-15</span>
+                  <div class="showcase-title">兴国镇乡村振兴文化惠民演出</div>
+                  <div class="showcase-place">📍 兴国镇综合文化站</div>
+                </li>
+                <li class="showcase-item">
+                  <span class="showcase-date">{year}-10-25 ~ 27</span>
+                  <div class="showcase-title">莲花镇传统庙会秦腔连台本戏</div>
+                  <div class="showcase-place">📍 莲花镇庙会戏台</div>
+                </li>
+                <li class="showcase-item">
+                  <span class="showcase-date">{year}-11-08</span>
+                  <div class="showcase-title">魏店镇农民丰收节文艺汇演</div>
+                  <div class="showcase-place">📍 魏店镇镇政府广场</div>
+                </li>
+                <li class="showcase-item">
+                  <span class="showcase-date">{year}-11-20</span>
+                  <div class="showcase-title">千户乡文化下乡惠民专场</div>
+                  <div class="showcase-place">📍 千户乡文化活动中心</div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="contact-sidebar">
+              <h4>📞 联系我们</h4>
+              <div class="contact-item-row">
+                <div class="contact-icon-box">📞</div>
+                <div class="contact-item-info">
+                  <h5>预约电话</h5>
+                  <p><a href="tel:13993839833" style="color: var(--cream);">13993839833</a></p>
+                </div>
+              </div>
+              <div class="contact-item-row">
+                <div class="contact-icon-box">📍</div>
+                <div class="contact-item-info">
+                  <h5>剧团地址</h5>
+                  <p>甘肃省天水市秦安县陇城镇张沟村</p>
+                </div>
+              </div>
+              <div class="contact-item-row">
+                <div class="contact-icon-box">🕐</div>
+                <div class="contact-item-info">
+                  <h5>工作时间</h5>
+                  <p>8:00 - 21:00（全年无休）</p>
+                </div>
+              </div>
+              <div class="contact-item-row">
+                <div class="contact-icon-box">🎫</div>
+                <div class="contact-item-info">
+                  <h5>在线预约</h5>
+                  <p><a href="index.html#booking" style="color: var(--gold);">点击立即预约 →</a></p>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>🎭 秦安县秦剧团文化演出有限公司</h3>
+          <p>传承陇原秦韵，唱响乡土华章。扎根秦安、服务乡村的专业秦腔演出团体，{year}年初心不改，致力传承西北非遗戏曲文化。</p>
+          <p>电话：13993839833<br>地址：甘肃省天水市秦安县陇城镇张沟村</p>
+        </div>
+        <div class="footer-col">
+          <h4>快速导航</h4>
+          <ul>
+            <li><a href="index.html">网站首页</a></li>
+            <li><a href="index.html#about">剧团简介</a></li>
+            <li><a href="index.html#repertoire">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>演出服务</h4>
+          <ul>
+            <li><a href="services.html">乡村庙会演出</a></li>
+            <li><a href="services.html">惠民下乡巡演</a></li>
+            <li><a href="services.html">节庆专场演出</a></li>
+            <li><a href="services.html">企业庆典定制</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>联系我们</h4>
+          <ul>
+            <li><a href="tel:13993839833">📞 13993839833</a></li>
+            <li><a href="index.html#booking">🎫 在线预约</a></li>
+            <li><a href="news.html">📰 新闻动态</a></li>
+            <li><a href="admin/login.html">🔐 后台管理</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© {year} 秦安县秦剧团文化演出有限公司 版权所有 | 陇ICP备（秦安戏曲文化号）</p>
+        <div class="footer-bottom-links">
+          <a href="qualifications.html">企业资质</a>
+          <span>|</span>
+          <a href="copyright.html">版权声明</a>
+          <span>|</span>
+          <a href="minor-policy.html">未成年预约</a>
+          <span>|</span>
+          <a href="breach-liability.html">违约民事责任</a>
+          <span>|</span>
+          <a href="qr-booking.html">二维码预约</a>
+          <span>|</span>
+          <a href="live-api.html">直播接口</a>
+          <span>|</span>
+          <a href="admin/login.html">管理入口</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/year-lite.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/pagination.js"></script>
+  <script>
+    document.querySelectorAll('.category-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.category-tab').forEach(function(t) {
+          t.classList.remove('active');
+        });
+        this.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

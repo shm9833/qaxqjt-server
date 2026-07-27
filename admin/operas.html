@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <script src="../js/favicon-inject.js" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>剧目资源管理 - 秦安县秦剧团云端预约系统 | {year}</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .category-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 20px 25px;
+      border-bottom: 1px solid var(--border-light);
+      background: var(--bg-light);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    .category-tab {
+      padding: 10px 22px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      color: var(--text-light);
+      background: var(--cream);
+      border: 1.5px solid var(--border-light);
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    .category-tab:hover {
+      border-color: var(--gold);
+      color: var(--primary);
+    }
+    .category-tab.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--gold-light);
+      border-color: var(--primary);
+      box-shadow: 0 2px 10px rgba(139, 0, 0, 0.2);
+    }
+    .opera-cat-manage {
+      margin-left: auto;
+      padding: 8px 18px;
+      border-radius: 20px;
+      background: var(--cream);
+      border: 1.5px dashed var(--gold);
+      color: var(--gold-dark);
+      font-size: 0.88rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    .opera-cat-manage:hover {
+      background: var(--gold);
+      color: var(--primary-dark);
+    }
+    .opera-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .opera-card {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border-light);
+      transition: var(--transition);
+      position: relative;
+    }
+    .opera-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--gold);
+    }
+    .opera-poster {
+      position: relative;
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+      background: var(--cream-dark);
+    }
+    .opera-poster img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    .opera-card:hover .opera-poster img {
+      transform: scale(1.06);
+    }
+    .opera-poster .hot-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: linear-gradient(135deg, #ff4757, #ff6b81);
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+    }
+    .opera-poster .category-label {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(139, 0, 0, 0.9);
+      color: var(--cream);
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      backdrop-filter: blur(5px);
+    }
+    .opera-body {
+      padding: 18px 18px 15px;
+    }
+    .opera-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .opera-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      font-family: "KaiTi", "STKaiti", serif;
+    }
+    .opera-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.82rem;
+      color: var(--text-light);
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--border-light);
+    }
+    .opera-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .opera-meta .meta-icon {
+      color: var(--gold-dark);
+    }
+    .scene-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .scene-tag {
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .scene-tag.temple { background: rgba(255, 107, 129, 0.15); color: #ff4757; }
+    .scene-tag.festival { background: rgba(255, 193, 7, 0.2); color: #e6a800; }
+    .scene-tag.huimin { background: rgba(23, 162, 184, 0.15); color: #17a2b8; }
+    .scene-tag.commercial { background: rgba(124, 58, 237, 0.15); color: #7c3aed; }
+    .opera-stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 10px 12px;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(139, 0, 0, 0.05));
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+    }
+    .opera-stats .stat-label {
+      color: var(--text-light);
+    }
+    .opera-stats .stat-num {
+      color: var(--primary);
+      font-weight: 700;
+      font-family: "KaiTi", "STKaiti", serif;
+      font-size: 1.1rem;
+    }
+    .opera-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .opera-actions .btn {
+      padding: 7px 10px;
+      font-size: 0.78rem;
+      flex: 1;
+      min-width: auto;
+    }
+    .view-toggle {
+      display: inline-flex;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1.5px solid var(--border-light);
+    }
+    .view-toggle button {
+      padding: 7px 14px;
+      border: none;
+      background: var(--cream);
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text-light);
+      font-family: inherit;
+      transition: var(--transition);
+    }
+    .view-toggle button.active {
+      background: var(--primary);
+      color: var(--cream);
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-box {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    .modal-header {
+      padding: 20px 28px;
+      border-bottom: 2px solid var(--gold);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--cream);
+    }
+    .modal-header h3 {
+      margin: 0;
+      color: var(--cream);
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: rgba(255, 250, 240, 0.15);
+      color: var(--cream);
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .modal-close:hover {
+      background: var(--gold);
+      color: var(--primary-dark);
+      transform: rotate(90deg);
+    }
+    .modal-body {
+      padding: 28px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .detail-section {
+      margin-bottom: 28px;
+    }
+    .detail-section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border-light);
+    }
+    .detail-section-title::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background: linear-gradient(180deg, var(--gold), var(--primary));
+      border-radius: 2px;
+    }
+    .detail-basic-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px 30px;
+    }
+    .detail-basic-item {
+      display: flex;
+      gap: 10px;
+      font-size: 0.92rem;
+    }
+    .detail-basic-item .label {
+      color: var(--text-light);
+      min-width: 90px;
+      flex-shrink: 0;
+    }
+    .detail-basic-item .value {
+      color: var(--text-dark);
+      font-weight: 500;
+    }
+    .detail-actor-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+      background: var(--bg-light);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+    .detail-actor-role {
+      padding: 3px 10px;
+      border-radius: 12px;
+      background: rgba(212, 175, 55, 0.2);
+      color: var(--gold-dark);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .detail-prop-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .detail-prop-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--bg-light);
+      border-radius: var(--radius);
+      font-size: 0.88rem;
+    }
+    .detail-prop-item .qty {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    @media (max-width: 768px) {
+      .opera-grid { grid-template-columns: 1fr; }
+      .detail-basic-grid { grid-template-columns: 1fr; }
+      .detail-prop-list { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <div class="logo-text">秦安县秦剧团<br/>文化演出管理系统</div>
+      </div>
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <div class="admin-menu-title">工作台</div>
+          <a href="index.html" class="admin-menu-item">
+            <span class="menu-icon">📊</span>
+            <span>数据概览</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-title">业务管理</div>
+          <a href="orders.html" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>订单预约管理</span>
+            <span class="menu-badge">12</span>
+          </a>
+          <a href="operas.html" class="admin-menu-item active">
+            <span class="menu-icon">🎭</span>
+            <span>剧目资源管理</span>
+          </a>
+          <a href="staff.html" class="admin-menu-item">
+            <span class="menu-icon">👥</span>
+            <span>演员人员管理</span>
+          </a>
+          <a href="schedule.html" class="admin-menu-item">
+            <span class="menu-icon">📅</span>
+            <span>排期调度管理</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-title">财务管理</div>
+          <a href="finance.html" class="admin-menu-item">
+            <span class="menu-icon">💰</span>
+            <span>收支财务核算</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-title">系统设置</div>
+          <a href="system.html" class="admin-menu-item">
+            <span class="menu-icon">⚙️</span>
+            <span>系统配置管理</span>
+          </a>
+        </div>
+      </nav>
+      <div class="admin-sidebar-footer">
+        <div class="admin-user-card">
+          <div class="user-avatar">管</div>
+          <div class="user-info">
+            <div class="user-name">系统管理员</div>
+            <div class="user-role">超级管理员</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" aria-label="切换菜单">☰</button>
+          <nav class="admin-breadcrumb">
+            <a href="index.html">首页</a>
+            <span class="separator">/</span>
+            <a href="#">业务管理</a>
+            <span class="separator">/</span>
+            <span class="current">剧目资源管理</span>
+          </nav>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="搜索剧目...">
+          </div>
+          <button class="admin-header-btn" title="通知">
+            🔔<span class="notify-dot"></span>
+          </button>
+          <button class="admin-header-btn" title="消息">
+            💬
+          </button>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <div class="admin-page-header">
+          <div class="admin-page-title">
+            <h1>剧目资源管理</h1>
+            <p class="page-desc">管理剧团所有演出剧目、分类及相关资源配置</p>
+          </div>
+          <div class="admin-page-actions">
+            <button class="btn btn-primary">
+              ➕ 新增剧目
+            </button>
+            <button class="btn btn-secondary">
+              🔥 批量设热门
+            </button>
+            <button class="btn btn-gold">
+              📥 导出剧目清单
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-card" style="padding:0;overflow:hidden;">
+          <div class="category-tabs">
+            <div class="category-tab active" data-cat="all">全部剧目 (48)</div>
+            <div class="category-tab" data-cat="traditional">传统本戏 (18)</div>
+            <div class="category-tab" data-cat="excerpt">经典折子戏 (16)</div>
+            <div class="category-tab" data-cat="folk">民俗专场 (8)</div>
+            <div class="category-tab" data-cat="modern">现代戏 (6)</div>
+            <button class="opera-cat-manage">⚙️ 分类管理</button>
+          </div>
+
+          <div class="admin-card-body">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:15px;">
+              <div class="admin-search" style="position:relative;">
+                <span class="search-icon" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-light);">🔍</span>
+                <input type="text" placeholder="搜索剧目名称/演员..." style="width:320px;padding:10px 16px 10px 40px;border:1.5px solid var(--border-light);border-radius:25px;background:var(--bg-light);font-family:inherit;">
+              </div>
+              <div class="view-toggle">
+                <button class="active" id="viewGridBtn">🖼️ 卡片</button>
+                <button id="viewListBtn">📊 列表</button>
+              </div>
+            </div>
+
+            <div id="operaGridView">
+              <div class="opera-grid">
+                <div class="opera-card">
+                  <div class="opera-poster">
+                  <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20traditional%20Qin%20Opera%20Flame%20Colt%20Huoyanju%20traditional%20costume%20dramatic%20red%20stage%20performance%20actors%20in%20elaborate%20embroidered%20robes&image_size=square_hd" alt="火焰驹">
+                    <div class="category-label">传统本戏</div>
+                    <div class="hot-badge">🔥 热门</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《火焰驹》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>180分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：张xx、李xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag temple">🏮 庙会</span>
+                      <span class="scene-tag festival">🎉 节庆</span>
+                      <span class="scene-tag commercial">🎊 商演</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">28 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="huoyanju">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="opera-card">
+                  <div class="opera-poster">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20traditional%20opera%20Dou%20E%20tragic%20female%20role%20in%20white%20mourning%20costume%20snow%20summer%20theme%20emotional%20Qin%20Opera&image_size=square_hd" alt="窦娥冤">
+                    <div class="category-label">传统本戏</div>
+                    <div class="hot-badge">🔥 热门</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《窦娥冤》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>165分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：王xx、赵xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag temple">🏮 庙会</span>
+                      <span class="scene-tag huimin">🎪 惠民</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">22 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="doueyuan">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="opera-card">
+                  <div class="opera-poster">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Qin%20Opera%20Legend%20of%20the%20White%20Snake%20traditional%20Chinese%20opera%20performance%20actors%20in%20elegant%20costumes&image_size=square_hd" alt="白蛇传">
+                    <div class="category-label">传统本戏</div>
+                    <div class="hot-badge">🔥 热门</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《白蛇传》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>170分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：刘xx、陈xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag festival">🎉 节庆</span>
+                      <span class="scene-tag commercial">🎊 商演</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">19 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="baishezhuan">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="opera-card">
+                  <div class="opera-poster">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Qin%20Opera%20Woods%20Mu%20Guiying%20female%20general%20military%20costume%20armor%20red%20cape%20warrior%20woman%20opera&image_size=square_hd" alt="穆桂英挂帅">
+                    <div class="category-label">传统本戏</div>
+                    <div class="hot-badge">🔥 热门</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《穆桂英挂帅》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>155分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：马xx、杨xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag temple">🏮 庙会</span>
+                      <span class="scene-tag festival">🎉 节庆</span>
+                      <span class="scene-tag huimin">🎪 惠民</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">25 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="muguiying">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="opera-card">
+                  <div class="opera-poster">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20traditional%20opera%20The%20Orphan%20of%20Zhao%20family%20tragic%20historical%20drama%20Qin%20Opera%20actors%20in%20ancient%20costumes&image_size=square_hd" alt="赵氏孤儿">
+                    <div class="category-label">传统本戏</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《赵氏孤儿》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>190分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：孙xx、周xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag temple">🏮 庙会</span>
+                      <span class="scene-tag commercial">🎊 商演</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">14 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="zhaoshiguer">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="opera-card">
+                  <div class="opera-poster">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Qin%20Opera%20Chen%20Shimei%20judge%20Bao%20Zheng%20black%20face%20mask%20courtroom%20scene%20traditional%20drama&image_size=square_hd" alt="铡美案">
+                    <div class="category-label">经典折子戏</div>
+                    <div class="hot-badge">🔥 热门</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《铡美案》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>45分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：吴xx、郑xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag temple">🏮 庙会</span>
+                      <span class="scene-tag huimin">🎪 惠民</span>
+                      <span class="scene-tag festival">🎉 节庆</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">32 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="zhameian">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="opera-card">
+                  <div class="opera-poster">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Qin%20Opera%20Three%20Visits%20to%20the%20Thatched%20Cottage%20Kongming%20strategist%20scholar%20costume&image_size=square_hd" alt="三顾茅庐">
+                    <div class="category-label">经典折子戏</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《三顾茅庐》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>50分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：韩xx、冯xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag huimin">🎪 惠民</span>
+                      <span class="scene-tag festival">🎉 节庆</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">16 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="sangumaolu">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="opera-card">
+                  <div class="opera-poster">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20opera%20Farewell%20My%20Concubine%20Xiang%20Yu%20Consort%20Yu%20tragic%20love%20story%20Qin%20Opera&image_size=square_hd" alt="霸王别姬">
+                    <div class="category-label">经典折子戏</div>
+                    <div class="hot-badge">🔥 热门</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《霸王别姬》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>40分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：何xx、董xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag commercial">🎊 商演</span>
+                      <span class="scene-tag festival">🎉 节庆</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">18 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="bawangbieji">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="opera-card">
+                  <div class="opera-poster">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20folk%20custom%20opera%20wedding%20celebration%20festive%20red%20theme%20Qin%20Opera%20happy%20scene&image_size=square_hd" alt="民俗婚嫁">
+                    <div class="category-label">民俗专场</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《龙凤呈祥》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>90分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：许xx、蒋xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag festival">🎉 节庆</span>
+                      <span class="scene-tag commercial">🎊 商演</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">11 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="longfengchengxiang">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="opera-card">
+                  <div class="opera-poster">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20modern%20opera%20contemporary%20rural%20village%20theme%20modern%20costumes%20Qin%20Opera&image_size=square_hd" alt="村官">
+                    <div class="category-label">现代戏</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《村官》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>120分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：沈xx、彭xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag huimin">🎪 惠民</span>
+                      <span class="scene-tag festival">🎉 节庆</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">9 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="cunguan">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="opera-card">
+                  <div class="opera-poster">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Qin%20Opera%20Qiao%20Lianxiu%20peking%20opera%20female%20role%20traditional%20embroidered%20costume&image_size=square_hd" alt="断桥">
+                    <div class="category-label">经典折子戏</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《断桥》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>35分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：吕xx、施xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag temple">🏮 庙会</span>
+                      <span class="scene-tag commercial">🎊 商演</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">13 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="duanqiao">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="opera-card">
+                  <div class="opera-poster">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20rural%20Spring%20Festival%20custom%20opera%20celebration%20folk%20tradition%20Qin%20Opera%20festive&image_size=square_hd" alt="闹元宵">
+                    <div class="category-label">民俗专场</div>
+                    <div class="hot-badge">🔥 热门</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《闹元宵》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>80分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：曾xx、魏xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag festival">🎉 节庆</span>
+                      <span class="scene-tag temple">🏮 庙会</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">15 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="naoyuanxiao">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="opera-card">
+                  <div class="opera-poster">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20modern%20opera%20poverty%20alleviation%20rural%20rejuvenation%20theme%20Qin%20Opera%20modern%20drama&image_size=square_hd" alt="乡村新貌">
+                    <div class="category-label">现代戏</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《乡村新貌》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>130分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：谢xx、苏xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag huimin">🎪 惠民</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">7 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="xiangcunxinmao">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="opera-card">
+                  <div class="opera-poster">
+                    <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Qin%20Opera%20Red%20Mansions%20Dream%20Daiyu%20buries%20flowers%20scene%20elegant%20female%20costume&image_size=square_hd" alt="黛玉葬花">
+                    <div class="category-label">经典折子戏</div>
+                  </div>
+                  <div class="opera-body">
+                    <div class="opera-title-row">
+                      <h3 class="opera-title">《黛玉葬花》</h3>
+                    </div>
+                    <div class="opera-meta">
+                      <span><span class="meta-icon">⏱️</span>38分钟</span>
+                      <span><span class="meta-icon">👤</span>主演：潘xx、范xx</span>
+                    </div>
+                    <div class="scene-tags">
+                      <span class="scene-tag commercial">🎊 商演</span>
+                      <span class="scene-tag festival">🎉 节庆</span>
+                    </div>
+                    <div class="opera-stats">
+                      <span class="stat-label">{year}年演出</span>
+                      <span class="stat-num">10 场</span>
+                    </div>
+                    <div class="opera-actions">
+                      <button class="btn btn-secondary btn-sm view-detail" data-opera="daiyuzanghua">👁 查看</button>
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-gold btn-sm">🔥 热门</button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="pagination" style="margin-top:30px;">
+                <button class="page-btn" disabled>« 上一页</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">4</button>
+                <span class="page-info">共 48 条 / 4 页</span>
+                <button class="page-btn">下一页 »</button>
+              </div>
+            </div>
+
+            <div id="operaListView" style="display:none;">
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>剧目ID</th>
+                      <th>剧目名称</th>
+                      <th>分类</th>
+                      <th>时长</th>
+                      <th>适配场景</th>
+                      <th>主要演员</th>
+                      <th>演出成本</th>
+                      <th>建议报价</th>
+                      <th>{year}演出</th>
+                      <th>热门</th>
+                      <th>创建时间</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong style="color:var(--primary);">OP001</strong></td>
+                      <td><strong>《火焰驹》</strong></td>
+                      <td><span class="badge badge-gold">传统本戏</span></td>
+                      <td>180分钟</td>
+                      <td>庙会/节庆/商演</td>
+                      <td>张xx、李xx</td>
+                      <td>¥8,500</td>
+                      <td style="color:var(--primary);font-weight:600;">¥6,800</td>
+                      <td><strong style="color:var(--gold-dark);">28场</strong></td>
+                      <td><span style="color:#ff4757;">🔥 是</span></td>
+                      <td>2020-03-15</td>
+                      <td>
+                        <div class="admin-table-actions">
+                          <button class="btn btn-secondary btn-sm view-detail" data-opera="huoyanju">👁</button>
+                          <button class="btn btn-primary btn-sm">✏️</button>
+                          <button class="btn btn-gold btn-sm">🔥</button>
+                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
+                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong style="color:var(--primary);">OP002</strong></td>
+                      <td><strong>《窦娥冤》</strong></td>
+                      <td><span class="badge badge-gold">传统本戏</span></td>
+                      <td>165分钟</td>
+                      <td>庙会/惠民</td>
+                      <td>王xx、赵xx</td>
+                      <td>¥7,800</td>
+                      <td style="color:var(--primary);font-weight:600;">¥6,800</td>
+                      <td><strong style="color:var(--gold-dark);">22场</strong></td>
+                      <td><span style="color:#ff4757;">🔥 是</span></td>
+                      <td>2019-08-20</td>
+                      <td>
+                        <div class="admin-table-actions">
+                          <button class="btn btn-secondary btn-sm view-detail" data-opera="doueyuan">👁</button>
+                          <button class="btn btn-primary btn-sm">✏️</button>
+                          <button class="btn btn-gold btn-sm">🔥</button>
+                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
+                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong style="color:var(--primary);">OP003</strong></td>
+                      <td><strong>《白蛇传》</strong></td>
+                      <td><span class="badge badge-gold">传统本戏</span></td>
+                      <td>170分钟</td>
+                      <td>节庆/商演</td>
+                      <td>刘xx、陈xx</td>
+                      <td>¥8,200</td>
+                      <td style="color:var(--primary);font-weight:600;">¥6,800</td>
+                      <td><strong style="color:var(--gold-dark);">19场</strong></td>
+                      <td><span style="color:#ff4757;">🔥 是</span></td>
+                      <td>2020-01-10</td>
+                      <td>
+                        <div class="admin-table-actions">
+                          <button class="btn btn-secondary btn-sm view-detail" data-opera="baishezhuan">👁</button>
+                          <button class="btn btn-primary btn-sm">✏️</button>
+                          <button class="btn btn-gold btn-sm">🔥</button>
+                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
+                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong style="color:var(--primary);">OP004</strong></td>
+                      <td><strong>《穆桂英挂帅》</strong></td>
+                      <td><span class="badge badge-gold">传统本戏</span></td>
+                      <td>155分钟</td>
+                      <td>庙会/节庆/惠民</td>
+                      <td>马xx、杨xx</td>
+                      <td>¥9,000</td>
+                      <td style="color:var(--primary);font-weight:600;">¥6,800</td>
+                      <td><strong style="color:var(--gold-dark);">25场</strong></td>
+                      <td><span style="color:#ff4757;">🔥 是</span></td>
+                      <td>2018-11-05</td>
+                      <td>
+                        <div class="admin-table-actions">
+                          <button class="btn btn-secondary btn-sm view-detail" data-opera="muguiying">👁</button>
+                          <button class="btn btn-primary btn-sm">✏️</button>
+                          <button class="btn btn-gold btn-sm">🔥</button>
+                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
+                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong style="color:var(--primary);">OP005</strong></td>
+                      <td><strong>《赵氏孤儿》</strong></td>
+                      <td><span class="badge badge-gold">传统本戏</span></td>
+                      <td>190分钟</td>
+                      <td>庙会/商演</td>
+                      <td>孙xx、周xx</td>
+                      <td>¥9,500</td>
+                      <td style="color:var(--primary);font-weight:600;">¥6,800</td>
+                      <td><strong style="color:var(--gold-dark);">14场</strong></td>
+                      <td>否</td>
+                      <td>2021-05-18</td>
+                      <td>
+                        <div class="admin-table-actions">
+                          <button class="btn btn-secondary btn-sm view-detail" data-opera="zhaoshiguer">👁</button>
+                          <button class="btn btn-primary btn-sm">✏️</button>
+                          <button class="btn btn-gold btn-sm">🔥</button>
+                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
+                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong style="color:var(--primary);">OP006</strong></td>
+                      <td><strong>《铡美案》</strong></td>
+                      <td><span class="badge badge-info">经典折子戏</span></td>
+                      <td>45分钟</td>
+                      <td>庙会/惠民/节庆</td>
+                      <td>吴xx、郑xx</td>
+                      <td>¥3,200</td>
+                      <td style="color:var(--primary);font-weight:600;">¥2,800</td>
+                      <td><strong style="color:var(--gold-dark);">32场</strong></td>
+                      <td><span style="color:#ff4757;">🔥 是</span></td>
+                      <td>2017-06-22</td>
+                      <td>
+                        <div class="admin-table-actions">
+                          <button class="btn btn-secondary btn-sm view-detail" data-opera="zhameian">👁</button>
+                          <button class="btn btn-primary btn-sm">✏️</button>
+                          <button class="btn btn-gold btn-sm">🔥</button>
+                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
+                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong style="color:var(--primary);">OP007</strong></td>
+                      <td><strong>《三顾茅庐》</strong></td>
+                      <td><span class="badge badge-info">经典折子戏</span></td>
+                      <td>50分钟</td>
+                      <td>惠民/节庆</td>
+                      <td>韩xx、冯xx</td>
+                      <td>¥3,500</td>
+                      <td style="color:var(--primary);font-weight:600;">¥2,800</td>
+                      <td><strong style="color:var(--gold-dark);">16场</strong></td>
+                      <td>否</td>
+                      <td>2020-09-12</td>
+                      <td>
+                        <div class="admin-table-actions">
+                          <button class="btn btn-secondary btn-sm view-detail" data-opera="sangumaolu">👁</button>
+                          <button class="btn btn-primary btn-sm">✏️</button>
+                          <button class="btn btn-gold btn-sm">🔥</button>
+                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
+                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong style="color:var(--primary);">OP008</strong></td>
+                      <td><strong>《霸王别姬》</strong></td>
+                      <td><span class="badge badge-info">经典折子戏</span></td>
+                      <td>40分钟</td>
+                      <td>商演/节庆</td>
+                      <td>何xx、董xx</td>
+                      <td>¥3,000</td>
+                      <td style="color:var(--primary);font-weight:600;">¥2,800</td>
+                      <td><strong style="color:var(--gold-dark);">18场</strong></td>
+                      <td><span style="color:#ff4757;">🔥 是</span></td>
+                      <td>2019-04-08</td>
+                      <td>
+                        <div class="admin-table-actions">
+                          <button class="btn btn-secondary btn-sm view-detail" data-opera="bawangbieji">👁</button>
+                          <button class="btn btn-primary btn-sm">✏️</button>
+                          <button class="btn btn-gold btn-sm">🔥</button>
+                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
+                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong style="color:var(--primary);">OP009</strong></td>
+                      <td><strong>《龙凤呈祥》</strong></td>
+                      <td><span class="badge badge-warning">民俗专场</span></td>
+                      <td>90分钟</td>
+                      <td>节庆/商演</td>
+                      <td>许xx、蒋xx</td>
+                      <td>¥5,500</td>
+                      <td style="color:var(--primary);font-weight:600;">¥4,800</td>
+                      <td><strong style="color:var(--gold-dark);">11场</strong></td>
+                      <td>否</td>
+                      <td>2021-02-14</td>
+                      <td>
+                        <div class="admin-table-actions">
+                          <button class="btn btn-secondary btn-sm view-detail" data-opera="longfengchengxiang">👁</button>
+                          <button class="btn btn-primary btn-sm">✏️</button>
+                          <button class="btn btn-gold btn-sm">🔥</button>
+                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
+                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong style="color:var(--primary);">OP010</strong></td>
+                      <td><strong>《村官》</strong></td>
+                      <td><span class="badge badge-success">现代戏</span></td>
+                      <td>120分钟</td>
+                      <td>惠民/节庆</td>
+                      <td>沈xx、彭xx</td>
+                      <td>¥6,800</td>
+                      <td style="color:var(--primary);font-weight:600;">¥5,800</td>
+                      <td><strong style="color:var(--gold-dark);">9场</strong></td>
+                      <td>否</td>
+                      <td>{year}-02-28</td>
+                      <td>
+                        <div class="admin-table-actions">
+                          <button class="btn btn-secondary btn-sm view-detail" data-opera="cunguan">👁</button>
+                          <button class="btn btn-primary btn-sm">✏️</button>
+                          <button class="btn btn-gold btn-sm">🔥</button>
+                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
+                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="pagination" style="margin-top:25px;">
+                <button class="page-btn" disabled>« 上一页</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">4</button>
+                <span class="page-info">共 48 条 / 5 页</span>
+                <button class="page-btn">下一页 »</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="operaDetailModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>🎭 剧目详情</h3>
+        <button class="modal-close" id="modalCloseBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-section">
+          <div class="detail-section-title">剧目基本信息</div>
+          <div class="detail-basic-grid">
+            <div class="detail-basic-item">
+              <span class="label">剧目名称：</span>
+              <span class="value">《火焰驹》</span>
+            </div>
+            <div class="detail-basic-item">
+              <span class="label">剧目分类：</span>
+              <span class="value"><span class="badge badge-gold">传统本戏</span></span>
+            </div>
+            <div class="detail-basic-item">
+              <span class="label">演出时长：</span>
+              <span class="value">180 分钟（3小时）</span>
+            </div>
+            <div class="detail-basic-item">
+              <span class="label">演出成本：</span>
+              <span class="value">¥8,500 / 场</span>
+            </div>
+            <div class="detail-basic-item">
+              <span class="label">建议报价：</span>
+              <span class="value" style="color:var(--primary);font-weight:600;">¥6,800 / 场</span>
+            </div>
+            <div class="detail-basic-item">
+              <span class="label">{year}演出：</span>
+              <span class="value" style="color:var(--gold-dark);font-weight:600;">28 场</span>
+            </div>
+            <div class="detail-basic-item">
+              <span class="label">累计演出：</span>
+              <span class="value">186 场</span>
+            </div>
+            <div class="detail-basic-item">
+              <span class="label">是否热门：</span>
+              <span class="value" style="color:#ff4757;">🔥 热门推荐</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">剧情简介</div>
+          <p style="color:var(--text-dark);line-height:1.9;font-size:0.95rem;text-indent:2em;">
+            《火焰驹》是秦腔传统经典剧目，讲述了北宋时期，李彦贵与黄桂英的爱情故事，以及艾谦仗义救人的侠义事迹。故事情节跌宕起伏，人物形象鲜明生动。全剧通过"卖水"、"传信"、"打路"、"祭桩"等经典折段，展现了人情冷暖、世态炎凉，歌颂了忠贞不渝的爱情和舍己为人的侠义精神。该剧唱腔激昂慷慨，表演细腻传神，是秦腔艺术宝库中的璀璨明珠，深受广大群众喜爱，常演不衰。
+          </p>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">演员表（行当配置）</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="detail-actor-row">
+              <div>
+                <strong style="color:var(--primary-dark);">张xx</strong>
+                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 李彦贵</span>
+              </div>
+              <span class="detail-actor-role">小生</span>
+            </div>
+            <div class="detail-actor-row">
+              <div>
+                <strong style="color:var(--primary-dark);">李xx</strong>
+                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 黄桂英</span>
+              </div>
+              <span class="detail-actor-role">闺门旦</span>
+            </div>
+            <div class="detail-actor-row">
+              <div>
+                <strong style="color:var(--primary-dark);">王xx</strong>
+                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 艾谦</span>
+              </div>
+              <span class="detail-actor-role">须生</span>
+            </div>
+            <div class="detail-actor-row">
+              <div>
+                <strong style="color:var(--primary-dark);">赵xx</strong>
+                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 黄璋</span>
+              </div>
+              <span class="detail-actor-role">大花脸</span>
+            </div>
+            <div class="detail-actor-row">
+              <div>
+                <strong style="color:var(--primary-dark);">刘xx</strong>
+                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 李母</span>
+              </div>
+              <span class="detail-actor-role">老旦</span>
+            </div>
+            <div class="detail-actor-row">
+              <div>
+                <strong style="color:var(--primary-dark);">陈xx</strong>
+                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 周瑞菊</span>
+              </div>
+              <span class="detail-actor-role">花旦</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">所需道具服装清单</div>
+          <div class="detail-prop-list">
+            <div class="detail-prop-item"><span>🧥 男蟒袍</span><span class="qty">×3</span></div>
+            <div class="detail-prop-item"><span>👘 女帔</span><span class="qty">×2</span></div>
+            <div class="detail-prop-item"><span>👑 盔头</span><span class="qty">×5</span></div>
+            <div class="detail-prop-item"><span>⚔️ 宝剑</span><span class="qty">×2</span></div>
+            <div class="detail-prop-item"><span>🎋 马鞭</span><span class="qty">×1</span></div>
+            <div class="detail-prop-item"><span>🎀 绣花鞋</span><span class="qty">×4</span></div>
+            <div class="detail-prop-item"><span>📜 书信道具</span><span class="qty">×2</span></div>
+            <div class="detail-prop-item"><span>🎭 脸谱套装</span><span class="qty">×6</span></div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">伴奏乐谱</div>
+          <div style="background:var(--bg-light);border-radius:var(--radius);padding:18px;">
+            <p style="margin-bottom:12px;color:var(--text-light);font-size:0.9rem;">📋 主要曲牌与板式配置：</p>
+            <ul style="list-style:disc;padding-left:24px;color:var(--text-dark);font-size:0.92rem;line-height:2;">
+              <li><strong>开场曲牌：</strong>《跳加官》→《开台套》→《引子》</li>
+              <li><strong>主要板式：</strong>慢板、二六板、带板、尖板、滚板</li>
+              <li><strong>经典唱段：</strong>《花园卖水》（二六转慢板）、《打路》（滚板）、《祭桩》（大段苦音）</li>
+              <li><strong>乐队编制：</strong>板胡1、二胡2、扬琴1、琵琶1、三弦1、司鼓1、铙钹1、锣1、梆子1（共9人）</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="detail-section" style="margin-bottom:0;">
+          <div class="detail-section-title">演出注意事项</div>
+          <div style="background:linear-gradient(135deg, rgba(139,0,0,0.05), rgba(212,175,55,0.08));border-radius:var(--radius);padding:18px;border-left:4px solid var(--primary);">
+            <ul style="list-style:disc;padding-left:24px;color:var(--text-dark);font-size:0.92rem;line-height:2;">
+              <li>《祭桩》一折需特别注意旦角情绪把控，苦音大段演唱前需给演员充足休息时间</li>
+              <li>武打场面（如《打路》）需提前检查舞台安全，预留足够表演空间</li>
+              <li>火焰驹道具需安排专人管理，马匹造型上场前需演员熟悉</li>
+              <li>建议演出前全体演员进行至少1次完整联排，确保衔接流畅</li>
+              <li>服装组需在演出前2小时完成全部角色服装准备工作</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/year-lite.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    (function() {
+      var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
+      try { var __raw = localStorage.getItem(ADMIN_STORAGE_KEY); if (!__raw || !JSON.parse(__raw)) { window.location.href = 'login.html'; } } catch (e) { window.location.href = 'login.html'; }
+    })();
+    document.querySelectorAll('.category-tab').forEach(function(tab) {
+      if (!tab.classList.contains('opera-cat-manage')) {
+        tab.addEventListener('click', function() {
+          document.querySelectorAll('.category-tab').forEach(function(t) { t.classList.remove('active'); });
+          tab.classList.add('active');
+        });
+      }
+    });
+
+    var viewGridBtn = document.getElementById('viewGridBtn');
+    var viewListBtn = document.getElementById('viewListBtn');
+    var gridView = document.getElementById('operaGridView');
+    var listView = document.getElementById('operaListView');
+    if (viewGridBtn) {
+      viewGridBtn.addEventListener('click', function() {
+        viewGridBtn.classList.add('active');
+        viewListBtn.classList.remove('active');
+        gridView.style.display = 'block';
+        listView.style.display = 'none';
+      });
+    }
+    if (viewListBtn) {
+      viewListBtn.addEventListener('click', function() {
+        viewListBtn.classList.add('active');
+        viewGridBtn.classList.remove('active');
+        gridView.style.display = 'none';
+        listView.style.display = 'block';
+      });
+    }
+
+    var modal = document.getElementById('operaDetailModal');
+    var modalClose = document.getElementById('modalCloseBtn');
+    document.querySelectorAll('.view-detail').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      });
+    });
+    if (modalClose) {
+      modalClose.addEventListener('click', function() {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      });
+    }
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

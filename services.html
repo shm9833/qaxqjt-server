@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="js/favicon-inject.js" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="秦安县秦剧团文化演出有限公司演出业务详情，承接乡村庙会、惠民下乡、节庆专场、企业庆典等各类戏曲演出">
+  <meta name="keywords" content="秦安秦剧团,秦安县秦剧团文化演出有限公司,演出业务,乡村庙会,惠民下乡,节庆专场,企业庆典">
+  <title>演出业务 - 秦安县秦剧团文化演出有限公司 | {year}</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .service-detail-section {
+      padding: 80px 0;
+      background: var(--bg-light);
+    }
+    .service-detail-section:nth-child(even) {
+      background: linear-gradient(180deg, var(--cream) 0%, var(--bg-light) 100%);
+    }
+    .service-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .service-detail-grid.reverse {
+      direction: rtl;
+    }
+    .service-detail-grid.reverse > * {
+      direction: ltr;
+    }
+    .service-detail-image {
+      position: relative;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      aspect-ratio: 4/3;
+    }
+    .service-detail-image::before {
+      content: '';
+      position: absolute;
+      inset: 15px;
+      border: 2px solid var(--gold);
+      border-radius: var(--radius);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .service-detail-content h3 {
+      color: var(--primary-dark);
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .service-detail-content h3 .service-num {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-family: "KaiTi", "STKaiti", serif;
+      flex-shrink: 0;
+    }
+    .service-info-block {
+      margin-bottom: 25px;
+    }
+    .service-info-block h4 {
+      color: var(--gold-dark);
+      font-size: 1.05rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .service-info-block h4::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background: linear-gradient(180deg, var(--primary), var(--gold));
+      border-radius: 2px;
+    }
+    .service-info-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .service-info-tag {
+      padding: 6px 14px;
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      font-size: 0.88rem;
+      color: var(--text-dark);
+      transition: var(--transition);
+    }
+    .service-info-tag:hover {
+      background: rgba(212, 175, 55, 0.1);
+      border-color: var(--gold);
+      color: var(--primary-dark);
+    }
+    .service-flow-list {
+      list-style: none;
+      padding: 0;
+    }
+    .service-flow-list li {
+      position: relative;
+      padding-left: 35px;
+      margin-bottom: 8px;
+      color: var(--text-light);
+      font-size: 0.93rem;
+      line-height: 1.7;
+    }
+    .service-flow-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      top: 2px;
+      width: 24px;
+      height: 24px;
+      background: rgba(139, 0, 0, 0.1);
+      color: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .process-section {
+      padding: 80px 0;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .process-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .process-section .section-header h2 {
+      color: var(--cream);
+    }
+    .process-section .section-header p {
+      color: var(--gold-light);
+    }
+    .process-flow {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 20px;
+      margin-top: 50px;
+    }
+    .process-step {
+      text-align: center;
+      position: relative;
+    }
+    .process-step-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: rgba(255, 250, 240, 0.1);
+      border: 2px solid var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: var(--gold);
+      backdrop-filter: blur(10px);
+      transition: var(--transition);
+    }
+    .process-step:hover .process-step-icon {
+      background: var(--gold);
+      color: var(--primary-dark);
+      transform: scale(1.1);
+    }
+    .process-step-num {
+      position: absolute;
+      top: -8px;
+      right: calc(50% - 48px);
+      width: 28px;
+      height: 28px;
+      background: var(--gold);
+      color: var(--primary-dark);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .process-step h4 {
+      color: var(--cream);
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+    }
+    .process-step p {
+      color: rgba(255, 250, 240, 0.7);
+      font-size: 0.85rem;
+      margin: 0;
+    }
+    .process-step::after {
+      content: '→';
+      position: absolute;
+      top: 40px;
+      right: -15px;
+      color: var(--gold);
+      font-size: 1.5rem;
+      z-index: 3;
+    }
+    .process-step:last-child::after {
+      display: none;
+    }
+    .cooperation-section {
+      padding: 80px 0;
+      background: var(--bg-light);
+    }
+    .cooperation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 30px;
+      margin-top: 50px;
+    }
+    .cooperation-card {
+      background: var(--cream);
+      padding: 35px 30px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      text-align: center;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .cooperation-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--gold));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    .cooperation-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--gold);
+    }
+    .cooperation-card:hover::before {
+      transform: scaleX(1);
+    }
+    .cooperation-card .coop-icon {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, rgba(139, 0, 0, 0.08), rgba(212, 175, 55, 0.15));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: var(--primary);
+      border: 2px solid var(--gold);
+    }
+    .cooperation-card h4 {
+      color: var(--primary-dark);
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+    }
+    .cooperation-card p {
+      color: var(--text-light);
+      font-size: 0.92rem;
+      line-height: 1.7;
+      margin: 0;
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    .section-header h2 {
+      display: inline-block;
+      position: relative;
+      padding: 0 60px;
+      font-size: 2.2rem;
+    }
+    .section-header h2::before,
+    .section-header h2::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold), transparent);
+    }
+    .section-header h2::before {
+      left: 0;
+    }
+    .section-header h2::after {
+      right: 0;
+      background: linear-gradient(90deg, transparent, var(--gold));
+    }
+    .section-header p {
+      display: block;
+      color: var(--text-light);
+      font-size: 1rem;
+      margin-top: 12px;
+      letter-spacing: 4px;
+    }
+    @media (max-width: 992px) {
+      .service-detail-grid,
+      .service-detail-grid.reverse {
+        grid-template-columns: 1fr;
+        direction: ltr;
+        gap: 40px;
+      }
+      .process-flow {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 40px 20px;
+      }
+      .process-step:nth-child(3)::after,
+      .process-step:nth-child(6)::after {
+        display: none;
+      }
+    }
+    @media (max-width: 576px) {
+      .process-flow {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .process-step:nth-child(even)::after {
+        display: none;
+      }
+      .section-header h2 {
+        padding: 0 30px;
+        font-size: 1.6rem;
+      }
+      .section-header h2::before,
+      .section-header h2::after {
+        width: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+          <div class="logo-text">
+            <h1>秦安县秦剧团</h1>
+            <p>文化演出有限公司 · 始于2014</p>
+          </div>
+        </div>
+        <button class="menu-toggle" aria-label="菜单">
+          <span>☰</span>
+        </button>
+        <nav>
+          <ul>
+            <li><a href="index.html">首页</a></li>
+            <li><a href="index.html#about">剧团简介</a></li>
+            <li><a href="index.html#repertoire">剧目中心</a></li>
+            <li><a href="services.html" class="active">演出业务</a></li>
+            <li><a href="news.html">新闻动态</a></li>
+            <li><a href="index.html#booking">在线预约</a></li>
+            <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
+            <li><a href="index.html#contact">联系我们</a></li>
+            <li><a href="admin/login.html" class="admin-link">后台管理</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-banner">
+      <div class="page-banner-content">
+        <h1>🎭 演出业务</h1>
+        <div class="breadcrumb">
+          <a href="index.html">首页</a>
+          <span class="separator">/</span>
+          <span>演出业务</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="service-detail-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>八大核心业务</h2>
+          <p>专业演出服务 · 覆盖各类文化活动场景 · 辐射天水全域</p>
+        </div>
+
+        <div class="service-detail-grid">
+          <div class="service-detail-image">
+            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Qin%20Opera%20temple%20festival%20performance%2C%20traditional%20outdoor%20stage%20with%20red%20lanterns%2C%20village%20temple%20fair%20scene%2C%20actors%20in%20elaborate%20costumes%2C%20audience%20watching&image_size=landscape_4_3" alt="乡村庙会戏曲演出">
+          </div>
+          <div class="service-detail-content">
+            <h3><span class="service-num">壹</span>乡村庙会戏曲演出</h3>
+            <div class="service-info-block">
+              <h4>服务内容</h4>
+              <p style="color: var(--text-light); line-height: 1.8; margin: 0;">承接各乡镇、村落传统庙会、民俗祭祀、村落庆典秦腔专场演出</p>
+            </div>
+            <div class="service-info-block">
+              <h4>场景适配</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">传统庙会祭祀戏</span>
+                <span class="service-info-tag">春祈秋报戏</span>
+                <span class="service-info-tag">村落开台戏</span>
+                <span class="service-info-tag">族谱庆典戏</span>
+              </div>
+            </div>
+            <div class="service-info-block">
+              <h4>服务流程</h4>
+              <ul class="service-flow-list">
+                <li>庙会对接 → 了解庙会规格、日期、演出需求</li>
+                <li>剧目确认 → 根据传统习俗和庙会主题选定剧目</li>
+                <li>合同签订 → 明确双方权责、费用、演出场次</li>
+                <li>排期准备 → 演员排演、舞美设备调试、行程安排</li>
+                <li>现场演出 → 专业搭台、准时演出、保质保量</li>
+                <li>结算归档 → 费用结算、资料留存、满意度回访</li>
+              </ul>
+            </div>
+            <div class="service-info-block">
+              <h4>合作模式</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">单场包场</span>
+                <span class="service-info-tag">连台本戏（3天/5天/7天）</span>
+                <span class="service-info-tag">庙会定制套餐</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="service-detail-section">
+      <div class="container">
+        <div class="service-detail-grid reverse">
+          <div class="service-detail-image">
+            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20government%20cultural%20benefit%20tour%2C%20rural%20stage%20performance%2C%20Qin%20Opera%20actors%20performing%20for%20villagers%2C%20community%20cultural%20event%2C%20warm%20atmosphere&image_size=landscape_4_3" alt="政府惠民下乡巡演">
+          </div>
+          <div class="service-detail-content">
+            <h3><span class="service-num">贰</span>政府惠民下乡巡演</h3>
+            <div class="service-info-block">
+              <h4>服务内容</h4>
+              <p style="color: var(--text-light); line-height: 1.8; margin: 0;">配合文旅部门、乡镇政府开展文化下乡、乡村振兴惠民演出</p>
+            </div>
+            <div class="service-info-block">
+              <h4>场景适配</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">新时代文明实践汇演</span>
+                <span class="service-info-tag">乡村振兴文化行</span>
+                <span class="service-info-tag">春节慰问演出</span>
+                <span class="service-info-tag">扶贫扶志专场</span>
+              </div>
+            </div>
+            <div class="service-info-block">
+              <h4>服务优势</h4>
+              <ul class="service-flow-list">
+                <li>资质齐全合规 — 具备完整演出经营资质，合规承接政府采购项目</li>
+                <li>剧目正能量导向 — 精选主旋律、正能量剧目，弘扬时代精神</li>
+                <li>配合宣传物料 — 提供演出海报、横幅、背景板等宣传物料支持</li>
+                <li>台账资料完善 — 演出记录、影像资料、签到台账齐全，方便验收归档</li>
+              </ul>
+            </div>
+            <div class="service-info-block">
+              <h4>合作模式</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">政府采购</span>
+                <span class="service-info-tag">乡镇集采</span>
+                <span class="service-info-tag">公益合作</span>
+                <span class="service-info-tag">专项文化项目</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="service-detail-section">
+      <div class="container">
+        <div class="service-detail-grid">
+          <div class="service-detail-image">
+            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Spring%20Festival%20gala%20Qin%20Opera%20performance%2C%20festive%20stage%20with%20red%20and%20gold%20decorations%2C%20colorful%20lanterns%2C%20celebration%20atmosphere%2C%20traditional%20opera%20show&image_size=landscape_4_3" alt="节庆专场文艺演出">
+          </div>
+          <div class="service-detail-content">
+            <h3><span class="service-num">叁</span>节庆专场文艺演出</h3>
+            <div class="service-info-block">
+              <h4>服务内容</h4>
+              <p style="color: var(--text-light); line-height: 1.8; margin: 0;">承接春节、端午、中秋、丰收节等各类节日戏曲专场、文艺晚会</p>
+            </div>
+            <div class="service-info-block">
+              <h4>场景适配</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">春节社火戏曲</span>
+                <span class="service-info-tag">端午民俗演出</span>
+                <span class="service-info-tag">中秋赏月晚会</span>
+                <span class="service-info-tag">农民丰收节汇演</span>
+                <span class="service-info-tag">社区文化节</span>
+              </div>
+            </div>
+            <div class="service-info-block">
+              <h4>定制服务</h4>
+              <ul class="service-flow-list">
+                <li>戏曲+歌舞综合节目 — 融合秦腔、民歌、舞蹈等多元节目形式</li>
+                <li>主题定制剧目 — 根据节日主题定制专属剧本和唱段</li>
+                <li>互动戏曲体验 — 设置观众互动环节，体验戏曲化妆、学唱等</li>
+                <li>节日专属舞美 — 定制节日主题舞台布景、灯光、音效方案</li>
+              </ul>
+            </div>
+            <div class="service-info-block">
+              <h4>合作模式</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">节日专场定制</span>
+                <span class="service-info-tag">社区联合主办</span>
+                <span class="service-info-tag">企业冠名赞助</span>
+                <span class="service-info-tag">文旅节庆合作</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="service-detail-section">
+      <div class="container">
+        <div class="service-detail-grid reverse">
+          <div class="service-detail-image">
+            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20wedding%20celebration%20Qin%20Opera%20performance%2C%20festive%20red%20theme%2C%20business%20opening%20ceremony%20stage%2C%20traditional%20Chinese%20celebration%20with%20opera%20show%2C%20happy%20atmosphere&image_size=landscape_4_3" alt="企业商户庆典演出">
+          </div>
+          <div class="service-detail-content">
+            <h3><span class="service-num">肆</span>企业商户庆典演出</h3>
+            <div class="service-info-block">
+              <h4>服务内容</h4>
+              <p style="color: var(--text-light); line-height: 1.8; margin: 0;">承接商铺开业、企业庆典、寿宴婚庆、邻里联谊等商业定制</p>
+            </div>
+            <div class="service-info-block">
+              <h4>场景适配</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">商铺开业大吉</span>
+                <span class="service-info-tag">企业周年庆典</span>
+                <span class="service-info-tag">寿宴祝寿戏</span>
+                <span class="service-info-tag">婚庆喜宴助兴</span>
+                <span class="service-info-tag">乔迁暖房戏</span>
+              </div>
+            </div>
+            <div class="service-info-block">
+              <h4>服务特色</h4>
+              <ul class="service-flow-list">
+                <li>吉祥剧目精选 — 《大升官》《八仙拜寿》等喜庆吉祥剧目专场</li>
+                <li>贺词定制 — 为寿星、新人、企业定制专属戏曲贺词和祝福</li>
+                <li>灵活场次时长 — 可根据庆典安排调整演出时长和剧目片段</li>
+                <li>小型舞台适配 — 提供小型化舞台方案，适配庭院、酒楼等场地</li>
+              </ul>
+            </div>
+            <div class="service-info-block">
+              <h4>合作模式</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">单场定制</span>
+                <span class="service-info-tag">庆典套餐</span>
+                <span class="service-info-tag">长期合作</span>
+                <span class="service-info-tag">亲友拼团</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="service-detail-section">
+      <div class="container">
+        <div class="service-detail-grid">
+          <div class="service-detail-image">
+            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Tianshui%20cultural%20tourism%20festival%2C%20Fuxi%20sacrifice%20ceremony%20stage%2C%20traditional%20opera%20performance%20at%20cultural%20heritage%20site%2C%20blue%20sky%20ancient%20architecture%2C%20crowd%20spectators&image_size=landscape_4_3" alt="天水文旅合作演出">
+          </div>
+          <div class="service-detail-content">
+            <h3><span class="service-num">伍</span>天水文旅合作演出</h3>
+            <div class="service-info-block">
+              <h4>服务内容</h4>
+              <p style="color: var(--text-light); line-height: 1.8; margin: 0;">深度对接天水市文化和旅游局，服务于公祭伏羲大典、天水伏羲文化旅游节、南郭寺文化节、卦台山非遗节、大地湾文化宣传等全市重大文旅活动，提供专业秦腔演出与非遗展示服务。</p>
+            </div>
+            <div class="service-info-block">
+              <h4>文旅项目</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">公祭伏羲大典配套</span>
+                <span class="service-info-tag">伏羲文化旅游节</span>
+                <span class="service-info-tag">麦积山石窟文化周</span>
+                <span class="service-info-tag">大地湾遗址文化节</span>
+                <span class="service-info-tag">南郭寺诗圣文化节</span>
+                <span class="service-info-tag">卦台山非遗展演</span>
+              </div>
+            </div>
+            <div class="service-info-block">
+              <h4>专项服务</h4>
+              <ul class="service-flow-list">
+                <li>伏羲文化主题剧目 — 定制伏羲祭典相关秦腔历史剧、配乐朗诵与民俗表演</li>
+                <li>景区驻场演出 — 提供麦积山、伏羲庙、仙人崖等景区日常驻场演出服务</li>
+                <li>文旅推介会演出 — 配合天水文旅在全国各大城市的旅游推介巡演</li>
+                <li>非遗名录申报支撑 — 提供非遗申报所需演出视频、资料整理与现场演示</li>
+              </ul>
+            </div>
+            <div class="service-info-block">
+              <h4>合作模式</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">文旅局专项合作</span>
+                <span class="service-info-tag">景区年度驻场</span>
+                <span class="service-info-tag">节会官方指定</span>
+                <span class="service-info-tag">文旅推介巡演</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="service-detail-section">
+      <div class="container">
+        <div class="service-detail-grid reverse">
+          <div class="service-detail-image">
+            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20opera%20education%20in%20elementary%20school%2C%20children%20wearing%20traditional%20opera%20makeup%2C%20actors%20teaching%20students%2C%20cultural%20heritage%20classroom%2C%20bright%20cheerful&image_size=landscape_4_3" alt="校园戏曲研学与非遗传承">
+          </div>
+          <div class="service-detail-content">
+            <h3><span class="service-num">陆</span>校园戏曲研学与非遗传承</h3>
+            <div class="service-info-block">
+              <h4>服务内容</h4>
+              <p style="color: var(--text-light); line-height: 1.8; margin: 0;">响应教育部"戏曲进校园"号召，为天水市大中小学、幼儿园提供专业戏曲研学课程、非遗传承体验、校园艺术节演出等一体化服务，以秦腔艺术传承西北戏曲非遗文化。</p>
+            </div>
+            <div class="service-info-block">
+              <h4>课程体系</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">戏曲进校园演出</span>
+                <span class="service-info-tag">秦腔唱腔兴趣班</span>
+                <span class="service-info-tag">戏曲身段体验课</span>
+                <span class="service-info-tag">戏曲化妆工作坊</span>
+                <span class="service-info-tag">非遗文化讲座</span>
+                <span class="service-info-tag">校园戏曲节编排</span>
+              </div>
+            </div>
+            <div class="service-info-block">
+              <h4>研学特色</h4>
+              <ul class="service-flow-list">
+                <li>分级课程体系 — 幼儿园启蒙、小学兴趣、初中研学、高中社团、大学赏析五级课程</li>
+                <li>配套教材教具 — 秦腔教学绘本、脸谱涂色卡、身段图卡、乐器演示教具</li>
+                <li>小小传承人计划 — 选拔优秀学员组建校园小剧团，参与正式演出与赛事</li>
+                <li>研学实践基地 — 开放剧团排练场、服装道具库作为研学实践教学基地</li>
+              </ul>
+            </div>
+            <div class="service-info-block">
+              <h4>合作模式</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">校园年度服务</span>
+                <span class="service-info-tag">研学活动承接</span>
+                <span class="service-info-tag">课后服务课程</span>
+                <span class="service-info-tag">教育局统采项目</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="service-detail-section">
+      <div class="container">
+        <div class="service-detail-grid">
+          <div class="service-detail-image">
+            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=live%20streaming%20Chinese%20opera%20performance%2C%20professional%20camera%20crew%20filming%20stage%2C%20online%20broadcast%20equipment%2C%20actors%20performing%20Qin%20Opera%20on%20stage%2C%20modern%20digital%20tech&image_size=landscape_4_3" alt="网络直播与数字演出">
+          </div>
+          <div class="service-detail-content">
+            <h3><span class="service-num">柒</span>网络直播与数字演出服务</h3>
+            <div class="service-info-block">
+              <h4>服务内容</h4>
+              <p style="color: var(--text-light); line-height: 1.8; margin: 0;">顺应数字文化发展趋势，提供线上秦腔直播演出、虚拟排演、4K 演出录制、短视频定制、直播接口对接等数字演出服务，打破时空限制，让秦腔艺术通过互联网覆盖更多观众。</p>
+            </div>
+            <div class="service-info-block">
+              <h4>数字服务</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">全程多机位直播</span>
+                <span class="service-info-tag">短视频剧目剪辑</span>
+                <span class="service-info-tag">4K演出录制</span>
+                <span class="service-info-tag">直播API接口</span>
+                <span class="service-info-tag">VR全景演出</span>
+                <span class="service-info-tag">付费点播剧场</span>
+              </div>
+            </div>
+            <div class="service-info-block">
+              <h4>接口与交付</h4>
+              <ul class="service-flow-list">
+                <li>标准 RTMP/FLV/HLS 推流 — 对接抖音、快手、视频号、B站等主流平台</li>
+                <li>RESTful 直播接口 — 提供订单查询、节目单下发、弹幕回调、观看统计 API 文档</li>
+                <li>母带级录制交付 — 4K 多机位现场录制 + 后期精剪 + 花絮合集 + 封面海报</li>
+                <li>二维码预约联动 — 直播间专属邀请二维码，扫码预约、开播提醒、回放通知</li>
+              </ul>
+            </div>
+            <div class="service-info-block">
+              <h4>合作模式</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">单场直播定制</span>
+                <span class="service-info-tag">平台年度合作</span>
+                <span class="service-info-tag">付费剧场分账</span>
+                <span class="service-info-tag">接口技术对接</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="service-detail-section">
+      <div class="container">
+        <div class="service-detail-grid reverse">
+          <div class="service-detail-image">
+            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20opera%20playwright%20and%20rehearsal%20scene%2C%20actors%20rehearsing%20new%20play%2C%20director%20guiding%20performers%2C%20script%20on%20table%2C%20traditional%20opera%20training%20room%2C%20professional%20dedication&image_size=landscape_4_3" alt="定制剧创作与专项排演">
+          </div>
+          <div class="service-detail-content">
+            <h3><span class="service-num">捌</span>定制剧创作与专项排演</h3>
+            <div class="service-info-block">
+              <h4>服务内容</h4>
+              <p style="color: var(--text-light); line-height: 1.8; margin: 0;">为政府机关、企事业单位、乡镇村落、景区文旅项目提供原创秦腔剧本创作、音乐编配、导演排演、服装道具定制、首演发布一体化专项服务，打造专属文化 IP 剧目。</p>
+            </div>
+            <div class="service-info-block">
+              <h4>定制方向</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">村镇历史名人剧</span>
+                <span class="service-info-tag">企业精神主题剧</span>
+                <span class="service-info-tag">家风家训传承剧</span>
+                <span class="service-info-tag">文旅景区专属剧</span>
+                <span class="service-info-tag">英模人物纪实剧</span>
+                <span class="service-info-tag">时代主旋律新剧</span>
+              </div>
+            </div>
+            <div class="service-info-block">
+              <h4>创作交付流程</h4>
+              <ul class="service-flow-list">
+                <li>题材采风 — 编剧团队实地采风、访谈调研、素材收集与历史考证</li>
+                <li>剧本创作 — 大纲编写、剧本初稿、唱腔设计、专家评审、多轮修改</li>
+                <li>音乐编配 — 作曲配器、乐队总谱、录音合成、主题曲目录制</li>
+                <li>排演合成 — 导演排戏、身段指导、合乐彩排、服装道具舞美制作</li>
+                <li>首演发布 — 组织首演仪式、媒体发布、演出视频拍摄与宣传推广</li>
+              </ul>
+            </div>
+            <div class="service-info-block">
+              <h4>合作模式</h4>
+              <div class="service-info-list">
+                <span class="service-info-tag">全程委托创作</span>
+                <span class="service-info-tag">剧本单独定制</span>
+                <span class="service-info-tag">联合出品运营</span>
+                <span class="service-info-tag">年度创作服务</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="process-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>通用服务流程</h2>
+          <p>六步标准化服务 · 让您省心放心</p>
+        </div>
+        <div class="process-flow">
+          <div class="process-step">
+            <span class="process-step-num">1</span>
+            <div class="process-step-icon">📞</div>
+            <h4>咨询对接</h4>
+            <p>电话/微信沟通，了解演出需求</p>
+          </div>
+          <div class="process-step">
+            <span class="process-step-num">2</span>
+            <div class="process-step-icon">📋</div>
+            <h4>方案定制</h4>
+            <p>制定专属演出方案和报价</p>
+          </div>
+          <div class="process-step">
+            <span class="process-step-num">3</span>
+            <div class="process-step-icon">📝</div>
+            <h4>合同签订</h4>
+            <p>签订正式合同，保障双方权益</p>
+          </div>
+          <div class="process-step">
+            <span class="process-step-num">4</span>
+            <div class="process-step-icon">📅</div>
+            <h4>排期确认</h4>
+            <p>确认演出排期，提前准备剧目</p>
+          </div>
+          <div class="process-step">
+            <span class="process-step-num">5</span>
+            <div class="process-step-icon">🎬</div>
+            <h4>现场演出</h4>
+            <p>专业团队到场，保质保量演出</p>
+          </div>
+          <div class="process-step">
+            <span class="process-step-num">6</span>
+            <div class="process-step-icon">📦</div>
+            <h4>售后归档</h4>
+            <p>演出资料交付，满意度回访</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cooperation-section" style="background: linear-gradient(180deg, var(--cream) 0%, var(--bg-light) 100%);">
+      <div class="container">
+        <div class="section-header">
+          <h2>服务覆盖范围</h2>
+          <p>天水市全域覆盖 · 辐射陇东南周边 · 最远行程按需定制</p>
+        </div>
+        <div class="cooperation-grid">
+          <div class="cooperation-card">
+            <div class="coop-icon">🏙️</div>
+            <h4>秦安县全境</h4>
+            <p>陇城镇、安伏镇、莲花镇、叶堡镇、西川镇、郭嘉镇、刘坪镇、王尹镇、魏店镇、千户镇、王窑镇、云山镇、兴丰镇、中山镇等所有乡镇村落。</p>
+          </div>
+          <div class="cooperation-card">
+            <div class="coop-icon">🏞️</div>
+            <h4>天水主城区</h4>
+            <p>秦州区各街道、玉泉镇、皂郊镇、平南镇、天水镇等；麦积区道北、桥南、马跑泉、甘泉、花牛、社棠、渭南、新阳、元龙、伯阳等乡镇。</p>
+          </div>
+          <div class="cooperation-card">
+            <div class="coop-icon">🌄</div>
+            <h4>其他各县区</h4>
+            <p>甘谷县大像山镇、新兴镇、磐安镇；武山县洛门镇、山丹镇；清水县永清镇、红堡镇；张家川县龙山镇、恭门镇，以及周边定西、平凉临近乡镇。</p>
+          </div>
+          <div class="cooperation-card">
+            <div class="coop-icon">🚛</div>
+            <h4>行程承诺</h4>
+            <p>秦安县域 2 小时内到场搭台；天水全市 4 小时内到达；临时应急演出可提供精简快装方案；长距离演出提前协商行程与住宿安排。</p>
+          </div>
+          <div class="cooperation-card">
+            <div class="coop-icon">🎟️</div>
+            <h4>预约通道</h4>
+            <p>官网在线预约、电话微信预约、二维码扫码预约、后台工单预约四大通道全年无休；签约后锁定档期，出具正式排期确认函。</p>
+          </div>
+          <div class="cooperation-card">
+            <div class="coop-icon">⚖️</div>
+            <h4>服务承诺</h4>
+            <p>签订正式合同，明确权责与违约条款；演出延误 2 小时以上可按比例退款；未成年观演与违约条款详见网站政策文件，民事责任清晰可追溯。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>🎭 秦安县秦剧团文化演出有限公司</h3>
+          <p>传承陇原秦韵，唱响乡土华章。扎根秦安、服务乡村的专业秦腔演出团体，{year}年初心不改，致力传承西北非遗戏曲文化。</p>
+          <p>电话：13993839833<br>地址：甘肃省天水市秦安县陇城镇张沟村</p>
+        </div>
+        <div class="footer-col">
+          <h4>快速导航</h4>
+          <ul>
+            <li><a href="index.html">网站首页</a></li>
+            <li><a href="index.html#about">剧团简介</a></li>
+            <li><a href="index.html#repertoire">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>演出服务</h4>
+          <ul>
+            <li><a href="services.html">乡村庙会演出</a></li>
+            <li><a href="services.html">惠民下乡巡演</a></li>
+            <li><a href="services.html">节庆专场演出</a></li>
+            <li><a href="services.html">企业庆典定制</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>联系我们</h4>
+          <ul>
+            <li><a href="tel:13993839833">📞 13993839833</a></li>
+            <li><a href="index.html#booking">🎫 在线预约</a></li>
+            <li><a href="news.html">📰 新闻动态</a></li>
+            <li><a href="admin/login.html">🔐 后台管理</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© {year} 秦安县秦剧团文化演出有限公司 版权所有 | 陇ICP备（秦安戏曲文化号）</p>
+        <div class="footer-bottom-links">
+          <a href="qualifications.html">企业资质</a>
+          <span>|</span>
+          <a href="copyright.html">版权声明</a>
+          <span>|</span>
+          <a href="minor-policy.html">未成年预约</a>
+          <span>|</span>
+          <a href="breach-liability.html">违约民事责任</a>
+          <span>|</span>
+          <a href="qr-booking.html">二维码预约</a>
+          <span>|</span>
+          <a href="live-api.html">直播接口</a>
+          <span>|</span>
+          <a href="admin/login.html">管理入口</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/year-lite.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

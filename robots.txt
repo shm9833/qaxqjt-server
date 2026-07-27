@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+
+Sitemap: /sitemap.xml
+
+# 秦安县秦剧团文化演出有限公司官网
+# {year}年度官方标准版
+# 适配 EdgeOne Pages 静态托管

@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="js/favicon-inject.js" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="秦安县秦剧团云端预约系统 - 零基础 EdgeOne Pages 逐步骤部署教程">
+  <meta name="keywords" content="秦安秦剧团,秦安县秦剧团文化演出有限公司,部署教程,EdgeOne Pages,腾讯云部署,零基础部署">
+  <title>零基础部署教程 · EdgeOne Pages 专属 - 秦安县秦剧团云端预约系统 | {year}</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="doc-body">
+  <nav class="navbar" data-header>
+    <div class="navbar-container">
+      <div class="navbar-brand">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <span>秦安县秦剧团 · 文档中心</span>
+      </div>
+      <div class="navbar-menu" data-nav-menu>
+        <a href="index.html">系统首页</a>
+        <a href="architecture.html">架构文档</a>
+        <a href="delivery.html">交付总结</a>
+        <a href="deploy.html" class="active">部署教程</a>
+        <a href="booking.html">在线预约</a>
+        <a href="admin/login.html" class="admin-link">后台管理</a>
+      </div>
+      <div class="navbar-actions">
+        <button class="navbar-toggle" data-nav-toggle aria-label="菜单">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="doc-layout">
+    <div class="doc-top-bar">
+      <div class="doc-top-bar-inner">
+        <div class="doc-breadcrumb">
+          <a href="index.html">🏠 系统首页</a>
+          <span class="sep">›</span>
+          <span>📜 文档中心</span>
+          <span class="sep">›</span>
+          <span style="color: var(--doc-blue-primary); font-weight: 600;">EdgeOne Pages 部署教程</span>
+        </div>
+        <button class="doc-print-btn" onclick="window.print()">
+          <span class="icon">🖨️</span>
+          <span>打印 / 导出PDF</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="doc-wrapper">
+      <aside class="doc-toc">
+        <div class="doc-toc-title">
+          <span class="icon">📑</span>
+          章节目录
+        </div>
+        <ul class="doc-toc-list">
+          <li class="doc-toc-item">
+            <a href="#page-1" class="doc-toc-link active" data-page="1">
+              <span class="num">1</span>
+              <span>教程封面</span>
+            </a>
+          </li>
+          <li class="doc-toc-item">
+            <a href="#page-2" class="doc-toc-link" data-page="2">
+              <span class="num">2</span>
+              <span>一、部署前置准备</span>
+            </a>
+          </li>
+          <li class="doc-toc-item">
+            <a href="#page-3" class="doc-toc-link" data-page="3">
+              <span class="num">3</span>
+              <span>二、标准化打包步骤</span>
+            </a>
+          </li>
+          <li class="doc-toc-item">
+            <a href="#page-4" class="doc-toc-link" data-page="4">
+              <span class="num">4</span>
+              <span>三、平台上传部署</span>
+            </a>
+          </li>
+          <li class="doc-toc-item">
+            <a href="#page-5" class="doc-toc-link" data-page="5">
+              <span class="num">5</span>
+              <span>四、部署完成校验</span>
+            </a>
+          </li>
+          <li class="doc-toc-item">
+            <a href="#page-6" class="doc-toc-link" data-page="6">
+              <span class="num">6</span>
+              <span>五、后续迭代更新</span>
+            </a>
+          </li>
+          <li class="doc-toc-item">
+            <a href="#page-7" class="doc-toc-link" data-page="7">
+              <span class="num">7</span>
+              <span>六、部署注意事项</span>
+            </a>
+          </li>
+          <li class="doc-toc-item">
+            <a href="#page-8" class="doc-toc-link" data-page="8">
+              <span class="num">8</span>
+              <span>七、项目部署预览</span>
+            </a>
+          </li>
+          <li class="doc-toc-item">
+            <a href="#page-9" class="doc-toc-link" data-page="9">
+              <span class="num">9</span>
+              <span>八、终审通过标准</span>
+            </a>
+          </li>
+        </ul>
+      </aside>
+
+      <main class="doc-container">
+        <div class="doc-nav-buttons" style="padding-top: 0;">
+          <button class="doc-nav-btn" disabled>
+            <span class="arrow">←</span>
+            <span>上一章</span>
+          </button>
+          <div class="doc-nav-info">共 9 章 · 当前第 1 章</div>
+          <button class="doc-nav-btn" onclick="goToPage(2)">
+            <span>下一章：前置准备</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+
+        <!-- 第1页：教程封面 -->
+        <section id="page-1" class="chapter-page cover-page" data-page-index="1">
+          <div class="chapter-corner-br"></div>
+          <div style="position: relative; z-index: 3; width: 100%;">
+            <div class="cover-badge-row">
+              <div class="cover-badge">
+                <span>📅</span>
+                <span>{year}年度官方标准版</span>
+              </div>
+              <div class="cover-badge">
+                <span>📝</span>
+                <span>逐步骤图文详解</span>
+              </div>
+              <div class="cover-badge">
+                <span>🚀</span>
+                <span>零技术门槛</span>
+              </div>
+            </div>
+
+            <h1 class="cover-title">
+              <span class="underline">秦安县秦剧团文化演出有限公司云端预约系统</span>
+            </h1>
+            <div class="cover-subtitle">零基础 · EdgeOne Pages 专属部署教程</div>
+
+            <div class="cover-info-card">
+              <div class="cover-info-title">🎯 教 程 导 读 说 明</div>
+              <ul class="cover-info-list">
+                <li>
+                  <span class="label">适用平台</span>
+                  <span class="value">腾讯云 EdgeOne Pages（免费托管）</span>
+                </li>
+                <li>
+                  <span class="label">技术要求</span>
+                  <span class="value">零基础 · 无需写代码 · 无需搭环境</span>
+                </li>
+                <li>
+                  <span class="label">部署耗时</span>
+                  <span class="value">约 5 - 10 分钟即可完成上线</span>
+                </li>
+                <li>
+                  <span class="label">章节总数</span>
+                  <span class="value">9 大步骤 · 逐页详解 · 验收必过</span>
+                </li>
+                <li>
+                  <span class="label">专属适配</span>
+                  <span class="value">💯 本系统 EdgeOne 专属零配置适配</span>
+                </li>
+              </ul>
+            </div>
+
+            <div style="margin-top: 35px; text-align: center; position: relative; z-index: 3;">
+              <div style="display: inline-flex; align-items: center; gap: 12px; padding: 12px 26px; background: linear-gradient(135deg, var(--doc-blue-primary), var(--doc-blue-dark)); color: var(--doc-gold-light); border-radius: 30px; font-weight: 600; font-family: 'KaiTi', 'STKaiti', serif; letter-spacing: 2px; box-shadow: 0 5px 20px rgba(30, 58, 95, 0.25);">
+                <span>📘</span>
+                <span>开始阅读部署教程 · 共 9 大章节</span>
+                <span>⬇️</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="doc-nav-buttons">
+          <button class="doc-nav-btn" onclick="goToPage(1)">
+            <span class="arrow">←</span>
+            <span>上一章：教程封面</span>
+          </button>
+          <div class="doc-nav-info">共 9 章 · 当前第 2 章</div>
+          <button class="doc-nav-btn" onclick="goToPage(3)">
+            <span>下一章：打包步骤</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+
+        <!-- 第2页：一、部署前置准备 -->
+        <section id="page-2" class="chapter-page" data-page-index="2">
+          <div class="chapter-corner-br"></div>
+          <div class="chapter-header">
+            <div class="chapter-number">第 一 章</div>
+            <h2 class="chapter-title">部署前置准备</h2>
+            <div class="chapter-subtitle">3 项必备条件 · 一次性确认到位</div>
+          </div>
+          <div class="chapter-body">
+            <div class="step-section">
+              <div class="step-section-title">
+                <div class="step-num">一</div>
+                <div class="step-text">部署前置准备（共 3 条）</div>
+              </div>
+
+              <ul class="icon-list">
+                <li>
+                  <div class="item-icon">☁️</div>
+                  <div class="item-content">
+                    <div class="item-title">腾讯云账号 + EdgeOne Pages 服务开通</div>
+                    <div class="item-desc">注册并登录腾讯云账号，进入 EdgeOne 控制台开通 Pages 服务（免费托管额度充足，零成本启动）。</div>
+                    <div class="img-placeholder">
+                      <span class="ph-icon">📷</span>
+                      【图文占位】腾讯云 EdgeOne Pages 控制台开通示意图
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div class="item-icon">📂</div>
+                  <div class="item-content">
+                    <div class="item-title">本部署包无需改代码 / 改配置 / 装环境</div>
+                    <div class="item-desc">本系统已完成 EdgeOne Pages 专属深度适配，所有配置零修改开箱即用，无需安装任何软件、无需改任何代码、无需改配置文件。</div>
+                    <div class="img-placeholder">
+                      <span class="ph-icon">📷</span>
+                      【图文占位】部署包文件结构一览图（核心文件在根目录）
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div class="item-icon">💻</div>
+                  <div class="item-content">
+                    <div class="item-title">本地准备：新建文件夹 + 复制全部文件</div>
+                    <div class="item-desc">在本地电脑新建名为 <strong style="color: var(--doc-blue-primary);">qintang-troupe-system</strong> 的文件夹，将本交付包内全部文件完整复制粘贴进去，确保所有资源齐全无遗漏。</div>
+                    <div class="img-placeholder">
+                      <span class="ph-icon">📷</span>
+                      【图文占位】本地新建文件夹 + 复制粘贴文件操作示意图
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <div class="doc-nav-buttons">
+          <button class="doc-nav-btn" onclick="goToPage(2)">
+            <span class="arrow">←</span>
+            <span>上一章：前置准备</span>
+          </button>
+          <div class="doc-nav-info">共 9 章 · 当前第 3 章</div>
+          <button class="doc-nav-btn" onclick="goToPage(4)">
+            <span>下一章：上传部署</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+
+        <!-- 第3页：二、标准化打包步骤 -->
+        <section id="page-3" class="chapter-page" data-page-index="3">
+          <div class="chapter-corner-br"></div>
+          <div class="chapter-header">
+            <div class="chapter-number">第 二 章</div>
+            <h2 class="chapter-title">标准化打包步骤</h2>
+            <div class="chapter-subtitle">4 步规范打包 · 避免部署失败</div>
+          </div>
+          <div class="chapter-body">
+            <div class="step-section">
+              <div class="step-section-title">
+                <div class="step-num">二</div>
+                <div class="step-text">标准化打包步骤（共 4 步）</div>
+              </div>
+
+              <ul class="step-list">
+                <li>
+                  <div class="step-item-title">打开文件夹，校验资源完整性</div>
+                  <div class="step-item-desc">双击打开 <strong>qintang-troupe-system</strong> 文件夹，确认核心文件（index.html、css/style.css、js/app.js、admin目录、图片等）均存在且无缺失，确保交付包完整无损坏。</div>
+                  <div class="img-placeholder">
+                    <span class="ph-icon">📷</span>
+                    【图文占位】文件夹资源完整性校验截图（标注核心文件位置）
+                  </div>
+                </li>
+                <li>
+                  <div class="step-item-title">全选 → 右键 → 压缩为 ZIP（禁止 RAR）</div>
+                  <div class="step-item-desc">按 Ctrl+A 全选文件夹内<strong>所有内容</strong>，右键选择「发送到 → 压缩(zipped)文件夹」，务必使用 ZIP 格式，严禁使用 RAR、7Z 等其他格式，EdgeOne Pages 仅支持 ZIP。</div>
+                  <div class="img-placeholder">
+                    <span class="ph-icon">📷</span>
+                    【图文占位】全选 + 右键压缩为 ZIP 操作流程图
+                  </div>
+                </li>
+                <li>
+                  <div class="step-item-title">命名：秦剧团云端预约系统_最终部署包.zip</div>
+                  <div class="step-item-desc">将生成的 ZIP 压缩包重命名为统一标准名称：<strong style="color: var(--doc-blue-primary);">秦剧团云端预约系统_最终部署包.zip</strong>，便于后续识别与归档管理。</div>
+                  <div class="img-placeholder">
+                    <span class="ph-icon">📷</span>
+                    【图文占位】压缩包标准命名示例图
+                  </div>
+                </li>
+                <li>
+                  <div class="step-item-title">压缩包校验：大小正常 + 无嵌套文件夹</div>
+                  <div class="step-item-desc">双击打开 ZIP 进行校验：① 确认文件大小正常（通常 2-20MB）；② <strong style="color: #c0392b;">核心！</strong>打开 ZIP 后<strong>直接</strong>看到 index.html 等核心文件，<strong>禁止</strong>出现多一层嵌套文件夹（例：ZIP → qintang-troupe-system → index.html 为错误结构，正确应为 ZIP → index.html）。</div>
+                  <div class="img-placeholder">
+                    <span class="ph-icon">📷</span>
+                    【图文占位】正确（无嵌套） vs 错误（多层嵌套）对比图
+                  </div>
+                </li>
+              </ul>
+
+              <div class="warning-box">
+                <div class="warn-icon">⚠️</div>
+                <div>
+                  <div class="warn-title">核心警告！压缩格式与嵌套结构</div>
+                  <div class="warn-text">
+                    ① <strong>禁止使用 RAR 格式</strong>：EdgeOne Pages 仅识别 ZIP，RAR 上传会直接报错导致部署失败；<br>
+                    ② <strong>禁止多层嵌套文件夹</strong>：若 ZIP 内多套了一层文件夹，部署后会全站 404 找不到文件，务必确保核心文件在 ZIP 根目录！
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="doc-nav-buttons">
+          <button class="doc-nav-btn" onclick="goToPage(3)">
+            <span class="arrow">←</span>
+            <span>上一章：打包步骤</span>
+          </button>
+          <div class="doc-nav-info">共 9 章 · 当前第 4 章</div>
+          <button class="doc-nav-btn" onclick="goToPage(5)">
+            <span>下一章：部署校验</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+
+        <!-- 第4页：三、平台上传部署步骤 -->
+        <section id="page-4" class="chapter-page" data-page-index="4">
+          <div class="chapter-corner-br"></div>
+          <div class="chapter-header">
+            <div class="chapter-number">第 三 章</div>
+            <h2 class="chapter-title">平台上传部署步骤</h2>
+            <div class="chapter-subtitle">5 步零配置 · 自动上线</div>
+          </div>
+          <div class="chapter-body">
+            <div class="step-section">
+              <div class="step-section-title">
+                <div class="step-num">三</div>
+                <div class="step-text">平台上传部署步骤（共 5 步）</div>
+              </div>
+
+              <ul class="step-list">
+                <li>
+                  <div class="step-item-title">腾讯云 → EdgeOne Pages 控制台</div>
+                  <div class="step-item-desc">登录腾讯云官网，搜索「EdgeOne」进入产品控制台，在左侧菜单找到「Pages 静态网站托管」模块，点击进入项目管理主界面。</div>
+                  <div class="img-placeholder">
+                    <span class="ph-icon">📷</span>
+                    【图文占位】EdgeOne Pages 控制台入口定位截图
+                  </div>
+                </li>
+                <li>
+                  <div class="step-item-title">创建项目 → 选择「从本地 ZIP 包部署」</div>
+                  <div class="step-item-desc">点击「新建项目」按钮，在部署方式选项中选择 <strong>「从本地 ZIP 包部署」</strong>（不要选 Git 仓库、不要选框架预设），填写项目名称（如：qintang-troupe），项目描述可留空。</div>
+                  <div class="img-placeholder">
+                    <span class="ph-icon">📷</span>
+                    【图文占位】新建项目 + 选择 ZIP 部署方式界面
+                  </div>
+                </li>
+                <li>
+                  <div class="step-item-title">上传 ZIP → 等待平台解析</div>
+                  <div class="step-item-desc">点击「选择文件」上传打包好的 <strong>秦剧团云端预约系统_最终部署包.zip</strong>，等待 10-30 秒平台自动解析文件结构，确认解析后显示的根目录文件清单中 index.html 存在且在第一层。</div>
+                  <div class="img-placeholder">
+                    <span class="ph-icon">📷</span>
+                    【图文占位】ZIP 上传进度条 + 解析成功文件清单
+                  </div>
+                </li>
+                <li>
+                  <div class="step-item-title">所有配置保持默认（无需修改，零配置）</div>
+                  <div class="step-item-desc">编译命令、输出目录、环境变量、框架选择、自定义域名等<strong>所有选项全部默认留空</strong>，本系统已做 EdgeOne 专属零配置适配，改任何一项都可能导致部署异常，切记不要做任何修改！</div>
+                  <div class="img-placeholder">
+                    <span class="ph-icon">📷</span>
+                    【图文占位】配置项默认值展示图（红框标注「全部保持默认」）
+                  </div>
+                </li>
+                <li>
+                  <div class="step-item-title">点击【确认部署】→ 自动编译 + CDN 分发 + 公网上线</div>
+                  <div class="step-item-desc">点击「确认部署」按钮，平台将自动完成：文件解压 → 资源校验 → 编译托管 → CDN 全网分发 → 生成公网访问域名，整个过程约 1-3 分钟，请耐心等待进度条完成。</div>
+                  <div class="img-placeholder">
+                    <span class="ph-icon">📷</span>
+                    【图文占位】部署进度 + 部署成功 + 公网域名展示图
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <div class="doc-nav-buttons">
+          <button class="doc-nav-btn" onclick="goToPage(4)">
+            <span class="arrow">←</span>
+            <span>上一章：上传部署</span>
+          </button>
+          <div class="doc-nav-info">共 9 章 · 当前第 5 章</div>
+          <button class="doc-nav-btn" onclick="goToPage(6)">
+            <span>下一章：迭代更新</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+
+        <!-- 第5页：四、部署完成校验标准 -->
+        <section id="page-5" class="chapter-page" data-page-index="5">
+          <div class="chapter-corner-br"></div>
+          <div class="chapter-header">
+            <div class="chapter-number">第 四 章</div>
+            <h2 class="chapter-title">部署完成校验标准</h2>
+            <div class="chapter-subtitle">验收必过 · 5 条硬核标准</div>
+          </div>
+          <div class="chapter-body">
+            <div class="step-section">
+              <div class="step-section-title">
+                <div class="step-num">四</div>
+                <div class="step-text">部署完成校验标准（验收必过，共 5 条）</div>
+              </div>
+
+              <table class="doc-table">
+                <thead>
+                  <tr>
+                    <th>序号</th>
+                    <th>校验项</th>
+                    <th>校验标准</th>
+                    <th>验收结果</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td>
+                    <td><strong>部署状态</strong></td>
+                    <td>控制台显示「部署成功」，部署日志无报错（红色）、无警告（黄色），进度条 100% 满格完成。</td>
+                    <td><div class="check-result-box">✓</div></td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td><strong>公网访问</strong></td>
+                    <td>使用 EdgeOne 提供的默认公网域名访问，全站页面加载正常、无白屏、无 404；PC/平板/手机三端均自适应无错乱。</td>
+                    <td><div class="check-result-box">✓</div></td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td><strong>年份渲染</strong></td>
+                    <td>全站页面底部版权、页脚标题、文案中所有 <code>{year}</code> 占位符均渲染为当前实际年份（如：{year}），无残留字符串；跨年自动更新、无需手工改码。</td>
+                    <td><div class="check-result-box">✓</div></td>
+                  </tr>
+                  <tr>
+                    <td>4</td>
+                    <td><strong>功能完整</strong></td>
+                    <td>预约表单可填写提交、阶梯优惠联动计算准确、导航跳转流畅无死链、剧目卡片加载正常、后台登录页可正常打开。</td>
+                    <td><div class="check-result-box">✓</div></td>
+                  </tr>
+                  <tr>
+                    <td>5</td>
+                    <td><strong>CDN 加速</strong></td>
+                    <td>全球节点极速加载、首屏打开 ≤ 2 秒、刷新无卡顿无白屏、静态资源（CSS/JS/图片）均命中 CDN 缓存（浏览器开发者工具 Network 面板可验证）。</td>
+                    <td><div class="check-result-box">✓</div></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div style="margin-top: 20px; padding: 18px 22px; background: linear-gradient(135deg, rgba(39, 174, 96, 0.08), rgba(30, 58, 95, 0.04)); border-left: 4px solid #27ae60; border-radius: 10px;">
+                <div style="font-weight: 700; color: #1e8449; margin-bottom: 6px; font-family: 'KaiTi', 'STKaiti', serif; font-size: 1.02rem;">📌 验收结论</div>
+                <div style="font-size: 0.93rem; color: var(--doc-ink); line-height: 1.8;">
+                  以上 5 项校验全部通过（即 5 个绿框均打勾），即可判定本次 EdgeOne Pages 部署<strong style="color: #1e8449;">正式验收合格</strong>，准许进入企业归档、项目正式交付流程。
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="doc-nav-buttons">
+          <button class="doc-nav-btn" onclick="goToPage(5)">
+            <span class="arrow">←</span>
+            <span>上一章：部署校验</span>
+          </button>
+          <div class="doc-nav-info">共 9 章 · 当前第 6 章</div>
+          <button class="doc-nav-btn" onclick="goToPage(7)">
+            <span>下一章：注意事项</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+
+        <!-- 第6页：五、后续迭代更新规范 -->
+        <section id="page-6" class="chapter-page" data-page-index="6">
+          <div class="chapter-corner-br"></div>
+          <div class="chapter-header">
+            <div class="chapter-number">第 五 章</div>
+            <h2 class="chapter-title">后续迭代更新规范</h2>
+            <div class="chapter-subtitle">3 条规范 · 一键迭代无负担</div>
+          </div>
+          <div class="chapter-body">
+            <div class="step-section">
+              <div class="step-section-title">
+                <div class="step-num">五</div>
+                <div class="step-text">后续迭代更新规范（共 3 条）</div>
+              </div>
+
+              <ul class="icon-list">
+                <li>
+                  <div class="item-icon">✏️</div>
+                  <div class="item-content">
+                    <div class="item-title">改版 → 改本地 → 重新打包 → 上传覆盖即可</div>
+                    <div class="item-desc">后续如需更新页面文案、图片、剧目信息等，仅需在本地电脑修改对应的 HTML / CSS / 图片文件，完成后重新按「第二章 · 标准化打包步骤」生成 ZIP，回到 EdgeOne Pages 项目详情页点击「重新部署」上传新 ZIP 即可覆盖上线，全程无需改动底层配置。</div>
+                    <div class="img-placeholder">
+                      <span class="ph-icon">📷</span>
+                      【图文占位】EdgeOne Pages 项目详情页「重新部署」按钮位置图
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div class="item-icon">⚡</div>
+                  <div class="item-content">
+                    <div class="item-title">无需重构 / 改配置 / 搭环境 → 一键迭代</div>
+                    <div class="item-desc">迭代更新<strong>不需要</strong>重新创建项目、<strong>不需要</strong>修改任何平台配置、<strong>不需要</strong>安装 Node.js/构建工具、<strong>不需要</strong>写命令行脚本，只需「本地改文件 → 重新打包ZIP → 上传覆盖」三步闭环，真正零基础一键迭代。</div>
+                    <div class="img-placeholder">
+                      <span class="ph-icon">📷</span>
+                      【图文占位】迭代更新 3 步闭环流程图（改本地 → 打包 → 上传）
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div class="item-icon">🔄</div>
+                  <div class="item-content">
+                    <div class="item-title">平台保留历史版本 → 支持版本回滚 / 溯源</div>
+                    <div class="item-desc">EdgeOne Pages 自动保留每次部署的历史版本（含时间戳、部署人、部署状态），若新版本出现异常，只需在历史版本列表中点击「回滚到该版本」，10 秒内即可恢复任意历史上线版本，全程可追溯、可回退、零风险。</div>
+                    <div class="img-placeholder">
+                      <span class="ph-icon">📷</span>
+                      【图文占位】EdgeOne Pages 历史版本列表 + 一键回滚操作界面
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <div class="doc-nav-buttons">
+          <button class="doc-nav-btn" onclick="goToPage(6)">
+            <span class="arrow">←</span>
+            <span>上一章：迭代更新</span>
+          </button>
+          <div class="doc-nav-info">共 9 章 · 当前第 7 章</div>
+          <button class="doc-nav-btn" onclick="goToPage(8)">
+            <span>下一章：部署预览</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+
+        <!-- 第7页：六、部署注意事项 -->
+        <section id="page-7" class="chapter-page" data-page-index="7">
+          <div class="chapter-corner-br"></div>
+          <div class="chapter-header">
+            <div class="chapter-number">第 六 章</div>
+            <h2 class="chapter-title">部署注意事项</h2>
+            <div class="chapter-subtitle">4 条红色警示 · 规避部署失败</div>
+          </div>
+          <div class="chapter-body">
+            <div class="step-section">
+              <div class="step-section-title">
+                <div class="step-num">六</div>
+                <div class="step-text">部署注意事项（4 条红色警示框）</div>
+              </div>
+
+              <div class="danger-boxes">
+                <div class="danger-box">
+                  <div class="d-icon">❌</div>
+                  <div class="d-text">
+                    <strong>禁止修改原生 JS / 删除年份脚本</strong><br>
+                    严禁手动修改 js/year-lite.js、js/app.js 核心脚本，严禁删除年份动态渲染相关代码；任何改动都会导致预约表单失效、{year} 渲染残留、阶梯优惠计算异常，直接影响系统核心功能。
+                  </div>
+                </div>
+                <div class="danger-box">
+                  <div class="d-icon">❌</div>
+                  <div class="d-text">
+                    <strong>禁止 RAR 格式 / 多层嵌套</strong><br>
+                    严禁使用 RAR、7Z 等非 ZIP 压缩格式（EdgeOne 不识别直接报错）；严禁 ZIP 内嵌套多层文件夹（部署后全站 404）。压缩格式 + 根目录结构两条为<strong>最高优先级红线</strong>，违者直接部署失败。
+                  </div>
+                </div>
+                <div class="danger-box">
+                  <div class="d-icon">❌</div>
+                  <div class="d-text">
+                    <strong>禁止随意更改平台默认配置</strong><br>
+                    EdgeOne Pages 的编译命令、输出目录、框架预设、环境变量、路由规则、缓存策略等<strong>全部保持默认值</strong>，任何一项随意改动均可能导致 CDN 失效、页面打不开、资源加载失败，务必零配置部署。
+                  </div>
+                </div>
+                <div class="danger-box ok">
+                  <div class="d-icon">✅</div>
+                  <div class="d-text">
+                    <strong>系统全自动跨年迭代 · 永久免维护免改码</strong><br>
+                    本系统内置 year-lite.js 全自动年份动态脚本，<strong>每年 1 月 1 日零点自动全站更新为新年份</strong>，无需人工改任何代码、无需重新部署、无需登录后台，一次部署永久跨年免维护，彻底告别年底改年份烦恼。
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top: 28px; padding: 22px 26px; background: linear-gradient(135deg, rgba(243, 156, 18, 0.1), rgba(30, 58, 95, 0.04)); border-radius: 12px; border: 1.5px solid rgba(243, 156, 18, 0.3);">
+                <div style="font-weight: 700; color: #d35400; margin-bottom: 10px; font-size: 1rem; font-family: 'KaiTi', 'STKaiti', serif;">💡 小贴士：部署异常快速排查清单</div>
+                <div style="font-size: 0.92rem; color: var(--doc-ink); line-height: 2;">
+                  ① 部署失败 404 → 检查 ZIP 是否嵌套文件夹 &nbsp;&nbsp;
+                  ② 白屏样式错乱 → 检查是否误改了平台配置 &nbsp;&nbsp;
+                  ③ 年份没渲染 → 检查 js/year-lite.js 是否存在 / 是否被删除 &nbsp;&nbsp;
+                  ④ 加载慢卡顿 → 检查 CDN 缓存是否启用（默认启用即可）
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="doc-nav-buttons">
+          <button class="doc-nav-btn" onclick="goToPage(7)">
+            <span class="arrow">←</span>
+            <span>上一章：注意事项</span>
+          </button>
+          <div class="doc-nav-info">共 9 章 · 当前第 8 章</div>
+          <button class="doc-nav-btn" onclick="goToPage(9)">
+            <span>下一章：终审通过</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+
+        <!-- 第8页：七、项目部署预览规范 -->
+        <section id="page-8" class="chapter-page" data-page-index="8">
+          <div class="chapter-corner-br"></div>
+          <div class="chapter-header">
+            <div class="chapter-number">第 七 章</div>
+            <h2 class="chapter-title">项目部署预览规范</h2>
+            <div class="chapter-subtitle">上线前校验标准 · 重要必查</div>
+          </div>
+          <div class="chapter-body">
+            <div class="step-section">
+              <div class="step-section-title">
+                <div class="step-num">七</div>
+                <div class="step-text">项目部署预览规范（上线前校验标准 · 重要！）</div>
+              </div>
+
+              <div class="sub-section">
+                <div class="sub-section-title">7.1 预览触发方式</div>
+                <div class="sub-section-desc">
+                  ZIP 包上传至 EdgeOne Pages 后，平台在正式部署前会自动生成<strong>临时预览域名</strong>；在部署详情页点击【预览访问】按钮，即可打开离线预览环境进行上线前的完整校验。预览环境与最终正式公网环境代码、资源、配置<strong>100% 完全一致</strong>，预览合格即等同于正式上线合格，可放心发布。
+                </div>
+                <div class="img-placeholder">
+                  <span class="ph-icon">📷</span>
+                  【图文占位】EdgeOne Pages 部署详情页「预览访问」按钮位置 + 临时预览域名示意图
+                </div>
+              </div>
+
+              <div class="sub-section">
+                <div class="sub-section-title">7.2 预览必查 5 核心项（逐项打勾确认）</div>
+                <ul class="checkbox-list">
+                  <li>
+                    <div class="cb"></div>
+                    <div><strong>页面完整性</strong>（7 前台 + 无 404）<br>首页 / 剧团简介 / 剧目中心 / 演出业务 / 新闻动态 / 在线预约 / 联系我们共 7 个前台页面 + 后台管理入口全部可正常打开，无 404 死链。</div>
+                  </li>
+                  <li>
+                    <div class="cb"></div>
+                    <div><strong>动态渲染</strong>（{year} 无残留 + 脚本零报错）<br>全站页面检查：页脚版权、标题中的 {year} 全部渲染为实际年份（{year}）；浏览器控制台 Console 面板零红色 JS 报错。</div>
+                  </li>
+                  <li>
+                    <div class="cb"></div>
+                    <div><strong>多终端适配</strong>（PC / 手机视图切换）<br>浏览器切换「响应式模式」或使用手机扫码访问，PC、平板、手机三种视口下页面均自适应，无横向滚动、无排版错乱。</div>
+                  </li>
+                  <li>
+                    <div class="cb"></div>
+                    <div><strong>功能可用性</strong>（预约表单 / 优惠展示 / 跳转）<br>预约表单可填写提交、场次输入阶梯优惠联动准确、导航跳转流畅、剧目卡片加载完整、后台登录页正常打开。</div>
+                  </li>
+                  <li>
+                    <div class="cb"></div>
+                    <div><strong>资源加载</strong>（CDN 预加载 + 无卡顿无白屏）<br>首屏加载 ≤ 2 秒、刷新无白屏、图片无裂图、CSS/JS 资源全部 200 状态码命中 CDN、页面滚动流畅无卡顿掉帧。</div>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="sub-section">
+                <div class="sub-section-title">7.3 预览环境 vs 正式环境对比</div>
+                <table class="compare-table">
+                  <thead>
+                    <tr>
+                      <th>🔍 预览环境（上线前）</th>
+                      <th>🌐 正式环境（公网上线）</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <span class="tag-preview">临时预览域名</span><br>
+                        EdgeOne 自动生成的随机临时访问链接，仅用于上线前测试，有效期至部署结束。
+                      </td>
+                      <td>
+                        <span class="tag-live">公网正式域名</span><br>
+                        平台分配的永久默认域名（如 xxx.pages.dev）或绑定的自定义企业域名。
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tag-preview">功能 100% 完整</span><br>
+                        所有前台页面 / 后台入口 / 预约 / 脚本 / 样式全部与正式环境完全一致，无任何阉割。
+                      </td>
+                      <td>
+                        <span class="tag-live">功能 100% 完整</span><br>
+                        与预览环境代码一致，加上 CDN 全网节点加速，全球访问更快更稳。
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tag-preview">不对外公开</span><br>
+                        仅拥有预览链接的人员可访问，用于内部测试验收，不会被搜索引擎收录。
+                      </td>
+                      <td>
+                        <span class="tag-live">公网全球可访问</span><br>
+                        部署完成后全球可访问，自动接入搜索引擎收录，可绑定自定义域名。
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tag-preview">可回退可修改</span><br>
+                        预览验收不合格，可终止发布、修改本地文件、重新打包、重新预览，不影响任何线上环境。
+                      </td>
+                      <td>
+                        <span class="tag-live">支持历史版本回滚</span><br>
+                        若正式发布后发现异常，可使用平台历史版本功能一键回滚至上一个稳定版本。
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="doc-nav-buttons">
+          <button class="doc-nav-btn" onclick="goToPage(8)">
+            <span class="arrow">←</span>
+            <span>上一章：部署预览</span>
+          </button>
+          <div class="doc-nav-info">共 9 章 · 当前第 9 章 · 最后一章</div>
+          <button class="doc-nav-btn" disabled>
+            <span>下一章</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+
+        <!-- 第9页：八、终审通过标准 & 异常处理 -->
+        <section id="page-9" class="chapter-page" data-page-index="9">
+          <div class="chapter-corner-br"></div>
+          <div class="chapter-header">
+            <div class="chapter-number">第 八 章 · 终 章</div>
+            <h2 class="chapter-title">终审通过标准 & 异常处理</h2>
+            <div class="chapter-subtitle">正式发布把关 · 官方认证通过</div>
+          </div>
+          <div class="chapter-body">
+            <div class="step-section">
+              <div class="step-section-title">
+                <div class="step-num">八</div>
+                <div class="step-text">终审通过标准 & 异常处理规范</div>
+              </div>
+
+              <div class="pass-box">
+                <div class="pass-title">8.1 预览终审通过标准（绿底大框）</div>
+                <ul class="pass-list">
+                  <li><span class="p-check">✓</span>全站页面完整</li>
+                  <li><span class="p-check">✓</span>视觉样式统一</li>
+                  <li><span class="p-check">✓</span>交互功能正常</li>
+                  <li><span class="p-check">✓</span>脚本零报错</li>
+                  <li><span class="p-check">✓</span>年份渲染精准</li>
+                  <li><span class="p-check">✓</span>多终端适配无误</li>
+                  <li><span class="p-check">✓</span>性能流畅零卡顿</li>
+                  <li><span class="p-check">✓</span>零 BUG 零瑕疵</li>
+                </ul>
+                <div style="text-align: center; margin-top: 18px; padding-top: 14px; border-top: 1px dashed rgba(39, 174, 96, 0.3); font-size: 1.02rem; color: #1e8449; font-weight: 700; font-family: 'KaiTi', 'STKaiti', serif; letter-spacing: 2px;">
+                  → 全部达标即可准许正式公网上线！
+                </div>
+              </div>
+
+              <div style="margin-bottom: 25px;">
+                <h3 style="font-size: 1.1rem; color: var(--doc-blue-dark); margin-bottom: 14px; font-family: 'KaiTi', 'STKaiti', serif; display: flex; align-items: center; gap: 10px;">
+                  <span style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--doc-blue-primary), var(--doc-blue-dark)); color: var(--doc-gold-light); display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 700;">8.2</span>
+                  异常处理规范
+                </h3>
+                <div style="padding: 20px 24px; background: linear-gradient(135deg, rgba(192, 57, 43, 0.06), rgba(243, 156, 18, 0.06)); border-radius: 12px; border: 1.5px solid rgba(192, 57, 43, 0.2); font-size: 0.93rem; color: var(--doc-ink); line-height: 2;">
+                  <strong style="color: #c0392b;">出现异常立即执行以下流程：</strong><br>
+                  ① <strong>终止发布</strong> → 预览环境发现任意瑕疵，立即取消部署，<strong>绝不可带病上线</strong>；<br>
+                  ② <strong>核对资源</strong> → 回到本地对照「第四章 · 部署校验 5 条标准」逐项排查，确认是打包问题、文件缺失、还是脚本异常；<br>
+                  ③ <strong>修复问题</strong> → 针对问题根因修复（例如：嵌套文件夹 → 重新打包；脚本缺失 → 恢复 js 文件；配置误改 → 恢复默认配置）；<br>
+                  ④ <strong>重新打包</strong> → 修复完成后严格按照「第二章 · 标准化打包 4 步」重新生成合规 ZIP；<br>
+                  ⑤ <strong>重新预览</strong> → 上传新 ZIP、生成新预览环境、重复 7.2 节 5 项必查核心清单；<br>
+                  ⑥ <strong>合格上线</strong> → 预览终审全部通过，点击【确认发布】正式公网上线。
+                </div>
+              </div>
+
+              <div style="margin-bottom: 18px;">
+                <h3 style="font-size: 1.1rem; color: var(--doc-blue-dark); margin-bottom: 14px; font-family: 'KaiTi', 'STKaiti', serif; display: flex; align-items: center; gap: 10px;">
+                  <span style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--doc-blue-primary), var(--doc-blue-dark)); color: var(--doc-gold-light); display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 700;">8.3</span>
+                  官方认证印章
+                </h3>
+                <div style="padding: 24px; background: linear-gradient(135deg, rgba(201, 162, 39, 0.1), rgba(30, 58, 95, 0.05)); border-radius: 14px; border: 1.5px dashed rgba(201, 162, 39, 0.4); text-align: center;">
+                  <div class="seal-cert">
+                    <span class="s-icon">🏅</span>
+                    【部署教程专属适配 ✅ · 秦安县秦剧团云端预约系统官方认证】
+                  </div>
+                  <div style="margin-top: 16px; font-size: 0.92rem; color: var(--doc-ink-light); line-height: 1.8;">
+                    本部署教程已针对「秦安县秦剧团云端预约系统 VER-{year}.FINAL-OFFICIAL」完成 EdgeOne Pages 平台全维度适配测试，<br>
+                    严格遵循本教程操作即可实现零配置、零报错、零瑕疵部署上线，官方永久保障兼容合规。
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top: 25px; padding: 22px 26px; background: linear-gradient(135deg, var(--doc-blue-primary), var(--doc-blue-dark)); color: #fff; border-radius: 14px; text-align: center;">
+                <div style="font-size: 1.3rem; font-weight: 700; font-family: 'KaiTi', 'STKaiti', serif; margin-bottom: 10px; letter-spacing: 3px;">
+                  🎉 9 章部署教程全部阅读完成 🎉
+                </div>
+                <div style="font-size: 0.95rem; opacity: 0.9; line-height: 1.9;">
+                  恭喜完成全部部署教程学习！按照本教程 9 大章节逐步骤操作，<br>
+                  即可完成秦安县秦剧团云端预约系统 EdgeOne Pages 零基础正式上线。<br>
+                  <span style="color: var(--doc-gold-light); font-weight: 600;">祝您部署顺利 · 验收满分 · 项目圆满交付！</span>
+                </div>
+                <div style="margin-top: 15px;">
+                  <a href="delivery.html" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; background: var(--doc-gold); color: var(--doc-blue-dark); border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.93rem; box-shadow: 0 4px 14px rgba(201, 162, 39, 0.35);">
+                    📦 前往阅读：最终交付总结文档
+                    <span>→</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="doc-nav-buttons" style="padding-bottom: 0;">
+          <button class="doc-nav-btn" onclick="goToPage(9)">
+            <span class="arrow">←</span>
+            <span>上一章：终审通过标准</span>
+          </button>
+          <div class="doc-nav-info">
+            📜 <a href="delivery.html" style="color: var(--doc-blue-primary); font-weight: 600;">返回：最终交付总结文档</a>
+            &nbsp;|&nbsp;
+            🏠 <a href="index.html" style="color: var(--doc-blue-primary); font-weight: 600;">回到系统首页</a>
+          </div>
+          <button class="doc-nav-btn" disabled>
+            <span>下一章</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, transparent, var(--doc-gold), transparent);"></div>
+    <div class="container" style="padding-top: 50px;">
+      <div class="footer-grid">
+        <div class="footer-col footer-about">
+          <div class="footer-brand">
+            <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+            <div class="brand-text">秦安县秦剧团文化演出有限公司</div>
+          </div>
+          <p>传承陇原秦韵，唱响乡土华章。{year}年初心不改，致力传承西北非遗戏曲文化，为县域群众提供专业秦腔演出服务。</p>
+          <div class="footer-social">
+            <a href="#" title="微信">💬</a>
+            <a href="tel:13993839833" title="电话">📞</a>
+            <a href="contact.html" title="联系">📧</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>文档导航</h4>
+          <ul class="footer-links">
+            <li><a href="architecture.html">🏗️ 架构文档</a></li>
+            <li><a href="delivery.html">📦 交付总结</a></li>
+            <li><a href="deploy.html">🚀 部署教程</a></li>
+            <li><a href="sitemap.xml">🗺️ 站点地图</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>业务入口</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">🏠 系统首页</a></li>
+            <li><a href="booking.html">🎫 在线预约</a></li>
+            <li><a href="operas.html">🎭 剧目中心</a></li>
+            <li><a href="news.html">📰 新闻动态</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>联系预约</h4>
+          <div class="footer-contact-item">
+            <span class="contact-icon">📞</span>
+            <span><a href="tel:13993839833">13993839833</a><br>工作时间：8:00 - 21:00</span>
+          </div>
+          <div class="footer-contact-item">
+            <span class="contact-icon">📍</span>
+            <span>甘肃省天水市秦安县陇城镇张沟村</span>
+          </div>
+          <div class="footer-contact-item">
+            <span class="contact-icon">🔐</span>
+            <span><a href="admin/login.html">后台管理入口</a></span>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© {year} 秦安县秦剧团文化演出有限公司 永久版权所有 · EdgeOne Pages 专属适配教程 · 全项目闭环认证通过 | 陇ICP备（秦安戏曲文化号）</p>
+        <div class="footer-links-inline">
+          <a href="index.html">回到顶部</a>
+          <span>|</span>
+          <a href="deploy.html">部署教程</a>
+          <span>|</span>
+          <a href="booking.html">演出预约</a>
+          <span>|</span>
+          <a href="admin/login.html">管理入口</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function goToPage(pageNum) {
+      if (pageNum < 1 || pageNum > 9) return;
+      var target = document.getElementById('page-' + pageNum);
+      if (target) {
+        var topBar = document.querySelector('.doc-top-bar');
+        var offset = (topBar ? topBar.offsetHeight : 0) + 90;
+        var top = target.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }
+    }
+
+    (function () {
+      var links = document.querySelectorAll('.doc-toc-link');
+      var pages = document.querySelectorAll('.chapter-page');
+
+      function updateActive() {
+        var scrollY = window.scrollY + 180;
+        var currentIndex = 1;
+        pages.forEach(function (page, i) {
+          if (page.offsetTop <= scrollY) {
+            currentIndex = parseInt(page.getAttribute('data-page-index')) || (i + 1);
+          }
+        });
+        links.forEach(function (link) {
+          var p = parseInt(link.getAttribute('data-page'));
+          link.classList.toggle('active', p === currentIndex);
+        });
+      }
+
+      window.addEventListener('scroll', updateActive, { passive: true });
+      document.addEventListener('DOMContentLoaded', updateActive);
+      updateActive();
+    })();
+  </script>
+  <script src="js/year-lite.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
