@@ -1,0 +1,480 @@
+{
+  "info": {
+    "_postman_id": "f13a9b86-7c5d-4f1e-a2b3-9c8d7e6a5b4c",
+    "name": "秦安县秦剧团云端预约系统 · 管理后台 API v1.0 (12页核心CRUD)",
+    "description": "包含 12 个管理页面核心 CRUD：认证/账号/角色权限/审计日志/客户/预约/排期/剧团演员/考勤/财务/报表/库存\n\n接入步骤：\n1. 导入 Collection 后，设置 Collection Variables（baseUrl / admin_username / admin_password）\n2. 先执行『01-认证登录 → POST 登录』获取 Token（脚本自动写入 accessToken 变量）\n3. 后续所有请求自动继承 Authorization: Bearer {{accessToken}}\n4. 若后端离线，可在 booking.html / admin/login.html 观察 localStorage 降级日志（Console）\n\n对应文档：E-5 后端接口对接方案v1.0 / E-2 后端REST鉴权规范v1.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:3001", "type": "string" },
+    { "key": "admin_username", "value": "admin", "type": "string" },
+    { "key": "admin_password", "value": "ChangeMe123!", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "lastAppointmentId", "value": "", "type": "string" },
+    { "key": "lastCustomerId", "value": "", "type": "string" },
+    { "key": "lastAccountId", "value": "", "type": "string" },
+    { "key": "lastRoleId", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{accessToken}}", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "01-认证登录 Auth",
+      "description": "对应页面：admin/login.html + index.html 鉴权守卫",
+      "item": [
+        {
+          "name": "GET 健康检查 healthz (无需鉴权)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/healthz",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "healthz"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('健康检查 status=200', function() { pm.response.to.have.status(200); });",
+            "pm.test('返回 service 字段', function() { var j = pm.response.json(); pm.expect(j.service).to.eql('qaxqjt-api'); });"
+          ], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST 登录 (无需鉴权 → 自动写入 accessToken 变量)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\",\n  \"captcha\": \"\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["v1", "auth", "login"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var code = pm.response.code;",
+            "pm.test('登录 status ∈ [200, 201] or network error for fallback demo', function() { pm.expect(code).to.be.oneOf([200,201]); });",
+            "try {",
+            "  var j = pm.response.json();",
+            "  var data = j.data || j;",
+            "  var tok = data.accessToken || j.accessToken || (data.data && data.data.accessToken);",
+            "  if (tok && String(tok).length > 30) {",
+            "    pm.collectionVariables.set('accessToken', tok);",
+            "    console.log('✅ Token 已写入变量 accessToken (len=' + tok.length + ')');",
+            "    var user = data.user || data.account || {};",
+            "    console.log('👤 当前用户: ' + (user.username || user.realName || '{{admin_username}}') + ' | role=' + (user.role || user.roles));",
+            "  } else { console.warn('⚠️ 未获取到 accessToken：后端返回空或账号密码错误？'); }",
+            "} catch(e) { console.warn('⚠️ 解析响应失败，后端可能离线（前端将自动走 localStorage 降级）：' + e.message); }"
+          ], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET 当前用户 /auth/me",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/auth/me", "host": ["{{baseUrl}}"], "path": ["v1", "auth", "me"] } },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('/auth/me 200 or 401(expected when no token)', function() { pm.expect(pm.response.code).to.be.oneOf([200,401]); });"
+          ], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST 刷新 accessToken /auth/refresh",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"(从登录响应复制粘贴)\"\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/auth/refresh", "host": ["{{baseUrl}}"], "path": ["v1", "auth", "refresh"] }
+          }
+        },
+        {
+          "name": "POST 注销 /auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{baseUrl}}/v1/auth/logout", "host": ["{{baseUrl}}"], "path": ["v1", "auth", "logout"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('登出返回 200', function() { pm.response.to.have.status(200); });",
+            "pm.collectionVariables.set('accessToken', '');"
+          ], "type": "text/javascript" } }]
+        }
+      ]
+    },
+
+    {
+      "name": "02-账号管理 Accounts (accounts.html)",
+      "description": "超级管理员对 IAM 账号的增删改查（对应 admin/accounts.html）",
+      "item": [
+        {
+          "name": "GET 账号列表 (分页+筛选)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/accounts?page=1&pageSize=20&role=&status=active",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "accounts"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" },
+                { "key": "role", "value": "", "disabled": true },
+                { "key": "status", "value": "active", "disabled": true }
+              ]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('列表 200/401/403', function() { pm.expect(pm.response.code).to.be.oneOf([200,401,403]); });",
+            "try { var j = pm.response.json(); var arr = j.data && j.data.list ? j.data.list : (j.list || j.data || j); if(arr && arr[0]) pm.collectionVariables.set('lastAccountId', arr[0].id); } catch(e){}"
+          ], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST 创建账号 (需 super_admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"ops_test_01\",\n  \"password\": \"Qaxqjt@2026\",\n  \"realName\": \"测试运营01\",\n  \"role\": \"ops\",\n  \"phone\": \"13800000001\",\n  \"email\": \"ops01@demo.local\",\n  \"status\": \"active\",\n  \"forcePwdChange\": true\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/accounts", "host": ["{{baseUrl}}"], "path": ["v1", "accounts"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "try { var j = pm.response.json(); if (j.data && j.data.id) pm.collectionVariables.set('lastAccountId', j.data.id); } catch(e){}"
+          ], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET 账号详情 /accounts/:id",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/accounts/{{lastAccountId}}", "host": ["{{baseUrl}}"], "path": ["v1", "accounts", "{{lastAccountId}}"] } }
+        },
+        {
+          "name": "PATCH 修改账号 /accounts/:id",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"realName\": \"测试运营01 - 已修改\",\n  \"phone\": \"13900000001\"\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/accounts/{{lastAccountId}}", "host": ["{{baseUrl}}"], "path": ["v1", "accounts", "{{lastAccountId}}"] }
+          }
+        },
+        {
+          "name": "POST 重置账号密码 /accounts/:id/reset-password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"password\": \"Qaxqjt@NewPwd2026\"\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/accounts/{{lastAccountId}}/reset-password", "host": ["{{baseUrl}}"], "path": ["v1", "accounts", "{{lastAccountId}}", "reset-password"] }
+          }
+        },
+        {
+          "name": "PATCH 修改本人密码 /accounts/me/password",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"oldPassword\": \"{{admin_password}}\",\n  \"newPassword\": \"{{admin_password}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/accounts/me/password", "host": ["{{baseUrl}}"], "path": ["v1", "accounts", "me", "password"] }
+          }
+        },
+        {
+          "name": "DELETE 删除账号 /accounts/:id",
+          "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/v1/accounts/{{lastAccountId}}", "host": ["{{baseUrl}}"], "path": ["v1", "accounts", "{{lastAccountId}}"] } }
+        }
+      ]
+    },
+
+    {
+      "name": "03-角色权限 Roles (roles.html)",
+      "description": "对应 admin/roles.html，角色+权限管理（super_admin 专属）",
+      "item": [
+        {
+          "name": "GET 角色列表 (分页)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/roles?page=1&pageSize=50", "host": ["{{baseUrl}}"], "path": ["v1", "roles"], "query": [{ "key": "page", "value": "1" }, { "key": "pageSize", "value": "50" }] } },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "try { var j = pm.response.json(); var arr = j.data && j.data.list ? j.data.list : (j.list || j.data || j); if(arr && arr[0]) pm.collectionVariables.set('lastRoleId', arr[0].id); } catch(e){}"
+          ], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET 权限列表 /permissions (按模块筛选)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/v1/permissions?module=appointments", "host": ["{{baseUrl}}"], "path": ["v1", "permissions"],
+              "query": [{ "key": "module", "value": "appointments", "disabled": true }] }
+          }
+        },
+        {
+          "name": "POST 创建角色",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"marketing_view\",\n  \"description\": \"市场查看角色（仅读）\",\n  \"level\": 200,\n  \"status\": \"active\"\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/roles", "host": ["{{baseUrl}}"], "path": ["v1", "roles"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "try { var j = pm.response.json(); if(j.data && j.data.id) pm.collectionVariables.set('lastRoleId', j.data.id); } catch(e){}"
+          ], "type": "text/javascript" } }]
+        },
+        {
+          "name": "PATCH 修改角色 /roles/:id",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"description\": \"市场查看角色 - 更新描述\"\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/roles/{{lastRoleId}}", "host": ["{{baseUrl}}"], "path": ["v1", "roles", "{{lastRoleId}}"] }
+          }
+        },
+        {
+          "name": "PUT 分配权限 /roles/:id/permissions",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"permissionIds\": [\"appointments:read\", \"customers:read\", \"finance:view\"]\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/roles/{{lastRoleId}}/permissions", "host": ["{{baseUrl}}"], "path": ["v1", "roles", "{{lastRoleId}}", "permissions"] }
+          }
+        },
+        {
+          "name": "DELETE 删除角色 /roles/:id",
+          "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/v1/roles/{{lastRoleId}}", "host": ["{{baseUrl}}"], "path": ["v1", "roles", "{{lastRoleId}}"] } }
+      ]
+    },
+
+    {
+      "name": "04-审计日志 Audit (审计面板)",
+      "description": "对应 admin 审计日志模块（嵌入 index.html 或独立 audit.html），按模块/操作人/时间范围查询",
+      "item": [
+        {
+          "name": "GET 审计日志列表 (多条件筛选)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/audit-logs?page=1&pageSize=50&module=auth&action=LOGIN_SUCCESS&from=2026-08-01&to=2026-08-04",
+              "host": ["{{baseUrl}}"], "path": ["v1", "audit-logs"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "50" },
+                { "key": "module", "value": "auth" },
+                { "key": "action", "value": "LOGIN_SUCCESS", "disabled": true },
+                { "key": "accountId", "value": "", "disabled": true },
+                { "key": "username", "value": "", "disabled": true },
+                { "key": "from", "value": "2026-08-01", "disabled": true },
+                { "key": "to", "value": "2026-08-04", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "05-客户管理 Customers (customers.html)",
+      "description": "对应 admin/customers.html，客户档案（个人/组织）增删改查",
+      "item": [
+        {
+          "name": "GET 客户列表 (按类型+等级)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/customers?page=1&pageSize=20&customerType=&level=&status=active",
+              "host": ["{{baseUrl}}"], "path": ["v1", "customers"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" },
+                { "key": "customerType", "value": "", "disabled": true },
+                { "key": "level", "value": "", "disabled": true },
+                { "key": "status", "value": "active", "disabled": true }
+              ]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "try { var j = pm.response.json(); var arr = j.data && j.data.list ? j.data.list : (j.list || j.data || j); if(arr && arr[0]) pm.collectionVariables.set('lastCustomerId', arr[0].id); } catch(e){}"
+          ], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST 创建客户 (组织类型·示例)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"customerType\": \"organization\",\n  \"customerName\": \"秦安县文旅局测试\",\n  \"organization\": \"秦安县文体广电和旅游局\",\n  \"contactPerson\": \"王主任\",\n  \"phone\": \"13811112222\",\n  \"backupPhone\": \"0938-1234567\",\n  \"email\": \"wls@demo.local\",\n  \"region\": \"甘肃省-天水市-秦安县\",\n  \"address\": \"秦安县兴国镇文化广场1号\",\n  \"sourceChannel\": \"文旅局官方\",\n  \"level\": \"A\",\n  \"creditLevel\": \"AAA\",\n  \"remark\": \"老客户测试数据\",\n  \"tags\": [\"VIP\", \"文旅系统\"],\n  \"contacts\": [\n    { \"name\": \"王主任\", \"phone\": \"13811112222\", \"position\": \"主任\", \"isPrimary\": true },\n    { \"name\": \"李秘书\", \"phone\": \"13911113333\", \"position\": \"秘书\", \"isPrimary\": false }\n  ],\n  \"firstContactDate\": \"2025-03-15\",\n  \"status\": \"active\"\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/customers", "host": ["{{baseUrl}}"], "path": ["v1", "customers"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "try { var j = pm.response.json(); if(j.data && j.data.id) pm.collectionVariables.set('lastCustomerId', j.data.id); } catch(e){}"
+          ], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET 客户详情 /customers/:id",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/customers/{{lastCustomerId}}", "host": ["{{baseUrl}}"], "path": ["v1", "customers", "{{lastCustomerId}}"] } }
+        },
+        {
+          "name": "PATCH 修改客户 /customers/:id",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"contactPerson\": \"王主任-更新\",\n  \"phone\": \"13899990000\",\n  \"level\": \"S\"\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/customers/{{lastCustomerId}}", "host": ["{{baseUrl}}"], "path": ["v1", "customers", "{{lastCustomerId}}"] }
+          }
+        },
+        {
+          "name": "DELETE 删除客户 /customers/:id",
+          "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/v1/customers/{{lastCustomerId}}", "host": ["{{baseUrl}}"], "path": ["v1", "customers", "{{lastCustomerId}}"] } }
+      ]
+    },
+
+    {
+      "name": "06-预约管理 Appointments (appointments.html + detail)",
+      "description": "对应 appointments.html + appointment-detail.html，共 11 个接口（含状态流转+剧目绑定）",
+      "item": [
+        {
+          "name": "GET 预约列表 (分页+状态+日期范围)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/appointments?page=1&pageSize=20&status=pending&packageType=&fromDate=2026-08-01&toDate=2026-09-30",
+              "host": ["{{baseUrl}}"], "path": ["v1", "appointments"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" },
+                { "key": "status", "value": "pending", "disabled": true },
+                { "key": "packageType", "value": "", "disabled": true },
+                { "key": "source", "value": "", "disabled": true },
+                { "key": "customerId", "value": "", "disabled": true },
+                { "key": "fromDate", "value": "2026-08-01", "disabled": true },
+                { "key": "toDate", "value": "2026-09-30", "disabled": true }
+              ]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "try { var j = pm.response.json(); var arr = j.data && j.data.list ? j.data.list : (j.list || j.data || j); if(arr && arr[0]) pm.collectionVariables.set('lastAppointmentId', arr[0].id); } catch(e){}"
+          ], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET 预约统计 /appointments/stats",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/appointments/stats", "host": ["{{baseUrl}}"], "path": ["v1", "appointments", "stats"] } }
+        },
+        {
+          "name": "POST 创建预约 (匿名公开接口·无需鉴权) — booking.html 提交",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"booking.html 测试-张大哥\",\n  \"customerType\": \"personal\",\n  \"organization\": \"\",\n  \"contactPerson\": \"张大哥\",\n  \"phone\": \"13844445555\",\n  \"backupPhone\": \"\",\n  \"email\": \"zhang@demo.local\",\n  \"region\": \"甘肃秦安\",\n  \"address\": \"秦安县叶堡镇\",\n  \"sourceChannel\": \"微信朋友圈\",\n  \"preferredStartDate\": \"2026-09-15\",\n  \"preferredEndDate\": \"2026-09-17\",\n  \"performanceCount\": 3,\n  \"packageType\": \"temple_fair\",\n  \"venueProvince\": \"甘肃省\",\n  \"venueCity\": \"天水市\",\n  \"venueDistrict\": \"秦安县\",\n  \"venueAddress\": \"叶堡镇文化广场舞台\",\n  \"estimatedBudget\": 36000.00,\n  \"totalPerformanceFee\": 36000.00,\n  \"depositAmount\": 10000.00,\n  \"paymentTerms\": \"签合同付 30%，演出前 3 天付清尾款\",\n  \"specialRequirements\": \"需要音响设备和灯光全套，安排《三滴血》《周仁回府》\",\n  \"remarkInternal\": \"\",\n  \"smsVerifiedFlag\": false,\n  \"plays\": [\n    { \"playId\": \"play_san_di_xue\", \"sortOrder\": 1, \"performanceDate\": \"2026-09-15\", \"performanceTime\": \"20:00\", \"note\": \"夜场\" },\n    { \"playId\": \"play_zhou_ren_hui_fu\", \"sortOrder\": 2, \"performanceDate\": \"2026-09-16\", \"performanceTime\": \"20:00\", \"note\": \"夜场\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/v1/appointments", "host": ["{{baseUrl}}"], "path": ["v1", "appointments"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var code = pm.response.code;",
+            "if (code >= 200 && code < 300) {",
+            "  try { var j = pm.response.json(); if(j.data && j.data.id) pm.collectionVariables.set('lastAppointmentId', j.data.id); console.log('✅ 预约提交成功 ID=' + (j.data.id || '')); }",
+            "  catch(e) { console.warn('解析响应失败: ' + e.message); }",
+            "} else {",
+            "  console.warn('⚠️ 预约接口失败 code=' + code + '；booking.html 将自动降级写入 localStorage（可在浏览器 Console 验证）。');",
+            "}"
+          ], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET 预约详情 /appointments/:id",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/appointments/{{lastAppointmentId}}", "host": ["{{baseUrl}}"], "path": ["v1", "appointments", "{{lastAppointmentId}}"] } }
+        },
+        {
+          "name": "PATCH 修改预约 (改期/改预算等)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"preferredStartDate\": \"2026-10-01\",\n  \"preferredEndDate\": \"2026-10-03\",\n  \"remarkInternal\": \"客户要求改到国庆期间\"\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/appointments/{{lastAppointmentId}}", "host": ["{{baseUrl}}"], "path": ["v1", "appointments", "{{lastAppointmentId}}"] }
+          }
+        },
+        {
+          "name": "POST 状态流转 (pending → confirmed/rejected/cancelled/converted)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"to\": \"confirmed\",\n  \"reason\": \"合同已签，定金￥10000 已到账\"\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/appointments/{{lastAppointmentId}}/transition", "host": ["{{baseUrl}}"], "path": ["v1", "appointments", "{{lastAppointmentId}}", "transition"] }
+          }
+        },
+        {
+          "name": "GET 预约操作审计日志 /:id/audit-logs",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/appointments/{{lastAppointmentId}}/audit-logs", "host": ["{{baseUrl}}"], "path": ["v1", "appointments", "{{lastAppointmentId}}", "audit-logs"] } }
+        },
+        {
+          "name": "GET 预约绑定剧目 /:id/plays",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/appointments/{{lastAppointmentId}}/plays", "host": ["{{baseUrl}}"], "path": ["v1", "appointments", "{{lastAppointmentId}}", "plays"] } }
+        },
+        {
+          "name": "PUT 覆盖预约剧目 /:id/plays",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "[\n  { \"playId\": \"play_san_di_xue\", \"sortOrder\": 1, \"performanceDate\": \"2026-10-01\", \"performanceTime\": \"20:00\", \"note\": \"国庆夜场 1\" },\n  { \"playId\": \"play_zhou_ren_hui_fu\", \"sortOrder\": 2, \"performanceDate\": \"2026-10-02\", \"performanceTime\": \"14:00\", \"note\": \"国庆午场\" },\n  { \"playId\": \"play_qing_dian\", \"sortOrder\": 3, \"performanceDate\": \"2026-10-03\", \"performanceTime\": \"20:00\", \"note\": \"国庆夜场 2\" }\n]" },
+            "url": { "raw": "{{baseUrl}}/v1/appointments/{{lastAppointmentId}}/plays", "host": ["{{baseUrl}}"], "path": ["v1", "appointments", "{{lastAppointmentId}}", "plays"] }
+          }
+        },
+        {
+          "name": "DELETE 删除预约 /:id",
+          "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/v1/appointments/{{lastAppointmentId}}", "host": ["{{baseUrl}}"], "path": ["v1", "appointments", "{{lastAppointmentId}}"] }
+        }
+      ]
+    },
+
+    {
+      "name": "07-排期管理 Schedules (scheduling.html)",
+      "description": "对应 admin/scheduling.html，剧团演出排期",
+      "item": [
+        { "name": "GET 排期列表 (按月份/演员/状态)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/schedules?page=1&pageSize=50&yearMonth=2026-09&performerId=&status=confirmed", "host": ["{{baseUrl}}"], "path": ["v1", "schedules"], "query": [ { "key": "page", "value": "1" }, { "key": "pageSize", "value": "50" }, { "key": "yearMonth", "value": "2026-09" }, { "key": "performerId", "value": "", "disabled": true }, { "key": "status", "value": "confirmed", "disabled": true } ] } } },
+        { "name": "POST 创建排期 (绑定预约)", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"appointmentId\": \"\",\n  \"title\": \"国庆档 - 秦安叶堡镇演出\",\n  \"startAt\": \"2026-10-01T19:30:00+08:00\",\n  \"endAt\": \"2026-10-01T22:00:00+08:00\",\n  \"venue\": \"叶堡镇文化广场舞台\",\n  \"castSheetRequired\": true\n}" }, "url": { "raw": "{{baseUrl}}/v1/schedules", "host": ["{{baseUrl}}"], "path": ["v1", "schedules"] } } },
+        { "name": "PATCH 修改排期 /:id", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"status\": \"confirmed\" }" }, "url": { "raw": "{{baseUrl}}/v1/schedules/1", "host": ["{{baseUrl}}"], "path": ["v1", "schedules", "1"] } } }
+      ]
+    },
+
+    {
+      "name": "08-剧团演员 Performers/Cast (troupe.html + resources.html)",
+      "description": "对应 admin/troupe.html（剧团演员档案）+ resources.html（服装道具资源）",
+      "item": [
+        { "name": "GET 演员列表", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/performers?page=1&pageSize=100&roleType=&status=on_contract", "host": ["{{baseUrl}}"], "path": ["v1", "performers"], "query": [ { "key": "page", "value": "1" }, { "key": "pageSize", "value": "100" }, { "key": "roleType", "value": "", "disabled": true }, { "key": "status", "value": "on_contract", "disabled": true } ] } } },
+        { "name": "POST 创建演员档案", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"李梅芳-测试\",\n  \"roleType\": \"huadan\",\n  \"phone\": \"13800001111\",\n  \"joinDate\": \"2018-05-01\",\n  \"status\": \"on_contract\",\n  \"monthlyBaseSalary\": 4800\n}" }, "url": { "raw": "{{baseUrl}}/v1/performers", "host": ["{{baseUrl}}"], "path": ["v1", "performers"] } } },
+        { "name": "GET 排戏单列表 /cast-sheets", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/cast-sheets?scheduleId=", "host": ["{{baseUrl}}"], "path": ["v1", "cast-sheets"], "query": [ { "key": "scheduleId", "value": "", "disabled": true } ] } }
+      ]
+    },
+
+    {
+      "name": "09-考勤记录 Attendances (考勤模块)",
+      "description": "剧团人员演出/排练考勤打卡与统计",
+      "item": [
+        { "name": "GET 考勤列表 (按月份/人员)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/attendances?page=1&pageSize=100&yearMonth=2026-08&performerId=", "host": ["{{baseUrl}}"], "path": ["v1", "attendances"], "query": [ { "key": "page", "value": "1" }, { "key": "pageSize", "value": "100" }, { "key": "yearMonth", "value": "2026-08" }, { "key": "performerId", "value": "", "disabled": true } ] } } },
+        { "name": "POST 新建考勤 (演出打卡)", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"performerId\": \"\",\n  \"type\": \"performance\",\n  \"scheduleId\": \"\",\n  \"checkInAt\": \"2026-08-04T19:30:00+08:00\",\n  \"location\": \"秦安县剧团大院 2 号排练厅\"\n}" }, "url": { "raw": "{{baseUrl}}/v1/attendances", "host": ["{{baseUrl}}"], "path": ["v1", "attendances"] } } },
+        { "name": "PATCH 修改考勤 /:id", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"remark\": \"补签：临时请假 1 小时\" }" }, "url": { "raw": "{{baseUrl}}/v1/attendances/1", "host": ["{{baseUrl}}"], "path": ["v1", "attendances", "1"] } } }
+      ]
+    },
+
+    {
+      "name": "10-财务总账 Finance (finance.html + salary.html)",
+      "description": "对应 admin/finance.html（财务总账）+ salary.html（工资发放）",
+      "item": [
+        { "name": "GET 财务明细 /fin-ledger (多条件)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/fin-ledger?page=1&pageSize=50&entryType=income&from=2026-08-01&to=2026-08-04&appointmentId=", "host": ["{{baseUrl}}"], "path": ["v1", "fin-ledger"], "query": [ { "key": "page", "value": "1" }, { "key": "pageSize", "value": "50" }, { "key": "entryType", "value": "income" }, { "key": "from", "value": "2026-08-01" }, { "key": "to", "value": "2026-08-04" }, { "key": "appointmentId", "value": "", "disabled": true } ] } } },
+        { "name": "POST 新增财务条目 (收/付款登记)", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"entryType\": \"income\",\n  \"amount\": 10000.00,\n  \"currency\": \"CNY\",\n  \"occurredAt\": \"2026-08-04T15:30:00+08:00\",\n  \"appointmentId\": \"\",\n  \"customerName\": \"booking 定金到账\",\n  \"category\": \"deposit\",\n  \"paymentMethod\": \"bank_transfer\",\n  \"remark\": \"客户定金￥10000 已到账-合同号 AP20260804-01\"\n}" }, "url": { "raw": "{{baseUrl}}/v1/fin-ledger", "host": ["{{baseUrl}}"], "path": ["v1", "fin-ledger"] } } },
+        { "name": "GET 工资批次列表 /wage-batches (salary.html)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/wage-batches?page=1&pageSize=20&yearMonth=2026-07", "host": ["{{baseUrl}}"], "path": ["v1", "wage-batches"], "query": [ { "key": "page", "value": "1" }, { "key": "pageSize", "value": "20" }, { "key": "yearMonth", "value": "2026-07" } ] } } },
+        { "name": "GET 工资汇总 (月度统计)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/finance/summary?yearMonth=2026-07", "host": ["{{baseUrl}}"], "path": ["v1", "finance", "summary"], "query": [ { "key": "yearMonth", "value": "2026-07" } ] } } },
+        { "name": "GET 收入趋势报表 (最近 6 个月)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/finance/revenue-trend?months=6", "host": ["{{baseUrl}}"], "path": ["v1", "finance", "revenue-trend"], "query": [ { "key": "months", "value": "6" } ] } } }
+      ]
+    },
+
+    {
+      "name": "11-报表中心 Reports (reports.html)",
+      "description": "对应 admin/reports.html，订单 / 预约 / 财务的多维度汇总报表",
+      "item": [
+        { "name": "GET 订单列表 /orders (分页)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/orders?page=1&pageSize=30&status=paid&from=2026-07-01&to=2026-08-04", "host": ["{{baseUrl}}"], "path": ["v1", "orders"], "query": [ { "key": "page", "value": "1" }, { "key": "pageSize", "value": "30" }, { "key": "status", "value": "paid", "disabled": true }, { "key": "from", "value": "2026-07-01", "disabled": true }, { "key": "to", "value": "2026-08-04", "disabled": true } ] } } },
+        { "name": "GET 订单详情 /orders/:id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/orders/ORD20260801-0001", "host": ["{{baseUrl}}"], "path": ["v1", "orders", "ORD20260801-0001"] } } },
+        { "name": "GET 预约状态汇总报表 (J1庙/文旅/校园 场景分布)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/appointments/stats", "host": ["{{baseUrl}}"], "path": ["v1", "appointments", "stats"] } } }
+      ]
+    },
+
+    {
+      "name": "12-库存&内容 Inventory/Contents (inventory.html + 公众号内容)",
+      "description": "对应 admin/inventory.html（服装道具物料库存）+ 公众号内容管理",
+      "item": [
+        { "name": "GET 库存物料列表 (按分类/状态)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/inventory?page=1&pageSize=100&category=costume&status=in_stock&keyword=", "host": ["{{baseUrl}}"], "path": ["v1", "inventory"], "query": [ { "key": "page", "value": "1" }, { "key": "pageSize", "value": "100" }, { "key": "category", "value": "costume", "disabled": true }, { "key": "status", "value": "in_stock", "disabled": true }, { "key": "keyword", "value": "", "disabled": true } ] } } },
+        { "name": "POST 新增库存 (服装入库)", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"skuCode\": \"COST-HUA-DAN-001\",\n  \"name\": \"花旦戏服 - 粉色绣金\",\n  \"category\": \"costume\",\n  \"quantity\": 6,\n  \"unit\": \"套\",\n  \"location\": \"1号服装库房 - A区 3排\",\n  \"status\": \"in_stock\"\n}" }, "url": { "raw": "{{baseUrl}}/v1/inventory", "host": ["{{baseUrl}}"], "path": ["v1", "inventory"] } } },
+        { "name": "GET 公众号内容/剧目列表 /contents", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/v1/contents?page=1&pageSize=30&type=play&status=published", "host": ["{{baseUrl}}"], "path": ["v1", "contents"], "query": [ { "key": "page", "value": "1" }, { "key": "pageSize", "value": "30" }, { "key": "type", "value": "play" }, { "key": "status", "value": "published", "disabled": true } ] } } },
+        { "name": "POST 新建剧目宣传内容", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"type\": \"play\",\n  \"title\": \"三滴血\",\n  \"author\": \"范紫东\",\n  \"durationMin\": 135,\n  \"summary\": \"经典秦腔剧目，讲述晋信书滴血认亲造成冤案，后真相反转的故事。\",\n  \"coverUrl\": \"\",\n  \"status\": \"published\"\n}" }, "url": { "raw": "{{baseUrl}}/v1/contents", "host": ["{{baseUrl}}"], "path": ["v1", "contents"] } } }
+      ]
+    }
+  ]
+}

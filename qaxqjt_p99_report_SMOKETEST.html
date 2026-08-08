@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>🎭 秦安县秦剧团 · Admin 按钮兜底 Perf P99 报表</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+         background:#f1f5f9; color:#0f172a; margin:0; padding:24px; }
+  h1 { margin:0 0 6px; font-size:22px; color:#0a3a63; }
+  .sub { color:#64748b; margin-bottom:22px; font-size:13px; }
+  .card { background:#fff; border-radius:14px; padding:18px 20px; box-shadow:0 2px 8px rgba(15,23,42,.06);
+          margin-bottom:18px; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:18px; }
+  .kpi { background:#fff; border-radius:14px; padding:16px; box-shadow:0 2px 8px rgba(15,23,42,.06);
+          border-left:4px solid #0F4C81; }
+  .kpi .v { font-size:30px; font-weight:700; color:#0a3a63; margin:6px 0 2px; }
+  .kpi.p99 { border-left-color:#dc2626; } .kpi.p99 .v { color:#b91c1c; }
+  .kpi.p95 { border-left-color:#f59e0b; } .kpi.p95 .v { color:#b45309; }
+  .kpi.p50 { border-left-color:#16a34a; } .kpi.p50 .v { color:#15803d; }
+  .kpi.tot { border-left-color:#6366f1; } .kpi.tot .v { color:#4338ca; }
+  .kpi .l { color:#64748b; font-size:13px; } .kpi .r { color:#94a3b8; font-size:12px; margin-top:4px; }
+  .row { display:grid; gap:18px; }
+  .row.c2 { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 900px){ .row.c2{grid-template-columns:1fr;} }
+  h2 { font-size:15px; margin:0 0 10px; color:#334155; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th,td { padding:9px 10px; border-bottom:1px solid #e2e8f0; text-align:left; }
+  th { background:#f8fafc; color:#475569; } td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.slow td { color:#b91c1c; }
+  .tag { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; }
+  .tag.ok   { background:#dcfce7; color:#166534; }
+  .tag.warn { background:#fef3c7; color:#92400e; }
+  .tag.err  { background:#fee2e2; color:#991b1b; }
+  .chart { width:100%; height:320px; }
+  .footer { color:#94a3b8; font-size:12px; text-align:center; margin-top:22px; }
+</style>
+</head>
+<body>
+  <h1>🎭 秦安县秦剧团云端预约系统 · Admin 按钮兜底 Perf P99 报表</h1>
+  <div class="sub">
+    报表时间：2026-08-04 17:10:36 · 查询范围：最近 1 小时 · 分桶：1m · 索引：<code>qaxqjt-admin-perf-*</code> ·
+    ES：<code>http://localhost:9200</code>
+    &nbsp; → 总体评价：<span id="badgePlaceholder"></span>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpis">
+    <div class="kpi tot"><div class="l">总点击 span 数（样本量）</div>
+      <div class="v" id="kpiTotal">-</div><div class="r">value_count(trace_id)</div></div>
+    <div class="kpi p50"><div class="l">整体 P50 延迟 (ms)</div>
+      <div class="v" id="kpiP50">-</div><div class="r">50% 用户请求 ≤ 该值</div></div>
+    <div class="kpi p95"><div class="l">整体 P95 延迟 (ms)</div>
+      <div class="v" id="kpiP95">-</div><div class="r">95% 用户请求 ≤ 该值</div></div>
+    <div class="kpi p99"><div class="l">整体 P99 延迟 (ms)</div>
+      <div class="v" id="kpiP99">-</div><div class="r">99% 用户请求 ≤ 该值</div></div>
+  </div>
+
+  <!-- 分桶延迟趋势 -->
+  <div class="card">
+    <h2>📈 延迟趋势（P50 / P95 / P99 每分钟分桶）</h2>
+    <div id="chartLine" class="chart"></div>
+  </div>
+
+  <div class="row c2">
+    <!-- 分桶吞吐 + 分支 P99 柱 -->
+    <div class="card">
+      <h2>📊 各业务分支 P99 延迟对比（Top 10 最慢）</h2>
+      <div id="chartBranch" class="chart"></div>
+    </div>
+    <div class="card">
+      <h2>🍩 真实绑定 vs 兜底命中占比</h2>
+      <div id="chartPie" class="chart"></div>
+    </div>
+  </div>
+
+  <!-- Top10 最慢分支表格 -->
+  <div class="card">
+    <h2>🔍 最慢分支明细（按 P99 倒序）</h2>
+    <table>
+      <thead><tr><th>#</th><th>branch</th><th class="num">点击次数</th>
+        <th class="num">P99 (ms)</th><th>评级</th></tr></thead>
+      <tbody id="branchTbody"></tbody>
+    </table>
+  </div>
+
+  <!-- 原始 JSON -->
+  <details style="margin-top:18px"><summary style="cursor:pointer;color:#64748b;font-size:13px">
+    查看本次 ES 查询原始聚合数据（调试用）</summary>
+    <pre id="rawJson" style="background:#fff;padding:14px;border-radius:10px;
+          font-size:12px;overflow-x:auto;max-height:420px"></pre>
+  </details>
+
+  <div class="footer">
+    生成脚本：elk_p99_report.py · 对应通用模板 v20260804-2（JSON Perf + 防重复注入）
+  </div>
+
+<script>
+/* ---------- 注入数据 ---------- */
+const DATA = {"total_count": 4368, "overall_p50": 18.5, "overall_p90": 42.0, "overall_p95": 68.7, "overall_p99": 145.2, "per_minute": [{"ts": "2024-03-10T10:00:00.000Z", "ms": 1710000000000, "cnt": 780, "p50": 10.0, "p95": 30.0, "p99": 90.0}, {"ts": "2024-03-10T10:01:00.000Z", "ms": 1710000060000, "cnt": 812, "p50": 12.0, "p95": 38.0, "p99": 100.0}, {"ts": "2024-03-10T10:02:00.000Z", "ms": 1710000120000, "cnt": 650, "p50": 16.0, "p95": 60.0, "p99": 150.0}, {"ts": "2024-03-10T10:03:00.000Z", "ms": 1710000180000, "cnt": 520, "p50": 22.0, "p95": 72.0, "p99": 198.0}, {"ts": "2024-03-10T10:04:00.000Z", "ms": 1710000240000, "cnt": 930, "p50": 25.0, "p95": 100.0, "p99": 280.0}, {"ts": "2024-03-10T10:05:00.000Z", "ms": 1710000300000, "cnt": 676, "p50": 20.0, "p95": 50.0, "p99": 120.0}], "by_module": [{"module": "DBF", "count": 2400, "p99": 140.0}, {"module": "SP", "count": 1968, "p99": 150.0}], "by_branch": [{"branch": "save", "count": 420, "p99": 320.0}, {"branch": "dispatch", "count": 280, "p99": 210.0}, {"branch": "audit", "count": 390, "p99": 80.0}, {"branch": "verify", "count": 310, "p99": 45.0}], "by_bound": {"真实绑定(bound=true)": 3900, "兜底命中(bound=false)": 468}};
+document.getElementById('rawJson').textContent = JSON.stringify(DATA, null, 2);
+
+/* KPI */
+function fmt(v, suffix=''){ return (v===null||v===undefined) ? '-' : (Math.round(v*100)/100 + suffix); }
+document.getElementById('kpiTotal').textContent = DATA.total_count.toLocaleString();
+document.getElementById('kpiP50').textContent   = fmt(DATA.overall_p50);
+document.getElementById('kpiP95').textContent   = fmt(DATA.overall_p95);
+document.getElementById('kpiP99').textContent   = fmt(DATA.overall_p99);
+const p99 = DATA.overall_p99 ?? 0;
+const badge = document.getElementById('badgePlaceholder');
+if (DATA.total_count === 0) {
+  badge.outerHTML = '<span class="tag warn">⚠️ 无样本（请确认 ES 有写入数据）</span>';
+} else if (p99 <= 50) {
+  badge.outerHTML = '<span class="tag ok">✅ 优秀（P99 ≤ 50ms）</span>';
+} else if (p99 <= 200) {
+  badge.outerHTML = '<span class="tag warn">⚠️ 一般（P99 ≤ 200ms）</span>';
+} else {
+  badge.outerHTML = '<span class="tag err">❌ 告警（P99 > 200ms，建议排查慢分支）</span>';
+}
+
+/* 分桶折线图 */
+(function(){
+  const buckets = DATA.per_minute || [];
+  const xs = buckets.map(b => (b.ts || '').replace('T',' ').slice(0,16));
+  const opt = {
+    tooltip:{trigger:'axis'}, legend:{data:['P50','P95','P99','点击次数(RPS)']},
+    grid:{left:50,right:60,top:40,bottom:50},
+    xAxis:{type:'category',data:xs,axisLabel:{rotate:30}},
+    yAxis:[
+      {type:'value', name:'延迟 (ms)', position:'left'},
+      {type:'value', name:'点击次数', position:'right'}
+    ],
+    series:[
+      {name:'P50', type:'line', smooth:true, data:buckets.map(b=>b.p50),
+       itemStyle:{color:'#16a34a'}, areaStyle:{opacity:0.08}},
+      {name:'P95', type:'line', smooth:true, data:buckets.map(b=>b.p95),
+       itemStyle:{color:'#f59e0b'}},
+      {name:'P99', type:'line', smooth:true, data:buckets.map(b=>b.p99),
+       itemStyle:{color:'#dc2626'}, lineStyle:{width:3}},
+      {name:'点击次数(RPS)', type:'bar', yAxisIndex:1, data:buckets.map(b=>b.cnt),
+       itemStyle:{color:'rgba(99,102,241,0.35)', borderRadius:[6,6,0,0]}}
+    ]
+  };
+  echarts.init(document.getElementById('chartLine')).setOption(opt);
+})();
+
+/* 分支 P99 柱 */
+(function(){
+  const rows = DATA.by_branch || [];
+  const opt = {
+    tooltip:{trigger:'axis', axisPointer:{type:'shadow'}},
+    grid:{left:120,right:30,top:30,bottom:40},
+    xAxis:{type:'value', name:'P99 (ms)'},
+    yAxis:{type:'category', data:rows.map(r=>r.branch).reverse(), inverse:false},
+    series:[{
+      type:'bar', label:{show:true, position:'right', formatter:'{c} ms'},
+      data: rows.slice().reverse().map(r => ({
+        value: r.p99,
+        itemStyle:{color: r.p99>=200?'#dc2626': r.p99>=50?'#f59e0b':'#16a34a',
+                   borderRadius:[0,8,8,0]}
+      }))
+    }]
+  };
+  echarts.init(document.getElementById('chartBranch')).setOption(opt);
+})();
+
+/* 真实绑定 vs 兜底饼图 */
+(function(){
+  const m = DATA.by_bound || {};
+  const arr = Object.entries(m).map(([k,v])=>({name:k, value:v}));
+  const opt = {
+    tooltip:{trigger:'item', formatter:'{b}: {c} ({d}%)'},
+    legend:{bottom:0},
+    color:['#6366f1','#f59e0b'],
+    series:[{type:'pie', radius:['45%','72%'], center:['50%','46%'],
+      label:{formatter:'{b}\n{d}%', fontSize:12},
+      data: arr.length ? arr : [{name:'无数据',value:1}]}]
+  };
+  echarts.init(document.getElementById('chartPie')).setOption(opt);
+})();
+
+/* 最慢分支表格 */
+(function(){
+  const tb = document.getElementById('branchTbody');
+  const rows = DATA.by_branch || [];
+  if (!rows.length){ tb.innerHTML = '<tr><td colspan=5 style="color:#94a3b8">无数据</td></tr>'; return; }
+  tb.innerHTML = rows.map((r,i)=>{
+    const cls = r.p99>=200?'slow':'';
+    const tag = r.p99>=200 ? '<span class="tag err">慢</span>'
+             : r.p99>=50  ? '<span class="tag warn">中</span>'
+             :              '<span class="tag ok">快</span>';
+    return `<tr class="${cls}"><td>${i+1}</td><td><code>${htmlEscape(r.branch)}</code></td>
+      <td class="num">${r.count.toLocaleString()}</td>
+      <td class="num"><b>${fmt(r.p99)}</b></td><td>${tag}</td></tr>`;
+  }).join('');
+  function htmlEscape(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+})();
+</script>
+</body>
+</html>

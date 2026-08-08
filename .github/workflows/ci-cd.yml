@@ -1,0 +1,438 @@
+# ==============================================================================
+# 秦安县秦剧团云端预约系统 · GitHub Actions CI/CD 流水线 v1.0
+# 对应文档：E-3 高可用与容灾方案 / F-1 后端部署完整清单
+#
+# ⚠️ 使用前必须在 GitHub 仓库配置以下 Secrets（Settings → Secrets and variables → Actions）：
+#   【镜像仓库 · 二选一】
+#   · 方案 A — GHCR（开箱即用，无需额外配置）：
+#     无需额外 Secrets，自动使用 ${{ secrets.GITHUB_TOKEN }}，镜像地址：
+#       ghcr.io/<OWNER>/<REPO>/qaxqjt-api   （全小写）
+#
+#   · 方案 B — 阿里云 ACR / 其他 Docker Registry：
+#     DOCKER_USERNAME : Docker Registry 登录用户名（如 ACR 实例 ID）
+#     DOCKER_PASSWORD : Docker Registry 登录密码 / AccessKey Secret
+#     DOCKER_REGISTRY : （可选，默认 registry.cn-beijing.aliyuncs.com）
+#     DOCKER_NAMESPACE: （可选，如 qaxqjt / your-namespace）
+#
+#   【生产部署（deploy-to-server 任务需要）】
+#     SSH_HOST      : 目标服务器公网 IP 或域名
+#     SSH_USER      : SSH 登录用户名（如 root / deploy）
+#     SSH_KEY       : SSH 私钥（~/.ssh/id_rsa 全量内容，含 -----BEGIN...-----END-----）
+#     SSH_PORT      : （可选，默认 22）SSH 端口
+#     ENV_FILE      : 生产环境完整 .env 文件内容（与 server/.env 同结构，含 DATABASE_URL / JWT_SECRET 等）
+#
+# ⚠️ 需要在 GitHub 仓库配置 Environment（Settings → Environments）：
+#   Name: production
+#   ✓ Required reviewers: 勾选，添加团长 / 运维 / 技术负责人为审批人（手动审批后才会部署）
+#   (可选) Deployment branches: 限制仅 main / master 分支
+#
+# 🚀 触发方式：
+#   · Lint + Test：所有 PR 向 main/master、以及所有 push 到 main/master 都会自动运行
+#   · Build + Push：push 到 main/master 分支，或打 v* 标签（如 v1.0.0、v2026.8.3）
+#   · Deploy：Build-push 成功后 → 进入 Environment: production 等待人工审批 → 审批通过即自动部署到服务器
+# ==============================================================================
+
+name: QAXQJT CI/CD
+
+run-name: "CI/CD · ${{ github.event_name }} · ${{ github.ref_name }} · @${{ github.actor }}"
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      deploy_enabled:
+        description: '是否执行部署（仅 Build-push 之后需手动在 Environment 审批）'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+env:
+  NODE_VERSION: '18.20.4'          # 与 Dockerfile node:18-alpine + package.json engines 对齐
+  SERVER_DIR: server                # 后端服务代码目录
+  DOCKER_CONTEXT: server            # Docker Build 上下文（package.json / src / ecosystem.config.js 所在目录）
+  IMAGE_NAME: qaxqjt-api            # 镜像名称（不含 Registry / Namespace）
+  DEFAULT_ACR_REGISTRY: 'registry.cn-beijing.aliyuncs.com'
+  DEFAULT_ACR_NAMESPACE: 'qaxqjt'
+  DEPLOY_PATH_ON_SERVER: '/opt/qaxqjt'
+
+# ============================================================
+# Job 1 · Lint：ESLint 代码检查（server 目录）
+# ============================================================
+jobs:
+  lint:
+    name: "① ESLint 代码检查"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ${{ env.SERVER_DIR }}
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.SERVER_DIR }}/package-lock.json
+
+      - name: 📦 安装依赖（npm ci 严格按 lockfile）
+        run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+
+      - name: 🔍 运行 ESLint（max-warnings = 0，零警告通过）
+        run: npm run lint
+
+  # ============================================================
+  # Job 2 · Test：Jest 单元测试 + 集成测试环境（MySQL 8 + Redis 7）
+  # ============================================================
+  test:
+    name: "② Jest 单元/集成测试"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: lint
+    defaults:
+      run:
+        working-directory: ${{ env.SERVER_DIR }}
+    services:
+      mysql:
+        image: mysql:8.0.36
+        env:
+          MYSQL_ROOT_PASSWORD: root_test_123
+          MYSQL_DATABASE: qaxqjt_test
+          MYSQL_USER: qaxqjt_test
+          MYSQL_PASSWORD: test_ChangeMe_123
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot_test_123"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+          --character-set-server=utf8mb4
+          --collation-server=utf8mb4_0900_ai_ci
+          --default-authentication-plugin=caching_sha2_password
+      redis:
+        image: redis:7.2.4
+        env:
+          REDIS_PASSWORD: redis_test_123
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli -a redis_test_123 ping || exit 1"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=5
+    env:
+      # 传给服务的测试环境变量（Jest 会被 dotenv 覆盖，但这里提供默认值）
+      DATABASE_URL: 'mysql://qaxqjt_test:test_ChangeMe_123@127.0.0.1:3306/qaxqjt_test'
+      REDIS_URL: 'redis://:redis_test_123@127.0.0.1:6379/0'
+      JWT_SECRET: 'jwt_test_secret_change_me_please_use_a_long_random_string'
+      JWT_REFRESH_SECRET: 'jwt_refresh_test_secret_change_me'
+      NODE_ENV: 'test'
+      PORT: '3001'
+      TZ: 'Asia/Shanghai'
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.SERVER_DIR }}/package-lock.json
+
+      - name: 📦 安装依赖
+        run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+
+      - name: 🗃️ Prisma generate Client
+        run: npx prisma generate
+
+      - name: 🧪 运行 Jest（--passWithNoTests 兼容当前无测试用例场景）
+        run: npm test
+
+  # ============================================================
+  # Job 2.5 · UI 回归测试：前端 HTML/CSS/JS 静态扫描（Python，无需 DB）
+  # 防止 Bug 回归：系统动态无限延长 / 派工单取消无显示 / HeightGuard 误判
+  # ============================================================
+  ui-test:
+    name: "② UI 回归测试"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: lint
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🧪 运行前端 UI 回归测试
+        run: |
+          python3 test_ui_regression.py
+        working-directory: ${{ github.workspace }}
+
+      - name: 🧾 测试摘要
+        if: always()
+        run: |
+          echo "### 前端 UI 回归测试" >> $GITHUB_STEP_SUMMARY
+          echo "- 检查项：系统动态限高 / 派工单取消toast / HeightGuard表格保护 / LIMIT阈值 / 弹窗关闭逻辑" >> $GITHUB_STEP_SUMMARY
+          echo "- 覆盖目录：主目录 + _deploy + _deploy/.edgeone/assets" >> $GITHUB_STEP_SUMMARY
+          echo "- 脚本：\`test_ui_regression.py\`" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================
+  # Job 3 · Build & Push：Docker Buildx 构建推送镜像
+  # ============================================================
+  build-and-push:
+    name: "③ Buildx 构建推送镜像"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [ lint, test, ui-test ]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))
+    permissions:
+      contents: read
+      packages: write   # GHCR 推送所需权限
+    outputs:
+      image_full_url: ${{ steps.set_image_meta.outputs.image_full_url }}
+      image_tag: ${{ steps.set_image_meta.outputs.image_tag }}
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 🔢 生成镜像 Tag（7 位短 SHA · latest · 标签名三选一）
+        id: set_image_meta
+        run: |
+          set -euo pipefail
+          SHA7="${GITHUB_SHA::7}"
+          REF_NAME="${GITHUB_REF_NAME}"
+          # 基础 tag：短 SHA（每次构建唯一）
+          TAG_PRIMARY="${SHA7}"
+          # 打 v* tag 时：同时附加 tag 版本号
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            TAG_VERSION="${REF_NAME}"
+          else
+            TAG_VERSION=""
+          fi
+          echo "image_tag=${TAG_PRIMARY}" >> $GITHUB_OUTPUT
+          echo "tag_version=${TAG_VERSION}" >> $GITHUB_OUTPUT
+          echo "sha7=${SHA7}" >> $GITHUB_OUTPUT
+
+          # 方案 B 优先：如果配置了 DOCKER_USERNAME + DOCKER_PASSWORD → 走 ACR / 自定义 Registry
+          if [[ -n "${{ secrets.DOCKER_USERNAME }}" && -n "${{ secrets.DOCKER_PASSWORD }}" ]]; then
+            REGISTRY="${{ secrets.DOCKER_REGISTRY }}${GOTOHELL:-}"
+            REGISTRY="${REGISTRY:-${DEFAULT_ACR_REGISTRY}}"
+            NAMESPACE="${{ secrets.DOCKER_NAMESPACE }}${GOTOHELL:-}"
+            NAMESPACE="${NAMESPACE:-${DEFAULT_ACR_NAMESPACE}}"
+            IMAGE_FULL="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}"
+            echo "registry_mode=acr" >> $GITHUB_OUTPUT
+          else
+            # 方案 A 兜底：GHCR（使用 GITHUB_TOKEN，开箱即用）
+            GHCR_REPO="${GITHUB_REPOSITORY@L}"  # 全小写
+            IMAGE_FULL="ghcr.io/${GHCR_REPO}/${IMAGE_NAME}"
+            echo "registry_mode=ghcr" >> $GITHUB_OUTPUT
+          fi
+          echo "image_full_url=${IMAGE_FULL}" >> $GITHUB_OUTPUT
+          echo "[meta] registry_mode=$(cat $GITHUB_OUTPUT | grep registry_mode | cut -d= -f2)"
+          echo "[meta] image_full_url=${IMAGE_FULL}"
+          echo "[meta] tag_primary=${TAG_PRIMARY}"
+          echo "[meta] tag_version=${TAG_VERSION}"
+        env:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          DEFAULT_ACR_REGISTRY: ${{ env.DEFAULT_ACR_REGISTRY }}
+          DEFAULT_ACR_NAMESPACE: ${{ env.DEFAULT_ACR_NAMESPACE }}
+
+      - name: 🛠️ Setup QEMU（跨架构构建可选）
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64
+
+      - name: 🐳 Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 登录镜像仓库
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ steps.set_image_meta.outputs.registry_mode == 'ghcr' && 'ghcr.io' || (secrets.DOCKER_REGISTRY || env.DEFAULT_ACR_REGISTRY) }}
+          username: ${{ steps.set_image_meta.outputs.registry_mode == 'ghcr' && github.actor || secrets.DOCKER_USERNAME }}
+          password: ${{ steps.set_image_meta.outputs.registry_mode == 'ghcr' && secrets.GITHUB_TOKEN || secrets.DOCKER_PASSWORD }}
+
+      - name: 📦 Build & Push（tag = 短 SHA + latest；打 v* 时再加版本号 tag）
+        id: build_push
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.DOCKER_CONTEXT }}
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          no-cache: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+            GIT_COMMIT_SHA=${{ steps.set_image_meta.outputs.sha7 }}
+          tags: |
+            ${{ steps.set_image_meta.outputs.image_full_url }}:${{ steps.set_image_meta.outputs.image_tag }}
+            ${{ steps.set_image_meta.outputs.image_full_url }}:latest
+            ${{ steps.set_image_meta.outputs.tag_version && format('{0}:{1}', steps.set_image_meta.outputs.image_full_url, steps.set_image_meta.outputs.tag_version) || '' }}
+
+      - name: 🧾 输出构建摘要
+        run: |
+          echo "### ✅ 镜像构建推送成功" >> $GITHUB_STEP_SUMMARY
+          echo "- **仓库模式**：${{ steps.set_image_meta.outputs.registry_mode }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **完整地址**：\`${{ steps.set_image_meta.outputs.image_full_url }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **主 Tag**：\`${{ steps.set_image_meta.outputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **附加 Tag**：\`latest\`${{ steps.set_image_meta.outputs.tag_version && format(' / `{0}`', steps.set_image_meta.outputs.tag_version) || '' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **镜像摘要**：\`${{ steps.build_push.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================
+  # Job 4 · Deploy：SSH 登录生产服务器部署 + 健康检查 + 失败回滚
+  # ============================================================
+  deploy-to-server:
+    name: "④ 生产部署（SSH → Docker Compose）"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: build-and-push
+    # 经验 1666653：生产环境必须手动审批 + Environment 保护
+    environment:
+      name: production
+      url: ${{ format('https://{0}', secrets.SSH_HOST || 'api.yourdomain.cn') }}
+    if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))) || (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_enabled == 'true')
+    env:
+      IMAGE_FULL: ${{ needs.build-and-push.outputs.image_full_url }}
+      IMAGE_TAG:  ${{ needs.build-and-push.outputs.image_tag }}
+    steps:
+      - name: 📥 Checkout（下载 docker-compose.yml / nginx 配置等）
+        uses: actions/checkout@v4
+
+      - name: ⚙️ 准备部署脚本（内联到变量，避免额外文件）
+        id: deploy_script
+        run: |
+          cat > deploy.sh << 'SCRIPT_EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          cd "${DEPLOY_PATH}"
+          echo "[1/9] 📌 当前目录：$(pwd)"
+          ls -la docker-compose.yml 2>/dev/null || { echo "❌ 未找到 docker-compose.yml，请先把仓库根目录 docker-compose.yml + nginx/ 目录等复制到 ${DEPLOY_PATH}"; exit 2; }
+
+          # ---------- 备份：保存 SHA_OLD 用于回滚 + 备份 docker-compose.yml + .env ----------
+          echo "[2/9] 🗄️ 备份现有部署文件"
+          TS=$(date +%Y%m%d_%H%M%S)
+          BACKUP_DIR="${DEPLOY_PATH}/backup_deploy_${TS}"
+          mkdir -p "${BACKUP_DIR}"
+          cp -a docker-compose.yml "${BACKUP_DIR}/" 2>/dev/null || true
+          if [ -f .env ]; then
+            cp -a .env "${BACKUP_DIR}/" 2>/dev/null || true
+            chmod 600 "${BACKUP_DIR}/.env"
+          fi
+          # 记录当前运行中的镜像（用于回滚锚点 SHA_OLD）
+          SHA_OLD="$(docker compose images api --format json 2>/dev/null | python3 -c "import sys,json;d=json.load(sys.stdin);print(d[0].get('ID') or d[0].get('Tag') or '')" 2>/dev/null || true)"
+          if [ -z "${SHA_OLD}" ]; then
+            SHA_OLD="$(${SUDO:-} docker compose ps -q api 2>/dev/null | head -n1 | xargs -r ${SUDO:-} docker inspect --format '{{.Image}}' 2>/dev/null || true)"
+          fi
+          echo "SHA_OLD=${SHA_OLD}" > "${BACKUP_DIR}/rollback_info.env"
+          echo "  · 备份目录：${BACKUP_DIR}"
+          echo "  · 当前 API 镜像 SHA：${SHA_OLD:-<首次部署，无旧镜像>}"
+
+          # ---------- 注入 Secrets 中 .env 文件 ----------
+          echo "[3/9] 🔐 写入生产 .env（来源 GitHub Secrets.ENV_FILE）"
+          if [ -z "${ENV_FILE_CONTENT:-}" ]; then
+            echo "⚠️  警告：未配置 Secrets.ENV_FILE，将使用既有 .env（若有）"
+          else
+            echo "${ENV_FILE_CONTENT}" > .env
+            chmod 600 .env
+            echo "  ✓ 已写入 $(echo "${ENV_FILE_CONTENT}" | wc -l) 行"
+          fi
+
+          # ---------- docker compose pull api ----------
+          echo "[4/9] 📥 拉取镜像：${IMAGE_FULL}:${IMAGE_TAG}"
+          docker compose pull api || {
+            echo "❌ pull 失败，尝试直接拉取完整地址"
+            docker pull "${IMAGE_FULL}:${IMAGE_TAG}"
+          }
+
+          # ---------- 优雅关闭 + 启动新镜像 ----------
+          echo "[5/9] 🚀 启动新版本（--no-deps，只重启 api 不重启 mysql/redis/nginx）"
+          # 注入镜像变量（docker-compose.yml 里 image 字段使用 api_image:tag 或通过 env 替换）
+          export QAXQJT_API_IMAGE="${IMAGE_FULL}:${IMAGE_TAG}"
+          docker compose up -d --no-deps --remove-orphans api
+          sleep 3
+
+          # ---------- 健康检查 ----------
+          echo "[6/9] 💓 健康检查：/v1/healthz（最多 60 秒）"
+          HEALTH_OK=0
+          for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/v1/healthz 2>/dev/null || echo "000")
+            if [ "${HTTP_CODE}" = "200" ]; then
+              HEALTH_OK=1; echo "  ✓ 第 ${i} 次探测：HTTP 200 OK"; break
+            fi
+            echo "  · 探测 #${i}：HTTP ${HTTP_CODE}，等待 5s..."
+            sleep 5
+          done
+
+          if [ "${HEALTH_OK}" != "1" ]; then
+            echo "[7/9] ❌ 健康检查失败 → 自动回滚"
+            # -- 回滚策略：若能定位 SHA_OLD 镜像，切回旧镜像；否则 docker compose up -d 用上次配置 --
+            if [ -n "${SHA_OLD}" ]; then
+              echo "  · 切回旧镜像：${SHA_OLD}"
+              export QAXQJT_API_IMAGE="${SHA_OLD}"
+            else
+              echo "  · 无 SHA_OLD，直接 compose up -d 恢复既有配置"
+            fi
+            docker compose up -d --no-deps api || true
+            sleep 5
+            # 回滚后再次确认
+            HTTP_RB=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/v1/healthz 2>/dev/null || echo "000")
+            echo "  · 回滚后 HTTP 状态：${HTTP_RB}"
+            echo "❌ 部署失败，已回滚。请检查 docker compose logs api --tail 200"
+            exit 1
+          fi
+
+          # ---------- 成功收尾：prune 老镜像（保留近 3 个） ----------
+          echo "[8/9] ✅ 健康检查通过，清理老镜像"
+          docker image prune -f --filter "until=168h" 2>/dev/null || true
+
+          echo "[9/9] 🎉 部署完成：${IMAGE_FULL}:${IMAGE_TAG}"
+          echo "--- 最终容器状态 ---"
+          docker compose ps
+          SCRIPT_EOF
+          chmod +x deploy.sh
+          echo "deploy_script_path=$(pwd)/deploy.sh" >> $GITHUB_OUTPUT
+
+      - name: 🚚 通过 SSH 执行部署脚本（appleboy/ssh-action）
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          timeout: 20m
+          command_timeout: 18m
+          script_stop: true
+          envs: DEPLOY_PATH,IMAGE_FULL,IMAGE_TAG,ENV_FILE_CONTENT,SUDO
+          script: |
+            export DEPLOY_PATH="${{ env.DEPLOY_PATH_ON_SERVER }}"
+            export IMAGE_FULL="${{ env.IMAGE_FULL }}"
+            export IMAGE_TAG="${{ env.IMAGE_TAG }}"
+            export ENV_FILE_CONTENT='${{ secrets.ENV_FILE }}'
+            # 若目标机需 sudo 才能操作 docker，取消下面注释并在 Secrets.SSH_USER 配置普通用户
+            # export SUDO="sudo"
+            bash -s < '${{ steps.deploy_script.outputs.deploy_script_path }}'
+
+      - name: 🧾 部署摘要
+        run: |
+          echo "### ✅ 生产部署完成" >> $GITHUB_STEP_SUMMARY
+          echo "- **服务器**：\`${{ secrets.SSH_HOST }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **部署路径**：\`${{ env.DEPLOY_PATH_ON_SERVER }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **部署镜像**：\`${{ env.IMAGE_FULL }}:${{ env.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **验证接口**：\`curl http(s)://<host>/v1/healthz\` 返回 HTTP 200" >> $GITHUB_STEP_SUMMARY

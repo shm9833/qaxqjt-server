@@ -1,0 +1,59 @@
+# ==================================================================
+#   秦安县秦剧团 · Admin Perf P99 日报
+#   Kubernetes ConfigMap · 非敏感配置
+# ==================================================================
+#   存放：ES 地址/索引/收件人列表/主题前缀/输出路径等
+#   密码/授权码 ⚠️ 绝对不能放这里，必须放到 secret.yaml 里！
+# ==================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qaxqjt-perf-p99-daily-config
+  namespace: qaxqjt-monitoring
+  labels:
+    app.kubernetes.io/name: qaxqjt-perf-p99
+    app.kubernetes.io/component: daily-report-mailer
+data:
+  # ============================================================
+  # ⚠️ 修改下面的值为真实生产配置后 kubectl apply -f k8s/
+  #    其中 ${...} 是对 Secret 的占位符，K8s CronJob 通过 envFrom 注入环境变量后
+  #    daily_mailer.py 本身不读这些环境变量——如果想让 daily_mailer.py 从环境变量取密码，
+  #    需扩展 load_config 支持 env override（或推荐直接用下面 whole-JSON 方式）
+  # ============================================================
+  #
+  # 推荐方式：直接把整份 config_daily_report.json 作为一个 ConfigMap key 存入
+  # CronJob 容器会把 key 挂载为 /data/config/config_daily_report.json 文件
+  config_daily_report.json: |
+    {
+      "_comment": "=== K8s ConfigMap 版本：非敏感字段请填这里，敏感密码(ES_PASSWORD/SMTP_PASSWORD)请在 Secret 里改并保证下面引用一致 ===",
+      "es": {
+        "host": "http://elasticsearch-master.elk-stack.svc.cluster.local:9200",
+        "index": "qaxqjt-admin-perf-*",
+        "user": "es_readonly_user",
+        "password": "__REPLACE_WITH_SECRET_ES_PASSWORD__",
+        "hours": 24,
+        "bucket": "5m",
+        "no_verify_ssl": true
+      },
+      "smtp": {
+        "server": "smtp.exmail.qq.com",
+        "port": 465,
+        "use_ssl": true,
+        "starttls": false,
+        "sender_email": "perf-bot@qaxqjt-your-company.com",
+        "sender_name": "🎭 秦剧团Perf监控机器人（K8s）",
+        "password": "__REPLACE_WITH_SECRET_SMTP_AUTH_CODE__",
+        "timeout_sec": 30,
+        "local_hostname": "perf-mailer.k8s.qaxqjt.local"
+      },
+      "recipients": [
+        "you@your-company.com",
+        "ops-team@your-company.com",
+        "dev-team@your-company.com"
+      ],
+      "cc": [],
+      "subject_prefix": "[秦剧团Perf日报][K8s-Prod]",
+      "output_dir": "/data/reports",
+      "log_dir": "/data/logs",
+      "keep_report_days": 30
+    }

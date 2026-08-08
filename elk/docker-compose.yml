@@ -1,0 +1,53 @@
+# ==================================================================
+#   秦安县秦剧团 · Admin Perf P99 日报
+#   Docker Compose · 本地快速验证镜像用（不是生产部署，生产请用 k8s/cronjob-*.yaml）
+# ==================================================================
+#   用法：
+#     1) 先构建镜像：docker compose build
+#     2) --dry-run 验证镜像能正常生成 HTML（不需真实邮箱+ES，用 --mock-es 演示）：
+#        docker compose run --rm mailer --config /data/config/config_daily_report.json --mock-es --dry-run -v
+#     3) 真实 ES + 真实邮箱测试（先把 ./config_daily_report.json 填真实值）：
+#        docker compose run --rm mailer --config /data/config/config_daily_report.json -v
+#     4) 仅测 SMTP 连通性：
+#        docker compose run --rm mailer --config /data/config/config_daily_report.json --test-smtp -v
+# ==================================================================
+services:
+  mailer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PY_VER: 3.11-slim-bookworm
+    image: qaxqjt/perf-p99-mailer:dev-local
+    container_name: qaxqjt-perf-p99-mailer-dev
+    user: "1001:1001"
+    environment:
+      TZ: Asia/Shanghai
+      PYTHONUNBUFFERED: "1"
+    working_dir: /app
+    # 默认命令：执行默认 CMD（生产用 daily_mailer.py 单次执行，执行完容器自动退出）
+    volumes:
+      # 1. 本机 ./config_daily_report.json → /data/config/config_daily_report.json
+      #    ⚠️ 第一次：先 cp config_daily_report.example.json config_daily_report.json 填好真实值
+      - ./config_daily_report.json:/data/config/config_daily_report.json:ro
+      # 2. 报表输出目录（挂本机 reports/，方便查看生成的 HTML）
+      - ./reports:/data/reports
+      # 3. 日志：挂本机 logs/（或取消注释，默认用容器 stdout 更清爽）
+      # - ./logs:/data/logs
+    # 安全加固
+    read_only: true            # 根文件系统只读，防止篡改；/data 目录可写（通过 tmpfs）
+    tmpfs:
+      - /tmp:size=64M,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: "0.5"
+    networks:
+      - perf-net
+
+networks:
+  perf-net:
+    driver: bridge

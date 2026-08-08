@@ -1,0 +1,158 @@
+{
+  "config": {
+    "ONLINE_BASE": "http://127.0.0.1:3001",
+    "OFFLINE_BASE": "http://127.0.0.1:19999",
+    "WEAK_LOSS": 0.3,
+    "WEAK_MIN_MS": 300,
+    "WEAK_MAX_MS": 2000,
+    "WEAK_RETRY": 2,
+    "TIMEOUT_MS": 8000,
+    "OUT_DIR": "D:\\全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）\\qaxqjt\\scripts\\fallback-test-artifacts",
+    "SIM_LOCALSTORAGE_FILE": "D:\\全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）\\qaxqjt\\scripts\\fallback-test-artifacts\\simulated_localStorage.json"
+  },
+  "phases": [
+    {
+      "name": "P0_BASELINE",
+      "goal": "基准：健康检查 200 + POST 返回 BK 前缀（fromMockApi=true）",
+      "health": {
+        "code": 0,
+        "version": "MOCK-1.0",
+        "via": "network",
+        "elapsedMs": 1,
+        "ok": true
+      },
+      "submit": {
+        "via": "network",
+        "bookingId": "BK2026144182581004",
+        "prefix": "BK",
+        "online": true,
+        "fromMockApi": true,
+        "elapsedMs": 1,
+        "attempt": 1
+      },
+      "note": "基准值；若 BK 非前缀意味着本地缓存未清/路由不工作"
+    },
+    {
+      "name": "P1_OFFLINE",
+      "goal": "ECONNREFUSED → 自动降级写入 localStorage（26-QA 前缀）",
+      "health": {
+        "offline": true,
+        "via": "network_fail_read",
+        "elapsedMs": 4,
+        "ok": true,
+        "fbModeAfter": "1"
+      },
+      "submit": {
+        "via": "force_fallback_write",
+        "bookingId": "26-QA-0001",
+        "prefix": "26-QA",
+        "online": false,
+        "localStorageOnly": true,
+        "elapsedMs": 2
+      },
+      "note": "若 healthz 为 network_fail_read，则 fallback_mode 已被自动设 1；之后 submit 走 force_fallback_write"
+    },
+    {
+      "name": "P2_WEAKNET",
+      "goal": "模拟 EdgeOne 抖动：平均提交耗时 ≤ 3s；重试仍失败才回 26-QA 前缀",
+      "health": {
+        "note": "weaknet 阶段直接测提交（省略 healthz 节省时间）"
+      },
+      "submit": {
+        "via": "network",
+        "bookingId": "BK2026144217561006",
+        "prefix": "BK",
+        "online": true,
+        "avgMs": 1162,
+        "maxMs": 1598,
+        "minMs": 628,
+        "attempt": "见每轮"
+      },
+      "note": "弱网：若丢包少 2 次重试内救回 → BK 前缀；否则命中 network_fail 写 26-QA"
+    },
+    {
+      "name": "P3_RECOVERY",
+      "goal": "从离线/弱网恢复后，健康检查立即恢复 code=0，提交立即 BK 前缀成功",
+      "health": {
+        "code": 0,
+        "via": "network",
+        "elapsedMs": 1,
+        "online": true
+      },
+      "submit": {
+        "via": "network",
+        "bookingId": "BK2026144217591007",
+        "prefix": "BK",
+        "online": true,
+        "fromMockApi": true,
+        "elapsedMs": 1,
+        "attempt": 1
+      },
+      "note": "恢复耗时以 healthz+submit 合计计算；若仍走 force_fallback，说明 fallback_mode 未被清除"
+    }
+  ],
+  "checks": [
+    {
+      "name": "P0 healthz code=0 & version=MOCK-1.0",
+      "pass": true,
+      "detail": "code=0 version=MOCK-1.0"
+    },
+    {
+      "name": "P0 submit 在线 BK 前缀",
+      "pass": true,
+      "detail": "bookingId=BK2026144182581004"
+    },
+    {
+      "name": "P0 submit fromMockApi=true",
+      "pass": true,
+      "detail": "true"
+    },
+    {
+      "name": "P1 healthz 走降级/离线 (非 network online)",
+      "pass": true,
+      "detail": "via=network_fail_read"
+    },
+    {
+      "name": "P1 submit 26-QA 前缀 & localStorageOnly=true",
+      "pass": true,
+      "detail": "id=26-QA-0001 localStorageOnly=true"
+    },
+    {
+      "name": "P1 healthz 失败后 fallback_mode 自动置 1 (持久化)",
+      "pass": true,
+      "detail": "fbMode=1"
+    },
+    {
+      "name": "P2 弱网 3 轮平均 ≤ 3000ms",
+      "pass": true,
+      "detail": "avg=1162ms  min=628  max=1598  阈值=3000ms"
+    },
+    {
+      "name": "P2 提交 via ∈ { network, network_fail_write, force_fallback_write }",
+      "pass": true,
+      "detail": "finalVia=network"
+    },
+    {
+      "name": "P3 恢复后 healthz via=network & code=0",
+      "pass": true,
+      "detail": "via=network code=0"
+    },
+    {
+      "name": "P3 恢复后 submit BK 前缀 & fromMockApi=true",
+      "pass": true,
+      "detail": "bookingId=BK2026144217591007 fromMockApi=true"
+    },
+    {
+      "name": "P3 恢复总耗时（健康检查+提交） ≤ 2000ms",
+      "pass": true,
+      "detail": "total=2ms  阈值=2000ms"
+    }
+  ],
+  "metrics": {
+    "T_online_ms": 1,
+    "T_offline_ms": 2,
+    "T_weak_avg_ms": 1162,
+    "T_recovery_ms": 2,
+    "T_total_ms": 3517
+  }
+}

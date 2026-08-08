@@ -1,0 +1,981 @@
+// ==============================================================================
+// 秦安县秦剧团云端预约系统 · Prisma Schema v1.0
+// 数据源：init_v1.0_mysql.sql 全部 42 表（MySQL 8.0+ 主选）
+// 切换 PostgreSQL：provider = "postgresql" + DATABASE_URL 切换即可（类型已兼容）
+// ==============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema", "postgresqlExtensions"]
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+// ==============================================================================
+// 批次 1：权限模块基础（8 张）
+// ==============================================================================
+
+model AccountsV2 {
+  id                String         @id @db.VarChar(32)
+  username          String         @unique(map: "idx_acc_username") @db.VarChar(64)
+  passwordHash      String         @map("password_hash") @db.VarChar(255)
+  realName          String         @map("real_name") @db.VarChar(50)
+  role              String         @default("staff") @db.VarChar(32)
+  phone             String?        @db.VarChar(20)
+  email             String?        @db.VarChar(128)
+  avatarUrl         String?        @map("avatar_url") @db.VarChar(500)
+  lastLoginAt       DateTime?      @map("last_login_at") @db.DateTime(0)
+  lastLoginIp       String?        @map("last_login_ip") @db.VarChar(45)
+  forcePwdChange    Boolean        @default(true) @map("force_pwd_change")
+  failedLoginCount  Int            @default(0) @map("failed_login_count")
+  lockedUntil       DateTime?      @map("locked_until") @db.DateTime(0)
+  totpSecret        String?        @map("totp_secret") @db.VarChar(64)
+  status            String         @default("active") @db.VarChar(20)
+  createdAt         DateTime       @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.DateTime(0)
+  createdBy         String?        @map("created_by") @db.VarChar(32)
+  ts                BigInt         @map("_ts")
+
+  userRoles         UserRole[]
+  adminSessions     AdminSession[]
+  auditLogs         AuditLog[]
+
+  @@index([role, status], map: "idx_acc_role_status")
+  @@map("accounts_v2")
+}
+
+model Role {
+  id          String            @id @db.VarChar(32)
+  name        String            @unique(map: "idx_role_name") @db.VarChar(64)
+  description String?           @db.VarChar(255)
+  level       Int               @default(0)
+  status      String            @default("active") @db.VarChar(20)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt   DateTime         @updatedAt @map("updated_at") @db.DateTime(0)
+  createdBy   String?           @map("created_by") @db.VarChar(32)
+  ts          BigInt            @map("_ts")
+
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String            @id @db.VarChar(32)
+  code        String            @unique(map: "idx_perm_code") @db.VarChar(128)
+  name        String            @db.VarChar(128)
+  module      String            @db.VarChar(64)
+  description String?           @db.VarChar(255)
+  status      String            @default("active") @db.VarChar(20)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt   DateTime         @updatedAt @map("updated_at") @db.DateTime(0)
+  ts          BigInt            @map("_ts")
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String   @map("role_id") @db.VarChar(32)
+  permissionId String   @map("permission_id") @db.VarChar(32)
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  ts           BigInt   @map("_ts")
+
+  @@id([roleId, permissionId])
+  @@index([roleId], map: "idx_rp_role")
+  @@map("role_permissions")
+}
+
+model UserRole {
+  accountId String   @map("account_id") @db.VarChar(32)
+  roleId    String   @map("role_id") @db.VarChar(32)
+  assignedBy  String?  @map("assigned_by") @db.VarChar(32)
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  ts        BigInt   @map("_ts")
+
+  @@id([accountId, roleId])
+  @@map("user_roles")
+}
+
+model AdminSession {
+  id           String    @id @db.VarChar(64)
+  accountId    String    @map("account_id") @db.VarChar(32)
+  tokenHash    String    @unique(map: "idx_sess_token") @map("token_hash") @db.VarChar(128)
+  ipAddress    String?   @map("ip_address") @db.VarChar(45)
+  userAgent    String?   @map("user_agent") @db.VarChar(500)
+  expiresAt    DateTime  @map("expires_at") @db.DateTime(0)
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  ts           BigInt    @map("_ts")
+
+  @@index([expiresAt], map: "idx_sess_expires")
+  @@map("admin_sessions")
+}
+
+model AuditLog {
+  id         String    @id @db.VarChar(32)
+  accountId  String?   @map("account_id") @db.VarChar(32)
+  username   String?   @db.VarChar(64)
+  action     String    @db.VarChar(128)
+  module     String    @db.VarChar(64)
+  targetType String?   @map("target_type") @db.VarChar(64)
+  targetId   String?   @map("target_id") @db.VarChar(64)
+  actionTs   DateTime @map("action_ts") @db.DateTime(0)
+  ipAddress  String?   @map("ip_address") @db.VarChar(45)
+  userAgent  String?   @map("user_agent") @db.VarChar(500)
+  detailJson Json?     @map("detail_json")
+  ts         BigInt    @map("_ts")
+
+  @@index([accountId, actionTs], map: "idx_audit_user_ts")
+  @@map("audit_logs")
+}
+
+model LoginAttempt {
+  id           String    @id @db.VarChar(32)
+  username     String?   @db.VarChar(64)
+  ipAddress    String    @map("ip_address") @db.VarChar(45)
+  attemptedAt DateTime @map("attempted_at") @db.DateTime(0)
+  successFlag  Boolean   @default(false) @map("success_flag")
+  failReason   String?   @map("fail_reason") @db.VarChar(255)
+  ts           BigInt    @map("_ts")
+
+  @@index([ipAddress, attemptedAt], map: "idx_login_ip_ts")
+  @@map("login_attempts")
+}
+
+// ==============================================================================
+// 批次 2：系统/配置（3 张）
+// ==============================================================================
+
+model Setting {
+  id          String   @id @db.VarChar(64)
+  key         String   @unique(map: "idx_sett_key") @db.VarChar(128)
+  value       String   @db.Text
+  group       String?  @db.VarChar(64)
+  description String?  @db.VarChar(255)
+  isPublic    Boolean  @default(false) @map("is_public")
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  updatedBy   String?  @map("updated_by") @db.VarChar(32)
+  ts          BigInt   @map("_ts")
+
+  @@index([group], map: "idx_sett_group")
+  @@map("settings")
+}
+
+model SystemBackup {
+  id            String    @id @db.VarChar(32)
+  backupType    String    @map("backup_type") @db.VarChar(32) // full/incremental/manual
+  filename      String    @db.VarChar(255)
+  storagePath   String    @map("storage_path") @db.VarChar(500)
+  fileSizeBytes BigInt    @map("file_size_bytes")
+  checksumSha256 String?  @map("checksum_sha256") @db.VarChar(64)
+  status        String    @default("completed") @db.VarChar(20)
+  createdBy     String?   @map("created_by") @db.VarChar(32)
+  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  expiredAt   DateTime? @map("expired_at") @db.DateTime(0)
+  ts            BigInt    @map("_ts")
+
+  @@index([createdAt], map: "idx_backup_ts")
+  @@map("system_backups")
+}
+
+model DataMigration {
+  id               String    @id @db.VarChar(64)
+  batch            Int
+  description      String    @db.VarChar(500)
+  executedBy         String?   @map("executed_by") @db.VarChar(64)
+  expectedRowCount Int?      @map("expected_row_count")
+  actualRowCount   Int?      @map("actual_row_count")
+  dryRun           Boolean   @default(false) @map("dry_run")
+  status           String    @default("pending") @db.VarChar(20)
+  executedAt       DateTime @default(now()) @map("executed_at") @db.DateTime(0)
+  ts               BigInt    @map("_ts")
+
+  @@map("data_migrations")
+}
+
+// ==============================================================================
+// 批次 3：主数据（6 张）
+// ==============================================================================
+
+model PerformersDbV1 {
+  id                String   @id @db.VarChar(32)
+  staffNo           String?  @unique(map: "idx_pf_staffno") @map("staff_no") @db.VarChar(32)
+  name              String   @db.VarChar(50)
+  gender            String?  @db.VarChar(10)
+  birthDate         DateTime? @map("birth_date") @db.Date
+  phone             String?  @db.VarChar(20)
+  idCardNo          String?  @map("id_card_no") @db.VarChar(18)
+  rankGrade         String?  @map("rank_grade") @db.VarChar(10) // A+/A/B/C
+  primaryRole       String?  @map("primary_role") @db.VarChar(50)
+  hireDate          DateTime? @map("hire_date") @db.Date
+  employmentType     String?  @map("employment_type") @db.VarChar(20) // 正式/外聘/临时
+  bankAccount     String?  @map("bank_account") @db.VarChar(50)
+  bankName        String?  @map("bank_name") @db.VarChar(100)
+  socialSecurityNo String?  @map("social_security_no") @db.VarChar(20)
+  status           String   @default("active") @db.VarChar(20)
+  remark            String?  @db.Text
+  avatarUrl       String?  @map("avatar_url") @db.VarChar(500)
+  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts                BigInt   @map("_ts")
+
+  @@map("performers_db_v1")
+}
+
+model Play {
+  id            String    @id @db.VarChar(32)
+  playCode      String?   @unique(map: "idx_play_code") @map("play_code") @db.VarChar(32)
+  title         String    @db.VarChar(200)
+  subtitle      String?   @db.VarChar(500)
+  genre         String?   @db.VarChar(50) // 历史/神话/现代/折子戏
+  durationMinutes Int?     @map("duration_minutes")
+  author        String?   @db.VarChar(200)
+  posterUrl     String?   @map("poster_url") @db.VarChar(500)
+  synopsis      String?   @db.Text
+  castSummary   String?   @map("cast_summary") @db.Text
+  difficultyLevel String? @map("difficulty_level") @db.VarChar(10)
+  status        String    @default("active") @db.VarChar(20)
+  createdBy     String?   @map("created_by") @db.VarChar(32)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  ts            BigInt    @map("_ts")
+
+  playCasts     PlayCast[]
+
+  @@map("plays")
+}
+
+model PlayCast {
+  id          String   @id @db.VarChar(32)
+  playId      String   @map("play_id") @db.VarChar(32)
+  performerId String?  @map("performer_id") @db.VarChar(32)
+  roleName    String   @map("role_name") @db.VarChar(100)
+  roleType    String?  @map("role_type") @db.VarChar(32) // 主演/配角/龙套/乐队
+  sortOrder   Int      @default(0) @map("sort_order")
+  note        String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  ts          BigInt   @map("_ts")
+
+  @@index([playId], map: "idx_pc_play")
+  @@map("play_casts")
+}
+
+model InventoryItem {
+  id          String   @id @db.VarChar(32)
+  sku         String?  @unique(map: "idx_inv_sku") @db.VarChar(64)
+  name        String   @db.VarChar(200)
+  category    String?  @db.VarChar(64) // 戏服/道具/头饰/乐器/其他
+  quantity    Int      @default(0)
+  unit        String?  @db.VarChar(20)
+  unitPrice   Decimal? @map("unit_price") @db.Decimal(12, 2)
+  location    String?  @db.VarChar(200)
+  status      String   @default("in_stock") @db.VarChar(20)
+  imageUrl    String?  @map("image_url") @db.VarChar(500)
+  remark      String?  @db.Text
+  updatedBy   String?  @map("updated_by") @db.VarChar(32)
+  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts          BigInt   @map("_ts")
+
+  @@index([category], map: "idx_inv_cat")
+  @@map("inventory_items")
+}
+
+model InventoryRecord {
+  id          String   @id @db.VarChar(32)
+  itemId      String   @map("item_id") @db.VarChar(32)
+  opType      String   @map("op_type") @db.VarChar(20) // in/out/borrow/return/loss
+  opDate      DateTime @map("op_date") @db.DateTime(0)
+  quantity    Int
+  relatedScheduleId String? @map("related_schedule_id") @db.VarChar(32)
+  operator    String?  @db.VarChar(50)
+  remark      String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  ts          BigInt   @map("_ts")
+
+  @@index([itemId, opDate], map: "idx_invrec_item")
+  @@map("inventory_records")
+}
+
+model ContentV2 {
+  id            String    @id @db.VarChar(32)
+  type          String    @db.VarChar(32) // news/article/notice/gallery/video
+  title         String    @db.VarChar(255)
+  subtitle      String?   @db.VarChar(500)
+  coverImage    String?   @map("cover_image") @db.VarChar(500)
+  contentBody      String?   @map("content_body") @db.Text
+  summary       String?   @db.Text
+  publishStatus  String    @default("draft") @map("publish_status") @db.VarChar(20)
+  publishDate   DateTime? @map("publish_date") @db.DateTime(0)
+  authorName    String?   @map("author_name") @db.VarChar(50)
+  sortWeight    Int       @default(0) @map("sort_weight")
+  viewCount     Int       @default(0) @map("view_count")
+  tagsJson      Json?     @map("tags_json")
+  extraJson     Json?     @map("extra_json")
+  createdBy     String?   @map("created_by") @db.VarChar(32)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  ts            BigInt    @map("_ts")
+
+  @@index([type, publishStatus, publishDate], map: "idx_ct_type_status")
+  @@map("content_v2")
+}
+
+// ==============================================================================
+// 批次 4：客户 + 预约（上游，6 张）
+// ==============================================================================
+
+model CustomersV1 {
+  id                 String    @id @db.VarChar(32)
+  customerType       String    @default("personal") @map("customer_type") @db.VarChar(20) // personal/organization
+  customerName       String    @map("customer_name") @db.VarChar(100)
+  organization       String?   @db.VarChar(200)
+  unifiedSocialCode  String?   @map("unified_social_code") @db.VarChar(32)
+  contactPerson      String?   @map("contact_person") @db.VarChar(50)
+  phone              String    @db.VarChar(20)
+  backupPhone        String?   @map("backup_phone") @db.VarChar(20)
+  wechatId           String?   @map("wechat_id") @db.VarChar(64)
+  email              String?   @db.VarChar(128)
+  region           String?   @db.VarChar(200)
+  address            String?   @db.Text
+  sourceChannel      String?   @map("source_channel") @db.VarChar(50)
+  level              String?   @db.VarChar(20) // VIP/A/B/C
+  creditLevel       String?   @map("credit_level") @db.VarChar(20)
+  totalOrdersAmount   Decimal? @map("total_orders_amount") @db.Decimal(14, 2)
+  totalOrdersCount   Int?      @map("total_orders_count")
+  remark             String?   @db.Text
+  tagsJson           Json?     @map("tags_json")
+  status             String    @default("active") @db.VarChar(20)
+  firstContactDate  DateTime? @map("first_contact_date") @db.Date
+  createdBy         String?   @map("created_by") @db.VarChar(32)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  ts                 BigInt    @map("_ts")
+
+  appointments      Appointment[]
+  customerContacts CustomerContact[]
+  customerTags      CustomerTag[]
+  orders             Order[]
+
+  @@index([customerName, organization], map: "idx_cust_name_org")
+  @@index([phone], map: "idx_cust_phone")
+  @@map("customers_v1")
+}
+
+model CustomerContact {
+  id           String    @id @db.VarChar(32)
+  customerId String    @map("customer_id") @db.VarChar(32)
+  name         String    @db.VarChar(50)
+  position     String?   @db.VarChar(50)
+  phone        String    @db.VarChar(20)
+  wechatId     String?   @map("wechat_id") @db.VarChar(64)
+  email        String?   @db.VarChar(128)
+  isPrimary     Boolean   @default(true) @map("is_primary")
+  remark       String?   @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  ts           BigInt    @map("_ts")
+
+  @@index([customerId], map: "idx_cc_customer")
+  @@map("customer_contacts")
+}
+
+model CustomerTag {
+  customerId String   @map("customer_id") @db.VarChar(32)
+  tag        String   @db.VarChar(64)
+  taggedAt   DateTime @default(now()) @map("tagged_at") @db.DateTime(0)
+  ts         BigInt   @map("_ts")
+
+  @@id([customerId, tag])
+  @@map("customer_tags")
+}
+
+model Appointment {
+  id                    String    @id @db.VarChar(32)
+  appointmentNo       String    @unique(map: "idx_appt_no") @map("appointment_no") @db.VarChar(32)
+  source          String    @default("website") @db.VarChar(32) // website/wechat/phone/manual
+  status                  String    @default("pending") @db.VarChar(32) // pending/confirmed/converted/cancelled/rejected
+  customerId            String    @map("customer_id") @db.VarChar(32)
+  customerName        String    @map("customer_name") @db.VarChar(100)
+  customerType        String?   @map("customer_type") @db.VarChar(20)
+  organization          String?   @db.VarChar(200)
+  phone                 String    @db.VarChar(20)
+  contactPerson         String?   @map("contact_person") @db.VarChar(50)
+  preferredStartDate    DateTime @map("preferred_start_date") @db.Date
+  preferredEndDate      DateTime? @map("preferred_end_date") @db.Date
+  performanceCount          Int       @default(1) @map("performance_count")
+  packageType       String?   @map("package_type") @db.VarChar(50) // 庙会包场/文旅演出/校园巡演/定制
+  venueProvince       String?   @map("venue_province") @db.VarChar(50)
+  venueCity             String?   @map("venue_city") @db.VarChar(50)
+  venueDistrict        String?   @map("venue_district") @db.VarChar(50)
+  venueAddress          String?   @map("venue_address") @db.VarChar(500)
+  estimatedBudget    Decimal? @map("estimated_budget") @db.Decimal(14, 2)
+  totalPerformanceFee  Decimal? @map("total_performance_fee") @db.Decimal(14, 2)
+  depositAmount        Decimal? @map("deposit_amount") @db.Decimal(14, 2)
+  paymentTerms           String?   @map("payment_terms") @db.VarChar(255)
+  specialRequirements    String?   @map("special_requirements") @db.Text
+  remarkInternal          String?   @map("remark_internal") @db.Text
+  assignedAccountId  String?   @map("assigned_account_id") @db.VarChar(32)
+  smsVerifiedFlag  Boolean   @default(false) @map("sms_verified_flag")
+  sourceChannel       String?   @map("source_channel") @db.VarChar(50)
+  conversionToOrderDate    DateTime? @map("conversion_to_order_date") @db.DateTime(0)
+  convertedOrderId   String?   @map("converted_order_id") @db.VarChar(32)
+  rejectReason          String?   @map("reject_reason") @db.VarChar(255)
+  createdBy         String?   @map("created_by") @db.VarChar(32)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  ts                    BigInt    @map("_ts")
+
+  plays              AppointmentPlay[]
+  appointmentAudits AppointmentAudit[]
+  order              Order?
+
+  @@index([phone, status, createdAt], map: "idx_appt_phone_status")
+  @@index([status, preferredStartDate], map: "idx_appt_status_date")
+  @@map("appointments")
+}
+
+model AppointmentPlay {
+  appointmentId String   @map("appointment_id") @db.VarChar(32)
+  playId        String   @map("play_id") @db.VarChar(32)
+  sortOrder     Int      @default(1) @map("sort_order")
+  performanceDate DateTime? @map("performance_date") @db.Date
+  performanceTime String?  @map("performance_time") @db.VarChar(20)
+  note          String?  @db.VarChar(255)
+  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  ts            BigInt   @map("_ts")
+
+  @@id([appointmentId, playId])
+  @@index([appointmentId], map: "idx_apptplay_appt")
+  @@map("appointment_plays")
+}
+
+model AppointmentAudit {
+  id             String    @id @db.VarChar(32)
+  appointmentId  String    @map("appointment_id") @db.VarChar(32)
+  actionType    String    @map("action_type") @db.VarChar(32)
+  actionTs      DateTime @map("action_ts") @db.DateTime(0)
+  operatorAccountId String? @map("operator_account_id") @db.VarChar(32)
+  operatorName     String?   @map("operator_name") @db.VarChar(50)
+  fromStatus       String?   @map("from_status") @db.VarChar(32)
+  toStatus         String?   @map("to_status") @db.VarChar(32)
+  remark           String?   @db.Text
+  detailJson       Json?     @map("detail_json")
+  ts               BigInt    @map("_ts")
+
+  @@index([appointmentId, actionTs], map: "idx_apptaudit_aid")
+  @@map("appointment_audit")
+}
+
+// ==============================================================================
+// 批次 5：订单 + 档期 + 演员表（8 张）
+// ==============================================================================
+
+model Order {
+  id                  String    @id @db.VarChar(32)
+  orderNo          String    @unique(map: "idx_order_no") @map("order_no") @db.VarChar(32)
+  orderType         String    @default("performance") @map("order_type") @db.VarChar(32)
+  status              String    @default("draft") @db.VarChar(32) // draft/confirmed/partial_paid/paid/performance/completed/cancelled/refunded
+  customerId        String    @map("customer_id") @db.VarChar(32)
+  customerName      String    @map("customer_name") @db.VarChar(100)
+  organization      String?   @db.VarChar(200)
+  phone               String?   @db.VarChar(20)
+  appointmentId     String?   @map("appointment_id") @db.VarChar(32)
+  orderDate           DateTime @map("order_date") @db.DateTime(0)
+  totalAmount     Decimal  @default(0) @map("total_amount") @db.Decimal(14, 2)
+  discountAmount  Decimal? @default(0) @map("discount_amount") @db.Decimal(14, 2)
+  finalAmount       Decimal  @default(0) @map("final_amount") @db.Decimal(14, 2)
+  depositAmount      Decimal? @default(0) @map("deposit_amount") @db.Decimal(14, 2)
+  paidAmount          Decimal? @default(0) @map("paid_amount") @db.Decimal(14, 2)
+  invoiceTitle          String?   @map("invoice_title") @db.VarChar(200)
+  taxNo               String?   @map("tax_no") @db.VarChar(32)
+  contractNo        String?   @map("contract_no") @db.VarChar(64)
+  contractUrl       String?   @map("contract_url") @db.VarChar(500)
+  salesmanId      String?   @map("salesman_id") @db.VarChar(32)
+  salesmanName       String?   @map("salesman_name") @db.VarChar(50)
+  performanceStartDate DateTime? @map("performance_start_date") @db.Date
+  performanceEndDate   DateTime? @map("performance_end_date") @db.Date
+  performanceCount    Int?      @map("performance_count")
+  venueFullAddress  String?   @map("venue_full_address") @db.VarChar(500)
+  specialRequirements   String?   @map("special_requirements") @db.Text
+  internalRemark       String?   @map("internal_remark") @db.Text
+  cancellationReason  String?   @map("cancellation_reason") @db.VarChar(255)
+  cancelledDate        DateTime? @map("cancelled_date") @db.DateTime(0)
+  cancelledBy       String?   @map("cancelled_by") @db.VarChar(32)
+  completedDate      DateTime? @map("completed_date") @db.DateTime(0)
+  createdBy       String?   @map("created_by") @db.VarChar(32)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  ts                  BigInt    @map("_ts")
+
+  items             OrderItem[]
+  payments          FinPaymentV1[]
+  refunds           OrderRefund[]
+  schedules       ScheduleV2[]
+
+  @@index([status, orderDate], map: "idx_order_status_date")
+  @@index([customerId], map: "idx_order_customer")
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String    @id @db.VarChar(32)
+  orderId           String    @map("order_id") @db.VarChar(32)
+  itemType        String    @map("item_type") @db.VarChar(32) // performance/extra/discount
+  playId          String?   @map("play_id") @db.VarChar(32)
+  itemName        String    @map("item_name") @db.VarChar(255)
+  quantity        Int       @default(1)
+  unitPrice       Decimal   @map("unit_price") @db.Decimal(14, 2)
+  subtotal        Decimal   @map("subtotal") @db.Decimal(14, 2)
+  performanceDate DateTime? @map("performance_date") @db.Date
+  remark          String?   @db.VarChar(255)
+  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  ts              BigInt    @map("_ts")
+
+  @@index([orderId], map: "idx_oi_order")
+  @@map("order_items")
+}
+
+model FinPaymentV1 {
+  id             String    @id @db.VarChar(32)
+  orderId        String    @map("order_id") @db.VarChar(32)
+  payNo          String    @unique(map: "idx_pay_no") @map("pay_no") @db.VarChar(64)
+  payDate        DateTime @map("pay_date") @db.DateTime(0)
+  payChannel     String    @map("pay_channel") @db.VarChar(32) // cash/transfer/wechat/alipay/cheque
+  payType        String    @default("in") @map("pay_type") @db.VarChar(10) // in=收/out=退
+  amount         Decimal   @map("amount") @db.Decimal(14, 2)
+  currency       String    @default("CNY") @db.VarChar(10)
+  payerAccount   String?   @map("payer_account") @db.VarChar(100)
+  payerName       String?   @map("payer_name") @db.VarChar(100)
+  receiverAccount String? @map("receiver_account") @db.VarChar(100)
+  receiverName   String?   @map("receiver_name") @db.VarChar(100)
+  voucherNo      String?   @map("voucher_no") @db.VarChar(64)
+  status         String    @default("confirmed") @db.VarChar(20)
+  remark         String?   @db.VarChar(255)
+  createdBy      String?   @map("created_by") @db.VarChar(32)
+  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts             BigInt    @map("_ts")
+
+  @@index([orderId, payDate], map: "idx_pay_order")
+  @@map("fin_payments_v1")
+}
+
+model OrderRefund {
+  id             String    @id @db.VarChar(32)
+  orderId        String    @map("order_id") @db.VarChar(32)
+  refundNo    String    @unique(map: "idx_refund_no") @map("refund_no") @db.VarChar(64)
+  refundDate    DateTime @map("refund_date") @db.DateTime(0)
+  refundChannel    String    @map("refund_channel") @db.VarChar(32)
+  amount        Decimal   @map("amount") @db.Decimal(14, 2)
+  reason        String?   @db.VarChar(255)
+  status        String    @default("pending") @db.VarChar(20)
+  approvedBy   String?   @map("approved_by") @db.VarChar(32)
+  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts            BigInt    @map("_ts")
+
+  @@index([orderId], map: "idx_refund_order")
+  @@map("order_refunds")
+}
+
+model ScheduleV2 {
+  id                  String    @id @db.VarChar(32)
+  scheduleNo        String    @unique(map: "idx_sched_no") @map("schedule_no") @db.VarChar(32)
+  orderId             String    @map("order_id") @db.VarChar(32)
+  status              String    @default("scheduled") @db.VarChar(32)
+  playId            String?   @map("play_id") @db.VarChar(32)
+  playTitle         String?   @map("play_title") @db.VarChar(200)
+  scheduleDateStart  DateTime @map("schedule_date_start") @db.Date
+  scheduleDateEnd   DateTime  @map("schedule_date_end") @db.Date
+  performanceTime  String?   @map("performance_time") @db.VarChar(20) // 日场/夜场/加场/下午场
+  venueProvince     String?   @map("venue_province") @db.VarChar(50)
+  venueCity         String?   @map("venue_city") @db.VarChar(50)
+  venueDistrict    String?   @map("venue_district") @db.VarChar(50)
+  venueAddress     String?   @map("venue_address") @db.VarChar(500)
+  audienceSize       Int?      @map("audience_size")
+  weatherForecast  String?   @map("weather_forecast") @db.VarChar(50)
+  actualAttendance  Int?      @map("actual_attendance")
+  feeAmount     Decimal? @map("fee_amount") @db.Decimal(14, 2)
+  castSheetId     String?   @map("cast_sheet_id") @db.VarChar(32)
+  attendanceStatus String?  @map("attendance_status") @db.VarChar(20)
+  completedDate     DateTime? @map("completed_date") @db.DateTime(0)
+  remark            String?   @db.Text
+  createdBy      String?   @map("created_by") @db.VarChar(32)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  ts                BigInt    @map("_ts")
+
+  castSheet   CastSheetsV1[]
+  venues    ScheduleVenue[]
+
+  @@index([scheduleDateStart, scheduleDateEnd, status], map: "idx_sched_range")
+  @@index([status, scheduleDateStart], map: "idx_sched_status")
+  @@map("schedules_v2")
+}
+
+model ScheduleVenue {
+  id           String    @id @db.VarChar(32)
+  scheduleId   String    @map("schedule_id") @db.VarChar(32)
+  venueName    String    @map("venue_name") @db.VarChar(200)
+  contactPerson String?   @map("contact_person") @db.VarChar(50)
+  contactPhone String?   @map("contact_phone") @db.VarChar(20)
+  venueType    String?   @map("venue_type") @db.VarChar(32)
+  capacity     Int?
+  stageSize   String?   @map("stage_size") @db.VarChar(100)
+  equipment    String?   @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  ts           BigInt    @map("_ts")
+
+  @@index([scheduleId], map: "idx_sv_schedule")
+  @@map("schedule_venues")
+}
+
+model CastSheetsV1 {
+  id             String    @id @db.VarChar(32)
+  sheetNo        String    @unique(map: "idx_cs_no") @map("sheet_no") @db.VarChar(32)
+  scheduleId     String    @map("schedule_id") @db.VarChar(32)
+  status         String    @default("draft") @db.VarChar(32)
+  lockFlag      Boolean   @default(false) @map("lock_flag")
+  playId       String?   @map("play_id") @db.VarChar(32)
+  playTitle       String?   @map("play_title") @db.VarChar(200)
+  performanceDate DateTime @map("performance_date") @db.Date
+  performanceTime String?  @map("performance_time") @db.VarChar(20)
+  venueFull     String?   @map("venue_full") @db.VarChar(500)
+  directorName   String?   @map("director_name") @db.VarChar(50)
+  conductorName  String?   @map("conductor_name") @db.VarChar(50)
+  stageManagerName String? @map("stage_manager_name") @db.VarChar(50)
+  crewNote        String?   @db.Text
+  versionNumber  Int       @default(1) @map("version_number")
+  confirmedBy  String?   @map("confirmed_by") @db.VarChar(32)
+  confirmedAt  DateTime? @map("confirmed_at") @db.DateTime(0)
+  createdBy      String?   @map("created_by") @db.VarChar(32)
+  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts             BigInt    @map("_ts")
+
+  crew           CastSheetCrew[]
+
+  @@index([scheduleId], map: "idx_cs_schedule")
+  @@map("cast_sheets_v1")
+}
+
+model CastSheetCrew {
+  id             String    @id @db.VarChar(32)
+  castSheetId    String    @map("cast_sheet_id") @db.VarChar(32)
+  performerId String?   @map("performer_id") @db.VarChar(32)
+  performerName  String    @map("performer_name") @db.VarChar(50)
+  category       String    @db.VarChar(32) // 主演/配角/龙套/乐队/舞美/灯光/服装/道具/化妆
+  roleName       String?   @map("role_name") @db.VarChar(100)
+  sortOrder      Int       @default(0) @map("sort_order")
+  attendanceType String?  @map("attendance_type") @db.VarChar(20)
+  wageAmount  Decimal? @map("wage_amount") @db.Decimal(12, 2)
+  note           String?   @db.VarChar(255)
+  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  ts             BigInt    @map("_ts")
+
+  @@index([castSheetId], map: "idx_csc_cs")
+  @@map("cast_sheet_crew")
+}
+
+// ==============================================================================
+// 批次 6：财务台账 + 发票 + 对账 + 欠款 + 工资批次/明细 + 工资规则（7 张）
+// ==============================================================================
+
+model WageRulesV1 {
+  id                    String    @id @db.VarChar(32)
+  rankGrade             String    @unique(map: "idx_wr_grade") @map("rank_grade") @db.VarChar(10)
+  baseDailyStandard   Decimal   @map("base_daily_standard") @db.Decimal(12, 2)
+  chiefRoleAllowance Decimal @map("chief_role_allowance") @db.Decimal(12, 2)
+  supportingRoleBase Decimal @map("supporting_role_base") @db.Decimal(12, 2)
+  ensembleBase        Decimal   @map("ensemble_base") @db.Decimal(12, 2)
+  crewBandBase        Decimal   @map("crew_band_base") @db.Decimal(12, 2)
+  techDancerBase     Decimal   @map("tech_dancer_base") @db.Decimal(12, 2)
+  nightShowBonus      Decimal   @map("night_show_bonus") @db.Decimal(12, 2)
+  holidayMultiplier Decimal  @default(1.0) @map("holiday_multiplier") @db.Decimal(5, 4)
+  transportAllowance Decimal @map("transport_allowance") @db.Decimal(12, 2)
+  mealAllowance       Decimal   @map("meal_allowance") @db.Decimal(12, 2)
+  fullAttendanceBonus Decimal @map("full_attendance_bonus") @db.Decimal(12, 2)
+  performanceBonusRate Decimal @map("performance_bonus_rate") @db.Decimal(5, 4)
+  effectiveFromDate  DateTime @map("effective_from_date") @db.Date
+  effectiveToDate   DateTime? @map("effective_to_date") @db.Date
+  status              String    @default("active") @db.VarChar(20)
+  createdBy        String?   @map("created_by") @db.VarChar(32)
+  createdAt          DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts                 BigInt    @map("_ts")
+
+  @@map("wage_rules_v1")
+}
+
+model WageBatchesV1 {
+  id                  String    @id @db.VarChar(32)
+  batchNo             String    @unique(map: "idx_wb_batchno") @map("batch_no") @db.VarChar(32)
+  wageMonth         String    @map("wage_month") @db.VarChar(7) // YYYY-MM
+  status              String    @default("draft") @db.VarChar(32)
+  performanceCount   Int?      @map("performance_count")
+  totalPerformers   Int?      @map("total_performers")
+  totalBaseWage    Decimal   @default(0) @map("total_base_wage") @db.Decimal(14, 2)
+  totalAllowance   Decimal   @default(0) @map("total_allowance") @db.Decimal(14, 2)
+  totalBonus       Decimal   @default(0) @map("total_bonus") @db.Decimal(14, 2)
+  totalDeduction  Decimal   @default(0) @map("total_deduction") @db.Decimal(14, 2)
+  totalNetPay      Decimal   @default(0) @map("total_net_pay") @db.Decimal(14, 2)
+  confirmedBy       String?   @map("confirmed_by") @db.VarChar(32)
+  confirmedAt       DateTime? @map("confirmed_at") @db.DateTime(0)
+  postedToLedger    Boolean   @default(false) @map("posted_to_ledger")
+  postedAt       DateTime? @map("posted_at") @db.DateTime(0)
+  createdBy       String?   @map("created_by") @db.VarChar(32)
+  createdAt        DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts                 BigInt    @map("_ts")
+
+  items            WageItemsV1[]
+
+  @@index([wageMonth], map: "idx_wb_month")
+  @@map("wage_batches_v1")
+}
+
+model WageItemsV1 {
+  id                  String    @id @db.VarChar(32)
+  batchId             String    @map("batch_id") @db.VarChar(32)
+  performerId      String?   @map("performer_id") @db.VarChar(32)
+  performerName      String    @map("performer_name") @db.VarChar(50)
+  staffNo            String?   @map("staff_no") @db.VarChar(32)
+  rankGrade          String?   @map("rank_grade") @db.VarChar(10)
+  attendanceDays     Decimal?  @map("attendance_days") @db.Decimal(6, 2)
+  baseWage        Decimal   @default(0) @map("base_wage") @db.Decimal(12, 2)
+  chiefRoleTotal  Decimal   @default(0) @map("chief_role_total") @db.Decimal(12, 2)
+  supportingRoleTotal Decimal @default(0) @map("supporting_role_total") @db.Decimal(12, 2)
+  nightShowBonus  Decimal   @default(0) @map("night_show_bonus") @db.Decimal(12, 2)
+  holidayBonus      Decimal   @default(0) @map("holiday_bonus") @db.Decimal(12, 2)
+  transportAllowance Decimal @default(0) @map("transport_allowance") @db.Decimal(12, 2)
+  mealAllowance     Decimal   @default(0) @map("meal_allowance") @db.Decimal(12, 2)
+  fullAttendanceBonus Decimal @default(0) @map("full_attendance_bonus") @db.Decimal(12, 2)
+  performanceBonus  Decimal @default(0) @map("performance_bonus") @db.Decimal(12, 2)
+  otherAllowance    Decimal   @default(0) @map("other_allowance") @db.Decimal(12, 2)
+  otherAllowanceNote String?  @map("other_allowance_note") @db.VarChar(255)
+  socialInsuranceDeduct Decimal @default(0) @map("social_insurance_deduct") @db.Decimal(12, 2)
+  housingFundDeduct Decimal @default(0) @map("housing_fund_deduct") @db.Decimal(12, 2)
+  taxDeduct         Decimal   @default(0) @map("tax_deduct") @db.Decimal(12, 2)
+  otherDeduction    Decimal   @default(0) @map("other_deduction") @db.Decimal(12, 2)
+  otherDeductionNote String? @map("other_deduction_note") @db.VarChar(255)
+  grossPay          Decimal   @default(0) @map("gross_pay") @db.Decimal(14, 2)
+  totalDeduction   Decimal   @default(0) @map("total_deduction") @db.Decimal(14, 2)
+  netPay          Decimal   @default(0) @map("net_pay") @db.Decimal(14, 2)
+  payslipPublished  Boolean   @default(false) @map("payslip_published")
+  payslipPublishedAt DateTime? @map("payslip_published_at") @db.DateTime(0)
+  remark          String?   @db.Text
+  createdAt         DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts                BigInt    @map("_ts")
+
+  @@index([batchId], map: "idx_wi_batch")
+  @@map("wage_items_v1")
+}
+
+model FinLedgerV1 {
+  id                String    @id @db.VarChar(32)
+  voucherNo       String    @unique(map: "idx_ledger_voucherno") @map("voucher_no") @db.VarChar(32)
+  voucherDate       DateTime @map("voucher_date") @db.DateTime(0)
+  voucherType     String    @map("voucher_type") @db.VarChar(32) // receipt/payment/transfer/adjustment
+  voucherCategory String?   @map("voucher_category") @db.VarChar(50)
+  summary           String    @db.VarChar(500)
+  orderId           String?   @map("order_id") @db.VarChar(32)
+  relatedBatchId    String?   @map("related_batch_id") @db.VarChar(32)
+  debitAmount     Decimal   @default(0) @map("debit_amount") @db.Decimal(14, 2)
+  creditAmount  Decimal   @default(0) @map("credit_amount") @db.Decimal(14, 2)
+  balanceAmount   Decimal   @default(0) @map("balance_amount") @db.Decimal(14, 2)
+  offsetAccount   String?   @map("offset_account") @db.VarChar(32)
+  cashFlowType    String?   @map("cash_flow_type") @db.VarChar(50)
+  cashFlowAmount Decimal? @map("cash_flow_amount") @db.Decimal(14, 2)
+  status            String    @default("draft") @db.VarChar(20)
+  makerAccountId String?   @map("maker_account_id") @db.VarChar(32)
+  madeAt        DateTime? @map("made_at") @db.DateTime(0)
+  checkerAccountId String? @map("checker_account_id") @db.VarChar(32)
+  checkedAt       DateTime? @map("checked_at") @db.DateTime(0)
+  doubleCheckRequired Boolean @default(false) @map("double_check_required")
+  isReconciled   Boolean   @default(false) @map("is_reconciled")
+  reconciledAt  DateTime? @map("reconciled_at") @db.DateTime(0)
+  attachmentUrls Json?     @map("attachment_urls")
+  remark          String?   @db.Text
+  createdBy       String?   @map("created_by") @db.VarChar(32)
+  createdAt        DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts              BigInt    @map("_ts")
+
+  @@index([voucherDate, voucherType], map: "idx_ledger_voucher_date")
+  @@index([status, isReconciled], map: "idx_ledger_status_reconciled")
+  @@map("fin_ledger_v1")
+}
+
+model FinInvoicesV1 {
+  id              String    @id @db.VarChar(32)
+  invoiceNo    String    @unique(map: "idx_inv_invoiceno") @map("invoice_no") @db.VarChar(32)
+  invoiceType   String    @map("invoice_type") @db.VarChar(32) // special/ordinary/electronic
+  orderId         String?   @map("order_id") @db.VarChar(32)
+  issueDate     DateTime @map("issue_date") @db.DateTime(0)
+  title             String    @db.VarChar(200)
+  taxNo           String?   @map("tax_no") @db.VarChar(32)
+  address         String?   @db.VarChar(500)
+  bankInfo        String?   @map("bank_info") @db.VarChar(255)
+  totalAmount   Decimal   @map("total_amount") @db.Decimal(14, 2)
+  taxAmount       Decimal   @default(0) @map("tax_amount") @db.Decimal(14, 2)
+  itemsJson       Json?     @map("items_json")
+  status          String    @default("issued") @db.VarChar(20)
+  redFlag      Boolean   @default(false) @map("red_flag")
+  originalInvoiceId String? @map("original_invoice_id") @db.VarChar(32)
+  issuedBy       String?   @map("issued_by") @db.VarChar(32)
+  pdfUrl         String?   @map("pdf_url") @db.VarChar(500)
+  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts            BigInt    @map("_ts")
+
+  @@index([orderId], map: "idx_inv_order")
+  @@map("fin_invoices_v1")
+}
+
+model FinReconsV1 {
+  id              String    @id @db.VarChar(32)
+  reconNo       String    @unique(map: "idx_recon_no") @map("recon_no") @db.VarChar(32)
+  reconMonth     String    @map("recon_month") @db.VarChar(7)
+  account         String    @db.VarChar(100) // 银行账号/现金科目
+  bookBalance  Decimal   @map("book_balance") @db.Decimal(14, 2)
+  bankBalance    Decimal   @map("bank_balance") @db.Decimal(14, 2)
+  reconDifference Decimal @default(0) @map("recon_difference") @db.Decimal(14, 2)
+  reconStatus      String    @default("draft") @map("recon_status") @db.VarChar(20)
+  matchedCount     Int?      @map("matched_count")
+  unmatchedCount   Int?      @map("unmatched_count")
+  itemsJson       Json?     @map("items_json")
+  reconciledBy    String?   @map("reconciled_by") @db.VarChar(32)
+  reconciledAt    DateTime? @map("reconciled_at") @db.DateTime(0)
+  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts              BigInt    @map("_ts")
+
+  @@index([reconMonth], map: "idx_recon_month")
+  @@map("fin_recons_v1")
+}
+
+model FinDebtsV1 {
+  id              String    @id @db.VarChar(32)
+  debtNo       String    @unique(map: "idx_debt_no") @map("debt_no") @db.VarChar(32)
+  debtType       String    @map("debt_type") @db.VarChar(20) // receivable/payable
+  orderId         String?   @map("order_id") @db.VarChar(32)
+  customerId     String?   @map("customer_id") @db.VarChar(32)
+  customerName    String?   @map("customer_name") @db.VarChar(100)
+  originalAmount    Decimal   @map("original_amount") @db.Decimal(14, 2)
+  paidAmount      Decimal   @default(0) @map("paid_amount") @db.Decimal(14, 2)
+  remainingAmount   Decimal   @map("remaining_amount") @db.Decimal(14, 2)
+  dueDate       DateTime @map("due_date") @db.Date
+  status          String    @default("outstanding") @db.VarChar(20)
+  lastRemindedAt   DateTime? @map("last_reminded_at") @db.DateTime(0)
+  remindCount      Int?      @default(0) @map("remind_count")
+  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts            BigInt    @map("_ts")
+
+  @@index([customerId, status], map: "idx_debt_cust_status")
+  @@map("fin_debts_v1")
+}
+
+// ==============================================================================
+// 批次 7：考勤 + 打卡 + 请假 + 加班（4 张）
+// ==============================================================================
+
+model AttendanceV1 {
+  id                 String    @id @db.VarChar(32)
+  staffId            String    @map("staff_id") @db.VarChar(32)
+  staffName          String    @map("staff_name") @db.VarChar(50)
+  attendanceMonth   String    @map("attendance_month") @db.VarChar(7) // YYYY-MM
+  attendanceDate     DateTime @map("attendance_date") @db.Date
+  attendanceType  String    @map("attendance_type") @db.VarChar(20) // full/night/double/half/公休/rest/SL/PL/BL/ML/AL/absent/rainout/leave/outing/study/business/injury
+  scheduleId      String?   @map("schedule_id") @db.VarChar(32)
+  checkInTime    DateTime? @map("check_in_time") @db.DateTime(0)
+  checkOutTime  DateTime? @map("check_out_time") @db.DateTime(0)
+  workHours       Decimal?  @map("work_hours") @db.Decimal(4, 2)
+  overtimeHours  Decimal?  @map("overtime_hours") @db.Decimal(4, 2)
+  locationGps   String?   @map("location_gps") @db.VarChar(100)
+  remark           String?   @db.VarChar(255)
+  approveStatus String?  @default("approved") @map("approve_status") @db.VarChar(20)
+  approvedBy      String?   @map("approved_by") @db.VarChar(32)
+  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts               BigInt    @map("_ts")
+
+  punches AttendancePunchRecord[]
+
+  @@index([staffId, attendanceMonth, attendanceType], map: "idx_att_month")
+  @@index([scheduleId], map: "idx_att_schedule")
+  @@map("attendance_v1")
+}
+
+model AttendancePunchRecord {
+  id               String    @id @db.VarChar(32)
+  attendanceId    String?   @map("attendance_id") @db.VarChar(32)
+  staffId        String    @map("staff_id") @db.VarChar(32)
+  staffName          String    @map("staff_name") @db.VarChar(50)
+  attendanceDate   DateTime @map("attendance_date") @db.Date
+  punchType     String    @map("punch_type") @db.VarChar(20) // in/out/meal_in/meal_out
+  punchTime    DateTime @map("punch_time") @db.DateTime(0)
+  punchSource  String?   @map("punch_source") @db.VarChar(20) // manual/gps/face/device
+  locationGps     String?   @map("location_gps") @db.VarChar(100)
+  deviceId           String?   @map("device_id") @db.VarChar(64)
+  remark         String?   @db.VarChar(255)
+  imageUrl         String?   @map("image_url") @db.VarChar(500)
+  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  ts               BigInt    @map("_ts")
+
+  @@index([staffId, attendanceDate, punchType], map: "idx_punch_staff")
+  @@map("attendance_punch_records")
+}
+
+model LeaveApplication {
+  id                String    @id @db.VarChar(32)
+  staffId           String    @map("staff_id") @db.VarChar(32)
+  staffName         String    @map("staff_name") @db.VarChar(50)
+  leaveType       String    @map("leave_type") @db.VarChar(20) // SL/PL/BL/ML/AL/outing/study/business/injury
+  dateFrom         DateTime @map("date_from") @db.Date
+  dateTo           DateTime @map("date_to") @db.Date
+  totalDays        Decimal  @map("total_days") @db.Decimal(4, 1)
+  totalHours       Decimal?  @map("total_hours") @db.Decimal(5, 2)
+  reason          String    @db.Text
+  attachmentUrls   Json?     @map("attachment_urls")
+  approveStatus     String    @default("pending") @map("approve_status") @db.VarChar(20)
+  approverId       String?   @map("approver_id") @db.VarChar(32)
+  approverName    String?   @map("approver_name") @db.VarChar(50)
+  approvedAt     DateTime? @map("approved_at") @db.DateTime(0)
+  rejectReason       String?   @map("reject_reason") @db.VarChar(255)
+  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts               BigInt    @map("_ts")
+
+  @@index([staffId, dateFrom], map: "idx_leave_staff")
+  @@map("leave_applications")
+}
+
+model OvertimeRecord {
+  id              String    @id @db.VarChar(32)
+  staffId       String    @map("staff_id") @db.VarChar(32)
+  staffName       String    @map("staff_name") @db.VarChar(50)
+  overtimeDate  DateTime @map("overtime_date") @db.Date
+  overtimeType String?   @map("overtime_type") @db.VarChar(20) // 工作日/周末/法定
+  startTime    DateTime? @map("start_time") @db.DateTime(0)
+  endTime     DateTime? @map("end_time") @db.DateTime(0)
+  totalHours    Decimal   @map("total_hours") @db.Decimal(4, 2)
+  scheduleId   String?   @map("schedule_id") @db.VarChar(32)
+  reason      String?   @db.Text
+  approveStatus   String    @default("pending") @map("approve_status") @db.VarChar(20)
+  approverId   String?   @map("approver_id") @db.VarChar(32)
+  approvedAt  DateTime? @map("approved_at") @db.DateTime(0)
+  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  ts              BigInt    @map("_ts")
+
+  @@index([staffId, overtimeDate], map: "idx_ot_staff")
+  @@map("overtime_records")
+}

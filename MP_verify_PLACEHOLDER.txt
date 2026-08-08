@@ -1,0 +1,19 @@
+MP_verify_XXXXXXXXXXXXXXXX_PLACEHOLDER.txt
+
+—— 微信公众平台「业务域名 / JS接口安全域名 / 网页授权域名」校验文件占位 ——
+
+如何使用：
+  1. 登录 微信公众平台 (https://mp.weixin.qq.com/)
+     → 设置与开发 → 公众号设置 → 功能设置
+  2. 分别在以下 3 处配置你的部署域名（例如 qaxqjt.edgeone.app 或自定义已备案域名）：
+       · 业务域名（防止 iframe 外链 / 表单跳转被拦截）
+       · JS接口安全域名（wx.config 调起微信扫码/分享/支付等）
+       · 网页授权域名（scope=snsapi_base / snsapi_userinfo 静默+手动授权）
+  3. 每处配置时，平台会给你一个形如 MP_verify_AbCdEf123456.txt 的 txt 文件
+  4. 下载该文件，删除本占位文件，把下载的真实文件直接放到本项目根目录（与 index.html 同级）
+  5. 重新 git push 部署，然后在公众平台点「保存」通过校验
+
+⚠️ 注意：
+  - 业务域名必须 ICP 备案
+  - 必须使用 https（EdgeOne Pages 默认 https）
+  - 一个 MP_verify 文件对应一个 AppID，多公众号/小程序可放多个

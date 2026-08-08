@@ -1,93 +1,100 @@
 {
-  "name": "秦安县秦剧团云端预约系统",
-  "version": "{year}.1.0",
-  "framework": "static",
+  "_comment": "腾讯云 EdgeOne Pages 部署配置 · 秦安县秦剧团云端预约系统 | 对应控制台：EdgeOne 控制台 → Pages → 项目设置 → 构建与部署 / 路由与回源 / 安全头",
+  "version": "1.0",
   "build": {
-    "command": "",
-    "outputDir": "./",
-    "env": {}
-  },
-  "routes": [
-    {
-      "route": "/",
-      "file": "index.html"
-    },
-    {
-      "route": "/index",
-      "file": "index.html"
-    },
-    {
-      "route": "/about",
-      "file": "about.html"
-    },
-    {
-      "route": "/operas",
-      "file": "operas.html"
-    },
-    {
-      "route": "/services",
-      "file": "services.html"
-    },
-    {
-      "route": "/news",
-      "file": "news.html"
-    },
-    {
-      "route": "/booking",
-      "file": "booking.html"
-    },
-    {
-      "route": "/contact",
-      "file": "contact.html"
-    },
-    {
-      "route": "/404",
-      "file": "404.html"
+    "_comment": "项目是纯静态 HTML/JS/CSS（booking.html、admin/login.html、js/app.js、css/ 等），无 Vite/Webpack 构建。真实用户若后续引入构建可改为 `npm install && npm run build`",
+    "buildCommand": "",
+    "outputDirectory": ".",
+    "installCommand": "",
+    "nodeVersion": "18",
+    "environment": {
+      "VITE_APP_NAME": "秦安县秦剧团云端预约系统",
+      "VITE_APP_DEPLOY_ENV": "edgeone-pages",
+      "_comment_build_date": "构建时间戳将由 EdgeOne Pages CI 注入 BUILD_ID 环境变量"
     }
-  ],
-  "errorPage": {
-    "notFound": "404.html"
   },
-  "headers": [
-    {
-      "pattern": "**/*.@(html|css|js|json|xml|txt)",
-      "headers": {
-        "Cache-Control": "public, max-age=3600, must-revalidate"
+  "routing": {
+    "_comment": "【重要】路由规则：同源前后端架构（DEPLOY_CHECKLIST §一·1）必须正确转发 /api/* 和 /v1/* 到后端（真实后端或 Mock 源站）；路径写错会触发 api-request.js L55 force_fallback 降级持久化开关",
+    "rules": [
+      {
+        "id": "api-backend-origin",
+        "type": "origin",
+        "_comment": "/api/v1/* 和 /v1/* 转发到真实后端回源地址（DEPLOY_CHECKLIST §二·2：同源 /api 前缀对应 mock-api-server.js L22 const PREFIX='/api' 剥除）。用户部署时将 ORIGIN_PO_ID 改为真实回源组 ID",
+        "match": {
+          "uriPattern": "^/(api/)?v1/.*",
+          "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+        },
+        "action": {
+          "originGroupId": "${YOUR_EDGEONE_BACKEND_ORIGIN_GROUP_ID}",
+          "originHost": "${YOUR_BACKEND_PUBLIC_HOST:qin-anyuanxi.example.com}",
+          "stripPrefix": "/api",
+          "_note_stripPrefix": "保持 stripPrefix='/api' 与 mock-api-server.js L108-L111 对齐，否则会出现 DEPLOY_CHECKLIST FAQ Q3 同源 /api 全部 404"
+        }
+      },
+      {
+        "id": "healthz-stable",
+        "type": "cache",
+        "_comment": "健康检查不缓存（避免旧缓存触发降级持久化开关 L130 setFallbackMode(true)）",
+        "match": { "uriPattern": "^/(api/)?v1/healthz$" },
+        "action": {
+          "cacheTtl": 0,
+          "cacheKey": { "ignoreQueryString": false, "includeHost": true }
+        }
+      },
+      {
+        "id": "static-root",
+        "type": "rewrite",
+        "_comment": "根路径 / 重写到 booking.html（用户主入口就是预约页）",
+        "match": { "uriPattern": "^/?$", "methods": ["GET"] },
+        "action": { "rewriteTarget": "/booking.html" }
+      },
+      {
+        "id": "admin-login",
+        "type": "rewrite",
+        "_comment": "DEPLOY_CHECKLIST §一·2 同源 admin 入口：/admin → 302 到 /admin/login.html",
+        "match": { "uriPattern": "^/admin/?$", "methods": ["GET"] },
+        "action": { "rewriteTarget": "/admin/login.html", "redirectStatusCode": 302 }
       }
-    },
-    {
-      "pattern": "**/*.@(jpg|jpeg|png|gif|svg|ico|webp)",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "pattern": "**/*.@(woff|woff2|ttf|eot|otf)",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "pattern": "admin/**",
-      "headers": {
-        "X-Robots-Tag": "noindex, nofollow",
-        "Cache-Control": "no-cache, no-store, must-revalidate"
-      }
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/home",
-      "destination": "/index.html",
-      "statusCode": 301
-    }
-  ],
-  "compress": {
-    "enable": true,
-    "algorithm": "brotli"
+    ]
   },
-  "https": {
-    "enable": true,
-    "http2": true
-  }
+  "customResponses": {
+    "_comment": "DEPLOY_CHECKLIST §一·8 自定义 404 必须带入口链接；EdgeOne Pages 默认 404 不符合，用本地 404.html 覆盖（如无 404.html，将在 §N2 生成）",
+    "404": {
+      "responseCode": 404,
+      "pagePath": "/404.html",
+      "_note": "/404.html 内容对齐 mock-api-server.js L136-L145：含 快速入口 / booking.html / admin/login.html / /v1/healthz 4 链接"
+    }
+  },
+  "security": {
+    "headers": {
+      "_comment": "安全响应头（HSTS/CSP/防 XSS），注意 CSP 允许同源 API 及必要内联脚本（否则 booking.html js/app.js 事件触发会被拦截）",
+      "add": [
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.tencentcs.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self';" }
+      ]
+    },
+    "cors": {
+      "_comment": "同源架构 CORS 默认允许；若接入手机端跨域（DEPLOY_CHECKLIST §六 FAQ 扩展时），在 productionCorsOrigins 填具体域名不要填 *",
+      "allowOrigins": [
+        "${YOUR_EDGEONE_PAGES_DOMAIN:https://qin-anyuanxi.example.com}"
+      ],
+      "allowMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "allowHeaders": ["Authorization", "Content-Type", "X-Requested-With"],
+      "exposeHeaders": ["X-Trace-Id"],
+      "allowCredentials": true,
+      "maxAge": 86400
+    }
+  },
+  "cache": {
+    "_comment": "静态文件 CDN 缓存策略：HTML 短 TTL（防内容过旧），JS/CSS/IMG 长 TTL（带 hash 或 v= 版本参数可更长）",
+    "rules": [
+      { "match": { "fileExtension": ["html"] }, "ttl": 60, "browserTtl": 300 },
+      { "match": { "fileExtension": ["js", "css"] }, "ttl": 604800, "browserTtl": 604800 },
+      { "match": { "fileExtension": ["png", "jpg", "jpeg", "gif", "webp", "svg", "ico"] }, "ttl": 2592000, "browserTtl": 2592000 }
+    ]
+  },
+  "deploymentChecklistAnchor": "DEPLOY_CHECKLIST.md §八（本文件生成时对应章节已更新）"
 }

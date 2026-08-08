@@ -1,0 +1,161 @@
+# ==================================================================
+#   秦安县秦剧团 · Admin Perf P99 日报
+#   Kubernetes CronJob · 生产部署清单
+# ==================================================================
+#   部署侧（CD）：修改此处 image tag → kubectl apply -f k8s/
+#   镜像构建侧（CI）：见 ../Dockerfile，CI 产出镜像后更新下面 image: 字段
+# ==================================================================
+#   调度策略：
+#     · 每天 凌晨 02:00（Cron 表达式：分钟 小时 日 月 周）
+#     · concurrencyPolicy: Forbid（防并发，CronJob 原生支持，等同 Windows IgnoreNew）
+#     · backoffLimit: 3（单次失败后最多重试 3 次，再失败就标记 Fail 并告警）
+#     · restartPolicy: OnFailure（容器 exit != 0 自动重启）
+#     · activeDeadlineSeconds: 7200（最多跑2小时超时强杀，防止卡死占资源）
+#     · successfulJobsHistoryLimit: 7   （保留最近 7 天成功 Job，便于查历史日志）
+#     · failedJobsHistoryLimit: 3       （保留最近 3 次失败 Job，便于排错）
+# ==================================================================
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: qaxqjt-perf-p99-daily
+  namespace: qaxqjt-monitoring   # ⚠️ 不存在就先 kubectl create namespace qaxqjt-monitoring
+  labels:
+    app.kubernetes.io/name: qaxqjt-perf-p99
+    app.kubernetes.io/component: daily-report-mailer
+    app.kubernetes.io/managed-by: kubectl
+    app.kubernetes.io/part-of: qin-an-ju-tuan
+    env: production
+spec:
+  # Cron 表达式：02:00 CST = 02:00 UTC+8（镜像内 TZ=Asia/Shanghai 已设，这里直接写本地时间）
+  schedule: "0 2 * * *"
+  # 时区（K8s 1.25+ 原生 CronJobTimeZone feature gate 开了才生效，没开就靠镜像内 TZ 兜底）
+  # 若集群未开 TimeZone feature，注释掉下面一行，靠镜像 ENV TZ=Asia/Shanghai 仍然正确
+  timeZone: "Asia/Shanghai"
+  concurrencyPolicy: Forbid      # ⭐ 核心：不允许并发（前面一次没跑完，后面一次跳过，防止锁/邮件重复）
+  startingDeadlineSeconds: 1800  # 最晚延迟30分钟启动（集群忙时允许补跑，超过就放弃本次）
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 3
+  suspend: false
+
+  jobTemplate:
+    spec:
+      backoffLimit: 3             # 容器失败后最多重试 3 次（配合 exit code）
+      activeDeadlineSeconds: 7200 # 单次 Job 最多 2 小时
+      ttlSecondsAfterFinished: 604800  # 7天后自动清理 Job 记录（604800秒=7天）
+
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: qaxqjt-perf-p99
+            app.kubernetes.io/component: daily-report-mailer
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: default   # 如需访问 K8s API 可建专用 SA
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001              # 对应 Dockerfile 里 useradd uid=1001
+            runAsGroup: 1001
+            fsGroup: 1001                # 让挂载卷默认权限归 qaxqjt 用户
+            seccompProfile:
+              type: RuntimeDefault
+
+          containers:
+            - name: mailer
+              # ==========================================================
+              # ⚠️ 每次发版：把下面 :v1.0 标签改成 CI 产出的新 tag / digest
+              #    推荐用 digest（@sha256:...） 防 tag 漂移，例如：
+              #    image: harbor.your-company.local/qaxqjt/perf-p99-mailer@sha256:xxxx...
+              # ==========================================================
+              image: harbor.your-company.local/qaxqjt/perf-p99-mailer:v1.0
+              imagePullPolicy: IfNotPresent
+
+              # 默认 CMD 即 --config /data/config/config_daily_report.json（Dockerfile 已写）
+              # 需要调试时可把 args 改成 ["--dry-run"] / ["--test-smtp"] / ["--mock-es", "-v"]
+              args: []
+
+              env:
+                - name: TZ
+                  value: "Asia/Shanghai"
+                - name: PYTHONUNBUFFERED
+                  value: "1"
+
+              # 资源配额（邮件发送不耗CPU，内存留足给 HTML 模板渲染）
+              resources:
+                requests:
+                  cpu: "50m"       # 0.05 核
+                  memory: "128Mi"
+                limits:
+                  cpu: "500m"      # 峰值 0.5 核
+                  memory: "512Mi"
+
+              # 探针：容器启动后 5s 执行 --help 通过则认为健康（CronJob 跑一次就结束，livenessProbe 非必须，保留 readinessProbe 便于调试）
+              readinessProbe:
+                exec:
+                  command: ["python", "daily_mailer.py", "--help"]
+                initialDelaySeconds: 5
+                periodSeconds: 30
+                failureThreshold: 2
+
+              volumeMounts:
+                # 1. 配置文件（非敏感）由 ConfigMap 挂载 → /data/config/config_daily_report.json
+                - name: config-volume
+                  mountPath: /data/config
+                  readOnly: true
+                # 2. 敏感密码（ES/SMTP）从 Secret 以 ENV 注入（推荐）或挂文件（二选一，默认用 ENV）
+                #    若选择挂文件，取消下面注释；若用 ENV 方式（Secret envFrom），下面这段可删除
+                # - name: secret-volume
+                #   mountPath: /data/secret
+                #   readOnly: true
+                # 3. 报表输出目录（挂 PVC 长期保留，或用 emptyDir 只本次运行用）
+                - name: reports-volume
+                  mountPath: /data/reports
+                # 4. 日志：容器 stdout/stderr 已被 K8s 自动采集，下面挂载是额外写本地文件用（按需）
+                # - name: logs-volume
+                #   mountPath: /data/logs
+
+          volumes:
+            - name: config-volume
+              configMap:
+                name: qaxqjt-perf-p99-daily-config
+                # ConfigMap key → filename 映射：把 ConfigMap 里的 "config_daily_report.json" 键挂成同名文件
+                items:
+                  - key: config_daily_report.json
+                    path: config_daily_report.json
+            # - name: secret-volume
+            #   secret:
+            #     secretName: qaxqjt-perf-p99-daily-secret
+            #     items:
+            #       - key: smtp_password
+            #         path: smtp_password.txt
+            #       - key: es_password
+            #         path: es_password.txt
+            # ===== ⭐ 生产强烈推荐：用 PVC 持久化报表输出（如 Longhorn / NFS / CephFS）=====
+            # - name: reports-volume
+            #   persistentVolumeClaim:
+            #     claimName: qaxqjt-perf-p99-reports-pvc   # ← 提前建好 ReadWriteMany PVC
+            # ===== 测试环境或无 PVC 时用 emptyDir（Pod 结束后报表即删，仅邮件附件保留即可）=====
+            - name: reports-volume
+              emptyDir: {}
+            # - name: logs-volume
+            #   persistentVolumeClaim:
+            #     claimName: qaxqjt-perf-p99-logs-pvc
+
+          # 镜像拉取秘钥（私有镜像仓库必填，需先 kubectl create secret docker-registry ...）
+          # imagePullSecrets:
+          #   - name: harbor-registry-secret
+
+          # 亲和性：调度到 monitoring 专用节点组（按需）
+          # affinity:
+          #   nodeAffinity:
+          #     requiredDuringSchedulingIgnoredDuringExecution:
+          #       nodeSelectorTerms:
+          #         - matchExpressions:
+          #             - key: node-role.kubernetes.io/monitoring
+          #               operator: In
+          #               values: ["true"]
+          # 容忍：容忍 monitoring 污点（按需）
+          # tolerations:
+          #   - key: "node-role.kubernetes.io/monitoring"
+          #     operator: "Equal"
+          #     value: "true"
+          #     effect: "NoSchedule"

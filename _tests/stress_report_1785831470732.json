@@ -1,0 +1,249 @@
+{
+  "config": {
+    "TEST_PAGES": [
+      "orders.html",
+      "accounts.html",
+      "schedule.html",
+      "finance.html",
+      "staff.html",
+      "operas.html",
+      "cast-sheet.html",
+      "content.html",
+      "reports.html",
+      "system.html",
+      "attendance.html",
+      "index.html",
+      "login.html",
+      "inventory.html"
+    ],
+    "MAX_CONCURRENT": 200,
+    "RAMP_UP_SEC": 5,
+    "STEADY_SEC": 10,
+    "RAMP_DOWN_SEC": 3,
+    "THINK_TIME_MIN_MS": 20,
+    "THINK_TIME_MAX_MS": 80,
+    "BUTTON_DISTRIBUTION": [
+      {
+        "weight": 15,
+        "name": "save",
+        "html": "<button class=\"btn btn-action\">保存订单</button>"
+      },
+      {
+        "weight": 10,
+        "name": "edit",
+        "html": "<button class=\"btn btn-sm\">编辑</button>"
+      },
+      {
+        "weight": 8,
+        "name": "delete",
+        "html": "<a class=\"action-link\">删除</a>"
+      },
+      {
+        "weight": 8,
+        "name": "view",
+        "html": "<a role=\"button\">查看详情</a>"
+      },
+      {
+        "weight": 10,
+        "name": "schedule",
+        "html": "<a class=\"btn btn-action\">派工安排</a>"
+      },
+      {
+        "weight": 10,
+        "name": "audit",
+        "html": "<button class=\"btn btn-action\">审核通过</button>"
+      },
+      {
+        "weight": 10,
+        "name": "sign",
+        "html": "<button class=\"btn\">签订合同</button>"
+      },
+      {
+        "weight": 8,
+        "name": "contract",
+        "html": "<a data-action=\"contract\">生成合同</a>"
+      },
+      {
+        "weight": 6,
+        "name": "accept",
+        "html": "<button class=\"btn btn-primary\">确认接单</button>"
+      },
+      {
+        "weight": 5,
+        "name": "export",
+        "html": "<button class=\"btn\">导出Excel</button>"
+      },
+      {
+        "weight": 5,
+        "name": "add",
+        "html": "<button class=\"btn\">新增演员</button>"
+      },
+      {
+        "weight": 5,
+        "name": "fallback",
+        "html": "<a class=\"btn\">申请调整</a>"
+      }
+    ]
+  },
+  "summary": {
+    "durationSec": "20.0",
+    "totalClicks": 40250,
+    "successClicks": 40250,
+    "failClicks": 0,
+    "successRate": 100,
+    "avgRps": 2012.5,
+    "peakRps": 2654,
+    "lockConflicts": 0,
+    "lockRate": 0,
+    "avgLatency": 0.20747826086956522,
+    "p50": 0,
+    "p95": 1,
+    "p99": 1
+  },
+  "perBranch": {
+    "save": {
+      "count": 6132,
+      "success": 6132,
+      "lock": 0,
+      "successRate": 100,
+      "avg": 0.21053489889106328,
+      "p50": 0,
+      "p95": 1,
+      "p99": 1
+    },
+    "edit": {
+      "count": 3947,
+      "success": 3947,
+      "lock": 0,
+      "successRate": 100,
+      "avg": 0.18875095008867493,
+      "p50": 0,
+      "p95": 1,
+      "p99": 1
+    },
+    "delete": {
+      "count": 3241,
+      "success": 3241,
+      "lock": 0,
+      "successRate": 100,
+      "avg": 0.21258870718913916,
+      "p50": 0,
+      "p95": 1,
+      "p99": 1
+    },
+    "view": {
+      "count": 3245,
+      "success": 3245,
+      "lock": 0,
+      "successRate": 100,
+      "avg": 0.22157164869029275,
+      "p50": 0,
+      "p95": 1,
+      "p99": 1
+    },
+    "schedule": {
+      "count": 4024,
+      "success": 4024,
+      "lock": 0,
+      "successRate": 100,
+      "avg": 0.21446322067594434,
+      "p50": 0,
+      "p95": 1,
+      "p99": 1
+    },
+    "audit": {
+      "count": 4028,
+      "success": 4028,
+      "lock": 0,
+      "successRate": 100,
+      "avg": 0.19389275074478649,
+      "p50": 0,
+      "p95": 1,
+      "p99": 1
+    },
+    "sign": {
+      "count": 3999,
+      "success": 3999,
+      "lock": 0,
+      "successRate": 100,
+      "avg": 0.20955238809702426,
+      "p50": 0,
+      "p95": 1,
+      "p99": 1
+    },
+    "contract": {
+      "count": 3226,
+      "success": 3226,
+      "lock": 0,
+      "successRate": 100,
+      "avg": 0.22380657160570366,
+      "p50": 0,
+      "p95": 1,
+      "p99": 1
+    },
+    "accept": {
+      "count": 2382,
+      "success": 2382,
+      "lock": 0,
+      "successRate": 100,
+      "avg": 0.20235096557514692,
+      "p50": 0,
+      "p95": 1,
+      "p99": 1
+    },
+    "export": {
+      "count": 2007,
+      "success": 2007,
+      "lock": 0,
+      "successRate": 100,
+      "avg": 0.19930244145490783,
+      "p50": 0,
+      "p95": 1,
+      "p99": 1
+    },
+    "add": {
+      "count": 2035,
+      "success": 2035,
+      "lock": 0,
+      "successRate": 100,
+      "avg": 0.21277641277641277,
+      "p50": 0,
+      "p95": 1,
+      "p99": 1
+    },
+    "fallback": {
+      "count": 1984,
+      "success": 1984,
+      "lock": 0,
+      "successRate": 100,
+      "avg": 0.19556451612903225,
+      "p50": 0,
+      "p95": 1,
+      "p99": 1
+    }
+  },
+  "perSecondRps": {
+    "0": 202,
+    "1": 693,
+    "2": 1147,
+    "3": 1356,
+    "4": 1657,
+    "5": 1878,
+    "6": 1976,
+    "7": 2037,
+    "8": 2111,
+    "9": 2101,
+    "10": 2515,
+    "11": 2612,
+    "12": 2654,
+    "13": 2598,
+    "14": 2310,
+    "15": 2608,
+    "16": 2613,
+    "17": 2540,
+    "18": 2514,
+    "19": 2128
+  },
+  "errors": [],
+  "pass": true
+}
