@@ -1,0 +1,51 @@
+================================================================================
+ 秦安县秦剧团 · booking.html 降级逻辑 & 弱网恢复自动化测试报告
+ 生成时间: 2026-08-04T03:45:31.425Z
+ 配置    : ONLINE=http://127.0.0.1:3001 OFFLINE=http://127.0.0.1:19999
+         : 弱网 LOSS=30% 延迟=300~2000ms 重试=2
+================================================================================
+
+【P0_BASELINE】  目标：基准：健康检查 200 + POST 返回 BK 前缀（fromMockApi=true）
+  · 健康检查: {"code":0,"version":"MOCK-1.0","via":"network","elapsedMs":1,"ok":true}
+  · 提交预约: via=network bookingId=BK2026151286041002 prefix=BK online=是
+  · 关键耗时: healthz=1 ms  submit=2 ms  attempt=1
+  · 备注: 基准值；若 BK 非前缀意味着本地缓存未清/路由不工作
+
+【P1_OFFLINE】  目标：ECONNREFUSED → 自动降级写入 localStorage（26-QA 前缀）
+  · 健康检查: {"offline":true,"via":"network_fail_read","elapsedMs":3,"ok":true,"fbModeAfter":"1"}
+  · 提交预约: via=force_fallback_write bookingId=26-QA-0001 prefix=26-QA online=否
+  · 关键耗时: healthz=3 ms  submit=2 ms  attempt=1
+  · 备注: 若 healthz 为 network_fail_read，则 fallback_mode 已被自动设 1；之后 submit 走 force_fallback_write
+
+【P2_WEAKNET】  目标：模拟 EdgeOne 抖动：平均提交耗时 ≤ 3s；重试仍失败才回 26-QA 前缀
+  · 健康检查: {"note":"weaknet 阶段直接测提交（省略 healthz 节省时间）"}
+  · 提交预约: via=network_fail_write bookingId=26-QA-0002 prefix=26-QA online=否
+  · 关键耗时: healthz=N/A  submit=N/A  attempt=见每轮
+  · 备注: 弱网：若丢包少 2 次重试内救回 → BK 前缀；否则命中 network_fail 写 26-QA
+
+【P3_RECOVERY】  目标：从离线/弱网恢复后，健康检查立即恢复 code=0，提交立即 BK 前缀成功
+  · 健康检查: {"code":0,"via":"network","elapsedMs":1,"online":true}
+  · 提交预约: via=network bookingId=BK2026151314221005 prefix=BK online=是
+  · 关键耗时: healthz=1 ms  submit=3 ms  attempt=1
+  · 备注: 恢复耗时以 healthz+submit 合计计算；若仍走 force_fallback，说明 fallback_mode 未被清除
+
+--------------------------------------------------------------------------------
+总体指标
+  · 在线提交（BK 前缀）耗时:     2 ms
+  · 硬断网降级（26-QA 前缀）耗时: 2 ms
+  · 弱网抖动平均提交耗时:         935 ms (丢包后重试)
+  · 恢复首次在线成功耗时:         4 ms
+  · 总执行耗时:                   2841 ms
+--------------------------------------------------------------------------------
+降级日志匹配检查（必须全部为 PASS）
+  · ✅ PASS  P0 healthz code=0 & version=MOCK-1.0 → code=0 version=MOCK-1.0
+  · ✅ PASS  P0 submit 在线 BK 前缀 → bookingId=BK2026151286041002
+  · ✅ PASS  P0 submit fromMockApi=true → true
+  · ✅ PASS  P1 healthz 走降级/离线 (非 network online) → via=network_fail_read
+  · ✅ PASS  P1 submit 26-QA 前缀 & localStorageOnly=true → id=26-QA-0001 localStorageOnly=true
+  · ✅ PASS  P1 healthz 失败后 fallback_mode 自动置 1 (持久化) → fbMode=1
+  · ✅ PASS  P2 弱网 3 轮平均 ≤ 3000ms → avg=935ms  min=309  max=1634  阈值=3000ms
+  · ✅ PASS  P2 提交 via ∈ { network, network_fail_write, force_fallback_write } → finalVia=network_fail_write
+  · ✅ PASS  P3 恢复后 healthz via=network & code=0 → via=network code=0
+  · ✅ PASS  P3 恢复后 submit BK 前缀 & fromMockApi=true → bookingId=BK2026151314221005 fromMockApi=true
+  · ✅ PASS  P3 恢复总耗时（健康检查+提交） ≤ 2000ms → total=4ms  阈值=2000ms

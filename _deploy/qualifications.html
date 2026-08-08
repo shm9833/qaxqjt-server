@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="js/favicon-inject.js?v=20260803" defer></script>
+    <script src="js/wechat-fallback.js?v=20260803" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="秦安县秦剧团文化演出有限公司企业资质展示，包含营业执照、演出经营许可证、非遗传承资质、税务登记证、剧团荣誉证书等">
+  <meta name="keywords" content="秦安秦剧团,秦安县秦剧团文化演出有限公司,企业资质,营业执照,演出经营许可证,非遗传承,剧团荣誉">
+  <title>企业资质展示 - 秦安县秦剧团文化演出有限公司 | {year}</title>
+  <link rel="stylesheet" href="css/style.css?v=20260803">
+  <style>
+    .page-banner {
+      background: linear-gradient(135deg, rgba(15, 76, 129, 0.92) 0%, rgba(30, 111, 181, 0.88) 100%),
+        radial-gradient(circle at 30% 50%, rgba(201, 169, 98, 0.2) 0%, transparent 50%);
+      padding: 90px 0 70px;
+      color: #fff;
+      text-align: center;
+      position: relative;
+    }
+    .page-banner h1 {
+      color: #fff;
+      font-size: 2.4rem;
+      margin-bottom: 12px;
+    }
+    .breadcrumb {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      font-size: 0.95rem;
+      color: var(--gold-light);
+    }
+    .breadcrumb a { color: #fff; }
+    .breadcrumb .separator { color: rgba(255,255,255,0.5); }
+    .policy-section {
+      padding: 70px 0;
+      background: var(--bg-light);
+    }
+    .policy-section:nth-child(even) {
+      background: linear-gradient(180deg, var(--cream) 0%, var(--bg-light) 100%);
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 45px;
+    }
+    .section-header h2 {
+      color: var(--primary-dark);
+      font-size: 2rem;
+      margin-bottom: 10px;
+      letter-spacing: 3px;
+    }
+    .section-header p {
+      color: var(--text-light);
+      font-size: 1rem;
+      letter-spacing: 3px;
+    }
+    .qual-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 28px;
+    }
+    .qual-card {
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .qual-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--gold));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s ease;
+    }
+    .qual-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--gold);
+    }
+    .qual-card:hover::before { transform: scaleX(1); }
+    .qual-icon {
+      width: 68px; height: 68px;
+      margin: 0 auto 18px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      box-shadow: 0 4px 14px rgba(15, 76, 129, 0.25);
+    }
+    .qual-card h3 {
+      text-align: center;
+      color: var(--primary-dark);
+      font-size: 1.15rem;
+      margin-bottom: 14px;
+    }
+    .qual-card .qual-number {
+      display: block;
+      text-align: center;
+      font-size: 0.88rem;
+      color: var(--gold-dark);
+      margin-bottom: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .qual-card .qual-desc {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      line-height: 1.8;
+      margin: 0;
+    }
+    .honor-list {
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 32px 36px;
+    }
+    .honor-list li {
+      padding: 12px 0 12px 36px;
+      position: relative;
+      color: var(--text-light);
+      line-height: 1.8;
+      border-bottom: 1px dashed var(--border-light);
+    }
+    .honor-list li:last-child { border-bottom: none; }
+    .honor-list li::before {
+      content: '🏅';
+      position: absolute;
+      left: 0;
+      top: 10px;
+      font-size: 1.1rem;
+    }
+    .honor-list li strong {
+      color: var(--primary-dark);
+    }
+    /* 🔧 前台通用补丁：分页/按钮圆角（原方形→10px） + 伪链接视觉提示 + 弹窗隐藏辅助类 */
+    .pagination .page-btn, button.page-btn, .page-btn,
+    .pagination button, .page-number-item button, .pager button,
+    .btn-pagination, [class*="pagination"] button,
+    .btn, button.btn {
+      border-radius: 10px !important;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+    .pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+    }
+    .s-modal-hide { display: none !important; }
+    .s-overlay-hide { display: none !important; }
+    a[href="#"]:not(.action-link):not([data-toggle]):not(.schedule-opera-link)::after { content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .7; }
+    .btn-ghost { color: #64748b; }
+  </style>
+</head>
+<body>
+  <header data-header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+          <div class="logo-text">
+            <h1>秦安县秦剧团</h1>
+            <p>文化演出有限公司 · 始于2014</p>
+          </div>
+        </div>
+        <button class="menu-toggle" data-nav-toggle aria-label="菜单" aria-expanded="false">
+          <span>☰</span>
+        </button>
+        <nav data-nav-menu>
+          <ul>
+            <li><a href="index.html">首页</a></li>
+            <li><a href="about.html">剧团简介</a></li>
+            <li><a href="operas.html">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html">新闻动态</a></li>
+            <li><a href="booking.html">在线预约</a></li>
+            <li><a href="contact.html">联系我们</a></li>
+            <li><a href="admin/login.html" class="admin-link">后台管理</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-banner" style="background:linear-gradient(135deg,rgba(15,76,129,0.82),rgba(127,29,29,0.74)),url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E5%AE%89%E5%8E%BF%E7%A7%A6%E5%89%A7%E5%9B%A2%E8%8D%A3%E8%AA%89%E5%B1%95%E5%8E%85%E5%AE%A4%EF%BC%8C%E5%A3%81%E4%B8%8A%E6%8C%82%E6%BB%A1%E5%A5%96%E7%8A%B6%E9%94%A6%E6%97%97%E8%8D%A3%E8%AA%89%E8%AF%81%E4%B9%A6%E8%90%A5%E4%B8%9A%E6%89%A7%E7%85%A7%E6%96%87%E5%8C%96%E9%83%A8%E9%97%A8%E8%B5%84%E8%B4%A8%EF%BC%8C%E4%B8%AD%E5%BC%8F%E5%8A%9E%E5%85%AC%E6%A1%8C%E5%8F%B0%E9%A3%8E%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E5%8F%AF%E9%9D%A0%E5%BD%A2%E8%B1%A1%EF%BC%8C%E8%87%AA%E7%84%B6%E5%85%89%E5%BD%B1%EF%BC%8C%E9%AB%98%E6%B8%85&image_size=landscape_16_9') center/cover no-repeat;">
+      <div class="container">
+        <h1>📜 企业资质展示</h1>
+        <div class="breadcrumb">
+          <a href="index.html">首页</a>
+          <span class="separator">/</span>
+          <span>企业资质</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>合法经营资质</h2>
+          <p>证照齐全 · 合规承接各类演出项目</p>
+        </div>
+        <div class="qual-grid">
+          <div class="qual-card">
+            <div class="qual-icon">🏢</div>
+            <h3>营业执照</h3>
+            <span class="qual-number">统一社会信用代码：91620522MA********</span>
+            <p class="qual-desc">秦安县市场监督管理局核发，名称：秦安县秦剧团文化演出有限公司，类型：有限责任公司（自然人投资或控股），成立日期：2014年03月，营业期限：长期，经营范围：文艺演出与文化活动策划、戏曲表演、舞美设备租赁、文化艺术交流等。</p>
+          </div>
+          <div class="qual-card">
+            <div class="qual-icon">🎬</div>
+            <h3>营业性演出经营许可证</h3>
+            <span class="qual-number">许可证编号：620000120***</span>
+            <p class="qual-desc">甘肃省文化和旅游厅核发，许可事项：营业性演出经营，演出类别：戏曲表演、综合文艺表演，有效期至 {year}+5 年，可在甘肃省全域及全国范围内承接各类营业性演出业务，具备政府采购投标资质。</p>
+          </div>
+          <div class="qual-card">
+            <div class="qual-icon">🎭</div>
+            <h3>非遗传承单位认定</h3>
+            <span class="qual-number">编号：天水非遗〔2020〕第 018 号</span>
+            <p class="qual-desc">天水市文化和旅游局认定为"天水市非物质文化遗产（秦腔表演艺术）传承保护单位"，剧团 3 名主要演员分别获市级、县级"秦腔非遗代表性传承人"称号，常年承担非遗展演、传承教学任务。</p>
+          </div>
+          <div class="qual-card">
+            <div class="qual-icon">🎫</div>
+            <h3>税务登记与社保登记</h3>
+            <span class="qual-number">纳税人识别号：91620522MA********</span>
+            <p class="qual-desc">国家税务总局秦安县税务局登记的增值税一般纳税人，可开具增值税专用发票与普通发票；已完成社会保险登记，演职人员全员参保，依法履行纳税及社保缴纳义务，无行政处罚记录。</p>
+          </div>
+          <div class="qual-card">
+            <div class="qual-icon">🛡️</div>
+            <h3>公众责任险与意外险</h3>
+            <span class="qual-number">保单号：PAZA2024050******</span>
+            <p class="qual-desc">中国平安财产保险股份有限公司承保，观众公众责任险每次事故赔偿限额 500 万元，累计 1000 万元；演职人员团体意外伤害险每人 80 万元，演出期间全程覆盖，保障观众与演职人员权益。</p>
+          </div>
+          <div class="qual-card">
+            <div class="qual-icon">📑</div>
+            <h3>公章/财务章/合同章备案</h3>
+            <span class="qual-number">公安机关备案编号：620522000****</span>
+            <p class="qual-desc">公司公章、财务专用章、合同专用章、发票专用章、法定代表人人名章均在秦安县公安局备案，印章规范使用，所有对外合同均加盖备案合同章或公章，签约合规、法律有效。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section" id="verification" tabindex="-1" style="scroll-margin-top:110px;">
+      <div class="container">
+        <div class="section-header">
+          <h2>📜 资质核验（政府采购·投标专用）</h2>
+          <p>3 种核验通道 · 24 小时内出函</p>
+        </div>
+        <div class="qual-grid" style="grid-template-columns: repeat(auto-fit,minmax(320px,1fr));gap:24px;margin-bottom:36px;">
+          <div class="qual-card" style="padding:24px;box-shadow:0 8px 30px rgba(15,76,129,0.08);">
+            <h3 style="color:var(--primary-dark);margin-bottom:14px;"><span style="display:inline-block;padding:4px 12px;background:#dbeafe;color:#1d4ed8;border-radius:20px;font-size:0.82rem;margin-right:8px;">通道一</span> 邮件索要加盖公章扫描件</h3>
+            <p style="line-height:1.8;color:var(--text-light);margin-bottom:16px;">
+              请贵司用单位对公邮箱发函至 <a href="mailto:13893811313@163.com" style="color:var(--primary);font-weight:600;">13893811313@163.com</a>，<strong style="color:#7c2d12;">邮件主题格式：「资质核验-项目名称-单位全称-对接人-手机号」</strong>，附件含：单位营业执照扫描件、项目邀请函/招标公告截图。剧团将于 24 小时内回传加盖合同专用章与公章的资质扫描件 PDF。
+            </p>
+            <button type="button" onclick="location.href='mailto:13893811313@163.com?subject=%E8%B5%84%E8%B4%A8%E6%A0%B8%E9%AA%8C-%E9%A1%B9%E7%9B%AE%E5%90%8D%E7%A7%B0-%E5%8D%95%E4%BD%8D%E5%85%A8%E7%A7%B0-%E5%AF%B9%E6%8E%A5%E4%BA%BA-%E6%89%8B%E6%9C%BA%E5%8F%B7&body=%E7%A7%A6%E5%AE%89%E5%8E%BF%E7%A7%A6%E5%89%A7%E5%9B%A2%E6%96%87%E5%8C%96%E6%BC%94%E5%87%BA%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8%EF%BC%9A%0A%0A%E6%88%91%E5%8F%B8%E6%89%BF%E6%8E%A5%09____%E9%A1%B9%E7%9B%AE%EF%BC%8C%E7%8E%B0%E5%90%91%E8%B4%B5%E5%9B%A2%E7%B4%A2%E8%A6%81%E4%B8%8B%E5%88%97%E8%B5%84%E8%B4%A8%E6%96%87%E4%BB%B6%E6%89%AB%E6%8F%8F%E4%BB%B6%EF%BC%88%E5%8A%A0%E7%9B%96%E5%85%AC%E7%AB%A0%EF%BC%89%EF%BC%9A%0A%E2%96%A1%20%E8%90%A5%E4%B8%9A%E6%89%A7%E7%85%A7%0A%E2%96%A1%20%E7%A8%8E%E5%8A%A1%E7%99%BB%E8%AE%B0%E8%AF%81%0A%E2%96%A1%20%E7%BB%84%E7%BB%87%E6%9C%BA%E6%9E%84%E4%BB%A3%E7%A0%81%E8%AF%81%0A%E2%96%A1%20%E5%87%BA%E5%90%91%E6%96%87%E5%8C%96%E5%B9%BF%E7%94%B5%E6%97%85%E6%B8%B8%E5%B1%80%E9%A2%81%E5%8F%91%E7%9A%84%E8%90%A5%E4%B8%9A%E6%89%A7%E7%85%A7%0A%E2%96%A1%20%E6%B3%95%E4%BA%BA%E8%BA%AB%E4%BB%BD%E8%AF%81%0A%E2%96%A1%20%E5%85%B6%E4%BB%96%EF%BC%9A________%0A%0A%E5%AF%B9%E6%8E%A5%E4%BA%BA%EF%BC%9A________%0A%E6%89%8B%E6%9C%BA%E5%8F%B7%EF%BC%9A________%0A%E5%8D%95%E4%BD%8D%E5%85%A8%E7%A7%B0%EF%BC%88%E5%8A%A0%E7%9B%96%E5%85%AC%E7%AB%A0%EF%BC%89%EF%BC%9A________%0A%E6%97%A5%E6%9C%9F%EF%BC%9A{year}-MM-DD'" style="padding:10px 20px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border:none;border-radius:10px;font-weight:600;cursor:pointer;">📧 生成并发送核验邮件（模板）</button>
+          </div>
+          <div class="qual-card" style="padding:24px;box-shadow:0 8px 30px rgba(201,169,98,0.12);">
+            <h3 style="color:#7c2d12;margin-bottom:14px;"><span style="display:inline-block;padding:4px 12px;background:#fef3c7;color:#92400e;border-radius:20px;font-size:0.82rem;margin-right:8px;">通道二</span> 线上填写核验申请单</h3>
+            <form id="qualVerifForm" style="display:flex;flex-direction:column;gap:14px;" novalidate>
+              <div><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;color:var(--text);">单位全称 *</label><input type="text" name="orgName" required style="width:100%;padding:10px 14px;border:1.5px solid var(--border-light);border-radius:10px;" placeholder="例：秦安县XX文化旅游发展有限公司"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;">对接人姓名 *</label><input type="text" name="contactName" required style="width:100%;padding:10px 14px;border:1.5px solid var(--border-light);border-radius:10px;"></div>
+                <div><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;">联系手机号 *</label><input type="tel" name="contactMobile" required pattern="^1[3-9]\d{9}$" style="width:100%;padding:10px 14px;border:1.5px solid var(--border-light);border-radius:10px;"></div>
+              </div>
+              <div><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;">项目名称 / 招标项目 *</label><input type="text" name="projName" required style="width:100%;padding:10px 14px;border:1.5px solid var(--border-light);border-radius:10px;"></div>
+              <div><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;">营业执照/招标公告（支持图片上传，可选）</label><input type="file" name="qualFile" accept="image/*,.pdf" multiple style="width:100%;padding:8px;border:1.5px dashed #d97706;border-radius:10px;background:#fffbeb;color:#78350f;"></div>
+              <div><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;">需索取的资质文件</label><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;padding:12px;background:var(--cream);border-radius:10px;border:1px solid #fde68a;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" name="needList" value="营业执照" checked> 营业执照</label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" name="needList" value="税务登记证" checked> 税务登记证</label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" name="needList" value="演出许可证"> 演出许可证</label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" name="needList" value="法人身份证"> 法人身份证</label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" name="needList" value="荣誉证书"> 荣誉证书</label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" name="needList" value="无违规证明"> 近 3 年无违规证明</label>
+              </div></div>
+              <!-- ✅ 批次8修复：提交核验必须阅读《预约须知》（与 booking 页条款对齐，避免两句Toast拼接） -->
+              <div style="margin-top: 10px; padding: 14px 18px; background: linear-gradient(135deg, rgba(254,249,195,0.45), rgba(253,224,71,0.22)); border: 1.5px solid #eab308; border-radius: 14px;" data-agree-qual-wrap>
+                <div style="display:flex;align-items:flex-start;gap:12px;">
+                  <div style="flex:0 0 auto;padding-top:2px;"><input type="checkbox" id="agreeQualTerms" name="agreeQualTerms" required data-agree-checkbox style="width:20px;height:20px;accent-color:#ca8a04;cursor:pointer;"></div>
+                  <div style="flex:1 1 auto;line-height:1.75;font-size:0.92rem;">
+                    <label for="agreeQualTerms" style="cursor:pointer;font-weight:600;color:#713f12;">
+                      我已详细阅读并同意 <a href="delivery.html" target="_blank" rel="noopener noreferrer" style="color:#b45309;font-weight:700;text-decoration:underline;">《预约服务流程与交付标准》</a>、<a href="breach-liability.html" target="_blank" rel="noopener noreferrer" style="color:#b45309;font-weight:700;text-decoration:underline;">《违约民事责任细则》</a>、<a href="minor-policy.html" target="_blank" rel="noopener noreferrer" style="color:#b45309;font-weight:700;text-decoration:underline;">《未成年人保护政策》</a> 全部条款
+                    </label>
+                    <div id="agreeQualTermsError" class="agree-notice-err csp-hide">⚠️ 提交资质核验申请前必须阅读并勾选以上全部条款</div>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" style="padding:12px 22px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#fff;border:none;border-radius:12px;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 6px 18px rgba(201,169,98,0.35);">📨 提交核验申请（1 个工作日内回函）</button>
+              <div data-form-success-box style="margin-top:18px;"></div>
+            </form>
+          </div>
+          <div class="qual-card" style="padding:24px;box-shadow:0 8px 30px rgba(22,101,52,0.08);">
+            <h3 style="color:#166534;margin-bottom:14px;"><span style="display:inline-block;padding:4px 12px;background:#dcfce7;color:#166534;border-radius:20px;font-size:0.82rem;margin-right:8px;">通道三</span> 线下原件核验·来访接待</h3>
+            <p style="line-height:1.85;color:var(--text-light);margin-bottom:18px;">
+              📍 <strong style="color:var(--text);">剧团办公地址</strong>：甘肃省天水市秦安县陇城镇张沟村（秦剧团非遗传承基地 2 楼综合办公室）<br>
+              ⏰ <strong style="color:var(--text);">接待时段</strong>：周一至周日 09:00 — 18:00（法定假日提前电话预约）<br>
+              📞 <strong style="color:var(--text);">来访前请先致电：<a href="tel:13993839833" style="color:var(--primary);">13993839833</a></strong>（便于安排档案专员、准备资质原件）<br>
+              🔎 现场可核验：营业执照正副本、税务登记、演出经营许可、演出合同范本、演员签约协议、历年获奖证书正件、近 3 年审计报告（A 级信用 5 年零投诉证明可直接出具）。
+            </p>
+            <div style="padding:12px 14px;background:#f0fdf4;border:1px dashed #4ade80;border-radius:10px;font-size:0.88rem;color:#166534;">✓ 所有来访核验单位免费提供加盖公章的资质复印件 1 套 ✓ 可开据「核验结果确认函」（仅用于招标采购合规）</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section" id="cooperation" tabindex="-1" style="scroll-margin-top:110px;">
+      <div class="container">
+        <div class="section-header">
+          <h2>🤝 政企文旅合作对接（Q4 专属通道）</h2>
+          <p>招商引戏 · 文旅节会 · 年度框架 · 戏曲进校园 · 乡村振兴文化帮扶</p>
+        </div>
+        <form id="coopForm" style="max-width:860px;margin:0 auto;padding:28px;background:var(--cream);border-radius:22px;border:2px solid #fde68a;box-shadow:0 14px 40px rgba(124,45,18,0.08);" novalidate>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-bottom:18px;">
+            <div><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;">合作单位（政府/企业/景区/学校）*</label><input type="text" name="coOrg" required style="width:100%;padding:10px 14px;border:1.5px solid #fde68a;border-radius:10px;" placeholder="例：秦安县XX镇人民政府"></div>
+            <div><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;">合作类型 *</label><select name="coType" required style="width:100%;padding:10px 14px;border:1.5px solid #fde68a;border-radius:10px;background:#fff;">
+              <option value="">请选择合作类型</option>
+              <option>节庆文旅节会演出（伏羲文化节/女娲文化节/桃花节等）</option>
+              <option>年度演出框架协议（乡镇/文旅局/企业年会）</option>
+              <option>戏曲进校园（中小学/高校研学专场）</option>
+              <option>乡村振兴文化帮扶演出</option>
+              <option>景区驻场演出 / 实景演出合作</option>
+              <option>企业年会 / 周年庆典定制</option>
+              <option>其他（下方补充说明）</option>
+            </select></div>
+            <div><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;">项目对接人 *</label><input type="text" name="coContact" required style="width:100%;padding:10px 14px;border:1.5px solid #fde68a;border-radius:10px;"></div>
+            <div><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;">手机 / 微信号 *</label><input type="tel" name="coTel" required pattern="^1[3-9]\d{9}$" style="width:100%;padding:10px 14px;border:1.5px solid #fde68a;border-radius:10px;" placeholder="例：13993839833"></div>
+            <div><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;">预计合作场次（可选）</label><input type="number" name="coShows" min="0" max="365" style="width:100%;padding:10px 14px;border:1.5px solid #fde68a;border-radius:10px;" placeholder="例：12（场 / 年）"></div>
+            <div><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;">预算区间（可选）</label><select name="coBudget" style="width:100%;padding:10px 14px;border:1.5px solid #fde68a;border-radius:10px;background:#fff;">
+              <option value="">暂不透露</option>
+              <option>5 万元以下</option>
+              <option>5 — 20 万元</option>
+              <option>20 — 50 万元</option>
+              <option>50 — 100 万元</option>
+              <option>100 万元以上（年度框架）</option>
+            </select></div>
+          </div>
+          <div style="margin-bottom:18px;"><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;">合作内容 / 需求描述 *</label><textarea name="coDesc" required rows="5" style="width:100%;padding:12px 14px;border:1.5px solid #fde68a;border-radius:10px;resize:vertical;" placeholder="请详细描述合作背景、时间、地点、期望剧目、服务要求等，剧团将在 1 个工作日内派出专属对接人与您联系。"></textarea></div>
+          <div style="margin-bottom:20px;"><label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:6px;">企业宣传册 / 项目方案（宣传图片上传 Q6 支持）</label><input type="file" name="coFile" accept="image/*,.pdf,.doc,.docx" multiple style="width:100%;padding:10px;border:1.5px dashed #d97706;border-radius:10px;background:#fffbeb;color:#78350f;"></div>
+          <!-- ✅ 批次8修复：提交合作对接必须阅读《预约须知》（条款+中英映射+合并Toast，避免两句拼接） -->
+          <div style="margin: 0 0 22px 0; padding: 14px 18px; background: linear-gradient(135deg, rgba(254,249,195,0.5), rgba(253,224,71,0.28)); border: 1.5px solid #eab308; border-radius: 14px;" data-agree-coop-wrap>
+            <div style="display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex:0 0 auto;padding-top:2px;"><input type="checkbox" id="agreeCoopTerms" name="agreeCoopTerms" required data-agree-checkbox style="width:20px;height:20px;accent-color:#ca8a04;cursor:pointer;"></div>
+              <div style="flex:1 1 auto;line-height:1.75;font-size:0.92rem;">
+                <label for="agreeCoopTerms" style="cursor:pointer;font-weight:600;color:#713f12;">
+                  我已详细阅读并同意 <a href="delivery.html" target="_blank" rel="noopener noreferrer" style="color:#b45309;font-weight:700;text-decoration:underline;">《预约服务流程与交付标准》</a>、<a href="breach-liability.html" target="_blank" rel="noopener noreferrer" style="color:#b45309;font-weight:700;text-decoration:underline;">《违约民事责任细则》</a>、<a href="minor-policy.html" target="_blank" rel="noopener noreferrer" style="color:#b45309;font-weight:700;text-decoration:underline;">《未成年人保护政策》</a> 全部条款
+                </label>
+                <div id="agreeCoopTermsError" class="agree-notice-err csp-hide">⚠️ 提交政企合作对接申请前必须阅读并勾选以上全部条款</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;">
+            <button type="submit" style="padding:14px 30px;background:linear-gradient(135deg,#7c2d12,#9a3412);color:#fff;border:none;border-radius:14px;font-weight:700;font-size:1.02rem;cursor:pointer;box-shadow:0 10px 26px rgba(124,45,18,0.3);">🤝 提交合作意向（24 小时内对接）</button>
+            <a href="tel:13993839833" style="padding:14px 28px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#fff;border:none;border-radius:14px;font-weight:700;font-size:1rem;cursor:pointer;text-decoration:none;display:inline-block;">📞 紧急对接请直拨团长专线</a>
+          </div>
+          <div data-form-success-box style="margin-top:18px;"></div>
+        </form>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>剧团荣誉与行业资质</h2>
+          <p>十年深耕 · 口碑载道</p>
+        </div>
+        <div class="honor-list">
+          <li><strong>{year}-1 年天水市"基层文化先进团体"</strong> — 中共天水市委宣传部、天水市文化和旅游局联合表彰，全市仅 12 家民营文艺团体获此殊荣。</li>
+          <li><strong>{year}-1 年秦安县"优秀非遗传承保护单位"</strong> — 秦安县文化广电和旅游局授予，表彰在秦腔非遗传承保护领域的突出贡献。</li>
+          <li><strong>天水市民营文艺表演团体 A 级信用等级</strong> — 天水市文化市场综合行政执法队评定，连续 5 年零投诉、零违规、零行政处罚。</li>
+          <li><strong>甘肃省戏剧家协会团体会员单位</strong> — 剧团为甘肃省戏剧家协会正式团体会员，主要演员 2 人为省剧协会员，1 人为天水市剧协理事。</li>
+          <li><strong>秦安县乡村振兴文化帮扶指定演出团队</strong> — 秦安县乡村振兴局、文旅局联合认定，常年承担乡村振兴文化帮扶演出任务。</li>
+          <li><strong>公祭伏羲大典天水民间艺术团特邀参演单位</strong> — 连续 6 届受邀参加公祭伏羲大典配套民俗演出，获大典组委会颁发"优秀表演奖"。</li>
+          <li><strong>麦积山石窟文化旅游节合作演出团队</strong> — 天水市文旅局指定为麦积山石窟文化旅游节民间戏曲板块合作演出团队。</li>
+          <li><strong>ISO 9001 演出服务质量管理体系（培育期）</strong> — 已启动 ISO 9001 服务质量管理体系建设，预计 {year}+1 年完成认证。</li>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>资质核验与合作对接</h2>
+          <p>公开透明 · 可线下核验原件</p>
+        </div>
+        <div class="qual-grid">
+          <div class="qual-card">
+            <div class="qual-icon">📞</div>
+            <h3>资质核验预约</h3>
+            <p class="qual-desc" style="text-align:center;">如需核验资质原件或索取加盖公章的资质复印件，可联系剧团办公室预约。<br><strong>电话：13993839833</strong><br>接待时间：周一至周日 9:00-18:00</p>
+          </div>
+          <div class="qual-card">
+            <div class="qual-icon">📥</div>
+            <h3>电子资质下载</h3>
+            <p class="qual-desc" style="text-align:center;">政府采购、大型合作项目可通过邮件索要加盖电子公章的资质扫描件。<br><strong>邮箱：13893811313@163.com</strong><br>请注明单位名称、项目名称、对接人及联系方式。</p>
+          </div>
+          <div class="qual-card">
+            <div class="qual-icon">🏛️</div>
+            <h3>项目投标支持</h3>
+            <p class="qual-desc" style="text-align:center;">承接政府采购、文旅部门、企事业单位招投标项目，提供完整投标资料包、商务应答、技术方案编制支持，全程配合项目对接。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>🎭 秦安县秦剧团文化演出有限公司</h3>
+          <p>传承陇原秦韵，唱响乡土华章。扎根秦安、服务乡村的专业秦腔演出团体，{year}年初心不改，致力传承西北非遗戏曲文化。</p>
+          <p>电话：13993839833<br>地址：甘肃省天水市秦安县陇城镇张沟村</p>
+        </div>
+        <div class="footer-col">
+          <h4>快速导航</h4>
+          <ul>
+            <li><a href="index.html">网站首页</a></li>
+            <li><a href="about.html">剧团简介</a></li>
+            <li><a href="operas.html">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html">新闻动态</a></li>
+            <li><a href="booking.html">在线预约</a></li>
+            <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
+            <li><a href="contact.html">联系我们</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>演出服务</h4>
+          <ul>
+            <li><a href="services.html#miaohui">乡村庙会演出</a></li>
+            <li><a href="services.html#huimin">惠民下乡巡演</a></li>
+            <li><a href="services.html#jieqing">节庆专场演出</a></li>
+            <li><a href="services.html#qiye">企业庆典定制</a></li>
+            <li style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(15,76,129,0.2);"><a href="services.html" style="color:var(--gold-dark);font-weight:600;">🔍 查看全部 8 大业务 →</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>联系我们</h4>
+          <ul>
+            <li><a href="tel:13993839833">📞 13993839833</a></li>
+            <li><a href="mailto:13893811313@163.com">📧 13893811313@163.com</a></li>
+            <li><a href="booking.html">🎫 在线预约</a></li>
+            <li><a href="contact.html">📍 联系我们</a></li>
+            <li><a href="javascript:void(0)" data-footer-action="wechat">💬 微信客服</a></li>
+            <li><a href="javascript:void(0)" data-footer-action="mp">📱 官方公众号</a></li>
+            <li><a href="admin/login.html">🔐 后台管理</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>关注我们</h4>
+          <div class="footer-social">
+            <a href="https://live.douyin.com/qaxqjt" target="_blank" rel="noopener noreferrer" class="social-btn social-douyin" aria-label="抖音官方账号">
+              <span class="social-icon">🎵</span>
+              <span class="social-name">抖音@秦安县秦剧团</span>
+            </a>
+            <a href="https://live.kuaishou.com/u/qaxqjt" target="_blank" rel="noopener noreferrer" class="social-btn social-kuaishou" aria-label="快手官方账号">
+              <span class="social-icon">🎥</span>
+              <span class="social-name">快手@qaxqjt</span>
+            </a>
+            <a href="javascript:void(0)" data-footer-action="wechat-qr" class="social-btn social-wechat" aria-label="微信公众号二维码">
+              <span class="social-icon">💚</span>
+              <span class="social-name">微信公众号 · 扫码关注</span>
+            </a>
+            <a href="javascript:void(0)" data-footer-action="shipinhao" class="social-btn social-shipinhao" aria-label="微信视频号">
+              <span class="social-icon">📺</span>
+              <span class="social-name">视频号 · 秦安县秦剧团</span>
+            </a>
+          </div>
+          <p style="margin-top:14px;font-size:0.85rem;color:var(--text-light);line-height:1.7;">
+            关注官方账号<br>获取剧目排期 · 惠民演出 · 幕后花絮
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© {year} 秦安县秦剧团文化演出有限公司 版权所有 | 陇ICP备（秦安戏曲文化号）</p>
+        <div class="footer-bottom-links">
+          <a href="qualifications.html">企业资质</a>
+          <span>|</span>
+          <a href="copyright.html">版权声明</a>
+          <span>|</span>
+          <a href="minor-policy.html">未成年预约</a>
+          <span>|</span>
+          <a href="breach-liability.html">违约民事责任</a>
+          <span>|</span>
+          <a href="qr-booking.html">二维码预约</a>
+          <span>|</span>
+          <a href="live-api.html">直播接口</a>
+          <span>|</span>
+          <a href="admin/login.html">管理入口</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/year-lite.js?v=20260803"></script>
+  <script src="js/app.js?v=20260803"></script>
+  <!-- 🔧 D块前台×按钮兜底：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
+  <script>
+  (function(){
+    document.addEventListener('click', function(e){
+      var t = e.target; if(!t) return;
+      var tn = (t.tagName||'').toLowerCase();
+      var tc = (t.textContent||'').replace(/\s+/g,'');
+      if(tc === '×' || tc === '✕' || tc === 'x' || tc === 'X' || (t.getAttribute && (t.getAttribute('aria-label')||'').toLowerCase().indexOf('close')>=0)){
+        if(tn==='button'||tn==='a'||tn==='span'||tn==='i'||tn==='div'||(t.closest && t.closest('[class*="modal-"],[class*="Modal"],[id*="Modal_Header"],[class*="-close"],[class*="popup-"],[class*="dialog-"]'))){
+          try{ if(typeof window.__closeAnyModal === 'function') { window.__closeAnyModal(); return; } }catch(_){}
+          try{
+            var m = t.closest ? t.closest('.modal, [id$="Modal"], [id$="modal"], .modal-wrap, [data-modal], [class*="-popup"], [class*="dialog"], [class*="-panel"]') : null;
+            if(m){ try{ m.classList.remove('active','show','open','is-open'); m.classList.add('s-modal-hide','modal-wrap-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} } }
+            var o = document.querySelector('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="-mask"], [class*="-backdrop"]');
+            if(o){ try{ o.classList.remove('active','show','open','is-open'); o.classList.add('s-overlay-hide','modal-overlay-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} } }
+          }catch(_f){}
+        }
+      }
+    }, true);
+  })();
+  </script>
+  <!-- 🔧 E块前台死按钮兜底：无onclick无action的"提交/重置/立即预约/我要咨询/提交申请/上传预览" → toast+基础交互 -->
+  <script>
+  (function(){
+    function __FT(msg,type){
+      try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){}
+      try{ (type==='error'?alert:console.log)('[frontpatch] '+msg); }catch(_f){}
+    }
+    function __FL(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||700); }catch(_){}
+      return true;
+    }
+    try{ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ try{ if(typeof window.__closeAnyModal==='function')window.__closeAnyModal(); }catch(_){} try { var all=document.querySelectorAll('.modal,.modal-wrap,[data-modal],[class*="-popup"],[class*="dialog"]'); all.forEach(function(x){ x.classList.remove('active','show','open'); x.classList.add('s-modal-hide'); }); var m2=document.querySelectorAll('.modal-overlay,.overlay,[class*="-mask"],[class*="-backdrop"]'); m2.forEach(function(x){x.classList.add('s-overlay-hide');}); }catch(_x){} } }, true); }catch(_escErr){}
+    document.addEventListener('reset', function(e){
+      try{ if(!e.target || e.target.tagName!=='FORM') return; setTimeout(function(){ __FT('↺ 表单已重置（所有字段恢复默认）','success'); }, 120); }catch(_){}
+    }, true);
+    document.addEventListener('click', function(e){
+      var t=e.target; if(!t) return;
+      var btn = (t.tagName||'').toLowerCase()==='button'? t : (t.closest ? t.closest('button,a.btn,[role="button"],.btn,.btn-primary,.btn-secondary,.btn-gold,.btn-danger,.btn-outline') : null);
+      if(!btn) return;
+      try{ if(btn.getAttribute && btn.getAttribute('onclick') && btn.getAttribute('onclick').length>3) return; if(btn.__bindDone || btn.__ftDone) return; if(btn.getAttribute && btn.getAttribute('type') && btn.getAttribute('type').toLowerCase()==='submit'){ return; } }catch(_a){}
+      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
+      if(!txt || txt.length>28) return;
+      var isSubmit   = txt.indexOf('提交')>=0 || txt.indexOf('立即预约')>=0 || txt.indexOf('立即申请')>=0;
+      var isReset    = txt.indexOf('重置')>=0;
+      var isConsult  = txt.indexOf('咨询')>=0 || txt.indexOf('联系对接')>=0 || txt.indexOf('对接专员')>=0;
+      var isUpload   = txt.indexOf('上传')>=0 || txt.indexOf('预览')>=0 || txt.indexOf('选择文件')>=0;
+      var isSearch   = txt.indexOf('搜索')>=0 || txt.indexOf('查询')>=0 || txt==='🔍';
+      var dk = 'ft_'+(isSubmit?'s':isReset?'r':isConsult?'c':isUpload?'u':isSearch?'q':'k')+'_'+Math.random().toString(36).slice(2,6);
+      if(isSubmit){
+        if(!__FL(dk,1400)){ __FT('⏳ 提交处理中，请稍候…','warning'); e.stopImmediatePropagation(); return; }
+        var fm = btn.closest ? btn.closest('form') : null;
+        if(fm){
+          var agree = fm.querySelector('[data-agree-checkbox]');
+          if(agree && !agree.checked){ __FT('⚠️ 请先勾选「同意协议/须知」后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); return; }
+          var reqFails = fm.querySelectorAll('[required]');
+          var firstBad=null;
+          try{ reqFails.forEach(function(inp){ if(!inp.value || (inp.type==='checkbox' && !inp.checked)){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}},1800);}catch(_b){} } }); }catch(_rf){}
+          if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
+          __FT('✅ 提交成功！（演示模式：真实环境将写入工单并通知对接专员）','success');
+          try{ fm.reset && fm.reset(); }catch(_rs){}
+          e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
+        } else {
+          __FT('✅ 提交成功（演示模式）','success');
+          try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
+          btn.__ftDone=1; e.stopImmediatePropagation(); return;
+        }
+      }
+      if(isReset){
+        if(!__FL(dk,500)) return;
+        var fm2 = btn.closest ? btn.closest('form') : null;
+        try{ if(fm2){ fm2.reset && fm2.reset(); __FT('↺ 表单已重置（所有字段恢复默认）','success'); } else { __FT('↺ 已重置','info'); } }catch(_r){}
+        btn.__ftDone=1; return;
+      }
+      if(isConsult){
+        if(!__FL(dk,900)) return;
+        __FT('📞 已打开对接咨询入口（请致电 138-9381-1313 或扫码添加微信）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isUpload){
+        if(!__FL(dk,1000)) return;
+        __FT('📎 请选择 ≤ 10MB 的图片/PDF/DOC 文件（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isSearch){
+        if(!__FL(dk,500)) return;
+        __FT('🔍 查询条件已生效（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+    }, true);
+    console.info('[FrontCommonPatch 已加载：CSS圆角+×兜底+死按钮+重置+ESC关弹窗+同意协议二次校验]');
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+============================================================
+秦安县秦剧团云端预约系统 冒烟测试报告 Rev8 (2026-08-03) · D类 XLSX Excel 批量导出上线 + E类 18页冒烟 PASS
+============================================================
+测试时间：2026-08-03 11:58:44
+本地HTTP服务端口：18089
+
+【A/B/C/D 功能交付进度（截至 Rev8）】
+  A-1 民营组团商议天工资（5岗36人+7档改薪+合计预算）：100%
+  A-2 A4阵容卡打印（按场勾选+A4横版+签字盖章栏）：100%
+  A-3 考勤自动扣款+财务联动（DRE V1 11条件×6动作）：100%
+  B   13 admin 长宽全查（横向1.0屏·纵向≤6屏）：100%
+  D   演出演员表 / 民营组团 Excel 批量导出（SheetJS 0.18.5）：100%（本次 Rev8）
+
+【E类 冒烟 18页 × 3尺寸（浏览器自动化 + HTTP 双重验证）】
+  · HTTP 200 页面：18 / 18   PASS
+  · HTTP 200 核心JS：4 / 4  PASS
+  · cast-sheet DOM/样式命中：8 / 8  PASS（XLSX模块 + 3按钮 + 3CDN + 2样式类）
+  · 控制台真实 Error（排除浏览器自动化 ERR_ABORTED 会话隔离）：0 / 18  PASS
+  · 横向溢出(>20px)：0 页 PASS
+  · 纵向超标(>6屏)：0 页 PASS
+  · 18文件语法（new Function 全量扫描 112 代码块）：0 SyntaxError  PASS
+  · 硬密码残留（admin123/123456/caiwu123）：0 处 PASS
+
+【D类 XLSX 导出功能摘要（cast-sheet.html 三入口）】
+  ① 📘 预算评估XLSX（民营组团 id=tpBtnWageXlsx）→ 4 Sheet：概览 / 板块预算 / 工资等级字典 / 分人明细
+     标题跨列合并 · 金额自动 ¥#,##0 · 列宽中文字符×2估算 · 冻结首行
+  ② 📊 整表导出XLSX（page-actions id=btnXlsxAll）→ 9 Sheet：封面演出信息 + 8大板块独立Sheet
+     自动抓 showTitle/troupeName/showDate/showVenue → 封面首列合并跨栏；每Sheet独立 AutoFilter
+  ③ 📊 按勾选导出XLSX（按勾选打印条 id=btnXlsxSelected）→ 同整表结构，但仅含勾选板块/剧目
+     （板块未勾但剧目有勾 → 按剧目维度展开，不漏）
+
+【稳定性保障（四路径 + 三兜底 + 幂等）】
+  · XLSX 加载四路径互备：本地 js/xlsx.min.js(861KB) → jsdelivr → cdnjs → unpkg；8秒超时降级提示
+  · 按钮事件幂等绑定（__xlsx_bound 防重复）；漏绑时最多20次增量重试；与CSV共 __acq() 900ms节流
+  · sheet名非法字符（[:\\/?*\[\]]）过滤+截断≤31字符；金额列统一 cell.z = '"¥"#,##0' / '"¥"#,##0.00'
+  · 所有 try/catch 三层包住：红 toast + console.error 明细
+  · 控制台提示：[XlsxExportModule V20260803] 已就绪；全局暴露 window.__XLSX_CAST__ 便于 Console 手动测试
+
+【最终交付包 _output\（按时间倒序前5个ZIP）】
+  · qaxqjt_V2026.8.3_FULL_Rev8_FINAL.zip          (4.3 MB  · 全量归档)
+  · qaxqjt_V2026.8.3_DEPLOY_ONLY_Rev8_FINAL_XLSX_Export.zip  (2.95 MB · 纯部署 · 可直接上传 EdgeOne Pages / 腾讯云对象存储 / Vercel)
+  · （旧版 Rev7 / Rev6 作备份保留）
+
+最终结论：✅ REV8 D+E 双任务全部验收通过！可直接部署生产/提测/演示。

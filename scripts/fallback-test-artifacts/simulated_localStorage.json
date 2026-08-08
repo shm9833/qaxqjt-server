@@ -1,0 +1,6 @@
+{
+  "qaxqjt_appointments": "[{\"customerName\":\"自动化测试_弱网\",\"phone\":\"13800000003\",\"serviceType\":\"节庆专场文艺演出\",\"shows\":1,\"preferredStartDate\":\"2026-10-03\",\"venue\":\"甘肃天水市秦安县莲花镇文化中心\",\"remarks\":\"自动化测试-弱网抖动\",\"agreeBookingNotice\":true,\"bookingId\":\"26-QA-0002\",\"id\":\"26-QA-0002\",\"status\":\"pending\",\"statusText\":\"待审核\",\"bookingTimeText\":\"2026-08-04\",\"localStorageOnly\":true,\"createdAt\":\"2026-08-04T03:45:31.419Z\",\"updatedAt\":\"2026-08-04T03:45:31.419Z\"},{\"customerName\":\"自动化测试_离线\",\"phone\":\"13800000002\",\"serviceType\":\"政府惠民下乡巡演\",\"shows\":2,\"preferredStartDate\":\"2026-10-02\",\"venue\":\"甘肃天水市秦安县陇城镇中心小学\",\"remarks\":\"自动化测试-断网降级\",\"agreeBookingNotice\":true,\"bookingId\":\"26-QA-0001\",\"id\":\"26-QA-0001\",\"status\":\"pending\",\"statusText\":\"待审核\",\"bookingTimeText\":\"2026-08-04\",\"localStorageOnly\":true,\"createdAt\":\"2026-08-04T03:45:28.611Z\",\"updatedAt\":\"2026-08-04T03:45:28.611Z\"}]",
+  "qaxqjt_appointments_seq_26": "2",
+  "qaxqjt_fallback_mode": "0",
+  "qaxqjt_access_token": ""
+}

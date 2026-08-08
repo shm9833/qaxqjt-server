@@ -1,0 +1,5 @@
+[flake8]
+# ms-python.flake8 扩展会自动读取本配置
+max-line-length = 120
+select = C,E,F,W,B  # 默认检查集合
+# 如仍需严格79：注释掉上面一行即可

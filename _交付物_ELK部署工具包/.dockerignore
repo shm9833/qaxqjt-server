@@ -1,0 +1,54 @@
+# ==================================================================
+# Docker 构建上下文白名单：只复制 daily_mailer.py / elk_p99_report.py / 依赖
+# 这样把报表/邮件/日志/ZIP/临时脚本等统统挡在镜像外，减少体积+防敏感泄露
+# ==================================================================
+
+# --- 演示产物（绝对不能进镜像，体积大+含客户邮件/数据）---
+_demo_received_emails/
+reports/
+logs/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# --- 打包交付物（ZIP、NDJSON、CONF）---
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+kibana_dashboard_*.ndjson
+logstash_pipeline_*.conf
+
+# --- 本机配置（含真实 ES/SMTP 密码，严禁进镜像）---
+config_daily_report.json
+config_daily_report_LOCAL_DEMO.json
+config_daily_report_TESTENV.json
+
+# 只允许 example 模板进镜像（构建断言用）
+!config_daily_report.example.json
+
+# --- 本机脚本（计划任务、wrapper.bat 仅宿主机用，容器不跑 schtasks/cron 容器只单次执行）---
+install_daily_report_WINDOWS.bat
+install_daily_report_cron_LINUX.sh
+install_daily_report_macos.sh
+uninstall_daily_report_WINDOWS.bat
+run_daily_mailer_wrapper.bat
+run_local_demo_WINDOWS.bat
+mock_local_smtp_server.py
+_demo_launcher.py
+_tmp_*.py
+_docker_build*.ps1
+test_*.py
+mock_smtp_verify.py
+
+# --- IDE / OS 垃圾 ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.git/
+.github/
+node_modules/

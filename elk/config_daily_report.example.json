@@ -1,0 +1,31 @@
+{
+  "_comment": "=== 秦安县秦剧团 Admin Perf P99 日报配置示例 · 把此文件复制为 config_daily_report.json 并填入真实值 ===",
+  "_comment_smtp_ports": "常见SMTP端口：腾讯企业邮/QQ邮箱 smtp.exmail.qq.com 465 SSL / 587 STARTTLS；163: smtp.163.com 465；Gmail: smtp.gmail.com 465（需APP专用密码）；阿里云企业邮: smtp.qiye.aliyun.com 465",
+  "es": {
+    "host": "http://127.0.0.1:9200",
+    "index": "qaxqjt-admin-perf-*",
+    "user": "elastic",
+    "password": "your_es_password_here_or_leave_empty",
+    "hours": 24,
+    "bucket": "5m",
+    "no_verify_ssl": true
+  },
+  "smtp": {
+    "server": "smtp.exmail.qq.com",
+    "port": 465,
+    "use_ssl": true,
+    "sender_email": "perf-bot@your-company.com",
+    "sender_name": "🎭 秦剧团Perf监控机器人",
+    "password": "your_smtp_auth_code_OR_password",
+    "timeout_sec": 30
+  },
+  "recipients": [
+    "you@your-company.com",
+    "ops-team@your-company.com"
+  ],
+  "cc": [],
+  "subject_prefix": "[秦剧团Perf日报]",
+  "output_dir": "./reports",
+  "log_dir": "./logs",
+  "keep_report_days": 30
+}

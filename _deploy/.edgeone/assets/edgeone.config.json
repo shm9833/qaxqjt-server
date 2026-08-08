@@ -1,0 +1,77 @@
+{
+  "name": "秦安县秦剧团云端预约系统",
+  "version": "2026.8.3",
+  "framework": "static",
+  "build": {
+    "command": "",
+    "outputDir": "./",
+    "env": {}
+  },
+  "routes": [
+    {"route": "/", "file": "index.html"},
+    {"route": "/index", "file": "index.html"},
+    {"route": "/home", "file": "index.html"},
+    {"route": "/about", "file": "about.html"},
+    {"route": "/operas", "file": "operas.html"},
+    {"route": "/services", "file": "services.html"},
+    {"route": "/news", "file": "news.html"},
+    {"route": "/booking", "file": "booking.html"},
+    {"route": "/contact", "file": "contact.html"},
+    {"route": "/live", "file": "live-api.html"},
+    {"route": "/live-api", "file": "live-api.html"},
+    {"route": "/qr-booking", "file": "qr-booking.html"},
+    {"route": "/qualifications", "file": "qualifications.html"},
+    {"route": "/copyright", "file": "copyright.html"},
+    {"route": "/minor-policy", "file": "minor-policy.html"},
+    {"route": "/breach-liability", "file": "breach-liability.html"},
+    {"route": "/deploy", "file": "deploy.html"},
+    {"route": "/delivery", "file": "delivery.html"},
+    {"route": "/architecture", "file": "architecture.html"},
+    {"route": "/404", "file": "404.html"}
+  ],
+  "errorPage": {
+    "notFound": "404.html"
+  },
+  "headers": [
+    {
+      "pattern": "**/*.@(html|css|js|json|xml|txt)",
+      "headers": {
+        "Cache-Control": "public, max-age=3600, must-revalidate"
+      }
+    },
+    {
+      "pattern": "**/*.@(jpg|jpeg|png|gif|svg|ico|webp)",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "pattern": "**/*.@(woff|woff2|ttf|eot|otf)",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "pattern": "admin/**",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow",
+        "Cache-Control": "no-cache, no-store, must-revalidate"
+      }
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/home",
+      "destination": "/index.html",
+      "statusCode": 301
+    }
+  ],
+  "compress": {
+    "enable": true,
+    "algorithm": "brotli"
+  },
+  "https": {
+    "enable": true,
+    "http2": true
+  }
+}

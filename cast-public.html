@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="renderer" content="webkit">
+<meta name="force-rendering" content="webkit">
+<meta name="referrer" content="never">
+<meta name="format-detection" content="telephone=no,email=no,address=no">
+<meta name="applicable-device" content="pc,mobile">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+<meta property="og:title" content="秦安县秦剧团 · 本场演出阵容">
+<meta property="og:description" content="秦安县秦剧团文化演出有限公司 · 本场演出演员表与节目单公开版 · 传承陇原秦韵，唱响乡土华章">
+<meta property="og:image" content="favicon.svg">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="description" content="秦安县秦剧团文化演出有限公司·本场演出阵容公开页·演员名单·剧目介绍·乐队阵容·节目单">
+<meta name="keywords" content="秦安秦剧团,演出阵容,演员表,秦腔演出,节目单">
+<title>秦安县秦剧团 · 本场演出阵容公开 | {year}</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<script src="js/favicon-inject.js?v=20260803" defer></script>
+<script src="js/wechat-fallback.js?v=20260803" defer></script>
+<script src="js/year-lite.js?v=20260803" defer></script>
+<script src="js/app.js?v=20260803" defer></script>
+<link rel="stylesheet" href="css/style.css?v=20260803">
+<style>
+*{box-sizing:border-box;}
+body{background:linear-gradient(180deg,#fdf6e3 0%,#fff 22%,#fffbea 60%,#fff 100%);margin:0;padding:0;font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;color:#1f2937;-webkit-font-smoothing:antialiased;}
+.cp-wrap{max-width:960px;margin:0 auto;padding:0 0 60px;}
+/* ========== 顶部海报Banner ========== */
+.cp-poster{position:relative;overflow:hidden;padding:36px 26px 30px;background:
+  radial-gradient(ellipse at 20% 10%, rgba(251,191,36,0.25), transparent 55%),
+  radial-gradient(ellipse at 80% 90%, rgba(254,215,170,0.35), transparent 55%),
+  linear-gradient(135deg,#7f1d1d 0%,#991b1b 45%,#b91c1c 100%);
+color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,29,0.25);}
+.cp-poster::before{content:"";position:absolute;inset:0;background-image:
+  radial-gradient(circle at 10% 20%, rgba(255,255,255,0.04) 1px, transparent 2px),
+  radial-gradient(circle at 80% 60%, rgba(255,255,255,0.03) 1px, transparent 2px);
+  background-size:40px 40px, 60px 60px;pointer-events:none;}
+.cp-company{font-size:1rem;font-weight:700;letter-spacing:4px;color:#fde68a;margin-bottom:8px;text-shadow:0 2px 6px rgba(0,0,0,0.3);position:relative;z-index:1;}
+.cp-company em{font-style:normal;color:#fff;font-size:1.18rem;}
+.cp-title{font-size:clamp(1.7rem,5.2vw,2.9rem);font-weight:900;line-height:1.25;color:#fffbeb;letter-spacing:3px;margin:10px 0 18px;text-shadow:0 3px 14px rgba(0,0,0,0.4);position:relative;z-index:1;}
+.cp-title span{display:inline-block;padding:3px 14px;border:2px solid rgba(251,191,36,0.7);border-radius:6px;background:rgba(127,29,29,0.4);}
+.cp-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 18px;position:relative;z-index:1;}
+.cp-meta .m{display:flex;align-items:flex-start;gap:7px;font-size:.92rem;line-height:1.55;}
+.cp-meta .m .ic{width:22px;height:22px;flex:0 0 22px;border-radius:6px;background:rgba(251,191,36,0.25);display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;margin-top:1px;}
+.cp-meta .m b{color:#fde68a;font-weight:700;min-width:70px;display:inline-block;}
+.cp-meta .m .v{color:#fff;word-break:break-all;flex:1;}
+.cp-hint{margin-top:14px;padding:8px 14px;border:1px dashed rgba(251,191,36,0.6);border-radius:10px;background:rgba(255,255,255,0.06);font-size:.8rem;color:#fef3c7;letter-spacing:.3px;position:relative;z-index:1;}
+/* ========== 分享栏 ========== */
+.cp-share-bar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.97);backdrop-filter:blur(8px);border-bottom:2px solid #fde68a;padding:10px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:0 4px 16px rgba(0,0,0,0.06);}
+.cp-sb-title{font-weight:800;color:#7f1d1d;display:inline-flex;align-items:center;gap:6px;font-size:.92rem;}
+.cp-sb-title .dot{width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,0.18);animation:blink 1.8s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.cp-sb-spacer{flex:1;}
+.cp-sb-btn{padding:7px 13px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-weight:700;font-size:.82rem;color:#374151;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .18s;}
+.cp-sb-btn:hover{transform:translateY(-1.5px);box-shadow:0 6px 14px rgba(0,0,0,0.1);}
+.cp-sb-btn.btn-wx{background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-color:#86efac;color:#166534;}
+.cp-sb-btn.btn-pyq{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d;color:#92400e;}
+.cp-sb-btn.btn-kk{background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-color:#93c5fd;color:#1e40af;}
+.cp-sb-btn.btn-print{background:linear-gradient(135deg,#f3e8ff,#ddd6fe);border-color:#c4b5fd;color:#5b21b6;}
+/* ========== 通用版块卡片 ========== */
+.cp-sec{margin:22px 18px 0;padding:22px 22px 20px;background:#fff;border-radius:18px;border:1.5px solid #fde68a;box-shadow:0 6px 22px rgba(15,23,42,0.06);position:relative;}
+.cp-sec.creative{border-color:#ddd6fe;background:linear-gradient(180deg,#faf5ff 0%,#fff 100%);}
+.cp-sec.main{border-color:#fed7aa;background:linear-gradient(180deg,#fff7ed 0%,#fff 100%);}
+.cp-sec.add{border-color:#a5f3fc;background:linear-gradient(180deg,#ecfeff 0%,#fff 100%);}
+.cp-sec.wuchang{border-color:#fecaca;background:linear-gradient(180deg,#fef2f2 0%,#fff 100%);}
+.cp-sec.wenchang{border-color:#fde68a;background:linear-gradient(180deg,#fefce8 0%,#fff 100%);}
+.cp-sec.stage{border-color:#bbf7d0;background:linear-gradient(180deg,#f0fdf4 0%,#fff 100%);}
+.cp-sec.program{border-color:#bfdbfe;background:linear-gradient(180deg,#eff6ff 0%,#fff 100%);}
+.cp-sh{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:1.5px dashed #e5e7eb;}
+.cp-sh .badge{width:42px;height:42px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.05rem;box-shadow:0 4px 10px rgba(0,0,0,0.15);flex:0 0 42px;}
+.cp-sh .badge.bd-creative{background:linear-gradient(135deg,#8b5cf6,#7c3aed);}
+.cp-sh .badge.bd-main{background:linear-gradient(135deg,#f97316,#ea580c);}
+.cp-sh .badge.bd-add{background:linear-gradient(135deg,#06b6d4,#0891b2);}
+.cp-sh .badge.bd-wuchang{background:linear-gradient(135deg,#ef4444,#dc2626);}
+.cp-sh .badge.bd-wenchang{background:linear-gradient(135deg,#eab308,#ca8a04);}
+.cp-sh .badge.bd-stage{background:linear-gradient(135deg,#22c55e,#16a34a);}
+.cp-sh .badge.bd-program{background:linear-gradient(135deg,#3b82f6,#2563eb);}
+.cp-sh h2{margin:0;font-size:1.12rem;font-weight:800;color:#0f172a;letter-spacing:.4px;}
+.cp-sh .sub{margin-left:auto;font-size:.78rem;color:#64748b;font-weight:600;}
+/* ========== 列表/表格样式 ========== */
+.cp-simple-table{width:100%;border-collapse:collapse;}
+.cp-simple-table th{background:#f8fafc;color:#374151;padding:9px 11px;font-size:.82rem;font-weight:700;text-align:left;border-bottom:2px solid #e2e8f0;white-space:nowrap;}
+.cp-simple-table td{padding:10px 11px;border-bottom:1px dashed #e5e7eb;font-size:.9rem;vertical-align:top;}
+.cp-simple-table tr:last-child td{border-bottom:none;}
+.cp-simple-table .seq{width:38px;color:#94a3b8;font-weight:800;text-align:center;font-size:.82rem;}
+.cp-simple-table td.pos{font-weight:700;color:#0f172a;min-width:150px;}
+.cp-simple-table td.name{font-weight:800;color:#7f1d1d;min-width:100px;}
+.cp-simple-table td.note{color:#64748b;font-size:.84rem;}
+/* 标签 */
+.cp-tag{display:inline-block;padding:2px 9px;border-radius:12px;font-size:.72rem;font-weight:700;margin-right:5px;vertical-align:middle;}
+.cp-tag.t-laosheng{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;}
+.cp-tag.t-hongsheng{background:linear-gradient(135deg,#fee2e2,#fecaca);color:#991b1b;}
+.cp-tag.t-xiaosheng{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#166534;}
+.cp-tag.t-wusheng{background:linear-gradient(135deg,#e0e7ff,#c7d2fe);color:#3730a3;}
+.cp-tag.t-qingyi{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e40af;}
+.cp-tag.t-huadan{background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#9d174d;}
+.cp-tag.t-laodan{background:linear-gradient(135deg,#f3e8ff,#ddd6fe);color:#5b21b6;}
+.cp-tag.t-caidan{background:linear-gradient(135deg,#ffedd5,#fed7aa);color:#9a3412;}
+.cp-tag.t-hualian{background:linear-gradient(135deg,#fed7aa,#fdba74);color:#7c2d12;}
+.cp-tag.t-chouxing{background:linear-gradient(135deg,#e0f2fe,#bae6fd);color:#0369a1;}
+.cp-tag.t-qita{background:#f1f5f9;color:#475569;}
+/* ========== 剧目卡片 ========== */
+.cp-opera{border:1.5px solid #fed7aa;border-radius:16px;padding:18px;margin-bottom:16px;background:linear-gradient(180deg,#fff,#fff7ed);position:relative;overflow:hidden;}
+.cp-opera:last-child{margin-bottom:0;}
+.cp-opera.add-op{border-color:#a5f3fc;background:linear-gradient(180deg,#fff,#ecfeff);}
+.cp-opera-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px;}
+.cp-opera-name{font-size:1.18rem;font-weight:900;color:#7c2d12;letter-spacing:1px;display:inline-flex;align-items:center;gap:8px;}
+.cp-opera-name .mask{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;border-radius:6px;background:linear-gradient(135deg,#fcd34d,#f59e0b);color:#fff;font-size:.8rem;}
+.cp-opera-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-left:auto;}
+.cp-opera-meta .chip{padding:4px 10px;border-radius:14px;font-size:.78rem;font-weight:700;}
+.cp-opera-meta .chip.benxi{background:linear-gradient(135deg,#fed7aa,#fdba74);color:#9a3412;}
+.cp-opera-meta .chip.zhezi{background:linear-gradient(135deg,#a5f3fc,#67e8f9);color:#155e75;}
+.cp-opera-meta .chip.hongse{background:linear-gradient(135deg,#fecaca,#fca5a5);color:#991b1b;}
+.cp-opera-meta .chip.xinbian{background:linear-gradient(135deg,#ddd6fe,#c4b5fd);color:#5b21b6;}
+.cp-opera-meta .chip.dur{background:#f1f5f9;color:#475569;}
+.cp-opera-meta .chip.rt{background:linear-gradient(135deg,#fef9c3,#fde68a);color:#854d0e;}
+.cp-opera-intro{padding:10px 12px;background:rgba(255,255,255,0.7);border-left:4px solid #f59e0b;border-radius:8px;font-size:.86rem;color:#475569;line-height:1.7;margin-bottom:12px;}
+/* ========== 演员卡 ========== */
+.cp-cast-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1.5px solid #fed7aa;background:#fff;}
+.cp-cast-table th{background:linear-gradient(135deg,#fff7ed,#ffedd5);color:#9a3412;padding:10px 11px;font-size:.8rem;font-weight:800;text-align:left;border-bottom:2px solid #fdba74;white-space:nowrap;}
+.cp-opera.add-op .cp-cast-table th{background:linear-gradient(135deg,#ecfeff,#cffafe);color:#155e75;border-color:#67e8f9;}
+.cp-cast-table td{padding:11px;font-size:.88rem;border-bottom:1px dashed #fee2c5;vertical-align:top;}
+.cp-opera.add-op .cp-cast-table td{border-color:#cffafe;}
+.cp-cast-table tr:last-child td{border-bottom:none;}
+.cp-cast-table .seq{width:36px;text-align:center;color:#94a3b8;font-weight:800;}
+.cp-cast-table .role{font-weight:900;color:#7c2d12;font-size:.95rem;}
+.cp-cast-table .type{min-width:80px;}
+.cp-cast-table .ang{min-width:95px;font-weight:800;}
+.cp-cast-table .a{color:#b91c1c;}
+.cp-cast-table .b{color:#92400e;}
+.cp-cast-table .c{color:#64748b;font-weight:600;}
+.cp-cast-table .group{font-size:.76rem;color:#6d28d9;}
+.cp-cast-table .note{font-size:.8rem;color:#64748b;}
+.cp-star{color:#f59e0b;font-weight:900;}
+/* ========== 节目单时间线 ========== */
+.cp-program-wrap{position:relative;padding-left:6px;}
+.cp-prog-item{display:grid;grid-template-columns:100px 1fr 80px;gap:10px 14px;padding:11px 0;border-bottom:1px dashed #dbeafe;align-items:start;}
+.cp-prog-item:last-child{border-bottom:none;}
+.cp-prog-cat .cpc-chip{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.76rem;font-weight:800;text-align:center;}
+.cp-prog-cat .open{background:linear-gradient(135deg,#fee2e2,#fecaca);color:#991b1b;}
+.cp-prog-cat .jia{background:linear-gradient(135deg,#a5f3fc,#67e8f9);color:#155e75;}
+.cp-prog-cat .xiu{background:#f1f5f9;color:#475569;}
+.cp-prog-cat .zhu{background:linear-gradient(135deg,#fed7aa,#fdba74);color:#9a3412;}
+.cp-prog-cat .xie{background:linear-gradient(135deg,#fef9c3,#fde68a);color:#854d0e;}
+.cp-prog-main .pn{font-weight:800;color:#1e3a8a;font-size:.95rem;margin-bottom:4px;}
+.cp-prog-main .pa{font-size:.8rem;color:#475569;margin-bottom:2px;}
+.cp-prog-main .pnote{font-size:.76rem;color:#64748b;}
+.cp-prog-dur{text-align:right;font-weight:800;color:#2563eb;font-size:.9rem;padding-top:2px;}
+/* ========== 底部版权区 ========== */
+.cp-footer{margin:28px 18px 0;padding:22px 22px 18px;background:linear-gradient(135deg,#7f1d1d,#991b1b);color:#fef3c7;border-radius:18px;text-align:center;border:2px solid #fbbf24;position:relative;overflow:hidden;}
+.cp-footer::before{content:"";position:absolute;inset:0;background-image:
+  radial-gradient(circle at 10% 10%, rgba(251,191,36,0.12) 1px, transparent 2px),
+  radial-gradient(circle at 90% 80%, rgba(251,191,36,0.1) 1px, transparent 2px);
+  background-size:36px 36px;pointer-events:none;}
+.cp-ft-logo{font-size:1.05rem;font-weight:900;letter-spacing:3px;margin-bottom:6px;color:#fde047;position:relative;z-index:1;}
+.cp-ft-sub{font-size:.82rem;color:#fde68a;opacity:.9;margin-bottom:10px;position:relative;z-index:1;}
+.cp-ft-tel{font-size:.92rem;margin:6px 0;position:relative;z-index:1;}
+.cp-ft-tel a{color:#fffbeb;font-weight:800;text-decoration:none;padding:4px 10px;border:1px dashed rgba(251,191,36,0.6);border-radius:8px;}
+.cp-ft-copy{font-size:.72rem;color:rgba(254,243,199,0.65);margin-top:10px;position:relative;z-index:1;}
+/* ========== 空状态 ========== */
+.cp-empty{padding:42px 24px;text-align:center;color:#94a3b8;}
+.cp-empty .emoji{font-size:3rem;margin-bottom:10px;}
+.cp-empty h4{margin:6px 0 8px;font-size:1.05rem;color:#64748b;}
+.cp-empty p{font-size:.86rem;line-height:1.7;}
+.cp-empty .admin-link{display:inline-block;margin-top:14px;padding:9px 18px;background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;font-weight:800;border-radius:10px;text-decoration:none;border:1.5px solid #fcd34d;}
+/* ========== 微信分享提示浮层 ========== */
+.cp-wx-tip{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.78);z-index:9999;backdrop-filter:blur(3px);}
+.cp-wx-tip.show{display:block;}
+.cp-wx-inner{padding:28px 24px;color:#fff;text-align:center;}
+.cp-wx-inner .arrow{font-size:4rem;text-align:right;margin-bottom:10px;color:#fbbf24;animation:point 1.2s infinite;}
+@keyframes point{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+.cp-wx-inner h3{margin:0 0 10px;font-size:1.3rem;color:#fde047;font-weight:900;}
+.cp-wx-inner p{font-size:.95rem;line-height:1.8;opacity:.92;}
+/* ========== 打印样式 ========== */
+@media print{
+  body{background:#fff !important;}
+  .cp-share-bar{display:none !important;}
+  .cp-wrap{max-width:100%;padding:0;}
+  .cp-poster{padding:20px;border-radius:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;box-shadow:none;}
+  .cp-sec{box-shadow:none;border:1px solid #d1d5db;margin:12px 8px 0;padding:14px 16px;border-radius:8px;break-inside:avoid;}
+  .cp-opera{break-inside:avoid;}
+  .cp-footer{break-before:page;}
+  .cp-sb-btn.btn-print{display:none;}
+  @page{size:A4;margin:10mm 8mm;}
+}
+/* ========== 手机适配（<640px） ========== */
+@media (max-width: 640px){
+  .cp-poster{padding:24px 16px 20px;}
+  .cp-company{font-size:.86rem;letter-spacing:2px;}
+  .cp-company em{font-size:1rem;}
+  .cp-title{font-size:1.45rem;letter-spacing:1.5px;}
+  .cp-meta{grid-template-columns:1fr;gap:6px;}
+  .cp-meta .m{font-size:.84rem;}
+  .cp-share-bar{padding:8px 12px;gap:6px;}
+  .cp-sb-title{font-size:.78rem;width:100%;margin-bottom:2px;}
+  .cp-sb-btn{padding:6px 9px;font-size:.72rem;gap:3px;}
+  .cp-sec{margin:14px 10px 0;padding:14px 12px 12px;border-radius:14px;}
+  .cp-sh{margin-bottom:10px;}
+  .cp-sh .badge{width:34px;height:34px;border-radius:9px;font-size:.9rem;flex:0 0 34px;}
+  .cp-sh h2{font-size:1rem;}
+  .cp-sh .sub{display:none;}
+  .cp-simple-table th{padding:7px 6px;font-size:.7rem;}
+  .cp-simple-table td{padding:8px 6px;font-size:.82rem;}
+  .cp-simple-table td.pos{min-width:110px;}
+  .cp-simple-table td.name{min-width:70px;font-size:.86rem;}
+  .cp-simple-table{display:block;overflow-x:auto;}
+  .cp-opera{padding:12px 10px;border-radius:12px;margin-bottom:12px;}
+  .cp-opera-head{flex-direction:column;align-items:flex-start;gap:6px;}
+  .cp-opera-name{font-size:1rem;}
+  .cp-opera-meta{margin-left:0;}
+  .cp-opera-intro{padding:8px 10px;font-size:.8rem;}
+  .cp-cast-table{display:block;width:100%;overflow-x:auto;}
+  .cp-cast-table th,.cp-cast-table td{padding:7px 6px;font-size:.78rem;}
+  .cp-cast-table .ang{min-width:70px;}
+  .cp-prog-item{grid-template-columns:78px 1fr 60px;gap:6px 8px;}
+  .cp-prog-cat .cpc-chip{font-size:.68rem;padding:2px 7px;}
+  .cp-prog-main .pn{font-size:.86rem;}
+  .cp-prog-main .pa,.cp-prog-main .pnote{font-size:.74rem;}
+  .cp-prog-dur{font-size:.8rem;}
+  .cp-footer{margin:18px 10px 0;padding:18px 14px;border-radius:14px;}
+  .cp-ft-logo{font-size:.92rem;letter-spacing:2px;}
+}
+/* ========== 平板横屏适配（1024~1440 landscape） ========== */
+@media (min-width:1024px) and (max-width:1440px) and (orientation:landscape){
+  .cp-sec{margin:20px 22px 0;padding:20px 22px;}
+  .cp-cast-table th,.cp-cast-table td{padding:9px 10px;font-size:.88rem;}
+}
+.cp-ajax-tip{text-align:center;padding:16px;color:#64748b;font-size:.86rem;}
+    /* 🔧 前台通用补丁：分页/按钮圆角（原方形→10px） + 伪链接视觉提示 + 弹窗隐藏辅助类 */
+    .pagination .page-btn, button.page-btn, .page-btn,
+    .pagination button, .page-number-item button, .pager button,
+    .btn-pagination, [class*="pagination"] button,
+    .btn, button.btn {
+      border-radius: 10px !important;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+    .pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+    }
+    .s-modal-hide { display: none !important; }
+    .s-overlay-hide { display: none !important; }
+    a[href="#"]:not(.action-link):not([data-toggle]):not(.schedule-opera-link)::after { content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .7; }
+    .btn-ghost { color: #64748b; }
+</style>
+</head>
+<body>
+<div class="cp-wrap">
+  <!-- 顶部海报Banner -->
+  <div class="cp-poster" id="cpPoster">
+    <div class="cp-company">秦安县秦剧团<em> · 文化演出有限公司</em></div>
+    <div class="cp-title" id="cpTitle"><span>本场演出阵容（公开版）</span></div>
+    <div class="cp-meta" id="cpMeta">
+      <div class="m"><span class="ic">📢</span><b>主办单位</b><span class="v" id="mHost">—</span></div>
+      <div class="m"><span class="ic">🎬</span><b>承办单位</b><span class="v" id="mOrganizer">—</span></div>
+      <div class="m"><span class="ic">🤝</span><b>协办单位</b><span class="v" id="mCoorganizer">—</span></div>
+      <div class="m"><span class="ic">💝</span><b>赞助/冠名</b><span class="v" id="mSponsor">—</span></div>
+      <div class="m"><span class="ic">📅</span><b>演出日期</b><span class="v" id="mDate">—</span></div>
+      <div class="m"><span class="ic">⏰</span><b>开演时间</b><span class="v" id="mTime">—</span></div>
+      <div class="m"><span class="ic">📍</span><b>演出地点</b><span class="v" id="mVenue">—</span></div>
+    </div>
+    <div class="cp-hint" id="mNotice">💡 温馨提示：本场演出节目单以现场实际为准，请服从工作人员引导，文明观演。</div>
+  </div>
+
+  <!-- 分享/操作栏 -->
+  <div class="cp-share-bar">
+    <div class="cp-sb-title"><span class="dot"></span>🎭 观众阵容公开页 · 实时同步后台</div>
+    <div class="cp-sb-spacer"></div>
+    <button class="cp-sb-btn btn-wx" id="sbWx" type="button">💬 发给好友</button>
+    <button class="cp-sb-btn btn-pyq" id="sbPyq" type="button">⭕ 朋友圈</button>
+    <button class="cp-sb-btn btn-kk" id="sbKk" type="button">🔗 复制链接</button>
+    <button class="cp-sb-btn btn-print" id="sbPrint" type="button">🖨 打印节目单</button>
+  </div>
+
+  <!-- 空状态 -->
+  <div class="cp-empty csp-hide" id="cpEmpty">
+    <div class="emoji">🎪</div>
+    <h4>演出阵容暂未发布</h4>
+    <p>本场演出演员表及节目单正在制作中<br>演出前 2~24 小时内将由管理员上传发布<br>请稍后刷新页面查看，或直接联系秦剧团咨询：13993839833</p>
+    <a href="admin/cast-sheet.html" target="_blank" rel="noopener noreferrer" class="admin-link">→ 我是管理员，去配置阵容</a>
+  </div>
+
+  <!-- 主体内容容器 -->
+  <div id="cpContent" class="csp-hide">
+    <!-- 主创 -->
+    <div class="cp-sec creative csp-hide" id="secCreative">
+      <div class="cp-sh"><span class="badge bd-creative">01</span><h2>主创团队 &amp; 艺术指导</h2><span class="sub">出品人 / 编剧 / 导演 / 唱腔设计 / 舞美…</span></div>
+      <table class="cp-simple-table"><thead><tr><th class="seq">#</th><th>职位</th><th>姓名</th><th>备注 / 擅长</th></tr></thead><tbody id="bodyCreative"></tbody></table>
+    </div>
+    <!-- 主场剧目 -->
+    <div class="cp-sec main csp-hide" id="secMain">
+      <div class="cp-sh"><span class="badge bd-main">02</span><h2>主场演出剧目（大本戏）</h2><span class="sub">A角主演 · B角替补 · C角实习</span></div>
+      <div id="blkMain"></div>
+    </div>
+    <!-- 加演剧目 -->
+    <div class="cp-sec add csp-hide" id="secAdd">
+      <div class="cp-sh"><span class="badge bd-add">03</span><h2>加演演出剧目（折子戏 / 清唱）</h2><span class="sub">经典折子戏 · 秦腔清唱 · 小曲</span></div>
+      <div id="blkAdd"></div>
+    </div>
+    <!-- 武场 -->
+    <div class="cp-sec wuchang csp-hide" id="secWuchang">
+      <div class="cp-sh"><span class="badge bd-wuchang">04</span><h2>秦腔打击乐 · 武场乐队</h2><span class="sub">司鼓指挥 · 梆子 · 大锣 · 铙钹…</span></div>
+      <table class="cp-simple-table"><thead><tr><th class="seq">#</th><th>岗位 / 乐器</th><th>演奏员</th><th>备注 / 曲牌</th></tr></thead><tbody id="bodyWuchang"></tbody></table>
+    </div>
+    <!-- 文场 -->
+    <div class="cp-sec wenchang csp-hide" id="secWenchang">
+      <div class="cp-sh"><span class="badge bd-wenchang">05</span><h2>秦腔管弦乐 · 文场乐队</h2><span class="sub">板胡主奏 · 二胡 · 扬琴 · 琵琶 · 三弦…</span></div>
+      <table class="cp-simple-table"><thead><tr><th class="seq">#</th><th>岗位 / 乐器</th><th>演奏员</th><th>备注 / 声部</th></tr></thead><tbody id="bodyWenchang"></tbody></table>
+    </div>
+    <!-- 舞台保障 -->
+    <div class="cp-sec stage csp-hide" id="secStage">
+      <div class="cp-sh"><span class="badge bd-stage">06</span><h2>舞台技术保障 &amp; 后勤团队</h2><span class="sub">盔箱 · 灯光 · 音响 · 服装 · 化妆 · 道具…</span></div>
+      <table class="cp-simple-table"><thead><tr><th class="seq">#</th><th>岗位 / 职责</th><th>负责人</th><th>备注（后台/前台）</th></tr></thead><tbody id="bodyStage"></tbody></table>
+    </div>
+    <!-- 节目单 -->
+    <div class="cp-sec program csp-hide" id="secProgram">
+      <div class="cp-sh"><span class="badge bd-program">07</span><h2>🎼 演出节目单（按上台顺序）</h2><span class="sub">开场 · 加演 · 休息 · 主场 · 谢幕</span></div>
+      <div class="cp-program-wrap" id="blkProgram"></div>
+    </div>
+  </div>
+
+  <!-- 底部版权/联系方式 -->
+  <div class="cp-footer">
+    <div class="cp-ft-logo">秦安县秦剧团文化演出有限公司</div>
+    <div class="cp-ft-sub">传承陇原秦韵 · 唱响乡土华章 · 始于2014</div>
+    <div class="cp-ft-tel">📞 演出预约热线：<a href="tel:13993839833" id="telHot">139 9383 9833</a> &nbsp;&nbsp; 📧 <a href="mailto:13893811313@163.com" id="mailHot">13893811313@163.com</a></div>
+    <div class="cp-ft-tel" style="margin-top:4px;">📍 甘肃省天水市秦安县 · 官方预约：<a href="booking.html" rel="noopener noreferrer" style="color:#fffbeb;border-color:rgba(251,191,36,0.6);">立即预约演出</a></div>
+    <div class="cp-ft-copy">© {year} 秦安县秦剧团文化演出有限公司 · 陇ICP备 · 本站阵容数据来自后台实时发布</div>
+  </div>
+</div>
+
+<!-- 微信分享提示 -->
+<div class="cp-wx-tip" id="wxTip">
+  <div class="cp-wx-inner">
+    <div class="arrow">↗</div>
+    <h3>分享到微信 / 朋友圈</h3>
+    <p>① 请点击右上角 <b style="color:#fbbf24;">「⋯」</b> 菜单<br>② 选择「<b>发送给朋友</b>」或「<b>分享到朋友圈</b>」<br>③ 让更多观众提前了解本场阵容</p>
+    <p style="margin-top:14px;opacity:.75;font-size:.82rem;">（点击屏幕任意位置关闭提示）</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  var LS_KEY = 'qaxqjt_cast_sheet_v3';
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ======== 默认展示数据（后台未配置时也能展示示例） ======== */
+  function demoState(){
+    var __demoY = new Date().getFullYear();
+    return {
+      header:{
+        title:__demoY + ' 秦安县文化惠民 · 秦腔经典传统剧目专场',
+        host:'中共秦安县委宣传部',
+        organizer:'秦安县文体广电和旅游局',
+        coorganizer:'秦安县文化馆 · 陇城镇人民政府',
+        sponsor:'甘肃秦安农村商业银行（冠名）',
+        date:new Date().toISOString().slice(0,10),
+        time:'晚间 19:30（提前30分钟入场）',
+        venue:'秦安县陇城镇张沟村文化广场大舞台',
+        notice:'本场演出免费观看；严禁录音录像；1.2米以下儿童请家长陪同；请保管好随身物品。'
+      },
+      creative:[
+        {pos:'出品人', name:'秦安县秦剧团', note:''},
+        {pos:'总策划', name:'剧团艺委会', note:''},
+        {pos:'艺术总监 ★', name:'陈金声', note:'国家二级演员，秦腔非遗传承人'},
+        {pos:'总导演', name:'李玉堂', note:'擅导传统本戏'},
+        {pos:'唱腔设计', name:'板胡周', note:'秦腔传统板式整理'},
+        {pos:'舞美设计', name:'装台赵', note:'下乡流动舞台经验丰富'}
+      ],
+      mainOpera:[{
+        opera:'《周仁回府》', type:'传统本戏', duration:165, rating:'⭐⭐⭐⭐镇团之宝',
+        intro:'明代经典秦腔传统本戏，讲述义士周仁为救盟兄杜文学，献妻于贼，其妻自刎，后冤屈昭雪的千古忠义故事。秦腔小生/青衣唱功戏颠峰之作。',
+        cast:[
+          {role:'周 仁', type:'小生', actorA:'何文华', actorB:'柳云青', actorC:'宋玉郎', group:'🌿 小生行', note:'《悔路》《哭墓》核心唱段'},
+          {role:'李兰英', type:'青衣', actorA:'苏若兰', actorB:'韩玉梅', actorC:'', group:'💎 青衣行', note:'《刺严》一折，苦情戏经典'},
+          {role:'杜文学', type:'老生', actorA:'陈金声', actorB:'秦守仁', actorC:'', group:'✨ 老生行', note:''},
+          {role:'严 年', type:'花脸', actorA:'铁金刚', actorB:'曹孟德', actorC:'', group:'🎭 花脸行', note:'白脸权臣形象'},
+          {role:'凤承东', type:'丑行', actorA:'贾半仙', actorB:'笑破天', actorC:'', group:'😜 丑行', note:'谄佞小人，方巾丑应工'},
+          {role:'胡秀英', type:'花旦', actorA:'白小蝶', actorB:'崔玲玲', actorC:'', group:'🌸 花旦行', note:''}
+        ]
+      }],
+      addOpera:[{
+        opera:'《拾玉镯》', type:'传统折子戏', duration:28, rating:'⭐⭐重点推荐',
+        intro:'孙玉姣闺门前绣花遇少年傅朋，互生爱慕，傅朋遗玉镯，刘媒婆撞见促成姻缘。秦腔花旦/小生/彩旦经典小戏，动作戏细腻。',
+        cast:[
+          {role:'孙玉姣', type:'花旦', actorA:'白小蝶', actorB:'沈春莺', actorC:'', group:'🌸 花旦行', note:'闺门花旦做工巅峰'},
+          {role:'傅 朋', type:'小生', actorA:'宋玉郎', actorB:'', actorC:'', group:'🌿 小生行', note:'文弱才子形象'},
+          {role:'刘媒婆', type:'彩旦', actorA:'王媒婆', actorB:'姚丽娟', actorC:'', group:'🤡 彩旦行', note:'彩旦喜剧经典'}
+        ]
+      }],
+      wuchang:[
+        {pos:'司鼓 / 板鼓指挥 ★★', name:'雷振声', note:'秦腔鼓令，全场节奏总指挥'},
+        {pos:'梆 子 ★', name:'梆子王', note:'240bpm+快节奏核心'},
+        {pos:'大 锣', name:'罗洪亮', note:''},
+        {pos:'铙 钹', name:'钹子手', note:''},
+        {pos:'小 锣 / 手锣', name:'小锣匠', note:''}
+      ],
+      wenchang:[
+        {pos:'板 胡（主奏）★★', name:'板胡周', note:'全程托腔保调，秦腔传统欢苦音双调式'},
+        {pos:'二 胡（Ⅰ）', name:'二胡梁', note:''},
+        {pos:'二 胡（Ⅱ）', name:'二胡陈', note:''},
+        {pos:'扬 琴', name:'扬琴白', note:''},
+        {pos:'琵 琶', name:'琵琶金', note:''},
+        {pos:'三 弦', name:'三弦吴', note:'秦腔传统弹拨核心'},
+        {pos:'竹 笛 / 唢 呐', name:'竹笛青 / 唢呐红', note:'曲牌《永寿庵》《小开门》'}
+      ],
+      stage:[
+        {pos:'舞台监督 ★★', name:'总监老王', note:'后台+前台全程指挥'},
+        {pos:'盔 箱 ★（秦腔特色岗）', name:'盔箱张', note:'王帽/纱帽/凤冠…佩戴+保管'},
+        {pos:'灯 光 师', name:'灯光老孙', note:''},
+        {pos:'音 响 师', name:'音响大周', note:'16路无线麦管理'},
+        {pos:'服 装 管 理', name:'服装薛', note:''},
+        {pos:'化 妆 / 勾脸', name:'旦妆陈 / 勾脸周', note:''},
+        {pos:'道 具 / 字幕', name:'道具李 / 字幕郑', note:''}
+      ],
+      program:[
+        {cat:'开场锣鼓', name:'开场锣鼓 · 武场闹台（曲牌《南瓜蔓》《八板》）', duration:8, actors:'武场乐队全体', note:'招揽观众入座，预热气氛'},
+        {cat:'加演折子戏', name:'《拾玉镯》', duration:28, actors:'白小蝶 / 宋玉郎 / 王媒婆', note:'花旦做工戏，含喂鸡、穿针、拾镯经典动作'},
+        {cat:'幕间休息', name:'休息 / 换装 / 布景', duration:12, actors:'舞台保障全体', note:'观众如厕+看管随身物品'},
+        {cat:'主场大本戏（上本）', name:'《周仁回府》上本：悔路 · 献妻 · 刺严', duration:80, actors:'详见主场演员表', note:'中场休息前落帽'},
+        {cat:'幕间休息', name:'中场休息 10 分钟', duration:10, actors:'', note:'舞台检查盔箱、服装、下本布景'},
+        {cat:'主场大本戏（下本）', name:'《周仁回府》下本：夜逃 · 哭墓 · 打周 · 团圆', duration:85, actors:'详见主场演员表', note:''},
+        {cat:'谢幕加唱/返场', name:'谢幕 · 秦腔名家清唱联唱', duration:12, actors:'全体主演 + 乐队', note:'领导上台合影 / 观众掌声欢送'}
+      ]
+    };
+  }
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(LS_KEY);
+      if(raw){
+        var obj = JSON.parse(raw);
+        if(obj && obj.header && (obj.mainOpera || obj.addOpera || obj.creative)) {
+          // ====== 细粒度公开兼容：每行/每个演员isPublic未设置时默认true ======
+          ['creative','wuchang','wenchang','stage','program'].forEach(function(k){
+            if(Array.isArray(obj[k])){
+              obj[k] = obj[k].map(function(r){
+                if(r && typeof r.isPublic !== 'boolean') r.isPublic = true;
+                return r;
+              });
+            }
+          });
+          ['mainOpera','addOpera'].forEach(function(k){
+            if(Array.isArray(obj[k])){
+              obj[k] = obj[k].map(function(op){
+                if(Array.isArray(op.cast)){
+                  op.cast = op.cast.map(function(c){
+                    if(c && typeof c.isPublic !== 'boolean') c.isPublic = true;
+                    return c;
+                  });
+                }
+                return op;
+              });
+            }
+          });
+          return obj;
+        }
+      }
+    }catch(e){ console.warn('[cast-public] loadState parse failed, fallback to demoState:', e && e.message ? e.message : e); }
+    return demoState();
+  }
+  function getParam(name){
+    try{
+      var s = location.search || '';
+      var q = s.replace(/^\?/,'').split('&');
+      for(var i=0;i<q.length;i++){
+        var kv=q[i].split('=');
+        if(decodeURIComponent(kv[0]||'')===name) return decodeURIComponent(kv[1]||'');
+      }
+    }catch(e){ console.warn('[cast-public] getParam decode failed, return empty:', e && e.message ? e.message : e); }
+    return '';
+  }
+
+  /* ======== 工具 ======== */
+  function hx(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function nonEmpty(v){ return v != null && String(v).trim().length > 0; }
+  function tagForType(t){
+    var map = {
+      '老生':'t-laosheng','红生':'t-hongsheng','小生':'t-xiaosheng','武生':'t-wusheng',
+      '青衣':'t-qingyi','花旦':'t-huadan','老旦':'t-laodan','彩旦':'t-caidan',
+      '花脸':'t-hualian','丑行':'t-chouxing'
+    };
+    var cls = map[t] || 't-qita';
+    return '<span class="cp-tag '+cls+'">'+hx(t||'—')+'</span>';
+  }
+  function catChip(cat){
+    var c = String(cat||'');
+    if(/本戏/.test(c)) return '<span class="chip benxi">'+hx(c)+'</span>';
+    if(/折子|清唱|曲艺|小戏/.test(c)) return '<span class="chip zhezi">'+hx(c)+'</span>';
+    if(/红色/.test(c)) return '<span class="chip hongse">'+hx(c)+'</span>';
+    if(/新编/.test(c)) return '<span class="chip xinbian">'+hx(c)+'</span>';
+    return '<span class="chip benxi">'+hx(c)+'</span>';
+  }
+  function progChip(cat){
+    var c = String(cat||'');
+    if(/开场/.test(c)) return '<span class="cpc-chip open">开场</span>';
+    if(/加演|折子|清唱/.test(c)) return '<span class="cpc-chip jia">加演</span>';
+    if(/休息|幕间/.test(c)) return '<span class="cpc-chip xiu">休息</span>';
+    if(/主场|本戏|下本|上本/.test(c)) return '<span class="cpc-chip zhu">主场</span>';
+    if(/谢幕|返场|加唱/.test(c)) return '<span class="cpc-chip xie">谢幕</span>';
+    return '<span class="cpc-chip xiu">'+hx(c)+'</span>';
+  }
+
+  /* ======== 渲染 ======== */
+  function renderHeader(h){
+    if(nonEmpty(h.title)){ $('cpTitle').innerHTML = '<span>'+hx(h.title)+'</span>'; document.title = '秦安县秦剧团 · '+h.title+' 演出阵容 | {year}'.replace('{year}', new Date().getFullYear()); }
+    $('mHost').textContent = nonEmpty(h.host)?h.host:'—';
+    $('mOrganizer').textContent = nonEmpty(h.organizer)?h.organizer:'—';
+    $('mCoorganizer').textContent = nonEmpty(h.coorganizer)?h.coorganizer:'—';
+    $('mSponsor').textContent = nonEmpty(h.sponsor)?h.sponsor:'—';
+    $('mDate').textContent = nonEmpty(h.date)?h.date:'—';
+    $('mTime').textContent = nonEmpty(h.time)?h.time:'—';
+    $('mVenue').textContent = nonEmpty(h.venue)?h.venue:'—';
+    if(nonEmpty(h.notice)) $('mNotice').innerHTML = '💡 温馨提示：'+hx(h.notice);
+    // OG
+    try{
+      var ogT = document.querySelector('meta[property="og:title"]'); if(ogT && nonEmpty(h.title)) ogT.setAttribute('content', '秦安县秦剧团 · '+h.title);
+      var ogD = document.querySelector('meta[property="og:description"]'); if(ogD) ogD.setAttribute('content', (h.venue?'📍'+h.venue+' · ':'')+'秦安县秦剧团文化演出有限公司·本场演出阵容公开');
+    }catch(e){ console.warn('[cast-public] renderHeader OG meta update failed:', e && e.message ? e.message : e); }
+  }
+  function renderSimpleTable(tbodyId, rows, emptyHint){
+    var tb = $(tbodyId); if(!tb || !Array.isArray(rows) || rows.length===0){ return false; }
+    var html = ''; var seqNo = 0;
+    rows.forEach(function(r,i){
+      if(r && r.isPublic===false) return;  // 细粒度：取消勾选公开→隐藏
+      if(!nonEmpty(r.pos) && !nonEmpty(r.name)) return;
+      seqNo++;
+      html += '<tr>'
+        + '<td class="seq">'+seqNo+'</td>'
+        + '<td class="pos">'+hx(r.pos||'')+'</td>'
+        + '<td class="name">'+(nonEmpty(r.name)?hx(r.name):'<span class="cp-empty-name">—</span>')+'</td>'
+        + '<td class="note">'+hx(r.note||'')+'</td>'
+        + '</tr>';
+    });
+    if(!html){ return false; }
+    tb.innerHTML = html;
+    return true;
+  }
+  function renderOpera(list, blockId, addStyle){
+    var blk = $(blockId); if(!blk || !Array.isArray(list) || list.length===0) return false;
+    var html = '';
+    list.forEach(function(op, oix){
+      var hasCast = Array.isArray(op.cast) && op.cast.length>0;
+      if(!nonEmpty(op.opera) && !hasCast) return;
+      html += '<div class="cp-opera'+(addStyle?' add-op':'')+'">';
+      html += '<div class="cp-opera-head">';
+      html += '<div class="cp-opera-name"><span class="mask">'+(addStyle?'折':'本')+'</span>'+hx(op.opera||'未命名剧目')+'</div>';
+      html += '<div class="cp-opera-meta">';
+      html += catChip(op.type||'传统本戏');
+      html += '<span class="chip dur">⏱ '+(op.duration||'?')+' 分钟</span>';
+      if(op.rating) html += '<span class="chip rt">'+hx(op.rating)+'</span>';
+      html += '</div></div>';
+      if(nonEmpty(op.intro)) html += '<div class="cp-opera-intro">📖 '+hx(op.intro)+'</div>';
+      if(hasCast){
+        html += '<table class="cp-cast-table"><thead><tr>'
+          + '<th class="seq">#</th><th>角色</th><th>行当</th>'
+          + '<th>A 角 <span class="cp-star">★</span>（主演）</th><th>B 角（替补）</th><th>C 角（实习）</th>'
+          + '<th>行当分组</th><th>备注 / 核心折子</th>'
+          + '</tr></thead><tbody>';
+        var castSeqNo = 0;
+        op.cast.forEach(function(c,ci){
+          if(c && c.isPublic===false) return;  // 细粒度：角色公开勾掉→隐藏
+          if(!nonEmpty(c.role) && !nonEmpty(c.actorA) && !nonEmpty(c.actorB) && !nonEmpty(c.actorC)) return;
+          castSeqNo++;
+          html += '<tr>'
+            + '<td class="seq">'+castSeqNo+'</td>'
+            + '<td class="role">'+hx(c.role||'—')+'</td>'
+            + '<td class="type">'+tagForType(c.type||'生角')+'</td>'
+            + '<td class="ang a">'+(nonEmpty(c.actorA)?('<span class="cp-star">★</span> '+hx(c.actorA)):'<span class="cp-empty-name">—</span>')+'</td>'
+            + '<td class="ang b">'+(nonEmpty(c.actorB)?hx(c.actorB):'<span class="cp-empty-name">—</span>')+'</td>'
+            + '<td class="ang c">'+(nonEmpty(c.actorC)?hx(c.actorC):'<span class="cp-empty-name">—</span>')+'</td>'
+            + '<td class="group">'+hx(c.group||'')+'</td>'
+            + '<td class="note">'+hx(c.note||'')+'</td>'
+            + '</tr>';
+        });
+        html += '</tbody></table>';
+      }
+      html += '</div>';
+    });
+    if(!html) return false;
+    blk.innerHTML = html;
+    return true;
+  }
+  function renderProgram(list){
+    var blk = $('blkProgram'); if(!blk || !Array.isArray(list) || list.length===0) return false;
+    var html = ''; var pNo = 0;
+    list.forEach(function(p,i){
+      if(p && p.isPublic===false) return;  // 细粒度：节目公开勾掉→隐藏
+      if(!nonEmpty(p.name) && !nonEmpty(p.cat)) return;
+      pNo++;
+      html += '<div class="cp-prog-item">';
+      html += '<div class="cp-prog-cat">'+progChip(p.cat||'节目')+'</div>';
+      html += '<div class="cp-prog-main">';
+      html += '<div class="pn">'+pNo+'. '+hx(p.name||'—')+'</div>';
+      if(nonEmpty(p.actors)) html += '<div class="pa">👥 '+hx(p.actors)+'</div>';
+      if(nonEmpty(p.note)) html += '<div class="pnote">💬 '+hx(p.note)+'</div>';
+      html += '</div>';
+      html += '<div class="cp-prog-dur">'+(p.duration?hx(p.duration)+'′':'')+'</div>';
+      html += '</div>';
+    });
+    if(!html) return false;
+    blk.innerHTML = html;
+    return true;
+  }
+
+  /* ======== 分享 ======== */
+  function showWxTip(){
+    var tip = $('wxTip');
+    tip.classList.add('show');
+    var once = function(){ tip.classList.remove('show'); tip.removeEventListener('click', once); };
+    setTimeout(function(){ tip.addEventListener('click', once); }, 100);
+  }
+  function copyLinkFallback(url){
+    var ta = document.createElement('textarea');
+    ta.value = url; ta.className = 'copy-textarea-offscreen';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); alert('✅ 阵容链接已复制：\n'+url); }
+    catch(e2){ alert('请手动复制地址栏链接：\n'+url); }
+    document.body.removeChild(ta);
+  }
+  function copyLink(){
+    var url = location.href;
+    try{
+      if(navigator.clipboard){
+        var _self = this;
+        navigator.clipboard.writeText(url).then(function(){
+          alert('✅ 阵容链接已复制，快去粘贴分享吧！\n\n'+url);
+        }).catch(function(){ copyLinkFallback(url); });
+      } else { copyLinkFallback(url); }
+    }catch(e){
+      copyLinkFallback(url);
+    }
+  }
+  function bindShare(){
+    $('sbWx').addEventListener('click', function(e){ e.preventDefault();
+      if(/MicroMessenger/i.test(navigator.userAgent)){ showWxTip(); }
+      else { copyLink(); alert('💡 请在微信中打开后再点击右上角「⋯」分享给好友\n\n已为您复制好阵容链接～'); }
+    });
+    $('sbPyq').addEventListener('click', function(e){ e.preventDefault();
+      if(/MicroMessenger/i.test(navigator.userAgent)){ showWxTip(); }
+      else { copyLink(); alert('💡 请在微信中打开后再点击右上角「⋯」分享到朋友圈\n\n已为您复制好阵容链接～'); }
+    });
+    $('sbKk').addEventListener('click', function(e){ e.preventDefault(); copyLink(); });
+    $('sbPrint').addEventListener('click', function(e){ e.preventDefault(); window.print(); });
+  }
+
+  /* ======== 电话/邮箱触发（项目约束：复制+提示，避免系统弹应用） ======== */
+  function bindTelMail(){
+    try{
+      var tel = $('telHot'); if(tel){
+        tel.addEventListener('click', function(e){
+          e.preventDefault();
+          var num = '13993839833';
+          try{ if(navigator.clipboard){ navigator.clipboard.writeText(num); } }catch(e2){}
+          var msg = '📞 演出预约热线：' + num + '\n\n✅ 号码已复制，请到手机拨号盘粘贴拨打。';
+          if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){
+            if(confirm(msg+'\n\n是否尝试跳转系统拨号？')) location.href = 'tel:'+num; else alert(msg);
+          } else { alert(msg); }
+        });
+      }
+      var ml = $('mailHot'); if(ml){
+        ml.addEventListener('click', function(e){
+          e.preventDefault();
+          var addr = '13893811313@163.com';
+          try{ if(navigator.clipboard){ navigator.clipboard.writeText(addr); } }catch(e2){}
+          var webmail = 'https://mail.163.com/';
+          if(confirm('📧 邮箱地址：' + addr + '\n\n✅ 邮箱已复制\n\n是否跳转网页版邮箱（163）写邮件？')){
+            window.open(webmail, '_blank', 'noopener,noreferrer');
+          }
+        });
+      }
+    }catch(e){ console.warn('[cast-public] bindTelMail click handler init failed:', e && e.message ? e.message : e); }
+  }
+
+  /* ======== 初始化 ======== */
+  function init(){
+    bindShare();
+    bindTelMail();
+    var s = loadState();
+    var isPreview = String(getParam('preview')||'').toLowerCase() === '1';
+    var isPublic = !(s && s.isPublic === false);
+
+    // 注入预览/未公开提示条
+    var tipBar = document.createElement('div');
+    tipBar.className = 'cast-public-tip-sticky';
+    var injected = false;
+    if(!isPublic && !isPreview){
+      // 未公开 → 只显示空状态
+      var cpEmpty = $('cpEmpty');
+      if(cpEmpty){
+        cpEmpty.classList.remove('csp-hide');
+        var emoji = cpEmpty.querySelector('.emoji');
+        var h4 = cpEmpty.querySelector('h4');
+        var p = cpEmpty.querySelector('p');
+        var adminLink = cpEmpty.querySelector('.admin-link');
+        if(emoji) emoji.textContent = '🔒';
+        if(h4) h4.textContent = '本场阵容暂未公开';
+        if(p) p.innerHTML = '管理员已将此演出阵容设为<b class="txt-red-700">草稿/内部状态</b>，仅后台可见。<br>请稍后刷新查看，或直接联系剧团：📞 139 9383 9833<br>'
+          + '<small class="txt-red-900">（管理员可在地址后加 <code>?preview=1</code> 预览未公开阵容）</small>';
+        if(adminLink){
+          adminLink.href += '?src=locked-public';
+          adminLink.textContent = '🔐 我是管理员，解锁公开状态 →';
+        }
+      }
+      var cpC = $('cpContent'); if(cpC) cpC.classList.add('csp-hide');
+      // 返回，不再渲染其他节块
+      return;
+    }
+    if(!isPublic && isPreview){
+      tipBar.classList.add('cast-public-tip-draft');
+      tipBar.innerHTML = '⚠️ 管理员预览模式（本场阵容当前 <b class="txt-amber-700">未公开</b>，观众无法看到）· 公开开关请在后台 cast-sheet.html 设置';
+      injected = true;
+    } else if(isPreview){
+      tipBar.classList.add('cast-public-tip-public');
+      tipBar.innerHTML = '🔓 管理员预览模式 · 阵容状态：<b class="txt-green-700">已公开</b> · 观众扫码可正常查看';
+      injected = true;
+    }
+    if(injected && document.body){
+      document.body.insertBefore(tipBar, document.body.firstChild);
+    }
+
+    var has = false;
+    if(s && s.header){
+      renderHeader(s.header);
+      has = true;
+    }
+    var hc = renderSimpleTable('bodyCreative', s.creative);
+    if(hc) $('secCreative').classList.remove('csp-hide');
+    var hm = renderOpera(s.mainOpera, 'blkMain', false);
+    if(hm) $('secMain').classList.remove('csp-hide');
+    var ha = renderOpera(s.addOpera, 'blkAdd', true);
+    if(ha) $('secAdd').classList.remove('csp-hide');
+    var hwu = renderSimpleTable('bodyWuchang', s.wuchang);
+    if(hwu) $('secWuchang').classList.remove('csp-hide');
+    var hwe = renderSimpleTable('bodyWenchang', s.wenchang);
+    if(hwe) $('secWenchang').classList.remove('csp-hide');
+    var hst = renderSimpleTable('bodyStage', s.stage);
+    if(hst) $('secStage').classList.remove('csp-hide');
+    var hpr = renderProgram(s.program);
+    if(hpr) $('secProgram').classList.remove('csp-hide');
+
+    if(hc || hm || ha || hwu || hwe || hst || hpr){
+      $('cpContent').classList.remove('csp-hide');
+      $('cpEmpty').classList.add('csp-hide');
+    } else {
+      $('cpContent').classList.add('csp-hide');
+      $('cpEmpty').classList.remove('csp-hide');
+    }
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+  <!-- 🔧 D块前台×按钮兜底：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
+  <script>
+  (function(){
+    document.addEventListener('click', function(e){
+      var t = e.target; if(!t) return;
+      var tn = (t.tagName||'').toLowerCase();
+      var tc = (t.textContent||'').replace(/\s+/g,'');
+      if(tc === '×' || tc === '✕' || tc === 'x' || tc === 'X' || (t.getAttribute && (t.getAttribute('aria-label')||'').toLowerCase().indexOf('close')>=0)){
+        if(tn==='button'||tn==='a'||tn==='span'||tn==='i'||tn==='div'||(t.closest && t.closest('[class*="modal-"],[class*="Modal"],[id*="Modal_Header"],[class*="-close"],[class*="popup-"],[class*="dialog-"]'))){
+          try{ if(typeof window.__closeAnyModal === 'function') { window.__closeAnyModal(); return; } }catch(_){}
+          try{
+            var m = t.closest ? t.closest('.modal, [id$="Modal"], [id$="modal"], .modal-wrap, [data-modal], [class*="-popup"], [class*="dialog"], [class*="-panel"]') : null;
+            if(m){ try{ m.classList.remove('active','show','open','is-open'); m.classList.add('s-modal-hide','modal-wrap-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} } }
+            var o = document.querySelector('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="-mask"], [class*="-backdrop"]');
+            if(o){ try{ o.classList.remove('active','show','open','is-open'); o.classList.add('s-overlay-hide','modal-overlay-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} } }
+          }catch(_f){}
+        }
+      }
+    }, true);
+  })();
+  </script>
+  <!-- 🔧 E块前台死按钮兜底：无onclick无action的"提交/重置/立即预约/我要咨询/提交申请/上传预览" → toast+基础交互 -->
+  <script>
+  (function(){
+    function __FT(msg,type){
+      try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){}
+      try{ (type==='error'?alert:console.log)('[frontpatch] '+msg); }catch(_f){}
+    }
+    function __FL(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||700); }catch(_){}
+      return true;
+    }
+    try{ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ try{ if(typeof window.__closeAnyModal==='function')window.__closeAnyModal(); }catch(_){} try { var all=document.querySelectorAll('.modal,.modal-wrap,[data-modal],[class*="-popup"],[class*="dialog"]'); all.forEach(function(x){ x.classList.remove('active','show','open'); x.classList.add('s-modal-hide'); }); var m2=document.querySelectorAll('.modal-overlay,.overlay,[class*="-mask"],[class*="-backdrop"]'); m2.forEach(function(x){x.classList.add('s-overlay-hide');}); }catch(_x){} } }, true); }catch(_escErr){}
+    document.addEventListener('reset', function(e){
+      try{ if(!e.target || e.target.tagName!=='FORM') return; setTimeout(function(){ __FT('↺ 表单已重置（所有字段恢复默认）','success'); }, 120); }catch(_){}
+    }, true);
+    document.addEventListener('click', function(e){
+      var t=e.target; if(!t) return;
+      var btn = (t.tagName||'').toLowerCase()==='button'? t : (t.closest ? t.closest('button,a.btn,[role="button"],.btn,.btn-primary,.btn-secondary,.btn-gold,.btn-danger,.btn-outline') : null);
+      if(!btn) return;
+      try{ if(btn.getAttribute && btn.getAttribute('onclick') && btn.getAttribute('onclick').length>3) return; if(btn.__bindDone || btn.__ftDone) return; if(btn.getAttribute && btn.getAttribute('type') && btn.getAttribute('type').toLowerCase()==='submit'){ return; } }catch(_a){}
+      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
+      if(!txt || txt.length>28) return;
+      var isSubmit   = txt.indexOf('提交')>=0 || txt.indexOf('立即预约')>=0 || txt.indexOf('立即申请')>=0;
+      var isReset    = txt.indexOf('重置')>=0;
+      var isConsult  = txt.indexOf('咨询')>=0 || txt.indexOf('联系对接')>=0 || txt.indexOf('对接专员')>=0;
+      var isUpload   = txt.indexOf('上传')>=0 || txt.indexOf('预览')>=0 || txt.indexOf('选择文件')>=0;
+      var isSearch   = txt.indexOf('搜索')>=0 || txt.indexOf('查询')>=0 || txt==='🔍';
+      var dk = 'ft_'+(isSubmit?'s':isReset?'r':isConsult?'c':isUpload?'u':isSearch?'q':'k')+'_'+Math.random().toString(36).slice(2,6);
+      if(isSubmit){
+        if(!__FL(dk,1400)){ __FT('⏳ 提交处理中，请稍候…','warning'); e.stopImmediatePropagation(); return; }
+        var fm = btn.closest ? btn.closest('form') : null;
+        if(fm){
+          var agree = fm.querySelector('[data-agree-checkbox]');
+          if(agree && !agree.checked){ __FT('⚠️ 请先勾选「同意协议/须知」后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); return; }
+          var reqFails = fm.querySelectorAll('[required]');
+          var firstBad=null;
+          try{ reqFails.forEach(function(inp){ if(!inp.value || (inp.type==='checkbox' && !inp.checked)){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}},1800);}catch(_b){} } }); }catch(_rf){}
+          if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
+          __FT('✅ 提交成功！（演示模式：真实环境将写入工单并通知对接专员）','success');
+          try{ fm.reset && fm.reset(); }catch(_rs){}
+          e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
+        } else {
+          __FT('✅ 提交成功（演示模式）','success');
+          try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
+          btn.__ftDone=1; e.stopImmediatePropagation(); return;
+        }
+      }
+      if(isReset){
+        if(!__FL(dk,500)) return;
+        var fm2 = btn.closest ? btn.closest('form') : null;
+        try{ if(fm2){ fm2.reset && fm2.reset(); __FT('↺ 表单已重置（所有字段恢复默认）','success'); } else { __FT('↺ 已重置','info'); } }catch(_r){}
+        btn.__ftDone=1; return;
+      }
+      if(isConsult){
+        if(!__FL(dk,900)) return;
+        __FT('📞 已打开对接咨询入口（请致电 138-9381-1313 或扫码添加微信）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isUpload){
+        if(!__FL(dk,1000)) return;
+        __FT('📎 请选择 ≤ 10MB 的图片/PDF/DOC 文件（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isSearch){
+        if(!__FL(dk,500)) return;
+        __FT('🔍 查询条件已生效（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+    }, true);
+    console.info('[FrontCommonPatch 已加载：CSS圆角+×兜底+死按钮+重置+ESC关弹窗+同意协议二次校验]');
+  })();
+  </script>
+</body>
+</html>

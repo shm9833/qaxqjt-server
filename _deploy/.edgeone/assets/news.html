@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="js/favicon-inject.js?v=20260803" defer></script>
+    <script src="js/wechat-fallback.js?v=20260803" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="秦安县秦剧团文化演出有限公司新闻动态，惠民演出资讯、剧团活动、行业通知、政策公示">
+  <meta name="keywords" content="秦安秦剧团,秦安县秦剧团文化演出有限公司,新闻动态,惠民演出,剧团资讯,文化下乡">
+  <title>新闻动态 - 秦安县秦剧团文化演出有限公司 | {year}</title>
+  <link rel="stylesheet" href="css/style.css?v=20260803">
+  <style>
+    .news-page-section {
+      padding: 60px 0;
+      background: var(--bg-light);
+    }
+    .news-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 40px;
+    }
+    .category-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 35px;
+      padding-bottom: 25px;
+      border-bottom: 1px dashed var(--border-light);
+    }
+    .category-tab {
+      padding: 10px 22px;
+      background: var(--cream);
+      border: 1.5px solid var(--border-light);
+      border-radius: 30px;
+      font-size: 0.92rem;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    .category-tab:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(139, 0, 0, 0.04);
+    }
+    .category-tab.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--cream);
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(139, 0, 0, 0.2);
+    }
+    .news-list {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+    .news-item-card {
+      display: flex;
+      gap: 25px;
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      padding: 25px;
+      border: 1px solid var(--border-light);
+      transition: var(--transition);
+    }
+    .news-item-card:hover {
+      box-shadow: var(--shadow);
+      border-color: var(--gold);
+      transform: translateY(-3px);
+    }
+    .news-date-box {
+      flex-shrink: 0;
+      width: 85px;
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: var(--radius);
+      padding: 15px 10px;
+      color: var(--cream);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .news-date-box .date-day {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: "KaiTi", "STKaiti", serif;
+      line-height: 1;
+    }
+    .news-date-box .date-month {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      margin-top: 5px;
+    }
+    .news-date-box .date-year {
+      font-size: 0.72rem;
+      opacity: 0.7;
+      margin-top: 3px;
+    }
+    .news-content-box {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .news-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .news-cat-tag {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(212, 175, 55, 0.15);
+      color: var(--gold-dark);
+      border-radius: 15px;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+    .news-cat-tag.cat-huimin { background: rgba(40, 167, 69, 0.12); color: #218838; }
+    .news-cat-tag.cat-activity { background: rgba(139, 0, 0, 0.1); color: var(--primary); }
+    .news-cat-tag.cat-notice { background: rgba(23, 162, 184, 0.12); color: #138496; }
+    .news-cat-tag.cat-policy { background: rgba(230, 168, 0, 0.15); color: #c79600; }
+    .news-cat-tag.cat-annual { background: rgba(111, 66, 193, 0.12); color: #6f42c1; }
+    .news-title {
+      color: var(--primary-dark);
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      line-height: 1.4;
+      font-family: "KaiTi", "STKaiti", serif;
+    }
+    .news-title:hover {
+      color: var(--primary);
+    }
+    .news-summary {
+      color: var(--text-light);
+      font-size: 0.92rem;
+      line-height: 1.8;
+      margin-bottom: 15px;
+      display: -webkit-box;
+      line-clamp: 2;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
+    }
+    .news-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border-light);
+    }
+    .news-stats {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      font-size: 0.82rem;
+      color: var(--text-light);
+      flex: 1 1 auto;
+      min-width: 160px;
+    }
+    /* 修复：窄屏下 👁阅读量💬评论 + 阅读全文→ 挤成一行显示不全的问题 */
+    .news-footer { flex-wrap:wrap; row-gap:8px; }
+    .read-more-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 16px;
+      background: linear-gradient(135deg,transparent,#fef3c7);
+      border: 1.5px solid var(--primary);
+      color: var(--primary);
+      border-radius: 20px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .read-more-btn:hover {
+      background: var(--primary);
+      color: var(--cream);
+    }
+    /* 新闻卡"展开全文"折叠区（阅读全文点击后展开） */
+    .news-full-text {
+      display: none;
+      margin-top: 12px;
+      padding: 14px 16px;
+      background: linear-gradient(135deg,#fffbeb,#fef9c3);
+      border-left: 3px solid #f59e0b;
+      border-radius: 0 10px 10px 0;
+      font-size: 0.9rem;
+      line-height: 1.75;
+      color: #78350f;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: max-height .5s ease, opacity .4s ease, transform .4s ease, margin-top .3s ease;
+    }
+    .news-full-text[data-open="1"] {
+      display: block;
+      max-height: 1200px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .news-full-text h4 {
+      margin: 0 0 8px 0;
+      color: #92400e;
+      font-size: 0.95rem;
+    }
+    .news-full-text p { margin: 0 0 8px 0; }
+    .news-full-text small {
+      color: #92400e;
+      display: block;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed #fbbf24;
+    }
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      position: sticky;
+      top: 90px;
+      align-self: flex-start;
+    }
+    .sidebar-card {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      padding: 25px;
+      border: 1px solid var(--border-light);
+    }
+    .sidebar-title {
+      color: var(--primary-dark);
+      font-size: 1.15rem;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-title::before {
+      content: '';
+      width: 6px;
+      height: 20px;
+      background: linear-gradient(180deg, var(--primary), var(--gold));
+      border-radius: 3px;
+    }
+    .hot-news-list {
+      list-style: none;
+      padding: 0;
+    }
+    .hot-news-item {
+      padding: 12px 0;
+      border-bottom: 1px dashed var(--border-light);
+    }
+    .hot-news-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .hot-news-item:first-child {
+      padding-top: 0;
+    }
+    .hot-news-link {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: var(--text-dark);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .hot-news-link:hover {
+      color: var(--primary);
+    }
+    .hot-news-rank {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(139, 0, 0, 0.08);
+      color: var(--text-light);
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hot-news-item:nth-child(1) .hot-news-rank { background: #dc3545; color: #fff; }
+    .hot-news-item:nth-child(2) .hot-news-rank { background: #fd7e14; color: #fff; }
+    .hot-news-item:nth-child(3) .hot-news-rank { background: #ffc107; color: var(--primary-dark); }
+    .hot-news-text {
+      flex: 1;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      display: -webkit-box;
+      line-clamp: 2;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .hot-news-date {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--text-light);
+      margin-top: 4px;
+      opacity: 0.8;
+    }
+    .showcase-list {
+      list-style: none;
+      padding: 0;
+    }
+    .showcase-item {
+      padding: 14px 0;
+      border-bottom: 1px dashed var(--border-light);
+    }
+    .showcase-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .showcase-item:first-child {
+      padding-top: 0;
+    }
+    .showcase-date {
+      display: inline-block;
+      padding: 2px 10px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--cream);
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .showcase-title {
+      color: var(--text-dark);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin-bottom: 4px;
+    }
+    .showcase-place {
+      color: var(--text-light);
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .contact-sidebar {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border-radius: var(--radius-lg);
+      padding: 25px;
+      color: var(--cream);
+      position: relative;
+      overflow: hidden;
+    }
+    .contact-sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .contact-sidebar > * {
+      position: relative;
+      z-index: 2;
+    }
+    .contact-sidebar h4 {
+      color: var(--gold);
+      font-size: 1.15rem;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    }
+    .contact-item-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .contact-item-row:last-child {
+      margin-bottom: 0;
+    }
+    .contact-icon-box {
+      width: 36px;
+      height: 36px;
+      background: rgba(212, 175, 55, 0.15);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .contact-item-info h5 {
+      color: var(--gold);
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .contact-item-info p,
+    .contact-item-info a {
+      color: rgba(255, 250, 240, 0.9);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    .section-header h2 {
+      display: inline-block;
+      position: relative;
+      padding: 0 60px;
+      font-size: 2.2rem;
+    }
+    .section-header h2::before,
+    .section-header h2::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold), transparent);
+    }
+    .section-header h2::before {
+      left: 0;
+    }
+    .section-header h2::after {
+      right: 0;
+      background: linear-gradient(90deg, transparent, var(--gold));
+    }
+    .section-header p {
+      display: block;
+      color: var(--text-light);
+      font-size: 1rem;
+      margin-top: 12px;
+      letter-spacing: 4px;
+    }
+    @media (max-width: 992px) {
+      .news-layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        position: static;
+      }
+    }
+    @media (max-width: 576px) {
+      .news-item-card {
+        flex-direction: column;
+        gap: 18px;
+      }
+      .news-date-box {
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+        gap: 15px;
+        padding: 12px;
+      }
+      .news-date-box .date-day,
+      .news-date-box .date-month,
+      .news-date-box .date-year {
+        margin: 0;
+      }
+      .section-header h2 {
+        padding: 0 30px;
+        font-size: 1.6rem;
+      }
+      .section-header h2::before,
+      .section-header h2::after {
+        width: 20px;
+      }
+      .category-tabs {
+        gap: 8px;
+      }
+      .category-tab {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+      }
+    }
+    /* 🔧 前台通用补丁：分页/按钮圆角（原方形→10px） + 伪链接视觉提示 + 弹窗隐藏辅助类 */
+    .pagination .page-btn, button.page-btn, .page-btn,
+    .pagination button, .page-number-item button, .pager button,
+    .btn-pagination, [class*="pagination"] button,
+    .btn, button.btn {
+      border-radius: 10px !important;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+    .pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+    }
+    .s-modal-hide { display: none !important; }
+    .s-overlay-hide { display: none !important; }
+    a[href="#"]:not(.action-link):not([data-toggle]):not(.schedule-opera-link)::after { content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .7; }
+    .btn-ghost { color: #64748b; }
+  </style>
+</head>
+<body>
+  <header data-header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+          <div class="logo-text">
+            <h1>秦安县秦剧团</h1>
+            <p>文化演出有限公司 · 始于2014</p>
+          </div>
+        </div>
+        <button class="menu-toggle" data-nav-toggle aria-label="菜单" aria-expanded="false">
+          <span>☰</span>
+        </button>
+        <nav data-nav-menu>
+          <ul>
+            <li><a href="index.html">首页</a></li>
+            <li><a href="about.html">剧团简介</a></li>
+            <li><a href="operas.html">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html" class="active">新闻动态</a></li>
+            <li><a href="booking.html">在线预约</a></li>
+            <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
+            <li><a href="contact.html">联系我们</a></li>
+            <li><a href="admin/login.html" class="admin-link">后台管理</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-banner" style="background:linear-gradient(135deg,rgba(120,53,15,0.82),rgba(127,29,29,0.74)),url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E5%AE%89%E5%8E%BF%E7%A7%A6%E5%89%A7%E5%9B%A2%E6%96%B0%E9%97%BB%E5%8F%91%E5%B8%83%E4%BC%9A%EF%BC%8C%E5%9B%A2%E9%95%BF%E5%90%91%E5%AA%92%E4%BD%93%E9%80%9A%E6%8A%A5%E6%BC%94%E5%87%BA%E5%AD%A3%E5%AE%89%E6%8E%92%EF%BC%8C%E8%83%8C%E6%99%AF%E6%9D%BF%E7%BA%A2%E8%89%B2%E4%B8%BB%E9%A2%98%EF%BC%8C%E8%AF%9D%E7%AD%92%E6%91%84%E5%83%8F%E6%9C%BA%EF%BC%8C%E6%96%B0%E9%97%BB%E5%AA%92%E4%BD%93%E5%9C%BA%E6%99%AF%EF%BC%8C%E9%AB%98%E6%B8%85&image_size=landscape_16_9') center/cover no-repeat;">
+      <div class="page-banner-content">
+        <h1>📰 新闻动态</h1>
+        <div class="breadcrumb">
+          <a href="index.html">首页</a>
+          <span class="separator">/</span>
+          <span>新闻动态</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="news-page-section">
+      <div class="container">
+        <div class="news-layout">
+          <div class="news-main">
+            <div class="category-tabs">
+              <button class="category-tab active" data-cat="all">全部资讯</button>
+              <button class="category-tab" data-cat="huimin">惠民演出资讯</button>
+              <button class="category-tab" data-cat="activity">剧团活动</button>
+              <button class="category-tab" data-cat="notice">行业通知</button>
+              <button class="category-tab" data-cat="policy">政策公示</button>
+              <button class="category-tab" data-cat="annual">年度动态</button>
+              <div class="search-input-wrap" style="margin-left:auto;">
+                <span class="search-icon">🔍</span>
+                <input type="search" class="search-input" placeholder="搜索新闻标题/内容..."
+                  data-search-news aria-label="搜索新闻">
+              </div>
+            </div>
+
+            <div class="news-list" data-paginate="list" data-page-size="6">
+              <article id="news-card-1" class="news-item-card"data-category="huimin">
+                <div class="news-date-box">
+                  <span class="date-day">28</span>
+                  <span class="date-month">02月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-huimin">惠民演出资讯</span>
+                  </div>
+                  <h3 class="news-title">{year}年春节惠民巡演圆满落幕 - 20场演出覆盖15乡镇</h3>
+                  <p class="news-summary">历时22天的{year}年春节文化惠民巡演活动圆满落下帷幕。剧团演职团队奔赴秦安县15个乡镇，为基层群众献上20场精彩纷呈的秦腔演出，累计观众达8万余人次，用传统戏曲为新春佳节增添了浓厚的文化氛围。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 2,356 阅读</span>
+                      <span>💬 15 评论</span>
+                    </div>
+                    <a href="#news-card-1" data-toggle="news-full" data-card-id="news-card-1"  class="read-more-btn">阅读全文 →</a>
+                  </div>
+                                <div class="news-full-text" data-news-full-text id="news-full-1">
+                  <h4>📖 详细报道</h4>
+                  <p>本次春节惠民巡演期间，秦安县秦剧团云端预约系统同步开放了在线直播、回看、预约后续专场等多项数字化服务，累计线上线下联动覆盖人群超10万人次。剧团46人专业演职团队（含国家一级演员3名、二级演员8名、省级非遗传承人2名）保障了每一场演出的艺术水准。</p>
+                  <p>据剧团团长介绍，{year}年度全团计划完成不少于120场惠民下乡与专场商业演出，并同步推出「预约秦腔·直播到家」服务（详情见 live-api.html），方便无法亲临现场的中老年戏迷通过电视或小程序同步观看。</p>
+                  <small>🎫 如需预约《春节惠民巡演》同类专场，可 <a href="booking.html" style="color:#b45309;font-weight:700;text-decoration:underline;">点此在线提交预约申请</a>，或致电 📞 13993839833 / 发邮件至 ✉️ 13893811313@163.com 咨询档期。</small>
+                </div>
+              </div>
+              </article>
+
+              <article id="news-card-2" class="news-item-card"data-category="activity">
+                <div class="news-date-box">
+                  <span class="date-day">15</span>
+                  <span class="date-month">03月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-activity">剧团活动</span>
+                  </div>
+                  <h3 class="news-title">喜讯！我团荣获秦安县{year}年度"基层文化先进集体"称号</h3>
+                  <p class="news-summary">在秦安县{year}年度文化工作表彰大会上，我团因在基层文化服务、惠民演出等方面的突出贡献，被县文旅局授予"基层文化先进集体"荣誉称号。剧团负责人代表全体演职人员上台领奖并作交流发言。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,892 阅读</span>
+                      <span>💬 23 评论</span>
+                    </div>
+                    <a href="#news-card-2" data-toggle="news-full" data-card-id="news-card-2"  class="read-more-btn">阅读全文 →</a>
+                  </div>
+                                <div class="news-full-text" data-news-full-text id="news-full-2">
+                  <h4>📖 详细报道</h4>
+                  <p>本次三月戏曲进校园期间，秦安县秦剧团云端预约系统同步开放了在线直播、回看、预约后续专场等多项数字化服务，累计线上线下联动覆盖人群超10万人次。剧团46人专业演职团队（含国家一级演员3名、二级演员8名、省级非遗传承人2名）保障了每一场演出的艺术水准。</p>
+                  <p>据剧团团长介绍，{year}年度全团计划完成不少于120场惠民下乡与专场商业演出，并同步推出「预约秦腔·直播到家」服务（详情见 live-api.html），方便无法亲临现场的中老年戏迷通过电视或小程序同步观看。</p>
+                  <small>🎫 如需预约《三月戏曲进校园》同类专场，可 <a href="booking.html" style="color:#b45309;font-weight:700;text-decoration:underline;">点此在线提交预约申请</a>，或致电 📞 13993839833 / 发邮件至 ✉️ 13893811313@163.com 咨询档期。</small>
+                </div>
+              </div>
+              </article>
+
+              <article id="news-card-3" class="news-item-card"data-category="huimin">
+                <div class="news-date-box">
+                  <span class="date-day">08</span>
+                  <span class="date-month">04月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-huimin">惠民演出资讯</span>
+                  </div>
+                  <h3 class="news-title">{year}年"乡村振兴·文化先行"惠民巡演正式启动</h3>
+                  <p class="news-summary">配合县乡村振兴局、文旅局开展的"乡村振兴·文化先行"主题惠民巡演活动在陇城镇文化广场正式启动。{year}全年计划完成80场惠民演出，覆盖全县17个乡镇，助力乡村文化振兴，丰富群众精神文化生活。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,567 阅读</span>
+                      <span>💬 18 评论</span>
+                    </div>
+                    <a href="#news-card-3" data-toggle="news-full" data-card-id="news-card-3"  class="read-more-btn">阅读全文 →</a>
+                  </div>
+                                <div class="news-full-text" data-news-full-text id="news-full-3">
+                  <h4>📖 详细报道</h4>
+                  <p>本次伏羲文化节专场期间，秦安县秦剧团云端预约系统同步开放了在线直播、回看、预约后续专场等多项数字化服务，累计线上线下联动覆盖人群超10万人次。剧团46人专业演职团队（含国家一级演员3名、二级演员8名、省级非遗传承人2名）保障了每一场演出的艺术水准。</p>
+                  <p>据剧团团长介绍，{year}年度全团计划完成不少于120场惠民下乡与专场商业演出，并同步推出「预约秦腔·直播到家」服务（详情见 live-api.html），方便无法亲临现场的中老年戏迷通过电视或小程序同步观看。</p>
+                  <small>🎫 如需预约《伏羲文化节专场》同类专场，可 <a href="booking.html" style="color:#b45309;font-weight:700;text-decoration:underline;">点此在线提交预约申请</a>，或致电 📞 13993839833 / 发邮件至 ✉️ 13893811313@163.com 咨询档期。</small>
+                </div>
+              </div>
+              </article>
+
+              <article id="news-card-4" class="news-item-card"data-category="activity">
+                <div class="news-date-box">
+                  <span class="date-day">22</span>
+                  <span class="date-month">05月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-activity">剧团活动</span>
+                  </div>
+                  <h3 class="news-title">我团参加天水市{year}年戏曲调演荣获优秀表演奖</h3>
+                  <p class="news-summary">天水市{year}年专业戏曲院团调演活动在市文化艺术中心圆满举办。我团参演的《火焰驹》选段凭借精湛的表演、地道的唱腔和细腻的人物塑造，从全市12支参赛队伍中脱颖而出，荣获优秀表演奖。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 2,103 阅读</span>
+                      <span>💬 31 评论</span>
+                    </div>
+                    <a href="#news-card-4" data-toggle="news-full" data-card-id="news-card-4"  class="read-more-btn">阅读全文 →</a>
+                  </div>
+                                <div class="news-full-text" data-news-full-text id="news-full-4">
+                  <h4>📖 详细报道</h4>
+                  <p>本次非遗文化进社区期间，秦安县秦剧团云端预约系统同步开放了在线直播、回看、预约后续专场等多项数字化服务，累计线上线下联动覆盖人群超10万人次。剧团46人专业演职团队（含国家一级演员3名、二级演员8名、省级非遗传承人2名）保障了每一场演出的艺术水准。</p>
+                  <p>据剧团团长介绍，{year}年度全团计划完成不少于120场惠民下乡与专场商业演出，并同步推出「预约秦腔·直播到家」服务（详情见 live-api.html），方便无法亲临现场的中老年戏迷通过电视或小程序同步观看。</p>
+                  <small>🎫 如需预约《非遗文化进社区》同类专场，可 <a href="booking.html" style="color:#b45309;font-weight:700;text-decoration:underline;">点此在线提交预约申请</a>，或致电 📞 13993839833 / 发邮件至 ✉️ 13893811313@163.com 咨询档期。</small>
+                </div>
+              </div>
+              </article>
+
+              <article id="news-card-5" class="news-item-card"data-category="notice">
+                <div class="news-date-box">
+                  <span class="date-day">01</span>
+                  <span class="date-month">06月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-notice">行业通知</span>
+                  </div>
+                  <h3 class="news-title">关于{year}年度庙会演出档期开放预约的通知</h3>
+                  <p class="news-summary">即日起，秦安县秦剧团{year}年度秋末冬初庙会演出档期正式开放预约。各乡村庙会负责人、村集体及相关单位可通过电话13993839833或在线预约系统提前锁定演出档期，档期有限，先约先得。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 3,241 阅读</span>
+                      <span>💬 45 评论</span>
+                    </div>
+                    <a href="#news-card-5" data-toggle="news-full" data-card-id="news-card-5"  class="read-more-btn">阅读全文 →</a>
+                  </div>
+                                <div class="news-full-text" data-news-full-text id="news-full-5">
+                  <h4>📖 详细报道</h4>
+                  <p>本次剧目创排研讨会期间，秦安县秦剧团云端预约系统同步开放了在线直播、回看、预约后续专场等多项数字化服务，累计线上线下联动覆盖人群超10万人次。剧团46人专业演职团队（含国家一级演员3名、二级演员8名、省级非遗传承人2名）保障了每一场演出的艺术水准。</p>
+                  <p>据剧团团长介绍，{year}年度全团计划完成不少于120场惠民下乡与专场商业演出，并同步推出「预约秦腔·直播到家」服务（详情见 live-api.html），方便无法亲临现场的中老年戏迷通过电视或小程序同步观看。</p>
+                  <small>🎫 如需预约《剧目创排研讨会》同类专场，可 <a href="booking.html" style="color:#b45309;font-weight:700;text-decoration:underline;">点此在线提交预约申请</a>，或致电 📞 13993839833 / 发邮件至 ✉️ 13893811313@163.com 咨询档期。</small>
+                </div>
+              </div>
+              </article>
+
+              <article id="news-card-6" class="news-item-card"data-category="huimin">
+                <div class="news-date-box">
+                  <span class="date-day">20</span>
+                  <span class="date-month">06月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-huimin">惠民演出资讯</span>
+                  </div>
+                  <h3 class="news-title">{year}年端午节陇城古镇民俗戏曲专场圆满举办</h3>
+                  <p class="news-summary">端午节期间，陇城古镇民俗文化节盛大开幕。我团在古镇文化舞台献上连续3天的秦腔专场演出，《白蛇传》《五典坡》等经典剧目轮番上演，吸引了周边县区众多戏迷观众，现场气氛热烈。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,789 阅读</span>
+                      <span>💬 19 评论</span>
+                    </div>
+                    <a href="#news-card-6" data-toggle="news-full" data-card-id="news-card-6"  class="read-more-btn">阅读全文 →</a>
+                  </div>
+                                <div class="news-full-text" data-news-full-text id="news-full-6">
+                  <h4>📖 详细报道</h4>
+                  <p>本次五一黄金周企业包场期间，秦安县秦剧团云端预约系统同步开放了在线直播、回看、预约后续专场等多项数字化服务，累计线上线下联动覆盖人群超10万人次。剧团46人专业演职团队（含国家一级演员3名、二级演员8名、省级非遗传承人2名）保障了每一场演出的艺术水准。</p>
+                  <p>据剧团团长介绍，{year}年度全团计划完成不少于120场惠民下乡与专场商业演出，并同步推出「预约秦腔·直播到家」服务（详情见 live-api.html），方便无法亲临现场的中老年戏迷通过电视或小程序同步观看。</p>
+                  <small>🎫 如需预约《五一黄金周企业包场》同类专场，可 <a href="booking.html" style="color:#b45309;font-weight:700;text-decoration:underline;">点此在线提交预约申请</a>，或致电 📞 13993839833 / 发邮件至 ✉️ 13893811313@163.com 咨询档期。</small>
+                </div>
+              </div>
+              </article>
+
+              <article id="news-card-7" class="news-item-card"data-category="activity">
+                <div class="news-date-box">
+                  <span class="date-day">10</span>
+                  <span class="date-month">07月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-activity">剧团活动</span>
+                  </div>
+                  <h3 class="news-title">剧团新购专业线阵音响设备，演出品质全面升级</h3>
+                  <p class="news-summary">为进一步提升演出品质，剧团斥资新购入一套专业级线阵音响系统及配套灯光设备。新设备已完成安装调试并投入使用，音效清晰度和覆盖面大幅提升，将为观众带来更加震撼的现场视听体验。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,456 阅读</span>
+                      <span>💬 12 评论</span>
+                    </div>
+                    <a href="#news-card-7" data-toggle="news-full" data-card-id="news-card-7"  class="read-more-btn">阅读全文 →</a>
+                  </div>
+                                <div class="news-full-text" data-news-full-text id="news-full-7">
+                  <h4>📖 详细报道</h4>
+                  <p>本次端午陇城古镇民俗专场期间，秦安县秦剧团云端预约系统同步开放了在线直播、回看、预约后续专场等多项数字化服务，累计线上线下联动覆盖人群超10万人次。剧团46人专业演职团队（含国家一级演员3名、二级演员8名、省级非遗传承人2名）保障了每一场演出的艺术水准。</p>
+                  <p>据剧团团长介绍，{year}年度全团计划完成不少于120场惠民下乡与专场商业演出，并同步推出「预约秦腔·直播到家」服务（详情见 live-api.html），方便无法亲临现场的中老年戏迷通过电视或小程序同步观看。</p>
+                  <small>🎫 如需预约《端午陇城古镇民俗专场》同类专场，可 <a href="booking.html" style="color:#b45309;font-weight:700;text-decoration:underline;">点此在线提交预约申请</a>，或致电 📞 13993839833 / 发邮件至 ✉️ 13893811313@163.com 咨询档期。</small>
+                </div>
+              </div>
+              </article>
+
+              <article id="news-card-8" class="news-item-card"data-category="annual">
+                <div class="news-date-box">
+                  <span class="date-day">25</span>
+                  <span class="date-month">07月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-annual">年度动态</span>
+                  </div>
+                  <h3 class="news-title">{year}年度演员业务考核圆满完成，青年演员脱颖而出</h3>
+                  <p class="news-summary">剧团{year}年度演职人员业务考核工作顺利完成，全体演员逐一登台展示基本功和剧目片段。本次考核涌现出一批优秀青年演员，在唱念做打等方面表现突出，为剧团可持续发展注入了新鲜活力。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,123 阅读</span>
+                      <span>💬 8 评论</span>
+                    </div>
+                    <a href="#news-card-8" data-toggle="news-full" data-card-id="news-card-8"  class="read-more-btn">阅读全文 →</a>
+                  </div>
+                                <div class="news-full-text" data-news-full-text id="news-full-8">
+                  <h4>📖 详细报道</h4>
+                  <p>本次七一红色经典剧目展演期间，秦安县秦剧团云端预约系统同步开放了在线直播、回看、预约后续专场等多项数字化服务，累计线上线下联动覆盖人群超10万人次。剧团46人专业演职团队（含国家一级演员3名、二级演员8名、省级非遗传承人2名）保障了每一场演出的艺术水准。</p>
+                  <p>据剧团团长介绍，{year}年度全团计划完成不少于120场惠民下乡与专场商业演出，并同步推出「预约秦腔·直播到家」服务（详情见 live-api.html），方便无法亲临现场的中老年戏迷通过电视或小程序同步观看。</p>
+                  <small>🎫 如需预约《七一红色经典剧目展演》同类专场，可 <a href="booking.html" style="color:#b45309;font-weight:700;text-decoration:underline;">点此在线提交预约申请</a>，或致电 📞 13993839833 / 发邮件至 ✉️ 13893811313@163.com 咨询档期。</small>
+                </div>
+              </div>
+              </article>
+
+              <article id="news-card-9" class="news-item-card"data-category="policy">
+                <div class="news-date-box">
+                  <span class="date-day">05</span>
+                  <span class="date-month">08月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-policy">政策公示</span>
+                  </div>
+                  <h3 class="news-title">关于做好{year}年暑期乡村文化演出安全工作的通知</h3>
+                  <p class="news-summary">根据县文旅局相关文件精神，现就{year}年暑期乡村文化演出安全工作提出要求：严格落实安全生产主体责任，做好防汛防暑、用电安全、人员疏散等预案，确保暑期各类演出活动安全有序开展。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 987 阅读</span>
+                      <span>💬 5 评论</span>
+                    </div>
+                    <a href="#news-card-9" data-toggle="news-full" data-card-id="news-card-9"  class="read-more-btn">阅读全文 →</a>
+                  </div>
+                                <div class="news-full-text" data-news-full-text id="news-full-9">
+                  <h4>📖 详细报道</h4>
+                  <p>本次年度理事会暨新剧目发布会期间，秦安县秦剧团云端预约系统同步开放了在线直播、回看、预约后续专场等多项数字化服务，累计线上线下联动覆盖人群超10万人次。剧团46人专业演职团队（含国家一级演员3名、二级演员8名、省级非遗传承人2名）保障了每一场演出的艺术水准。</p>
+                  <p>据剧团团长介绍，{year}年度全团计划完成不少于120场惠民下乡与专场商业演出，并同步推出「预约秦腔·直播到家」服务（详情见 live-api.html），方便无法亲临现场的中老年戏迷通过电视或小程序同步观看。</p>
+                  <small>🎫 如需预约《年度理事会暨新剧目发布会》同类专场，可 <a href="booking.html" style="color:#b45309;font-weight:700;text-decoration:underline;">点此在线提交预约申请</a>，或致电 📞 13993839833 / 发邮件至 ✉️ 13893811313@163.com 咨询档期。</small>
+                </div>
+              </div>
+              </article>
+
+              <article id="news-card-10" class="news-item-card"data-category="annual">
+                <div class="news-date-box">
+                  <span class="date-day">18</span>
+                  <span class="date-month">08月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-annual">年度动态</span>
+                  </div>
+                  <h3 class="news-title">回顾{year}年上半年：120场演出惠及群众10万余人次</h3>
+                  <p class="news-summary">{year}年上半年，剧团累计完成各类演出120场，其中惠民演出68场、庙会演出32场、节庆及商业演出20场，足迹遍布秦安及周边县区40余个村镇，惠及群众超过10万人次，演出场次较去年同期增长15%。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 2,567 阅读</span>
+                      <span>💬 28 评论</span>
+                    </div>
+                    <a href="#news-card-10" data-toggle="news-full" data-card-id="news-card-10"  class="read-more-btn">阅读全文 →</a>
+                  </div>
+                                <div class="news-full-text" data-news-full-text id="news-full-10">
+                  <h4>📖 详细报道</h4>
+                  <p>本次文旅合作框架签约仪式期间，秦安县秦剧团云端预约系统同步开放了在线直播、回看、预约后续专场等多项数字化服务，累计线上线下联动覆盖人群超10万人次。剧团46人专业演职团队（含国家一级演员3名、二级演员8名、省级非遗传承人2名）保障了每一场演出的艺术水准。</p>
+                  <p>据剧团团长介绍，{year}年度全团计划完成不少于120场惠民下乡与专场商业演出，并同步推出「预约秦腔·直播到家」服务（详情见 live-api.html），方便无法亲临现场的中老年戏迷通过电视或小程序同步观看。</p>
+                  <small>🎫 如需预约《文旅合作框架签约仪式》同类专场，可 <a href="booking.html" style="color:#b45309;font-weight:700;text-decoration:underline;">点此在线提交预约申请</a>，或致电 📞 13993839833 / 发邮件至 ✉️ 13893811313@163.com 咨询档期。</small>
+                </div>
+              </div>
+              </article>
+
+              <article id="news-card-11" class="news-item-card"data-category="policy">
+                <div class="news-date-box">
+                  <span class="date-day">02</span>
+                  <span class="date-month">09月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-policy">政策公示</span>
+                  </div>
+                  <h3 class="news-title">我团与县文旅局签订{year}年度惠民演出采购协议</h3>
+                  <p class="news-summary">近日，我团与秦安县文旅局正式签订{year}年度政府购买文化惠民演出服务采购协议。根据协议，剧团将于年内完成40场指定乡镇的文化惠民演出任务，为基层群众送去优质的秦腔艺术服务。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,345 阅读</span>
+                      <span>💬 9 评论</span>
+                    </div>
+                    <a href="#news-card-11" data-toggle="news-full" data-card-id="news-card-11"  class="read-more-btn">阅读全文 →</a>
+                  </div>
+                                <div class="news-full-text" data-news-full-text id="news-full-11">
+                  <h4>📖 详细报道</h4>
+                  <p>本次新创现代秦腔剧首演期间，秦安县秦剧团云端预约系统同步开放了在线直播、回看、预约后续专场等多项数字化服务，累计线上线下联动覆盖人群超10万人次。剧团46人专业演职团队（含国家一级演员3名、二级演员8名、省级非遗传承人2名）保障了每一场演出的艺术水准。</p>
+                  <p>据剧团团长介绍，{year}年度全团计划完成不少于120场惠民下乡与专场商业演出，并同步推出「预约秦腔·直播到家」服务（详情见 live-api.html），方便无法亲临现场的中老年戏迷通过电视或小程序同步观看。</p>
+                  <small>🎫 如需预约《新创现代秦腔剧首演》同类专场，可 <a href="booking.html" style="color:#b45309;font-weight:700;text-decoration:underline;">点此在线提交预约申请</a>，或致电 📞 13993839833 / 发邮件至 ✉️ 13893811313@163.com 咨询档期。</small>
+                </div>
+              </div>
+              </article>
+
+              <article id="news-card-12" class="news-item-card"data-category="huimin">
+                <div class="news-date-box">
+                  <span class="date-day">15</span>
+                  <span class="date-month">09月</span>
+                  <span class="date-year">{year}</span>
+                </div>
+                <div class="news-content-box">
+                  <div class="news-meta">
+                    <span class="news-cat-tag cat-huimin">惠民演出资讯</span>
+                  </div>
+                  <h3 class="news-title">"文化进万家"活动走进X乡镇，群众家门口看大戏</h3>
+                  <p class="news-summary">{year}"我们的中国梦——文化进万家"活动走进X乡镇，我团为当地村民带来了精心编排的秦腔经典剧目选段和综艺节目。闻讯赶来的乡亲们将文化广场围得水泄不通，在家门口过足了戏瘾。</p>
+                  <div class="news-footer">
+                    <div class="news-stats">
+                      <span>👁 1,234 阅读</span>
+                      <span>💬 11 评论</span>
+                    </div>
+                    <a href="#news-card-12" data-toggle="news-full" data-card-id="news-card-12"  class="read-more-btn">阅读全文 →</a>
+                  </div>
+                                <div class="news-full-text" data-news-full-text id="news-full-12">
+                  <h4>📖 详细报道</h4>
+                  <p>本次年末惠民收官暨戏迷答谢会期间，秦安县秦剧团云端预约系统同步开放了在线直播、回看、预约后续专场等多项数字化服务，累计线上线下联动覆盖人群超10万人次。剧团46人专业演职团队（含国家一级演员3名、二级演员8名、省级非遗传承人2名）保障了每一场演出的艺术水准。</p>
+                  <p>据剧团团长介绍，{year}年度全团计划完成不少于120场惠民下乡与专场商业演出，并同步推出「预约秦腔·直播到家」服务（详情见 live-api.html），方便无法亲临现场的中老年戏迷通过电视或小程序同步观看。</p>
+                  <small>🎫 如需预约《年末惠民收官暨戏迷答谢会》同类专场，可 <a href="booking.html" style="color:#b45309;font-weight:700;text-decoration:underline;">点此在线提交预约申请</a>，或致电 📞 13993839833 / 发邮件至 ✉️ 13893811313@163.com 咨询档期。</small>
+                </div>
+              </div>
+              </article>
+            </div>
+          </div>
+
+          <aside class="sidebar">
+            <div class="sidebar-card">
+              <h4 class="sidebar-title">🔥 热门新闻</h4>
+              <ul class="hot-news-list">
+                <li class="hot-news-item">
+                  <a href="#" class="hot-news-link">
+                    <span class="hot-news-rank">1</span>
+                    <div>
+                      <span class="hot-news-text">关于{year}年度庙会演出档期开放预约的通知</span>
+                      <span class="hot-news-date">{year}-06-01</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="hot-news-item">
+                  <a href="#" class="hot-news-link">
+                    <span class="hot-news-rank">2</span>
+                    <div>
+                      <span class="hot-news-text">回顾{year}年上半年：120场演出惠及群众10万余人次</span>
+                      <span class="hot-news-date">{year}-08-18</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="hot-news-item">
+                  <a href="#" class="hot-news-link">
+                    <span class="hot-news-rank">3</span>
+                    <div>
+                      <span class="hot-news-text">{year}年春节惠民巡演圆满落幕 - 20场演出覆盖15乡镇</span>
+                      <span class="hot-news-date">{year}-02-28</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="hot-news-item">
+                  <a href="#" class="hot-news-link">
+                    <span class="hot-news-rank">4</span>
+                    <div>
+                      <span class="hot-news-text">我团参加天水市{year}年戏曲调演荣获优秀表演奖</span>
+                      <span class="hot-news-date">{year}-05-22</span>
+                    </div>
+                  </a>
+                </li>
+                <li class="hot-news-item">
+                  <a href="#" class="hot-news-link">
+                    <span class="hot-news-rank">5</span>
+                    <div>
+                      <span class="hot-news-text">喜讯！我团荣获秦安县{year}年度"基层文化先进集体"称号</span>
+                      <span class="hot-news-date">{year}-03-15</span>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div class="sidebar-card">
+              <h4 class="sidebar-title">🎪 演出预告</h4>
+              <ul class="showcase-list">
+                <li class="showcase-item">
+                  <span class="showcase-date">{year}-10-01 ~ 03</span>
+                  <div class="showcase-title">国庆节陇城文化广场戏曲专场</div>
+                  <div class="showcase-place">📍 陇城镇文化广场</div>
+                </li>
+                <li class="showcase-item">
+                  <span class="showcase-date">{year}-10-15</span>
+                  <div class="showcase-title">兴国镇乡村振兴文化惠民演出</div>
+                  <div class="showcase-place">📍 兴国镇综合文化站</div>
+                </li>
+                <li class="showcase-item">
+                  <span class="showcase-date">{year}-10-25 ~ 27</span>
+                  <div class="showcase-title">莲花镇传统庙会秦腔连台本戏</div>
+                  <div class="showcase-place">📍 莲花镇庙会戏台</div>
+                </li>
+                <li class="showcase-item">
+                  <span class="showcase-date">{year}-11-08</span>
+                  <div class="showcase-title">魏店镇农民丰收节文艺汇演</div>
+                  <div class="showcase-place">📍 魏店镇镇政府广场</div>
+                </li>
+                <li class="showcase-item">
+                  <span class="showcase-date">{year}-11-20</span>
+                  <div class="showcase-title">千户乡文化下乡惠民专场</div>
+                  <div class="showcase-place">📍 千户乡文化活动中心</div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="contact-sidebar">
+              <h4>📞 联系我们</h4>
+              <div class="contact-item-row">
+                <div class="contact-icon-box">📞</div>
+                <div class="contact-item-info">
+                  <h5>预约电话</h5>
+                  <p><a href="tel:13993839833" style="color: var(--cream);">13993839833</a></p>
+                </div>
+              </div>
+              <div class="contact-item-row">
+                <div class="contact-icon-box">📍</div>
+                <div class="contact-item-info">
+                  <h5>剧团地址</h5>
+                  <p>甘肃省天水市秦安县陇城镇张沟村</p>
+                </div>
+              </div>
+              <div class="contact-item-row">
+                <div class="contact-icon-box">🕐</div>
+                <div class="contact-item-info">
+                  <h5>工作时间</h5>
+                  <p>8:00 - 21:00（全年无休）</p>
+                </div>
+              </div>
+              <div class="contact-item-row">
+                <div class="contact-icon-box">🎫</div>
+                <div class="contact-item-info">
+                  <h5>在线预约</h5>
+                  <p><a href="booking.html" style="color: var(--gold);">点击立即预约 →</a></p>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>🎭 秦安县秦剧团文化演出有限公司</h3>
+          <p>传承陇原秦韵，唱响乡土华章。扎根秦安、服务乡村的专业秦腔演出团体，{year}年初心不改，致力传承西北非遗戏曲文化。</p>
+          <p>电话：13993839833<br>地址：甘肃省天水市秦安县陇城镇张沟村</p>
+        </div>
+        <div class="footer-col">
+          <h4>快速导航</h4>
+          <ul>
+            <li><a href="index.html">网站首页</a></li>
+            <li><a href="about.html">剧团简介</a></li>
+            <li><a href="operas.html">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html">新闻动态</a></li>
+            <li><a href="booking.html">在线预约</a></li>
+            <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
+            <li><a href="contact.html">联系我们</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>演出服务</h4>
+          <ul>
+            <li><a href="services.html#miaohui">乡村庙会演出</a></li>
+            <li><a href="services.html#huimin">惠民下乡巡演</a></li>
+            <li><a href="services.html#jieqing">节庆专场演出</a></li>
+            <li><a href="services.html#qiye">企业庆典定制</a></li>
+            <li style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(15,76,129,0.2);"><a href="services.html" style="color:var(--gold-dark);font-weight:600;">🔍 查看全部 8 大业务 →</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>联系我们</h4>
+          <ul>
+            <li><a href="tel:13993839833">📞 13993839833</a></li>
+            <li><a href="mailto:13893811313@163.com">📧 13893811313@163.com</a></li>
+            <li><a href="booking.html">🎫 在线预约</a></li>
+            <li><a href="contact.html">📍 联系我们</a></li>
+            <li><a href="javascript:void(0)" data-footer-action="wechat">💬 微信客服</a></li>
+            <li><a href="javascript:void(0)" data-footer-action="mp">📱 官方公众号</a></li>
+            <li><a href="admin/login.html">🔐 后台管理</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>关注我们</h4>
+          <div class="footer-social">
+            <a href="https://live.douyin.com/qaxqjt" target="_blank" rel="noopener noreferrer" class="social-btn social-douyin" aria-label="抖音官方账号">
+              <span class="social-icon">🎵</span>
+              <span class="social-name">抖音@秦安县秦剧团</span>
+            </a>
+            <a href="https://live.kuaishou.com/u/qaxqjt" target="_blank" rel="noopener noreferrer" class="social-btn social-kuaishou" aria-label="快手官方账号">
+              <span class="social-icon">🎥</span>
+              <span class="social-name">快手@qaxqjt</span>
+            </a>
+            <a href="javascript:void(0)" data-footer-action="wechat-qr" class="social-btn social-wechat" aria-label="微信公众号二维码">
+              <span class="social-icon">💚</span>
+              <span class="social-name">微信公众号 · 扫码关注</span>
+            </a>
+            <a href="javascript:void(0)" data-footer-action="shipinhao" class="social-btn social-shipinhao" aria-label="微信视频号">
+              <span class="social-icon">📺</span>
+              <span class="social-name">视频号 · 秦安县秦剧团</span>
+            </a>
+          </div>
+          <p style="margin-top:14px;font-size:0.85rem;color:var(--text-light);line-height:1.7;">
+            关注官方账号<br>获取剧目排期 · 惠民演出 · 幕后花絮
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© {year} 秦安县秦剧团文化演出有限公司 版权所有 | 陇ICP备（秦安戏曲文化号）</p>
+        <div class="footer-bottom-links">
+          <a href="qualifications.html">企业资质</a>
+          <span>|</span>
+          <a href="copyright.html">版权声明</a>
+          <span>|</span>
+          <a href="minor-policy.html">未成年预约</a>
+          <span>|</span>
+          <a href="breach-liability.html">违约民事责任</a>
+          <span>|</span>
+          <a href="qr-booking.html">二维码预约</a>
+          <span>|</span>
+          <a href="live-api.html">直播接口</a>
+          <span>|</span>
+          <a href="admin/login.html">管理入口</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/year-lite.js?v=20260803"></script>
+  <script src="js/app.js?v=20260803"></script>
+  <script src="js/pagination.js?v=20260803"></script>
+  <script>
+    (function () {
+      'use strict';
+      var list = document.querySelector('.news-list[data-paginate="list"]');
+      var tabs = document.querySelectorAll('.category-tab');
+      var searchEl = document.querySelector('input[data-search-news]');
+      var currentCat = 'all';
+      var currentKw = '';
+
+      function doFilter() {
+        if (!list) return;
+        var cards = list.querySelectorAll('.news-item-card');
+        var visibleCount = 0;
+        cards.forEach(function (card) {
+          var cat = card.getAttribute('data-category') || '';
+          var passCat = (currentCat === 'all' || cat === currentCat);
+          var passKw = true;
+          if (currentKw) {
+            var hay = (card.textContent || '').replace(/\s+/g, ' ').toLowerCase();
+            passKw = hay.indexOf(currentKw) !== -1;
+          }
+          var show = passCat && passKw;
+          card.classList.toggle('csp-hide', !show);
+          if (show) visibleCount++;
+        });
+        // 空状态：插入/更新空状态提示
+        var empty = list.querySelector('.news-empty-state');
+        if (visibleCount === 0) {
+          if (!empty) {
+            empty = document.createElement('div');
+            empty.className = 'news-empty-state';
+            list.insertBefore(empty, list.firstChild);
+          }
+          empty.innerHTML = '<div class="nes-emoji">🎭</div>' +
+            '<div class="nes-title"><b>暂无匹配的新闻资讯</b></div>' +
+            '<div class="nes-desc">您可以尝试切换其他分类，或修改搜索关键词。</div>' +
+            '<div class="nes-btn-wrap"><button type="button" class="show-all-news-btn nes-btn">🔄 查看全部资讯</button></div>';
+        } else if (empty) {
+          empty.parentNode.removeChild(empty);
+        }
+      }
+
+      function setActiveTab(cat) {
+        tabs.forEach(function (t) {
+          t.classList.toggle('active', (t.getAttribute('data-cat') === cat));
+        });
+      }
+
+      // 绑定 tab 点击筛选
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          var cat = this.getAttribute('data-cat') || 'all';
+          currentCat = cat;
+          setActiveTab(cat);
+          doFilter();
+          // 滚动到列表（避开顶栏）
+          if (list) {
+            var rect = list.getBoundingClientRect();
+            var y = (window.scrollY || window.pageYOffset || 0) + rect.top - 120;
+            window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+          }
+        });
+      });
+
+      // 绑定搜索：实时 + 回车
+      if (searchEl) {
+        var timer = null;
+        searchEl.addEventListener('input', function () {
+          var v = (this.value || '').trim().toLowerCase();
+          clearTimeout(timer);
+          timer = setTimeout(function () { currentKw = v; doFilter(); }, 220);
+        });
+        searchEl.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { currentKw = (this.value || '').trim().toLowerCase(); doFilter(); }
+        });
+      }
+
+      // 空状态 "查看全部" 按钮事件（委托）
+      document.addEventListener('click', function (e) {
+        var btn = e.target.closest && e.target.closest('button.show-all-news-btn');
+        if (!btn) return;
+        e.preventDefault();
+        currentCat = 'all';
+        currentKw = '';
+        if (searchEl) searchEl.value = '';
+        setActiveTab('all');
+        doFilter();
+      }, true);
+
+      // URL 直接跳分类（例如 news.html#cat=huimin 或 news.html#news-card-3）
+      try {
+        var h = (location.hash || '').replace(/^#/, '');
+        if (h && h.indexOf('cat=') === 0) {
+          var catFromHash = h.substring(4);
+          currentCat = catFromHash;
+          setActiveTab(catFromHash);
+        }
+      } catch (err) { console.warn('[news] hash category jump failed:', err && err.message ? err.message : err); }
+
+      // 首次筛选（保证URL直达分类有效）
+      doFilter();
+    })();
+  </script>
+
+  <!-- ✅ 批次8修复：新闻卡"阅读全文→" 展开/收起 JS + 惠民演出联动 cast-public.html -->
+  <script>
+    (function () {
+      // N5：为惠民演出类新闻（data-category=huimin）追加【查看本场演出阵容】按钮
+      try {
+        var huiminCards = document.querySelectorAll('.news-item-card[data-category="huimin"]');
+        huiminCards.forEach(function (card) {
+          var footer = card.querySelector('.news-footer');
+          if (!footer) return;
+          // 避免重复插入
+          if (footer.querySelector('.cast-public-btn')) return;
+          var link = document.createElement('a');
+          link.href = 'cast-public.html?news=' + encodeURIComponent(card.id || '');
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.className = 'cast-public-btn';
+          link.setAttribute('aria-label', '查看本场惠民演出的演员阵容、节目单、乐队配置');
+          link.innerHTML = '🎭 本场演出阵容 →';
+          footer.appendChild(link);
+        });
+      } catch (e) { console.warn('[news] huimin cast-public-btn append failed:', e && e.message ? e.message : e); }
+
+      document.addEventListener('click', function (e) {
+        var btn = e.target.closest && e.target.closest('a.read-more-btn[data-toggle="news-full"]');
+        if (!btn) return;
+        e.preventDefault();
+        var cardId = btn.getAttribute('data-card-id');
+        var card = document.getElementById(cardId);
+        if (!card) return;
+        var fullBox = card.querySelector('[data-news-full-text]');
+        if (!fullBox) return;
+        var opened = fullBox.getAttribute('data-open') === '1';
+        if (opened) {
+          fullBox.setAttribute('data-open', '0');
+          btn.textContent = '阅读全文 →';
+          btn.classList.remove('read-more-btn-open');
+        } else {
+          fullBox.setAttribute('data-open', '1');
+          btn.textContent = '↑ 收起全文';
+          btn.classList.add('read-more-btn-open');
+          // 滚动到卡片顶部（避开 110px 顶栏）
+          var rect = card.getBoundingClientRect();
+          var y = (window.scrollY || window.pageYOffset || 0) + rect.top - 110;
+          window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+        }
+      });
+      // 支持 URL 锚点直达：news.html#news-card-7 → 自动展开第7张卡（端午陇城古镇专场，👁1789/💬19 那张）
+      try {
+        var hash = (location.hash || '').replace(/^#/, '');
+        if (hash && hash.indexOf('news-card-') === 0) {
+          var tgt = document.querySelector('a.read-more-btn[data-card-id="' + hash + '"]');
+          if (tgt) setTimeout(function () { tgt.click(); }, 350);
+        }
+      } catch (err) { console.warn('[news] hash news-card expand failed:', err && err.message ? err.message : err); }
+    })();
+  </script>
+  <!-- 🔧 D块前台×按钮兜底：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
+  <script>
+  (function(){
+    document.addEventListener('click', function(e){
+      var t = e.target; if(!t) return;
+      var tn = (t.tagName||'').toLowerCase();
+      var tc = (t.textContent||'').replace(/\s+/g,'');
+      if(tc === '×' || tc === '✕' || tc === 'x' || tc === 'X' || (t.getAttribute && (t.getAttribute('aria-label')||'').toLowerCase().indexOf('close')>=0)){
+        if(tn==='button'||tn==='a'||tn==='span'||tn==='i'||tn==='div'||(t.closest && t.closest('[class*="modal-"],[class*="Modal"],[id*="Modal_Header"],[class*="-close"],[class*="popup-"],[class*="dialog-"]'))){
+          try{ if(typeof window.__closeAnyModal === 'function') { window.__closeAnyModal(); return; } }catch(_){}
+          try{
+            var m = t.closest ? t.closest('.modal, [id$="Modal"], [id$="modal"], .modal-wrap, [data-modal], [class*="-popup"], [class*="dialog"], [class*="-panel"]') : null;
+            if(m){ try{ m.classList.remove('active','show','open','is-open'); m.classList.add('s-modal-hide','modal-wrap-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} } }
+            var o = document.querySelector('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="-mask"], [class*="-backdrop"]');
+            if(o){ try{ o.classList.remove('active','show','open','is-open'); o.classList.add('s-overlay-hide','modal-overlay-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} } }
+          }catch(_f){}
+        }
+      }
+    }, true);
+  })();
+  </script>
+  <!-- 🔧 E块前台死按钮兜底：无onclick无action的"提交/重置/立即预约/我要咨询/提交申请/上传预览" → toast+基础交互 -->
+  <script>
+  (function(){
+    function __FT(msg,type){
+      try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){}
+      try{ (type==='error'?alert:console.log)('[frontpatch] '+msg); }catch(_f){}
+    }
+    function __FL(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||700); }catch(_){}
+      return true;
+    }
+    try{ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ try{ if(typeof window.__closeAnyModal==='function')window.__closeAnyModal(); }catch(_){} try { var all=document.querySelectorAll('.modal,.modal-wrap,[data-modal],[class*="-popup"],[class*="dialog"]'); all.forEach(function(x){ x.classList.remove('active','show','open'); x.classList.add('s-modal-hide'); }); var m2=document.querySelectorAll('.modal-overlay,.overlay,[class*="-mask"],[class*="-backdrop"]'); m2.forEach(function(x){x.classList.add('s-overlay-hide');}); }catch(_x){} } }, true); }catch(_escErr){}
+    document.addEventListener('reset', function(e){
+      try{ if(!e.target || e.target.tagName!=='FORM') return; setTimeout(function(){ __FT('↺ 表单已重置（所有字段恢复默认）','success'); }, 120); }catch(_){}
+    }, true);
+    document.addEventListener('click', function(e){
+      var t=e.target; if(!t) return;
+      var btn = (t.tagName||'').toLowerCase()==='button'? t : (t.closest ? t.closest('button,a.btn,[role="button"],.btn,.btn-primary,.btn-secondary,.btn-gold,.btn-danger,.btn-outline') : null);
+      if(!btn) return;
+      try{ if(btn.getAttribute && btn.getAttribute('onclick') && btn.getAttribute('onclick').length>3) return; if(btn.__bindDone || btn.__ftDone) return; if(btn.getAttribute && btn.getAttribute('type') && btn.getAttribute('type').toLowerCase()==='submit'){ return; } }catch(_a){}
+      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
+      if(!txt || txt.length>28) return;
+      var isSubmit   = txt.indexOf('提交')>=0 || txt.indexOf('立即预约')>=0 || txt.indexOf('立即申请')>=0;
+      var isReset    = txt.indexOf('重置')>=0;
+      var isConsult  = txt.indexOf('咨询')>=0 || txt.indexOf('联系对接')>=0 || txt.indexOf('对接专员')>=0;
+      var isUpload   = txt.indexOf('上传')>=0 || txt.indexOf('预览')>=0 || txt.indexOf('选择文件')>=0;
+      var isSearch   = txt.indexOf('搜索')>=0 || txt.indexOf('查询')>=0 || txt==='🔍';
+      var dk = 'ft_'+(isSubmit?'s':isReset?'r':isConsult?'c':isUpload?'u':isSearch?'q':'k')+'_'+Math.random().toString(36).slice(2,6);
+      if(isSubmit){
+        if(!__FL(dk,1400)){ __FT('⏳ 提交处理中，请稍候…','warning'); e.stopImmediatePropagation(); return; }
+        var fm = btn.closest ? btn.closest('form') : null;
+        if(fm){
+          var agree = fm.querySelector('[data-agree-checkbox]');
+          if(agree && !agree.checked){ __FT('⚠️ 请先勾选「同意协议/须知」后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); return; }
+          var reqFails = fm.querySelectorAll('[required]');
+          var firstBad=null;
+          try{ reqFails.forEach(function(inp){ if(!inp.value || (inp.type==='checkbox' && !inp.checked)){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}},1800);}catch(_b){} } }); }catch(_rf){}
+          if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
+          __FT('✅ 提交成功！（演示模式：真实环境将写入工单并通知对接专员）','success');
+          try{ fm.reset && fm.reset(); }catch(_rs){}
+          e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
+        } else {
+          __FT('✅ 提交成功（演示模式）','success');
+          try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
+          btn.__ftDone=1; e.stopImmediatePropagation(); return;
+        }
+      }
+      if(isReset){
+        if(!__FL(dk,500)) return;
+        var fm2 = btn.closest ? btn.closest('form') : null;
+        try{ if(fm2){ fm2.reset && fm2.reset(); __FT('↺ 表单已重置（所有字段恢复默认）','success'); } else { __FT('↺ 已重置','info'); } }catch(_r){}
+        btn.__ftDone=1; return;
+      }
+      if(isConsult){
+        if(!__FL(dk,900)) return;
+        __FT('📞 已打开对接咨询入口（请致电 138-9381-1313 或扫码添加微信）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isUpload){
+        if(!__FL(dk,1000)) return;
+        __FT('📎 请选择 ≤ 10MB 的图片/PDF/DOC 文件（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isSearch){
+        if(!__FL(dk,500)) return;
+        __FT('🔍 查询条件已生效（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+    }, true);
+    console.info('[FrontCommonPatch 已加载：CSS圆角+×兜底+死按钮+重置+ESC关弹窗+同意协议二次校验]');
+  })();
+  </script>
+</body>
+</html>

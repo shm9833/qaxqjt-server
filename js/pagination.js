@@ -147,6 +147,13 @@
   QinPagination.prototype._renderBar = function (state) {
     var bar = document.createElement('div');
     bar.className = 'pagination-bar';
+    // —— ★ 全局无限延长修复：pagination-bar 双保险（即使没注入 CSS 也不会撑到 4690px 那种高度）
+    try {
+      bar.style.maxHeight = '180px';
+      bar.style.overflow = 'hidden';
+      bar.style.position = 'relative';
+      bar.style.minHeight = '0';
+    } catch (_s) {}
     bar.innerHTML =
       '<div class="pagination-bar-inner">' +
         '<div class="pagination-controls">' +
@@ -173,6 +180,16 @@
       '</div>';
 
     var self = this;
+    function getTotalPages(st) {
+      var total = self._getVisibleItems(st).length;
+      return Math.max(1, Math.ceil(total / st.pageSize));
+    }
+    function clampPage(st, page) {
+      var tp = getTotalPages(st);
+      if (page < 1) return 1;
+      if (page > tp) return tp;
+      return page;
+    }
     var ps = bar.querySelector('[data-page-size-select]');
     ps.value = String(state.pageSize);
     ps.addEventListener('change', function () {
@@ -195,32 +212,72 @@
       if (action === 'prev') {
         if (state.currentPage > 1) { state.currentPage--; self._refresh(state); }
       } else if (action === 'next') {
-        state.currentPage++; self._refresh(state);
+        var tp = getTotalPages(state);
+        if (state.currentPage < tp) { state.currentPage++; self._refresh(state); }
       } else if (num) {
-        state.currentPage = parseInt(num, 10); self._refresh(state);
+        state.currentPage = clampPage(state, parseInt(num, 10));
+        self._refresh(state);
       }
     });
 
     var jump = bar.querySelector('[data-page-jump]');
+    function doJump() {
+      var v = parseInt(jump.value, 10);
+      if (!v || v < 1) return;
+      state.currentPage = clampPage(state, v);
+      self._refresh(state);
+    }
     jump.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        var v = parseInt(jump.value, 10);
-        if (v && v >= 1) {
-          state.currentPage = v; self._refresh(state);
-        }
-      }
+      if (e.key === 'Enter') { e.preventDefault(); doJump(); }
     });
+    jump.addEventListener('blur', doJump);
 
     return bar;
   };
 
+  function isElementVisible(el) {
+    if (!el) return false;
+    var node = el;
+    while (node && node !== document.body && node.parentNode) {
+      var st = null;
+      try { st = window.getComputedStyle ? window.getComputedStyle(node, null) : node.style; } catch (e) { st = node.style; }
+      if (!st) { node = node.parentNode; continue; }
+      var disp = (st.display || node.style.display || '').toLowerCase();
+      var vis = (st.visibility || node.style.visibility || '').toLowerCase();
+      if (disp === 'none' || vis === 'hidden') return false;
+      node = node.parentNode;
+    }
+    return true;
+  }
+
   QinPagination.prototype._bindSearch = function (state) {
     var scope = state.container.closest('main, section, .admin-content, body') || document;
-    var input = scope.querySelector('input[data-search], .search-input, .admin-search input[type="text"], .filter-bar .search-box input, .admin-filter-bar input[placeholder*="搜索"]');
+    var selectors = 'input[data-search], .search-input, .admin-search input[type="text"], .filter-bar .search-box input, .admin-filter-bar input[placeholder*="搜索"]';
+    var input = null;
+    try {
+      var nodes = scope.querySelectorAll(selectors);
+      for (var k = 0; k < nodes.length; k++) {
+        if (isElementVisible(nodes[k])) { input = nodes[k]; break; }
+      }
+      if (!input) {
+        for (var k2 = 0; k2 < nodes.length; k2++) {
+          if (!nodes[k2].disabled) { input = nodes[k2]; break; }
+        }
+      }
+    } catch (e) {}
+    if (!input) {
+      try {
+        var fallbackNodes = document.querySelectorAll(selectors);
+        for (var kf = 0; kf < fallbackNodes.length; kf++) {
+          if (!fallbackNodes[kf].disabled) { input = fallbackNodes[kf]; break; }
+        }
+      } catch (e) {}
+    }
     if (!input) {
       try {
         var candidates = document.querySelectorAll('input[type="text"], input[type="search"]');
         for (var i = 0; i < candidates.length; i++) {
+          if (!isElementVisible(candidates[i])) continue;
           var ph = (candidates[i].placeholder || '').toLowerCase();
           if (ph.indexOf('搜索') >= 0 || ph.indexOf('search') >= 0) {
             input = candidates[i]; break;
@@ -240,7 +297,11 @@
 
   QinPagination.prototype._bindCategory = function (state) {
     var scope = state.container.closest('main, section, .admin-content, body') || document;
-    var btns = scope.querySelectorAll('.category-btn, .category-tab, .tab-item[data-tab], [data-tab-btn], .staff-tab, .inv-tab');
+    var selectors = '.category-btn, .category-tab, .tab-item[data-tab], [data-tab-btn], .staff-tab, .inv-tab';
+    var btns = scope.querySelectorAll(selectors);
+    if (btns.length === 0) {
+      try { btns = document.querySelectorAll(selectors); } catch (e) { btns = []; }
+    }
     if (btns.length === 0) return;
 
     function findActive() {
@@ -278,18 +339,37 @@
     var all = getDirectChildren(state.container);
     var keyword = state.searchKeyword;
     var self = this;
+    var resolveCat = function (el) {
+      var c = el.getAttribute('data-category') || el.getAttribute('data-tab-panel');
+      if (c) return c;
+      try {
+        var tag = el.querySelector('[class*="cat-"], .news-cat-tag, .opera-cat-tag, .cat-tag');
+        if (tag) {
+          var cls = tag.className || '';
+          var m = cls.match(/cat-([a-zA-Z0-9_-]+)/);
+          if (m) return m[1];
+        }
+      } catch (e) {}
+      return null;
+    };
     var filtered = all.filter(function (el) {
+      var isEmpty = el.classList && el.classList.contains('category-empty');
       if (keyword && !elementMatchesKeyword(el, keyword)) return false;
       if (state.categoryKey && state.categoryKey !== 'all') {
         var disp = el.style.display;
         if (disp === 'none' && !keyword) return false;
-        var catAttr = el.getAttribute('data-category') || el.getAttribute('data-tab-panel');
-        if (catAttr && catAttr !== state.categoryKey && state.categoryKey !== 'all') {
-          return false;
+        var catAttr = resolveCat(el);
+        if (isEmpty) {
+          if (catAttr && catAttr !== state.categoryKey) return false;
+        } else {
+          if (catAttr && catAttr !== state.categoryKey && state.categoryKey !== 'all') {
+            return false;
+          }
         }
       } else {
+        if (isEmpty) return false;
         if (el.style.display === 'none' && !keyword) {
-          var catAttr2 = el.getAttribute('data-category') || el.getAttribute('data-tab-panel');
+          var catAttr2 = resolveCat(el);
           if (catAttr2) return false;
         }
       }
@@ -301,6 +381,14 @@
   QinPagination.prototype._refresh = function (state) {
     var host = state.host;
     var all = getDirectChildren(state.container);
+    for (var ci = 0; ci < all.length; ci++) {
+      var cel = all[ci];
+      if (cel.hasAttribute('data-pagination-hidden')) {
+        cel.removeAttribute('data-pagination-hidden');
+      }
+      // B7 CSP合规：使用classList移除.pg-hidden替代style.display恢复
+      try { cel.classList.remove('pg-hidden'); } catch (_csp) {}
+    }
     var visible = this._getVisibleItems(state);
     var total = visible.length;
     var pageSize = state.pageSize;
@@ -313,29 +401,23 @@
 
     for (var i = 0; i < all.length; i++) {
       var el = all[i];
+      if (el._paginationOrigDisplay === undefined && !el.hasAttribute('data-pagination-hidden')) {
+        el._paginationOrigDisplay = true;  // 仅标记已初始化，不再存真实display值
+      }
       var inVisible = visible.indexOf(el) >= 0;
       var inPageRange = false;
       if (inVisible) {
         var vi = visible.indexOf(el);
         inPageRange = (vi >= startIdx && vi < endIdx);
       }
-      if (!inVisible) {
+      if (!inVisible || !inPageRange) {
         el.setAttribute('data-pagination-hidden', '1');
-        el.style.display = 'none';
-      } else if (!inPageRange) {
-        el.setAttribute('data-pagination-hidden', '1');
-        el.style.display = 'none';
+        // B7 CSP合规：添加.pg-hidden替代el.style.display='none'
+        try { el.classList.add('pg-hidden'); } catch (_csp) {}
       } else {
         el.removeAttribute('data-pagination-hidden');
-        if (el._paginationOrigDisplay !== undefined) {
-          el.style.display = el._paginationOrigDisplay;
-        } else {
-          if (el.tagName.toLowerCase() === 'tr') {
-            el.style.display = '';
-          } else {
-            el.style.display = '';
-          }
-        }
+        // B7 CSP合规：移除.pg-hidden替代el.style.display=''
+        try { el.classList.remove('pg-hidden'); } catch (_csp) {}
       }
     }
 
@@ -348,6 +430,7 @@
 
   QinPagination.prototype._renderNumbers = function (state, totalPages) {
     var wrap = state.bar.querySelector('[data-page-numbers]');
+    if (!wrap) return;
     wrap.innerHTML = '';
     var cur = state.currentPage;
     var maxShow = 7;
@@ -387,6 +470,7 @@
 
   QinPagination.prototype._renderInfo = function (state, total, startIdx, endIdx) {
     var info = state.bar.querySelector('[data-page-info]');
+    if (!info) return;
     if (total === 0) {
       info.textContent = '暂无数据';
     } else {
@@ -416,7 +500,8 @@
       for (var j = 0; j < all.length; j++) {
         if (all[j].getAttribute('data-pagination-hidden') === '1') {
           all[j].removeAttribute('data-pagination-hidden');
-          all[j].style.display = '';
+          // B7 CSP合规：移除.pg-hidden替代all[j].style.display=''
+          try { all[j].classList.remove('pg-hidden'); } catch (_csp) {}
         }
       }
       s.container.removeAttribute('data-pagination-bound');

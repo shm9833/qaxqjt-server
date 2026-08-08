@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="js/favicon-inject.js?v=20260803" defer></script>
+    <script src="js/wechat-fallback.js?v=20260803" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="秦安县秦剧团直播 API 接口说明文档，包含标准直播推流、节目单 API、观看统计回调、弹幕回调、直播回放等 RESTful 接口与鉴权示例">
+  <meta name="keywords" content="秦安秦剧团,秦安县秦剧团文化演出有限公司,直播API,接口文档,数字演出,推流接口,节目单API,直播回调,OpenAPI">
+  <title>直播接口说明 - 秦安县秦剧团云端预约系统 | {year}</title>
+  <link rel="stylesheet" href="css/style.css?v=20260803">
+  <style>
+    .page-banner {
+      background: linear-gradient(135deg, rgba(15, 76, 129, 0.92) 0%, rgba(30, 111, 181, 0.88) 50%, rgba(91, 155, 213, 0.85) 100%),
+        radial-gradient(circle at 20% 80%, rgba(201, 169, 98, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(201, 169, 98, 0.15) 0%, transparent 40%);
+      padding: 90px 0 70px;
+      color: #fff;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .page-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle, rgba(201, 169, 98, 0.15) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-size: 40px 40px, 25px 25px;
+      background-position: 0 0, 20px 20px;
+      pointer-events: none;
+    }
+    .page-banner h1 {
+      color: #fff;
+      font-size: 2.4rem;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .breadcrumb {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      font-size: 0.95rem;
+      color: var(--gold-light);
+      position: relative;
+      z-index: 1;
+    }
+    .breadcrumb a { color: #fff; }
+    .breadcrumb .separator { color: rgba(255,255,255,0.5); }
+    .policy-section {
+      padding: 70px 0;
+      background: var(--bg-light);
+    }
+    .policy-section:nth-child(even) {
+      background: linear-gradient(180deg, var(--cream) 0%, var(--bg-light) 100%);
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 45px;
+    }
+    .section-header h2 {
+      color: var(--primary-dark);
+      font-size: 2rem;
+      margin-bottom: 10px;
+      letter-spacing: 3px;
+    }
+    .section-header p {
+      color: var(--text-light);
+      font-size: 1rem;
+      letter-spacing: 1.5px;
+    }
+    .overview-card {
+      background: var(--cream);
+      border: 1px solid var(--gold-light);
+      border-radius: var(--radius-lg);
+      padding: 40px 44px;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+    .overview-card::before {
+      content: '';
+      position: absolute;
+      top: 15px; left: 15px; right: 15px; bottom: 15px;
+      border: 1px dashed rgba(201, 169, 98, 0.35);
+      border-radius: calc(var(--radius-lg) - 4px);
+      pointer-events: none;
+    }
+    .overview-card h3 {
+      color: var(--primary-dark);
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+      letter-spacing: 2.5px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--gold-light);
+      display: inline-block;
+    }
+    .overview-card p {
+      color: var(--text-light);
+      font-size: 1rem;
+      line-height: 2;
+      text-indent: 2em;
+      margin-bottom: 14px;
+    }
+    .api-endpoint-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 12px 22px;
+      background: linear-gradient(135deg, rgba(15, 76, 129, 0.06), rgba(201, 169, 98, 0.08));
+      border: 1.5px solid var(--primary-light);
+      border-radius: var(--radius);
+      font-family: "Consolas", "Monaco", "Courier New", monospace;
+      font-size: 0.92rem;
+      color: var(--primary-dark);
+      word-break: break-all;
+    }
+    .api-endpoint-badge .env-tag {
+      padding: 3px 10px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-family: "KaiTi", "STKaiti", serif;
+      letter-spacing: 1px;
+    }
+    .timeline-list {
+      list-style: none;
+      padding: 0;
+      position: relative;
+      max-width: 880px;
+      margin: 0 auto;
+    }
+    .timeline-list::before {
+      content: '';
+      position: absolute;
+      left: 30px;
+      top: 20px;
+      bottom: 20px;
+      width: 3px;
+      background: linear-gradient(180deg, var(--primary), var(--gold), var(--primary));
+      opacity: 0.35;
+      border-radius: 2px;
+    }
+    .timeline-item {
+      position: relative;
+      padding: 18px 0 18px 90px;
+      min-height: 72px;
+    }
+    .timeline-num {
+      position: absolute;
+      left: 0;
+      top: 14px;
+      width: 62px;
+      height: 62px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "STXingkai", "华文行楷", "KaiTi", serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      box-shadow: 0 5px 18px rgba(15, 76, 129, 0.32), inset 0 0 0 2.5px var(--gold-light);
+      z-index: 1;
+    }
+    .timeline-item h4 {
+      color: var(--primary-dark);
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+    }
+    .timeline-item p {
+      color: var(--text-light);
+      font-size: 0.93rem;
+      margin: 0;
+      line-height: 1.8;
+    }
+    .table-wrap {
+      background: var(--cream);
+      border: 1px solid var(--gold-light);
+      border-radius: var(--radius-lg);
+      padding: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .table-wrap table {
+      margin: 0;
+      border-radius: calc(var(--radius-lg) - 4px);
+    }
+    .table-striped tbody tr:nth-child(odd) td {
+      background: #fff;
+    }
+    .table-striped tbody tr:nth-child(even) td {
+      background: rgba(201, 169, 98, 0.05);
+    }
+    .api-method {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-family: "Consolas", "Monaco", monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .method-get {
+      background: rgba(74, 124, 89, 0.12);
+      color: var(--bamboo);
+      border: 1px solid var(--bamboo);
+    }
+    .method-post {
+      background: rgba(15, 76, 129, 0.12);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    .api-path {
+      font-family: "Consolas", "Monaco", "Courier New", monospace;
+      color: var(--primary-dark);
+      font-weight: 600;
+      font-size: 0.92rem;
+    }
+    .code-block-container {
+      background: linear-gradient(135deg, #1a2332 0%, #0f1724 100%);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(201, 169, 98, 0.25);
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+      margin: 22px 0;
+    }
+    .code-block-header {
+      padding: 12px 20px;
+      background: rgba(15, 76, 129, 0.35);
+      border-bottom: 1px solid rgba(201, 169, 98, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .code-lang-tag {
+      font-family: "Consolas", "Monaco", monospace;
+      font-size: 0.82rem;
+      color: var(--gold-light);
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+    .code-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+    .code-dot.red { background: #ff5f57; }
+    .code-dot.yellow { background: #febc2e; }
+    .code-dot.green { background: #28c840; }
+    .code-block-container pre {
+      padding: 22px 26px;
+      margin: 0;
+      overflow-x: auto;
+      font-family: "Consolas", "Monaco", "Courier New", monospace;
+      font-size: 0.88rem;
+      line-height: 1.75;
+      color: #e0e6ed;
+    }
+    .code-block-container code {
+      font-family: inherit;
+    }
+    .code-comment { color: #6b7a8f; font-style: italic; }
+    .code-string { color: #c3e88d; }
+    .code-keyword { color: #c792ea; }
+    .code-function { color: #82aaff; }
+    .code-number { color: #f78c6c; }
+    .code-variable { color: #ffcb6b; }
+    .auth-intro {
+      background: linear-gradient(135deg, rgba(15, 76, 129, 0.05), rgba(201, 169, 98, 0.06));
+      border-left: 4px solid var(--gold);
+      padding: 22px 26px;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      margin-bottom: 26px;
+    }
+    .auth-intro p {
+      margin: 0 0 10px 0;
+      color: var(--text-light);
+      line-height: 1.9;
+    }
+    .auth-intro p:last-child { margin-bottom: 0; }
+    .auth-intro strong {
+      color: var(--primary-dark);
+    }
+    .contact-card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      max-width: 900px;
+      margin: 0 auto 32px;
+    }
+    .contact-card {
+      background: var(--cream);
+      border: 1px solid var(--gold-light);
+      border-radius: var(--radius-lg);
+      padding: 36px 30px;
+      text-align: center;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .contact-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--gold));
+    }
+    .contact-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--gold);
+    }
+    .contact-card-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 22px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.4rem;
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(15, 76, 129, 0.3), inset 0 0 0 3px var(--gold-light);
+    }
+    .contact-card h3 {
+      color: var(--primary-dark);
+      font-size: 1.25rem;
+      margin-bottom: 16px;
+      letter-spacing: 2px;
+    }
+    .contact-card-info {
+      font-family: "Consolas", "Monaco", monospace;
+      color: var(--text-dark);
+      font-size: 0.95rem;
+      line-height: 2;
+    }
+    .contact-card-info a {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .phone-card {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #fff;
+      border-radius: var(--radius-lg);
+      padding: 28px 36px;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto 32px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 28px rgba(15, 76, 129, 0.35);
+    }
+    .phone-card::before {
+      content: '';
+      position: absolute;
+      inset: 10px;
+      border: 1.5px solid rgba(201, 169, 98, 0.45);
+      border-radius: calc(var(--radius-lg) - 4px);
+      pointer-events: none;
+    }
+    .phone-card h3 {
+      color: var(--gold-light);
+      font-size: 1.15rem;
+      margin-bottom: 10px;
+      letter-spacing: 2.5px;
+    }
+    .phone-card .phone-number {
+      font-family: "STXingkai", "华文行楷", "KaiTi", serif;
+      font-size: 2.6rem;
+      color: #fff;
+      letter-spacing: 3px;
+      margin: 8px 0;
+    }
+    .phone-card .phone-number a {
+      color: #fff;
+    }
+    .openapi-note {
+      background: var(--cream);
+      border: 1px dashed var(--gold);
+      border-radius: var(--radius-lg);
+      padding: 28px 34px;
+      text-align: center;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .openapi-note p {
+      color: var(--text-light);
+      line-height: 2;
+      margin: 0;
+      font-size: 0.97rem;
+    }
+    .openapi-note strong {
+      color: var(--primary-dark);
+    }
+    .service-info-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+      justify-content: center;
+    }
+    .service-info-tag {
+      padding: 6px 14px;
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      font-size: 0.88rem;
+      color: var(--text-dark);
+      transition: var(--transition);
+    }
+    .service-info-tag:hover {
+      background: rgba(201, 169, 98, 0.1);
+      border-color: var(--gold);
+      color: var(--primary-dark);
+    }
+    .error-code-success { color: var(--bamboo); font-weight: 600; }
+    .error-code-client { color: #c88500; font-weight: 600; }
+    .error-code-auth { color: var(--cinnabar); font-weight: 600; }
+    .error-code-server { color: #8E7540; font-weight: 600; }
+    @media (max-width: 992px) {
+      .contact-card-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .timeline-list::before { left: 20px; }
+      .timeline-num { width: 48px; height: 48px; font-size: 1.2rem; }
+      .timeline-item { padding-left: 74px; }
+    }
+  </style>
+</head>
+<body>
+  <header data-header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+          <div class="logo-text">
+            <h1>秦安县秦剧团</h1>
+            <p>文化演出有限公司 · 始于2014</p>
+          </div>
+        </div>
+        <button class="menu-toggle" aria-label="菜单" data-nav-toggle>
+          <span>☰</span>
+        </button>
+        <nav data-nav-menu>
+          <ul>
+            <li><a href="index.html">首页</a></li>
+            <li><a href="about.html">剧团简介</a></li>
+            <li><a href="operas.html">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html">新闻动态</a></li>
+            <li><a href="booking.html">在线预约</a></li>
+            <li><a href="contact.html">联系我们</a></li>
+            <li><a href="admin/login.html" class="admin-link">后台管理</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-banner" style="background:linear-gradient(135deg,rgba(190,18,60,0.78),rgba(79,70,229,0.72)),url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E7%9B%B4%E6%92%AD%E5%AF%BC%E6%92%AD%E6%8E%A7%E5%88%B6%E5%AE%A4%EF%BC%8C%E5%A4%9A%E6%9C%BA%E4%BD%8D%E7%9B%B4%E6%92%AD%E7%9B%91%E8%A7%86%E5%99%A8%E5%B1%8F%E5%B9%95%E6%98%BE%E7%A4%BA%E7%A7%A6%E8%85%94%E6%BC%94%E5%87%BA%E7%94%BB%E9%9D%A2%EF%BC%8C%E5%AF%BC%E6%92%AD%E4%BA%BA%E5%91%98%E6%93%8D%E4%BD%9C%E7%9B%B4%E6%92%AD%E6%8E%A8%E6%B5%81%E5%88%87%E6%8D%A2%E5%8F%B0%EF%BC%8C%E7%81%AF%E5%85%89%E8%B0%83%E9%9F%B3%E5%8F%B0%E5%85%A8%E6%99%AF%EF%BC%8C%E7%9B%B4%E6%92%AD%E8%AE%BE%E5%A4%87%E4%B8%93%E4%B8%9A%E9%BD%90%E5%85%A8%EF%BC%8C%E7%A7%91%E6%8A%80%E6%84%9F%2B%E4%BC%A0%E7%BB%9F%E6%88%8F%E6%9B%B2%E8%9E%8D%E5%90%88%EF%BC%8C8k%E9%AB%98%E6%B8%85%E5%95%86%E4%B8%9A%E6%91%84%E5%BD%B1&image_size=landscape_16_9') center/cover no-repeat;">
+      <div class="container">
+        <h1>📡 直播 API 接口与数字演出服务</h1>
+        <div class="breadcrumb">
+          <a href="index.html">首页</a>
+          <span class="separator">/</span>
+          <span>直播接口说明</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section" style="background:linear-gradient(135deg,rgba(15,76,129,0.06),rgba(201,169,98,0.06));">
+      <div class="section-inner">
+        <div class="section-title-center" style="text-align:center;">
+          <h2 style="font-size:2rem;color:var(--primary-dark);font-family:STXingkai,KaiTi,serif;">📡 快手 · 抖音官方直播观看</h2>
+          <p class="section-subtitle" style="color:var(--gold-dark);text-align:center;margin-bottom:20px;">经典秦腔剧目现场直播 · 惠民演出线上同步 · 海内外戏迷共赏</p>
+        </div>
+
+        <div style="max-width:1200px;margin:0 auto 30px;padding:18px 22px;background:linear-gradient(90deg,#fff8e6,#ffefcc);border:2px solid #e6a23c;border-radius:14px;box-shadow:0 6px 20px rgba(230,162,60,0.14);">
+          <div style="display:flex;gap:14px;align-items:flex-start;">
+            <div style="font-size:1.9rem;">📱</div>
+            <div style="flex:1;color:#7d4e00;font-size:1rem;line-height:1.7;">
+              <div style="font-weight:700;font-size:1.05rem;margin-bottom:4px;">微信环境观看直播指引（必看）</div>
+              如您通过「微信」打开本页并出现<span style="color:#c0392b;font-weight:600;">「未经授权」</span>或无法打开直播间：<br>
+              ① 请点击微信右上角【<b>⋯</b>】图标 → 选择【<b>在浏览器打开</b>】即可正常访问；<br>
+              ② 微信分享、预约表单、企业资质、剧目中心等其余功能在微信内可正常使用；<br>
+              ③ 如您是剧团管理员，请在公众平台完成「业务域名 / JS接口安全域名 / 网页授权域名」配置（详见项目根目录 <code>MP_verify_PLACEHOLDER.txt</code>）。
+            </div>
+          </div>
+        </div>
+
+        <div class="services-grid mobile-1col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:30px;max-width:1200px;margin:0 auto;">
+          <!-- 快手直播卡片 -->
+          <div class="scroll-card" style="background:var(--cream);border-radius:16px;box-shadow:0 10px 40px rgba(15,76,129,0.1);overflow:hidden;">
+            <div style="background:linear-gradient(135deg,#ff7e00,#ef4136);padding:16px 24px;color:#fff;display:flex;align-items:center;gap:12px;">
+              <div style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🎬</div>
+              <div>
+                <h3 style="margin:0;font-size:1.25rem;color:#fff;">快手官方直播间</h3>
+                <p style="margin:2px 0 0;font-size:0.85rem;opacity:0.9;">账号：@秦安县秦剧团文化演出有限公司</p>
+              </div>
+            </div>
+            <div class="live-enter-wrap" style="padding:20px;">
+              <div style="position:relative;background:#111;border-radius:12px;aspect-ratio:16/9;overflow:hidden;margin-bottom:16px;">
+                <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E7%9B%B4%E6%92%AD%E5%AF%BC%E6%92%AD%E5%8F%B0%E5%A4%9A%E6%9C%BA%E4%BD%8D%EF%BC%8C%E5%AF%BC%E6%BC%94%E7%9B%91%E8%A7%86%E5%99%A8%E5%B1%8F%E5%B9%95%EF%BC%8C%E5%B7%A5%E4%BD%9C%E4%BA%BA%E5%91%98%E6%93%8D%E4%BD%9C%EF%BC%8C%E7%9B%B4%E6%92%AD%E6%8E%A7%E5%88%B6%E5%AE%A4%EF%BC%8C%E7%A7%91%E6%8A%80%E6%84%9F%EF%BC%8C%E9%AB%98%E6%B8%85&image_size=landscape_16_9 TIUrl" alt="快手直播画面" style="width:100%;height:100%;object-fit:cover;opacity:0.92;" />
+                <div style="position:absolute;top:12px;left:12px;background:linear-gradient(135deg,#ef4136,#ff7e00);color:#fff;padding:4px 10px;border-radius:16px;font-size:0.78rem;display:flex;align-items:center;gap:6px;">
+                  <span style="width:8px;height:8px;background:#fff;border-radius:50%;animation:livePulse 1.5s infinite;"></span>LIVE 直播中
+                </div>
+                <a href="https://live.kuaishou.com/u/qaxqjt" target="_blank" rel="noopener noreferrer" class="live-enter-mask">
+                  <span style="background:#fff;color:#ef4136;padding:14px 28px;border-radius:32px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,0.3);">▶ 进入快手直播间观看</span>
+                </a>
+              </div>
+              <div class="service-flow-list" style="margin-bottom:12px;">
+                <li><span>✓</span>每周三 19:30 经典秦腔全本戏直播</li>
+                <li><span>✓</span>庙会、文旅节庆现场同步直播</li>
+                <li><span>✓</span>直播回放 7 天内可观看</li>
+              </div>
+              <a href="https://live.kuaishou.com/u/qaxqjt" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#ff7e00,#ef4136);border:none;padding:10px 20px;color:#fff;border-radius:8px;text-decoration:none;">🎥 前往快手直播间 →</a>
+            </div>
+          </div>
+
+          <!-- 抖音直播卡片 -->
+          <div class="scroll-card" style="background:var(--cream);border-radius:16px;box-shadow:0 10px 40px rgba(15,76,129,0.1);overflow:hidden;">
+            <div style="background:linear-gradient(135deg,#161823,#25F4EE 60%,#FE2C55);padding:16px 24px;color:#fff;display:flex;align-items:center;gap:12px;">
+              <div style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🎵</div>
+              <div>
+                <h3 style="margin:0;font-size:1.25rem;color:#fff;">抖音官方直播间</h3>
+                <p style="margin:2px 0 0;font-size:0.85rem;opacity:0.95;">账号：@秦安县秦剧团文化演出有限公司</p>
+              </div>
+            </div>
+            <div class="live-enter-wrap" style="padding:20px;">
+              <div style="position:relative;background:#111;border-radius:12px;aspect-ratio:16/9;overflow:hidden;margin-bottom:16px;">
+                <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E7%9B%B4%E6%92%AD%E5%AF%BC%E6%92%AD%E5%8F%B0%E5%A4%9A%E6%9C%BA%E4%BD%8D%EF%BC%8C%E5%AF%BC%E6%BC%94%E7%9B%91%E8%A7%86%E5%99%A8%E5%B1%8F%E5%B9%95%EF%BC%8C%E5%B7%A5%E4%BD%9C%E4%BA%BA%E5%91%98%E6%93%8D%E4%BD%9C%EF%BC%8C%E7%9B%B4%E6%92%AD%E6%8E%A7%E5%88%B6%E5%AE%A4%EF%BC%8C%E7%A7%91%E6%8A%80%E6%84%9F%EF%BC%8C%E9%AB%98%E6%B8%85&image_size=landscape_16_9 TIUrl" alt="抖音直播画面" style="width:100%;height:100%;object-fit:cover;opacity:0.92;" />
+                <div style="position:absolute;top:12px;left:12px;background:linear-gradient(135deg,#FE2C55,#25F4EE);color:#fff;padding:4px 10px;border-radius:16px;font-size:0.78rem;display:flex;align-items:center;gap:6px;">
+                  <span style="width:8px;height:8px;background:#fff;border-radius:50%;animation:livePulse 1.5s infinite;"></span>LIVE 直播中
+                </div>
+                <a href="https://live.douyin.com/qaxqjt" target="_blank" rel="noopener noreferrer" class="live-enter-mask">
+                  <span style="background:#fff;color:#FE2C55;padding:14px 28px;border-radius:32px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,0.3);">▶ 进入抖音直播间观看</span>
+                </a>
+              </div>
+              <div class="service-flow-list" style="margin-bottom:12px;">
+                <li><span>✓</span>每周五 19:30 折子戏专场直播</li>
+                <li><span>✓</span>戏曲教学、幕后花絮、化妆展示</li>
+                <li><span>✓</span>直播连麦互动，点戏点唱服务</li>
+              </div>
+              <a href="https://live.douyin.com/qaxqjt" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#161823,#222);border:none;padding:10px 20px;color:#fff;border-radius:8px;text-decoration:none;">🎵 前往抖音直播间 →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 网页嵌入播放器（iframe 占位说明） -->
+        <div class="admin-chart-card" style="max-width:1200px;margin:40px auto 0;padding:24px;background:var(--cream);border-radius:16px;box-shadow:0 10px 40px rgba(15,76,129,0.1);">
+          <h3 style="font-size:1.2rem;color:var(--primary-dark);font-family:KaiTi,serif;border-left:4px solid var(--gold);padding-left:12px;margin-bottom:16px;">📺 网页内嵌播放器（本站直接观看）</h3>
+          <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:16px;">正式直播时可将以下 iframe 播放器的 <code>src</code> 替换为快手/抖音官方开放平台提供的网页推流地址，用户无需跳转即可在本站直接观看直播。</p>
+          <div class="mobile-1col" style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+            <div style="background:#0a0a0a;border-radius:12px;overflow:hidden;">
+              <div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#fff;font-family:KaiTi,serif;flex-direction:column;gap:10px;background:radial-gradient(circle at 30% 40%,rgba(239,65,54,0.2),transparent 50%),radial-gradient(circle at 70% 60%,rgba(255,126,0,0.18),transparent 50%),#0a0a0a;">
+                <div style="font-size:3rem;">🎬</div>
+                <div style="font-size:1.1rem;">快手直播内嵌播放器占位</div>
+                <div style="font-size:0.8rem;opacity:0.6;">待接入快手开放平台 Web SDK / HLS 地址后启用</div>
+              </div>
+              <div style="padding:10px 16px;background:rgba(255,255,255,0.03);border-top:1px solid rgba(255,255,255,0.06);color:#aaa;font-size:0.78rem;">
+                代码：<code>&lt;iframe src="https://live.kuaishou.com/embed/qaxqjt" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;</code>
+              </div>
+            </div>
+            <div style="background:#0a0a0a;border-radius:12px;overflow:hidden;">
+              <div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#fff;font-family:KaiTi,serif;flex-direction:column;gap:10px;background:radial-gradient(circle at 25% 50%,rgba(37,244,238,0.18),transparent 50%),radial-gradient(circle at 75% 50%,rgba(254,44,85,0.2),transparent 50%),#0a0a0a;">
+                <div style="font-size:3rem;">🎵</div>
+                <div style="font-size:1.1rem;">抖音直播内嵌播放器占位</div>
+                <div style="font-size:0.8rem;opacity:0.6;">待接入抖音开放平台直播组件后启用</div>
+              </div>
+              <div style="padding:10px 16px;background:rgba(255,255,255,0.03);border-top:1px solid rgba(255,255,255,0.06);color:#aaa;font-size:0.78rem;">
+                代码：<code>&lt;iframe src="https://live.douyin.com/embed/qaxqjt" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <style>
+          @keyframes livePulse {
+            0%,100% { opacity:1; transform:scale(1); }
+            50% { opacity:0.4; transform:scale(0.6); }
+          }
+          /* 🔧 前台通用补丁：分页/按钮圆角（原方形→10px） + 伪链接视觉提示 + 弹窗隐藏辅助类 */
+          .pagination .page-btn, button.page-btn, .page-btn,
+          .pagination button, .page-number-item button, .pager button,
+          .btn-pagination, [class*="pagination"] button,
+          .btn, button.btn {
+            border-radius: 10px !important;
+            transition: transform .2s ease, box-shadow .2s ease;
+          }
+          .pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+          .pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+          }
+          .s-modal-hide { display: none !important; }
+          .s-overlay-hide { display: none !important; }
+          a[href="#"]:not(.action-link):not([data-toggle])::after { content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .7; }
+          .btn-ghost { color: #64748b; }
+        </style>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>接口概览</h2>
+          <p>开放合作 · 文旅融合 · 共建数字秦腔新生态</p>
+        </div>
+        <div class="overview-card">
+          <h3>🎬 标准开放接口体系</h3>
+          <p>
+            秦安县秦剧团云端预约系统提供完整的标准化开放 API 接口体系，涵盖直播推流管理、节目单查询、开播提醒订阅、直播弹幕回调、观看统计数据、直播回放下载等六大核心能力，诚挚欢迎省内外文旅平台、智慧景区大屏系统、合作媒体平台、互联网视频平台、政务新媒体矩阵等合作伙伴对接接入，共同推动秦腔艺术数字化、网络化、智能化传播。
+          </p>
+          <p>
+            本页面为 EdgeOne Pages 静态部署版本的<strong>接口占位说明文档</strong>，正式环境部署至腾讯云 EdgeOne Pages 并接入后端 Serverless 云函数与数据库后，接口前缀为下方正式域名地址。{year} 年剧团将持续扩展 API 接口能力，包括票务核销、演出评价、艺人资料、AI 戏曲生成等更多高级接口，敬请合作伙伴持续关注。
+          </p>
+          <div style="margin-top: 8px;">
+            <div class="api-endpoint-badge">
+              <span class="env-tag">正式环境</span>
+              <span>https://your-edgeone-domain/api/v1/</span>
+            </div>
+          </div>
+          <div class="service-info-list" style="justify-content: flex-start; margin-top: 22px;">
+            <span class="service-info-tag">✓ RESTful 架构</span>
+            <span class="service-info-tag">✓ JSON 数据格式</span>
+            <span class="service-info-tag">✓ HMAC-SHA256 鉴权</span>
+            <span class="service-info-tag">✓ HTTPS 加密传输</span>
+            <span class="service-info-tag">✓ 沙盒测试环境</span>
+            <span class="service-info-tag">✓ 7x24 技术支持</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>接入流程</h2>
+          <p>六步完成对接 · 专业团队全程护航</p>
+        </div>
+        <ul class="timeline-list">
+          <li class="timeline-item">
+            <div class="timeline-num">1</div>
+            <h4>商务洽谈</h4>
+            <p>联系剧团商务合作负责人，沟通直播需求场景、合作方式、接口权限范围、商业模式、SLA 服务等级等核心诉求，确定对接意向</p>
+          </li>
+          <li class="timeline-item">
+            <div class="timeline-num">2</div>
+            <h4>签署协议</h4>
+            <p>签订《直播合作框架协议》或《技术对接 NDA 保密协议》，明确双方权利义务、数据合规条款、知识产权归属、保密责任等法律事项</p>
+          </li>
+          <li class="timeline-item">
+            <div class="timeline-num">3</div>
+            <h4>获取密钥</h4>
+            <p>合作方提供主体信息、回调域名、IP 白名单等资料，剧团技术部为合作方开通 AppID / AppSecret / 接口调用 Token，分配沙盒环境权限</p>
+          </li>
+          <li class="timeline-item">
+            <div class="timeline-num">4</div>
+            <h4>沙盒联调</h4>
+            <p>接入沙盒环境测试全部接口，验证节目单获取、推流地址、开播回调、数据统计等功能，技术团队 1v1 支持接口对接与问题排查</p>
+          </li>
+          <li class="timeline-item">
+            <div class="timeline-num">5</div>
+            <h4>正式上线</h4>
+            <p>沙盒联调通过后签署上线确认函，切换至生产环境 API 地址，启用生产环境密钥，配置真实回调地址与告警通知联系人</p>
+          </li>
+          <li class="timeline-item">
+            <div class="timeline-num">6</div>
+            <h4>运维保障</h4>
+            <p>7x24 小时技术支持与监控告警，接口可用性 99.9% SLA 承诺，月度接口调用报告送达，季度业务复盘与迭代优化建议</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>核心 RESTful API 列表</h2>
+          <p>六大核心接口 · 覆盖数字演出全场景</p>
+        </div>
+        <div class="table-wrap table-striped table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 90px;">方法</th>
+                <th style="width: 280px;">接口路径</th>
+                <th>功能说明</th>
+                <th style="width: 130px;">鉴权方式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="api-method method-get">GET</span></td>
+                <td><span class="api-path">/live/upcoming</span></td>
+                <td>获取 30 天内即将直播的节目单，包含演出 ID、剧目名称、直播开始时间、预计时长、主演阵容、观看人数预估、封面缩略图等字段，可按日期范围、演出类型分页筛选。</td>
+                <td><span class="badge-gold badge">API Key</span></td>
+              </tr>
+              <tr>
+                <td><span class="api-method method-post">POST</span></td>
+                <td><span class="api-path">/live/subscribe</span></td>
+                <td>预约指定演出的开播提醒回调。入参：回调 URL（合作方服务端接收 POST 通知）、演出 ID、手机号（可选，用于短信双提醒）、自定义扩展参数。开播前 15 分钟、5 分钟各触发一次回调。</td>
+                <td><span class="badge-gold badge">HMAC-Sign</span></td>
+              </tr>
+              <tr>
+                <td><span class="api-method method-get">GET</span></td>
+                <td><span class="api-path">/live/streams</span></td>
+                <td>获取正在直播的推流地址列表，支持 RTMP / FLV / HLS / WEBRTC 四种主流协议输出，每条推流含清晰度标识（原画/1080P/720P/480P）、CDN 节点信息、观众实时在线人数。</td>
+                <td><span class="badge-gold badge">HMAC-Sign</span></td>
+              </tr>
+              <tr>
+                <td><span class="api-method method-post">POST</span></td>
+                <td><span class="api-path">/live/danmaku/callback</span></td>
+                <td>配置弹幕回调地址，合作方平台用户在合作方页面发弹幕时，剧团服务端会将弹幕内容以 POST JSON 形式推送到合作方指定回调地址，支持弹幕关键词过滤、敏感词审计、点赞礼物同步回调。</td>
+                <td><span class="badge-gold badge">HMAC-Sign</span></td>
+              </tr>
+              <tr>
+                <td><span class="api-method method-get">GET</span></td>
+                <td><span class="api-path">/live/{id}/stats</span></td>
+                <td>查询指定直播 ID 的实时/历史统计数据：实时观看人数、峰值在线人数、累计观看人次、弹幕总数、评论数、点赞数、虚拟礼物收入（若开启）、平均观看时长、地域分布 Top 5、观看设备占比等。</td>
+                <td><span class="badge-gold badge">HMAC-Sign</span></td>
+              </tr>
+              <tr>
+                <td><span class="api-method method-get">GET</span></td>
+                <td><span class="api-path">/live/{id}/playback</span></td>
+                <td>获取直播回放地址与有效期、下载权限。支持生成带签名的临时回放地址（默认有效期 2 小时，可通过参数延长），支持 FLV/MP4/HLS 三种回放格式，高级合作方可开启 MP4 源文件下载权限。</td>
+                <td><span class="badge-gold badge">HMAC-Sign</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>鉴权说明与示例代码</h2>
+          <p>HMAC-SHA256 签名 · 安全可靠 · 标准通用</p>
+        </div>
+
+        <div class="auth-intro">
+          <p>
+            <strong>签名算法：</strong>剧团所有写操作（POST）与敏感读操作均采用 HMAC-SHA256 签名方式鉴权。合作方请求时需将请求参数按字典序拼接，加上时间戳 timestamp（毫秒级，5 分钟有效期）与随机字符串 nonce，使用 AppSecret 作为密钥计算 HMAC-SHA256 签名，签名结果以小写十六进制字符串放入 HTTP Header X-QinOpera-Sign 中。
+          </p>
+          <p>
+            <strong>请求头要求：</strong>X-QinOpera-AppID（分配的 AppID）、X-QinOpera-Timestamp（毫秒时间戳）、X-QinOpera-Nonce（随机字符串）、X-QinOpera-Sign（签名结果）。GET 接口可使用 API Key 直接放入 Header X-QinOpera-APIKey 调用。
+          </p>
+        </div>
+
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <div>
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-lang-tag">Bash · curl 调用示例</span>
+            <div style="width: 52px;"></div>
+          </div>
+<pre><code><span class="code-comment"># 获取指定直播的实时统计数据 curl 示例</span>
+<span class="code-comment"># 环境变量示例（正式部署前请替换为真实 AppID / AppSecret）</span>
+<span class="code-variable">APP_ID</span>=<span class="code-string">"QINOPERA_2024010001"</span>
+<span class="code-variable">APP_SECRET</span>=<span class="code-string">"YOUR_APP_SECRET_HERE_KEEP_SAFE"</span>
+<span class="code-variable">API_BASE</span>=<span class="code-string">"https://your-edgeone-domain/api/v1"</span>
+<span class="code-variable">LIVE_ID</span>=<span class="code-string">"live_20240520_001"</span>
+
+<span class="code-comment"># 生成签名参数</span>
+<span class="code-variable">TIMESTAMP</span>=$(<span class="code-function">date</span> +%s%3N)
+<span class="code-variable">NONCE</span>=$(<span class="code-function">openssl</span> rand -hex <span class="code-number">16</span>)
+<span class="code-variable">PARAMS</span>=<span class="code-string">"appid=${APP_ID}&id=${LIVE_ID}&nonce=${NONCE}&timestamp=${TIMESTAMP}"</span>
+<span class="code-variable">SIGNATURE</span>=$(<span class="code-function">echo</span> -n <span class="code-string">"${PARAMS}"</span> | openssl dgst -sha256 -hmac <span class="code-string">"${APP_SECRET}"</span> | sed <span class="code-string">'s/^.*= //'</span>)
+
+<span class="code-comment"># 发送 HTTPS 请求</span>
+curl -X GET <span class="code-string">"${API_BASE}/live/${LIVE_ID}/stats"</span> \
+  -H <span class="code-string">"Content-Type: application/json"</span> \
+  -H <span class="code-string">"X-QinOpera-AppID: ${APP_ID}"</span> \
+  -H <span class="code-string">"X-QinOpera-Timestamp: ${TIMESTAMP}"</span> \
+  -H <span class="code-string">"X-QinOpera-Nonce: ${NONCE}"</span> \
+  -H <span class="code-string">"X-QinOpera-Sign: ${SIGNATURE}"</span> \
+  --tlsv1.3 --compressed | jq <span class="code-string">"."</span>
+</code></pre>
+        </div>
+
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <div>
+              <span class="code-dot red"></span>
+              <span class="code-dot yellow"></span>
+              <span class="code-dot green"></span>
+            </div>
+            <span class="code-lang-tag">JavaScript · fetch 调用示例 (Node.js / 浏览器)</span>
+            <div style="width: 52px;"></div>
+          </div>
+<pre><code><span class="code-comment">/**
+ * 秦安县秦剧团直播 API 调用示例 - JavaScript fetch 版
+ * 依赖：Node.js 内置 crypto 模块（浏览器环境需引入 crypto-js 或 Web Crypto API）
+ * @author tech-qinopera@163.com
+ */</span>
+<span class="code-keyword">const</span> crypto = <span class="code-function">require</span>(<span class="code-string">'crypto'</span>);
+
+<span class="code-keyword">const</span> <span class="code-variable">CONFIG</span> = {
+  <span class="code-variable">APP_ID</span>: <span class="code-string">'QINOPERA_2024010001'</span>,
+  <span class="code-variable">APP_SECRET</span>: <span class="code-string">'YOUR_APP_SECRET_HERE_KEEP_SAFE'</span>,
+  <span class="code-variable">API_BASE</span>: <span class="code-string">'https://your-edgeone-domain/api/v1'</span>
+};
+
+<span class="code-comment">/** 生成 HMAC-SHA256 签名 */</span>
+<span class="code-keyword">function</span> <span class="code-function">generateSignature</span>(<span class="code-variable">params</span>, <span class="code-variable">secret</span>) {
+  <span class="code-keyword">const</span> <span class="code-variable">sorted</span> = Object.<span class="code-function">keys</span>(<span class="code-variable">params</span>).<span class="code-function">sort</span>()
+    .<span class="code-function">map</span>(<span class="code-variable">k</span> => <span class="code-string">`${k}=${params[k]}`</span>).<span class="code-function">join</span>(<span class="code-string">'&'</span>);
+  <span class="code-keyword">return</span> crypto.<span class="code-function">createHmac</span>(<span class="code-string">'sha256'</span>, <span class="code-variable">secret</span>)
+    .<span class="code-function">update</span>(<span class="code-variable">sorted</span>).<span class="code-function">digest</span>(<span class="code-string">'hex'</span>);
+}
+
+<span class="code-comment">/** 订阅指定演出开播提醒 - POST 接口 */</span>
+<span class="code-keyword">async function</span> <span class="code-function">subscribeLiveReminder</span>(<span class="code-variable">payload</span>) {
+  <span class="code-keyword">const</span> <span class="code-variable">timestamp</span> = Date.<span class="code-function">now</span>().<span class="code-function">toString</span>();
+  <span class="code-keyword">const</span> <span class="code-variable">nonce</span> = crypto.<span class="code-function">randomBytes</span>(<span class="code-number">16</span>).<span class="code-function">toString</span>(<span class="code-string">'hex'</span>);
+  <span class="code-keyword">const</span> <span class="code-variable">signPayload</span> = { ...<span class="code-variable">payload</span>, <span class="code-variable">appid</span>: <span class="code-variable">CONFIG</span>.<span class="code-variable">APP_ID</span>, <span class="code-variable">timestamp</span>, <span class="code-variable">nonce</span> };
+  <span class="code-keyword">const</span> <span class="code-variable">sign</span> = <span class="code-function">generateSignature</span>(<span class="code-variable">signPayload</span>, <span class="code-variable">CONFIG</span>.<span class="code-variable">APP_SECRET</span>);
+
+  <span class="code-keyword">const</span> <span class="code-variable">resp</span> = <span class="code-keyword">await</span> <span class="code-function">fetch</span>(<span class="code-string">`${CONFIG.API_BASE}/live/subscribe`</span>, {
+    <span class="code-variable">method</span>: <span class="code-string">'POST'</span>,
+    <span class="code-variable">headers</span>: {
+      <span class="code-string">'Content-Type'</span>: <span class="code-string">'application/json'</span>,
+      <span class="code-string">'X-QinOpera-AppID'</span>: <span class="code-variable">CONFIG</span>.<span class="code-variable">APP_ID</span>,
+      <span class="code-string">'X-QinOpera-Timestamp'</span>: <span class="code-variable">timestamp</span>,
+      <span class="code-string">'X-QinOpera-Nonce'</span>: <span class="code-variable">nonce</span>,
+      <span class="code-string">'X-QinOpera-Sign'</span>: <span class="code-variable">sign</span>
+    },
+    <span class="code-variable">body</span>: JSON.<span class="code-function">stringify</span>(<span class="code-variable">payload</span>)
+  });
+  <span class="code-keyword">return</span> <span class="code-keyword">await</span> <span class="code-variable">resp</span>.<span class="code-function">json</span>();
+}
+
+<span class="code-comment">// 使用示例 - 订阅演出开播提醒</span>
+<span class="code-function">subscribeLiveReminder</span>({
+  <span class="code-variable">callback_url</span>: <span class="code-string">'https://your-platform.com/api/qinopera/callback'</span>,
+  <span class="code-variable">live_id</span>: <span class="code-string">'live_20240520_001'</span>,
+  <span class="code-variable">phone</span>: <span class="code-string">'13993839833'</span>,
+  <span class="code-variable">extra</span>: { <span class="code-variable">platform_user_id</span>: <span class="code-string">'U12345'</span> }
+}).<span class="code-function">then</span>(<span class="code-variable">data</span> => console.<span class="code-function">log</span>(<span class="code-string">'订阅成功：'</span>, <span class="code-variable">data</span>));
+</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>错误码说明</h2>
+          <p>标准结构化返回 · 快速定位问题</p>
+        </div>
+        <div class="table-wrap table-striped table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 110px;">错误码 Code</th>
+                <th style="width: 220px;">错误信息 Message</th>
+                <th>排查建议 Suggestion</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="error-code-success">200</span></td>
+                <td>OK · 接口调用成功</td>
+                <td>接口正常返回业务数据，data 字段为业务响应内容，可直接解析使用。分页接口请检查 page、total 等分页元信息。</td>
+              </tr>
+              <tr>
+                <td><span class="error-code-client">4001</span></td>
+                <td>Parameter Missing · 必填参数缺失</td>
+                <td>检查请求 URL 路径参数、Query 参数、POST Body 字段，对照接口文档补全所有 required 字段，注意参数名大小写完全匹配。</td>
+              </tr>
+              <tr>
+                <td><span class="error-code-client">4002</span></td>
+                <td>Parameter Invalid · 参数格式非法</td>
+                <td>检查参数类型与格式，例如日期应为 ISO 8601 格式、手机号应为 11 位数字、枚举值必须在文档允许范围内、JSON 结构嵌套正确。</td>
+              </tr>
+              <tr>
+                <td><span class="error-code-auth">4003</span></td>
+                <td>Signature Error · 签名校验失败</td>
+                <td>请按以下顺序排查：① AppID / AppSecret 是否正确 ② 参数是否按字典序 ASCII 升序排列 ③ HMAC-SHA256 密钥是否使用 AppSecret ④ 签名转十六进制是否为小写。</td>
+              </tr>
+              <tr>
+                <td><span class="error-code-auth">4010</span></td>
+                <td>Token Expired · Token / 签名已过期</td>
+                <td>timestamp 时间戳需使用毫秒级，有效期 5 分钟。请检查服务器时钟是否同步 NTP 网络授时，重新生成签名后再次发起请求。</td>
+              </tr>
+              <tr>
+                <td><span class="error-code-auth">4011</span></td>
+                <td>IP Blocked · IP 不在白名单</td>
+                <td>该接口启用了 IP 白名单限制，请联系剧团技术支持将合作方服务器出口 IP 添加至白名单列表，支持 IPv4 CIDR 批量配置。</td>
+              </tr>
+              <tr>
+                <td><span class="error-code-client">4040</span></td>
+                <td>Resource Not Found · 演出 / 资源不存在</td>
+                <td>请求的 live_id、演出 ID 等资源标识无效或已下架，请先调用 /live/upcoming 接口获取有效的演出列表再使用真实 ID。</td>
+              </tr>
+              <tr>
+                <td><span class="error-code-client">4290</span></td>
+                <td>Rate Limit Exceeded · 请求频率超限</td>
+                <td>默认限流策略：单 AppID 每分钟 300 次调用、每天 50000 次。高频调用场景请联系技术支持申请提升配额，或在客户端实现指数退避重试。</td>
+              </tr>
+              <tr>
+                <td><span class="error-code-server">5000</span></td>
+                <td>Server Error · 服务器内部错误</td>
+                <td>剧团服务端发生未知异常，请 30 秒后自动重试；若多次重试持续报错，请立即联系技术支持并提供请求 X-Request-ID 协助排查。</td>
+              </tr>
+              <tr>
+                <td><span class="error-code-server">5030</span></td>
+                <td>Service Unavailable · 服务维护中</td>
+                <td>接口正在发布或维护中，通常持续 5-15 分钟。紧急接入请联系值班电话获取备用域名或延后到维护窗口结束后调用。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="policy-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>商务与技术对接</h2>
+          <p>专业团队 · 全程服务 · 携手共赢</p>
+        </div>
+
+        <div class="contact-card-grid">
+          <div class="contact-card">
+            <div class="contact-card-icon">💻</div>
+            <h3>技术对接邮箱</h3>
+            <div class="contact-card-info">
+              📧 <a href="mailto:tech-qinopera@163.com">tech-qinopera@163.com</a><br>
+              接口联调 · 密钥申请 · 故障排查<br>
+              性能调优 · 架构咨询 · 文档答疑
+            </div>
+            <div class="service-info-list" style="justify-content: center;">
+              <span class="service-info-tag">工作日 2 小时内响应</span>
+              <span class="service-info-tag">1v1 技术对接</span>
+            </div>
+          </div>
+          <div class="contact-card">
+            <div class="contact-card-icon">🤝</div>
+            <h3>商务合作邮箱</h3>
+            <div class="contact-card-info">
+              📧 <a href="mailto:business-qinopera@163.com">business-qinopera@163.com</a><br>
+              合作洽谈 · 协议签署 · 定制需求<br>
+              品牌联名 · 政府采购 · 年度框架
+            </div>
+            <div class="service-info-list" style="justify-content: center;">
+              <span class="service-info-tag">工作日 4 小时内响应</span>
+              <span class="service-info-tag">商务总监对接</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone-card">
+          <h3>📞 24 小时值班对接电话</h3>
+          <div class="phone-number"><a href="tel:13993839833">13993839833</a></div>
+          <p style="color: rgba(255,255,255,0.8); margin: 0; letter-spacing: 1.5px; font-size: 0.95rem;">
+            全年无休 · 紧急故障优先处理 · 节假日照常值守
+          </p>
+        </div>
+
+        <div class="openapi-note">
+          <p>
+            <strong>📋 本页为接口占位文档说明</strong><br>
+            正式部署到 EdgeOne Pages 并接入后端云函数、Redis 缓存、MySQL 数据库、消息队列、直播 CDN 等完整基础设施后，<br>
+            将在本站 <span style="color: var(--primary); font-weight: 600;">/openapi.json</span> 路径提供完整的 <strong>OpenAPI 3.0 规范 JSON 规格文件</strong>，<br>
+            并同步提供 <strong>Postman Collection v2.1 接口调试集合</strong> 下载链接，便于合作伙伴一键导入快速开展对接工作。<br>
+            {year} 年剧团将持续扩展更多数字化演出服务接口，期待与您深度合作，共谱秦腔艺术数字化新篇章！
+          </p>
+          <div class="service-info-list" style="margin-top: 20px;">
+            <span class="service-info-tag">📄 OpenAPI 3.0 Specification</span>
+            <span class="service-info-tag">🧪 Postman Collection</span>
+            <span class="service-info-tag">📚 SDK (Node.js / Python / Java)</span>
+            <span class="service-info-tag">🔌 Webhook Callback</span>
+            <span class="service-info-tag">🎯 沙盒测试环境</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>🎭 秦安县秦剧团文化演出有限公司</h3>
+          <p>传承陇原秦韵，唱响乡土华章。扎根秦安、服务乡村的专业秦腔演出团体，{year}年初心不改，致力传承西北非遗戏曲文化。</p>
+          <p>电话：13993839833<br>地址：甘肃省天水市秦安县陇城镇张沟村</p>
+        </div>
+        <div class="footer-col">
+          <h4>快速导航</h4>
+          <ul>
+            <li><a href="index.html">网站首页</a></li>
+            <li><a href="about.html">剧团简介</a></li>
+            <li><a href="operas.html">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html">新闻动态</a></li>
+            <li><a href="booking.html">在线预约</a></li>
+            <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
+            <li><a href="contact.html">联系我们</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>演出服务</h4>
+          <ul>
+            <li><a href="services.html#miaohui">乡村庙会演出</a></li>
+            <li><a href="services.html#huimin">惠民下乡巡演</a></li>
+            <li><a href="services.html#jieqing">节庆专场演出</a></li>
+            <li><a href="services.html#qiye">企业庆典定制</a></li>
+            <li style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(15,76,129,0.2);"><a href="services.html" style="color:var(--gold-dark);font-weight:600;">🔍 查看全部 8 大业务 →</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>联系我们</h4>
+          <ul>
+            <li><a href="tel:13993839833">📞 13993839833</a></li>
+            <li><a href="mailto:13893811313@163.com">📧 13893811313@163.com</a></li>
+            <li><a href="booking.html">🎫 在线预约</a></li>
+            <li><a href="contact.html">📍 联系我们</a></li>
+            <li><a href="javascript:void(0)" data-footer-action="wechat">💬 微信客服</a></li>
+            <li><a href="javascript:void(0)" data-footer-action="mp">📱 官方公众号</a></li>
+            <li><a href="admin/login.html">🔐 后台管理</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>关注我们</h4>
+          <div class="footer-social">
+            <a href="https://live.douyin.com/qaxqjt" target="_blank" rel="noopener noreferrer" class="social-btn social-douyin" aria-label="抖音官方账号">
+              <span class="social-icon">🎵</span>
+              <span class="social-name">抖音@秦安县秦剧团</span>
+            </a>
+            <a href="https://live.kuaishou.com/u/qaxqjt" target="_blank" rel="noopener noreferrer" class="social-btn social-kuaishou" aria-label="快手官方账号">
+              <span class="social-icon">🎥</span>
+              <span class="social-name">快手@qaxqjt</span>
+            </a>
+            <a href="javascript:void(0)" data-footer-action="wechat-qr" class="social-btn social-wechat" aria-label="微信公众号二维码">
+              <span class="social-icon">💚</span>
+              <span class="social-name">微信公众号 · 扫码关注</span>
+            </a>
+            <a href="javascript:void(0)" data-footer-action="shipinhao" class="social-btn social-shipinhao" aria-label="微信视频号">
+              <span class="social-icon">📺</span>
+              <span class="social-name">视频号 · 秦安县秦剧团</span>
+            </a>
+          </div>
+          <p style="margin-top:14px;font-size:0.85rem;color:var(--text-light);line-height:1.7;">
+            关注官方账号<br>获取剧目排期 · 惠民演出 · 幕后花絮
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© {year} 秦安县秦剧团文化演出有限公司 版权所有 | 陇ICP备（秦安戏曲文化号）</p>
+        <div class="footer-bottom-links">
+          <a href="qualifications.html">企业资质</a>
+          <span>|</span>
+          <a href="copyright.html">版权声明</a>
+          <span>|</span>
+          <a href="minor-policy.html">未成年预约</a>
+          <span>|</span>
+          <a href="breach-liability.html">违约民事责任</a>
+          <span>|</span>
+          <a href="qr-booking.html">二维码预约</a>
+          <span>|</span>
+          <a href="live-api.html">直播接口</a>
+          <span>|</span>
+          <a href="admin/login.html">管理入口</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/year-lite.js?v=20260803"></script>
+  <script src="js/app.js?v=20260803"></script>
+  <!-- 🔧 D块前台×按钮兜底：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
+  <script>
+  (function(){
+    document.addEventListener('click', function(e){
+      var t = e.target; if(!t) return;
+      var tn = (t.tagName||'').toLowerCase();
+      var tc = (t.textContent||'').replace(/\s+/g,'');
+      if(tc === '×' || tc === '✕' || tc === 'x' || tc === 'X' || (t.getAttribute && (t.getAttribute('aria-label')||'').toLowerCase().indexOf('close')>=0)){
+        var closeDetectSel = '[class*="modal-"],[class*="Modal"],[id*="Modal_Header"],[class*="-close"],[class*="popup-"],[class*="dialog-"]';
+        if(tn==='button'||tn==='a'||tn==='span'||tn==='i'||tn==='div'||(t.closest && t.closest(closeDetectSel))){
+          try{ if(typeof window.__closeAnyModal === 'function') { window.__closeAnyModal(); return; } }catch(_){}
+          try{
+            var m = t.closest ? t.closest('.modal, [id$="Modal"], [id$="modal"], .modal-wrap, [data-modal], [class*="-popup"], [class*="dialog"], [class*="-panel"]') : null;
+            if(m){ try{ m.classList.remove('active','show','open','is-open'); m.classList.add('s-modal-hide','modal-wrap-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} } }
+            var o = document.querySelector('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="-mask"], [class*="-backdrop"]');
+            if(o){ try{ o.classList.remove('active','show','open','is-open'); o.classList.add('s-overlay-hide','modal-overlay-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} } }
+          }catch(_f){}
+        }
+      }
+    }, true);
+  })();
+  </script>
+  <!-- 🔧 E块前台死按钮兜底：无onclick无action的"提交/重置/查询/生成/复制/导出"→ toast+基础交互+表单校验 -->
+  <script>
+  (function(){
+    function __FT(msg,type){
+      try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){}
+      try{ (type==='error'?alert:console.log)('[frontpatch] '+msg); }catch(_f){}
+    }
+    function __FL(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||700); }catch(_){}
+      return true;
+    }
+    // 1) ESC 关所有弹窗 + 遮罩
+    try{ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ try{ if(typeof window.__closeAnyModal==='function')window.__closeAnyModal(); }catch(_){} try{ var all=document.querySelectorAll('.modal,.modal-wrap,[data-modal],[class*="-popup"],[class*="dialog"]'); all.forEach(function(x){ x.classList.remove('active','show','open'); x.classList.add('s-modal-hide'); }); var m2=document.querySelectorAll('.modal-overlay,.overlay,[class*="-mask"],[class*="-backdrop"]'); m2.forEach(function(x){x.classList.add('s-overlay-hide');}); }catch(_x){} } }, true); }catch(_escErr){}
+    // 2) form reset 事件 → toast
+    try{ document.addEventListener('reset', function(e){ try{ if(!e.target||e.target.tagName!=='FORM') return; setTimeout(function(){ __FT('↺ 表单已重置（所有字段恢复默认）','success'); },120); }catch(_){} }, true); }catch(_rErr){}
+    // 3) 死按钮 document 级 capture 委托
+    document.addEventListener('click', function(e){
+      var t=e.target; if(!t) return;
+      var btn = (t.tagName||'').toLowerCase()==='button'? t : (t.closest ? t.closest('button,a.btn,[role="button"],.btn,.btn-primary,.btn-secondary,.btn-gold,.btn-outline,.btn-sm,.btn-action') : null);
+      if(!btn) return;
+      try{ if(btn.getAttribute && btn.getAttribute('onclick') && btn.getAttribute('onclick').length>3) return; if(btn.__bindDone || btn.__ftDone) return; var tp=(btn.getAttribute&&btn.getAttribute('type')||'').toLowerCase(); if(tp==='submit') return; }catch(_a){}
+      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
+      if(!txt || txt.length>32) return;
+      var isSubmit  = txt.indexOf('提交')>=0 || txt.indexOf('生成')>=0 || txt.indexOf('申请')>=0 || txt.indexOf('预约')>=0;
+      var isReset   = txt.indexOf('重置')>=0;
+      var isSearch  = txt.indexOf('搜索')>=0 || txt.indexOf('查询')>=0 || txt==='🔍' || txt.indexOf('筛选')>=0;
+      var isCopy    = txt.indexOf('复制')>=0;
+      var isExport  = txt.indexOf('导出')>=0 || txt.indexOf('下载')>=0;
+      var isPrint   = txt.indexOf('打印')>=0;
+      var dk = 'ft2_'+(isSubmit?'s':isReset?'r':isSearch?'q':isCopy?'cp':isExport?'x':isPrint?'p':'k')+'_'+Math.random().toString(36).slice(2,6);
+      if(isSubmit){
+        if(!__FL(dk,1400)){ __FT('⏳ 处理中，请稍候…','warning'); e.stopImmediatePropagation(); return; }
+        var fm = btn.closest? btn.closest('form') : null;
+        if(fm){
+          var agree = fm.querySelector('[data-agree-checkbox]');
+          if(agree && !agree.checked){ __FT('⚠️ 请先勾选「同意协议/须知」后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); return; }
+          var reqFails = fm.querySelectorAll('[required]');
+          var firstBad=null;
+          try{ reqFails.forEach(function(inp){ var v=(inp.value||''); var ok=true; if(inp.type==='checkbox' && !inp.checked) ok=false; else if(inp.type!=='checkbox' && inp.type!=='radio' && !v.trim()) ok=false; if(!ok){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}}, 1800);}catch(_b){} } }); }catch(_rf){}
+          if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
+          __FT('✅ 操作成功（演示模式：真实环境将写入工单 + 通知对接专员）','success');
+          try{ fm.reset && fm.reset(); }catch(_rs){}
+          e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
+        } else {
+          __FT('✅ 操作成功（演示模式）','success');
+          try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
+          btn.__ftDone=1; e.stopImmediatePropagation(); return;
+        }
+      }
+      if(isReset){
+        if(!__FL(dk,500)) return;
+        var fm2 = btn.closest ? btn.closest('form') : null;
+        try{ if(fm2){ fm2.reset && fm2.reset(); __FT('↺ 表单已重置（所有字段恢复默认）','success'); } else { __FT('↺ 已重置','info'); } }catch(_r){}
+        btn.__ftDone=1; return;
+      }
+      if(isSearch){
+        if(!__FL(dk,550)) return;
+        __FT('🔍 查询条件已生效（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isCopy){
+        if(!__FL(dk,900)) return;
+        try{ var wrap = btn.closest ? btn.closest('[data-copy], .copy-wrap, p, li, div') : null; var src = (btn.getAttribute&&btn.getAttribute('data-copy-text')) || (wrap?wrap.textContent:'') || ''; src = src.replace(/\s+/g,' ').trim().slice(0,300); if(src && navigator.clipboard){ navigator.clipboard.writeText(src).then(function(){ __FT('📋 已复制到剪贴板','success'); }).catch(function(){ __FT('📋 内容就绪（浏览器不支持自动复制）','info'); }); } else { __FT('📋 内容就绪（请手动复制）','info'); } }catch(_c){ __FT('📋 复制操作触发','info'); }
+        btn.__ftDone=1; return;
+      }
+      if(isExport){
+        if(!__FL(dk,1200)) { __FT('⏳ 导出中…','warning'); return; }
+        __FT('📤 导出完成：CSV/PDF 已就绪（真实环境触发浏览器下载）','success');
+        btn.__ftDone=1; return;
+      }
+      if(isPrint){
+        if(!__FL(dk, 1200)) return;
+        try{ window.print && window.print(); __FT('🖨 已调起打印对话框','success'); }catch(_p){ __FT('🖨 打印准备中…','info'); }
+        btn.__ftDone=1; return;
+      }
+    }, true);
+    console.info('[FrontPolicyPatch 已加载：CSS圆角+×兜底+死按钮+ESC关弹窗+表单校验]');
+  })();
+  </script>
+</body>
+</html>

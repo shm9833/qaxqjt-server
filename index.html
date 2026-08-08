@@ -2,16 +2,48 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <script src="js/favicon-inject.js" defer></script>
+    <script src="js/favicon-inject.js?v=20260803" defer></script>
+    <script src="js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="秦安县秦剧团文化演出有限公司，秦安本土老牌专业秦腔演出团体，承接乡村庙会、惠民下乡、节庆专场、企业庆典等各类戏曲演出，电话：13993839833">
   <meta name="keywords" content="秦安秦剧团,秦安县秦剧团文化演出有限公司,秦腔演出,乡村庙会,文化惠民,天水戏曲,秦安县秦剧团">
   <title>秦安县秦剧团文化演出有限公司 - 传承陇原秦韵，唱响乡土华章 | {year}</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20260803">
+  <style>
+    /* 🔧 前台通用补丁：分页/按钮圆角（原方形→10px） + 伪链接视觉提示 + 弹窗隐藏辅助类 */
+    .pagination .page-btn, button.page-btn, .page-btn,
+    .pagination button, .page-number-item button, .pager button,
+    .btn-pagination, [class*="pagination"] button,
+    .btn, button.btn {
+      border-radius: 10px !important;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+    .pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+    }
+    .s-modal-hide { display: none !important; }
+    .s-overlay-hide { display: none !important; }
+    a[href="#"]:not(.action-link):not([data-toggle]):not(.schedule-opera-link)::after { content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .7; }
+    .btn-ghost { color: #64748b; }
+  </style>
 </head>
 <body>
-  <header>
+  <header data-header>
     <div class="container">
       <div class="header-content">
         <div class="logo">
@@ -59,19 +91,19 @@
             <p>文化演出有限公司 · 始于2014</p>
           </div>
         </div>
-        <button class="menu-toggle" aria-label="菜单">
+        <button class="menu-toggle" data-nav-toggle aria-label="菜单" aria-expanded="false">
           <span>☰</span>
         </button>
-        <nav>
+        <nav data-nav-menu>
           <ul>
-            <li><a href="#home" class="active">首页</a></li>
-            <li><a href="#about">剧团简介</a></li>
-            <li><a href="#repertoire">剧目中心</a></li>
-            <li><a href="#services">演出业务</a></li>
-            <li><a href="#news">新闻动态</a></li>
-            <li><a href="#booking">在线预约</a></li>
+            <li><a href="index.html" class="active">首页</a></li>
+            <li><a href="about.html">剧团简介</a></li>
+            <li><a href="operas.html">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html">新闻动态</a></li>
+            <li><a href="booking.html">在线预约</a></li>
             <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
-            <li><a href="#contact">联系我们</a></li>
+            <li><a href="contact.html">联系我们</a></li>
             <li><a href="admin/login.html" class="admin-link">后台管理</a></li>
           </ul>
         </nav>
@@ -89,9 +121,10 @@
             数十年乡土坚守，深耕秦腔传统艺术。秦安县秦剧团文化演出有限公司立足陇城、辐射全县，专注乡村惠民巡演、庙会民俗演出、节庆文艺汇演、企业庆典专场，以地道秦腔、经典戏曲剧目，丰富县域群众精神文化生活，传承西北非遗戏曲文化。匠心演绎每一场好戏，真情服务每一位乡亲。
           </p>
           <div class="banner-buttons">
-            <a href="#booking" class="btn btn-primary">立即预约演出</a>
+            <a href="booking.html" class="btn btn-primary">立即预约演出</a>
             <a href="live-api.html" class="btn btn-secondary" style="background:linear-gradient(135deg,var(--gold),#B8860B);color:#fff;border-color:transparent;">📡 观看官方直播</a>
-            <a href="#about" class="btn btn-secondary">了解剧团详情</a>
+            <a href="cast-public.html" class="btn btn-secondary" style="background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;border-color:transparent;">🎭 本月演出阵容</a>
+            <a href="about.html" class="btn btn-secondary">了解剧团详情</a>
           </div>
         </div>
       </div>
@@ -105,7 +138,7 @@
         </div>
         <div class="about-grid">
           <div class="about-image">
-            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Qin%20Opera%20troupe%20group%20photo%20with%20traditional%20costumes%2C%20actors%20and%20musicians%20posing%20on%20stage%2C%20red%20and%20gold%20theme%2C%20professional%20opera%20performance%20group&image_size=landscape_16_9" alt="秦安县秦剧团演职团队合影">
+            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E4%B8%AD%E5%9B%BD%E8%A5%BF%E5%8C%97%E7%A7%A6%E8%85%94%E6%88%8F%E6%9B%B2%E8%88%9E%E5%8F%B0%E5%85%A8%E6%99%AF%EF%BC%8C%E5%8F%A4%E8%89%B2%E5%8F%A4%E9%A6%99%E7%9A%84%E6%88%8F%E5%8F%B0%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%AE%AB%E7%81%AF%E9%AB%98%E6%8C%82%EF%BC%8C%E8%BA%AB%E7%A9%BF%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%E7%9A%84%E6%97%A6%E8%A7%92%E6%BC%94%E5%91%98%E4%B8%8E%E5%A4%A7%E8%8A%B1%E8%84%B8%E5%87%80%E8%A7%92%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E4%BC%A0%E7%BB%9F%E7%A7%A6%E8%85%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E5%8D%8E%E4%B8%BD%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E8%83%8C%E6%99%AF%E6%98%AF%E7%94%98%E8%82%83%E5%A4%A9%E6%B0%B4%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E7%9C%8B%E6%88%8F%E7%9A%84%E4%BA%BA%E7%BE%A4%EF%BC%8C%E5%8F%A4%E6%88%8F%E5%8F%B0%E9%87%91%E7%A2%A7%E8%BE%89%E7%85%8C%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E5%85%89%E5%BD%B1%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_16_9" alt="秦安县秦剧团演职团队合影">
           </div>
           <div class="about-content">
             <h3>秦安县秦剧团文化演出有限公司</h3>
@@ -141,26 +174,26 @@
           <p class="section-subtitle">四大演出服务，覆盖各类文化活动场景</p>
         </div>
         <div class="services-grid">
-          <div class="service-card">
+          <a href="services.html#miaohui" class="service-card" style="text-decoration:none;color:inherit;display:block;">
             <div class="service-icon">🏮</div>
             <h4>乡村庙会戏曲演出</h4>
             <p>承接各乡镇、村落传统庙会、民俗祭祀、村落庆典秦腔专场演出</p>
-          </div>
-          <div class="service-card">
+          </a>
+          <a href="services.html#huimin" class="service-card" style="text-decoration:none;color:inherit;display:block;">
             <div class="service-icon">🎪</div>
             <h4>政府惠民下乡巡演</h4>
             <p>配合文旅部门、乡镇政府开展文化下乡、乡村振兴惠民演出</p>
-          </div>
-          <div class="service-card">
+          </a>
+          <a href="services.html#jieqing" class="service-card" style="text-decoration:none;color:inherit;display:block;">
             <div class="service-icon">🎉</div>
             <h4>节庆专场文艺演出</h4>
             <p>承接春节、端午、中秋、丰收节等各类节日戏曲专场</p>
-          </div>
-          <div class="service-card">
+          </a>
+          <a href="services.html#qiye" class="service-card" style="text-decoration:none;color:inherit;display:block;">
             <div class="service-icon">🎊</div>
             <h4>企业商户庆典演出</h4>
             <p>承接商铺开业、企业庆典、寿宴婚庆等商业及私人定制</p>
-          </div>
+          </a>
         </div>
       </div>
     </section>
@@ -174,79 +207,87 @@
         <div class="repertoire-grid">
           <div class="repertoire-card">
             <div class="repertoire-image">
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20traditional%20opera%20performance%20scene%2C%20Qin%20Opera%20%22Flame%20Colt%22%2C%20actors%20in%20elaborate%20red%20and%20gold%20costumes%2C%20dramatic%20stage%20lighting&image_size=landscape_16_9" alt="火焰驹">
+              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E4%B8%AD%E5%9B%BD%E8%A5%BF%E5%8C%97%E7%A7%A6%E8%85%94%E6%88%8F%E6%9B%B2%E8%88%9E%E5%8F%B0%E5%85%A8%E6%99%AF%EF%BC%8C%E5%8F%A4%E8%89%B2%E5%8F%A4%E9%A6%99%E7%9A%84%E6%88%8F%E5%8F%B0%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%AE%AB%E7%81%AF%E9%AB%98%E6%8C%82%EF%BC%8C%E8%BA%AB%E7%A9%BF%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%E7%9A%84%E6%97%A6%E8%A7%92%E6%BC%94%E5%91%98%E4%B8%8E%E5%A4%A7%E8%8A%B1%E8%84%B8%E5%87%80%E8%A7%92%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E4%BC%A0%E7%BB%9F%E7%A7%A6%E8%85%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E5%8D%8E%E4%B8%BD%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E8%83%8C%E6%99%AF%E6%98%AF%E7%94%98%E8%82%83%E5%A4%A9%E6%B0%B4%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E7%9C%8B%E6%88%8F%E7%9A%84%E4%BA%BA%E7%BE%A4%EF%BC%8C%E5%8F%A4%E6%88%8F%E5%8F%B0%E9%87%91%E7%A2%A7%E8%BE%89%E7%85%8C%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E5%85%89%E5%BD%B1%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_16_9" alt="火焰驹">
             </div>
             <div class="repertoire-info">
               <h4>《火焰驹》</h4>
               <p>秦腔经典传统本戏，讲述侠义故事，唱腔激昂慷慨</p>
+              <p style="margin-top:10px;"><a href="cast-public.html?opera=%E7%81%AB%E7%84%B0%E9%A9%B9" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;text-decoration:none;">🎭 查看本剧演出阵容 →</a></p>
             </div>
           </div>
           <div class="repertoire-card">
             <div class="repertoire-image">
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20traditional%20opera%20the%20Injustice%20to%20Dou%20E%2C%20tragic%20scene%2C%20female%20protagonist%20in%20white%20costume%2C%20snow%20in%20summer%20theme%2C%20emotional%20Qin%20Opera%20performance&image_size=landscape_16_9" alt="窦娥冤">
+              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E4%B8%AD%E5%9B%BD%E8%A5%BF%E5%8C%97%E7%A7%A6%E8%85%94%E6%88%8F%E6%9B%B2%E8%88%9E%E5%8F%B0%E5%85%A8%E6%99%AF%EF%BC%8C%E5%8F%A4%E8%89%B2%E5%8F%A4%E9%A6%99%E7%9A%84%E6%88%8F%E5%8F%B0%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%AE%AB%E7%81%AF%E9%AB%98%E6%8C%82%EF%BC%8C%E8%BA%AB%E7%A9%BF%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%E7%9A%84%E6%97%A6%E8%A7%92%E6%BC%94%E5%91%98%E4%B8%8E%E5%A4%A7%E8%8A%B1%E8%84%B8%E5%87%80%E8%A7%92%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E4%BC%A0%E7%BB%9F%E7%A7%A6%E8%85%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E5%8D%8E%E4%B8%BD%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E8%83%8C%E6%99%AF%E6%98%AF%E7%94%98%E8%82%83%E5%A4%A9%E6%B0%B4%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E7%9C%8B%E6%88%8F%E7%9A%84%E4%BA%BA%E7%BE%A4%EF%BC%8C%E5%8F%A4%E6%88%8F%E5%8F%B0%E9%87%91%E7%A2%A7%E8%BE%89%E7%85%8C%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E5%85%89%E5%BD%B1%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_16_9" alt="窦娥冤">
             </div>
             <div class="repertoire-info">
               <h4>《窦娥冤》</h4>
               <p>元杂剧经典改编，感天动地悲剧，唱功考验代表作</p>
+              <p style="margin-top:10px;"><a href="cast-public.html?opera=%E7%AA%A6%E5%A8%A5%E5%86%A4" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;text-decoration:none;">🎭 查看本剧演出阵容 →</a></p>
             </div>
           </div>
           <div class="repertoire-card">
             <div class="repertoire-image">
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Qin%20Opera%20%22The%20Great%20Promotion%22%2C%20court%20scene%20with%20officials%20in%20robes%2C%20imperial%20palace%20setting%2C%20grand%20stage%20performance&image_size=landscape_16_9" alt="大升官">
+              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E4%B8%AD%E5%9B%BD%E8%A5%BF%E5%8C%97%E7%A7%A6%E8%85%94%E6%88%8F%E6%9B%B2%E8%88%9E%E5%8F%B0%E5%85%A8%E6%99%AF%EF%BC%8C%E5%8F%A4%E8%89%B2%E5%8F%A4%E9%A6%99%E7%9A%84%E6%88%8F%E5%8F%B0%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%AE%AB%E7%81%AF%E9%AB%98%E6%8C%82%EF%BC%8C%E8%BA%AB%E7%A9%BF%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%E7%9A%84%E6%97%A6%E8%A7%92%E6%BC%94%E5%91%98%E4%B8%8E%E5%A4%A7%E8%8A%B1%E8%84%B8%E5%87%80%E8%A7%92%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E4%BC%A0%E7%BB%9F%E7%A7%A6%E8%85%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E5%8D%8E%E4%B8%BD%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E8%83%8C%E6%99%AF%E6%98%AF%E7%94%98%E8%82%83%E5%A4%A9%E6%B0%B4%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E7%9C%8B%E6%88%8F%E7%9A%84%E4%BA%BA%E7%BE%A4%EF%BC%8C%E5%8F%A4%E6%88%8F%E5%8F%B0%E9%87%91%E7%A2%A7%E8%BE%89%E7%85%8C%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E5%85%89%E5%BD%B1%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_16_9" alt="大升官">
             </div>
             <div class="repertoire-info">
               <h4>《大升官》</h4>
               <p>秦腔宫廷大戏，二进宫经典选段，生旦净丑行当齐全</p>
+              <p style="margin-top:10px;"><a href="cast-public.html?opera=%E5%A4%A7%E5%8D%87%E5%AE%98" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;text-decoration:none;">🎭 查看本剧演出阵容 →</a></p>
             </div>
           </div>
           <div class="repertoire-card">
             <div class="repertoire-image">
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Qin%20Opera%20%22Three%20Drops%20of%20Blood%22%2C%20comedic%20family%20drama%20scene%2C%20traditional%20Chinese%20household%20setting%2C%20actors%20in%20Ming%20dynasty%20costumes&image_size=landscape_16_9" alt="三滴血">
+              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E4%B8%AD%E5%9B%BD%E8%A5%BF%E5%8C%97%E7%A7%A6%E8%85%94%E6%88%8F%E6%9B%B2%E8%88%9E%E5%8F%B0%E5%85%A8%E6%99%AF%EF%BC%8C%E5%8F%A4%E8%89%B2%E5%8F%A4%E9%A6%99%E7%9A%84%E6%88%8F%E5%8F%B0%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%AE%AB%E7%81%AF%E9%AB%98%E6%8C%82%EF%BC%8C%E8%BA%AB%E7%A9%BF%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%E7%9A%84%E6%97%A6%E8%A7%92%E6%BC%94%E5%91%98%E4%B8%8E%E5%A4%A7%E8%8A%B1%E8%84%B8%E5%87%80%E8%A7%92%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E4%BC%A0%E7%BB%9F%E7%A7%A6%E8%85%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E5%8D%8E%E4%B8%BD%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E8%83%8C%E6%99%AF%E6%98%AF%E7%94%98%E8%82%83%E5%A4%A9%E6%B0%B4%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E7%9C%8B%E6%88%8F%E7%9A%84%E4%BA%BA%E7%BE%A4%EF%BC%8C%E5%8F%A4%E6%88%8F%E5%8F%B0%E9%87%91%E7%A2%A7%E8%BE%89%E7%85%8C%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E5%85%89%E5%BD%B1%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_16_9" alt="三滴血">
             </div>
             <div class="repertoire-info">
               <h4>《三滴血》</h4>
               <p>秦腔喜剧经典，啼笑因缘故事，家喻户晓的传世名剧</p>
+              <p style="margin-top:10px;"><a href="cast-public.html?opera=%E4%B8%89%E6%BB%B4%E8%A1%80" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;text-decoration:none;">🎭 查看本剧演出阵容 →</a></p>
             </div>
           </div>
           <div class="repertoire-card">
             <div class="repertoire-image">
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Qin%20Opera%20%22Five%20Dian%20Slope%22%2C%20Wang%20Baochai%20waiting%20scene%2C%20cold%20cave%20dwelling%2C%20poignant%20love%20story%20performance&image_size=landscape_16_9" alt="五典坡">
+              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E4%B8%AD%E5%9B%BD%E8%A5%BF%E5%8C%97%E7%A7%A6%E8%85%94%E6%88%8F%E6%9B%B2%E8%88%9E%E5%8F%B0%E5%85%A8%E6%99%AF%EF%BC%8C%E5%8F%A4%E8%89%B2%E5%8F%A4%E9%A6%99%E7%9A%84%E6%88%8F%E5%8F%B0%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%AE%AB%E7%81%AF%E9%AB%98%E6%8C%82%EF%BC%8C%E8%BA%AB%E7%A9%BF%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%E7%9A%84%E6%97%A6%E8%A7%92%E6%BC%94%E5%91%98%E4%B8%8E%E5%A4%A7%E8%8A%B1%E8%84%B8%E5%87%80%E8%A7%92%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E4%BC%A0%E7%BB%9F%E7%A7%A6%E8%85%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E5%8D%8E%E4%B8%BD%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E8%83%8C%E6%99%AF%E6%98%AF%E7%94%98%E8%82%83%E5%A4%A9%E6%B0%B4%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E7%9C%8B%E6%88%8F%E7%9A%84%E4%BA%BA%E7%BE%A4%EF%BC%8C%E5%8F%A4%E6%88%8F%E5%8F%B0%E9%87%91%E7%A2%A7%E8%BE%89%E7%85%8C%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E5%85%89%E5%BD%B1%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_16_9" alt="五典坡">
             </div>
             <div class="repertoire-info">
               <h4>《五典坡》</h4>
               <p>薛平贵与王宝钏爱情传奇，算粮登殿经典折子戏</p>
+              <p style="margin-top:10px;"><a href="cast-public.html?opera=%E4%BA%94%E5%85%B8%E5%9D%A1" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;text-decoration:none;">🎭 查看本剧演出阵容 →</a></p>
             </div>
           </div>
           <div class="repertoire-card">
             <div class="repertoire-image">
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Qin%20Opera%20%22Chen%20Shimei%20Case%22%2C%20Bao%20Zheng%20in%20black%20robe%20with%20red%20face%2C%20courtroom%20scene%20with%20crescent%20moon%20emblem%2C%20dramatic%20judgment&image_size=landscape_16_9" alt="铡美案">
+              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E4%B8%AD%E5%9B%BD%E8%A5%BF%E5%8C%97%E7%A7%A6%E8%85%94%E6%88%8F%E6%9B%B2%E8%88%9E%E5%8F%B0%E5%85%A8%E6%99%AF%EF%BC%8C%E5%8F%A4%E8%89%B2%E5%8F%A4%E9%A6%99%E7%9A%84%E6%88%8F%E5%8F%B0%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%AE%AB%E7%81%AF%E9%AB%98%E6%8C%82%EF%BC%8C%E8%BA%AB%E7%A9%BF%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%E7%9A%84%E6%97%A6%E8%A7%92%E6%BC%94%E5%91%98%E4%B8%8E%E5%A4%A7%E8%8A%B1%E8%84%B8%E5%87%80%E8%A7%92%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E4%BC%A0%E7%BB%9F%E7%A7%A6%E8%85%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E5%8D%8E%E4%B8%BD%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E8%83%8C%E6%99%AF%E6%98%AF%E7%94%98%E8%82%83%E5%A4%A9%E6%B0%B4%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E7%9C%8B%E6%88%8F%E7%9A%84%E4%BA%BA%E7%BE%A4%EF%BC%8C%E5%8F%A4%E6%88%8F%E5%8F%B0%E9%87%91%E7%A2%A7%E8%BE%89%E7%85%8C%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E5%85%89%E5%BD%B1%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_16_9" alt="铡美案">
             </div>
             <div class="repertoire-info">
               <h4>《铡美案》</h4>
               <p>包公铁面无私铡美案，花脸唱功重头戏，正义之唱</p>
+              <p style="margin-top:10px;"><a href="cast-public.html?opera=%E9%93%A1%E7%BE%8E%E6%A1%88" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;text-decoration:none;">🎭 查看本剧演出阵容 →</a></p>
             </div>
           </div>
           <div class="repertoire-card">
             <div class="repertoire-image">
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20Qin%20Opera%20%22Golden%20Sands%20Beach%22%2C%20warrior%20generals%20in%20armor%2C%20battlefield%20scene%2C%20Yang%20family%20loyal%20subjects%20story%2C%20epic%20performance&image_size=landscape_16_9" alt="金沙滩">
+              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E4%B8%AD%E5%9B%BD%E8%A5%BF%E5%8C%97%E7%A7%A6%E8%85%94%E6%88%8F%E6%9B%B2%E8%88%9E%E5%8F%B0%E5%85%A8%E6%99%AF%EF%BC%8C%E5%8F%A4%E8%89%B2%E5%8F%A4%E9%A6%99%E7%9A%84%E6%88%8F%E5%8F%B0%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%AE%AB%E7%81%AF%E9%AB%98%E6%8C%82%EF%BC%8C%E8%BA%AB%E7%A9%BF%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%E7%9A%84%E6%97%A6%E8%A7%92%E6%BC%94%E5%91%98%E4%B8%8E%E5%A4%A7%E8%8A%B1%E8%84%B8%E5%87%80%E8%A7%92%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E4%BC%A0%E7%BB%9F%E7%A7%A6%E8%85%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E5%8D%8E%E4%B8%BD%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E8%83%8C%E6%99%AF%E6%98%AF%E7%94%98%E8%82%83%E5%A4%A9%E6%B0%B4%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E7%9C%8B%E6%88%8F%E7%9A%84%E4%BA%BA%E7%BE%A4%EF%BC%8C%E5%8F%A4%E6%88%8F%E5%8F%B0%E9%87%91%E7%A2%A7%E8%BE%89%E7%85%8C%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E5%85%89%E5%BD%B1%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_16_9" alt="金沙滩">
             </div>
             <div class="repertoire-info">
               <h4>《金沙滩》</h4>
               <p>杨家将忠义故事，金沙滩双龙会，武生重头戏</p>
+              <p style="margin-top:10px;"><a href="cast-public.html?opera=%E9%87%91%E6%B2%99%E6%BB%A9" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;text-decoration:none;">🎭 查看本剧演出阵容 →</a></p>
             </div>
           </div>
           <div class="repertoire-card">
             <div class="repertoire-image">
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20traditional%20opera%20collection%2C%20various%20Qin%20Opera%20characters%20montage%2C%20colorful%20facial%20makeup%2C%20rich%20costumes%2C%20theater%20curtain%20background&image_size=landscape_16_9" alt="更多经典剧目">
+              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E4%B8%AD%E5%9B%BD%E8%A5%BF%E5%8C%97%E7%A7%A6%E8%85%94%E6%88%8F%E6%9B%B2%E8%88%9E%E5%8F%B0%E5%85%A8%E6%99%AF%EF%BC%8C%E5%8F%A4%E8%89%B2%E5%8F%A4%E9%A6%99%E7%9A%84%E6%88%8F%E5%8F%B0%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%AE%AB%E7%81%AF%E9%AB%98%E6%8C%82%EF%BC%8C%E8%BA%AB%E7%A9%BF%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%E7%9A%84%E6%97%A6%E8%A7%92%E6%BC%94%E5%91%98%E4%B8%8E%E5%A4%A7%E8%8A%B1%E8%84%B8%E5%87%80%E8%A7%92%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E4%BC%A0%E7%BB%9F%E7%A7%A6%E8%85%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E5%8D%8E%E4%B8%BD%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E8%83%8C%E6%99%AF%E6%98%AF%E7%94%98%E8%82%83%E5%A4%A9%E6%B0%B4%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E7%9C%8B%E6%88%8F%E7%9A%84%E4%BA%BA%E7%BE%A4%EF%BC%8C%E5%8F%A4%E6%88%8F%E5%8F%B0%E9%87%91%E7%A2%A7%E8%BE%89%E7%85%8C%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E5%85%89%E5%BD%B1%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_16_9" alt="更多经典剧目">
             </div>
             <div class="repertoire-info">
               <h4>更多经典剧目</h4>
               <p>50余部传统本戏、折子戏，详见剧目中心完整列表</p>
+              <p style="margin-top:10px;"><a href="cast-public.html" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;text-decoration:none;">🎭 查看全部演出阵容 →</a></p>
             </div>
           </div>
         </div>
         <div class="repertoire-more">
-          <a href="#repertoire" class="btn btn-primary">查看完整剧目单</a>
+          <a href="operas.html" class="btn btn-primary">查看完整剧目单</a>
         </div>
       </div>
     </section>
@@ -293,27 +334,43 @@
             <div class="service-icon">📅</div>
             <h4>{year}年春节惠民巡演</h4>
             <p>新春走基层，文化进万家。剧团正月期间奔赴秦安15个乡镇开展春节惠民演出20余场，为乡亲们送上戏曲文化大餐。</p>
+            <p style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;">
+              <a href="cast-public.html?news=chunjie-huimin-{year}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;text-decoration:none;">🎭 查看本场演出阵容 →</a>
+              <a href="news.html?category=huimin" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;border:1px solid rgba(15,76,129,0.25);color:#0f4c81;font-size:0.82rem;font-weight:600;text-decoration:none;">📰 惠民资讯详情 →</a>
+            </p>
           </div>
           <div class="service-card">
             <div class="service-icon">🎭</div>
             <h4>陇城庙会专场演出</h4>
             <p>陇城镇传统民俗庙会盛大举办，剧团连唱三天大戏，《火焰驹》《大升官》等经典剧目轮番上演，观众反响热烈。</p>
+            <p style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;">
+              <a href="cast-public.html?news=longcheng-miaohui" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;text-decoration:none;">🎭 查看本场演出阵容 →</a>
+              <a href="news.html?category=jumu" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;border:1px solid rgba(15,76,129,0.25);color:#0f4c81;font-size:0.82rem;font-weight:600;text-decoration:none;">📰 庙会演出资讯 →</a>
+            </p>
           </div>
           <div class="service-card">
             <div class="service-icon">🎪</div>
             <h4>乡村振兴文化下乡</h4>
             <p>配合县文旅局开展"戏曲进乡村"文化惠民工程，全年计划完成80场下乡演出任务，助力乡村文化振兴。</p>
+            <p style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;">
+              <a href="cast-public.html?news=xiangcun-zhenxing" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;text-decoration:none;">🎭 查看惠民演出阵容 →</a>
+              <a href="news.html?category=huimin" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;border:1px solid rgba(15,76,129,0.25);color:#0f4c81;font-size:0.82rem;font-weight:600;text-decoration:none;">📰 文化下乡详情 →</a>
+            </p>
           </div>
           <div class="service-card">
             <div class="service-icon">🌟</div>
             <h4>新排剧目预告</h4>
             <p>剧团正在精心排演《周仁回府》《下河东》等经典大戏，预计下季度正式与广大戏迷观众见面，敬请期待！</p>
+            <p style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;">
+              <a href="cast-public.html" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;text-decoration:none;">🎭 现有阵容浏览 →</a>
+              <a href="news.html?category=jumu" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:6px 14px;border-radius:999px;border:1px solid rgba(15,76,129,0.25);color:#0f4c81;font-size:0.82rem;font-weight:600;text-decoration:none;">📰 新排资讯跟进 →</a>
+            </p>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="booking" class="contact-section">
+    <section id="contact" class="contact-section">
       <div class="container">
         <div class="section-header">
           <h2 class="section-title">联系预约</h2>
@@ -395,8 +452,6 @@
       </div>
     </section>
 
-    <section id="contact" style="padding: 0;">
-    </section>
   </main>
 
   <footer>
@@ -410,29 +465,62 @@
         <div class="footer-col">
           <h4>快速导航</h4>
           <ul>
-            <li><a href="#home">网站首页</a></li>
-            <li><a href="#about">剧团简介</a></li>
-            <li><a href="#repertoire">剧目中心</a></li>
-            <li><a href="#services">演出业务</a></li>
+            <li><a href="index.html">网站首页</a></li>
+            <li><a href="about.html">剧团简介</a></li>
+            <li><a href="operas.html">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html">新闻动态</a></li>
+            <li><a href="booking.html">在线预约</a></li>
+            <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
+            <li><a href="contact.html">联系我们</a></li>
           </ul>
         </div>
         <div class="footer-col">
           <h4>演出服务</h4>
           <ul>
-            <li><a href="#services">乡村庙会演出</a></li>
-            <li><a href="#services">惠民下乡巡演</a></li>
-            <li><a href="#services">节庆专场演出</a></li>
-            <li><a href="#services">企业庆典定制</a></li>
+            <li><a href="services.html#miaohui">乡村庙会演出</a></li>
+            <li><a href="services.html#huimin">惠民下乡巡演</a></li>
+            <li><a href="services.html#jieqing">节庆专场演出</a></li>
+            <li><a href="services.html#qiye">企业庆典定制</a></li>
+            <li><a href="cast-public.html" style="color:#7f1d1d;font-weight:600;">🎭 演出阵容查询</a></li>
+            <li style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(15,76,129,0.2);"><a href="services.html" style="color:var(--gold-dark);font-weight:600;">🔍 查看全部 8 大业务 →</a></li>
           </ul>
         </div>
         <div class="footer-col">
           <h4>联系我们</h4>
           <ul>
             <li><a href="tel:13993839833">📞 13993839833</a></li>
-            <li><a href="#booking">🎫 在线预约</a></li>
-            <li><a href="#news">📰 新闻动态</a></li>
+            <li><a href="mailto:13893811313@163.com">📧 13893811313@163.com</a></li>
+            <li><a href="booking.html">🎫 在线预约</a></li>
+            <li><a href="contact.html">📍 联系我们</a></li>
+            <li><a href="javascript:void(0)" data-footer-action="wechat">💬 微信客服</a></li>
+            <li><a href="javascript:void(0)" data-footer-action="mp">📱 官方公众号</a></li>
             <li><a href="admin/login.html">🔐 后台管理</a></li>
           </ul>
+        </div>
+        <div class="footer-col">
+          <h4>关注我们</h4>
+          <div class="footer-social">
+            <a href="https://live.douyin.com/qaxqjt" target="_blank" rel="noopener noreferrer" class="social-btn social-douyin" aria-label="抖音官方账号">
+              <span class="social-icon">🎵</span>
+              <span class="social-name">抖音@秦安县秦剧团</span>
+            </a>
+            <a href="https://live.kuaishou.com/u/qaxqjt" target="_blank" rel="noopener noreferrer" class="social-btn social-kuaishou" aria-label="快手官方账号">
+              <span class="social-icon">🎥</span>
+              <span class="social-name">快手@qaxqjt</span>
+            </a>
+            <a href="javascript:void(0)" data-footer-action="wechat-qr" class="social-btn social-wechat" aria-label="微信公众号二维码">
+              <span class="social-icon">💚</span>
+              <span class="social-name">微信公众号 · 扫码关注</span>
+            </a>
+            <a href="javascript:void(0)" data-footer-action="shipinhao" class="social-btn social-shipinhao" aria-label="微信视频号">
+              <span class="social-icon">📺</span>
+              <span class="social-name">视频号 · 秦安县秦剧团</span>
+            </a>
+          </div>
+          <p style="margin-top:14px;font-size:0.85rem;color:var(--text-light);line-height:1.7;">
+            关注官方账号<br>获取剧目排期 · 惠民演出 · 幕后花絮
+          </p>
         </div>
       </div>
       <div class="footer-bottom">
@@ -456,7 +544,101 @@
     </div>
   </footer>
 
-  <script src="js/year-lite.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/year-lite.js?v=20260803"></script>
+  <script src="js/app.js?v=20260803"></script>
+  <!-- 🔧 D块前台×按钮兜底：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
+  <script>
+  (function(){
+    document.addEventListener('click', function(e){
+      var t = e.target; if(!t) return;
+      var tn = (t.tagName||'').toLowerCase();
+      var tc = (t.textContent||'').replace(/\s+/g,'');
+      if(tc === '×' || tc === '✕' || tc === 'x' || tc === 'X' || (t.getAttribute && (t.getAttribute('aria-label')||'').toLowerCase().indexOf('close')>=0)){
+        if(tn==='button'||tn==='a'||tn==='span'||tn==='i'||tn==='div'||(t.closest && t.closest('[class*="modal-"],[class*="Modal"],[id*="Modal_Header"],[class*="-close"],[class*="popup-"],[class*="dialog-"]'))){
+          try{ if(typeof window.__closeAnyModal === 'function') { window.__closeAnyModal(); return; } }catch(_){}
+          try{
+            var m = t.closest ? t.closest('.modal, [id$="Modal"], [id$="modal"], .modal-wrap, [data-modal], [class*="-popup"], [class*="dialog"], [class*="-panel"]') : null;
+            if(m){ try{ m.classList.remove('active','show','open','is-open'); m.classList.add('s-modal-hide','modal-wrap-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} } }
+            var o = document.querySelector('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="-mask"], [class*="-backdrop"]');
+            if(o){ try{ o.classList.remove('active','show','open','is-open'); o.classList.add('s-overlay-hide','modal-overlay-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} } }
+          }catch(_f){}
+        }
+      }
+    }, true);
+  })();
+  </script>
+  <!-- 🔧 E块前台死按钮兜底：无onclick无action的"提交/重置/立即预约/我要咨询/提交申请/上传预览" → toast+基础交互 -->
+  <script>
+  (function(){
+    function __FT(msg,type){
+      try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){}
+      try{ (type==='error'?alert:console.log)('[frontpatch] '+msg); }catch(_f){}
+    }
+    function __FL(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||700); }catch(_){}
+      return true;
+    }
+    try{ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ try{ if(typeof window.__closeAnyModal==='function')window.__closeAnyModal(); }catch(_){} try { var all=document.querySelectorAll('.modal,.modal-wrap,[data-modal],[class*="-popup"],[class*="dialog"]'); all.forEach(function(x){ x.classList.remove('active','show','open'); x.classList.add('s-modal-hide'); }); var m2=document.querySelectorAll('.modal-overlay,.overlay,[class*="-mask"],[class*="-backdrop"]'); m2.forEach(function(x){x.classList.add('s-overlay-hide');}); }catch(_x){} } }, true); }catch(_escErr){}
+    document.addEventListener('reset', function(e){
+      try{ if(!e.target || e.target.tagName!=='FORM') return; setTimeout(function(){ __FT('↺ 表单已重置（所有字段恢复默认）','success'); }, 120); }catch(_){}
+    }, true);
+    document.addEventListener('click', function(e){
+      var t=e.target; if(!t) return;
+      var btn = (t.tagName||'').toLowerCase()==='button'? t : (t.closest ? t.closest('button,a.btn,[role="button"],.btn,.btn-primary,.btn-secondary,.btn-gold,.btn-danger,.btn-outline') : null);
+      if(!btn) return;
+      try{ if(btn.getAttribute && btn.getAttribute('onclick') && btn.getAttribute('onclick').length>3) return; if(btn.__bindDone || btn.__ftDone) return; if(btn.getAttribute && btn.getAttribute('type') && btn.getAttribute('type').toLowerCase()==='submit'){ return; } }catch(_a){}
+      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
+      if(!txt || txt.length>28) return;
+      var isSubmit   = txt.indexOf('提交')>=0 || txt.indexOf('立即预约')>=0 || txt.indexOf('立即申请')>=0;
+      var isReset    = txt.indexOf('重置')>=0;
+      var isConsult  = txt.indexOf('咨询')>=0 || txt.indexOf('联系对接')>=0 || txt.indexOf('对接专员')>=0;
+      var isUpload   = txt.indexOf('上传')>=0 || txt.indexOf('预览')>=0 || txt.indexOf('选择文件')>=0;
+      var isSearch   = txt.indexOf('搜索')>=0 || txt.indexOf('查询')>=0 || txt==='🔍';
+      var dk = 'ft_'+(isSubmit?'s':isReset?'r':isConsult?'c':isUpload?'u':isSearch?'q':'k')+'_'+Math.random().toString(36).slice(2,6);
+      if(isSubmit){
+        if(!__FL(dk,1400)){ __FT('⏳ 提交处理中，请稍候…','warning'); e.stopImmediatePropagation(); return; }
+        var fm = btn.closest ? btn.closest('form') : null;
+        if(fm){
+          var agree = fm.querySelector('[data-agree-checkbox]');
+          if(agree && !agree.checked){ __FT('⚠️ 请先勾选「同意协议/须知」后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); return; }
+          var reqFails = fm.querySelectorAll('[required]');
+          var firstBad=null;
+          try{ reqFails.forEach(function(inp){ if(!inp.value || (inp.type==='checkbox' && !inp.checked)){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}},1800);}catch(_b){} } }); }catch(_rf){}
+          if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
+          __FT('✅ 提交成功！（演示模式：真实环境将写入工单并通知对接专员）','success');
+          try{ fm.reset && fm.reset(); }catch(_rs){}
+          e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
+        } else {
+          __FT('✅ 提交成功（演示模式）','success');
+          try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
+          btn.__ftDone=1; e.stopImmediatePropagation(); return;
+        }
+      }
+      if(isReset){
+        if(!__FL(dk,500)) return;
+        var fm2 = btn.closest ? btn.closest('form') : null;
+        try{ if(fm2){ fm2.reset && fm2.reset(); __FT('↺ 表单已重置（所有字段恢复默认）','success'); } else { __FT('↺ 已重置','info'); } }catch(_r){}
+        btn.__ftDone=1; return;
+      }
+      if(isConsult){
+        if(!__FL(dk,900)) return;
+        __FT('📞 已打开对接咨询入口（请致电 138-9381-1313 或扫码添加微信）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isUpload){
+        if(!__FL(dk,1000)) return;
+        __FT('📎 请选择 ≤ 10MB 的图片/PDF/DOC 文件（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isSearch){
+        if(!__FL(dk,500)) return;
+        __FT('🔍 查询条件已生效（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+    }, true);
+    console.info('[FrontCommonPatch 已加载：CSS圆角+×兜底+死按钮+重置+ESC关弹窗+同意协议二次校验]');
+  })();
+  </script>
 </body>
 </html>

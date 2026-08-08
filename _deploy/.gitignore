@@ -1,0 +1,45 @@
+# ========== 秦安县秦剧团云端预约系统 ==========
+# 临时Python脚本（批量注入/诊断/检查用的一次性脚本）
+__*.py
+
+# 日志文件
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 编辑器/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+.DS_Store
+.AppleDouble
+.LSOverride
+$RECYCLE.BIN/
+*.lnk
+
+# 依赖/构建（纯静态项目当前暂无，预留）
+node_modules/
+dist/
+build/
+.cache/
+.parcel-cache/
+.vite/
+coverage/
+
+# 本地环境变量
+.env
+.env.local
+.env.*.local
+
+# 备份
+*.bak
+*.backup

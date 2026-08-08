@@ -43,3 +43,9 @@ coverage/
 # 备份
 *.bak
 *.backup
+
+# Tencent Cloud EdgeOne
+.env
+.edgeone/*
+.tef_dist/*
+  

@@ -1,0 +1,32 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#bg)" stroke="url(#gold)" stroke-width="3"/>
+  <!-- 四角祥云 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#gold)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#gold)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#gold)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#gold)" opacity="0.85"/>
+  <!-- 秦篆书 -->
+  <g transform="translate(50,52)" font-weight="900" text-anchor="middle" fill="url(#gold)">
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#gold)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#gold)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#gold)"/>
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#gold)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#gold)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#gold)"/>
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#gold)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#gold)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#gold)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#gold)"/>
+  </g>
+</svg>

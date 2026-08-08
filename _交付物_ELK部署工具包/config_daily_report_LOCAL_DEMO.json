@@ -1,0 +1,37 @@
+{
+  "_注释_01_端口冲突": "若Mock SMTP启动报 10013/端口占用：改 mock_local_smtp_server.py#L30 的 BIND_PORT（如 10026），同时同步把本文件 smtp.port 改成同一个值",
+  "_注释_02_真实ES配置": "想看完整P99 HTML报表？把本文件 es.host/es.index/es.user/es.password 换成你真实的 ELK 配置。调试建议先跑：py -3 daily_mailer.py --config config_daily_report_LOCAL_DEMO.json --dry-run（只生成报表不发邮件，去掉 --dry-run 则连邮件一起发）",
+  "_注释_03_SMTP配置": "本地演示用，SMTP指向 127.0.0.1:10025 Mock 服务器，任意用户名/密码均可通过 AUTH；切换到真实邮箱只需改 smtp.server/port/use_ssl/starttls/user/password 6 个字段",
+  "_注释": "本地完整演示用配置：SMTP指向本地 127.0.0.1:10025 Mock服务器；ES填占位符（演示时会因ES不可达显示 exit=3 属正常预期，想看完整报表生成请填真实ES）",
+  "es": {
+    "host": "https://ES_HOST:9200",
+    "index": "logs-*",
+    "user": "",
+    "password": "",
+    "timeout_sec": 10,
+    "verify_ssl": false
+  },
+  "smtp": {
+    "server": "127.0.0.1",
+    "port": 10025,
+    "use_ssl": false,
+    "starttls": false,
+    "sender_name": "秦安县秦剧团·演示系统",
+    "sender_email": "daily-report-demo@qaxqjt.local",
+    "user": "demo_user",
+    "password": "demo_pass_123",
+    "timeout_sec": 15,
+    "retries": 3,
+    "retry_interval_sec": 2,
+    "local_hostname": "demo-mailer-client.qaxqjt.local"
+  },
+  "recipients": [
+    "admin-op@qaxqjt.local",
+    "dev-team@qaxqjt.local",
+    "qa-team@qaxqjt.local"
+  ],
+  "subject_prefix": "[演示·本地Mock]",
+  "hours_back": 24,
+  "log_dir": "./logs",
+  "output_dir": "./reports"
+}

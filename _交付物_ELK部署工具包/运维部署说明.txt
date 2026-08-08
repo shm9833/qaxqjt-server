@@ -1,0 +1,117 @@
+======================================================================================
+  秦安县秦剧团 · Admin Perf P99 日报
+  运维部署说明（给运维同事的操作指南）
+======================================================================================
+【目标】让一台 Windows 机器每天凌晨 2:00 自动从 ELK 拉取性能数据、生成 P99 报表、
+      并把报表+CSV附件以邮件形式发给相关人员。
+
+======================================================================================
+【文件清单】（本 zip 解压后就有这些）
+======================================================================================
+  1) daily_mailer.py                    ← 日报主脚本（拉ES→生成HTML→发邮件）
+  2) elk_p99_report.py                  ← ES 查询聚合 + HTML 渲染模块（daily_mailer 依赖它）
+  3) config_daily_report_TESTENV.json   ← 测试环境配置模板（有中文注释+SMTP/ES速查表）
+  4) config_daily_report.example.json   ← 最简配置示例（无注释）
+  5) run_daily_mailer_wrapper.bat       ← 调度 wrapper：防重复运行+失败30分钟重试3次+完整日志
+  6) install_daily_report_WINDOWS.bat   ← 一键安装计划任务【右键管理员身份运行】
+  7) uninstall_daily_report_WINDOWS.bat ← 一键卸载计划任务【右键管理员身份运行】
+  8) install_daily_report_cron_LINUX.sh ← Linux cron 安装脚本（可选）
+  9) install_daily_report_macos.sh      ← macOS launchd 安装脚本（可选）
+ 10) logstash_pipeline_qaxqjt_perf.conf ← Logstash Nginx → ES 管道配置
+ 11) kibana_dashboard_qaxqjt_perf.ndjson← Kibana 仪表盘（可直接导入）
+ 12) qaxqjt_p99_daily_XXXXXXXX.html     ← 本次 dry-run 生成的示例测试报告（参考用）
+ 13) 运维部署说明.txt                    ← 本文件
+
+======================================================================================
+【部署步骤】5 步搞定，预计 10 分钟
+======================================================================================
+  第 1 步：解压 + 安装 Python 3（如果还没装）
+    · 解压本 zip 到任意固定目录，建议：C:\QAXQJT\ELK_Daily_Report\
+    · 装 Python 3.10+：https://www.python.org/downloads/windows/
+    · ⚠️ 安装时务必勾选 "Add Python to PATH"（最顶部那个复选框）
+    · 验证：打开新的 CMD，执行 `py --version`，能看到 Python 3.x.x 就说明装好了
+
+  第 2 步：填配置文件（最关键一步）
+    · 复制 config_daily_report_TESTENV.json 改名成 config_daily_report.json
+    · 编辑 config_daily_report.json，把以下字段填成真实值：
+       ┌─────────────┬───────────────────────────────────────────────┐
+       │ es.host     │ ES 地址（带协议+端口）：http://192.168.x.x:9200 │
+       │ es.index    │ 索引匹配模式：qaxqjt-admin-perf-* 或 nginx-* │
+       │ es.user     │ ES 用户名（开了 X-Pack 就填 elastic）        │
+       │ es.password │ ES 密码                                     │
+       │ smtp.server │ 发件服务器：smtp.exmail.qq.com（QQ企业邮）   │
+       │ smtp.port   │ 465 （优先 SSL）                           │
+       │ smtp.username │ 发件完整邮箱：report@yourcompany.com      │
+       │ smtp.password │ ⚠️ 客户端授权码（不是网页登录密码！）     │
+       │ smtp.sender_email │ 同上，完整邮箱地址                    │
+       │ recipients  │ 收件人数组：["张三@x.com","李四@x.com"]     │
+       └─────────────┴───────────────────────────────────────────────┘
+    · 💡 常见 SMTP 参数速查（模板里也有）：
+        QQ 企业邮：smtp.exmail.qq.com : 465 (SSL)
+        163 邮箱  ：smtp.163.com      : 465 (SSL)
+        Outlook   ：smtp.office365.com: 587 (STARTTLS)
+
+  第 3 步：手动验证 2 条命令（必须跑，确保配置没问题）
+    · 打开 CMD，cd 到解压目录，执行：
+        C:
+        cd C:\QAXQJT\ELK_Daily_Report\
+        py daily_mailer.py --dry-run --config config_daily_report.json
+      → 结果：最后一行打印 [FINAL_STATUS] exit_code=0 status=OK，且 reports/ 目录下生成新 HTML
+    · 再执行：
+        py daily_mailer.py --test-smtp --config config_daily_report.json
+      → 结果：recipients 里的人都能收到一封【测试SMTP连通性】邮件
+    · ✅ 以上 2 条必须全部通过，才继续下一步；否则先查 logs/ 下的日志排错
+
+  第 4 步：一键安装计划任务
+    · 找到 install_daily_report_WINDOWS.bat → 右键 → 【以管理员身份运行】
+    · 脚本会自动做：环境检查 → dry-run 校验 → 建任务 → 立即触发一次 → 打印任务详情
+    · 看到最后绿色的 "✅ 安装成功" 就搞定了
+    · 任务名：QAXQJT_Perf_P99_Daily （每天凌晨 02:00 运行）
+
+  第 5 步：验收
+    · 等 1~2 分钟（手动触发需要启动时间），打开 logs/ 目录检查：
+       · scheduler.log 最后一行有 [RUNNER] SUCCESS
+       · daily_mailer_YYYYMMDD.log 最后一行有 [FINAL_STATUS] exit_code=0 status=OK
+       · 收件人邮箱里收到当天 P99 日报邮件（带 HTML 附件 + CSV 附件）
+    · 🎉 验收通过！
+
+======================================================================================
+【日常维护】常用命令（CMD 里执行）
+======================================================================================
+  查看任务详情   ：schtasks /Query /TN "QAXQJT_Perf_P99_Daily" /V /FO LIST
+  立即手动执行   ：schtasks /Run   /TN "QAXQJT_Perf_P99_Daily"
+  强制结束运行   ：schtasks /End   /TN "QAXQJT_Perf_P99_Daily"
+  卸载定时任务   ：右键管理员运行 uninstall_daily_report_WINDOWS.bat
+
+  查某天是否成功：
+       findstr /C:"[FINAL_STATUS]" logs\daily_mailer_20260804.log
+  查所有调度记录：
+       type logs\scheduler.log
+  查某天完整输出：
+       type logs\task_runner_20260804.log
+
+======================================================================================
+【FAQ · 常见问题排查】
+======================================================================================
+  Q1: dry-run 报错 ES 查询失败 / getaddrinfo failed → 网络不通
+    → 那台机器能否 ping 通 ES 的 host？防火墙有没有放行 9200？
+  Q2: SMTPAuthenticationError 535 登录失败
+    → ⚠️ 99% 是用了登录密码而不是【客户端授权码】！去邮箱后台开 SMTP 服务拿授权码
+  Q3: 凌晨 2 点没收到邮件，但手动执行就有
+    → 检查① 电脑是否关机？计划任务勾选了"WakeToRun 唤醒运行"，但 BIOS 里也要开启"允许唤醒"
+    → ② logs\scheduler.log 里看有没有 [RUNNER] 记录，没有说明任务没触发；有记录但FAIL说明配置问题
+  Q4: 报表 P99 数值全是 0
+    → es.index 写错了，或者那个索引里没有符合 query 要求的日志字段（trace_id/latency_ms 等）
+  Q5: 想改触发时间（比如改成每天凌晨 3 点）
+    → 打开 install_daily_report_WINDOWS.bat 搜 "02:00"，改成 "03:00" 后重新右键管理员运行一次即可（会覆盖旧任务）
+
+======================================================================================
+【日志关键字速查表】（直接 findstr 或 grep 搜这些即可）
+======================================================================================
+  [FINAL_STATUS]        ：daily_mailer 最终成败（OK=exit_code=0 / FAIL=非0）
+  [TASK_BEGIN]          ：daily_mailer 启动
+  [ES_QUERY_BEGIN/RESULT]：ES 查询阶段（成功/失败+排错建议）
+  [SMTP_CONNECT_BEGIN/RESULT]：SMTP 连接阶段
+  [EMAIL_SEND_RESULT]   ：邮件发送结果
+  [RUNNER] SUCCESS/FAIL ：scheduler 层面每次运行的一行摘要
+  [UNEXPECTED_EXCEPTION]：未预见异常（需要研发介入）

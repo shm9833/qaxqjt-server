@@ -2,13 +2,45 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <script src="js/favicon-inject.js" defer></script>
+    <script src="js/favicon-inject.js?v=20260803" defer></script>
+    <script src="js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="秦安县秦剧团在线预约系统，阶梯优惠自动计算，乡村庙会、惠民下乡、节庆专场、企业庆典等各类戏曲演出预约，电话：13993839833">
   <meta name="keywords" content="秦安秦剧团,秦安县秦剧团文化演出有限公司,在线预约,阶梯优惠,秦腔演出预约,戏曲演出">
   <title>在线预约 - 秦安县秦剧团文化演出有限公司 | {year}</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20260803">
+  <style>
+    /* 🔧 前台通用补丁：分页/按钮圆角（原方形→10px） + 伪链接视觉提示 + 弹窗隐藏辅助类 */
+    .pagination .page-btn, button.page-btn, .page-btn,
+    .pagination button, .page-number-item button, .pager button,
+    .btn-pagination, [class*="pagination"] button,
+    .btn, button.btn {
+      border-radius: 10px !important;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+    .pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+    }
+    .s-modal-hide { display: none !important; }
+    .s-overlay-hide { display: none !important; }
+    a[href="#"]:not(.action-link):not([data-toggle]):not(.schedule-opera-link)::after { content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .7; }
+    .btn-ghost { color: #64748b; }
+  </style>
 </head>
 <body>
   <header data-header>
@@ -65,10 +97,10 @@
         <nav data-nav-menu>
           <ul>
             <li><a href="index.html">首页</a></li>
-            <li><a href="index.html#about">剧团简介</a></li>
-            <li><a href="index.html#repertoire">剧目中心</a></li>
-            <li><a href="index.html#services">演出业务</a></li>
-            <li><a href="index.html#news">新闻动态</a></li>
+            <li><a href="about.html">剧团简介</a></li>
+            <li><a href="operas.html">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html">新闻动态</a></li>
             <li><a href="booking.html" class="active">在线预约</a></li>
             <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
             <li><a href="contact.html">联系我们</a></li>
@@ -80,7 +112,7 @@
   </header>
 
   <main>
-    <section class="page-banner">
+    <section class="page-banner" style="background:linear-gradient(135deg,rgba(14,116,144,0.78),rgba(120,53,15,0.74)),url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E6%BC%94%E5%87%BA%E9%A2%84%E7%BA%A6%E5%AE%A3%E4%BC%A0%E6%B5%B7%E6%8A%A5%EF%BC%8C%E5%8F%A4%E6%88%8F%E5%8F%B0%E5%89%8D%E6%97%A6%E8%A7%92%E6%BC%94%E5%91%98%E6%89%8B%E6%8C%81%E6%89%87%E5%AD%90%E6%AD%A3%E5%BC%8F%E5%AE%A3%E4%BC%A0%E7%85%A7%EF%BC%8C%E7%BA%A2%E5%AE%AB%E7%81%AF%E7%BA%A2%E6%A3%95%E5%AD%97%E6%A0%87%E8%AF%AD%E5%9C%A8%E7%BA%BF%E9%A2%84%E7%BA%A6%EF%BC%8C%E4%B8%AD%E5%BC%8F%E6%88%8F%E6%9B%B2%E9%A3%8E%E6%A0%BC%EF%BC%8C%E5%96%9C%E5%BA%86%E7%BA%A2%E8%89%B2%E8%B0%83%EF%BC%8C%E9%AB%98%E6%B8%858k&image_size=landscape_16_9') center/cover no-repeat;">
       <div class="page-banner-content">
         <h1>🎫 在线预约</h1>
         <div class="breadcrumb">
@@ -214,8 +246,8 @@
             <p>带 <span class="required">*</span> 为必填项，请如实填写</p>
           </div>
 
-          <form data-appointment-form id="appointmentForm">
-            <div data-form-errors style="display:none;margin-bottom:20px;padding:15px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;"></div>
+          <form data-appointment-form id="appointmentForm" novalidate>
+            <div data-form-errors class="form-errors-box csp-hide"></div>
 
             <div class="booking-section-title">
               <div class="step-num">1</div>
@@ -225,19 +257,19 @@
             <div class="form-row">
               <div class="form-group" data-field="customerName">
                 <label for="customerName">联系人姓名 <span class="required">*</span></label>
-                <input type="text" id="customerName" name="customerName" class="form-control" placeholder="请输入您的姓名">
-                <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
+                <input type="text" id="customerName" name="customerName" class="form-control" placeholder="请输入您的姓名" maxlength="30" required>
+                <span class="field-error-tip form-hint field-tip-red"></span>
               </div>
               <div class="form-group" data-field="phone">
                 <label for="phone">联系电话 <span class="required">*</span></label>
-                <input type="tel" id="phone" name="phone" class="form-control" placeholder="请输入手机号码">
-                <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
+                <input type="tel" id="phone" name="phone" class="form-control" placeholder="请输入手机号码" required>
+                <span class="field-error-tip form-hint field-tip-red"></span>
               </div>
             </div>
 
             <div class="form-group" data-field="organization">
               <label for="organization">合作单位/组织机构</label>
-              <input type="text" id="organization" name="organization" class="form-control" placeholder="如：XX镇文化站、XX村委会、XX企业等">
+              <input type="text" id="organization" name="organization" class="form-control" placeholder="如：XX镇文化站、XX村委会、XX企业等" maxlength="100">
               <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
             </div>
 
@@ -249,7 +281,7 @@
             <div class="form-row">
               <div class="form-group" data-field="serviceType">
                 <label for="serviceType">演出类型 <span class="required">*</span></label>
-                <select id="serviceType" name="serviceType" class="form-control">
+                <select id="serviceType" name="serviceType" class="form-control" required>
                   <option value="">请选择演出类型</option>
                   <option value="乡村庙会戏曲演出">乡村庙会戏曲演出</option>
                   <option value="政府惠民下乡巡演">政府惠民下乡巡演</option>
@@ -264,27 +296,27 @@
               </div>
               <div class="form-group" data-field="shows">
                 <label for="shows">预约场次数量 <span class="required">*</span></label>
-                <input type="number" id="shows" name="shows" class="form-control" data-shows-input placeholder="请输入场次数量（1-100）" min="1" max="100" value="1">
-                <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
+                <input type="number" id="shows" name="shows" class="form-control" data-shows-input placeholder="请输入场次数量（1-100）" min="1" max="100" value="1" required>
+                <span class="field-error-tip form-hint field-tip-red"></span>
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group" data-field="preferredStartDate">
                 <label for="preferredStartDate">演出日期 <span class="required">*</span></label>
-                <input type="date" id="preferredStartDate" name="preferredStartDate" class="form-control">
-                <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
+                <input type="date" id="preferredStartDate" name="preferredStartDate" class="form-control" required>
+                <span class="field-error-tip form-hint field-tip-red"></span>
               </div>
               <div class="form-group" data-field="venue">
                 <label for="venue">演出地点 <span class="required">*</span></label>
-                <input type="text" id="venue" name="venue" class="form-control" placeholder="省/市/县/乡镇/村（详细地址）">
-                <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
+                <input type="text" id="venue" name="venue" class="form-control" placeholder="省/市/县/乡镇/村（详细地址）" maxlength="200" required>
+                <span class="field-error-tip form-hint field-tip-red"></span>
               </div>
             </div>
 
             <div class="form-group">
               <label>意向剧目（可多选）</label>
-              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:15px;background:var(--bg-light);border-radius:8px;border:1px solid var(--border-light);">
+              <div class="plays-grid-wrap">
                 <label class="form-check">
                   <input type="checkbox" name="selectedPlays" value="《火焰驹》">
                   <span>《火焰驹》</span>
@@ -317,6 +349,22 @@
                   <input type="checkbox" name="selectedPlays" value="《周仁回府》">
                   <span>《周仁回府》</span>
                 </label>
+                <label class="form-check">
+                  <input type="checkbox" name="selectedPlays" value="《断桥》">
+                  <span>《断桥》</span>
+                </label>
+                <label class="form-check">
+                  <input type="checkbox" name="selectedPlays" value="《拾玉镯》">
+                  <span>《拾玉镯》</span>
+                </label>
+                <label class="form-check">
+                  <input type="checkbox" name="selectedPlays" value="《三娘教子》">
+                  <span>《三娘教子》</span>
+                </label>
+                <label class="form-check">
+                  <input type="checkbox" name="selectedPlays" value="《二进宫》">
+                  <span>《二进宫》</span>
+                </label>
               </div>
               <span class="form-hint">可多选，或在下方备注中填写其他剧目需求</span>
             </div>
@@ -336,8 +384,23 @@
 
             <div class="form-group" data-field="remarks">
               <label for="remarks">特殊需求/备注说明</label>
-              <textarea id="remarks" name="remarks" class="form-control" rows="4" placeholder="请填写其他特殊要求、演出预算、附加服务需求等信息..."></textarea>
-              <span class="field-error-tip form-hint" style="color:#dc2626;"></span>
+              <textarea id="remarks" name="remarks" class="form-control" rows="4" placeholder="请填写其他特殊要求、演出预算、附加服务需求等信息..." maxlength="500"></textarea>
+              <span class="field-error-tip form-hint field-tip-red"></span>
+            </div>
+
+            <!-- 📋 提交预约必须阅读预约须知（Q3强制要求） -->
+            <div class="form-group agree-notice-group" data-field="agreeNotice">
+              <div style="display:flex;align-items:flex-start;gap:12px;">
+                <div style="flex:0 0 auto;padding-top:2px;">
+                  <input type="checkbox" id="agreeBookingNotice" name="agreeBookingNotice" class="agree-notice-cb" required data-agree-checkbox>
+                </div>
+                <div style="flex:1 1 auto;line-height:1.75;font-size:0.92rem;">
+                  <label for="agreeBookingNotice" style="cursor:pointer;font-weight:600;color:#713f12;">
+                    我已详细阅读并同意 <a href="delivery.html" target="_blank" rel="noopener noreferrer" style="color:#b45309;font-weight:700;text-decoration:underline;">《预约服务流程与交付标准》</a>、<a href="breach-liability.html" target="_blank" rel="noopener noreferrer" style="color:#b45309;font-weight:700;text-decoration:underline;">《违约民事责任细则》</a>、<a href="minor-policy.html" target="_blank" rel="noopener noreferrer" style="color:#b45309;font-weight:700;text-decoration:underline;">《未成年人保护政策》</a> 全部条款
+                  </label>
+                  <div id="agreeBookingNoticeError" class="agree-notice-err csp-hide">⚠️ 提交预约前必须阅读并勾选以上全部条款</div>
+                </div>
+              </div>
             </div>
 
             <div class="form-actions">
@@ -348,10 +411,15 @@
             </div>
           </form>
 
-          <div id="formSuccessMsg" style="display:none;margin-top:30px;padding:30px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;border-radius:16px;text-align:center;">
-            <div style="font-size:4rem;margin-bottom:15px;">🎉</div>
-            <h3 style="color:#166534;margin-bottom:10px;font-size:1.5rem;">预约提交成功！</h3>
-            <p style="color:#15803d;margin:0;font-size:1rem;">感谢您的信任！我们将在 <strong>24小时内</strong> 安排专人与您电话联系确认演出详情。<br>如有紧急需求，请直接拨打 <a href="tel:13993839833" style="color:#166534;font-weight:600;">13993839833</a>。</p>
+          <div id="formSuccessMsg" class="form-success-card csp-hide">
+            <div class="success-emoji">🎉</div>
+            <h3 class="success-title">预约提交成功！</h3>
+            <p class="success-desc">感谢您的信任！我们将在 <strong>24小时内</strong> 安排专人与您电话联系确认演出详情。<br>如有紧急需求，请直接拨打 <a href="tel:13993839833">13993839833</a>。</p>
+            <div data-booking-id-row class="booking-id-row csp-hide">
+              <div class="booking-id-label">📋 您的预约编号（请妥善保存）</div>
+              <div class="booking-id-val" data-booking-id-display>-</div>
+              <button type="button" class="booking-id-copy" data-booking-id-copy>📋 复制预约编号</button>
+            </div>
           </div>
         </div>
       </div>
@@ -368,30 +436,62 @@
         </div>
         <div class="footer-col">
           <h4>快速导航</h4>
-          <ul class="footer-links">
+          <ul>
             <li><a href="index.html">网站首页</a></li>
-            <li><a href="index.html#about">剧团简介</a></li>
-            <li><a href="index.html#repertoire">剧目中心</a></li>
-            <li><a href="index.html#services">演出业务</a></li>
+            <li><a href="about.html">剧团简介</a></li>
+            <li><a href="operas.html">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html">新闻动态</a></li>
+            <li><a href="booking.html">在线预约</a></li>
+            <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
+            <li><a href="contact.html">联系我们</a></li>
           </ul>
         </div>
         <div class="footer-col">
           <h4>演出服务</h4>
-          <ul class="footer-links">
-            <li><a href="index.html#services">乡村庙会演出</a></li>
-            <li><a href="index.html#services">惠民下乡巡演</a></li>
-            <li><a href="index.html#services">节庆专场演出</a></li>
-            <li><a href="index.html#services">企业庆典定制</a></li>
+          <ul>
+            <li><a href="services.html#miaohui">乡村庙会演出</a></li>
+            <li><a href="services.html#huimin">惠民下乡巡演</a></li>
+            <li><a href="services.html#jieqing">节庆专场演出</a></li>
+            <li><a href="services.html#qiye">企业庆典定制</a></li>
+            <li style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(15,76,129,0.2);"><a href="services.html" style="color:var(--gold-dark);font-weight:600;">🔍 查看全部 8 大业务 →</a></li>
           </ul>
         </div>
         <div class="footer-col">
           <h4>联系我们</h4>
-          <ul class="footer-links">
+          <ul>
             <li><a href="tel:13993839833">📞 13993839833</a></li>
+            <li><a href="mailto:13893811313@163.com">📧 13893811313@163.com</a></li>
             <li><a href="booking.html">🎫 在线预约</a></li>
             <li><a href="contact.html">📍 联系我们</a></li>
+            <li><a href="javascript:void(0)" data-footer-action="wechat">💬 微信客服</a></li>
+            <li><a href="javascript:void(0)" data-footer-action="mp">📱 官方公众号</a></li>
             <li><a href="admin/login.html">🔐 后台管理</a></li>
           </ul>
+        </div>
+        <div class="footer-col">
+          <h4>关注我们</h4>
+          <div class="footer-social">
+            <a href="https://live.douyin.com/qaxqjt" target="_blank" rel="noopener noreferrer" class="social-btn social-douyin" aria-label="抖音官方账号">
+              <span class="social-icon">🎵</span>
+              <span class="social-name">抖音@秦安县秦剧团</span>
+            </a>
+            <a href="https://live.kuaishou.com/u/qaxqjt" target="_blank" rel="noopener noreferrer" class="social-btn social-kuaishou" aria-label="快手官方账号">
+              <span class="social-icon">🎥</span>
+              <span class="social-name">快手@qaxqjt</span>
+            </a>
+            <a href="javascript:void(0)" data-footer-action="wechat-qr" class="social-btn social-wechat" aria-label="微信公众号二维码">
+              <span class="social-icon">💚</span>
+              <span class="social-name">微信公众号 · 扫码关注</span>
+            </a>
+            <a href="javascript:void(0)" data-footer-action="shipinhao" class="social-btn social-shipinhao" aria-label="微信视频号">
+              <span class="social-icon">📺</span>
+              <span class="social-name">视频号 · 秦安县秦剧团</span>
+            </a>
+          </div>
+          <p style="margin-top:14px;font-size:0.85rem;color:var(--text-light);line-height:1.7;">
+            关注官方账号<br>获取剧目排期 · 惠民演出 · 幕后花絮
+          </p>
         </div>
       </div>
       <div class="footer-bottom">
@@ -415,30 +515,108 @@
     </div>
   </footer>
 
-  <button data-back-to-top style="display:none;position:fixed;bottom:30px;right:30px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#8B0000,#6B0000);color:#fff;border:none;box-shadow:0 4px 15px rgba(139,0,0,0.4);cursor:pointer;font-size:1.3rem;z-index:999;transition:all .3s ease;" aria-label="回到顶部">
+  <button data-back-to-top class="back-to-top theme-red pg-hidden" aria-label="回到顶部">
     ↑
   </button>
 
-  <script src="js/year-lite.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/year-lite.js?v=20260803"></script>
+  <script src="js/api-config.js?v=20260803"></script>
+  <script src="js/api-request.js?v=20260803"></script>
+  <script src="js/app.js?v=20260803"></script>
   <script>
     (function() {
-      var form = document.getElementById('appointmentForm');
-      var successMsg = document.getElementById('formSuccessMsg');
-      if (form) {
-        form.addEventListener('submit', function(e) {
-          setTimeout(function() {
-            if (successMsg && form.querySelector('[data-field="customerName"] .field-error') === null) {
-              var errBox = form.querySelector('[data-form-errors]');
-              if (!errBox || errBox.style.display === 'none') {
-                successMsg.style.display = 'block';
-                successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // ====== booking.html 专属：URL 参数双向预填（剧目卡 / 二维码预约 两种场景）======
+      try {
+        var usp = new URLSearchParams(window.location.search);
+        var filledCount = 0;
+        var fromQR = usp.has('serviceName') || usp.has('showCount'); // 识别二维码场景
+        var stSel = document.getElementById('serviceType');
+        if (stSel && usp.get('serviceType')) {
+          var want = usp.get('serviceType');
+          var found = false;
+          for (var i = 0; i < stSel.options.length; i++) {
+            var optVal = stSel.options[i].value;
+            if (optVal === want || decodeURIComponent(optVal) === want || optVal === decodeURIComponent(want)) {
+              stSel.selectedIndex = i; found = true; break;
+            }
+          }
+          if (found) filledCount++;
+          stSel.dispatchEvent(new Event('change', {bubbles:true}));
+        }
+        var dateInput = document.getElementById('preferredStartDate');
+        if (dateInput && usp.get('date')) {
+          dateInput.value = usp.get('date'); filledCount++;
+        }
+        var showInput = document.querySelector('[data-shows-input]');
+        var countVal = usp.get('showCount') || usp.get('playCount') || usp.get('shows') || usp.get('count');
+        if (showInput && countVal) {
+          var cn = parseInt(countVal, 10);
+          if (!isNaN(cn) && cn >= 1 && cn <= 100) {
+            showInput.value = String(cn); filledCount++;
+            showInput.dispatchEvent(new Event('input', {bubbles:true}));
+          }
+        }
+        var telInput = document.getElementById('contactPhone');
+        if (!telInput) telInput = document.querySelector('input[type="tel"]');
+        if (telInput && usp.get('contactTel')) {
+          telInput.value = usp.get('contactTel'); filledCount++;
+        }
+        // 剧目卡场景：play参数 → 复选框勾选 + remarks填入（宽松规范化匹配，支持多剧目逗号/顿号分隔）
+        function normStr(s) { if (!s) return ''; return String(s).replace(/《|》|\s|折段|选段/g, '').toLowerCase(); }
+        var playName = usp.get('play');
+        if (playName) {
+          playName = decodeURIComponent(playName);
+          // 支持多剧目分隔
+          var playTargets = String(playName).split(/[，,、;；|\/]/).map(function(s){return s.trim();}).filter(function(s){return !!s;});
+          var cbList = document.querySelectorAll('input[name="selectedPlays"]');
+          var matchedCount = 0;
+          var unmatched = [];
+          playTargets.forEach(function(targetPlay){
+            var playNorm = normStr(targetPlay);
+            var matched = false;
+            for (var k = 0; k < cbList.length; k++) {
+              var vNorm = normStr(cbList[k].value);
+              if (vNorm && (vNorm === playNorm || vNorm.indexOf(playNorm) >= 0 || (playNorm && playNorm.indexOf(vNorm) >= 0))) {
+                cbList[k].checked = true; matched = true;
               }
             }
-          }, 500);
-        });
+            if (matched) matchedCount++; else unmatched.push(targetPlay);
+          });
+          var remInput = document.getElementById('remarks');
+          if (unmatched.length > 0 && remInput) {
+            var cur = remInput.value ? remInput.value + '\n' : '';
+            var titleized = unmatched.map(function(t){ return (t.indexOf('《') < 0 ? '《' + t + '》' : t); }).join('、');
+            remInput.value = cur + '意向剧目：' + titleized;
+          }
+          if (matchedCount > 0 || (unmatched.length > 0 && remInput)) filledCount++;
+        }
+        // 触发toast（二维码/剧目卡 分流样式）
+        if (filledCount > 0 && window.Utils && typeof Utils.showToast === 'function') {
+          if (fromQR) {
+            Utils.showToast('✓ 已从预约二维码带入' + filledCount + '项信息，请补充完整后提交', 'info', 4500);
+          } else {
+            Utils.showToast('✓ 参数预填成功（已选择' + filledCount + '项）', 'success', 3200);
+          }
+        }
+      } catch (e) { /* 预填失败不阻塞 */ }
+
+      var form = document.getElementById('appointmentForm');
+      var successMsg = document.getElementById('formSuccessMsg');
+      var dateInput2 = document.getElementById('preferredStartDate');
+      if (dateInput2) {
+        var td = new Date();
+        var ty = td.getFullYear();
+        var tm = String(td.getMonth() + 1).padStart(2, '0');
+        var tdd = String(td.getDate()).padStart(2, '0');
+        var todayStr = ty + '-' + tm + '-' + tdd;
+        dateInput2.setAttribute('min', todayStr);
+      }
+      if (form) {
         form.addEventListener('reset', function() {
-          if (successMsg) successMsg.style.display = 'none';
+          var isSubmitReset = form.getAttribute('data-booking-submitted') === '1';
+          if (successMsg && !isSubmitReset) {
+            successMsg.style.display = 'none';
+          }
           setTimeout(function() {
             var previewBox = document.querySelector('[data-pricing-detail]');
             var showInput = document.querySelector('[data-shows-input]');
@@ -446,10 +624,114 @@
               showInput.value = '1';
               showInput.dispatchEvent(new Event('input'));
             }
+            if (isSubmitReset) return;
+            var idDisplay = successMsg ? successMsg.querySelector('[data-booking-id-display]') : null;
+            if (idDisplay) {
+              var current = idDisplay.textContent.trim();
+              var isPlaceholder = (current === '-' || current === '');
+              var isResetFlag = form.getAttribute('data-booking-reset-only') === '1';
+              if (isPlaceholder || isResetFlag) {
+                idDisplay.textContent = '-';
+              }
+            }
           }, 100);
         });
       }
     })();
+  </script>
+  <!-- 🔧 D块前台×按钮兜底：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
+  <script>
+  (function(){
+    document.addEventListener('click', function(e){
+      var t = e.target; if(!t) return;
+      var tn = (t.tagName||'').toLowerCase();
+      var tc = (t.textContent||'').replace(/\s+/g,'');
+      if(tc === '×' || tc === '✕' || tc === 'x' || tc === 'X' || (t.getAttribute && (t.getAttribute('aria-label')||'').toLowerCase().indexOf('close')>=0)){
+        if(tn==='button'||tn==='a'||tn==='span'||tn==='i'||tn==='div'||(t.closest && t.closest('[class*="modal-"],[class*="Modal"],[id*="Modal_Header"],[class*="-close"],[class*="popup-"],[class*="dialog-"]'))){
+          try{ if(typeof window.__closeAnyModal === 'function') { window.__closeAnyModal(); return; } }catch(_){}
+          try{
+            var m = t.closest ? t.closest('.modal, [id$="Modal"], [id$="modal"], .modal-wrap, [data-modal], [class*="-popup"], [class*="dialog"], [class*="-panel"]') : null;
+            if(m){ try{ m.classList.remove('active','show','open','is-open'); m.classList.add('s-modal-hide','modal-wrap-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} } }
+            var o = document.querySelector('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="-mask"], [class*="-backdrop"]');
+            if(o){ try{ o.classList.remove('active','show','open','is-open'); o.classList.add('s-overlay-hide','modal-overlay-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} } }
+          }catch(_f){}
+        }
+      }
+    }, true);
+  })();
+  </script>
+  <!-- 🔧 E块前台死按钮兜底：无onclick无action的"提交/重置/立即预约/我要咨询/提交申请/上传预览" → toast+基础交互 -->
+  <script>
+  (function(){
+    function __FT(msg,type){
+      try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){}
+      try{ (type==='error'?alert:console.log)('[frontpatch] '+msg); }catch(_f){}
+    }
+    function __FL(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||700); }catch(_){}
+      return true;
+    }
+    try{ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ try{ if(typeof window.__closeAnyModal==='function')window.__closeAnyModal(); }catch(_){} try { var all=document.querySelectorAll('.modal,.modal-wrap,[data-modal],[class*="-popup"],[class*="dialog"]'); all.forEach(function(x){ x.classList.remove('active','show','open'); x.classList.add('s-modal-hide'); }); var m2=document.querySelectorAll('.modal-overlay,.overlay,[class*="-mask"],[class*="-backdrop"]'); m2.forEach(function(x){x.classList.add('s-overlay-hide');}); }catch(_x){} } }, true); }catch(_escErr){}
+    document.addEventListener('reset', function(e){
+      try{ if(!e.target || e.target.tagName!=='FORM') return; setTimeout(function(){ __FT('↺ 表单已重置（所有字段恢复默认）','success'); }, 120); }catch(_){}
+    }, true);
+    document.addEventListener('click', function(e){
+      var t=e.target; if(!t) return;
+      var btn = (t.tagName||'').toLowerCase()==='button'? t : (t.closest ? t.closest('button,a.btn,[role="button"],.btn,.btn-primary,.btn-secondary,.btn-gold,.btn-danger,.btn-outline') : null);
+      if(!btn) return;
+      try{ if(btn.getAttribute && btn.getAttribute('onclick') && btn.getAttribute('onclick').length>3) return; if(btn.__bindDone || btn.__ftDone) return; if(btn.getAttribute && btn.getAttribute('type') && btn.getAttribute('type').toLowerCase()==='submit'){ return; } }catch(_a){}
+      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
+      if(!txt || txt.length>28) return;
+      var isSubmit   = txt.indexOf('提交')>=0 || txt.indexOf('立即预约')>=0 || txt.indexOf('立即申请')>=0;
+      var isReset    = txt.indexOf('重置')>=0;
+      var isConsult  = txt.indexOf('咨询')>=0 || txt.indexOf('联系对接')>=0 || txt.indexOf('对接专员')>=0;
+      var isUpload   = txt.indexOf('上传')>=0 || txt.indexOf('预览')>=0 || txt.indexOf('选择文件')>=0;
+      var isSearch   = txt.indexOf('搜索')>=0 || txt.indexOf('查询')>=0 || txt==='🔍';
+      var dk = 'ft_'+(isSubmit?'s':isReset?'r':isConsult?'c':isUpload?'u':isSearch?'q':'k')+'_'+Math.random().toString(36).slice(2,6);
+      if(isSubmit){
+        if(!__FL(dk,1400)){ __FT('⏳ 提交处理中，请稍候…','warning'); e.stopImmediatePropagation(); return; }
+        var fm = btn.closest ? btn.closest('form') : null;
+        if(fm){
+          var agree = fm.querySelector('[data-agree-checkbox]');
+          if(agree && !agree.checked){ __FT('⚠️ 请先勾选「同意协议/须知」后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); return; }
+          var reqFails = fm.querySelectorAll('[required]');
+          var firstBad=null;
+          try{ reqFails.forEach(function(inp){ if(!inp.value || (inp.type==='checkbox' && !inp.checked)){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}},1800);}catch(_b){} } }); }catch(_rf){}
+          if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
+          __FT('✅ 提交成功！（演示模式：真实环境将写入工单并通知对接专员）','success');
+          try{ fm.reset && fm.reset(); }catch(_rs){}
+          e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
+        } else {
+          __FT('✅ 提交成功（演示模式）','success');
+          try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
+          btn.__ftDone=1; e.stopImmediatePropagation(); return;
+        }
+      }
+      if(isReset){
+        if(!__FL(dk,500)) return;
+        var fm2 = btn.closest ? btn.closest('form') : null;
+        try{ if(fm2){ fm2.reset && fm2.reset(); __FT('↺ 表单已重置（所有字段恢复默认）','success'); } else { __FT('↺ 已重置','info'); } }catch(_r){}
+        btn.__ftDone=1; return;
+      }
+      if(isConsult){
+        if(!__FL(dk,900)) return;
+        __FT('📞 已打开对接咨询入口（请致电 138-9381-1313 或扫码添加微信）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isUpload){
+        if(!__FL(dk,1000)) return;
+        __FT('📎 请选择 ≤ 10MB 的图片/PDF/DOC 文件（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isSearch){
+        if(!__FL(dk,500)) return;
+        __FT('🔍 查询条件已生效（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+    }, true);
+    console.info('[FrontCommonPatch 已加载：CSS圆角+×兜底+死按钮+重置+ESC关弹窗+同意协议二次校验]');
+  })();
   </script>
 </body>
 </html>

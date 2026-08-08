@@ -1,0 +1,254 @@
+# ==============================================================================
+# 秦安县秦剧团云端预约系统 · Docker Compose 编排 v1.0
+# 4 个服务：
+#   1. mysql   : MySQL 8.0 （M-2 三层账号 + 42 张表 + 15 条索引）
+#   2. redis   : Redis 7    （M-1 Session/CSRF/频控/乐观锁）
+#   3. api     : Node.js 18 （M-8 PM2 集群，Express）
+#   4. nginx   : Nginx 1.25 （M-7 反向代理 + SSL A+ + WAF 安全头 + Gzip）
+# 数据卷：mysql_data / redis_data / backup_data
+# 初始化脚本挂载：./init-scripts/*.sql → /docker-entrypoint-initdb.d（首次初始化执行）
+# ==============================================================================
+version: "3.9"
+
+x-restart-policy: &restart-policy
+  restart: unless-stopped
+  stop_grace_period: 60s
+  security_opt:
+    - no-new-privileges:true
+  pids_limit: 1024
+  mem_swappiness: 1
+
+services:
+  # ============================================================================
+  # 1. MySQL 8.0（F-1 §P0-1 必须 ≥8.0.19）
+  #    M-2：3层账号在 init_v1.0_mysql.sql 00_create_users.sql
+  #    M-11：每日备份脚本挂到 cron 容器或单独服务
+  # ============================================================================
+  mysql:
+    image: mysql:8.0.36-bookworm
+    <<: *restart-policy
+    container_name: qaxqjt-mysql
+    hostname: mysql
+    command:
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_0900_ai_ci"
+      - "--default-authentication-plugin=caching_sha2_password"
+      - "--innodb-buffer-pool-size=1G"
+      - "--innodb-log-file-size=2G"
+      - "--max-connections=500"
+      - "--max-allowed-packet=128M"         # M-4 大文件上传 + SQL
+      - "--skip-name-resolve"
+      - "--slow-query-log=ON"
+      - "--long-query-time=2"                # M-6 Sentry 慢查询告警阈值对齐
+      - "--log-queries-not-using-indexes"
+    environment:
+      TZ: Asia/Shanghai
+      # M-10093706 经验：首次初始化只对空数据目录生效
+      # 根密码仅本机容器可连，外部用 3 层业务账号（app/migrate/read）
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-ChangeMeRoot123!}
+      MYSQL_DATABASE: ${DB_NAME:-qaxqjt_prod}
+      MYSQL_USER: ${DB_USER:-qaxqjt_app}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-ChangeMeApp!}
+    volumes:
+      - type: volume
+        source: mysql_data
+        target: /var/lib/mysql
+      # M-11 备份目录：mysqldump 输出到这里，cron 服务可同步 OSS
+      - type: volume
+        source: backup_data
+        target: /backups
+      # 初始化脚本：CREATE DATABASE + 42 张表 + 索引 + 种子数据（只首次执行！）
+      - type: bind
+        source: ./init-scripts
+        target: /docker-entrypoint-initdb.d
+        read_only: true
+    ports:
+      - "127.0.0.1:33060:3306"      # 只本机映射，禁止公网暴露
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1",
+             "-u${DB_USER:-qaxqjt_app}", "-p${DB_PASSWORD:-ChangeMeApp!}"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      backend:
+        ipv4_address: 172.30.10.10
+
+  # ============================================================================
+  # 2. Redis 7（M-1 Session/CSRF/频控/预约乐观锁，F-1 §一 Redis ≥7）
+  # ============================================================================
+  redis:
+    image: redis:7.2.4-bookworm
+    <<: *restart-policy
+    container_name: qaxqjt-redis
+    hostname: redis
+    command:
+      - "redis-server"
+      - "--appendonly"
+      - "yes"
+      - "--appendfsync"
+      - "everysec"
+      - "--save 900 1 300 10 60 10000"
+      - "--maxmemory 1gb"
+      - "--maxmemory-policy allkeys-lru"
+      - "--requirepass"
+      - "${REDIS_PASSWORD:-ChangeMeRedis!}"
+      - "--loglevel notice"
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - type: volume
+        source: redis_data
+        target: /data
+    ports:
+      - "127.0.0.1:63790:6379"    # 只本机映射
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-ChangeMeRedis!}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      backend:
+        ipv4_address: 172.30.10.20
+
+  # ============================================================================
+  # 3. API 应用（Node.js 18 + PM2 集群，Dockerfile 构建）
+  #    M-1：Redis 会话（连接 172.30.10.20）
+  #    M-4：上传临时目录 .tmp-upload → 上传成功直传 OSS → 删临时
+  #    M-6：Sentry / 企业微信机器人告警通过 .env 触发
+  #    M-9：Zod/Ajv 参数白名单校验在 app 层执行
+  #    M-12：Nginx 传 X-Request-Id → app 透传
+  # ============================================================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: qaxqjt-api:V2026.8.3
+    <<: *restart-policy
+    container_name: qaxqjt-api
+    hostname: api
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    # M-100079857 经验：启动链路与依赖解耦
+    # 应用 server.js 自带 10 次 3s 退避重连 MySQL/Redis，健康检查才对外服务
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-qaxqjt_prod}
+      DB_USER: ${DB_USER:-qaxqjt_app}
+      DB_PASSWORD: ${DB_PASSWORD:-ChangeMeApp!}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-ChangeMeRedis!}
+      PM2_INSTANCES: ${PM2_INSTANCES:-max}
+    volumes:
+      - ./logs:/app/logs:rw
+      - .tmp-upload:/app/.tmp-upload:rw
+      - backup_data:/app/local-backup:rw   # M-11 备份 → OSS 脚本读
+    expose:
+      - "3001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3001/v1/healthz"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    networks:
+      backend:
+        ipv4_address: 172.30.10.30
+
+  # ============================================================================
+  # 4. Nginx 反向代理（M-7 HTTPS终结/WAF安全头/CSP/Gzip）
+  #    对应 F-1 §七 Nginx 配置完整搬到：./nginx/conf.d/*.conf
+  # ============================================================================
+  nginx:
+    image: nginx:1.25.4-alpine3.18
+    <<: *restart-policy
+    container_name: qaxqjt-nginx
+    hostname: nginx
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # M-7 站点配置（api.yourdomain.cn / admin.yourdomain.cn）
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      # 全局 nginx.conf（含 log_format traceId 字段 M-12）
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Let's Encrypt 证书（生产路径，可用 acme.sh / certbot 挂载）
+      - ./nginx/ssl:/etc/letsencrypt:ro
+      # ACME HTTP-01 验证目录
+      - ./nginx/acme-challenge:/var/www/acme:ro
+      # 静态资源（如果前端用私有部署而不是 EdgeOne Pages）
+      - ./dist-www:/var/www/www:ro
+      - ./dist-admin:/var/www/admin:ro
+      # Nginx 日志 → M-6 Loki/ELK 采集
+      - ./logs/nginx:/var/log/nginx:rw
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:80/healthz"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      backend:
+        ipv4_address: 172.30.10.40
+      frontend:
+
+  # ============================================================================
+  # 5.（可选）Cron 服务：每日备份 + 每月算薪定时任务（M-11 备份脚本）
+  #    不启用就注释掉：docker compose --profile cron up -d
+  # ============================================================================
+  cron:
+    image: mcuadros/ofelia:v0.3.10
+    profiles: ["cron"]
+    <<: *restart-policy
+    container_name: qaxqjt-cron
+    depends_on:
+      - mysql
+      - api
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./scripts/backup-daily.sh:/scripts/backup-daily.sh:ro
+      - backup_data:/backups:rw
+    command: daemon --docker
+    environment:
+      TZ: Asia/Shanghai
+
+networks:
+  frontend:
+    name: qaxqjt-frontend
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.20.0/24
+  backend:
+    name: qaxqjt-backend
+    internal: true    # M-7 内网不对外，仅 Nginx 有 frontend 网卡
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.10.0/24
+
+volumes:
+  mysql_data:
+    name: qaxqjt_mysql_data
+    driver: local
+  redis_data:
+    name: qaxqjt_redis_data
+    driver: local
+  backup_data:
+    name: qaxqjt_backup_data
+    driver: local
