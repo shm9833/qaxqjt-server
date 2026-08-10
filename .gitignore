@@ -43,6 +43,14 @@ coverage/
 # 备份
 *.bak
 *.backup
+*.zip
+_output/
+elk/
+_output/
+最终交付_*
+qaxqjt_V2026.*_*
+验收工具包.zip
+ELK部署工具包.zip
 
 # Tencent Cloud EdgeOne
 .env
