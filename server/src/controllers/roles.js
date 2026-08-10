@@ -88,8 +88,7 @@ const assignPermissions = async ctx => {
           roleId: ctx.params.id,
           permissionId: p.id,
           ts: BigInt(nowMs())
-        })),
-        skipDuplicates: true
+        }))
       });
     }
   });

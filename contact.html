@@ -314,18 +314,24 @@
               <h3>✍️ 快速留言表单</h3>
               <p>填写以下信息，我们将尽快与您联系</p>
             </div>
-            <form id="quickContactForm">
+            <form id="quickContactForm" novalidate>
               <div class="form-group">
                 <label for="contactName">您的姓名 <span class="required">*</span></label>
-                <input type="text" id="contactName" name="contactName" class="form-control" placeholder="请输入您的姓名" required>
+                <input type="text" id="contactName" name="contactName" class="form-control" placeholder="请输入您的姓名" maxlength="30" required autocomplete="name">
+                <span class="qc-field-tip" data-tip-for="contactName" style="display:none;color:#dc2626;font-size:0.8rem;margin-top:4px;"></span>
               </div>
               <div class="form-group">
                 <label for="contactPhone">联系电话 <span class="required">*</span></label>
-                <input type="tel" id="contactPhone" name="contactPhone" class="form-control" placeholder="请输入手机号码" required>
+                <input type="tel" id="contactPhone" name="contactPhone" class="form-control" placeholder="请输入 11 位手机号码" maxlength="11" required autocomplete="tel" inputmode="numeric">
+                <span class="qc-field-tip" data-tip-for="contactPhone" style="display:none;color:#dc2626;font-size:0.8rem;margin-top:4px;"></span>
               </div>
               <div class="form-group">
                 <label for="contactMessage">留言内容 <span class="required">*</span></label>
-                <textarea id="contactMessage" name="contactMessage" class="form-control" rows="5" placeholder="请简述您的需求，如：演出类型、日期、场次、地点等..." required></textarea>
+                <textarea id="contactMessage" name="contactMessage" class="form-control" rows="5" maxlength="500" placeholder="请简述您的需求，如：演出类型、日期、场次、地点等..." required></textarea>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                  <span style="font-size:0.78rem;color:var(--text-light);">💡 至少 5 个字，方便我们了解需求</span>
+                  <span class="qc-char-count" style="font-size:0.78rem;color:var(--text-light);">0 / 500</span>
+                </div>
               </div>
               <div class="form-actions">
                 <button type="reset" class="btn btn-secondary">清空内容</button>
@@ -468,49 +474,60 @@
       var form = document.getElementById('quickContactForm');
       var successMsg = document.getElementById('contactSuccessMsg');
       if (form) {
-        form.addEventListener('submit', function(e) {
-          e.preventDefault();
-          var name = document.getElementById('contactName').value.trim();
-          var phone = document.getElementById('contactPhone').value.trim();
-          var message = document.getElementById('contactMessage').value.trim();
+        /* 字数统计 */
+        var msgEl = document.getElementById('contactMessage');
+        var charCount = form.querySelector('.qc-char-count');
+        if (msgEl && charCount) {
+          var updateCount = function () {
+            var len = (msgEl.value || '').length;
+            charCount.textContent = len + ' / 500';
+            charCount.style.color = len > 450 ? '#dc2626' : '';
+          };
+          msgEl.addEventListener('input', updateCount);
+          updateCount();
+        }
 
-          if (!name || name.length < 2) {
-            QinApp.Utils.toast('请填写正确的姓名（至少2个字符）', 'warn');
-            return;
-          }
-          if (!QinApp.Utils.isPhone(phone)) {
-            QinApp.Utils.toast('请输入正确的手机号码', 'warn');
-            return;
-          }
-          if (!message || message.length < 5) {
-            QinApp.Utils.toast('请填写留言内容（至少5个字符）', 'warn');
-            return;
-          }
+        /* 手机号仅数字 */
+        var phoneEl = document.getElementById('contactPhone');
+        if (phoneEl) {
+          phoneEl.addEventListener('input', function () {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);
+          });
+        }
 
-          try {
-            var messages = JSON.parse(localStorage.getItem('qaxqjt_contact_messages') || '[]');
-            messages.unshift({
-              id: QinApp.Utils.generateId('msg'),
-              name: name,
-              phone: phone,
-              message: message,
-              createdAt: new Date().toISOString(),
-              status: 'unread'
-            });
-            localStorage.setItem('qaxqjt_contact_messages', JSON.stringify(messages));
-          } catch (err) {
-            console.error('保存留言失败', err);
-          }
-
-          QinApp.Utils.toast('留言提交成功，我们将尽快联系您！', 'success');
-          form.reset();
-          if (successMsg) {
-            successMsg.style.display = 'block';
-            successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
+        /* 实时验证 */
+        function bindTip(inputId, tipAttr, validateFn) {
+          var input = document.getElementById(inputId);
+          var tip = form.querySelector('[data-tip-for="' + tipAttr + '"]');
+          if (!input || !tip) return;
+          input.addEventListener('blur', function () {
+            var err = validateFn((this.value || '').trim());
+            if (err) { tip.textContent = err; tip.style.display = 'block'; this.style.borderColor = '#dc2626'; }
+            else { tip.style.display = 'none'; this.style.borderColor = ''; }
+          });
+          input.addEventListener('input', function () {
+            if (this.style.borderColor === 'rgb(220, 38, 38)') {
+              var e2 = validateFn((this.value || '').trim());
+              if (!e2) { tip.style.display = 'none'; this.style.borderColor = ''; }
+            }
+          });
+        }
+        bindTip('contactName', 'contactName', function (v) {
+          if (!v) return '请输入您的姓名';
+          if (v.length < 2) return '姓名至少 2 个字符';
+          return null;
         });
+        bindTip('contactPhone', 'contactPhone', function (v) {
+          if (!v) return '请输入手机号码';
+          if (!/^1[3-9]\d{9}$/.test(v)) return '请输入正确的 11 位手机号';
+          return null;
+        });
+
+        /* submit / reset 事件由 app.js initQuickContactForm 统一处理，避免重复绑定 */
+        /* 仅在表单 reset 时同步重置字数统计和成功提示 */
         form.addEventListener('reset', function() {
-          if (successMsg) successMsg.style.display = 'none';
+          if (successMsg) { try { successMsg.classList.add('csp-hide'); } catch(_e){} try { successMsg.style.display = ''; } catch(_e2){} }
+          if (charCount) charCount.textContent = '0 / 500';
         });
       }
     })();

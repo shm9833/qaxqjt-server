@@ -3,6 +3,12 @@
 /**
  * src/app.js —— Koa 应用组装（不 listen，方便 supertest）
  */
+
+// BigInt JSON 序列化修复（Prisma 的 ts 字段是 BigInt，JSON.stringify 默认不支持）
+if (!BigInt.prototype.toJSON) {
+  BigInt.prototype.toJSON = function () { return Number(this); };
+}
+
 const Koa = require('koa');
 const cors = require('@koa/cors');
 const helmet = require('koa-helmet');

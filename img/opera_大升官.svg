@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </linearGradient>
+    <linearGradient id="gold3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f4d03f"/>
+      <stop offset="100%" stop-color="#b7950b"/>
+    </linearGradient>
+    <linearGradient id="redGrad3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c0392b"/>
+      <stop offset="100%" stop-color="#641e16"/>
+    </linearGradient>
+  </defs>
+  <!-- 宫殿背景 -->
+  <rect width="800" height="450" fill="url(#bg3)"/>
+  <!-- 大殿屋顶 -->
+  <path d="M100,200 L400,80 L700,200 L680,220 L120,220 Z" fill="url(#redGrad3)"/>
+  <path d="M130,220 L400,110 L670,220" stroke="url(#gold3)" stroke-width="3" fill="none"/>
+  <!-- 柱子 -->
+  <rect x="160" y="220" width="30" height="140" fill="#78281f"/>
+  <rect x="610" y="220" width="30" height="140" fill="#78281f"/>
+  <rect x="385" y="220" width="30" height="140" fill="#78281f"/>
+  <!-- 龙匾 -->
+  <rect x="300" y="140" width="200" height="50" rx="5" fill="url(#gold3)" opacity="0.9"/>
+  <text x="400" y="173" text-anchor="middle" font-family="STXingkai,KaiTi,serif" font-size="26" fill="#4a2c00" font-weight="bold">金 銮 殿</text>
+  <!-- 地面 -->
+  <rect y="360" width="800" height="90" fill="#34495e"/>
+  <!-- 台阶 -->
+  <polygon points="300,360 500,360 530,380 270,380" fill="#5d6d7e"/>
+  <polygon points="270,380 530,380 550,400 250,400" fill="#7f8c8d"/>
+  <!-- 人物：徐彦昭（黑叮本）+ 杨波（生）+ 李艳妃（旦） -->
+  <g transform="translate(400,300)">
+    <!-- 李艳妃（中） -->
+    <ellipse cx="0" cy="10" rx="42" ry="60" fill="#e8daef"/>
+    <circle cx="0" cy="-60" r="26" fill="#f8dcc4"/>
+    <path d="M-28,-85 Q0,-110 28,-85 Q20,-75 0,-78 Q-20,-75 -28,-85" fill="url(#gold3)"/>
+    <!-- 徐彦昭（左，大花脸） -->
+    <ellipse cx="-110" cy="15" rx="50" ry="68" fill="#2c3e50"/>
+    <circle cx="-110" cy="-60" r="30" fill="#f1c40f"/>
+    <path d="M-130,-70 Q-110,-80 -90,-70" stroke="#000" stroke-width="3" fill="none"/>
+    <path d="M-130,-48 Q-110,-30 -90,-48 L-85,-20 Q-110,5 -135,-20 Z" fill="#1a1a1a"/>
+    <!-- 杨波（右，须生） -->
+    <ellipse cx="110" cy="12" rx="45" ry="65" fill="#154360"/>
+    <circle cx="110" cy="-62" r="27" fill="#f8dcc4"/>
+    <path d="M88,-40 Q110,0 132,-40 L135,-10 Q110,30 85,-10 Z" fill="#1a1a1a"/>
+  </g>
+  <text x="400" y="425" text-anchor="middle" font-family="STXingkai,KaiTi,serif" font-size="28" fill="url(#gold3)" font-weight="bold" letter-spacing="8">《大升官》· 二进宫</text>
+</svg>

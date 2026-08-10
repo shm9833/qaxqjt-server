@@ -78,15 +78,13 @@ const create = async ctx => {
         isPrimary: !!c.isPrimary || i === 0,
         remark: c.remark || null,
         ts: BigInt(nowMs())
-      })),
-      skipDuplicates: true
+      }))
     });
   }
   // tags
   if (Array.isArray(b.tags) && b.tags.length) {
     await prisma.customerTag.createMany({
-      data: b.tags.map(t => ({ customerId: row.id, tag: String(t), ts: BigInt(nowMs()) })),
-      skipDuplicates: true
+      data: b.tags.map(t => ({ customerId: row.id, tag: String(t), ts: BigInt(nowMs()) }))
     });
   }
   await audit({ ctx, module: 'crm', action: 'CUSTOMER_CREATE', targetId: row.id, detail: { phone: row.phone } });

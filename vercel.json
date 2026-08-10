@@ -1,0 +1,59 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "outputDirectory": "_deploy",
+  "cleanUrls": true,
+  "trailingSlash": false,
+
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://${YOUR_BACKEND_PUBLIC_HOST}/$1"
+    },
+    {
+      "source": "/v1/:path*",
+      "destination": "https://${YOUR_BACKEND_PUBLIC_HOST}/v1/:path*"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin/login.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/_deploy/index.html"
+    }
+  ],
+
+  "headers": [
+    {
+      "source": "/(.*)\\.(?:png|jpg|jpeg|gif|svg|ico|webp)$",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=2592000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.(?:css|js|woff|woff2|ttf|eot)$",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=604800, immutable" }
+      ]
+    },
+    {
+      "source": "/(api/)?v1/healthz",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ],
+
+  "redirects": [
+    { "source": "/index", "destination": "/index.html", "permanent": true }
+  ]
+}

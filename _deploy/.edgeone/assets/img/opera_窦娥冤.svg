@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2c1810"/>
+      <stop offset="50%" stop-color="#3d2314"/>
+      <stop offset="100%" stop-color="#1a0f0a"/>
+    </linearGradient>
+    <linearGradient id="goldGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f4d03f"/>
+      <stop offset="50%" stop-color="#d4ac0d"/>
+      <stop offset="100%" stop-color="#b7950b"/>
+    </linearGradient>
+    <linearGradient id="snowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ecf0f1"/>
+      <stop offset="100%" stop-color="#bdc3c7"/>
+    </linearGradient>
+  </defs>
+  <!-- 背景 -->
+  <rect width="800" height="450" fill="url(#bg2)"/>
+  <!-- 雪花 -->
+  <g fill="#fff" opacity="0.6">
+    <circle cx="80" cy="60" r="3"/><circle cx="150" cy="120" r="2"/><circle cx="220" cy="50" r="4"/>
+    <circle cx="300" cy="90" r="2"/><circle cx="400" cy="40" r="3"/><circle cx="480" cy="100" r="2"/>
+    <circle cx="560" cy="60" r="4"/><circle cx="650" cy="130" r="3"/><circle cx="720" cy="70" r="2"/>
+    <circle cx="120" cy="200" r="2"/><circle cx="680" cy="190" r="3"/><circle cx="50" cy="280" r="2"/>
+    <circle cx="750" cy="260" r="3"/>
+  </g>
+  <!-- 地面 -->
+  <path d="M0,360 Q200,340 400,350 Q600,360 800,345 L800,450 L0,450 Z" fill="url(#snowGrad)"/>
+  <!-- 法场剪影 -->
+  <rect x="100" y="200" width="8" height="160" fill="#5d4037"/>
+  <rect x="90" y="190" width="28" height="15" fill="#5d4037"/>
+  <rect x="692" y="200" width="8" height="160" fill="#5d4037"/>
+  <rect x="682" y="190" width="28" height="15" fill="#5d4037"/>
+  <!-- 窦娥人物（旦角悲愤） -->
+  <g transform="translate(400,280)">
+    <!-- 身体（白衣） -->
+    <ellipse cx="0" cy="20" rx="40" ry="65" fill="#fdfefe"/>
+    <!-- 头 -->
+    <circle cx="0" cy="-60" r="26" fill="#f8dcc4"/>
+    <!-- 愁眉泪眼表情 -->
+    <path d="M-12,-68 Q-8,-65 -4,-68" stroke="#2c3e50" stroke-width="2" fill="none"/>
+    <path d="M4,-68 Q8,-65 12,-68" stroke="#2c3e50" stroke-width="2" fill="none"/>
+    <path d="M-10,-52 L-7,-58" stroke="#2980b9" stroke-width="2"/>
+    <path d="M7,-52 L10,-58" stroke="#2980b9" stroke-width="2"/>
+    <path d="M-8,-45 Q0,-42 8,-45" stroke="#c0392b" stroke-width="2.5" fill="none"/>
+    <!-- 长发 -->
+    <path d="M-22,-55 Q-30,-10 -25,50" stroke="#1a1a1a" stroke-width="4" fill="none"/>
+    <path d="M22,-55 Q30,-10 25,50" stroke="#1a1a1a" stroke-width="4" fill="none"/>
+    <!--  raised hand 发誓 -->
+    <path d="M-30,-10 L-45,-50 L-38,-52 L-28,-20 Z" fill="#fdfefe"/>
+    <circle cx="-46" cy="-55" r="8" fill="#f8dcc4"/>
+    <!-- 血溅白练（红色飞溅） -->
+    <path d="M-5,20 Q-15,-30 -5,-80 Q5,-30 15,10 Q5,30 -5,20 Z" fill="#c0392b" opacity="0.8"/>
+  </g>
+  <!-- 标题 -->
+  <text x="400" y="420" text-anchor="middle" font-family="STXingkai,KaiTi,serif" font-size="28" fill="url(#goldGrad2)" font-weight="bold" letter-spacing="8">《窦娥冤》· 感天动地</text>
+</svg>

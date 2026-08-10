@@ -43,3 +43,5 @@ coverage/
 # 备份
 *.bak
 *.backup
+
+.vercel

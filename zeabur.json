@@ -1,0 +1,8 @@
+{
+  "build": {
+    "root_dir": "server"
+  },
+  "start": {
+    "cmd": "npm run start"
+  }
+}

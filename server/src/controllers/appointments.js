@@ -72,7 +72,7 @@ const list = async ctx => {
       take,
       orderBy: { createdAt: 'desc' },
       include: {
-        plays: { include: { play: true } },
+        plays: true,
         customer: { select: { id: true, customerName: true, phone: true, level: true } }
       }
     }),
@@ -185,8 +185,7 @@ const create = async ctx => {
         performanceTime: p.performanceTime || null,
         note: p.note || null,
         ts: BigInt(nowMs())
-      })),
-      skipDuplicates: true
+      }))
     });
   }
 
