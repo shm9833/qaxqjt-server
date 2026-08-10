@@ -140,7 +140,7 @@ const me = async ctx => {
   if (!u) throw new BusinessError('UNAUTHORIZED', '请先登录');
   const acc = await prisma.accountsV2.findUnique({
     where: { id: u.sub },
-    include: { userRoles: { include: { role: { include: { rolePermissions: { include: { permission: true } } } } } }
+    include: { userRoles: { include: { role: { include: { rolePermissions: { include: { permission: true } } } } } } }
   });
   if (!acc) throw new BusinessError('NOT_FOUND', '账号不存在');
   const roles = (acc.userRoles || []).map(ur => ({

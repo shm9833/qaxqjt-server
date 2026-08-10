@@ -5,12 +5,11 @@
 // ==============================================================================
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["multiSchema", "postgresqlExtensions"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider     = "mysql"
+  provider     = "postgresql"
   url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
@@ -20,44 +19,44 @@ datasource db {
 // ==============================================================================
 
 model AccountsV2 {
-  id                String         @id @db.VarChar(32)
-  username          String         @unique(map: "idx_acc_username") @db.VarChar(64)
-  passwordHash      String         @map("password_hash") @db.VarChar(255)
-  realName          String         @map("real_name") @db.VarChar(50)
-  role              String         @default("staff") @db.VarChar(32)
-  phone             String?        @db.VarChar(20)
-  email             String?        @db.VarChar(128)
-  avatarUrl         String?        @map("avatar_url") @db.VarChar(500)
-  lastLoginAt       DateTime?      @map("last_login_at") @db.DateTime(0)
-  lastLoginIp       String?        @map("last_login_ip") @db.VarChar(45)
-  forcePwdChange    Boolean        @default(true) @map("force_pwd_change")
-  failedLoginCount  Int            @default(0) @map("failed_login_count")
-  lockedUntil       DateTime?      @map("locked_until") @db.DateTime(0)
-  totpSecret        String?        @map("totp_secret") @db.VarChar(64)
-  status            String         @default("active") @db.VarChar(20)
-  createdAt         DateTime       @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt         DateTime       @updatedAt @map("updated_at") @db.DateTime(0)
-  createdBy         String?        @map("created_by") @db.VarChar(32)
-  ts                BigInt         @map("_ts")
+  id               String    @id
+  username         String    @unique(map: "idx_acc_username")
+  passwordHash     String    @map("password_hash")
+  realName         String    @map("real_name")
+  role             String    @default("staff")
+  phone            String?
+  email            String?
+  avatarUrl        String?   @map("avatar_url")
+  lastLoginAt      DateTime? @map("last_login_at")
+  lastLoginIp      String?   @map("last_login_ip")
+  forcePwdChange   Boolean   @default(true) @map("force_pwd_change")
+  failedLoginCount Int       @default(0) @map("failed_login_count")
+  lockedUntil      DateTime? @map("locked_until")
+  totpSecret       String?   @map("totp_secret")
+  status           String    @default("active")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  createdBy        String?   @map("created_by")
+  ts               BigInt    @map("_ts")
 
-  userRoles         UserRole[]
-  adminSessions     AdminSession[]
-  auditLogs         AuditLog[]
+  userRoles     UserRole[]
+  adminSessions AdminSession[]
+  auditLogs     AuditLog[]
 
   @@index([role, status], map: "idx_acc_role_status")
   @@map("accounts_v2")
 }
 
 model Role {
-  id          String            @id @db.VarChar(32)
-  name        String            @unique(map: "idx_role_name") @db.VarChar(64)
-  description String?           @db.VarChar(255)
-  level       Int               @default(0)
-  status      String            @default("active") @db.VarChar(20)
-  createdAt   DateTime         @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt   DateTime         @updatedAt @map("updated_at") @db.DateTime(0)
-  createdBy   String?           @map("created_by") @db.VarChar(32)
-  ts          BigInt            @map("_ts")
+  id          String   @id
+  name        String   @unique(map: "idx_role_name")
+  description String?
+  level       Int      @default(0)
+  status      String   @default("active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdBy   String?  @map("created_by")
+  ts          BigInt   @map("_ts")
 
   rolePermissions RolePermission[]
   userRoles       UserRole[]
@@ -66,15 +65,15 @@ model Role {
 }
 
 model Permission {
-  id          String            @id @db.VarChar(32)
-  code        String            @unique(map: "idx_perm_code") @db.VarChar(128)
-  name        String            @db.VarChar(128)
-  module      String            @db.VarChar(64)
-  description String?           @db.VarChar(255)
-  status      String            @default("active") @db.VarChar(20)
-  createdAt   DateTime         @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt   DateTime         @updatedAt @map("updated_at") @db.DateTime(0)
-  ts          BigInt            @map("_ts")
+  id          String   @id
+  code        String   @unique(map: "idx_perm_code")
+  name        String
+  module      String
+  description String?
+  status      String   @default("active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  ts          BigInt   @map("_ts")
 
   rolePermissions RolePermission[]
 
@@ -82,10 +81,12 @@ model Permission {
 }
 
 model RolePermission {
-  roleId       String   @map("role_id") @db.VarChar(32)
-  permissionId String   @map("permission_id") @db.VarChar(32)
-  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  ts           BigInt   @map("_ts")
+  roleId       String     @map("role_id")
+  permissionId String     @map("permission_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  ts           BigInt     @map("_ts")
+  Role         Role       @relation(fields: [roleId], references: [id])
+  Permission   Permission @relation(fields: [permissionId], references: [id])
 
   @@id([roleId, permissionId])
   @@index([roleId], map: "idx_rp_role")
@@ -93,56 +94,60 @@ model RolePermission {
 }
 
 model UserRole {
-  accountId String   @map("account_id") @db.VarChar(32)
-  roleId    String   @map("role_id") @db.VarChar(32)
-  assignedBy  String?  @map("assigned_by") @db.VarChar(32)
-  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  ts        BigInt   @map("_ts")
+  accountId    String      @map("account_id")
+  roleId       String      @map("role_id")
+  assignedBy   String?     @map("assigned_by")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  ts           BigInt      @map("_ts")
+  account      AccountsV2  @relation(fields: [accountId], references: [id])
+  role         Role        @relation(fields: [roleId], references: [id])
 
   @@id([accountId, roleId])
   @@map("user_roles")
 }
 
 model AdminSession {
-  id           String    @id @db.VarChar(64)
-  accountId    String    @map("account_id") @db.VarChar(32)
-  tokenHash    String    @unique(map: "idx_sess_token") @map("token_hash") @db.VarChar(128)
-  ipAddress    String?   @map("ip_address") @db.VarChar(45)
-  userAgent    String?   @map("user_agent") @db.VarChar(500)
-  expiresAt    DateTime  @map("expires_at") @db.DateTime(0)
-  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  ts           BigInt    @map("_ts")
+  id           String      @id
+  accountId    String      @map("account_id")
+  tokenHash    String      @unique(map: "idx_sess_token") @map("token_hash")
+  ipAddress    String?     @map("ip_address")
+  userAgent    String?     @map("user_agent")
+  expiresAt    DateTime    @map("expires_at")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  ts           BigInt      @map("_ts")
+  account      AccountsV2  @relation(fields: [accountId], references: [id])
 
   @@index([expiresAt], map: "idx_sess_expires")
   @@map("admin_sessions")
 }
 
 model AuditLog {
-  id         String    @id @db.VarChar(32)
-  accountId  String?   @map("account_id") @db.VarChar(32)
-  username   String?   @db.VarChar(64)
-  action     String    @db.VarChar(128)
-  module     String    @db.VarChar(64)
-  targetType String?   @map("target_type") @db.VarChar(64)
-  targetId   String?   @map("target_id") @db.VarChar(64)
-  actionTs   DateTime @map("action_ts") @db.DateTime(0)
-  ipAddress  String?   @map("ip_address") @db.VarChar(45)
-  userAgent  String?   @map("user_agent") @db.VarChar(500)
-  detailJson Json?     @map("detail_json")
-  ts         BigInt    @map("_ts")
+  id           String      @id
+  accountId    String?     @map("account_id")
+  username     String?
+  action       String
+  module       String
+  targetType   String?     @map("target_type")
+  targetId     String?     @map("target_id")
+  actionTs     DateTime    @map("action_ts")
+  ipAddress    String?     @map("ip_address")
+  userAgent    String?     @map("user_agent")
+  detailJson   String?     @map("detail_json")
+  ts           BigInt      @map("_ts")
+  account      AccountsV2? @relation(fields: [accountId], references: [id])
 
   @@index([accountId, actionTs], map: "idx_audit_user_ts")
   @@map("audit_logs")
 }
 
 model LoginAttempt {
-  id           String    @id @db.VarChar(32)
-  username     String?   @db.VarChar(64)
-  ipAddress    String    @map("ip_address") @db.VarChar(45)
-  attemptedAt DateTime @map("attempted_at") @db.DateTime(0)
-  successFlag  Boolean   @default(false) @map("success_flag")
-  failReason   String?   @map("fail_reason") @db.VarChar(255)
-  ts           BigInt    @map("_ts")
+  id          String   @id
+  username    String?
+  ipAddress   String   @map("ip_address")
+  attemptedAt DateTime @map("attempted_at")
+  successFlag Boolean  @default(false) @map("success_flag")
+  failReason  String?  @map("fail_reason")
+  ts          BigInt   @map("_ts")
 
   @@index([ipAddress, attemptedAt], map: "idx_login_ip_ts")
   @@map("login_attempts")
@@ -153,14 +158,14 @@ model LoginAttempt {
 // ==============================================================================
 
 model Setting {
-  id          String   @id @db.VarChar(64)
-  key         String   @unique(map: "idx_sett_key") @db.VarChar(128)
-  value       String   @db.Text
-  group       String?  @db.VarChar(64)
-  description String?  @db.VarChar(255)
+  id          String   @id
+  key         String   @unique(map: "idx_sett_key")
+  value       String
+  group       String?
+  description String?
   isPublic    Boolean  @default(false) @map("is_public")
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  updatedBy   String?  @map("updated_by") @db.VarChar(32)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedBy   String?  @map("updated_by")
   ts          BigInt   @map("_ts")
 
   @@index([group], map: "idx_sett_group")
@@ -168,33 +173,33 @@ model Setting {
 }
 
 model SystemBackup {
-  id            String    @id @db.VarChar(32)
-  backupType    String    @map("backup_type") @db.VarChar(32) // full/incremental/manual
-  filename      String    @db.VarChar(255)
-  storagePath   String    @map("storage_path") @db.VarChar(500)
-  fileSizeBytes BigInt    @map("file_size_bytes")
-  checksumSha256 String?  @map("checksum_sha256") @db.VarChar(64)
-  status        String    @default("completed") @db.VarChar(20)
-  createdBy     String?   @map("created_by") @db.VarChar(32)
-  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  expiredAt   DateTime? @map("expired_at") @db.DateTime(0)
-  ts            BigInt    @map("_ts")
+  id             String    @id
+  backupType     String    @map("backup_type") // full/incremental/manual
+  filename       String
+  storagePath    String    @map("storage_path")
+  fileSizeBytes  BigInt    @map("file_size_bytes")
+  checksumSha256 String?   @map("checksum_sha256")
+  status         String    @default("completed")
+  createdBy      String?   @map("created_by")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  expiredAt      DateTime? @map("expired_at")
+  ts             BigInt    @map("_ts")
 
   @@index([createdAt], map: "idx_backup_ts")
   @@map("system_backups")
 }
 
 model DataMigration {
-  id               String    @id @db.VarChar(64)
+  id               String   @id
   batch            Int
-  description      String    @db.VarChar(500)
-  executedBy         String?   @map("executed_by") @db.VarChar(64)
-  expectedRowCount Int?      @map("expected_row_count")
-  actualRowCount   Int?      @map("actual_row_count")
-  dryRun           Boolean   @default(false) @map("dry_run")
-  status           String    @default("pending") @db.VarChar(20)
-  executedAt       DateTime @default(now()) @map("executed_at") @db.DateTime(0)
-  ts               BigInt    @map("_ts")
+  description      String
+  executedBy       String?  @map("executed_by")
+  expectedRowCount Int?     @map("expected_row_count")
+  actualRowCount   Int?     @map("actual_row_count")
+  dryRun           Boolean  @default(false) @map("dry_run")
+  status           String   @default("pending")
+  executedAt       DateTime @default(now()) @map("executed_at")
+  ts               BigInt   @map("_ts")
 
   @@map("data_migrations")
 }
@@ -204,123 +209,125 @@ model DataMigration {
 // ==============================================================================
 
 model PerformersDbV1 {
-  id                String   @id @db.VarChar(32)
-  staffNo           String?  @unique(map: "idx_pf_staffno") @map("staff_no") @db.VarChar(32)
-  name              String   @db.VarChar(50)
-  gender            String?  @db.VarChar(10)
-  birthDate         DateTime? @map("birth_date") @db.Date
-  phone             String?  @db.VarChar(20)
-  idCardNo          String?  @map("id_card_no") @db.VarChar(18)
-  rankGrade         String?  @map("rank_grade") @db.VarChar(10) // A+/A/B/C
-  primaryRole       String?  @map("primary_role") @db.VarChar(50)
-  hireDate          DateTime? @map("hire_date") @db.Date
-  employmentType     String?  @map("employment_type") @db.VarChar(20) // 正式/外聘/临时
-  bankAccount     String?  @map("bank_account") @db.VarChar(50)
-  bankName        String?  @map("bank_name") @db.VarChar(100)
-  socialSecurityNo String?  @map("social_security_no") @db.VarChar(20)
-  status           String   @default("active") @db.VarChar(20)
-  remark            String?  @db.Text
-  avatarUrl       String?  @map("avatar_url") @db.VarChar(500)
-  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt       DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts                BigInt   @map("_ts")
+  id               String    @id
+  staffNo          String?   @unique(map: "idx_pf_staffno") @map("staff_no")
+  name             String
+  gender           String?
+  birthDate        DateTime? @map("birth_date")
+  phone            String?
+  idCardNo         String?   @map("id_card_no")
+  rankGrade        String?   @map("rank_grade") // A+/A/B/C
+  primaryRole      String?   @map("primary_role")
+  hireDate         DateTime? @map("hire_date")
+  employmentType   String?   @map("employment_type") // 正式/外聘/临时
+  bankAccount      String?   @map("bank_account")
+  bankName         String?   @map("bank_name")
+  socialSecurityNo String?   @map("social_security_no")
+  status           String    @default("active")
+  remark           String?
+  avatarUrl        String?   @map("avatar_url")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  ts               BigInt    @map("_ts")
 
   @@map("performers_db_v1")
 }
 
 model Play {
-  id            String    @id @db.VarChar(32)
-  playCode      String?   @unique(map: "idx_play_code") @map("play_code") @db.VarChar(32)
-  title         String    @db.VarChar(200)
-  subtitle      String?   @db.VarChar(500)
-  genre         String?   @db.VarChar(50) // 历史/神话/现代/折子戏
+  id              String   @id
+  playCode        String?  @unique(map: "idx_play_code") @map("play_code")
+  title           String
+  subtitle        String?
+  genre           String? // 历史/神话/现代/折子戏
   durationMinutes Int?     @map("duration_minutes")
-  author        String?   @db.VarChar(200)
-  posterUrl     String?   @map("poster_url") @db.VarChar(500)
-  synopsis      String?   @db.Text
-  castSummary   String?   @map("cast_summary") @db.Text
-  difficultyLevel String? @map("difficulty_level") @db.VarChar(10)
-  status        String    @default("active") @db.VarChar(20)
-  createdBy     String?   @map("created_by") @db.VarChar(32)
-  createdAt     DateTime  @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
-  ts            BigInt    @map("_ts")
+  author          String?
+  posterUrl       String?  @map("poster_url")
+  synopsis        String?
+  castSummary     String?  @map("cast_summary")
+  difficultyLevel String?  @map("difficulty_level")
+  status          String   @default("active")
+  createdBy       String?  @map("created_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  ts              BigInt   @map("_ts")
 
   playCasts     PlayCast[]
+  appointmentPlays AppointmentPlay[]
 
   @@map("plays")
 }
 
 model PlayCast {
-  id          String   @id @db.VarChar(32)
-  playId      String   @map("play_id") @db.VarChar(32)
-  performerId String?  @map("performer_id") @db.VarChar(32)
-  roleName    String   @map("role_name") @db.VarChar(100)
-  roleType    String?  @map("role_type") @db.VarChar(32) // 主演/配角/龙套/乐队
+  id          String   @id
+  playId      String   @map("play_id")
+  performerId String?  @map("performer_id")
+  roleName    String   @map("role_name")
+  roleType    String?  @map("role_type") // 主演/配角/龙套/乐队
   sortOrder   Int      @default(0) @map("sort_order")
-  note        String?  @db.VarChar(255)
-  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  note        String?
+  createdAt   DateTime @default(now()) @map("created_at")
   ts          BigInt   @map("_ts")
+  Play        Play     @relation(fields: [playId], references: [id])
 
   @@index([playId], map: "idx_pc_play")
   @@map("play_casts")
 }
 
 model InventoryItem {
-  id          String   @id @db.VarChar(32)
-  sku         String?  @unique(map: "idx_inv_sku") @db.VarChar(64)
-  name        String   @db.VarChar(200)
-  category    String?  @db.VarChar(64) // 戏服/道具/头饰/乐器/其他
-  quantity    Int      @default(0)
-  unit        String?  @db.VarChar(20)
-  unitPrice   Decimal? @map("unit_price") @db.Decimal(12, 2)
-  location    String?  @db.VarChar(200)
-  status      String   @default("in_stock") @db.VarChar(20)
-  imageUrl    String?  @map("image_url") @db.VarChar(500)
-  remark      String?  @db.Text
-  updatedBy   String?  @map("updated_by") @db.VarChar(32)
-  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts          BigInt   @map("_ts")
+  id        String   @id
+  sku       String?  @unique(map: "idx_inv_sku")
+  name      String
+  category  String? // 戏服/道具/头饰/乐器/其他
+  quantity  Int      @default(0)
+  unit      String?
+  unitPrice Decimal? @map("unit_price")
+  location  String?
+  status    String   @default("in_stock")
+  imageUrl  String?  @map("image_url")
+  remark    String?
+  updatedBy String?  @map("updated_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  ts        BigInt   @map("_ts")
 
   @@index([category], map: "idx_inv_cat")
   @@map("inventory_items")
 }
 
 model InventoryRecord {
-  id          String   @id @db.VarChar(32)
-  itemId      String   @map("item_id") @db.VarChar(32)
-  opType      String   @map("op_type") @db.VarChar(20) // in/out/borrow/return/loss
-  opDate      DateTime @map("op_date") @db.DateTime(0)
-  quantity    Int
-  relatedScheduleId String? @map("related_schedule_id") @db.VarChar(32)
-  operator    String?  @db.VarChar(50)
-  remark      String?  @db.Text
-  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  ts          BigInt   @map("_ts")
+  id                String   @id
+  itemId            String   @map("item_id")
+  opType            String   @map("op_type") // in/out/borrow/return/loss
+  opDate            DateTime @map("op_date")
+  quantity          Int
+  relatedScheduleId String?  @map("related_schedule_id")
+  operator          String?
+  remark            String?
+  createdAt         DateTime @default(now()) @map("created_at")
+  ts                BigInt   @map("_ts")
 
   @@index([itemId, opDate], map: "idx_invrec_item")
   @@map("inventory_records")
 }
 
 model ContentV2 {
-  id            String    @id @db.VarChar(32)
-  type          String    @db.VarChar(32) // news/article/notice/gallery/video
-  title         String    @db.VarChar(255)
-  subtitle      String?   @db.VarChar(500)
-  coverImage    String?   @map("cover_image") @db.VarChar(500)
-  contentBody      String?   @map("content_body") @db.Text
-  summary       String?   @db.Text
-  publishStatus  String    @default("draft") @map("publish_status") @db.VarChar(20)
-  publishDate   DateTime? @map("publish_date") @db.DateTime(0)
-  authorName    String?   @map("author_name") @db.VarChar(50)
+  id            String    @id
+  type          String // news/article/notice/gallery/video
+  title         String
+  subtitle      String?
+  coverImage    String?   @map("cover_image")
+  contentBody   String?   @map("content_body")
+  summary       String?
+  publishStatus String    @default("draft") @map("publish_status")
+  publishDate   DateTime? @map("publish_date")
+  authorName    String?   @map("author_name")
   sortWeight    Int       @default(0) @map("sort_weight")
   viewCount     Int       @default(0) @map("view_count")
-  tagsJson      Json?     @map("tags_json")
-  extraJson     Json?     @map("extra_json")
-  createdBy     String?   @map("created_by") @db.VarChar(32)
-  createdAt     DateTime  @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  tagsJson      String?   @map("tags_json")
+  extraJson     String?   @map("extra_json")
+  createdBy     String?   @map("created_by")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
   ts            BigInt    @map("_ts")
 
   @@index([type, publishStatus, publishDate], map: "idx_ct_type_status")
@@ -332,36 +339,36 @@ model ContentV2 {
 // ==============================================================================
 
 model CustomersV1 {
-  id                 String    @id @db.VarChar(32)
-  customerType       String    @default("personal") @map("customer_type") @db.VarChar(20) // personal/organization
-  customerName       String    @map("customer_name") @db.VarChar(100)
-  organization       String?   @db.VarChar(200)
-  unifiedSocialCode  String?   @map("unified_social_code") @db.VarChar(32)
-  contactPerson      String?   @map("contact_person") @db.VarChar(50)
-  phone              String    @db.VarChar(20)
-  backupPhone        String?   @map("backup_phone") @db.VarChar(20)
-  wechatId           String?   @map("wechat_id") @db.VarChar(64)
-  email              String?   @db.VarChar(128)
-  region           String?   @db.VarChar(200)
-  address            String?   @db.Text
-  sourceChannel      String?   @map("source_channel") @db.VarChar(50)
-  level              String?   @db.VarChar(20) // VIP/A/B/C
-  creditLevel       String?   @map("credit_level") @db.VarChar(20)
-  totalOrdersAmount   Decimal? @map("total_orders_amount") @db.Decimal(14, 2)
-  totalOrdersCount   Int?      @map("total_orders_count")
-  remark             String?   @db.Text
-  tagsJson           Json?     @map("tags_json")
-  status             String    @default("active") @db.VarChar(20)
-  firstContactDate  DateTime? @map("first_contact_date") @db.Date
-  createdBy         String?   @map("created_by") @db.VarChar(32)
-  createdAt          DateTime  @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt          DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
-  ts                 BigInt    @map("_ts")
+  id                String    @id
+  customerType      String    @default("personal") @map("customer_type") // personal/organization
+  customerName      String    @map("customer_name")
+  organization      String?
+  unifiedSocialCode String?   @map("unified_social_code")
+  contactPerson     String?   @map("contact_person")
+  phone             String
+  backupPhone       String?   @map("backup_phone")
+  wechatId          String?   @map("wechat_id")
+  email             String?
+  region            String?
+  address           String?
+  sourceChannel     String?   @map("source_channel")
+  level             String? // VIP/A/B/C
+  creditLevel       String?   @map("credit_level")
+  totalOrdersAmount Decimal?  @map("total_orders_amount")
+  totalOrdersCount  Int?      @map("total_orders_count")
+  remark            String?
+  tagsJson          String?   @map("tags_json")
+  status            String    @default("active")
+  firstContactDate  DateTime? @map("first_contact_date")
+  createdBy         String?   @map("created_by")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  ts                BigInt    @map("_ts")
 
-  appointments      Appointment[]
+  appointments     Appointment[]
   customerContacts CustomerContact[]
-  customerTags      CustomerTag[]
-  orders             Order[]
+  customerTags     CustomerTag[]
+  orders           Order[]
 
   @@index([customerName, organization], map: "idx_cust_name_org")
   @@index([phone], map: "idx_cust_phone")
@@ -369,71 +376,74 @@ model CustomersV1 {
 }
 
 model CustomerContact {
-  id           String    @id @db.VarChar(32)
-  customerId String    @map("customer_id") @db.VarChar(32)
-  name         String    @db.VarChar(50)
-  position     String?   @db.VarChar(50)
-  phone        String    @db.VarChar(20)
-  wechatId     String?   @map("wechat_id") @db.VarChar(64)
-  email        String?   @db.VarChar(128)
-  isPrimary     Boolean   @default(true) @map("is_primary")
-  remark       String?   @db.VarChar(255)
-  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  ts           BigInt    @map("_ts")
+  id            String       @id
+  customerId    String       @map("customer_id")
+  name          String
+  position      String?
+  phone         String
+  wechatId      String?      @map("wechat_id")
+  email         String?
+  isPrimary     Boolean      @default(true) @map("is_primary")
+  remark        String?
+  createdAt     DateTime     @default(now()) @map("created_at")
+  ts            BigInt       @map("_ts")
+  customer      CustomersV1  @relation(fields: [customerId], references: [id])
 
   @@index([customerId], map: "idx_cc_customer")
   @@map("customer_contacts")
 }
 
 model CustomerTag {
-  customerId String   @map("customer_id") @db.VarChar(32)
-  tag        String   @db.VarChar(64)
-  taggedAt   DateTime @default(now()) @map("tagged_at") @db.DateTime(0)
-  ts         BigInt   @map("_ts")
+  customerId    String       @map("customer_id")
+  tag           String
+  taggedAt      DateTime     @default(now()) @map("tagged_at")
+  ts            BigInt       @map("_ts")
+  customer      CustomersV1  @relation(fields: [customerId], references: [id])
 
   @@id([customerId, tag])
   @@map("customer_tags")
 }
 
 model Appointment {
-  id                    String    @id @db.VarChar(32)
-  appointmentNo       String    @unique(map: "idx_appt_no") @map("appointment_no") @db.VarChar(32)
-  source          String    @default("website") @db.VarChar(32) // website/wechat/phone/manual
-  status                  String    @default("pending") @db.VarChar(32) // pending/confirmed/converted/cancelled/rejected
-  customerId            String    @map("customer_id") @db.VarChar(32)
-  customerName        String    @map("customer_name") @db.VarChar(100)
-  customerType        String?   @map("customer_type") @db.VarChar(20)
-  organization          String?   @db.VarChar(200)
-  phone                 String    @db.VarChar(20)
-  contactPerson         String?   @map("contact_person") @db.VarChar(50)
-  preferredStartDate    DateTime @map("preferred_start_date") @db.Date
-  preferredEndDate      DateTime? @map("preferred_end_date") @db.Date
-  performanceCount          Int       @default(1) @map("performance_count")
-  packageType       String?   @map("package_type") @db.VarChar(50) // 庙会包场/文旅演出/校园巡演/定制
-  venueProvince       String?   @map("venue_province") @db.VarChar(50)
-  venueCity             String?   @map("venue_city") @db.VarChar(50)
-  venueDistrict        String?   @map("venue_district") @db.VarChar(50)
-  venueAddress          String?   @map("venue_address") @db.VarChar(500)
-  estimatedBudget    Decimal? @map("estimated_budget") @db.Decimal(14, 2)
-  totalPerformanceFee  Decimal? @map("total_performance_fee") @db.Decimal(14, 2)
-  depositAmount        Decimal? @map("deposit_amount") @db.Decimal(14, 2)
-  paymentTerms           String?   @map("payment_terms") @db.VarChar(255)
-  specialRequirements    String?   @map("special_requirements") @db.Text
-  remarkInternal          String?   @map("remark_internal") @db.Text
-  assignedAccountId  String?   @map("assigned_account_id") @db.VarChar(32)
-  smsVerifiedFlag  Boolean   @default(false) @map("sms_verified_flag")
-  sourceChannel       String?   @map("source_channel") @db.VarChar(50)
-  conversionToOrderDate    DateTime? @map("conversion_to_order_date") @db.DateTime(0)
-  convertedOrderId   String?   @map("converted_order_id") @db.VarChar(32)
-  rejectReason          String?   @map("reject_reason") @db.VarChar(255)
-  createdBy         String?   @map("created_by") @db.VarChar(32)
-  createdAt           DateTime  @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt           DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  id                    String    @id
+  appointmentNo         String    @unique(map: "idx_appt_no") @map("appointment_no")
+  source                String    @default("website") // website/wechat/phone/manual
+  status                String    @default("pending") // pending/confirmed/converted/cancelled/rejected
+  customerId            String    @map("customer_id")
+  customerName          String    @map("customer_name")
+  customerType          String?   @map("customer_type")
+  organization          String?
+  phone                 String
+  contactPerson         String?   @map("contact_person")
+  preferredStartDate    DateTime  @map("preferred_start_date")
+  preferredEndDate      DateTime? @map("preferred_end_date")
+  performanceCount      Int       @default(1) @map("performance_count")
+  packageType           String?   @map("package_type") // 庙会包场/文旅演出/校园巡演/定制
+  venueProvince         String?   @map("venue_province")
+  venueCity             String?   @map("venue_city")
+  venueDistrict         String?   @map("venue_district")
+  venueAddress          String?   @map("venue_address")
+  estimatedBudget       Decimal?  @map("estimated_budget")
+  totalPerformanceFee   Decimal?  @map("total_performance_fee")
+  depositAmount         Decimal?  @map("deposit_amount")
+  paymentTerms          String?   @map("payment_terms")
+  specialRequirements   String?   @map("special_requirements")
+  remarkInternal        String?   @map("remark_internal")
+  assignedAccountId     String?   @map("assigned_account_id")
+  smsVerifiedFlag       Boolean   @default(false) @map("sms_verified_flag")
+  sourceChannel         String?   @map("source_channel")
+  conversionToOrderDate DateTime? @map("conversion_to_order_date")
+  convertedOrderId      String?   @map("converted_order_id")
+  rejectReason          String?   @map("reject_reason")
+  createdBy             String?   @map("created_by")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
   ts                    BigInt    @map("_ts")
 
-  plays              AppointmentPlay[]
+  plays             AppointmentPlay[]
   appointmentAudits AppointmentAudit[]
-  order              Order?
+  order             Order?
+  customer          CustomersV1       @relation(fields: [customerId], references: [id])
 
   @@index([phone, status, createdAt], map: "idx_appt_phone_status")
   @@index([status, preferredStartDate], map: "idx_appt_status_date")
@@ -441,32 +451,36 @@ model Appointment {
 }
 
 model AppointmentPlay {
-  appointmentId String   @map("appointment_id") @db.VarChar(32)
-  playId        String   @map("play_id") @db.VarChar(32)
-  sortOrder     Int      @default(1) @map("sort_order")
-  performanceDate DateTime? @map("performance_date") @db.Date
-  performanceTime String?  @map("performance_time") @db.VarChar(20)
-  note          String?  @db.VarChar(255)
-  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  ts            BigInt   @map("_ts")
+  appointmentId   String      @map("appointment_id")
+  playId          String      @map("play_id")
+  sortOrder       Int         @default(1) @map("sort_order")
+  performanceDate DateTime?   @map("performance_date")
+  performanceTime String?     @map("performance_time")
+  note            String?
+  createdAt       DateTime    @default(now()) @map("created_at")
+  ts              BigInt      @map("_ts")
+  Appointment     Appointment @relation(fields: [appointmentId], references: [id])
+  play            Play        @relation(fields: [playId], references: [id])
 
   @@id([appointmentId, playId])
   @@index([appointmentId], map: "idx_apptplay_appt")
+  @@index([playId], map: "idx_apptplay_play")
   @@map("appointment_plays")
 }
 
 model AppointmentAudit {
-  id             String    @id @db.VarChar(32)
-  appointmentId  String    @map("appointment_id") @db.VarChar(32)
-  actionType    String    @map("action_type") @db.VarChar(32)
-  actionTs      DateTime @map("action_ts") @db.DateTime(0)
-  operatorAccountId String? @map("operator_account_id") @db.VarChar(32)
-  operatorName     String?   @map("operator_name") @db.VarChar(50)
-  fromStatus       String?   @map("from_status") @db.VarChar(32)
-  toStatus         String?   @map("to_status") @db.VarChar(32)
-  remark           String?   @db.Text
-  detailJson       Json?     @map("detail_json")
-  ts               BigInt    @map("_ts")
+  id                String      @id
+  appointmentId     String      @map("appointment_id")
+  actionType        String      @map("action_type")
+  actionTs          DateTime    @map("action_ts")
+  operatorAccountId String?     @map("operator_account_id")
+  operatorName      String?     @map("operator_name")
+  fromStatus        String?     @map("from_status")
+  toStatus          String?     @map("to_status")
+  remark            String?
+  detailJson        String?     @map("detail_json")
+  ts                BigInt      @map("_ts")
+  Appointment       Appointment @relation(fields: [appointmentId], references: [id])
 
   @@index([appointmentId, actionTs], map: "idx_apptaudit_aid")
   @@map("appointment_audit")
@@ -477,46 +491,48 @@ model AppointmentAudit {
 // ==============================================================================
 
 model Order {
-  id                  String    @id @db.VarChar(32)
-  orderNo          String    @unique(map: "idx_order_no") @map("order_no") @db.VarChar(32)
-  orderType         String    @default("performance") @map("order_type") @db.VarChar(32)
-  status              String    @default("draft") @db.VarChar(32) // draft/confirmed/partial_paid/paid/performance/completed/cancelled/refunded
-  customerId        String    @map("customer_id") @db.VarChar(32)
-  customerName      String    @map("customer_name") @db.VarChar(100)
-  organization      String?   @db.VarChar(200)
-  phone               String?   @db.VarChar(20)
-  appointmentId     String?   @map("appointment_id") @db.VarChar(32)
-  orderDate           DateTime @map("order_date") @db.DateTime(0)
-  totalAmount     Decimal  @default(0) @map("total_amount") @db.Decimal(14, 2)
-  discountAmount  Decimal? @default(0) @map("discount_amount") @db.Decimal(14, 2)
-  finalAmount       Decimal  @default(0) @map("final_amount") @db.Decimal(14, 2)
-  depositAmount      Decimal? @default(0) @map("deposit_amount") @db.Decimal(14, 2)
-  paidAmount          Decimal? @default(0) @map("paid_amount") @db.Decimal(14, 2)
-  invoiceTitle          String?   @map("invoice_title") @db.VarChar(200)
-  taxNo               String?   @map("tax_no") @db.VarChar(32)
-  contractNo        String?   @map("contract_no") @db.VarChar(64)
-  contractUrl       String?   @map("contract_url") @db.VarChar(500)
-  salesmanId      String?   @map("salesman_id") @db.VarChar(32)
-  salesmanName       String?   @map("salesman_name") @db.VarChar(50)
-  performanceStartDate DateTime? @map("performance_start_date") @db.Date
-  performanceEndDate   DateTime? @map("performance_end_date") @db.Date
-  performanceCount    Int?      @map("performance_count")
-  venueFullAddress  String?   @map("venue_full_address") @db.VarChar(500)
-  specialRequirements   String?   @map("special_requirements") @db.Text
-  internalRemark       String?   @map("internal_remark") @db.Text
-  cancellationReason  String?   @map("cancellation_reason") @db.VarChar(255)
-  cancelledDate        DateTime? @map("cancelled_date") @db.DateTime(0)
-  cancelledBy       String?   @map("cancelled_by") @db.VarChar(32)
-  completedDate      DateTime? @map("completed_date") @db.DateTime(0)
-  createdBy       String?   @map("created_by") @db.VarChar(32)
-  createdAt           DateTime  @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt           DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
-  ts                  BigInt    @map("_ts")
+  id                   String    @id
+  orderNo              String    @unique(map: "idx_order_no") @map("order_no")
+  orderType            String    @default("performance") @map("order_type")
+  status               String    @default("draft") // draft/confirmed/partial_paid/paid/performance/completed/cancelled/refunded
+  customerId           String    @map("customer_id")
+  customerName         String    @map("customer_name")
+  organization         String?
+  phone                String?
+  appointmentId        String?   @unique @map("appointment_id")
+  orderDate            DateTime  @map("order_date")
+  totalAmount          Decimal   @default(0) @map("total_amount")
+  discountAmount       Decimal?  @default(0) @map("discount_amount")
+  finalAmount          Decimal   @default(0) @map("final_amount")
+  depositAmount        Decimal?  @default(0) @map("deposit_amount")
+  paidAmount           Decimal?  @default(0) @map("paid_amount")
+  invoiceTitle         String?   @map("invoice_title")
+  taxNo                String?   @map("tax_no")
+  contractNo           String?   @map("contract_no")
+  contractUrl          String?   @map("contract_url")
+  salesmanId           String?   @map("salesman_id")
+  salesmanName         String?   @map("salesman_name")
+  performanceStartDate DateTime? @map("performance_start_date")
+  performanceEndDate   DateTime? @map("performance_end_date")
+  performanceCount     Int?      @map("performance_count")
+  venueFullAddress     String?   @map("venue_full_address")
+  specialRequirements  String?   @map("special_requirements")
+  internalRemark       String?   @map("internal_remark")
+  cancellationReason   String?   @map("cancellation_reason")
+  cancelledDate        DateTime? @map("cancelled_date")
+  cancelledBy          String?   @map("cancelled_by")
+  completedDate        DateTime? @map("completed_date")
+  createdBy            String?   @map("created_by")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  ts                   BigInt    @map("_ts")
 
-  items             OrderItem[]
-  payments          FinPaymentV1[]
-  refunds           OrderRefund[]
-  schedules       ScheduleV2[]
+  items         OrderItem[]
+  payments      FinPaymentV1[]
+  refunds       OrderRefund[]
+  schedules     ScheduleV2[]
+  customer      CustomersV1    @relation(fields: [customerId], references: [id])
+  appointment   Appointment?   @relation(fields: [appointmentId], references: [id])
 
   @@index([status, orderDate], map: "idx_order_status_date")
   @@index([customerId], map: "idx_order_customer")
@@ -524,95 +540,99 @@ model Order {
 }
 
 model OrderItem {
-  id              String    @id @db.VarChar(32)
-  orderId           String    @map("order_id") @db.VarChar(32)
-  itemType        String    @map("item_type") @db.VarChar(32) // performance/extra/discount
-  playId          String?   @map("play_id") @db.VarChar(32)
-  itemName        String    @map("item_name") @db.VarChar(255)
+  id              String    @id
+  orderId         String    @map("order_id")
+  itemType        String    @map("item_type") // performance/extra/discount
+  playId          String?   @map("play_id")
+  itemName        String    @map("item_name")
   quantity        Int       @default(1)
-  unitPrice       Decimal   @map("unit_price") @db.Decimal(14, 2)
-  subtotal        Decimal   @map("subtotal") @db.Decimal(14, 2)
-  performanceDate DateTime? @map("performance_date") @db.Date
-  remark          String?   @db.VarChar(255)
-  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  unitPrice       Decimal   @map("unit_price")
+  subtotal        Decimal   @map("subtotal")
+  performanceDate DateTime? @map("performance_date")
+  remark          String?
+  createdAt       DateTime  @default(now()) @map("created_at")
   ts              BigInt    @map("_ts")
+  Order           Order     @relation(fields: [orderId], references: [id])
 
   @@index([orderId], map: "idx_oi_order")
   @@map("order_items")
 }
 
 model FinPaymentV1 {
-  id             String    @id @db.VarChar(32)
-  orderId        String    @map("order_id") @db.VarChar(32)
-  payNo          String    @unique(map: "idx_pay_no") @map("pay_no") @db.VarChar(64)
-  payDate        DateTime @map("pay_date") @db.DateTime(0)
-  payChannel     String    @map("pay_channel") @db.VarChar(32) // cash/transfer/wechat/alipay/cheque
-  payType        String    @default("in") @map("pay_type") @db.VarChar(10) // in=收/out=退
-  amount         Decimal   @map("amount") @db.Decimal(14, 2)
-  currency       String    @default("CNY") @db.VarChar(10)
-  payerAccount   String?   @map("payer_account") @db.VarChar(100)
-  payerName       String?   @map("payer_name") @db.VarChar(100)
-  receiverAccount String? @map("receiver_account") @db.VarChar(100)
-  receiverName   String?   @map("receiver_name") @db.VarChar(100)
-  voucherNo      String?   @map("voucher_no") @db.VarChar(64)
-  status         String    @default("confirmed") @db.VarChar(20)
-  remark         String?   @db.VarChar(255)
-  createdBy      String?   @map("created_by") @db.VarChar(32)
-  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts             BigInt    @map("_ts")
+  id              String   @id
+  orderId         String   @map("order_id")
+  payNo           String   @unique(map: "idx_pay_no") @map("pay_no")
+  payDate         DateTime @map("pay_date")
+  payChannel      String   @map("pay_channel") // cash/transfer/wechat/alipay/cheque
+  payType         String   @default("in") @map("pay_type") // in=收/out=退
+  amount          Decimal  @map("amount")
+  currency        String   @default("CNY")
+  payerAccount    String?  @map("payer_account")
+  payerName       String?  @map("payer_name")
+  receiverAccount String?  @map("receiver_account")
+  receiverName    String?  @map("receiver_name")
+  voucherNo       String?  @map("voucher_no")
+  status          String   @default("confirmed")
+  remark          String?
+  createdBy       String?  @map("created_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  ts              BigInt   @map("_ts")
+  Order           Order    @relation(fields: [orderId], references: [id])
 
   @@index([orderId, payDate], map: "idx_pay_order")
   @@map("fin_payments_v1")
 }
 
 model OrderRefund {
-  id             String    @id @db.VarChar(32)
-  orderId        String    @map("order_id") @db.VarChar(32)
-  refundNo    String    @unique(map: "idx_refund_no") @map("refund_no") @db.VarChar(64)
-  refundDate    DateTime @map("refund_date") @db.DateTime(0)
-  refundChannel    String    @map("refund_channel") @db.VarChar(32)
-  amount        Decimal   @map("amount") @db.Decimal(14, 2)
-  reason        String?   @db.VarChar(255)
-  status        String    @default("pending") @db.VarChar(20)
-  approvedBy   String?   @map("approved_by") @db.VarChar(32)
-  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts            BigInt    @map("_ts")
+  id            String   @id
+  orderId       String   @map("order_id")
+  refundNo      String   @unique(map: "idx_refund_no") @map("refund_no")
+  refundDate    DateTime @map("refund_date")
+  refundChannel String   @map("refund_channel")
+  amount        Decimal  @map("amount")
+  reason        String?
+  status        String   @default("pending")
+  approvedBy    String?  @map("approved_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  ts            BigInt   @map("_ts")
+  Order         Order    @relation(fields: [orderId], references: [id])
 
   @@index([orderId], map: "idx_refund_order")
   @@map("order_refunds")
 }
 
 model ScheduleV2 {
-  id                  String    @id @db.VarChar(32)
-  scheduleNo        String    @unique(map: "idx_sched_no") @map("schedule_no") @db.VarChar(32)
-  orderId             String    @map("order_id") @db.VarChar(32)
-  status              String    @default("scheduled") @db.VarChar(32)
-  playId            String?   @map("play_id") @db.VarChar(32)
-  playTitle         String?   @map("play_title") @db.VarChar(200)
-  scheduleDateStart  DateTime @map("schedule_date_start") @db.Date
-  scheduleDateEnd   DateTime  @map("schedule_date_end") @db.Date
-  performanceTime  String?   @map("performance_time") @db.VarChar(20) // 日场/夜场/加场/下午场
-  venueProvince     String?   @map("venue_province") @db.VarChar(50)
-  venueCity         String?   @map("venue_city") @db.VarChar(50)
-  venueDistrict    String?   @map("venue_district") @db.VarChar(50)
-  venueAddress     String?   @map("venue_address") @db.VarChar(500)
-  audienceSize       Int?      @map("audience_size")
-  weatherForecast  String?   @map("weather_forecast") @db.VarChar(50)
+  id                String    @id
+  scheduleNo        String    @unique(map: "idx_sched_no") @map("schedule_no")
+  orderId           String    @map("order_id")
+  status            String    @default("scheduled")
+  playId            String?   @map("play_id")
+  playTitle         String?   @map("play_title")
+  scheduleDateStart DateTime  @map("schedule_date_start")
+  scheduleDateEnd   DateTime  @map("schedule_date_end")
+  performanceTime   String?   @map("performance_time") // 日场/夜场/加场/下午场
+  venueProvince     String?   @map("venue_province")
+  venueCity         String?   @map("venue_city")
+  venueDistrict     String?   @map("venue_district")
+  venueAddress      String?   @map("venue_address")
+  audienceSize      Int?      @map("audience_size")
+  weatherForecast   String?   @map("weather_forecast")
   actualAttendance  Int?      @map("actual_attendance")
-  feeAmount     Decimal? @map("fee_amount") @db.Decimal(14, 2)
-  castSheetId     String?   @map("cast_sheet_id") @db.VarChar(32)
-  attendanceStatus String?  @map("attendance_status") @db.VarChar(20)
-  completedDate     DateTime? @map("completed_date") @db.DateTime(0)
-  remark            String?   @db.Text
-  createdBy      String?   @map("created_by") @db.VarChar(32)
-  createdAt       DateTime  @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.DateTime(0)
+  feeAmount         Decimal?  @map("fee_amount")
+  castSheetId       String?   @map("cast_sheet_id")
+  attendanceStatus  String?   @map("attendance_status")
+  completedDate     DateTime? @map("completed_date")
+  remark            String?
+  createdBy         String?   @map("created_by")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
   ts                BigInt    @map("_ts")
 
-  castSheet   CastSheetsV1[]
+  castSheet CastSheetsV1[]
   venues    ScheduleVenue[]
+  Order     Order           @relation(fields: [orderId], references: [id])
 
   @@index([scheduleDateStart, scheduleDateEnd, status], map: "idx_sched_range")
   @@index([status, scheduleDateStart], map: "idx_sched_status")
@@ -620,64 +640,67 @@ model ScheduleV2 {
 }
 
 model ScheduleVenue {
-  id           String    @id @db.VarChar(32)
-  scheduleId   String    @map("schedule_id") @db.VarChar(32)
-  venueName    String    @map("venue_name") @db.VarChar(200)
-  contactPerson String?   @map("contact_person") @db.VarChar(50)
-  contactPhone String?   @map("contact_phone") @db.VarChar(20)
-  venueType    String?   @map("venue_type") @db.VarChar(32)
-  capacity     Int?
-  stageSize   String?   @map("stage_size") @db.VarChar(100)
-  equipment    String?   @db.Text
-  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  ts           BigInt    @map("_ts")
+  id            String      @id
+  scheduleId    String      @map("schedule_id")
+  venueName     String      @map("venue_name")
+  contactPerson String?     @map("contact_person")
+  contactPhone  String?     @map("contact_phone")
+  venueType     String?     @map("venue_type")
+  capacity      Int?
+  stageSize     String?     @map("stage_size")
+  equipment     String?
+  createdAt     DateTime    @default(now()) @map("created_at")
+  ts            BigInt      @map("_ts")
+  schedule     ScheduleV2  @relation(fields: [scheduleId], references: [id])
 
   @@index([scheduleId], map: "idx_sv_schedule")
   @@map("schedule_venues")
 }
 
 model CastSheetsV1 {
-  id             String    @id @db.VarChar(32)
-  sheetNo        String    @unique(map: "idx_cs_no") @map("sheet_no") @db.VarChar(32)
-  scheduleId     String    @map("schedule_id") @db.VarChar(32)
-  status         String    @default("draft") @db.VarChar(32)
-  lockFlag      Boolean   @default(false) @map("lock_flag")
-  playId       String?   @map("play_id") @db.VarChar(32)
-  playTitle       String?   @map("play_title") @db.VarChar(200)
-  performanceDate DateTime @map("performance_date") @db.Date
-  performanceTime String?  @map("performance_time") @db.VarChar(20)
-  venueFull     String?   @map("venue_full") @db.VarChar(500)
-  directorName   String?   @map("director_name") @db.VarChar(50)
-  conductorName  String?   @map("conductor_name") @db.VarChar(50)
-  stageManagerName String? @map("stage_manager_name") @db.VarChar(50)
-  crewNote        String?   @db.Text
-  versionNumber  Int       @default(1) @map("version_number")
-  confirmedBy  String?   @map("confirmed_by") @db.VarChar(32)
-  confirmedAt  DateTime? @map("confirmed_at") @db.DateTime(0)
-  createdBy      String?   @map("created_by") @db.VarChar(32)
-  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts             BigInt    @map("_ts")
+  id               String    @id
+  sheetNo          String    @unique(map: "idx_cs_no") @map("sheet_no")
+  scheduleId       String    @map("schedule_id")
+  status           String    @default("draft")
+  lockFlag         Boolean   @default(false) @map("lock_flag")
+  playId           String?   @map("play_id")
+  playTitle        String?   @map("play_title")
+  performanceDate  DateTime  @map("performance_date")
+  performanceTime  String?   @map("performance_time")
+  venueFull        String?   @map("venue_full")
+  directorName     String?   @map("director_name")
+  conductorName    String?   @map("conductor_name")
+  stageManagerName String?   @map("stage_manager_name")
+  crewNote         String?
+  versionNumber    Int       @default(1) @map("version_number")
+  confirmedBy      String?   @map("confirmed_by")
+  confirmedAt      DateTime? @map("confirmed_at")
+  createdBy        String?   @map("created_by")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  ts               BigInt    @map("_ts")
 
-  crew           CastSheetCrew[]
+  crew         CastSheetCrew[]
+  schedule     ScheduleV2     @relation(fields: [scheduleId], references: [id])
 
   @@index([scheduleId], map: "idx_cs_schedule")
   @@map("cast_sheets_v1")
 }
 
 model CastSheetCrew {
-  id             String    @id @db.VarChar(32)
-  castSheetId    String    @map("cast_sheet_id") @db.VarChar(32)
-  performerId String?   @map("performer_id") @db.VarChar(32)
-  performerName  String    @map("performer_name") @db.VarChar(50)
-  category       String    @db.VarChar(32) // 主演/配角/龙套/乐队/舞美/灯光/服装/道具/化妆
-  roleName       String?   @map("role_name") @db.VarChar(100)
-  sortOrder      Int       @default(0) @map("sort_order")
-  attendanceType String?  @map("attendance_type") @db.VarChar(20)
-  wageAmount  Decimal? @map("wage_amount") @db.Decimal(12, 2)
-  note           String?   @db.VarChar(255)
-  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  ts             BigInt    @map("_ts")
+  id             String        @id
+  castSheetId    String        @map("cast_sheet_id")
+  performerId    String?       @map("performer_id")
+  performerName  String        @map("performer_name")
+  category       String // 主演/配角/龙套/乐队/舞美/灯光/服装/道具/化妆
+  roleName       String?       @map("role_name")
+  sortOrder      Int           @default(0) @map("sort_order")
+  attendanceType String?       @map("attendance_type")
+  wageAmount     Decimal?      @map("wage_amount")
+  note           String?
+  createdAt      DateTime      @default(now()) @map("created_at")
+  ts             BigInt        @map("_ts")
+  castSheet   CastSheetsV1 @relation(fields: [castSheetId], references: [id])
 
   @@index([castSheetId], map: "idx_csc_cs")
   @@map("cast_sheet_crew")
@@ -688,125 +711,126 @@ model CastSheetCrew {
 // ==============================================================================
 
 model WageRulesV1 {
-  id                    String    @id @db.VarChar(32)
-  rankGrade             String    @unique(map: "idx_wr_grade") @map("rank_grade") @db.VarChar(10)
-  baseDailyStandard   Decimal   @map("base_daily_standard") @db.Decimal(12, 2)
-  chiefRoleAllowance Decimal @map("chief_role_allowance") @db.Decimal(12, 2)
-  supportingRoleBase Decimal @map("supporting_role_base") @db.Decimal(12, 2)
-  ensembleBase        Decimal   @map("ensemble_base") @db.Decimal(12, 2)
-  crewBandBase        Decimal   @map("crew_band_base") @db.Decimal(12, 2)
-  techDancerBase     Decimal   @map("tech_dancer_base") @db.Decimal(12, 2)
-  nightShowBonus      Decimal   @map("night_show_bonus") @db.Decimal(12, 2)
-  holidayMultiplier Decimal  @default(1.0) @map("holiday_multiplier") @db.Decimal(5, 4)
-  transportAllowance Decimal @map("transport_allowance") @db.Decimal(12, 2)
-  mealAllowance       Decimal   @map("meal_allowance") @db.Decimal(12, 2)
-  fullAttendanceBonus Decimal @map("full_attendance_bonus") @db.Decimal(12, 2)
-  performanceBonusRate Decimal @map("performance_bonus_rate") @db.Decimal(5, 4)
-  effectiveFromDate  DateTime @map("effective_from_date") @db.Date
-  effectiveToDate   DateTime? @map("effective_to_date") @db.Date
-  status              String    @default("active") @db.VarChar(20)
-  createdBy        String?   @map("created_by") @db.VarChar(32)
-  createdAt          DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt          DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts                 BigInt    @map("_ts")
+  id                   String    @id
+  rankGrade            String    @unique(map: "idx_wr_grade") @map("rank_grade")
+  baseDailyStandard    Decimal   @map("base_daily_standard")
+  chiefRoleAllowance   Decimal   @map("chief_role_allowance")
+  supportingRoleBase   Decimal   @map("supporting_role_base")
+  ensembleBase         Decimal   @map("ensemble_base")
+  crewBandBase         Decimal   @map("crew_band_base")
+  techDancerBase       Decimal   @map("tech_dancer_base")
+  nightShowBonus       Decimal   @map("night_show_bonus")
+  holidayMultiplier    Decimal   @default(1.0) @map("holiday_multiplier")
+  transportAllowance   Decimal   @map("transport_allowance")
+  mealAllowance        Decimal   @map("meal_allowance")
+  fullAttendanceBonus  Decimal   @map("full_attendance_bonus")
+  performanceBonusRate Decimal   @map("performance_bonus_rate")
+  effectiveFromDate    DateTime  @map("effective_from_date")
+  effectiveToDate      DateTime? @map("effective_to_date")
+  status               String    @default("active")
+  createdBy            String?   @map("created_by")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  ts                   BigInt    @map("_ts")
 
   @@map("wage_rules_v1")
 }
 
 model WageBatchesV1 {
-  id                  String    @id @db.VarChar(32)
-  batchNo             String    @unique(map: "idx_wb_batchno") @map("batch_no") @db.VarChar(32)
-  wageMonth         String    @map("wage_month") @db.VarChar(7) // YYYY-MM
-  status              String    @default("draft") @db.VarChar(32)
-  performanceCount   Int?      @map("performance_count")
-  totalPerformers   Int?      @map("total_performers")
-  totalBaseWage    Decimal   @default(0) @map("total_base_wage") @db.Decimal(14, 2)
-  totalAllowance   Decimal   @default(0) @map("total_allowance") @db.Decimal(14, 2)
-  totalBonus       Decimal   @default(0) @map("total_bonus") @db.Decimal(14, 2)
-  totalDeduction  Decimal   @default(0) @map("total_deduction") @db.Decimal(14, 2)
-  totalNetPay      Decimal   @default(0) @map("total_net_pay") @db.Decimal(14, 2)
-  confirmedBy       String?   @map("confirmed_by") @db.VarChar(32)
-  confirmedAt       DateTime? @map("confirmed_at") @db.DateTime(0)
-  postedToLedger    Boolean   @default(false) @map("posted_to_ledger")
-  postedAt       DateTime? @map("posted_at") @db.DateTime(0)
-  createdBy       String?   @map("created_by") @db.VarChar(32)
-  createdAt        DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt        DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts                 BigInt    @map("_ts")
+  id               String    @id
+  batchNo          String    @unique(map: "idx_wb_batchno") @map("batch_no")
+  wageMonth        String    @map("wage_month") // YYYY-MM
+  status           String    @default("draft")
+  performanceCount Int?      @map("performance_count")
+  totalPerformers  Int?      @map("total_performers")
+  totalBaseWage    Decimal   @default(0) @map("total_base_wage")
+  totalAllowance   Decimal   @default(0) @map("total_allowance")
+  totalBonus       Decimal   @default(0) @map("total_bonus")
+  totalDeduction   Decimal   @default(0) @map("total_deduction")
+  totalNetPay      Decimal   @default(0) @map("total_net_pay")
+  confirmedBy      String?   @map("confirmed_by")
+  confirmedAt      DateTime? @map("confirmed_at")
+  postedToLedger   Boolean   @default(false) @map("posted_to_ledger")
+  postedAt         DateTime? @map("posted_at")
+  createdBy        String?   @map("created_by")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  ts               BigInt    @map("_ts")
 
-  items            WageItemsV1[]
+  items WageItemsV1[]
 
   @@index([wageMonth], map: "idx_wb_month")
   @@map("wage_batches_v1")
 }
 
 model WageItemsV1 {
-  id                  String    @id @db.VarChar(32)
-  batchId             String    @map("batch_id") @db.VarChar(32)
-  performerId      String?   @map("performer_id") @db.VarChar(32)
-  performerName      String    @map("performer_name") @db.VarChar(50)
-  staffNo            String?   @map("staff_no") @db.VarChar(32)
-  rankGrade          String?   @map("rank_grade") @db.VarChar(10)
-  attendanceDays     Decimal?  @map("attendance_days") @db.Decimal(6, 2)
-  baseWage        Decimal   @default(0) @map("base_wage") @db.Decimal(12, 2)
-  chiefRoleTotal  Decimal   @default(0) @map("chief_role_total") @db.Decimal(12, 2)
-  supportingRoleTotal Decimal @default(0) @map("supporting_role_total") @db.Decimal(12, 2)
-  nightShowBonus  Decimal   @default(0) @map("night_show_bonus") @db.Decimal(12, 2)
-  holidayBonus      Decimal   @default(0) @map("holiday_bonus") @db.Decimal(12, 2)
-  transportAllowance Decimal @default(0) @map("transport_allowance") @db.Decimal(12, 2)
-  mealAllowance     Decimal   @default(0) @map("meal_allowance") @db.Decimal(12, 2)
-  fullAttendanceBonus Decimal @default(0) @map("full_attendance_bonus") @db.Decimal(12, 2)
-  performanceBonus  Decimal @default(0) @map("performance_bonus") @db.Decimal(12, 2)
-  otherAllowance    Decimal   @default(0) @map("other_allowance") @db.Decimal(12, 2)
-  otherAllowanceNote String?  @map("other_allowance_note") @db.VarChar(255)
-  socialInsuranceDeduct Decimal @default(0) @map("social_insurance_deduct") @db.Decimal(12, 2)
-  housingFundDeduct Decimal @default(0) @map("housing_fund_deduct") @db.Decimal(12, 2)
-  taxDeduct         Decimal   @default(0) @map("tax_deduct") @db.Decimal(12, 2)
-  otherDeduction    Decimal   @default(0) @map("other_deduction") @db.Decimal(12, 2)
-  otherDeductionNote String? @map("other_deduction_note") @db.VarChar(255)
-  grossPay          Decimal   @default(0) @map("gross_pay") @db.Decimal(14, 2)
-  totalDeduction   Decimal   @default(0) @map("total_deduction") @db.Decimal(14, 2)
-  netPay          Decimal   @default(0) @map("net_pay") @db.Decimal(14, 2)
-  payslipPublished  Boolean   @default(false) @map("payslip_published")
-  payslipPublishedAt DateTime? @map("payslip_published_at") @db.DateTime(0)
-  remark          String?   @db.Text
-  createdAt         DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt         DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts                BigInt    @map("_ts")
+  id                    String         @id
+  batchId               String         @map("batch_id")
+  performerId           String?        @map("performer_id")
+  performerName         String         @map("performer_name")
+  staffNo               String?        @map("staff_no")
+  rankGrade             String?        @map("rank_grade")
+  attendanceDays        Decimal?       @map("attendance_days")
+  baseWage              Decimal        @default(0) @map("base_wage")
+  chiefRoleTotal        Decimal        @default(0) @map("chief_role_total")
+  supportingRoleTotal   Decimal        @default(0) @map("supporting_role_total")
+  nightShowBonus        Decimal        @default(0) @map("night_show_bonus")
+  holidayBonus          Decimal        @default(0) @map("holiday_bonus")
+  transportAllowance    Decimal        @default(0) @map("transport_allowance")
+  mealAllowance         Decimal        @default(0) @map("meal_allowance")
+  fullAttendanceBonus   Decimal        @default(0) @map("full_attendance_bonus")
+  performanceBonus      Decimal        @default(0) @map("performance_bonus")
+  otherAllowance        Decimal        @default(0) @map("other_allowance")
+  otherAllowanceNote    String?        @map("other_allowance_note")
+  socialInsuranceDeduct Decimal        @default(0) @map("social_insurance_deduct")
+  housingFundDeduct     Decimal        @default(0) @map("housing_fund_deduct")
+  taxDeduct             Decimal        @default(0) @map("tax_deduct")
+  otherDeduction        Decimal        @default(0) @map("other_deduction")
+  otherDeductionNote    String?        @map("other_deduction_note")
+  grossPay              Decimal        @default(0) @map("gross_pay")
+  totalDeduction        Decimal        @default(0) @map("total_deduction")
+  netPay                Decimal        @default(0) @map("net_pay")
+  payslipPublished      Boolean        @default(false) @map("payslip_published")
+  payslipPublishedAt    DateTime?      @map("payslip_published_at")
+  remark                String?
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
+  ts                    BigInt         @map("_ts")
+  batch                WageBatchesV1  @relation(fields: [batchId], references: [id])
 
   @@index([batchId], map: "idx_wi_batch")
   @@map("wage_items_v1")
 }
 
 model FinLedgerV1 {
-  id                String    @id @db.VarChar(32)
-  voucherNo       String    @unique(map: "idx_ledger_voucherno") @map("voucher_no") @db.VarChar(32)
-  voucherDate       DateTime @map("voucher_date") @db.DateTime(0)
-  voucherType     String    @map("voucher_type") @db.VarChar(32) // receipt/payment/transfer/adjustment
-  voucherCategory String?   @map("voucher_category") @db.VarChar(50)
-  summary           String    @db.VarChar(500)
-  orderId           String?   @map("order_id") @db.VarChar(32)
-  relatedBatchId    String?   @map("related_batch_id") @db.VarChar(32)
-  debitAmount     Decimal   @default(0) @map("debit_amount") @db.Decimal(14, 2)
-  creditAmount  Decimal   @default(0) @map("credit_amount") @db.Decimal(14, 2)
-  balanceAmount   Decimal   @default(0) @map("balance_amount") @db.Decimal(14, 2)
-  offsetAccount   String?   @map("offset_account") @db.VarChar(32)
-  cashFlowType    String?   @map("cash_flow_type") @db.VarChar(50)
-  cashFlowAmount Decimal? @map("cash_flow_amount") @db.Decimal(14, 2)
-  status            String    @default("draft") @db.VarChar(20)
-  makerAccountId String?   @map("maker_account_id") @db.VarChar(32)
-  madeAt        DateTime? @map("made_at") @db.DateTime(0)
-  checkerAccountId String? @map("checker_account_id") @db.VarChar(32)
-  checkedAt       DateTime? @map("checked_at") @db.DateTime(0)
-  doubleCheckRequired Boolean @default(false) @map("double_check_required")
-  isReconciled   Boolean   @default(false) @map("is_reconciled")
-  reconciledAt  DateTime? @map("reconciled_at") @db.DateTime(0)
-  attachmentUrls Json?     @map("attachment_urls")
-  remark          String?   @db.Text
-  createdBy       String?   @map("created_by") @db.VarChar(32)
-  createdAt        DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt        DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts              BigInt    @map("_ts")
+  id                  String    @id
+  voucherNo           String    @unique(map: "idx_ledger_voucherno") @map("voucher_no")
+  voucherDate         DateTime  @map("voucher_date")
+  voucherType         String    @map("voucher_type") // receipt/payment/transfer/adjustment
+  voucherCategory     String?   @map("voucher_category")
+  summary             String
+  orderId             String?   @map("order_id")
+  relatedBatchId      String?   @map("related_batch_id")
+  debitAmount         Decimal   @default(0) @map("debit_amount")
+  creditAmount        Decimal   @default(0) @map("credit_amount")
+  balanceAmount       Decimal   @default(0) @map("balance_amount")
+  offsetAccount       String?   @map("offset_account")
+  cashFlowType        String?   @map("cash_flow_type")
+  cashFlowAmount      Decimal?  @map("cash_flow_amount")
+  status              String    @default("draft")
+  makerAccountId      String?   @map("maker_account_id")
+  madeAt              DateTime? @map("made_at")
+  checkerAccountId    String?   @map("checker_account_id")
+  checkedAt           DateTime? @map("checked_at")
+  doubleCheckRequired Boolean   @default(false) @map("double_check_required")
+  isReconciled        Boolean   @default(false) @map("is_reconciled")
+  reconciledAt        DateTime? @map("reconciled_at")
+  attachmentUrls      String?   @map("attachment_urls")
+  remark              String?
+  createdBy           String?   @map("created_by")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  ts                  BigInt    @map("_ts")
 
   @@index([voucherDate, voucherType], map: "idx_ledger_voucher_date")
   @@index([status, isReconciled], map: "idx_ledger_status_reconciled")
@@ -814,47 +838,47 @@ model FinLedgerV1 {
 }
 
 model FinInvoicesV1 {
-  id              String    @id @db.VarChar(32)
-  invoiceNo    String    @unique(map: "idx_inv_invoiceno") @map("invoice_no") @db.VarChar(32)
-  invoiceType   String    @map("invoice_type") @db.VarChar(32) // special/ordinary/electronic
-  orderId         String?   @map("order_id") @db.VarChar(32)
-  issueDate     DateTime @map("issue_date") @db.DateTime(0)
-  title             String    @db.VarChar(200)
-  taxNo           String?   @map("tax_no") @db.VarChar(32)
-  address         String?   @db.VarChar(500)
-  bankInfo        String?   @map("bank_info") @db.VarChar(255)
-  totalAmount   Decimal   @map("total_amount") @db.Decimal(14, 2)
-  taxAmount       Decimal   @default(0) @map("tax_amount") @db.Decimal(14, 2)
-  itemsJson       Json?     @map("items_json")
-  status          String    @default("issued") @db.VarChar(20)
-  redFlag      Boolean   @default(false) @map("red_flag")
-  originalInvoiceId String? @map("original_invoice_id") @db.VarChar(32)
-  issuedBy       String?   @map("issued_by") @db.VarChar(32)
-  pdfUrl         String?   @map("pdf_url") @db.VarChar(500)
-  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt     DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts            BigInt    @map("_ts")
+  id                String   @id
+  invoiceNo         String   @unique(map: "idx_inv_invoiceno") @map("invoice_no")
+  invoiceType       String   @map("invoice_type") // special/ordinary/electronic
+  orderId           String?  @map("order_id")
+  issueDate         DateTime @map("issue_date")
+  title             String
+  taxNo             String?  @map("tax_no")
+  address           String?
+  bankInfo          String?  @map("bank_info")
+  totalAmount       Decimal  @map("total_amount")
+  taxAmount         Decimal  @default(0) @map("tax_amount")
+  itemsJson         String?  @map("items_json")
+  status            String   @default("issued")
+  redFlag           Boolean  @default(false) @map("red_flag")
+  originalInvoiceId String?  @map("original_invoice_id")
+  issuedBy          String?  @map("issued_by")
+  pdfUrl            String?  @map("pdf_url")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  ts                BigInt   @map("_ts")
 
   @@index([orderId], map: "idx_inv_order")
   @@map("fin_invoices_v1")
 }
 
 model FinReconsV1 {
-  id              String    @id @db.VarChar(32)
-  reconNo       String    @unique(map: "idx_recon_no") @map("recon_no") @db.VarChar(32)
-  reconMonth     String    @map("recon_month") @db.VarChar(7)
-  account         String    @db.VarChar(100) // 银行账号/现金科目
-  bookBalance  Decimal   @map("book_balance") @db.Decimal(14, 2)
-  bankBalance    Decimal   @map("bank_balance") @db.Decimal(14, 2)
-  reconDifference Decimal @default(0) @map("recon_difference") @db.Decimal(14, 2)
-  reconStatus      String    @default("draft") @map("recon_status") @db.VarChar(20)
-  matchedCount     Int?      @map("matched_count")
-  unmatchedCount   Int?      @map("unmatched_count")
-  itemsJson       Json?     @map("items_json")
-  reconciledBy    String?   @map("reconciled_by") @db.VarChar(32)
-  reconciledAt    DateTime? @map("reconciled_at") @db.DateTime(0)
-  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt     DateTime @updatedAt @map("updated_at") @db.DateTime(0)
+  id              String    @id
+  reconNo         String    @unique(map: "idx_recon_no") @map("recon_no")
+  reconMonth      String    @map("recon_month")
+  account         String // 银行账号/现金科目
+  bookBalance     Decimal   @map("book_balance")
+  bankBalance     Decimal   @map("bank_balance")
+  reconDifference Decimal   @default(0) @map("recon_difference")
+  reconStatus     String    @default("draft") @map("recon_status")
+  matchedCount    Int?      @map("matched_count")
+  unmatchedCount  Int?      @map("unmatched_count")
+  itemsJson       String?   @map("items_json")
+  reconciledBy    String?   @map("reconciled_by")
+  reconciledAt    DateTime? @map("reconciled_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
   ts              BigInt    @map("_ts")
 
   @@index([reconMonth], map: "idx_recon_month")
@@ -862,22 +886,22 @@ model FinReconsV1 {
 }
 
 model FinDebtsV1 {
-  id              String    @id @db.VarChar(32)
-  debtNo       String    @unique(map: "idx_debt_no") @map("debt_no") @db.VarChar(32)
-  debtType       String    @map("debt_type") @db.VarChar(20) // receivable/payable
-  orderId         String?   @map("order_id") @db.VarChar(32)
-  customerId     String?   @map("customer_id") @db.VarChar(32)
-  customerName    String?   @map("customer_name") @db.VarChar(100)
-  originalAmount    Decimal   @map("original_amount") @db.Decimal(14, 2)
-  paidAmount      Decimal   @default(0) @map("paid_amount") @db.Decimal(14, 2)
-  remainingAmount   Decimal   @map("remaining_amount") @db.Decimal(14, 2)
-  dueDate       DateTime @map("due_date") @db.Date
-  status          String    @default("outstanding") @db.VarChar(20)
-  lastRemindedAt   DateTime? @map("last_reminded_at") @db.DateTime(0)
-  remindCount      Int?      @default(0) @map("remind_count")
-  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt     DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts            BigInt    @map("_ts")
+  id              String    @id
+  debtNo          String    @unique(map: "idx_debt_no") @map("debt_no")
+  debtType        String    @map("debt_type") // receivable/payable
+  orderId         String?   @map("order_id")
+  customerId      String?   @map("customer_id")
+  customerName    String?   @map("customer_name")
+  originalAmount  Decimal   @map("original_amount")
+  paidAmount      Decimal   @default(0) @map("paid_amount")
+  remainingAmount Decimal   @map("remaining_amount")
+  dueDate         DateTime  @map("due_date")
+  status          String    @default("outstanding")
+  lastRemindedAt  DateTime? @map("last_reminded_at")
+  remindCount     Int?      @default(0) @map("remind_count")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  ts              BigInt    @map("_ts")
 
   @@index([customerId, status], map: "idx_debt_cust_status")
   @@map("fin_debts_v1")
@@ -888,24 +912,24 @@ model FinDebtsV1 {
 // ==============================================================================
 
 model AttendanceV1 {
-  id                 String    @id @db.VarChar(32)
-  staffId            String    @map("staff_id") @db.VarChar(32)
-  staffName          String    @map("staff_name") @db.VarChar(50)
-  attendanceMonth   String    @map("attendance_month") @db.VarChar(7) // YYYY-MM
-  attendanceDate     DateTime @map("attendance_date") @db.Date
-  attendanceType  String    @map("attendance_type") @db.VarChar(20) // full/night/double/half/公休/rest/SL/PL/BL/ML/AL/absent/rainout/leave/outing/study/business/injury
-  scheduleId      String?   @map("schedule_id") @db.VarChar(32)
-  checkInTime    DateTime? @map("check_in_time") @db.DateTime(0)
-  checkOutTime  DateTime? @map("check_out_time") @db.DateTime(0)
-  workHours       Decimal?  @map("work_hours") @db.Decimal(4, 2)
-  overtimeHours  Decimal?  @map("overtime_hours") @db.Decimal(4, 2)
-  locationGps   String?   @map("location_gps") @db.VarChar(100)
-  remark           String?   @db.VarChar(255)
-  approveStatus String?  @default("approved") @map("approve_status") @db.VarChar(20)
-  approvedBy      String?   @map("approved_by") @db.VarChar(32)
-  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts               BigInt    @map("_ts")
+  id              String    @id
+  staffId         String    @map("staff_id")
+  staffName       String    @map("staff_name")
+  attendanceMonth String    @map("attendance_month") // YYYY-MM
+  attendanceDate  DateTime  @map("attendance_date")
+  attendanceType  String    @map("attendance_type") // full/night/double/half/公休/rest/SL/PL/BL/ML/AL/absent/rainout/leave/outing/study/business/injury
+  scheduleId      String?   @map("schedule_id")
+  checkInTime     DateTime? @map("check_in_time")
+  checkOutTime    DateTime? @map("check_out_time")
+  workHours       Decimal?  @map("work_hours")
+  overtimeHours   Decimal?  @map("overtime_hours")
+  locationGps     String?   @map("location_gps")
+  remark          String?
+  approveStatus   String?   @default("approved") @map("approve_status")
+  approvedBy      String?   @map("approved_by")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  ts              BigInt    @map("_ts")
 
   punches AttendancePunchRecord[]
 
@@ -915,66 +939,67 @@ model AttendanceV1 {
 }
 
 model AttendancePunchRecord {
-  id               String    @id @db.VarChar(32)
-  attendanceId    String?   @map("attendance_id") @db.VarChar(32)
-  staffId        String    @map("staff_id") @db.VarChar(32)
-  staffName          String    @map("staff_name") @db.VarChar(50)
-  attendanceDate   DateTime @map("attendance_date") @db.Date
-  punchType     String    @map("punch_type") @db.VarChar(20) // in/out/meal_in/meal_out
-  punchTime    DateTime @map("punch_time") @db.DateTime(0)
-  punchSource  String?   @map("punch_source") @db.VarChar(20) // manual/gps/face/device
-  locationGps     String?   @map("location_gps") @db.VarChar(100)
-  deviceId           String?   @map("device_id") @db.VarChar(64)
-  remark         String?   @db.VarChar(255)
-  imageUrl         String?   @map("image_url") @db.VarChar(500)
-  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  ts               BigInt    @map("_ts")
+  id             String        @id
+  attendanceId   String?       @map("attendance_id")
+  staffId        String        @map("staff_id")
+  staffName      String        @map("staff_name")
+  attendanceDate DateTime      @map("attendance_date")
+  punchType      String        @map("punch_type") // in/out/meal_in/meal_out
+  punchTime      DateTime      @map("punch_time")
+  punchSource    String?       @map("punch_source") // manual/gps/face/device
+  locationGps    String?       @map("location_gps")
+  deviceId       String?       @map("device_id")
+  remark         String?
+  imageUrl       String?       @map("image_url")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  ts             BigInt        @map("_ts")
+  attendance   AttendanceV1? @relation(fields: [attendanceId], references: [id])
 
   @@index([staffId, attendanceDate, punchType], map: "idx_punch_staff")
   @@map("attendance_punch_records")
 }
 
 model LeaveApplication {
-  id                String    @id @db.VarChar(32)
-  staffId           String    @map("staff_id") @db.VarChar(32)
-  staffName         String    @map("staff_name") @db.VarChar(50)
-  leaveType       String    @map("leave_type") @db.VarChar(20) // SL/PL/BL/ML/AL/outing/study/business/injury
-  dateFrom         DateTime @map("date_from") @db.Date
-  dateTo           DateTime @map("date_to") @db.Date
-  totalDays        Decimal  @map("total_days") @db.Decimal(4, 1)
-  totalHours       Decimal?  @map("total_hours") @db.Decimal(5, 2)
-  reason          String    @db.Text
-  attachmentUrls   Json?     @map("attachment_urls")
-  approveStatus     String    @default("pending") @map("approve_status") @db.VarChar(20)
-  approverId       String?   @map("approver_id") @db.VarChar(32)
-  approverName    String?   @map("approver_name") @db.VarChar(50)
-  approvedAt     DateTime? @map("approved_at") @db.DateTime(0)
-  rejectReason       String?   @map("reject_reason") @db.VarChar(255)
-  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt       DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts               BigInt    @map("_ts")
+  id             String    @id
+  staffId        String    @map("staff_id")
+  staffName      String    @map("staff_name")
+  leaveType      String    @map("leave_type") // SL/PL/BL/ML/AL/outing/study/business/injury
+  dateFrom       DateTime  @map("date_from")
+  dateTo         DateTime  @map("date_to")
+  totalDays      Decimal   @map("total_days")
+  totalHours     Decimal?  @map("total_hours")
+  reason         String
+  attachmentUrls String?   @map("attachment_urls")
+  approveStatus  String    @default("pending") @map("approve_status")
+  approverId     String?   @map("approver_id")
+  approverName   String?   @map("approver_name")
+  approvedAt     DateTime? @map("approved_at")
+  rejectReason   String?   @map("reject_reason")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  ts             BigInt    @map("_ts")
 
   @@index([staffId, dateFrom], map: "idx_leave_staff")
   @@map("leave_applications")
 }
 
 model OvertimeRecord {
-  id              String    @id @db.VarChar(32)
-  staffId       String    @map("staff_id") @db.VarChar(32)
-  staffName       String    @map("staff_name") @db.VarChar(50)
-  overtimeDate  DateTime @map("overtime_date") @db.Date
-  overtimeType String?   @map("overtime_type") @db.VarChar(20) // 工作日/周末/法定
-  startTime    DateTime? @map("start_time") @db.DateTime(0)
-  endTime     DateTime? @map("end_time") @db.DateTime(0)
-  totalHours    Decimal   @map("total_hours") @db.Decimal(4, 2)
-  scheduleId   String?   @map("schedule_id") @db.VarChar(32)
-  reason      String?   @db.Text
-  approveStatus   String    @default("pending") @map("approve_status") @db.VarChar(20)
-  approverId   String?   @map("approver_id") @db.VarChar(32)
-  approvedAt  DateTime? @map("approved_at") @db.DateTime(0)
-  createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(0)
-  updatedAt     DateTime @updatedAt @map("updated_at") @db.DateTime(0)
-  ts              BigInt    @map("_ts")
+  id            String    @id
+  staffId       String    @map("staff_id")
+  staffName     String    @map("staff_name")
+  overtimeDate  DateTime  @map("overtime_date")
+  overtimeType  String?   @map("overtime_type") // 工作日/周末/法定
+  startTime     DateTime? @map("start_time")
+  endTime       DateTime? @map("end_time")
+  totalHours    Decimal   @map("total_hours")
+  scheduleId    String?   @map("schedule_id")
+  reason        String?
+  approveStatus String    @default("pending") @map("approve_status")
+  approverId    String?   @map("approver_id")
+  approvedAt    DateTime? @map("approved_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  ts            BigInt    @map("_ts")
 
   @@index([staffId, overtimeDate], map: "idx_ot_staff")
   @@map("overtime_records")

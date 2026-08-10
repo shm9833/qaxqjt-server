@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="50%" stop-color="#16213e"/>
+      <stop offset="100%" stop-color="#0f3460"/>
+    </linearGradient>
+    <linearGradient id="curtain1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8b0000"/>
+      <stop offset="50%" stop-color="#a52a2a"/>
+      <stop offset="100%" stop-color="#5c0000"/>
+    </linearGradient>
+    <linearGradient id="goldGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f4d03f"/>
+      <stop offset="50%" stop-color="#d4ac0d"/>
+      <stop offset="100%" stop-color="#b7950b"/>
+    </linearGradient>
+  </defs>
+  <!-- 背景 -->
+  <rect width="800" height="450" fill="url(#bg1)"/>
+  <!-- 戏台地板 -->
+  <rect y="340" width="800" height="110" fill="#3d2914"/>
+  <rect y="340" width="800" height="8" fill="url(#goldGrad1)" opacity="0.7"/>
+  <!-- 幕布 -->
+  <path d="M0,0 Q80,40 60,180 Q40,320 0,340 Z" fill="url(#curtain1)"/>
+  <path d="M800,0 Q720,40 740,180 Q760,320 800,340 Z" fill="url(#curtain1)"/>
+  <!-- 宫灯 -->
+  <circle cx="160" cy="80" r="30" fill="#c0392b"/>
+  <circle cx="160" cy="80" r="22" fill="#e74c3c"/>
+  <rect x="155" y="105" width="10" height="25" fill="#d4ac0d"/>
+  <circle cx="640" cy="80" r="30" fill="#c0392b"/>
+  <circle cx="640" cy="80" r="22" fill="#e74c3c"/>
+  <rect x="635" y="105" width="10" height="25" fill="#d4ac0d"/>
+  <!-- 中心人物剪影（旦角+花脸） -->
+  <g transform="translate(400,260)">
+    <!-- 旦角 -->
+    <ellipse cx="-70" cy="0" rx="45" ry="70" fill="#f5e6d3"/>
+    <circle cx="-70" cy="-75" r="28" fill="#f8dcc4"/>
+    <!-- 头饰 -->
+    <ellipse cx="-70" cy="-95" rx="32" ry="15" fill="url(#goldGrad1)"/>
+    <circle cx="-82" cy="-90" r="6" fill="#e74c3c"/>
+    <circle cx="-58" cy="-90" r="6" fill="#e74c3c"/>
+    <!-- 水袖 -->
+    <path d="M-115,-10 Q-140,30 -120,70 Q-95,50 -85,15 Z" fill="#ecf0f1"/>
+    <!-- 净角（大花脸） -->
+    <ellipse cx="70" cy="5" rx="55" ry="75" fill="#2c3e50"/>
+    <circle cx="70" cy="-72" r="32" fill="#e8c39e"/>
+    <!-- 脸谱 -->
+    <path d="M50,-82 L50,-62 M90,-82 L90,-62" stroke="#000" stroke-width="3"/>
+    <path d="M55,-70 Q70,-55 85,-70" stroke="#c0392b" stroke-width="4" fill="none"/>
+    <!-- 髯口 -->
+    <path d="M48,-55 Q70,-20 92,-55 L95,-35 Q70,0 45,-35 Z" fill="#1a1a1a"/>
+    <!-- 靠旗 -->
+    <path d="M110,-40 L140,-90 L125,-40 Z" fill="#c0392b"/>
+    <path d="M115,-35 L150,-70 L130,-35 Z" fill="#e74c3c"/>
+  </g>
+  <!-- 标题水印 -->
+  <text x="400" y="420" text-anchor="middle" font-family="STXingkai,KaiTi,serif" font-size="28" fill="url(#goldGrad1)" font-weight="bold" letter-spacing="8">《火焰驹》· 秦腔经典</text>
+</svg>

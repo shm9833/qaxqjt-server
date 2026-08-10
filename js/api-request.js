@@ -52,11 +52,11 @@
     var timeoutMs = Number(opts.timeoutMs) || 15000;
 
     // 1. 强制降级？直接走 fallback（用户在系统页勾选后端离线模式）
-    if (CFG.isFallbackMode && typeof opts.fallback === 'function') {
+    if (CFG.isFallbackMode && CFG.isFallbackMode() && typeof opts.fallback === 'function') {
       try { return await opts.fallback({ reason: 'force_fallback' }); }
       catch (e) { throw e; }
     }
-    if (CFG.isFallbackMode && typeof opts.fallbackRead === 'function') {
+    if (CFG.isFallbackMode && CFG.isFallbackMode() && typeof opts.fallbackRead === 'function') {
       try { return await opts.fallbackRead({ reason: 'force_fallback' }); }
       catch (e) { throw e; }
     }

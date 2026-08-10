@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 320" width="300" height="320">
+  <defs>
+    <linearGradient id="qrBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f8f9fa"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#07c160"/>
+      <stop offset="100%" stop-color="#06ad56"/>
+    </linearGradient>
+  </defs>
+  <!-- 卡片背景 -->
+  <rect width="300" height="320" rx="16" fill="url(#qrBg)" stroke="#e5e7eb" stroke-width="2"/>
+  <!-- 顶部微信绿条 -->
+  <rect x="0" y="0" width="300" height="48" rx="16" fill="url(#greenGrad)"/>
+  <path d="M0,48 L0,32 Q0,16 16,16 L284,16 Q300,16 300,32 L300,48 Z" fill="url(#greenGrad)"/>
+  <!-- 微信Logo -->
+  <g transform="translate(24,12)">
+    <circle cx="12" cy="12" r="10" fill="#fff" opacity="0.95"/>
+    <circle cx="8" cy="9" r="1.5" fill="#07c160"/>
+    <circle cx="14" cy="9" r="1.5" fill="#07c160"/>
+    <path d="M3,16 Q7,13 11,15" stroke="#07c160" stroke-width="1.2" fill="none"/>
+  </g>
+  <text x="54" y="32" font-family="Microsoft YaHei,sans-serif" font-size="16" fill="#fff" font-weight="bold">秦安县秦剧团 · 官方微信</text>
+  <!-- 二维码区域（模拟QR码） -->
+  <g transform="translate(50,64)">
+    <rect x="0" y="0" width="200" height="200" rx="8" fill="#fff" stroke="#d1d5db" stroke-width="1"/>
+    <!-- QR码：三个定位角 -->
+    <g>
+      <rect x="8" y="8" width="48" height="48" rx="4" fill="#fff" stroke="#000" stroke-width="2"/>
+      <rect x="16" y="16" width="32" height="32" rx="2" fill="#000"/>
+      <rect x="22" y="22" width="20" height="20" rx="1" fill="#fff"/>
+    </g>
+    <g>
+      <rect x="144" y="8" width="48" height="48" rx="4" fill="#fff" stroke="#000" stroke-width="2"/>
+      <rect x="152" y="16" width="32" height="32" rx="2" fill="#000"/>
+      <rect x="158" y="22" width="20" height="20" rx="1" fill="#fff"/>
+    </g>
+    <g>
+      <rect x="8" y="144" width="48" height="48" rx="4" fill="#fff" stroke="#000" stroke-width="2"/>
+      <rect x="16" y="152" width="32" height="32" rx="2" fill="#000"/>
+      <rect x="22" y="158" width="20" height="20" rx="1" fill="#fff"/>
+    </g>
+    <!-- QR码中间Logo（剧团印章） -->
+    <g transform="translate(82,82)">
+      <rect x="-18" y="-18" width="36" height="36" rx="4" fill="#fff"/>
+      <rect x="-16" y="-16" width="32" height="32" rx="2" fill="#b91c1c"/>
+      <text x="0" y="-2" text-anchor="middle" font-family="STXingkai,KaiTi,serif" font-size="12" fill="#fff" font-weight="bold">秦</text>
+      <text x="0" y="10" text-anchor="middle" font-family="STXingkai,KaiTi,serif" font-size="10" fill="#fff" font-weight="bold">劇</text>
+    </g>
+    <!-- QR码数据点（装饰） -->
+    <g fill="#000">
+      <rect x="72" y="16" width="6" height="6"/><rect x="84" y="16" width="6" height="6"/><rect x="96" y="16" width="6" height="6"/><rect x="116" y="22" width="6" height="6"/>
+      <rect x="66" y="28" width="6" height="6"/><rect x="102" y="34" width="6" height="6"/><rect x="120" y="28" width="6" height="6"/>
+      <rect x="66" y="44" width="6" height="6"/><rect x="78" y="50" width="6" height="6"/><rect x="90" y="44" width="6" height="6"/><rect x="114" y="50" width="6" height="6"/><rect x="126" y="44" width="6" height="6"/>
+      <rect x="16" y="72" width="6" height="6"/><rect x="28" y="78" width="6" height="6"/><rect x="40" y="72" width="6" height="6"/><rect x="66" y="66" width="6" height="6"/><rect x="78" y="72" width="6" height="6"/><rect x="90" y="66" width="6" height="6"/><rect x="114" y="78" width="6" height="6"/><rect x="126" y="72" width="6" height="6"/><rect x="144" y="66" width="6" height="6"/><rect x="156" y="72" width="6" height="6"/><rect x="168" y="66" width="6" height="6"/><rect x="180" y="72" width="6" height="6"/>
+      <rect x="16" y="90" width="6" height="6"/><rect x="34" y="96" width="6" height="6"/><rect x="46" y="90" width="6" height="6"/><rect x="60" y="96" width="6" height="6"/><rect x="132" y="90" width="6" height="6"/><rect x="144" y="96" width="6" height="6"/><rect x="174" y="90" width="6" height="6"/>
+      <rect x="16" y="108" width="6" height="6"/><rect x="28" y="114" width="6" height="6"/><rect x="46" y="108" width="6" height="6"/><rect x="60" y="114" width="6" height="6"/><rect x="78" y="108" width="6" height="6"/><rect x="120" y="114" width="6" height="6"/><rect x="144" y="108" width="6" height="6"/><rect x="162" y="114" width="6" height="6"/><rect x="180" y="108" width="6" height="6"/>
+      <rect x="66" y="126" width="6" height="6"/><rect x="90" y="132" width="6" height="6"/><rect x="108" y="126" width="6" height="6"/><rect x="126" y="132" width="6" height="6"/><rect x="144" y="126" width="6" height="6"/><rect x="180" y="132" width="6" height="6"/>
+      <rect x="72" y="144" width="6" height="6"/><rect x="84" y="150" width="6" height="6"/><rect x="108" y="144" width="6" height="6"/><rect x="126" y="150" width="6" height="6"/>
+      <rect x="66" y="162" width="6" height="6"/><rect x="90" y="168" width="6" height="6"/><rect x="114" y="162" width="6" height="6"/><rect x="132" y="168" width="6" height="6"/><rect x="150" y="162" width="6" height="6"/><rect x="168" y="168" width="6" height="6"/><rect x="180" y="162" width="6" height="6"/>
+      <rect x="72" y="180" width="6" height="6"/><rect x="96" y="186" width="6" height="6"/><rect x="120" y="180" width="6" height="6"/><rect x="144" y="186" width="6" height="6"/><rect x="168" y="180" width="6" height="6"/>
+    </g>
+  </g>
+  <!-- 底部说明 -->
+  <text x="150" y="288" text-anchor="middle" font-family="Microsoft YaHei,sans-serif" font-size="13" fill="#374151">💬 长按识别 · 添加微信咨询洽谈</text>
+  <text x="150" y="306" text-anchor="middle" font-family="Microsoft YaHei,sans-serif" font-size="11" fill="#6b7280">剧团微信同号：13993839833</text>
+</svg>

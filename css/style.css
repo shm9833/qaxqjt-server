@@ -6061,6 +6061,14 @@ form > table th:nth-child(1),
 [data-tab-panel].tab-grid-show.tab-active {
   display: grid !important;
 }
+/* ========== 修复：opera-card 带 data-tab-panel 时不受通用 [data-tab-panel] 隐藏规则影响 ========== */
+/* 剧目卡片由分页 pg-hidden 控制显隐，不应被通用 tab 面板隐藏规则误伤 */
+.opera-card[data-tab-panel] {
+  display: block !important;
+}
+.opera-card[data-tab-panel].pg-hidden {
+  display: none !important;
+}
 /* ========== D10 CSP合规：回到顶部按钮 全局通用样式（兼容 show 和 pg-hidden 双机制） ========== */
 .back-to-top:not(.show) {
   display: none !important;

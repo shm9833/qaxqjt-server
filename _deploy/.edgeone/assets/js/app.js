@@ -1594,17 +1594,42 @@
       };
       if (apiPlays.length) apiPayload.plays = apiPlays;
 
+      // ========== 🔍 提交日志增强：打印后端 API 请求体 ==========
+      var _apiPath = '/v1/appointments';
+      var _resolvedUrl = _apiPath;
+      try {
+        if (window.QAXQJT_API_CONFIG && typeof window.QAXQJT_API_CONFIG.resolveUrl === 'function') {
+          _resolvedUrl = window.QAXQJT_API_CONFIG.resolveUrl(_apiPath);
+        }
+      } catch (_urlE) {}
+      console.log('[submitAppointment] ① 预约对象 appointment =', JSON.stringify({
+        bookingId: bookingId,
+        customerName: appointment.customerName,
+        phone: appointment.phone,
+        serviceType: appointment.serviceType,
+        shows: appointment.shows,
+        selectedPlays: appointment.selectedPlays,
+        preferredStartDate: appointment.preferredStartDate,
+        venue: appointment.venue,
+        pricing: appointment.pricing
+      }, null, 2));
+      console.log('[submitAppointment] ② 后端 Payload（' + _resolvedUrl + '） =', JSON.stringify(apiPayload, null, 2));
+
       // 3. 统一 QAXQJT_API.post：后端可用 → 走 API；网络失败 → 自动降级 fallback 走 localStorage
       //    skipAuth=true 因为预约页面是公开页面，访客不需要登录
       var _win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this);
       var hasApi = _win && typeof _win.QAXQJT_API !== 'undefined' && typeof _win.QAXQJT_API.post === 'function';
+      var _submitT0 = Date.now();
+      console.log('[submitAppointment] ③ 提交方式：' + (hasApi ? 'QAXQJT_API.post → 后端API（含 localStorage 自动降级）' : '无 API 模块 → 直接 localStorage 写入'));
       var submitPromise;
       if (hasApi) {
-        submitPromise = _win.QAXQJT_API.post('/v1/appointments', apiPayload, {
+        submitPromise = _win.QAXQJT_API.post(_apiPath, apiPayload, {
           skipAuth: true,
           showErrorToast: false,
           fallback: async function (fbInfo) {
-            console.info('[submitAppointment] API 不可用（' + ((fbInfo && fbInfo.reason) || 'fallback') + '），已降级 localStorage 写入');
+            var _reason = (fbInfo && fbInfo.reason) || 'fallback';
+            var _netErr = (fbInfo && fbInfo.err && fbInfo.err.message) ? fbInfo.err.message : '';
+            console.warn('[submitAppointment] ③-a ⚠️ API 不可用，触发降级：reason=' + _reason + (_netErr ? ('; 网络错误=' + _netErr) : ''));
             return _saveToLocalStorage();
           }
         });
@@ -1614,9 +1639,26 @@
 
       // 4. 成功 → UI 提示 + 展示编号 + 重置表单 + 解锁；失败 → 解锁 + 报错
       return submitPromise.then(function (saved) {
+        var _elapsed = Date.now() - _submitT0;
+        console.log('[submitAppointment] ④ ✅ 提交成功：耗时=' + _elapsed + 'ms；写入方式=' + (hasApi ? 'API→后端（或降级localStorage）' : '直接localStorage'));
+        console.log('[submitAppointment] ④-a 返回 saved 对象关键字段 =', JSON.stringify({
+          id: saved && saved.id,
+          bookingId: saved && (saved.bookingId || saved.bookingNo),
+          status: saved && saved.status,
+          _fromStorage: saved && saved._genSessionId ? 'yes(localStorage路径)' : null
+        }, null, 2));
         _finalizeSuccess(saved);
         return saved;
       }).catch(function (err) {
+        var _elapsed = Date.now() - _submitT0;
+        console.error('[submitAppointment] ④ ❌ 提交失败：耗时=' + _elapsed + 'ms；错误消息 =', err && err.message ? err.message : String(err));
+        if (err) {
+          console.error('[submitAppointment] ④-b HTTP status=' + err.status + '; code=' + err.code + '; detail=' + (err.detail || ''));
+          if (err.name === 'AbortError') console.error('[submitAppointment] ④-c 超时（AbortError）：请检查后端服务是否启动、API_BASE 是否配置正确');
+          if (err.data) console.error('[submitAppointment] ④-d 后端响应 JSON data =', JSON.stringify(err.data, null, 2));
+          if (err.response) console.error('[submitAppointment] ④-e Response 对象：status=' + err.response.status + ' ok=' + err.response.ok + ' type=' + err.response.type);
+          if (err.stack) console.error('[submitAppointment] ④-f 错误栈追踪：\n' + err.stack);
+        }
         console.error('[submitAppointment] 提交失败：', err && err.message ? err.message : err);
         try { Utils.toast('提交失败，请稍后重试（' + (err && err.message ? err.message : '未知错误') + '）', 'error'); } catch (_te) {}
         try { form.removeAttribute('data-booking-submitted'); } catch (_) {}
@@ -3171,15 +3213,34 @@
         var dt = (formDataX.get('preferredStartDate') || '').toString().trim();
         var now3 = Date.now();
 
+        // ========== 🔍 提交日志增强：打印表单原始数据快照 ==========
+        var _dbgFields = {};
+        try {
+          formDataX.forEach(function (v, k) {
+            _dbgFields[k] = (k === 'selectedPlays') ? _dbgFields[k] ? [].concat(_dbgFields[k], String(v)) : [String(v)] : String(v || '');
+          });
+        } catch (_fdLog) {}
+        console.groupCollapsed('%c[Booking:submit] 🚀 START  ts=' + new Date(now3).toISOString(), 'background:#0F4C81;color:#fff;padding:2px 8px;border-radius:4px;');
+        console.log('[Booking:submit] ① 表单原始字段 =', JSON.stringify(_dbgFields, null, 2));
+        console.log('[Booking:submit] ② 去重校验：name=' + nm + ' phone=' + ph + ' date=' + dt);
+        var _hasApi = !!(window.QAXQJT_API && typeof window.QAXQJT_API.post === 'function');
+        var _apiBase = '';
+        try { _apiBase = (window.QAXQJT_API_CONFIG && (window.QAXQJT_API_CONFIG.BASE || window.QAXQJT_API_CONFIG.resolveUrl('/v1/appointments'))) || ''; } catch (_e) {}
+        console.log('[Booking:submit] ③ 后端可用性：API模块=' + _hasApi + ' 解析URL=' + (_apiBase || '同源 /api 反代'));
+
         try {
           var recent3 = JSON.parse(sessionStorage.getItem('qaxqjt_booking_combo_3s') || '{}');
           var comboKey = nm + '||' + ph + '||' + dt;
           if (recent3 && recent3.key === comboKey && (now3 - recent3.ts) < 3500) {
+            console.warn('[Booking:submit] ❌ 3s 防重复拦截：上次提交 ' + (now3 - recent3.ts) + 'ms 前');
+            console.groupEnd();
             Utils.toast('⚠️ 3秒内已提交过相同预约，请勿重复提交（可修改日期或联系电话后再试）', 'warn');
             return;
           }
           sessionStorage.setItem('qaxqjt_booking_combo_3s', JSON.stringify({ key: comboKey, ts: now3 }));
-        } catch (e) {}
+        } catch (e) {
+          console.warn('[Booking:submit] sessionStorage 去重读取异常：', e && e.message);
+        }
 
         var originalText = '';
         if (submitBtn) {
@@ -3203,8 +3264,10 @@
         var result;
         try {
           result = FormValidator.submitAppointment(form);
+          console.log('[Booking:submit] ④ submitAppointment 返回类型 =', result === null ? 'null(校验失败)' : (result && typeof result.then === 'function') ? 'Promise(异步提交中)' : typeof result);
         } catch (err) {
-          console.error('[Booking] submit sync error:', err);
+          console.error('[Booking:submit] ❌ sync 阶段异常栈：', err);
+          console.groupEnd();
           Utils.toast('提交失败，请稍后重试', 'error');
           _restoreBtn();
           return;
@@ -3213,20 +3276,37 @@
         // 任务 6：submitAppointment 现在返回 Promise（走异步 API 或 localStorage）
         // 校验失败会同步返回 null，此时立即恢复按钮（表单已提示错误信息）
         if (result === null || result === undefined) {
+          console.warn('[Booking:submit] ❌ 校验失败，流程终止（表单已高亮错误）');
+          console.groupEnd();
           _restoreBtn();
           return;
         }
         if (result && typeof result.then === 'function') {
-          result.then(function () {
-            // 成功：submitAppointment 内部已处理 UI（10秒防重锁自己会释放）
-            // 此处仅 2.5 秒后恢复按钮文案，防重锁仍由内部 submitAppointment 持至 10 秒
+          var _t0 = Date.now();
+          result.then(function (saved) {
+            var _elapsed = Date.now() - _t0;
+            console.log('[Booking:submit] ✅ 成功！耗时=' + _elapsed + 'ms；保存结果 =', JSON.stringify({
+              bookingId: saved && (saved.bookingId || saved.bookingNo),
+              id: saved && saved.id,
+              customerName: saved && saved.customerName,
+              phone: saved && saved.phone
+            }, null, 2));
+            console.groupEnd();
             setTimeout(_restoreBtn, 2500);
           }, function (err) {
-            console.error('[Booking] submit promise rejected:', err && err.message ? err.message : err);
+            var _elapsed = Date.now() - _t0;
+            console.error('[Booking:submit] ❌ Promise rejected：耗时=' + _elapsed + 'ms；错误消息 =', err && err.message ? err.message : String(err));
+            if (err) {
+              console.error('[Booking:submit] ❌ 错误详情：status=' + err.status + ' code=' + err.code + ' detail=' + (err.detail || ''));
+              if (err.stack) console.error('[Booking:submit] ❌ 错误栈：\n' + err.stack);
+            }
+            console.groupEnd();
             _restoreBtn();
           });
         } else {
           // 兜底：同步返回了 saved 对象（理论上不会出现，兼容老代码）
+          console.log('[Booking:submit] ⚠️ 走同步兜底分支（非Promise）');
+          console.groupEnd();
           setTimeout(_restoreBtn, 2500);
         }
       });
@@ -3255,6 +3335,92 @@
     initQuickBookForm: function () {
       var form = document.getElementById('quickBookForm');
       if (!form) return;
+
+      /* 字数统计 */
+      var msgInput = form.querySelector('#message');
+      var charCount = form.querySelector('.qb-char-count');
+      if (msgInput && charCount) {
+        var updateCount = function () {
+          var len = (msgInput.value || '').length;
+          charCount.textContent = len + ' / 500';
+          charCount.style.color = len > 450 ? '#dc2626' : '';
+        };
+        msgInput.addEventListener('input', updateCount);
+        updateCount();
+      }
+
+      /* 日期最小值 = 今天 */
+      var dateInput = form.querySelector('#eventDate');
+      if (dateInput) {
+        var todayStr = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', todayStr);
+      }
+
+      /* 手机号仅允许数字 */
+      var phoneInput = form.querySelector('#phone');
+      if (phoneInput && !phoneInput._qbDigitBound) {
+        phoneInput._qbDigitBound = true;
+        phoneInput.addEventListener('input', function () {
+          this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);
+        });
+      }
+
+      /* 实时验证：姓名 */
+      var nameInput = form.querySelector('#name');
+      if (nameInput && !nameInput._qbValidateBound) {
+        nameInput._qbValidateBound = true;
+        var nameTip = form.querySelector('[data-tip-for="name"]');
+        nameInput.addEventListener('blur', function () {
+          var v = (this.value || '').trim();
+          if (!v) {
+            if (nameTip) { nameTip.textContent = '请输入您的姓名'; nameTip.style.display = 'block'; }
+            this.style.borderColor = '#dc2626';
+          } else if (v.length < 2) {
+            if (nameTip) { nameTip.textContent = '姓名至少 2 个字符'; nameTip.style.display = 'block'; }
+            this.style.borderColor = '#dc2626';
+          } else {
+            if (nameTip) nameTip.style.display = 'none';
+            this.style.borderColor = '';
+          }
+        });
+        nameInput.addEventListener('input', function () {
+          if (this.style.borderColor === 'rgb(220, 38, 38)') {
+            var v = (this.value || '').trim();
+            if (v.length >= 2) {
+              if (nameTip) nameTip.style.display = 'none';
+              this.style.borderColor = '';
+            }
+          }
+        });
+      }
+
+      /* 实时验证：手机号 */
+      if (phoneInput && !phoneInput._qbValidateBound) {
+        phoneInput._qbValidateBound = true;
+        var phoneTip = form.querySelector('[data-tip-for="phone"]');
+        phoneInput.addEventListener('blur', function () {
+          var v = (this.value || '').trim();
+          if (!v) {
+            if (phoneTip) { phoneTip.textContent = '请输入手机号码'; phoneTip.style.display = 'block'; }
+            this.style.borderColor = '#dc2626';
+          } else if (!/^1[3-9]\d{9}$/.test(v)) {
+            if (phoneTip) { phoneTip.textContent = '请输入正确的 11 位手机号'; phoneTip.style.display = 'block'; }
+            this.style.borderColor = '#dc2626';
+          } else {
+            if (phoneTip) phoneTip.style.display = 'none';
+            this.style.borderColor = '';
+          }
+        });
+        phoneInput.addEventListener('input', function () {
+          if (this.style.borderColor === 'rgb(220, 38, 38)') {
+            var v = (this.value || '').trim();
+            if (/^1[3-9]\d{9}$/.test(v)) {
+              if (phoneTip) phoneTip.style.display = 'none';
+              this.style.borderColor = '';
+            }
+          }
+        });
+      }
 
       form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -3374,7 +3540,35 @@
         }
 
         Utils.toast('快速预约提交成功！我们将在 24 小时内与您联系', 'success');
+
+        /* 显示成功卡片（含预约编号） */
+        var successCard = document.getElementById('quickBookSuccess');
+        var bookingIdEl = document.getElementById('qbBookingId');
+        if (successCard && bookingIdEl) {
+          bookingIdEl.textContent = record.bookingId || record.id || '已受理';
+          successCard.style.display = 'block';
+          try { successCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+        }
+
+        /* 隐藏表单、重置字段 */
         form.reset();
+        var charCount = form.querySelector('.qb-char-count');
+        if (charCount) charCount.textContent = '0 / 500';
+        try { form.style.display = 'none'; } catch (e) {}
+
+        /* "再提交一条"按钮 → 恢复表单 */
+        var resetBtn = document.getElementById('qbResetBtn');
+        if (resetBtn && !resetBtn._qbBound) {
+          resetBtn._qbBound = true;
+          resetBtn.addEventListener('click', function () {
+            if (successCard) successCard.style.display = 'none';
+            try { form.style.display = ''; } catch (e) {}
+            try { form.querySelector('#name').focus(); } catch (e) {}
+          });
+        }
+
+        /* 更新字数计数 */
+        var msgInput = form.querySelector('#message');
 
         setTimeout(function () {
           if (submitBtn) {
@@ -3448,9 +3642,14 @@
         Storage.create(Storage.KEYS.APPOINTMENTS, record);
         Utils.toast('留言提交成功！我们将尽快与您联系', 'success');
         form.reset();
+        /* 重置字数统计 */
+        var charCountEl = form.querySelector('.qc-char-count');
+        if (charCountEl) charCountEl.textContent = '0 / 500';
         if (successMsg) {
           // B7 CSP合规：csp-hide替代style.display='block'/'none'
           try { successMsg.classList.remove('csp-hide'); } catch (_csp) {}
+          try { successMsg.style.display = ''; } catch (e) {}
+          try { successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
           var _tmpMsg = successMsg;
           setTimeout(function () {
             if (_tmpMsg) try { _tmpMsg.classList.add('csp-hide'); } catch (_csp) {}
@@ -6444,28 +6643,45 @@
           Utils.toast && Utils.toast('🔄 图片预览与文件选择已清空，required 校验已同步重置', 'info', 2800);
         } catch (_) {}
       }, true);
-      // —— Bug 3 修复：#openStaffUploadBtn 点击 → 触发 #staffAttachFiles 的文件选择弹窗
-      try {
-        var uploadBtn = document.getElementById('openStaffUploadBtn');
-        var fileInput = document.getElementById('staffAttachFiles');
-        if (uploadBtn && fileInput) {
-          uploadBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            try { fileInput.click(); } catch (_) {}
-          });
-        } else if (uploadBtn) {
-          // 兜底：若 file 元素 id 不一致，则查找同 form 内第一个 file input
-          uploadBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            try {
-              var form = document.getElementById('staffAttachForm');
-              var fInp = form ? form.querySelector('input[type="file"]') : null;
-              if (fInp) fInp.click();
-              else Utils.toast && Utils.toast('⚠️ 未找到对应的文件选择输入框', 'error', 2500);
-            } catch (_) {}
-          });
-        }
-      } catch (_) {}
+      // —— 通用修复：所有「📤 选择图片/剧照/附件/凭证」按钮 → 触发同区块内 file input
+      // 覆盖 5 个页面：staff/operas/inventory/orders/finance + data-open-upload 跳转
+      var UPLOAD_BTN_MAP = {
+        'openStaffUploadBtn':    'staffAttachFiles',
+        'openOperasUploadBtn':   'operasAttachFiles',
+        'openInvUploadBtn':      'invAttachFiles',
+        'openOrdersUploadBtn':   'ordersAttachFiles',
+        'openFinanceUploadBtn':  'financeAttachFiles'
+      };
+      Object.keys(UPLOAD_BTN_MAP).forEach(function (btnId) {
+        var btn = document.getElementById(btnId);
+        if (!btn) return;
+        var fileId = UPLOAD_BTN_MAP[btnId];
+        var fInp = document.getElementById(fileId);
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (fInp) { try { fInp.click(); } catch (_) {} return; }
+          // 兜底：找同 form 内第一个 file input
+          var form = btn.closest('form');
+          var fallback = form ? form.querySelector('input[type="file"]') : null;
+          if (fallback) { try { fallback.click(); } catch (_) {} }
+          else Utils.toast && Utils.toast('⚠️ 未找到对应的文件选择输入框', 'error', 2500);
+        });
+      });
+      // data-open-upload="formId" → 滚动到表单 + 高亮 + 触发 file input
+      document.addEventListener('click', function (e) {
+        var link = e.target.closest('[data-open-upload]');
+        if (!link) return;
+        e.preventDefault();
+        var formId = link.getAttribute('data-open-upload');
+        var form = document.getElementById(formId);
+        if (!form) return;
+        try { form.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+        var wrap = form.closest('[data-upload-wrap]') || form;
+        try { wrap.classList.add('wrap-agree-error-border'); } catch (_) {}
+        setTimeout(function () { try { wrap.classList.remove('wrap-agree-error-border'); } catch (_) {} }, 2400);
+        var fInp = form.querySelector('input[type="file"]');
+        if (fInp) { try { fInp.click(); } catch (_) {} }
+      });
     },
 
     /**
@@ -8828,7 +9044,161 @@
       try { initGlobalYearReplace(); } catch (_yrErr) { try { console.warn('[YearReplace] 初始化失败：', _yrErr); } catch (_) {} }
       try { initCspInlinePatch(); } catch (_patchErr) { try { console.warn('[CSP-patch] 初始化失败：', _patchErr); } catch (_) {} }
     }
-  }
 
+    // ============================================================
+    // 🔧 调试工具：模拟预约提交请求（在浏览器 DevTools 控制台执行）
+    // 使用方式：在 booking.html 页面控制台执行 __testMockAppointmentSubmit()
+    // ============================================================
+    (function () {
+      function _pad2(n) { return n < 10 ? ('0' + n) : ('' + n); }
+      function _addDays(d, days) {
+        var x = new Date(d.getTime()); x.setDate(x.getDate() + (days || 0)); return x;
+      }
+      function _resolveAppointmentsUrl() {
+        var base = '';
+        try {
+          if (window.QAXQJT_API_CONFIG) {
+            if (window.QAXQJT_API_CONFIG.BASE) base = window.QAXQJT_API_CONFIG.BASE;
+            else base = window.QAXQJT_API_CONFIG.HOMOLOGOUS_PROXY_PREFIX || '/api';
+            if (typeof window.QAXQJT_API_CONFIG.resolveUrl === 'function') return window.QAXQJT_API_CONFIG.resolveUrl('/v1/appointments');
+          }
+        } catch (_e) {}
+        if (base) return (base + '/v1/appointments').replace(/^\/+/, '/');
+        return '/api/v1/appointments';
+      }
+
+      global.__testMockAppointmentSubmit = async function (opts) {
+        opts = opts || {};
+        var today = new Date();
+        var future7 = _addDays(today, 7);
+        var mockData = {
+          customerName: opts.customerName || '测试客户_' + _pad2(Math.floor(Math.random() * 1000)),
+          phone: opts.phone || '139938398' + _pad2(Math.floor(Math.random() * 100)),
+          organization: opts.organization || '测试组织_秦安县陇城镇文化站',
+          contactPerson: '',
+          sourceChannel: 'website_booking_test',
+          preferredStartDate: opts.preferredStartDate || (future7.getFullYear() + '-' + _pad2(future7.getMonth() + 1) + '-' + _pad2(future7.getDate())),
+          performanceCount: typeof opts.performanceCount === 'number' ? opts.performanceCount : 1,
+          packageType: opts.packageType || 'temple_fair',
+          venueProvince: opts.venueProvince || '甘肃省',
+          venueCity: opts.venueCity || '天水市',
+          venueDistrict: opts.venueDistrict || '秦安县',
+          venueAddress: opts.venueAddress || '甘肃省天水市秦安县陇城镇张沟村文化广场',
+          estimatedBudget: typeof opts.estimatedBudget === 'number' ? opts.estimatedBudget : 6800,
+          totalPerformanceFee: typeof opts.totalPerformanceFee === 'number' ? opts.totalPerformanceFee : 6800,
+          specialRequirements: opts.specialRequirements || '【测试模拟提交】剧目：火焰驹/窦娥冤；要求：自带音响灯光，舞台尺寸6*10米',
+          remarkInternal: '[TEST_MOCK_' + new Date().toISOString() + ']',
+          smsVerifiedFlag: false,
+          plays: [{ playId: 'play_1', sortOrder: 1, note: opts.play1 || '《火焰驹》' }]
+        };
+        mockData.contactPerson = mockData.customerName;
+
+        var targetUrl = _resolveAppointmentsUrl();
+        var curl = opts.curlUrl || targetUrl;
+        var groupLabel = '%c[MockBooking] 🧪 模拟预约提交  curl=' + curl;
+        console.groupCollapsed(groupLabel, 'background:#7c3f00;color:#fff;padding:2px 8px;border-radius:4px;');
+        console.log('[MockBooking] ① 后端接口 URL =', curl);
+        console.log('[MockBooking] ② 请求 Payload =', JSON.stringify(mockData, null, 2));
+        var cURLCmd = 'curl -X POST "' + curl + '" -H "Content-Type: application/json; charset=utf-8" -H "Accept: application/json" -d \'' + JSON.stringify(mockData) + '\'';
+        console.log('[MockBooking] ③ 等效 curl 命令（复制到终端执行）：\n' + cURLCmd);
+        window.__lastMockBookingCurl = cURLCmd;
+
+        var result = {
+          url: curl,
+          payload: JSON.parse(JSON.stringify(mockData)),
+          requestOk: false,
+          responseRaw: null,
+          httpStatus: 0,
+          networkError: null,
+          jsonError: null,
+          saved: null
+        };
+
+        var _t0 = Date.now();
+        try {
+          var init = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(mockData)
+          };
+          var controller = new (window.AbortController || function () { var o = {}; o.abort = function () {}; return o; })();
+          init.signal = controller.signal;
+          var timeoutMs = Number(opts.timeoutMs) || 8000;
+          var timer = setTimeout(function () { try { controller.abort(); } catch (_e) {} }, timeoutMs);
+
+          var res = await fetch(curl, init);
+          clearTimeout(timer);
+          result.httpStatus = res.status;
+          result._responseObj = res;
+          console.log('[MockBooking] ④ HTTP 请求完成：status=' + res.status + ' statusText=' + res.statusText + ' ok=' + res.ok + ' 耗时=' + (Date.now() - _t0) + 'ms');
+
+          try {
+            var txt = await res.text();
+            result.responseRaw = txt;
+            try {
+              result.data = JSON.parse(txt || 'null');
+            } catch (pe) {
+              result.jsonError = 'JSON 解析失败：' + pe.message + '；原始文本=' + txt.slice(0, 500);
+            }
+          } catch (txtErr) {
+            result.responseRaw = '<无法读取响应文本：' + (txtErr && txtErr.message) + '>';
+          }
+          console.log('[MockBooking] ⑤ 响应体解析：data=', result.data || '(空/非JSON)；raw=', result.responseRaw && result.responseRaw.slice(0, 800));
+
+          if (res.ok && (!result.data || result.data.ok !== false)) {
+            result.requestOk = true;
+            result.saved = result.data && result.data.data ? result.data.data : result.data;
+            console.log('%c[MockBooking] ✅ 后端接收成功！HTTP=' + res.status + (result.jsonError ? ' ⚠️但响应非JSON：' + result.jsonError : ''), 'color:green;font-weight:bold;');
+            if (typeof alert !== 'undefined') try { alert('✅ 模拟提交成功！\nHTTP=' + res.status + '\n响应详情已打印至 Console'); } catch (_) {}
+          } else {
+            console.error('%c[MockBooking] ❌ 后端返回业务错误：HTTP=' + res.status, 'color:red;font-weight:bold;');
+            var msg = (result.data && result.data.error && result.data.error.message) || ('HTTP ' + res.status);
+            console.error('[MockBooking] ❌ 错误消息：' + msg + '；error.code=' + (result.data && result.data.error && result.data.error.code));
+            if (res.status === 400) console.error('[MockBooking] ❌ 400 校验错误：常见为字段缺失/格式不符，上方 Payload 对照后端 Joi schema（customerName/phone 必填、手机号 11 位、日期 YYYY-MM-DD）');
+            if (res.status === 401) console.error('[MockBooking] ❌ 401 未授权：公开预约接口应 skipAuth=true；若确实保护了 /v1/appointments，请在 Authorization header 传 Bearer token');
+            if (res.status === 404) console.error('[MockBooking] ❌ 404 不存在：检查 API_BASE 是否指向正确服务端（/api/v1/appointments 或 http://host:port/v1/appointments）');
+            if (res.status === 500) console.error('[MockBooking] ❌ 500 内部错误：请查看后端日志（server/logs/app.log 或 docker logs api）');
+            if (typeof alert !== 'undefined') try { alert('❌ 模拟提交失败\nHTTP=' + res.status + '\n错误：' + msg + '\n详见 Console'); } catch (_) {}
+          }
+        } catch (netErr) {
+          result.networkError = netErr && netErr.message ? netErr.message : String(netErr);
+          var elapsed = Date.now() - _t0;
+          console.error('%c[MockBooking] ❌ 网络错误：' + result.networkError + ' 耗时=' + elapsed + 'ms', 'color:red;font-weight:bold;');
+          if (netErr && netErr.name === 'AbortError') console.error('[MockBooking] ❌ 原因：请求超时（>' + timeoutMs + 'ms），建议：1) 确认后端服务已启动；2) 确认 API_BASE 配置正确（当前解析=' + curl + '）；3) 防火墙未阻断端口');
+          else if (/Failed to fetch|NetworkError|TypeError.*fetch/i.test(result.networkError || '')) console.error('[MockBooking] ❌ 原因：后端不可达（CORS/CONN_REFUSED/SSL），建议：1) 本地启动后端 node server（_serve_backend.js 或 npm run dev:api）；2) 部署时确认 Nginx 反代 /api → 后端 3001 端口；3) 确认 API_BASE 与页面同源或 CORS 放行 origin');
+          else if (netErr && netErr.stack) console.error('[MockBooking] ❌ 错误栈追踪：\n' + netErr.stack);
+          if (typeof alert !== 'undefined') try { alert('❌ 模拟提交网络错误\n' + result.networkError + '\n详见 Console 排查建议'); } catch (_) {}
+        }
+        console.log('[MockBooking] ⑥ 汇总结果 =', JSON.stringify({
+          requestOk: result.requestOk,
+          httpStatus: result.httpStatus,
+          networkError: result.networkError,
+          jsonError: result.jsonError,
+          savedKeys: result.saved ? Object.keys(result.saved) : null
+        }, null, 2));
+        console.groupEnd();
+        return result;
+      };
+
+      global.__testMockAppointmentSubmit.help = [
+        '🧪 __testMockAppointmentSubmit() 用法：',
+        '  1) 打开 booking.html 页面，F12 控制台直接执行：__testMockAppointmentSubmit()',
+        '  2) 自定义字段：__testMockAppointmentSubmit({ customerName:"张三", phone:"13900001111", performanceCount: 2 })',
+        '  3) 指定后端地址（独立部署时）：__testMockAppointmentSubmit({ curlUrl:"http://192.168.1.100:3001/v1/appointments" })',
+        '  4) 打印出的 curl 命令可直接复制到终端执行：window.__lastMockBookingCurl',
+        '  5) 若后端不可用，仍会降级 localStorage 写入，提交日志可判断走了哪条路径'
+      ].join('\n');
+
+      // 控制台友好提示（booking.html 或 operas.html 加载后输出一次）
+      setTimeout(function () {
+        try {
+          if (location.pathname.indexOf('booking') >= 0 || location.pathname.indexOf('operas') >= 0) {
+            console.info('%c🧪 模拟预约提交工具已就绪：执行  __testMockAppointmentSubmit()  测试后端接口。详情 __testMockAppointmentSubmit.help', 'background:#F59E0B;color:#000;padding:2px 6px;border-radius:3px;');
+          }
+        } catch (_) {}
+      }, 1500);
+    })();
+  }
 })(typeof window !== 'undefined' ? window : this);
 

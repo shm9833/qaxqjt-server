@@ -21,7 +21,7 @@ const write = async ({ ctx, module: m, action, targetType, targetId, detail }) =
     actionTs: new Date(),
     ipAddress: ctx.ip || null,
     userAgent: (ctx.get('user-agent') || '').slice(0, 480) || null,
-    detailJson: detail || null,
+    detailJson: detail ? JSON.stringify(detail) : null,
     ts: BigInt(nowMs())
   };
   // 审计日志失败不阻塞业务
