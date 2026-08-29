@@ -81,6 +81,15 @@ if (!isDev) {
 app.use(jwtAuth());
 app.use(requireAuth({ allowAnonymous: true }));
 
+// 8.5 EdgeOne 兼容：剥离 /api 前缀，使后端同时支持 /v1/* 和 /api/v1/*
+// （EdgeOne Pages 路由规则若无"剥离前缀"选项，/api/v1/healthz 会原样转发到后端）
+app.use(async (ctx, next) => {
+  if (ctx.path.startsWith('/api/')) {
+    ctx.path = ctx.path.slice(4); // '/api' → ''  =>  /api/v1/healthz → /v1/healthz
+  }
+  await next();
+});
+
 // 9. v1 路由
 app.use(v1Router.routes()).use(v1Router.allowedMethods());
 
