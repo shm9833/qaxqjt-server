@@ -1,47 +1,48 @@
-// Debug function: test fetch to backend
+// Step-by-step debug: test with headers and redirect option
 export const onRequest = async (context) => {
-  const url = new URL(context.request.url);
+  const { request } = context;
+  const url = new URL(request.url);
   const backendUrl = 'http://1.14.106.173:3001/v1/healthz';
   
-  const debug = {
-    requestUrl: context.request.url,
-    pathname: url.pathname,
-    backendUrl: backendUrl,
-    fetchResult: null,
-    error: null
-  };
+  const debug = { step: 'start', error: null };
   
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    debug.step = 'creating headers';
+    const reqHeaders = new Headers();
+    reqHeaders.set('accept', 'application/json');
+    reqHeaders.set('user-agent', 'edgeone-proxy');
     
+    debug.step = 'fetching';
     const resp = await fetch(backendUrl, {
       method: 'GET',
-      signal: controller.signal
+      headers: reqHeaders,
+      redirect: 'manual'
     });
     
-    clearTimeout(timeoutId);
-    debug.fetchResult = {
-      status: resp.status,
-      statusText: resp.statusText,
-      contentType: resp.headers.get('content-type')
-    };
+    debug.step = 'reading response';
+    debug.status = resp.status;
+    debug.statusText = resp.statusText;
     
     const body = await resp.text();
-    debug.fetchResult.body = body.substring(0, 500);
+    debug.body = body.substring(0, 300);
+    
+    debug.step = 'building response headers';
+    const respHeaders = new Headers();
+    respHeaders.set('content-type', 'application/json; charset=utf-8');
+    respHeaders.set('x-edge-proxy', 'headers-test');
+    respHeaders.set('access-control-allow-origin', '*');
+    
+    debug.step = 'returning response';
+    return new Response(body, {
+      status: resp.status,
+      statusText: resp.statusText,
+      headers: respHeaders
+    });
   } catch (err) {
-    debug.error = {
-      name: err.name,
-      message: err.message,
-      toString: String(err)
-    };
+    debug.error = { name: err.name, message: err.message };
+    return new Response(JSON.stringify(debug, null, 2), {
+      status: 500,
+      headers: { 'content-type': 'application/json; charset=utf-8' }
+    });
   }
-  
-  return new Response(JSON.stringify(debug, null, 2), {
-    status: 200,
-    headers: {
-      'content-type': 'application/json; charset=utf-8',
-      'x-edge-proxy': 'fetch-debug'
-    }
-  });
 };
