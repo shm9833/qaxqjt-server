@@ -1,4 +1,4 @@
-// Progressive test: path stripping + headers, no body handling
+// Progressive test: add onRequestOptions
 const DEFAULT_BACKEND_URL = 'http://1.14.106.173:3001';
 
 export const onRequest = async (context) => {
@@ -32,7 +32,7 @@ export const onRequest = async (context) => {
     const respHeaders = new Headers();
     const rct = resp.headers.get('content-type');
     if (rct) respHeaders.set('content-type', rct);
-    respHeaders.set('x-edge-proxy', 'progressive-test');
+    respHeaders.set('x-edge-proxy', 'options-test');
     respHeaders.set('access-control-allow-origin', '*');
 
     const body = await resp.text();
@@ -42,12 +42,20 @@ export const onRequest = async (context) => {
       headers: respHeaders
     });
   } catch (err) {
-    return new Response(JSON.stringify({
-      ok: false,
-      error: String(err)
-    }), {
-      status: 502,
-      headers: { 'content-type': 'application/json' }
+    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
+      status: 502, headers: { 'content-type': 'application/json' }
     });
   }
+};
+
+export const onRequestOptions = async (context) => {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'access-control-allow-origin': '*',
+      'access-control-allow-methods': 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS',
+      'access-control-allow-headers': 'Content-Type,Authorization',
+      'access-control-max-age': '86400'
+    }
+  });
 };
