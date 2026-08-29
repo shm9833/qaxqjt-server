@@ -65,7 +65,8 @@ export const onRequest = async (context) => {
     redirect: 'manual'
   };
   if (hasBody) {
-    init.body = request.body;
+    // EdgeOne V8 isolate 中 request.body 不能直接透传，需先读取
+    init.body = await request.arrayBuffer();
   }
 
   let backendResp;
