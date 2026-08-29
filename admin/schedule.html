@@ -536,6 +536,146 @@
 .admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
   content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
 }
+/* ====== 空卡片修复20260825：隐藏多余分页栏 + 约束表格高度 ====== */
+.pagination-bar, .pagination-toolbar, [class*="pagination-bar"], [class*="pg-toolbar"] {
+  display: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.table-wrapper, .table-wrap, .table-container, .data-table-container {
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+}
+/* ====== 档期详情列表：列宽与排版优化 ====== */
+#scheduleListTbody {
+  table-layout: fixed;
+}
+/* 列宽分配（共11列，操作列最宽） */
+#scheduleListTbody tr td:nth-child(1),  /* 档期ID */
+#scheduleListTbody tr th:nth-child(1) { width: 105px; }
+#scheduleListTbody tr td:nth-child(2),  /* 日期 */
+#scheduleListTbody tr th:nth-child(2) { width: 88px; }
+#scheduleListTbody tr td:nth-child(3),  /* 星期 */
+#scheduleListTbody tr th:nth-child(3) { width: 58px; }
+#scheduleListTbody tr td:nth-child(4),  /* 演出单位 */
+#scheduleListTbody tr th:nth-child(4) { width: 115px; }
+#scheduleListTbody tr td:nth-child(5),  /* 地点 */
+#scheduleListTbody tr th:nth-child(5) { width: 115px; }
+#scheduleListTbody tr td:nth-child(6),  /* 演出类型 */
+#scheduleListTbody tr th:nth-child(6) { width: 78px; }
+#scheduleListTbody tr td:nth-child(7),  /* 剧目 */
+#scheduleListTbody tr th:nth-child(7) { width: 120px; }
+#scheduleListTbody tr td:nth-child(8),  /* 场次 */
+#scheduleListTbody tr th:nth-child(8) { width: 62px; }
+#scheduleListTbody tr td:nth-child(9),  /* 负责人 */
+#scheduleListTbody tr th:nth-child(9) { width: 78px; }
+#scheduleListTbody tr td:nth-child(10), /* 状态 */
+#scheduleListTbody tr th:nth-child(10) { width: 78px; }
+#scheduleListTbody tr td:nth-child(11), /* 操作 */
+#scheduleListTbody tr th:nth-child(11) { width: 260px; }
+#scheduleListTbody td,
+#scheduleListTbody th {
+  padding: 8px 6px !important;
+  vertical-align: middle;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 档期ID：窄列、加粗、小字 */
+.sched-tag-bold {
+  font-weight: 700;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+/* 剧目：加粗 */
+.sched-title-bold {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 派工人数：小字、浅色 */
+.sched-cast-sub {
+  font-size: 0.72rem;
+  color: var(--text-light, #888);
+  white-space: nowrap;
+}
+/* 操作列：不换行，按钮 flex 自动换行 */
+.sched-actions-wrap {
+  white-space: normal !important;
+}
+.sched-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 3px !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  min-width: 0 !important;
+}
+.sched-actions .btn-action {
+  padding: 2px 5px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  line-height: 1.3 !important;
+}
+/* 原始行操作链接也优化 */
+#scheduleListTbody td .action-link {
+  font-size: 0.78rem;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
 </style>
 </head>
 <body>
@@ -588,70 +728,75 @@
 
       <nav class="admin-sidebar-menu">
         <div class="admin-menu-group">
-          <a href="index.html" class="admin-menu-item  ">
+          <a href="index.html" data-role-level="100" class="admin-menu-item  ">
             <span class="menu-icon">📊</span>
             <span>数据看板</span>
           </a>
-          <a href="accounts.html" class="admin-menu-item">
+          <a href="accounts.html" data-role-level="999" class="admin-menu-item">
             <span class="menu-icon">👥</span>
             <span>账号权限管理</span>
           </a>
-          <a href="schedule.html" class="admin-menu-item active admin-menu-item">
+          <a href="schedule.html" data-role-level="800" class="admin-menu-item active admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
             <span class="menu-badge">8</span>
           </a>
-          <a href="cast-sheet.html" class="admin-menu-item">
+          <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
             <span>演出演员表</span>
             <span class="menu-badge">NEW</span>
           </a>
-          <a href="orders.html" class="admin-menu-item">
+          <a href="orders.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📋</span>
             <span>订单预约管理</span>
             <span class="menu-badge">5</span>
           </a>
-          <a href="operas.html" class="admin-menu-item">
+          <a href="operas.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
             <span>剧目资源管理</span>
           </a>
-          <a href="staff.html" class="admin-menu-item">
+          <a href="staff.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">👨‍🎤</span>
             <span>演职人员管理</span>
           </a>
-          <a href="inventory.html" class="admin-menu-item">
+          <a href="attendance.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">💵</span>
+            <span>考勤与薪酬</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="inventory.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📦</span>
             <span>道具服装库存</span>
             <span class="menu-badge">!</span>
           </a>
-          <a href="finance.html" class="admin-menu-item">
+          <a href="finance.html" data-role-level="500" class="admin-menu-item">
             <span class="menu-icon">💰</span>
             <span>财务收支台账</span>
           </a>
-          <a href="content.html" class="admin-menu-item">
+          <a href="content.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📝</span>
             <span>官网内容管理</span>
           </a>
-          <a href="reports.html" class="admin-menu-item">
+          <a href="reports.html" data-role-level="700" class="admin-menu-item">
             <span class="menu-icon">📈</span>
             <span>数据统计报表</span>
           </a>
-          <a href="system.html" class="admin-menu-item">
+          <a href="system.html" data-role-level="999" class="admin-menu-item">
             <span class="menu-icon">🔧</span>
             <span>系统日志备份</span>
           </a>
         </div>
         <div class="admin-menu-group">
           <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
-          <a href="../architecture.html" class="admin-menu-item">
+          <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
             <span class="menu-icon">📋</span>
             <span>架构验收报告</span>
           </a>
-          <a href="../delivery.html" class="admin-menu-item">
+          <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
             <span class="menu-icon">📦</span>
             <span>最终交付总结</span>
           </a>
-          <a href="../deploy.html" class="admin-menu-item">
+          <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
             <span class="menu-icon">🚀</span>
             <span>EdgeOne Pages 部署教程</span>
           </a>
@@ -801,7 +946,7 @@
               <div class="form-group" style="margin-bottom:0;min-width:130px;">
                 <label>年份</label>
                 <select class="form-control">
-                  <option value="{year}" selected>{year}年</option>
+                  <option value="2026" selected>2026年</option>
                   <option value="2025">2025年</option>
                   <option value="2024">2024年</option>
                 </select>
@@ -815,8 +960,8 @@
                   <option value="4">4月</option>
                   <option value="5">5月</option>
                   <option value="6">6月</option>
-                  <option value="7" selected>7月</option>
-                  <option value="8">8月</option>
+                  <option value="7">7月</option>
+                  <option value="8" selected>8月</option>
                   <option value="9">9月</option>
                   <option value="10">10月</option>
                   <option value="11">11月</option>
@@ -1192,7 +1337,7 @@
                 </div>
               </div>
               <div style="padding:18px 22px;">
-                <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:12px;">
+                <div id="weekDayHeaders" style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:12px;">
                   <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周一 7/13</div>
                   <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周二 7/14</div>
                   <div style="text-align:center;padding:8px 6px;background:rgba(220,53,69,0.08);border-radius:8px;font-weight:600;color:#b91c1c;border:1px dashed #fca5a5;">周三 7/15 ⚠️</div>
@@ -1361,17 +1506,17 @@
             <table>
               <thead>
                 <tr>
-                  <th>档期ID</th>
-                  <th>日期</th>
-                  <th>星期</th>
-                  <th>演出单位</th>
-                  <th>地点</th>
-                  <th>演出类型</th>
-                  <th>剧目</th>
-                  <th>场次</th>
-                  <th>负责人</th>
-                  <th>状态</th>
-                  <th style="min-width:220px;">操作</th>
+                  <th style="width:105px;">档期ID</th>
+                  <th style="width:88px;">日期</th>
+                  <th style="width:58px;">星期</th>
+                  <th style="width:115px;">演出单位</th>
+                  <th style="width:115px;">地点</th>
+                  <th style="width:78px;">演出类型</th>
+                  <th style="width:120px;">剧目</th>
+                  <th style="width:62px;">场次</th>
+                  <th style="width:78px;">负责人</th>
+                  <th style="width:78px;">状态</th>
+                  <th style="width:260px;">操作</th>
                 </tr>
               </thead>
               <tbody id="scheduleListTbody" data-paginate="list" data-page-size="10">
@@ -1642,10 +1787,115 @@
         }, false);
       } catch (_evt) {}
 
+      // —— 角色级别映射（与后端 ROLE_LEVEL 对齐，前端 admin→super_admin, finance→finance_admin）——
+      var __ROLE_LEVEL = { super_admin:999, admin:999, ops:800, director:700, finance_checker:600, finance_cashier:520, finance_maker:550, finance_view:510, finance_admin:500, finance:500, staff:100 };
+      function __getRoleLevel(role) {
+        if (!role) return 0;
+        return __ROLE_LEVEL[role] || 0;
+      }
+      // —— 基于角色过滤侧边栏菜单（隐藏无权限菜单项）——
+      function __applyRoleMenuFilter(session) {
+        if (!session) return;
+        var userLevel = __getRoleLevel(session.role);
+        var items = document.querySelectorAll('.admin-sidebar-menu .admin-menu-item[data-role-level]');
+        items.forEach(function(item) {
+          var need = parseInt(item.getAttribute('data-role-level'), 10) || 0;
+          if (userLevel < need) {
+            item.style.display = 'none';
+          }
+        });
+      }
+
       var currentSession = checkAuth();
+      __applyRoleMenuFilter(currentSession);
+      // —— 页面级权限拦截：直接访问 URL 时检查角色，不足则跳首页 ——
+      (function() {
+        if (!currentSession) return;
+        var userLvl = __getRoleLevel(currentSession.role);
+        if (userLvl < 800) {
+          location.replace('index.html');
+        }
+      })();
       // TS2 FIX：视图真实渲染 + 季度卡片联动 + 🚨查看冲突滚动高亮
       var __toastS2 = function(msg,type){ try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){} try{(type==='error'?alert:console.log)('[schedule] '+msg);}catch(_f){} };
       var __acqS2 = function(key,ttl){ if(window.__OP_LOCKS&&window.__OP_LOCKS[key])return false; try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||600);}catch(_lk){} return true; };
+      // 动态渲染日历：根据年月生成日历格子 + 更新标题
+      function __renderCalendar(year, month){
+        try{
+          var titleEl = document.getElementById('calendarTitleText');
+          if(titleEl) titleEl.textContent = year+'年 '+month+'月 演出排期日历';
+          var tbody = document.querySelector('#monthContainer .calendar-table tbody');
+          if(!tbody) return;
+          year = parseInt(year,10) || new Date().getFullYear();
+          month = parseInt(month,10) || 1;
+          if(month<1) month=1; if(month>12) month=12;
+          var firstDay = new Date(year, month-1, 1).getDay();
+          var daysInMonth = new Date(year, month, 0).getDate();
+          var prevMonthDays = new Date(year, month-1, 0).getDate();
+          var today = new Date();
+          var isCurMonth = (year===today.getFullYear() && month===today.getMonth()+1);
+          // 读取排期数据，按日期分组
+          var schedByDay = {};
+          try{
+            var schedList = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]');
+            schedList.forEach(function(s){
+              if(s && s.date){
+                var d = String(s.date);
+                if(!schedByDay[d]) schedByDay[d] = [];
+                schedByDay[d].push(s);
+              }
+            });
+          }catch(_){}
+          function _pad(n){ return n<10 ? '0'+n : ''+n; }
+          function _hx(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+          function _typeClass(t){
+            if(!t) return '';
+            var tt = String(t);
+            if(tt.indexOf('庙会')>=0) return 'type-miaohui';
+            if(tt.indexOf('惠民')>=0) return 'type-huimin';
+            if(tt.indexOf('节庆')>=0) return 'type-jieqing';
+            if(tt.indexOf('商演')>=0 || tt.indexOf('企业')>=0) return 'type-shangyan';
+            return '';
+          }
+          var html = '';
+          var dayCount = 1, nextMonthDay = 1;
+          for(var row=0; row<6; row++){
+            html += '<tr>';
+            for(var col=0; col<7; col++){
+              var cellIndex = row*7+col;
+              var dayNum, isEmpty=false, cellYear=year, cellMonth=month;
+              if(cellIndex < firstDay){
+                dayNum = prevMonthDays - firstDay + 1 + cellIndex; isEmpty=true;
+                cellMonth = month-1; if(cellMonth<1){ cellMonth=12; cellYear=year-1; }
+              }
+              else if(dayCount > daysInMonth){
+                dayNum = nextMonthDay++; isEmpty=true;
+                cellMonth = month+1; if(cellMonth>12){ cellMonth=1; cellYear=year+1; }
+              }
+              else { dayNum = dayCount++; }
+              var isToday = (!isEmpty && isCurMonth && dayNum===today.getDate());
+              html += '<td><div class="calendar-day'+(isEmpty?' empty':'')+(isToday?' today':'')+'">';
+              html += '<div class="day-number">'+dayNum+'</div>';
+              html += '<div class="day-events">';
+              if(!isEmpty){
+                var dateStr = cellYear+'-'+_pad(cellMonth)+'-'+_pad(dayNum);
+                var evts = schedByDay[dateStr] || [];
+                evts.slice(0,3).forEach(function(s){
+                  var tc = _typeClass(s.type);
+                  html += '<div class="mini-event '+tc+'" title="'+_hx((s.title||'')+' · '+(s.venue||''))+'">'+_hx(s.title||s.plays||'')+'</div>';
+                });
+                if(evts.length>3){
+                  html += '<div class="mini-event" style="opacity:.7;font-size:.65rem;">+'+(evts.length-3)+'</div>';
+                }
+              }
+              html += '</div>';
+              html += '</div></td>';
+            }
+            html += '</tr>';
+          }
+          tbody.innerHTML = html;
+        }catch(_e){}
+      }
       // 视图切换显示/隐藏（CSP友好：用CSS class控制，不用直接改style.display — 但由于三容器都在calendar-wrapper外层同级，直接用style.display切换更简单，且未插值）
       function __switchView(viewName){
         var m = document.getElementById('monthContainer');
@@ -1667,6 +1917,44 @@
           __switchView(v);
         });
       });
+      // 周视图导航
+      var __weekOffset = 0;
+      function __renderWeek(offset){
+        try{
+          __weekOffset = offset || 0;
+          var today = new Date();
+          var base = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+          var dayOfWeek = base.getDay(); if(dayOfWeek===0) dayOfWeek=7;
+          var monday = new Date(base); monday.setDate(base.getDate() - dayOfWeek + 1 + __weekOffset*7);
+          var titleEl = document.getElementById('weekTitleText');
+          if(titleEl){
+            var m = monday.getMonth()+1, d = monday.getDate();
+            var sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+            titleEl.textContent = monday.getFullYear()+'年 '+m+'月 第'+Math.ceil((d+new Date(monday.getFullYear(),monday.getMonth(),1).getDay())/7)+'周 排期一览（'+m+'/'+d+' - '+(sunday.getMonth()+1)+'/'+sunday.getDate()+'）';
+          }
+          var dayNames = ['周一','周二','周三','周四','周五','周六','周日'];
+          var cells = document.querySelectorAll('#weekDayHeaders > div');
+          if(cells && cells.length >= 7){
+            for(var i=0;i<7;i++){
+              var dt = new Date(monday); dt.setDate(monday.getDate()+i);
+              var isToday = (dt.getFullYear()===today.getFullYear() && dt.getMonth()===today.getMonth() && dt.getDate()===today.getDate());
+              if(cells[i]){
+                cells[i].textContent = dayNames[i]+' '+(dt.getMonth()+1)+'/'+dt.getDate()+(isToday?' ⭐':'');
+                cells[i].style.background = isToday ? 'rgba(124,58,237,0.1)' : '';
+                cells[i].style.color = isToday ? '#7c3aed' : '';
+              }
+            }
+          }
+        }catch(_e){}
+      }
+      var wPrev = $('weekNavPrev'), wToday = $('weekNavToday'), wNext = $('weekNavNext');
+      if(wPrev&&!wPrev.__s2b){ wPrev.__s2b=1; wPrev.addEventListener('click',function(){ __renderWeek(__weekOffset-1); __toastS2('📋 已切换至上一周','info',1200); }); }
+      if(wToday&&!wToday.__s2b){ wToday.__s2b=1; wToday.addEventListener('click',function(){ __renderWeek(0); __toastS2('📋 已回到本周','success',1200); }); }
+      if(wNext&&!wNext.__s2b){ wNext.__s2b=1; wNext.addEventListener('click',function(){ __renderWeek(__weekOffset+1); __toastS2('📋 已切换至下一周','info',1200); }); }
+      // 导出/打印按钮
+      var spExp = $('spExportScheduleBtn'), spPrn = $('spPrintScheduleBtn');
+      if(spExp&&!spExp.__s2b){ spExp.__s2b=1; spExp.addEventListener('click',function(){ __toastS2('📊 正在导出排期表 CSV（演示模式：真实环境将导出当月全部演出场次）','info',2500); }); }
+      if(spPrn&&!spPrn.__s2b){ spPrn.__s2b=1; spPrn.addEventListener('click',function(){ __toastS2('🖨️ 正在准备打印排期月历...','info',1000); setTimeout(function(){ try{ window.print(); }catch(_e){ __toastS2('⚠️ 打印调用失败，请用 Ctrl+P 手动打印','warning',2500); } },400); }); }
       // 季度卡片点击联动：更新年月筛选下拉 + 切月视图 + toast
       document.querySelectorAll('.history-link-card').forEach(function(card){
         card.style.cursor='pointer';
@@ -1677,17 +1965,113 @@
           var ySel = document.querySelector('.admin-filter-bar select');
           var mSel = ySel ? ySel.parentElement.parentElement.querySelectorAll('select')[1] : null;
           function __setMonth(m1,m2){
-            try{ if(mSel){ mSel.value = String(m1); } __toastS2('📅 已定位季度：'+label+'（默认展示 '+m1+'月，可切换至 '+m2+'月）','success'); }catch(_e){ __toastS2('📅 已切换：'+label+' - '+desc,'info'); }
+            try{
+              var curYear = ySel ? (parseInt(ySel.value,10)||new Date().getFullYear()) : new Date().getFullYear();
+              if(mSel){ mSel.value = String(m1); }
+              __renderCalendar(curYear, m1);
+              __toastS2('📅 已定位季度：'+label+'（默认展示 '+m1+'月，可切换至 '+m2+'月）','success');
+            }catch(_e){ __toastS2('📅 已切换：'+label+' - '+desc,'info'); }
           }
           // 先切到月度视图
           __switchView('month');
           viewBtns.forEach(function(b){ b.classList.remove('active'); if(b.getAttribute('data-view')==='month')b.classList.add('active'); });
           if(desc.indexOf('Q1')>=0 || desc.indexOf('1-3月')>=0){ __setMonth(1,'2-3'); }
           else if(desc.indexOf('Q2')>=0 || desc.indexOf('4-6月')>=0){ __setMonth(4,'5-6'); }
+          else if(desc.indexOf('往年')>=0 || desc.indexOf('2024')>=0 || desc.indexOf('以前')>=0){
+            if(ySel){ ySel.value = '2024'; }
+            __renderCalendar(2024, 1);
+            __toastS2('📅 已切换至 2024 年度档案（默认展示 1月）','success');
+          }
           else if(desc.indexOf('年度')>=0 || desc.indexOf('12个月')>=0){ __toastS2('📅 已切换：'+label+' '+desc+'（月度视图默认展示当前月）','success'); }
           else { __toastS2('📅 已切换：'+label+' '+desc,'info'); }
         });
       });
+      // 年份/月份 select change 联动日历渲染
+      (function(){
+        var filterBar = document.querySelector('.admin-filter-bar');
+        if(!filterBar) return;
+        var sels = filterBar.querySelectorAll('select');
+        var ySel2 = sels[0], mSel2 = sels[1];
+        function __onYMChange(){
+          var y = ySel2 ? (parseInt(ySel2.value,10)||new Date().getFullYear()) : new Date().getFullYear();
+          var m = mSel2 ? (parseInt(mSel2.value,10)||1) : 1;
+          __renderCalendar(y, m);
+        }
+        if(ySel2) ySel2.addEventListener('change', __onYMChange);
+        if(mSel2) mSel2.addEventListener('change', __onYMChange);
+        // 日历导航按钮
+        var navToday = document.getElementById('calNavToday');
+        var navPrevM = document.getElementById('calNavPrevMonth');
+        var navNextM = document.getElementById('calNavNextMonth');
+        var navPrevY = document.getElementById('calNavPrevYear');
+        var navNextY = document.getElementById('calNavNextYear');
+        function __getYM(){
+          var y = ySel2 ? (parseInt(ySel2.value,10)||new Date().getFullYear()) : new Date().getFullYear();
+          var m = mSel2 ? (parseInt(mSel2.value,10)||1) : 1;
+          return {y:y, m:m};
+        }
+        function __setYM(y,m){
+          if(ySel2){ ySel2.value = String(y); }
+          if(mSel2){ mSel2.value = String(m); }
+          __renderCalendar(y, m);
+        }
+        if(navToday) navToday.addEventListener('click', function(){
+          var t = new Date(); __setYM(t.getFullYear(), t.getMonth()+1);
+          __toastS2('📅 已定位到今日 '+t.getFullYear()+'年'+(t.getMonth()+1)+'月','success');
+        });
+        if(navPrevM) navPrevM.addEventListener('click', function(){
+          var ym = __getYM(); var m = ym.m-1, y = ym.y;
+          if(m<1){ m=12; y--; } __setYM(y, m);
+        });
+        if(navNextM) navNextM.addEventListener('click', function(){
+          var ym = __getYM(); var m = ym.m+1, y = ym.y;
+          if(m>12){ m=1; y++; } __setYM(y, m);
+        });
+        if(navPrevY) navPrevY.addEventListener('click', function(){
+          var ym = __getYM(); __setYM(ym.y-1, ym.m);
+        });
+        if(navNextY) navNextY.addEventListener('click', function(){
+          var ym = __getYM(); __setYM(ym.y+1, ym.m);
+        });
+        // 初始化：渲染当前选中的年月
+        var initYM = __getYM(); __renderCalendar(initYM.y, initYM.m);
+      })();
+      // 列表视图：紧凑/详情模式切换 + 立即处理冲突
+      (function(){
+        var denseBtn = document.getElementById('listDenseBtn');
+        var detailBtn = document.getElementById('listDetailBtn');
+        var listItems = document.querySelectorAll('#listContainer [style*="border-left"]');
+        function __setListMode(mode){
+          listItems.forEach(function(item){
+            if(mode==='dense'){
+              try{ item.style.padding='8px 12px'; item.style.gap='6px'; }catch(_){}
+            }else{
+              try{ item.style.padding='14px 16px'; item.style.gap='8px'; }catch(_){}
+            }
+          });
+          if(denseBtn) denseBtn.classList.toggle('active', mode==='dense');
+          if(detailBtn) detailBtn.classList.toggle('active', mode==='detail');
+          __toastS2(mode==='dense'?'📋 已切换至紧凑模式':'⊞ 已切换至详情模式','info');
+        }
+        if(denseBtn) denseBtn.addEventListener('click', function(){ __setListMode('dense'); });
+        if(detailBtn) detailBtn.addEventListener('click', function(){ __setListMode('detail'); });
+        // 立即处理冲突链接
+        document.querySelectorAll('#listContainer .action-link').forEach(function(link){
+          if((link.textContent||'').indexOf('立即处理')>=0){
+            link.style.cursor='pointer';
+            link.addEventListener('click', function(e){
+              e.preventDefault();
+              if(!__acqS2('sch_handle_conflict',500)) return;
+              __toastS2('🚨 正在打开冲突处理面板（正式环境对接人员调度接口）','warning');
+              try{
+                if(window.openAdminModal){
+                  openAdminModal(link, { mode:'edit', title:'档期冲突处理', id:'conflict-handle', width:'720px', actionLabel:'确认调整' });
+                }
+              }catch(_){}
+            });
+          }
+        });
+      })();
       // 🚨 查看冲突按钮：切列表视图 → 滚动到 conflictAnchor0715 → 高亮闪烁
       var conflictBtns = document.querySelectorAll('.schedule-alert .btn, .schedule-alert button');
       conflictBtns.forEach(function(btn){
@@ -1745,21 +2129,33 @@
       var addSubmit = document.getElementById('addScheduleSubmit');
       /* B7：弹窗显隐改为纯 classList 控制（配合 .modal-overlay-hide/.modal-wrap-hide CSS，CSP style-src-elem 严格模式不再 JS 写 style.display） */
       function openAddModal() {
-        if (!addModal || !addOverlay) return;
-        try { addOverlay.classList.remove('modal-overlay-hide'); } catch(_){}
-        try { addModal.classList.remove('modal-wrap-hide'); } catch(_){}
-        addOverlay.classList.add('active');
-        addModal.classList.add('active');
+        var m = document.getElementById('addScheduleModal');
+        var o = document.getElementById('addScheduleOverlay');
+        if (!m || !o) return;
+        try { o.classList.remove('modal-overlay-hide'); } catch(_){}
+        try { m.classList.remove('modal-wrap-hide'); } catch(_){}
+        o.classList.add('active');
+        m.classList.add('active');
+        // 延迟绑定按钮（元素在脚本块之后定义，IIFE 执行时尚不存在）
+        var sb = document.getElementById('addScheduleSubmit');
+        if (sb && !sb.__s2b) { sb.__s2b = 1; sb.addEventListener('click', submitAddSchedule); }
+        var cb = document.getElementById('addScheduleClose');
+        if (cb && !cb.__s2b) { cb.__s2b = 1; cb.addEventListener('click', closeAddModal); }
+        var cnb = document.getElementById('addScheduleCancel');
+        if (cnb && !cnb.__s2b) { cnb.__s2b = 1; cnb.addEventListener('click', closeAddModal); }
+        if (o && !o.__s2b) { o.__s2b = 1; o.addEventListener('click', function(e) { if (e.target === o) closeAddModal(); }); }
       }
       function closeAddModal() {
-        if (addOverlay) { try { addOverlay.classList.remove('active'); } catch(_){} try { addOverlay.classList.add('modal-overlay-hide'); } catch(_){} }
-        if (addModal)   { try { addModal.classList.remove('active'); } catch(_){} try { addModal.classList.add('modal-wrap-hide'); } catch(_){} }
+        var o = document.getElementById('addScheduleOverlay');
+        var m = document.getElementById('addScheduleModal');
+        if (o) { try { o.classList.remove('active'); } catch(_){} try { o.classList.add('modal-overlay-hide'); } catch(_){} }
+        if (m) { try { m.classList.remove('active'); } catch(_){} try { m.classList.add('modal-wrap-hide'); } catch(_){} }
       }
       if (addBtn) addBtn.addEventListener('click', openAddModal);
       if (addClose) addClose.addEventListener('click', closeAddModal);
       if (addCancel) addCancel.addEventListener('click', closeAddModal);
       if (addOverlay) addOverlay.addEventListener('click', function(e) { if (e.target === addOverlay) closeAddModal(); });
-      if (addSubmit) addSubmit.addEventListener('click', function() {
+      function submitAddSchedule() {
         var titleEl = document.getElementById('schedTitle') || {};
         var title = (titleEl.value || '').trim();
         var dateEl = document.getElementById('schedDate') || {};
@@ -1870,8 +2266,24 @@
           console.error('[schedule.submit] outer catch:', outerErr);
           try { (window.QinApp && QinApp.Utils) ? QinApp.Utils.toast('⚠️ 排期保存异常：' + (outerErr && outerErr.message ? outerErr.message : ''), 'error') : alert('保存失败'); } catch(_) {}
         }
+        // 保存成功后自动切换到列表视图，让用户立即看到新排期
+        try {
+          __switchView('list');
+          document.querySelectorAll('.view-toggle button').forEach(function(b){
+            b.classList.remove('active');
+            if (b.getAttribute('data-view') === 'list') b.classList.add('active');
+          });
+          // 同步更新月视图日历，切回月视图时新排期可见
+          try {
+            var ySel = document.querySelector('.admin-filter-bar select');
+            var mSel = ySel ? ySel.parentElement.parentElement.querySelectorAll('select')[1] : null;
+            var y = ySel ? (parseInt(ySel.value,10)||new Date().getFullYear()) : new Date().getFullYear();
+            var m = mSel ? (parseInt(mSel.value,10)||1) : 1;
+            __renderCalendar(y, m);
+          } catch(_) {}
+        } catch (_) {}
         closeAddModal();
-      });
+      }
       document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeAddModal(); });
       /* ---------- CRITICAL 修复：退出登录按钮（侧边栏 + 头像下拉） + 7 类 legacy key 彻底清理 ---------- */
       function __doScheduleLogout() {
@@ -1929,6 +2341,9 @@
       // =============================================================================
       // 🔧 D3 FIX：排期/档期 全按钮自动化事件绑定 + 去抖
       // =============================================================================
+
+      // 暴露日历渲染/视图切换函数，供后续 script 块（查询/今日/重置按钮）调用
+      try { window.__renderCalendar = __renderCalendar; window.__switchView = __switchView; } catch(_) {}
 
     })();
   </script>
@@ -2104,7 +2519,7 @@
         overlays.forEach(function(o){
           try{ o.classList.remove('active'); o.classList.add('modal-overlay-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
         });
-        var modals = document.querySelectorAll('.modal, [id*="Modal"], [id*="modal"], [class*="modal-wrap"], .modal-wrap');
+        var modals = document.querySelectorAll('.modal, [id*="Modal"], [id*="modal"], [class*="modal-wrap"], .modal-wrap, .generic-modal-root, [role="dialog"]');
         modals.forEach(function(m){
           try{ m.classList.remove('active'); m.classList.add('modal-wrap-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
         });
@@ -2172,10 +2587,19 @@
       filterBtns.forEach(function(b){
         if (b.__ts3Done) return;
         var txt = (b.textContent||'').replace(/\s+/g,' ').trim();
+        // 标记已绑定，防止 SuperPatch 拦截
+        try { b.__superPatchBound = 1; } catch(_) {}
         if (txt.indexOf('重置')>=0 && txt.indexOf('今日')<0) {
           b.addEventListener('click', function(){
             if(!__acq('sch_fReset', 500)) return;
             var n = __resetFilterBar();
+            // 重置后重新渲染日历到当前年月
+            try {
+              var sels0 = document.querySelectorAll('.admin-filter-bar select');
+              var y0 = sels0[0] ? (parseInt(sels0[0].value,10)||new Date().getFullYear()) : new Date().getFullYear();
+              var m0 = sels0[1] ? (parseInt(sels0[1].value,10)||1) : 1;
+              if (window.__renderCalendar) window.__renderCalendar(y0, m0);
+            } catch(_){}
             __toast('↺ 查询条件已重置（'+n+' 项恢复默认）','success');
           }, true);
           b.__ts3Done = 1;
@@ -2183,15 +2607,49 @@
           b.addEventListener('click', function(){
             if(!__acq('sch_fToday', 350)) return;
             var sels = document.querySelectorAll('.admin-filter-bar select');
+            var now = new Date();
+            var curY = now.getFullYear(), curM = now.getMonth()+1;
             if (sels && sels.length>=2) {
-              try { sels[0].selectedIndex = 0; }catch(_y){}
+              try {
+                for (var yi=0; yi<sels[0].options.length; yi++){
+                  if (String(sels[0].options[yi].value)===String(curY)){ sels[0].selectedIndex = yi; break; }
+                }
+              }catch(_y){}
               try {
                 for (var mj=0; mj<sels[1].options.length; mj++){
-                  if (String(sels[1].options[mj].value)==='7'){ sels[1].selectedIndex = mj; break; }
+                  if (String(sels[1].options[mj].value)===String(curM)){ sels[1].selectedIndex = mj; break; }
                 }
               }catch(_m){}
             }
-            __toast('📅 已回到「今日」月份（{year}年7月）','success');
+            if (window.__renderCalendar) window.__renderCalendar(curY, curM);
+            __toast('📅 已回到「今日」（'+curY+'年'+curM+'月）','success');
+          }, true);
+          b.__ts3Done = 1;
+        } else if (txt.indexOf('查询')>=0) {
+          b.addEventListener('click', function(){
+            if(!__acq('sch_fSearch', 400)) return;
+            var sels = document.querySelectorAll('.admin-filter-bar select');
+            var y = sels[0] ? (parseInt(sels[0].value,10)||new Date().getFullYear()) : new Date().getFullYear();
+            var m = sels[1] ? (parseInt(sels[1].value,10)||1) : 1;
+            var type = sels[2] ? (sels[2].value||'') : '';
+            var status = sels[3] ? (sels[3].value||'') : '';
+            // 年月 → 重新渲染日历
+            if (window.__renderCalendar) window.__renderCalendar(y, m);
+            // 更新列表标题
+            var lt = document.getElementById('listTitleText');
+            if (lt) lt.textContent = y+'年 '+m+'月 全量排期清单（按日期升序）';
+            // 提示筛选条件
+            var parts = [];
+            parts.push(y+'年'+m+'月');
+            if (type) {
+              var typeText = sels[2] && sels[2].options[sels[2].selectedIndex] ? sels[2].options[sels[2].selectedIndex].text : type;
+              parts.push('类型:'+typeText);
+            }
+            if (status) {
+              var statusText = sels[3] && sels[3].options[sels[3].selectedIndex] ? sels[3].options[sels[3].selectedIndex].text : status;
+              parts.push('状态:'+statusText);
+            }
+            __toast('🔍 查询条件已生效：'+parts.join(' / '),'success');
           }, true);
           b.__ts3Done = 1;
         }
@@ -2671,6 +3129,7 @@ var __pT0=0;
       try{
   function __btnHasBound(btn){
     if(!btn) return false;
+    if(btn.__superPatchBound) return true;
     var oc = btn.getAttribute && btn.getAttribute('onclick');
     var hr = btn.getAttribute && btn.getAttribute('href');
     if(oc && oc.length > 3) return true;
@@ -2808,6 +3267,7 @@ var __pT0=0;
 
     }, true);
     console.info('[DeadButtonFallback 已加载：×兜底 + 保存/编辑/删除/查看/核销/导出/新增 死按钮兜底委托]');
+    try{ window.__T = __T; window.__L = __L; }catch(_){}
   })();
   
 } /* end of 防重复注入保护 if */
@@ -3396,7 +3856,14 @@ function __pLog(module,event,extra){
     console.info('[SuperPatch 5/6] 已激活 ✓');
   }catch(e){ console.warn('[SuperPatch 5/6 init err]',e); }
 
+  
+  // 功能按钮绑定（上传/新建/导出）
   try{
+    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
+    __bindBtn('openScheduleUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".xls,.xlsx,.csv"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（排期文件）（演示模式：真实环境将上传到服务器）","info"); }; inp.click(); });
+  }catch(_e){ console.warn("[upload-bind err]",_e); }
+
+try{
     console.info('[SuperPatch 6/6] 死按钮兜底 + toast通道 初始化...');
     function _hasAction(btn){
       if(!btn) return false;
@@ -3406,6 +3873,7 @@ function __pLog(module,event,extra){
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
       if(btn.__deadBtnChecked) return true;
+      if(btn.__superPatchBound) return true;
       return false;
     }
     function _txtMatch(txt, list){
@@ -3417,6 +3885,9 @@ function __pLog(module,event,extra){
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
+        // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
+        if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
+        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
         btn.__superPatchBound = 1;
@@ -3482,5 +3953,70 @@ function __pLog(module,event,extra){
 </script>
 <!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
 
+
+<script>
+/* ========== 🔽 下拉菜单 Click 切换（兼容移动端） ========== */
+(function(){
+  if(window.__DD_CLICK_INJECTED__) return;
+  window.__DD_CLICK_INJECTED__ = true;
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('.action-dropdown-btn') : null;
+    var menu = e.target.closest ? e.target.closest('.action-dropdown-menu') : null;
+    // 关闭所有下拉菜单
+    document.querySelectorAll('.action-dropdown-menu').forEach(function(m){
+      if(m !== menu) m.style.display = 'none';
+    });
+    // 切换当前下拉菜单
+    if(btn){
+      var dd = btn.closest('.action-dropdown');
+      if(dd){
+        var m = dd.querySelector('.action-dropdown-menu');
+        if(m){
+          e.preventDefault();
+          e.stopPropagation();
+          m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+        }
+      }
+    }
+  });
+})();
+</script>
+
+<script>
+/* ========== 🔒 通用 __closeAnyModal：关闭所有弹窗/遮罩 ========== */
+(function(){
+  if(window.__closeAnyModal) return;
+  window.__closeAnyModal = function(){
+    try{
+      var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], .modal-overlay-root, [data-overlay]');
+      overlays.forEach(function(o){
+        try{ o.classList.remove('active','show','modal-overlay-show'); o.classList.add('s-overlay-hide','modal-overlay-hide','csp-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
+      });
+      var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, .generic-modal-root, [data-modal], [role="dialog"]');
+      modals.forEach(function(m){
+        try{ m.classList.remove('active','show','modal-show'); m.classList.add('s-modal-hide','modal-wrap-hide','csp-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
+      });
+    try{ document.body.classList.remove('body-modal-locked','modal-open','nav-locked'); }catch(_b){}
+    }catch(err){ console.warn('[__closeAnyModal] err:', err); }
+  };
+  // ESC 键关闭弹窗
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      var fns = ['closeAddModal','closeEditModal','closeDispatchModal','closeOrderViewModal','closeDeleteConfirm'];
+      for(var i=0;i<fns.length;i++){ try{ if(typeof window[fns[i]]==='function') window[fns[i]](); }catch(_){} }
+      window.__closeAnyModal();
+    }
+  });
+})();
+</script>
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+(function(){
+  function __markBound(){
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
+})();</script>
 </body>
 </html>

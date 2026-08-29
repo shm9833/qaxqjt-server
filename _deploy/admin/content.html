@@ -684,7 +684,68 @@
 .admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
   content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
 }
-  </style>
+/* ====== 空卡片修复20260825：隐藏多余分页栏 + 约束表格高度 ====== */
+.pagination-bar, .pagination-toolbar, [class*="pagination-bar"], [class*="pg-toolbar"] {
+  display: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.table-wrapper, .table-wrap, .table-container, .data-table-container {
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+}
+  
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+</style>
 </head>
 <body>
   <div class="admin-layout">
@@ -736,70 +797,75 @@
 
       <nav class="admin-sidebar-menu">
         <div class="admin-menu-group">
-          <a href="index.html" class="admin-menu-item  ">
+          <a href="index.html" data-role-level="100" class="admin-menu-item  ">
             <span class="menu-icon">📊</span>
             <span>数据看板</span>
           </a>
-          <a href="accounts.html" class="admin-menu-item">
+          <a href="accounts.html" data-role-level="999" class="admin-menu-item">
             <span class="menu-icon">👥</span>
             <span>账号权限管理</span>
           </a>
-          <a href="schedule.html" class="admin-menu-item">
+          <a href="schedule.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
             <span class="menu-badge">8</span>
           </a>
-          <a href="cast-sheet.html" class="admin-menu-item">
+          <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
             <span>演出演员表</span>
             <span class="menu-badge">NEW</span>
           </a>
-          <a href="orders.html" class="admin-menu-item">
+          <a href="orders.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📋</span>
             <span>订单预约管理</span>
             <span class="menu-badge">5</span>
           </a>
-          <a href="operas.html" class="admin-menu-item">
+          <a href="operas.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
             <span>剧目资源管理</span>
           </a>
-          <a href="staff.html" class="admin-menu-item">
+          <a href="staff.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">👨‍🎤</span>
             <span>演职人员管理</span>
           </a>
-          <a href="inventory.html" class="admin-menu-item">
+          <a href="attendance.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">💵</span>
+            <span>考勤与薪酬</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="inventory.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📦</span>
             <span>道具服装库存</span>
             <span class="menu-badge">!</span>
           </a>
-          <a href="finance.html" class="admin-menu-item">
+          <a href="finance.html" data-role-level="500" class="admin-menu-item">
             <span class="menu-icon">💰</span>
             <span>财务收支台账</span>
           </a>
-          <a href="content.html" class="admin-menu-item active admin-menu-item">
+          <a href="content.html" data-role-level="800" class="admin-menu-item active admin-menu-item">
             <span class="menu-icon">📝</span>
             <span>官网内容管理</span>
           </a>
-          <a href="reports.html" class="admin-menu-item">
+          <a href="reports.html" data-role-level="700" class="admin-menu-item">
             <span class="menu-icon">📈</span>
             <span>数据统计报表</span>
           </a>
-          <a href="system.html" class="admin-menu-item">
+          <a href="system.html" data-role-level="999" class="admin-menu-item">
             <span class="menu-icon">🔧</span>
             <span>系统日志备份</span>
           </a>
         </div>
         <div class="admin-menu-group">
           <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
-          <a href="../architecture.html" class="admin-menu-item">
+          <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
             <span class="menu-icon">📋</span>
             <span>架构验收报告</span>
           </a>
-          <a href="../delivery.html" class="admin-menu-item">
+          <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
             <span class="menu-icon">📦</span>
             <span>最终交付总结</span>
           </a>
-          <a href="../deploy.html" class="admin-menu-item">
+          <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
             <span class="menu-icon">🚀</span>
             <span>EdgeOne Pages 部署教程</span>
           </a>
@@ -2277,7 +2343,35 @@
         }, false);
       } catch (_evt) {}
 
+      // —— 角色级别映射（与后端 ROLE_LEVEL 对齐，前端 admin→super_admin, finance→finance_admin）——
+      var __ROLE_LEVEL = { super_admin:999, admin:999, ops:800, director:700, finance_checker:600, finance_cashier:520, finance_maker:550, finance_view:510, finance_admin:500, finance:500, staff:100 };
+      function __getRoleLevel(role) {
+        if (!role) return 0;
+        return __ROLE_LEVEL[role] || 0;
+      }
+      // —— 基于角色过滤侧边栏菜单（隐藏无权限菜单项）——
+      function __applyRoleMenuFilter(session) {
+        if (!session) return;
+        var userLevel = __getRoleLevel(session.role);
+        var items = document.querySelectorAll('.admin-sidebar-menu .admin-menu-item[data-role-level]');
+        items.forEach(function(item) {
+          var need = parseInt(item.getAttribute('data-role-level'), 10) || 0;
+          if (userLevel < need) {
+            item.style.display = 'none';
+          }
+        });
+      }
+
       var currentSession = checkAuth();
+      __applyRoleMenuFilter(currentSession);
+      // —— 页面级权限拦截：直接访问 URL 时检查角色，不足则跳首页 ——
+      (function() {
+        if (!currentSession) return;
+        var userLvl = __getRoleLevel(currentSession.role);
+        if (userLvl < 800) {
+          location.replace('index.html');
+        }
+      })();
 
       var tabItems = document.querySelectorAll('.tab-item');
       var tabContents = document.querySelectorAll('.tab-content');
@@ -2428,6 +2522,7 @@ var __pT0=0;
       try{
   function __btnHasBound(btn){
     if(!btn) return false;
+    if(btn.__superPatchBound) return true;
     var oc = btn.getAttribute && btn.getAttribute('onclick');
     var hr = btn.getAttribute && btn.getAttribute('href');
     if(oc && oc.length > 3) return true;
@@ -3163,6 +3258,7 @@ function __pLog(module,event,extra){
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
       if(btn.__deadBtnChecked) return true;
+      if(btn.__superPatchBound) return true;
       return false;
     }
     function _txtMatch(txt, list){
@@ -3174,6 +3270,9 @@ function __pLog(module,event,extra){
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
+                // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
+        if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
+        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
         btn.__superPatchBound = 1;
@@ -3239,6 +3338,71 @@ function __pLog(module,event,extra){
 </script>
 <!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
 
+
+<script>
+/* ========== 🔽 下拉菜单 Click 切换（兼容移动端） ========== */
+(function(){
+  if(window.__DD_CLICK_INJECTED__) return;
+  window.__DD_CLICK_INJECTED__ = true;
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('.action-dropdown-btn') : null;
+    var menu = e.target.closest ? e.target.closest('.action-dropdown-menu') : null;
+    // 关闭所有下拉菜单
+    document.querySelectorAll('.action-dropdown-menu').forEach(function(m){
+      if(m !== menu) m.style.display = 'none';
+    });
+    // 切换当前下拉菜单
+    if(btn){
+      var dd = btn.closest('.action-dropdown');
+      if(dd){
+        var m = dd.querySelector('.action-dropdown-menu');
+        if(m){
+          e.preventDefault();
+          e.stopPropagation();
+          m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+        }
+      }
+    }
+  });
+})();
+</script>
+
+<script>
+/* ========== 🔒 通用 __closeAnyModal：关闭所有弹窗/遮罩 ========== */
+(function(){
+  if(window.__closeAnyModal) return;
+  window.__closeAnyModal = function(){
+    try{
+      var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], .modal-overlay-root, [data-overlay]');
+      overlays.forEach(function(o){
+        try{ o.classList.remove('active','show','modal-overlay-show'); o.classList.add('s-overlay-hide','modal-overlay-hide','csp-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
+      });
+      var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, .generic-modal-root, [data-modal], [role="dialog"]');
+      modals.forEach(function(m){
+        try{ m.classList.remove('active','show','modal-show'); m.classList.add('s-modal-hide','modal-wrap-hide','csp-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
+      });
+    try{ document.body.classList.remove('body-modal-locked','modal-open','nav-locked'); }catch(_b){}
+    }catch(err){ console.warn('[__closeAnyModal] err:', err); }
+  };
+  // ESC 键关闭弹窗
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      var fns = ['closeAddModal','closeEditModal','closeDispatchModal','closeOrderViewModal','closeDeleteConfirm'];
+      for(var i=0;i<fns.length;i++){ try{ if(typeof window[fns[i]]==='function') window[fns[i]](); }catch(_){} }
+      window.__closeAnyModal();
+    }
+  });
+})();
+</script>
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+(function(){
+  function __markBound(){
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
+})();</script>
 </body>
 
 </html>

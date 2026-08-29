@@ -23,6 +23,36 @@
       location.replace(base + L);
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
+<script>
+(function() {
+  var __ROLE_LEVEL = { super_admin:999, admin:999, ops:800, director:700, finance_checker:600, finance_cashier:520, finance_maker:550, finance_view:510, finance_admin:500, finance:500, staff:100 };
+  function __getRoleLevel(role) { if (!role) return 0; return __ROLE_LEVEL[role] || 0; }
+  function __applyRoleMenuFilter(session) {
+    if (!session) return;
+    var userLevel = __getRoleLevel(session.role);
+    var items = document.querySelectorAll('.admin-sidebar-menu .admin-menu-item[data-role-level]');
+    items.forEach(function(item) {
+      var need = parseInt(item.getAttribute('data-role-level'), 10) || 0;
+      if (userLevel < need) item.style.display = 'none';
+    });
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      var raw = localStorage.getItem('qaxqjt_admin_session');
+      var sess = raw ? JSON.parse(raw) : null;
+      __applyRoleMenuFilter(sess);
+      // —— 页面级权限拦截：直接访问 URL 时检查角色，不足则跳首页 ——
+      (function() {
+        if (!sess) return;
+        var userLvl = __getRoleLevel(sess.role);
+        if (userLvl < 999) {
+          location.replace('index.html');
+        }
+      })();
+    } catch(e) {}
+  });
+})();
+</script>
 
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="renderer" content="webkit">
@@ -39,6 +69,11 @@
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
     <script src="../js/favicon-inject.js?v=20260803" defer></script>
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
+  <script src="../js/year-lite.js?v=20260803"></script>
+    <script src="../js/api-config.js?v=20260803"></script>
+  <script src="../js/api-request.js?v=20260803"></script>
+<script src="../js/app.js?v=20260803"></script>
+  <script src="../js/pagination.js?v=20260803"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>系统日志与数据备份 - 秦安县秦剧团云端预约管理系统 {year}</title>
   <link rel="stylesheet" href="../css/style.css?v=20260803">
@@ -1139,7 +1174,55 @@
 .admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
   content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
 }
-  </style>
+  
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+</style>
 </head>
 <body>
   <div class="admin-layout">
@@ -1191,70 +1274,75 @@
 
       <nav class="admin-sidebar-menu">
         <div class="admin-menu-group">
-          <a href="index.html" class="admin-menu-item  ">
+          <a href="index.html" data-role-level="100" class="admin-menu-item  ">
             <span class="menu-icon">📊</span>
             <span>数据看板</span>
           </a>
-          <a href="accounts.html" class="admin-menu-item">
+          <a href="accounts.html" data-role-level="999" class="admin-menu-item">
             <span class="menu-icon">👥</span>
             <span>账号权限管理</span>
           </a>
-          <a href="schedule.html" class="admin-menu-item">
+          <a href="schedule.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
             <span class="menu-badge">8</span>
           </a>
-          <a href="cast-sheet.html" class="admin-menu-item">
+          <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
             <span>演出演员表</span>
             <span class="menu-badge">NEW</span>
           </a>
-          <a href="orders.html" class="admin-menu-item">
+          <a href="orders.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📋</span>
             <span>订单预约管理</span>
             <span class="menu-badge">5</span>
           </a>
-          <a href="operas.html" class="admin-menu-item">
+          <a href="operas.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
             <span>剧目资源管理</span>
           </a>
-          <a href="staff.html" class="admin-menu-item">
+          <a href="staff.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">👨‍🎤</span>
             <span>演职人员管理</span>
           </a>
-          <a href="inventory.html" class="admin-menu-item">
+          <a href="attendance.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">💵</span>
+            <span>考勤与薪酬</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="inventory.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📦</span>
             <span>道具服装库存</span>
             <span class="menu-badge">!</span>
           </a>
-          <a href="finance.html" class="admin-menu-item">
+          <a href="finance.html" data-role-level="500" class="admin-menu-item">
             <span class="menu-icon">💰</span>
             <span>财务收支台账</span>
           </a>
-          <a href="content.html" class="admin-menu-item">
+          <a href="content.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📝</span>
             <span>官网内容管理</span>
           </a>
-          <a href="reports.html" class="admin-menu-item">
+          <a href="reports.html" data-role-level="700" class="admin-menu-item">
             <span class="menu-icon">📈</span>
             <span>数据统计报表</span>
           </a>
-          <a href="system.html" class="admin-menu-item active admin-menu-item">
+          <a href="system.html" data-role-level="999" class="admin-menu-item active admin-menu-item">
             <span class="menu-icon">🔧</span>
             <span>系统日志备份</span>
           </a>
         </div>
         <div class="admin-menu-group">
           <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
-          <a href="../architecture.html" class="admin-menu-item">
+          <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
             <span class="menu-icon">📋</span>
             <span>架构验收报告</span>
           </a>
-          <a href="../delivery.html" class="admin-menu-item">
+          <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
             <span class="menu-icon">📦</span>
             <span>最终交付总结</span>
           </a>
-          <a href="../deploy.html" class="admin-menu-item">
+          <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
             <span class="menu-icon">🚀</span>
             <span>EdgeOne Pages 部署教程</span>
           </a>
@@ -1485,6 +1573,7 @@ var __pT0=0;
       try{
   function __btnHasBound(btn){
     if(!btn) return false;
+    if(btn.__superPatchBound) return true;
     var oc = btn.getAttribute && btn.getAttribute('onclick');
     var hr = btn.getAttribute && btn.getAttribute('href');
     if(oc && oc.length > 3) return true;
@@ -1625,6 +1714,50 @@ var __pT0=0;
   })();
   
 } /* end of 防重复注入保护 if */
+
+/* ========== 🔧 系统维护操作函数（演示模式） ========== */
+window.runHealthCheck = function(){
+  var toast = window.QinApp && QinApp.Utils && QinApp.Utils.toast;
+  toast && toast('🩺 正在执行系统健康检查…','warning');
+  setTimeout(function(){
+    toast && toast('✅ 系统健康检查通过：CPU 12% | 内存 58% | 磁盘 34% | API 响应正常','success');
+  }, 1200);
+};
+window.batchMarkResolved = function(){
+  var toast = window.QinApp && QinApp.Utils && QinApp.Utils.toast;
+  if(!confirm('确认将所有未解决的告警标记为已解决？')) return;
+  toast && toast('✅ 已批量标记告警为已解决（演示模式，真实环境更新状态+审计日志）','success');
+};
+window.batchExportLogs = function(){
+  var toast = window.QinApp && QinApp.Utils && QinApp.Utils.toast;
+  toast && toast('📤 正在导出系统日志…','warning');
+  setTimeout(function(){
+    toast && toast('✅ 日志导出完成：CSV/Excel 文件已就绪（演示模式，真实环境触发下载）','success');
+  }, 1500);
+};
+window.batchCleanupExpired = function(){
+  var toast = window.QinApp && QinApp.Utils && QinApp.Utils.toast;
+  if(!confirm('确认清理所有过期数据（含过期预约、临时文件）？此操作不可撤销！')) return;
+  toast && toast('🗑️ 正在清理过期数据…','warning');
+  setTimeout(function(){
+    toast && toast('✅ 过期数据清理完成（演示模式，真实环境执行物理清理+审计日志）','success');
+  }, 1200);
+};
+window.triggerBackup = function(){
+  var toast = window.QinApp && QinApp.Utils && QinApp.Utils.toast;
+  toast && toast('💾 正在触发数据备份…','warning');
+  setTimeout(function(){
+    toast && toast('✅ 数据备份完成：备份包已生成（演示模式，真实环境上传到对象存储）','success');
+  }, 1800);
+};
+/* ========== 🖥️ 全屏切换函数 ========== */
+window.toggleFullscreen = function() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen && document.exitFullscreen();
+  }
+};
 </script>
 
 <script id="adminSuperPatchV20260730">
@@ -2220,6 +2353,7 @@ function __pLog(module,event,extra){
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
       if(btn.__deadBtnChecked) return true;
+      if(btn.__superPatchBound) return true;
       return false;
     }
     function _txtMatch(txt, list){
@@ -2231,6 +2365,9 @@ function __pLog(module,event,extra){
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
+                // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
+        if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
+        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
         btn.__superPatchBound = 1;
@@ -2296,5 +2433,42 @@ function __pLog(module,event,extra){
 </script>
 <!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
 
+
+<script>
+/* ========== 🔒 通用 __closeAnyModal：关闭所有弹窗/遮罩 ========== */
+(function(){
+  if(window.__closeAnyModal) return;
+  window.__closeAnyModal = function(){
+    try{
+      var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], .modal-overlay-root, [data-overlay]');
+      overlays.forEach(function(o){
+        try{ o.classList.remove('active','show','modal-overlay-show'); o.classList.add('s-overlay-hide','modal-overlay-hide','csp-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
+      });
+      var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, .generic-modal-root, [data-modal], [role="dialog"]');
+      modals.forEach(function(m){
+        try{ m.classList.remove('active','show','modal-show'); m.classList.add('s-modal-hide','modal-wrap-hide','csp-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
+      });
+    try{ document.body.classList.remove('body-modal-locked','modal-open','nav-locked'); }catch(_b){}
+    }catch(err){ console.warn('[__closeAnyModal] err:', err); }
+  };
+  // ESC 键关闭弹窗
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      var fns = ['closeAddModal','closeEditModal','closeDispatchModal','closeOrderViewModal','closeDeleteConfirm'];
+      for(var i=0;i<fns.length;i++){ try{ if(typeof window[fns[i]]==='function') window[fns[i]](); }catch(_){} }
+      window.__closeAnyModal();
+    }
+  });
+})();
+</script>
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+(function(){
+  function __markBound(){
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
+})();</script>
 </body>
 </html>

@@ -463,6 +463,8 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
 .troupe-bar .tb-btn-emerald:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(5,150,105,0.35);}
 .troupe-bar .tb-btn-green{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;}
 .troupe-bar .tb-btn-purple{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;}
+.troupe-bar .tb-btn-indigo{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;}
+.troupe-bar .tb-btn-indigo:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(99,102,241,0.35);}
 .tp-group{margin-bottom:14px;border:2px solid #e2e8f0;border-radius:14px;overflow:hidden;}
 .tp-group .tp-g-head{padding:10px 16px;background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-bottom:2px solid #e2e8f0;display:flex;align-items:center;gap:10px;font-weight:800;color:#0f172a;}
 .tp-group .tp-g-head .tp-g-count{margin-left:auto;background:#fff;border:1.5px solid #cbd5e1;border-radius:20px;padding:3px 12px;font-size:.82rem;font-weight:900;color:#334155;}
@@ -503,6 +505,54 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
 @media print{
   .troupe-bar{display:none !important;}
 }
+
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
 </style>
 </head>
 <body>
@@ -512,56 +562,60 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     <div class="sidebar-header">秦安县<br>秦剧团管理后台</div>
     <nav class="admin-sidebar-menu">
       <div class="admin-menu-group">
-        <a href="index.html" class="admin-menu-item">
+        <a href="index.html" data-role-level="100" class="admin-menu-item">
           <span class="menu-icon">📊</span><span>数据看板</span>
         </a>
-        <a href="accounts.html" class="admin-menu-item">
+        <a href="accounts.html" data-role-level="999" class="admin-menu-item">
           <span class="menu-icon">👥</span><span>账号权限管理</span>
         </a>
-        <a href="schedule.html" class="admin-menu-item">
+        <a href="schedule.html" data-role-level="800" class="admin-menu-item">
           <span class="menu-icon">📅</span><span>演出档期排班</span>
           <span class="menu-badge">8</span>
         </a>
-        <a href="cast-sheet.html" class="admin-menu-item active">
+        <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item active">
           <span class="menu-icon">🎭</span><span>演出演员表</span>
           <span class="menu-badge">NEW</span>
         </a>
-        <a href="orders.html" class="admin-menu-item">
+        <a href="orders.html" data-role-level="800" class="admin-menu-item">
           <span class="menu-icon">📋</span><span>订单预约管理</span>
           <span class="menu-badge">5</span>
         </a>
-        <a href="operas.html" class="admin-menu-item">
+        <a href="operas.html" data-role-level="800" class="admin-menu-item">
           <span class="menu-icon">🎭</span><span>剧目资源管理</span>
         </a>
-        <a href="staff.html" class="admin-menu-item">
+        <a href="staff.html" data-role-level="800" class="admin-menu-item">
           <span class="menu-icon">👨‍🎤</span><span>演职人员管理</span>
         </a>
-        <a href="inventory.html" class="admin-menu-item">
+        <a href="attendance.html" data-role-level="700" class="admin-menu-item">
+          <span class="menu-icon">💵</span><span>考勤与薪酬</span>
+          <span class="menu-badge">NEW</span>
+        </a>
+        <a href="inventory.html" data-role-level="800" class="admin-menu-item">
           <span class="menu-icon">📦</span><span>道具服装库存</span>
           <span class="menu-badge">!</span>
         </a>
-        <a href="finance.html" class="admin-menu-item">
+        <a href="finance.html" data-role-level="500" class="admin-menu-item">
           <span class="menu-icon">💰</span><span>财务收支台账</span>
         </a>
-        <a href="content.html" class="admin-menu-item">
+        <a href="content.html" data-role-level="800" class="admin-menu-item">
           <span class="menu-icon">📝</span><span>官网内容管理</span>
         </a>
-        <a href="reports.html" class="admin-menu-item">
+        <a href="reports.html" data-role-level="700" class="admin-menu-item">
           <span class="menu-icon">📈</span><span>数据统计报表</span>
         </a>
-        <a href="system.html" class="admin-menu-item">
+        <a href="system.html" data-role-level="999" class="admin-menu-item">
           <span class="menu-icon">🔧</span><span>系统日志备份</span>
         </a>
       </div>
       <div class="admin-menu-group">
         <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
-        <a href="../architecture.html" class="admin-menu-item">
+        <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
           <span class="menu-icon">📋</span><span>架构验收报告</span>
         </a>
-        <a href="../delivery.html" class="admin-menu-item">
+        <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
           <span class="menu-icon">📦</span><span>最终交付总结</span>
         </a>
-        <a href="../deploy.html" class="admin-menu-item">
+        <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
           <span class="menu-icon">🚀</span><span>EdgeOne Pages 部署教程</span>
         </a>
       </div>
@@ -580,7 +634,11 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
   <div class="admin-main">
     <div class="admin-topbar">
       <button class="topbar-toggle" id="sidebarToggle" type="button">☰ 切换侧边栏</button>
-      <div class="breadcrumb"><a href="index.html">后台首页</a> / <span>🎭 演出演员表配置（秦腔专业增强版V3）</span></div>
+      <div class="admin-breadcrumb">
+        <a href="index.html">首页</a>
+        <span class="separator">/</span>
+        <span class="current">演出演员表</span>
+      </div>
       <div class="topbar-user">👨‍💼 秦剧团管理员 / <a href="#" id="logoutLink2">退出</a></div>
     </div>
     <div class="cast-page-wrap">
@@ -635,6 +693,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
           <button class="tb-btn tb-btn-rose"   id="tpBtnManage"    data-action="troupe-manage"    type="button">⚙️ 组团模板管理</button>
           <button class="tb-btn tb-btn-purple" id="tpBtnWgEdit"    data-action="troupe-wg-edit"    type="button" title="编辑7档天工资等级（W1实习～W7主A角），影响所有样板/模板默认档位">🎚️ 工资等级</button>
           <button class="tb-btn tb-btn-gray"   id="tpBtnSeed"      data-action="troupe-seed-36"   type="button">✨ 一键生成36人标配样板</button>
+          <button class="tb-btn tb-btn-indigo" id="tpBtnCustom"    data-action="troupe-custom"     type="button" title="自定义各组人数，生成专属组团样板">🛠 自定义组团</button>
         </div>
       </div>
       <!-- ===== 组团模板 · End ===== -->
@@ -978,7 +1037,35 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
       }, false);
     } catch (_evt) {}
 
-    var currentSession = checkAuth();
+    // —— 角色级别映射（与后端 ROLE_LEVEL 对齐，前端 admin→super_admin, finance→finance_admin）——
+      var __ROLE_LEVEL = { super_admin:999, admin:999, ops:800, director:700, finance_checker:600, finance_cashier:520, finance_maker:550, finance_view:510, finance_admin:500, finance:500, staff:100 };
+      function __getRoleLevel(role) {
+        if (!role) return 0;
+        return __ROLE_LEVEL[role] || 0;
+      }
+      // —— 基于角色过滤侧边栏菜单（隐藏无权限菜单项）——
+      function __applyRoleMenuFilter(session) {
+        if (!session) return;
+        var userLevel = __getRoleLevel(session.role);
+        var items = document.querySelectorAll('.admin-sidebar-menu .admin-menu-item[data-role-level]');
+        items.forEach(function(item) {
+          var need = parseInt(item.getAttribute('data-role-level'), 10) || 0;
+          if (userLevel < need) {
+            item.style.display = 'none';
+          }
+        });
+      }
+
+      var currentSession = checkAuth();
+      __applyRoleMenuFilter(currentSession);
+      // —— 页面级权限拦截：直接访问 URL 时检查角色，不足则跳首页 ——
+      (function() {
+        if (!currentSession) return;
+        var userLvl = __getRoleLevel(currentSession.role);
+        if (userLvl < 800) {
+          location.replace('index.html');
+        }
+      })();
   })();
 </script>
 <script>
@@ -2355,8 +2442,8 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
 
 </script>
 
-  <!-- S-通用后台补丁：去抖锁 + __closeAnyModal + 查询重置真重置 + ESC 关弹窗 + 侧边栏死链修复 + 空 a[href=#] 禁跳 →
-  [script]
+  <!-- S-通用后台补丁：去抖锁 + __closeAnyModal + 查询重置真重置 + ESC 关弹窗 + 侧边栏死链修复 + 空 a[href=#] 禁跳 -->
+<script>
   (function __adminCommonPatchV20260730(){
     var __toastC = function(msg,type){
       try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){}
@@ -2375,14 +2462,15 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     // 2) 通用 __closeAnyModal：扫描所有 .modal/.overlay 并关闭
     window.__closeAnyModal = function(){
       try{
-        var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], [data-overlay]');
+        var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], .modal-overlay-root, [data-overlay]');
         overlays.forEach(function(o){
-          try{ o.classList.remove('active','show'); o.classList.add('s-overlay-hide','modal-overlay-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
+          try{ o.classList.remove('active','show','modal-overlay-show'); o.classList.add('s-overlay-hide','modal-overlay-hide','csp-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
         });
-        var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, [data-modal]');
+        var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, .generic-modal-root, [data-modal], [role="dialog"]');
         modals.forEach(function(m){
-          try{ m.classList.remove('active','show'); m.classList.add('s-modal-hide','modal-wrap-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
+          try{ m.classList.remove('active','show','modal-show'); m.classList.add('s-modal-hide','modal-wrap-hide','csp-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
         });
+      try{ document.body.classList.remove('body-modal-locked','modal-open','nav-locked'); }catch(_b){}
       }catch(err){ console.warn('[__closeAnyModal] err:', err); }
     };
     // 3) ESC 键 → 关所有弹窗 + 触发页面级 closeAddModal/closeEditModal/closeDispatchModal 若存在
@@ -2390,7 +2478,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
       document.addEventListener('keydown', function(e){
         if(e.key==='Escape'){
           var fns = ['closeAddModal','closeEditModal','closeDispatchModal','closeOrderViewModal','closeDeleteConfirm'];
-          for(var i=0;i[fns.length;i++){ try{ if(typeof window[fns[i]]==='function') window[fns[i]](); }catch(_){} }
+          for(var i=0;i<fns.length;i++){ try{ if(typeof window[fns[i]]==='function') window[fns[i]](); }catch(_){} }
           window.__closeAnyModal();
         }
       }, true);
@@ -2415,7 +2503,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         rbtns.forEach(function(b){
           if(b.__sBound) return;
           var txt = (b.textContent||'').replace(/\s+/g,' ').trim();
-          if(txt.indexOf('重置')]=0 && txt.indexOf('今日')<0 && txt.indexOf('密码')<0){
+          if(txt.indexOf('重置')>=0 && txt.indexOf('今日')<0 && txt.indexOf('密码')<0){
             b.addEventListener('click', function(){
               if(!window.__acqCommon('c_reset_'+Math.random().toString(36).slice(2,6),450)) return;
               var n = __resetFilterBar();
@@ -2467,8 +2555,8 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
             var t = (li.textContent||'').replace(/\s+/g,' ').trim();
             var a = li.querySelector('a');
             if(!a || !t) return;
-            for(var j=0;j[menuMap.length;j++){
-              if(t.indexOf(menuMap[j].kw)]=0 && a.getAttribute('href') !== menuMap[j].target){
+            for(var j=0;j<menuMap.length;j++){
+              if(t.indexOf(menuMap[j].kw)>=0 && a.getAttribute('href') !== menuMap[j].target){
                 try{ a.setAttribute('href', menuMap[j].target); a.removeAttribute('onclick'); a.__sBound=1; }catch(_s){}
                 break;
               }
@@ -2481,8 +2569,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     else document.addEventListener('DOMContentLoaded', function(){ setTimeout(__bindButtonsOnce, 150); });
     console.info('[adminCommonPatchV20260730 已应用：去抖锁 + __closeAnyModal + 重置真重置 + ESC关弹窗 + 侧边栏死链修复 + 页码圆角CSS]');
   })();
-  [/script]
-  
+</script>
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
 <script>
 /* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
@@ -2551,6 +2638,7 @@ var __pT0=0;
       try{
   function __btnHasBound(btn){
     if(!btn) return false;
+    if(btn.__superPatchBound) return true;
     var oc = btn.getAttribute && btn.getAttribute('onclick');
     var hr = btn.getAttribute && btn.getAttribute('href');
     if(oc && oc.length > 3) return true;
@@ -3286,6 +3374,8 @@ function __pLog(module,event,extra){
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
       if(btn.__deadBtnChecked) return true;
+      if(btn.__superPatchBound) return true;
+      if(btn.__superPatchBound) return true;
       return false;
     }
     function _txtMatch(txt, list){
@@ -3297,6 +3387,9 @@ function __pLog(module,event,extra){
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
+                // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
+        if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
+        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
         btn.__superPatchBound = 1;
@@ -3362,5 +3455,353 @@ function __pLog(module,event,extra){
 </script>
 <!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
 
+<script id="castSheetBtnFix202608">
+(function(){
+  'use strict';
+  function $(id){ return document.getElementById(id); }
+  function toast(msg,type,ms){
+    var t=document.createElement('div');
+    t.style.cssText='position:fixed;top:20px;right:20px;z-index:99999;padding:12px 24px;border-radius:8px;color:#fff;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.3);background:'+(type==='error'?'#dc3545':type==='success'?'#28a745':type==='warning'?'#ffc107':'#17a2b8');
+    t.textContent=msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); },ms||3000);
+  }
+  var LS_KEY='qaxqjt_cast_sheet_v3';
+  var LS_SHEETS='qaxqjt_cast_sheets_v1';
+  var LS_TROUPE='qaxqjt_troupe_template_v1';
+  function getSheets(){ try{ var r=localStorage.getItem(LS_SHEETS); return r?JSON.parse(r):[]; }catch(_){ return []; } }
+  function saveSheets(a){ try{ localStorage.setItem(LS_SHEETS,JSON.stringify(a)); }catch(_){} }
+  function getCurId(){ try{ return localStorage.getItem('qaxqjt_cast_current_sheet')||'default'; }catch(_){ return 'default'; } }
+  function setCurId(id){ try{ localStorage.setItem('qaxqjt_cast_current_sheet',id); }catch(_){} }
+  function refreshSheetSelect(){
+    var sel=$('csSheetSelect'); if(!sel) return;
+    var sheets=getSheets(); var curId=getCurId();
+    sel.innerHTML='';
+    if(sheets.length===0){ sel.innerHTML='<option value="default">默认存档</option>'; var info=$('csSheetInfo'); if(info) info.textContent='默认存档'; return; }
+    for(var i=0;i<sheets.length;i++){ var o=document.createElement('option'); o.value=sheets[i].id; o.textContent=sheets[i].name||('存档'+(i+1)); if(sheets[i].id===curId) o.selected=true; sel.appendChild(o); }
+    var info2=$('csSheetInfo'); if(info2){ var cur=sheets.filter(function(s){return s.id===curId;})[0]; info2.textContent=cur?('当前：'+cur.name):'默认存档'; }
+  }
+  function newSheet(){
+    var name=prompt('请输入新演出名称：','新建演出'+(getSheets().length+1)); if(!name) return;
+    var id='sheet_'+Date.now(); var sheets=getSheets(); sheets.push({id:id,name:name,ts:Date.now()}); saveSheets(sheets); setCurId(id);
+    try{ localStorage.removeItem(LS_KEY); }catch(_){}
+    refreshSheetSelect(); toast('✅ 已创建：'+name+'，请编辑后点击保存','success',3000); setTimeout(function(){ location.reload(); },1000);
+  }
+  function saveAsSheet(){
+    var name=prompt('另存为新存档，请输入名称：','存档副本'+(getSheets().length+1)); if(!name) return;
+    var id='sheet_'+Date.now(); var sheets=getSheets(); var curData=null; try{ curData=localStorage.getItem(LS_KEY); }catch(_){}
+    sheets.push({id:id,name:name,ts:Date.now(),data:curData}); saveSheets(sheets); setCurId(id); refreshSheetSelect(); toast('✅ 已另存为：'+name,'success',3000);
+  }
+  function deleteSheet(){
+    var curId=getCurId(); var sheets=getSheets(); var cur=sheets.filter(function(s){return s.id===curId;})[0];
+    if(!cur){ toast('⚠️ 默认存档不可删除','warning',2000); return; }
+    if(!confirm('确定删除存档「'+cur.name+'」？此操作不可撤销！')) return;
+    sheets=sheets.filter(function(s){return s.id!==curId;}); saveSheets(sheets); setCurId('default'); refreshSheetSelect();
+    toast('🗑️ 已删除：'+cur.name,'success',2000); setTimeout(function(){ location.reload(); },1000);
+  }
+  function switchSheet(id){
+    setCurId(id); var sheets=getSheets(); var cur=sheets.filter(function(s){return s.id===id;})[0];
+    if(cur&&cur.data){ try{ localStorage.setItem(LS_KEY,cur.data); }catch(_){} }
+    toast('📁 已切换到：'+(cur?cur.name:'默认存档'),'info',2000); setTimeout(function(){ location.reload(); },800);
+  }
+  var WAGE_GRADES={W1:{name:'实习',daily:80},W2:{name:'替补',daily:120},W3:{name:'C角',daily:180},W4:{name:'B角',daily:280},W5:{name:'A角',daily:400},W6:{name:'主B',daily:600},W7:{name:'主A角',daily:800}};
+  function generate36Template(){
+    var template=[];
+    var actors=[{name:'王建国',role:'老生',grade:'W5'},{name:'李明华',role:'老生',grade:'W4'},{name:'张文斌',role:'小生',grade:'W5'},{name:'陈志强',role:'小生',grade:'W3'},{name:'刘秀英',role:'青衣',grade:'W6'},{name:'赵雅芳',role:'青衣',grade:'W4'},{name:'孙美玲',role:'花旦',grade:'W5'},{name:'周丽萍',role:'花旦',grade:'W3'},{name:'吴铁柱',role:'花脸',grade:'W6'},{name:'郑大山',role:'花脸',grade:'W4'},{name:'马小丑',role:'丑角',grade:'W4'},{name:'黄文龙',role:'武生',grade:'W5'},{name:'徐凤英',role:'老旦',grade:'W4'},{name:'朱彩云',role:'彩旦',grade:'W3'},{name:'胡建国',role:'红生',grade:'W5'},{name:'林文海',role:'小丑',grade:'W3'},{name:'郭天明',role:'武净',grade:'W4'},{name:'何丽华',role:'武旦',grade:'W4'}];
+    for(var i=0;i<actors.length;i++){ template.push({cat:'actor',name:actors[i].name,role:actors[i].role,grade:actors[i].grade,daily:WAGE_GRADES[actors[i].grade].daily}); }
+    var band=[{name:'钱师傅',role:'板胡',grade:'W6'},{name:'孙师傅',role:'二胡',grade:'W4'},{name:'李师傅',role:'笛子',grade:'W4'},{name:'赵师傅',role:'三弦',grade:'W3'},{name:'周师傅',role:'鼓师',grade:'W6'},{name:'吴师傅',role:'锣',grade:'W3'},{name:'郑师傅',role:'铙钹',grade:'W3'},{name:'王师傅',role:'梆子',grade:'W2'}];
+    for(var i2=0;i2<band.length;i2++){ template.push({cat:'band',name:band[i2].name,role:band[i2].role,grade:band[i2].grade,daily:WAGE_GRADES[band[i2].grade].daily}); }
+    var front=[{name:'张管理',role:'舞台监督',grade:'W5'},{name:'李前台',role:'前台',grade:'W2'},{name:'王字幕',role:'字幕',grade:'W2'},{name:'赵检票',role:'检票',grade:'W1'}];
+    for(var i3=0;i3<front.length;i3++){ template.push({cat:'front',name:front[i3].name,role:front[i3].role,grade:front[i3].grade,daily:WAGE_GRADES[front[i3].grade].daily}); }
+    var costume=[{name:'刘服装',role:'服装师',grade:'W4'},{name:'陈化妆',role:'化妆师',grade:'W3'},{name:'杨盔箱',role:'盔箱',grade:'W3'}];
+    for(var i4=0;i4<costume.length;i4++){ template.push({cat:'costume',name:costume[i4].name,role:costume[i4].role,grade:costume[i4].grade,daily:WAGE_GRADES[costume[i4].grade].daily}); }
+    var electric=[{name:'孙灯光',role:'灯光师',grade:'W4'},{name:'赵音响',role:'音响师',grade:'W4'},{name:'钱电工',role:'配电',grade:'W2'}];
+    for(var i5=0;i5<electric.length;i5++){ template.push({cat:'electric',name:electric[i5].name,role:electric[i5].role,grade:electric[i5].grade,daily:WAGE_GRADES[electric[i5].grade].daily}); }
+    return template;
+  }
+  function updateTroupeStats(template){
+    var total=$('tp-total'); var actor=$('tp-actor'); var band=$('tp-band'); var front=$('tp-front'); var costume=$('tp-costume'); var electric=$('tp-electric'); var status=$('tp-status'); var dayWage=$('tp-wage-day');
+    var ac=0,bc=0,fc=0,cc=0,ec=0,totalWage=0;
+    for(var i=0;i<template.length;i++){ var p=template[i]; totalWage+=p.daily||0; if(p.cat==='actor')ac++; else if(p.cat==='band')bc++; else if(p.cat==='front')fc++; else if(p.cat==='costume')cc++; else if(p.cat==='electric')ec++; }
+    if(total){total.querySelector('em').textContent=template.length;}
+    if(actor){actor.querySelector('em').textContent=ac;}
+    if(band){band.querySelector('em').textContent=bc;}
+    if(front){front.querySelector('em').textContent=fc;}
+    if(costume){costume.querySelector('em').textContent=cc;}
+    if(electric){electric.querySelector('em').textContent=ec;}
+    if(status){var em=status.querySelector('em'); if(template.length>=30){em.textContent='✅达标';em.style.color='#16a34a';}else{em.textContent='⚠️不足30人';em.style.color='#dc3545';}}
+    if(dayWage){dayWage.querySelector('em').textContent='¥'+totalWage.toLocaleString('zh-CN');}
+    var days=parseInt($('tpDays')?$('tpDays').value:3)||3;
+    var totalEl=$('tp-wage-total'); if(totalEl){totalEl.querySelector('em').textContent='¥'+(totalWage*days).toLocaleString('zh-CN');}
+  }
+  function syncToCast(){
+    var template=getCurrentTemplate(); if(!template||template.length===0){ toast('⚠️ 请先生成或载入组团模板','warning',2000); return; }
+    toast('🧩 正在同步'+template.length+'人到演员表...','info',2000);
+    try{ localStorage.setItem(LS_TROUPE,JSON.stringify(template)); }catch(_){}
+    setTimeout(function(){ toast('✅ 已同步'+template.length+'人到演员表，请查看各板块','success',3000); },500);
+  }
+  function getCurrentTemplate(){ try{ var raw=localStorage.getItem(LS_TROUPE); return raw?JSON.parse(raw):null; }catch(_){ return null; } }
+  function _hx(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function _fillBlock(bodyId, rows, key){
+    var body=$(bodyId); if(!body) return;
+    var html='';
+    rows.forEach(function(r,i){
+      html += '<tr><td class="seq">'+(i+1)+'</td>'
+        + '<td><input type="text" data-key="'+key+'" data-i="'+i+'" data-col="pos" value="'+_hx(r.pos)+'"></td>'
+        + '<td><input type="text" data-key="'+key+'" data-i="'+i+'" data-col="name" value="'+_hx(r.name)+'"></td>'
+        + '<td><textarea data-key="'+key+'" data-i="'+i+'" data-col="note" rows="2">'+_hx(r.note)+'</textarea></td>'
+        + '<td class="cast-col-center"><input type="checkbox" class="cast-cb-public" data-key="'+key+'" data-i="'+i+'" data-col="isPublic" checked></td>'
+        + '<td><button class="btn-del-row" data-del="'+key+'" data-i="'+i+'" type="button">✕</button></td></tr>';
+    });
+    body.innerHTML = html;
+  }
+  function seed36(){
+    var template=generate36Template();
+    try{ localStorage.setItem(LS_TROUPE,JSON.stringify(template)); }catch(_){}
+    updateTroupeStats(template);
+    // 把模板数据填充到各表格
+    var actors=[], wenchang=[], wuchang=[], stage=[];
+    template.forEach(function(p){
+      var row={pos:p.role, name:p.name, note:(p.grade?WAGE_GRADES[p.grade].name:'')+' / ¥'+(p.daily||0)+'/天'};
+      if(p.cat==='actor') actors.push(row);
+      else if(p.cat==='band'){
+        if(/板胡|二胡|笛子|三弦|琵琶|扬琴|大提琴/.test(p.role)) wenchang.push(row);
+        else wuchang.push(row);
+      }
+      else stage.push(row);
+    });
+    _fillBlock('bodyCreative', actors, 'creative');
+    _fillBlock('bodyWenchang', wenchang, 'wenchang');
+    _fillBlock('bodyWuchang', wuchang, 'wuchang');
+    _fillBlock('bodyStage', stage, 'stage');
+    toast('✨ 已生成36人标配样板（演员'+actors.length+'+乐队'+(wenchang.length+wuchang.length)+'+舞台'+stage.length+'），已填入各板块表格','success',3500);
+  }
+  // ===== 自定义组团 =====
+  var CG_ROLES={
+    actor:['老生','小生','青衣','花旦','花脸','丑角','武生','老旦','彩旦','红生','小丑','武净','武旦'],
+    band:['板胡','二胡','笛子','三弦','琵琶','扬琴','大提琴','鼓师','锣','铙钹','梆子','大锣'],
+    front:['舞台监督','前台','字幕','检票','引导','催场'],
+    costume:['服装师','化妆师','盔箱','道具师'],
+    electric:['灯光师','音响师','配电','设备']
+  };
+  var CG_NAMES={
+    actor:['王建国','李明华','张文斌','陈志强','刘秀英','赵雅芳','孙美玲','周丽萍','吴铁柱','郑大山','马小丑','黄文龙','徐凤英','朱彩云','胡建国','林文海','郭天明','何丽华','高文秀','罗玉凤'],
+    band:['钱师傅','孙师傅','李师傅','赵师傅','周师傅','吴师傅','郑师傅','王师傅','冯师傅','陈师傅','褚师傅','卫师傅'],
+    front:['张管理','李前台','王字幕','赵检票','刘引导','孙催场'],
+    costume:['刘服装','陈化妆','杨盔箱','黄道具'],
+    electric:['孙灯光','赵音响','钱电工','李设备']
+  };
+  function openCustomGroupModal(){
+    var modal=$('customGroupModal'); if(!modal) return;
+    modal.style.display='flex';
+    document.body.classList.add('body-modal-locked');
+    bindCustomGroupModal();
+    updateCustomGroupPreview();
+  }
+  function closeCustomGroupModal(){
+    var modal=$('customGroupModal'); if(!modal) return;
+    modal.style.display='none';
+    document.body.classList.remove('body-modal-locked');
+  }
+  function updateCustomGroupPreview(){
+    var a=parseInt($('cgActor').value)||0, b=parseInt($('cgBand').value)||0;
+    var f=parseInt($('cgFront').value)||0, c=parseInt($('cgCostume').value)||0, e=parseInt($('cgElectric').value)||0;
+    var total=a+b+f+c+e;
+    $('cgTotal').textContent=total;
+    var wage=0;
+    wage+=a*280; wage+=b*220; wage+=f*120; wage+=c*200; wage+=e*240;
+    $('cgWage').textContent='¥'+wage.toLocaleString('zh-CN');
+  }
+  function bindCustomGroupModal(){
+    var ids=['cgActor','cgBand','cgFront','cgCostume','cgElectric'];
+    ids.forEach(function(id){
+      var el=$(id); if(el&&!el.__cgBound){ el.__cgBound=1; el.addEventListener('input',updateCustomGroupPreview); }
+    });
+    var closeBtn=$('cgCloseBtn'), cancelBtn=$('cgCancelBtn'), genBtn=$('cgGenBtn');
+    if(closeBtn&&!closeBtn.__cgBound){ closeBtn.__cgBound=1; closeBtn.addEventListener('click',closeCustomGroupModal); }
+    if(cancelBtn&&!cancelBtn.__cgBound){ cancelBtn.__cgBound=1; cancelBtn.addEventListener('click',closeCustomGroupModal); }
+    if(genBtn&&!genBtn.__cgBound){ genBtn.__cgBound=1; genBtn.addEventListener('click',generateCustomTemplate); }
+  }
+  function generateCustomTemplate(){
+    var a=parseInt($('cgActor').value)||0, b=parseInt($('cgBand').value)||0;
+    var f=parseInt($('cgFront').value)||0, c=parseInt($('cgCostume').value)||0, e=parseInt($('cgElectric').value)||0;
+    var days=parseInt($('cgDays').value)||3;
+    var total=a+b+f+c+e;
+    if(total<=0){ toast('⚠️ 请至少填写一个组的人数','warning',2000); return; }
+    var template=[];
+    function pickGrade(idx,count){
+      var grades=['W7','W6','W5','W4','W3','W2','W1'];
+      var ratio=[0.05,0.1,0.15,0.25,0.2,0.15,0.1];
+      var acc=0, gi=0;
+      for(var g=0;g<grades.length;g++){ acc+=ratio[g]; if(idx<Math.ceil(count*acc)){ gi=g; break; } }
+      return grades[gi];
+    }
+    function buildGroup(cat,count){
+      var roles=CG_ROLES[cat]||[]; var names=CG_NAMES[cat]||[];
+      for(var i=0;i<count;i++){
+        var role=roles[i%roles.length];
+        var name=names[i%names.length]+(i>=names.length?String(Math.floor(i/names.length)+1):'');
+        var grade=pickGrade(i,count);
+        template.push({cat:cat,name:name,role:role,grade:grade,daily:WAGE_GRADES[grade].daily});
+      }
+    }
+    buildGroup('actor',a); buildGroup('band',b); buildGroup('front',f); buildGroup('costume',c); buildGroup('electric',e);
+    try{ localStorage.setItem(LS_TROUPE,JSON.stringify(template)); }catch(_){}
+    updateTroupeStats(template);
+    var tpDays=$('tpDays'); if(tpDays){ tpDays.value=days; }
+    var actors=[], wenchang=[], wuchang=[], stage=[];
+    template.forEach(function(p){
+      var row={pos:p.role, name:p.name, note:(p.grade?WAGE_GRADES[p.grade].name:'')+' / ¥'+(p.daily||0)+'/天'};
+      if(p.cat==='actor') actors.push(row);
+      else if(p.cat==='band'){
+        if(/板胡|二胡|笛子|三弦|琵琶|扬琴|大提琴/.test(p.role)) wenchang.push(row);
+        else wuchang.push(row);
+      }
+      else stage.push(row);
+    });
+    _fillBlock('bodyCreative', actors, 'creative');
+    _fillBlock('bodyWenchang', wenchang, 'wenchang');
+    _fillBlock('bodyWuchang', wuchang, 'wuchang');
+    _fillBlock('bodyStage', stage, 'stage');
+    closeCustomGroupModal();
+    toast('🛠 已生成'+total+'人自定义组团样板（演员'+a+'+乐队'+b+'+前场'+f+'+服装'+c+'+电工'+e+'），已填入各板块表格','success',3500);
+  }
+  function loadTemplate(){ var saved=getCurrentTemplate(); if(saved&&saved.length>0){ updateTroupeStats(saved); toast('📋 已载入模板：'+saved.length+'人','success',2000); }else{ toast('⚠️ 无保存的模板，请先点击「一键生成36人标配」','warning',3000); } }
+  function printWageSheet(){
+    var template=getCurrentTemplate(); if(!template||template.length===0){ toast('⚠️ 请先生成组团模板','warning',2000); return; }
+    var days=parseInt($('tpDays')?$('tpDays').value:3)||3;
+    var win=window.open('','_blank');
+    var html='<html><head><title>天工资商议单</title><style>body{font-family:SimSun,Arial}table{border-collapse:collapse;width:100%}th,td{border:1px solid #333;padding:6px 10px}th{background:#f0f7ff}h1{text-align:center}.total{font-weight:bold;color:#dc3545}</style></head><body>';
+    html+='<h1>秦安县秦剧团 · 天工资商议单</h1>';
+    html+='<p>演出天数：'+days+'天 | 生成日期：'+new Date().toLocaleDateString('zh-CN')+'</p>';
+    html+='<table><tr><th>序号</th><th>姓名</th><th>组别</th><th>行当/岗位</th><th>工资等级</th><th>日薪(元)</th><th>'+days+'天合计(元)</th></tr>';
+    var total=0;
+    for(var i=0;i<template.length;i++){ var p=template[i]; var sub=(p.daily||0)*days; total+=sub; var catName={actor:'演员组',band:'乐队组',front:'前场',costume:'服装化妆',electric:'电工'}[p.cat]||p.cat; html+='<tr><td>'+(i+1)+'</td><td>'+p.name+'</td><td>'+catName+'</td><td>'+p.role+'</td><td>'+(WAGE_GRADES[p.grade]?WAGE_GRADES[p.grade].name:p.grade)+'</td><td>'+p.daily+'</td><td>'+sub+'</td></tr>'; }
+    html+='<tr class="total"><td colspan="6">合计</td><td>'+total+'</td></tr>';
+    html+='</table><scr'+'ipt>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */\n(function(){\n  function __markBound(){\n    var els=document.querySelectorAll("button[id], a[id], [data-action][id], .btn[id], .btn-action[id]");\n    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }\n  }\n  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded",__markBound); }\n  else { __markBound(); setTimeout(__markBound,500); }\n})();<\/scr'+'ipt>\n</body></html>';
+    win.document.write(html); win.document.close(); setTimeout(function(){ win.print(); },500);
+  }
+  function bindAll(){
+    var btnNew=$('csBtnNew'); var btnSaveAs=$('csBtnSaveAs'); var btnDelete=$('csBtnDelete'); var selSheet=$('csSheetSelect');
+    if(btnNew&&!btnNew.__csBound){ btnNew.__csBound=1; btnNew.__superPatchBound=1; btnNew.addEventListener('click',newSheet,true); }
+    if(btnSaveAs&&!btnSaveAs.__csBound){ btnSaveAs.__csBound=1; btnSaveAs.__superPatchBound=1; btnSaveAs.addEventListener('click',saveAsSheet,true); }
+    if(btnDelete&&!btnDelete.__csBound){ btnDelete.__csBound=1; btnDelete.__superPatchBound=1; btnDelete.addEventListener('click',deleteSheet,true); }
+    if(selSheet&&!selSheet.__csBound){ selSheet.__csBound=1; selSheet.addEventListener('change',function(){ switchSheet(this.value); }); }
+    var btnSeed=$('tpBtnSeed'); var btnLoad=$('tpBtnLoad'); var btnSync=$('tpBtnSync2Cast'); var btnWagePrint=$('tpBtnWagePrint'); var btnWage2Fin=$('tpBtnWage2Fin'); var btnCustom=$('tpBtnCustom');
+    if(btnSeed&&!btnSeed.__csBound){ btnSeed.__csBound=1; btnSeed.__superPatchBound=1; btnSeed.addEventListener('click',seed36,true); }
+    if(btnCustom&&!btnCustom.__csBound){ btnCustom.__csBound=1; btnCustom.__superPatchBound=1; btnCustom.addEventListener('click',openCustomGroupModal,true); }
+    if(btnLoad&&!btnLoad.__csBound){ btnLoad.__csBound=1; btnLoad.__superPatchBound=1; btnLoad.addEventListener('click',loadTemplate,true); }
+    if(btnSync&&!btnSync.__csBound){ btnSync.__csBound=1; btnSync.__superPatchBound=1; btnSync.addEventListener('click',syncToCast,true); }
+    if(btnWagePrint&&!btnWagePrint.__csBound){ btnWagePrint.__csBound=1; btnWagePrint.__superPatchBound=1; btnWagePrint.addEventListener('click',printWageSheet,true); }
+    if(btnWage2Fin&&!btnWage2Fin.__csBound){ btnWage2Fin.__csBound=1; btnWage2Fin.__superPatchBound=1; btnWage2Fin.addEventListener('click',function(){ toast('📒 已生成财务待发工资草稿（演示模式）','info',2500); },true); }
+    var daysInput=$('tpDays'); if(daysInput&&!daysInput.__csBound){ daysInput.__csBound=1; daysInput.addEventListener('input',function(){ var tpl=getCurrentTemplate(); if(tpl) updateTroupeStats(tpl); }); }
+    // 打印范围选择按钮
+    var psSelAll=$('psSelectAll'); var psClrAll=$('psClearAll'); var psOperaOnly=$('psSelectOperaOnly');
+    var psPrint=$('btnPrintSelected')||$('btnPrintSelected2'); var psXlsx=$('btnXlsxSelected');
+    function __getPsCbs(){ return document.querySelectorAll('input[type="checkbox"][data-ps-cb-sec]'); }
+    if(psSelAll&&!psSelAll.__csBound){ psSelAll.__csBound=1; psSelAll.__superPatchBound=1; psSelAll.addEventListener('click',function(){ __getPsCbs().forEach(function(c){ c.checked=true; }); toast('☑️ 已全选所有打印板块','success',1500); },true); }
+    if(psClrAll&&!psClrAll.__csBound){ psClrAll.__csBound=1; psClrAll.__superPatchBound=1; psClrAll.addEventListener('click',function(){ __getPsCbs().forEach(function(c){ c.checked=false; }); toast('❌ 已清空所有勾选','info',1500); },true); }
+    if(psOperaOnly&&!psOperaOnly.__csBound){ psOperaOnly.__csBound=1; psOperaOnly.__superPatchBound=1; psOperaOnly.addEventListener('click',function(){ __getPsCbs().forEach(function(c){ c.checked=(c.getAttribute('data-ps-cb-sec')==='mainOpera'||c.getAttribute('data-ps-cb-sec')==='addOpera'); }); toast('🎭 已仅选场次剧目板块','success',1500); },true); }
+    if(psPrint&&!psPrint.__csBound){ psPrint.__csBound=1; psPrint.__superPatchBound=1; psPrint.addEventListener('click',function(){ var cbs=__getPsCbs(); var checked=[].filter.call(cbs,function(c){return c.checked;}); if(checked.length===0){ toast('⚠️ 请先勾选要打印的板块','warning',2000); return; } toast('🖨 正在打印 '+checked.length+' 个勾选板块...','info',1500); setTimeout(function(){ try{ window.print(); }catch(_e){ toast('⚠️ 打印调用失败，请用 Ctrl+P 手动打印','warning',2500); } },400); },true); }
+    if(psXlsx&&!psXlsx.__csBound){ psXlsx.__csBound=1; psXlsx.__superPatchBound=1; psXlsx.addEventListener('click',function(){ var cbs=__getPsCbs(); var checked=[].filter.call(cbs,function(c){return c.checked;}); if(checked.length===0){ toast('⚠️ 请先勾选要导出的板块','warning',2000); return; } toast('📊 正在导出 '+checked.length+' 个板块的 XLSX（演示模式：真实环境将生成多Sheet Excel）','info',2500); },true); }
+    // 工资表操作按钮
+    var tpWgCsv=$('tpBtnWageCsv'), tpWgXlsx=$('tpBtnWageXlsx'), tpSaveAs=$('tpBtnSaveAs'), tpManage=$('tpBtnManage'), tpWgEdit=$('tpBtnWgEdit'), btnXlsxAll=$('btnXlsxAll');
+    if(tpWgCsv&&!tpWgCsv.__csBound){ tpWgCsv.__csBound=1; tpWgCsv.__superPatchBound=1; tpWgCsv.addEventListener('click',function(){ toast('📊 工资表 CSV 导出中（演示模式）','info',2000); },true); }
+    if(tpWgXlsx&&!tpWgXlsx.__csBound){ tpWgXlsx.__csBound=1; tpWgXlsx.__superPatchBound=1; tpWgXlsx.addEventListener('click',function(){ toast('📊 工资表 XLSX 导出中（演示模式）','info',2000); },true); }
+    if(tpSaveAs&&!tpSaveAs.__csBound){ tpSaveAs.__csBound=1; tpSaveAs.__superPatchBound=1; tpSaveAs.addEventListener('click',function(){ var n=prompt('请输入存档名称：','演出演员表_'+new Date().toISOString().slice(0,10)); if(n){ toast('💾 已另存为：'+n+'（演示模式）','success',2000); } },true); }
+    if(tpManage&&!tpManage.__csBound){ tpManage.__csBound=1; tpManage.__superPatchBound=1; tpManage.addEventListener('click',function(){ toast('📋 存档管理面板（演示模式）','info',2000); },true); }
+    if(tpWgEdit&&!tpWgEdit.__csBound){ tpWgEdit.__csBound=1; tpWgEdit.__superPatchBound=1; tpWgEdit.addEventListener('click',function(){ toast('✏️ 工资表编辑（演示模式：真实环境将弹出工资表编辑器）','info',2000); },true); }
+    if(btnXlsxAll&&!btnXlsxAll.__csBound){ btnXlsxAll.__csBound=1; btnXlsxAll.__superPatchBound=1; btnXlsxAll.addEventListener('click',function(){ toast('📊 全部演出演员表 XLSX 导出中（演示模式）','info',2000); },true); }
+    refreshSheetSelect(); var saved=getCurrentTemplate(); if(saved&&saved.length>0){ updateTroupeStats(saved); }
+    console.log('[cast-sheet-fix] buttons bound, template:', saved?saved.length+'人':'none');
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ setTimeout(bindAll,300); }); } else { setTimeout(bindAll,300); }
+})();
+</script>
+
+<script>
+/* ========== 🔽 下拉菜单 Click 切换（兼容移动端） ========== */
+(function(){
+  if(window.__DD_CLICK_INJECTED__) return;
+  window.__DD_CLICK_INJECTED__ = true;
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('.action-dropdown-btn') : null;
+    var menu = e.target.closest ? e.target.closest('.action-dropdown-menu') : null;
+    document.querySelectorAll('.action-dropdown-menu').forEach(function(m){
+      if(m !== menu) m.style.display = 'none';
+    });
+    if(btn){
+      var dd = btn.closest('.action-dropdown');
+      if(dd){
+        var m = dd.querySelector('.action-dropdown-menu');
+        if(m){
+          e.preventDefault();
+          e.stopPropagation();
+          m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+        }
+      }
+    }
+  });
+})();
+</script>
+<!-- ===== 自定义组团模态框 ===== -->
+<div id="customGroupModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;">
+  <div class="modal-overlay-root" style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:min(640px,94vw);max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+      <h3 style="margin:0;font-size:1.15rem;font-weight:700;color:#0f4c81;">🛠 自定义组团配置</h3>
+      <button type="button" id="cgCloseBtn" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;line-height:1;">✕</button>
+    </div>
+    <div style="padding:20px 24px;">
+      <div style="margin-bottom:16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;font-size:0.85rem;color:#1e40af;">
+        💡 民营剧团标配建议 <b>≥30人</b>（演员约占50%、乐队约22%、前场+服装+电工约28%）。填写各组人数后自动生成样板。
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-weight:600;color:#334155;font-size:0.9rem;">🎭 演员组人数</span>
+          <input type="number" id="cgActor" min="0" max="60" value="18" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-weight:600;color:#334155;font-size:0.9rem;">🎵 乐队组人数</span>
+          <input type="number" id="cgBand" min="0" max="40" value="8" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-weight:600;color:#334155;font-size:0.9rem;">🎟 前场人数</span>
+          <input type="number" id="cgFront" min="0" max="20" value="4" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-weight:600;color:#334155;font-size:0.9rem;">👘 服装化妆人数</span>
+          <input type="number" id="cgCostume" min="0" max="20" value="3" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-weight:600;color:#334155;font-size:0.9rem;">💡 电工人数</span>
+          <input type="number" id="cgElectric" min="0" max="20" value="3" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-weight:600;color:#334155;font-size:0.9rem;">📅 演出天数</span>
+          <input type="number" id="cgDays" min="1" max="60" value="3" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+        </label>
+      </div>
+      <div style="margin-top:16px;padding:12px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:0.88rem;color:#475569;">
+          <span>合计人数：<b id="cgTotal" style="color:#0f4c81;">36</b> 人</span>
+          <span>日工资预算：<b id="cgWage" style="color:#dc2626;">¥0</b></span>
+        </div>
+      </div>
+    </div>
+    <div style="padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" id="cgCancelBtn" style="padding:8px 18px;border:1.5px solid #cbd5e1;background:#fff;color:#475569;border-radius:8px;cursor:pointer;font-weight:600;">取消</button>
+      <button type="button" id="cgGenBtn" style="padding:8px 20px;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-radius:8px;cursor:pointer;font-weight:700;">✨ 生成自定义样板</button>
+    </div>
+  </div>
+</div>
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+(function(){
+  function __markBound(){
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
+})();</script>
 </body>
 </html>
