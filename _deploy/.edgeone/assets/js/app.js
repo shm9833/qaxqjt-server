@@ -2998,7 +2998,7 @@
         var a = e.target.closest('a[href^="#"]');
         if (!a) return;
         var id = a.getAttribute('href');
-        if (id.length < 2 || id === '#') return;
+        if (id.length < 2 || id === '#') { e.preventDefault(); return; }
         var target = document.querySelector(id);
         if (!target) return;
         e.preventDefault();
@@ -8823,6 +8823,8 @@
           var evtName = attrName.slice(2).toLowerCase();
           try {
             elem.addEventListener(evtName, _safeEvalWrap(attrVal), false);
+            // 标记：告知 SuperPatch 该元素已绑定事件，避免被误拦截
+            try { elem.__superPatchBound = 1; } catch (_mErr) {}
             // 关键：移除原内联属性，阻止CSP拦截
             try { elem.removeAttribute(attrName); } catch (_re) {}
             // 同时清空 DOM Level 0 on* 属性（双重保险）

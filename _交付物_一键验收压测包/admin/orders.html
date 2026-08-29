@@ -388,6 +388,67 @@
   h1, h2, h3, h4 { color: #0f4c81 !important; }
   .section { padding: 10px 0 !important; page-break-inside: avoid; }
 }
+/* ====== 空卡片修复20260825：隐藏多余分页栏 + 约束表格高度 ====== */
+.pagination-bar, .pagination-toolbar, [class*="pagination-bar"], [class*="pg-toolbar"] {
+  display: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.table-wrapper, .table-wrap, .table-container, .data-table-container {
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+}
+
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
 </style>
 </head>
 <body>
@@ -440,70 +501,75 @@
 
       <nav class="admin-sidebar-menu">
         <div class="admin-menu-group">
-          <a href="index.html" class="admin-menu-item  ">
+          <a href="index.html" data-role-level="100" class="admin-menu-item  ">
             <span class="menu-icon">📊</span>
             <span>数据看板</span>
           </a>
-          <a href="accounts.html" class="admin-menu-item">
+          <a href="accounts.html" data-role-level="999" class="admin-menu-item">
             <span class="menu-icon">👥</span>
             <span>账号权限管理</span>
           </a>
-          <a href="schedule.html" class="admin-menu-item">
+          <a href="schedule.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
             <span class="menu-badge">8</span>
           </a>
-          <a href="cast-sheet.html" class="admin-menu-item">
+          <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
             <span>演出演员表</span>
             <span class="menu-badge">NEW</span>
           </a>
-          <a href="orders.html" class="admin-menu-item active admin-menu-item">
+          <a href="orders.html" data-role-level="800" class="admin-menu-item active admin-menu-item">
             <span class="menu-icon">📋</span>
             <span>订单预约管理</span>
             <span class="menu-badge">5</span>
           </a>
-          <a href="operas.html" class="admin-menu-item">
+          <a href="operas.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
             <span>剧目资源管理</span>
           </a>
-          <a href="staff.html" class="admin-menu-item">
+          <a href="staff.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">👨‍🎤</span>
             <span>演职人员管理</span>
           </a>
-          <a href="inventory.html" class="admin-menu-item">
+          <a href="attendance.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">💵</span>
+            <span>考勤与薪酬</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="inventory.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📦</span>
             <span>道具服装库存</span>
             <span class="menu-badge">!</span>
           </a>
-          <a href="finance.html" class="admin-menu-item">
+          <a href="finance.html" data-role-level="500" class="admin-menu-item">
             <span class="menu-icon">💰</span>
             <span>财务收支台账</span>
           </a>
-          <a href="content.html" class="admin-menu-item">
+          <a href="content.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📝</span>
             <span>官网内容管理</span>
           </a>
-          <a href="reports.html" class="admin-menu-item">
+          <a href="reports.html" data-role-level="700" class="admin-menu-item">
             <span class="menu-icon">📈</span>
             <span>数据统计报表</span>
           </a>
-          <a href="system.html" class="admin-menu-item">
+          <a href="system.html" data-role-level="999" class="admin-menu-item">
             <span class="menu-icon">🔧</span>
             <span>系统日志备份</span>
           </a>
         </div>
         <div class="admin-menu-group">
           <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
-          <a href="../architecture.html" class="admin-menu-item">
+          <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
             <span class="menu-icon">📋</span>
             <span>架构验收报告</span>
           </a>
-          <a href="../delivery.html" class="admin-menu-item">
+          <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
             <span class="menu-icon">📦</span>
             <span>最终交付总结</span>
           </a>
-          <a href="../deploy.html" class="admin-menu-item">
+          <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
             <span class="menu-icon">🚀</span>
             <span>EdgeOne Pages 部署教程</span>
           </a>
@@ -561,7 +627,7 @@
             <button class="btn btn-secondary" id="spExportOrdersBtn">
               📥 导出Excel
             </button>
-            <button class="btn btn-gold" id="spPrintDispatchBtn">
+            <button class="btn btn-gold" id="spPrintDispatchBtn" onclick="window.print()">
               🖨️ 打印派工单
             </button>
           </div>
@@ -1721,7 +1787,35 @@
         }, false);
       } catch (_evt) {}
 
+      // —— 角色级别映射（与后端 ROLE_LEVEL 对齐，前端 admin→super_admin, finance→finance_admin）——
+      var __ROLE_LEVEL = { super_admin:999, admin:999, ops:800, director:700, finance_checker:600, finance_cashier:520, finance_maker:550, finance_view:510, finance_admin:500, finance:500, staff:100 };
+      function __getRoleLevel(role) {
+        if (!role) return 0;
+        return __ROLE_LEVEL[role] || 0;
+      }
+      // —— 基于角色过滤侧边栏菜单（隐藏无权限菜单项）——
+      function __applyRoleMenuFilter(session) {
+        if (!session) return;
+        var userLevel = __getRoleLevel(session.role);
+        var items = document.querySelectorAll('.admin-sidebar-menu .admin-menu-item[data-role-level]');
+        items.forEach(function(item) {
+          var need = parseInt(item.getAttribute('data-role-level'), 10) || 0;
+          if (userLevel < need) {
+            item.style.display = 'none';
+          }
+        });
+      }
+
       var currentSession = checkAuth();
+      __applyRoleMenuFilter(currentSession);
+      // —— 页面级权限拦截：直接访问 URL 时检查角色，不足则跳首页 ——
+      (function() {
+        if (!currentSession) return;
+        var userLvl = __getRoleLevel(currentSession.role);
+        if (userLvl < 800) {
+          location.replace('index.html');
+        }
+      })();
     })();
     (function() {
       var tabs = document.querySelectorAll('.tab-item');
@@ -1994,6 +2088,8 @@
       var o=document.getElementById('dispatchOverlay'), m=document.getElementById('dispatchModal');
       try { o.classList.remove('active'); o.classList.add('csp-hide'); } catch(_){}
       try { m.classList.remove('active'); m.classList.add('csp-hide'); } catch(_){}
+      /* ★ FIX: 派工单取消后添加 toast 反馈，解决"取消无显示"问题 */
+      try { (window.QinApp&&QinApp.Utils?QinApp.Utils.toast:function(m){console.info(m);})('派工单已取消，未保存更改','info'); } catch(_){}
     }
     document.addEventListener('click', function(e){
       var t=e.target;
@@ -2160,8 +2256,8 @@
   })();
   </script>
 
-  <!-- S-通用后台补丁：去抖锁 + __closeAnyModal + 查询重置真重置 + ESC 关弹窗 + 侧边栏死链修复 + 空 a[href=#] 禁跳 →
-  [script]
+  <!-- S-通用后台补丁：去抖锁 + __closeAnyModal + 查询重置真重置 + ESC 关弹窗 + 侧边栏死链修复 + 空 a[href=#] 禁跳 -->
+<script>
   (function __adminCommonPatchV20260730(){
     var __toastC = function(msg,type){
       try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){}
@@ -2180,14 +2276,15 @@
     // 2) 通用 __closeAnyModal：扫描所有 .modal/.overlay 并关闭
     window.__closeAnyModal = function(){
       try{
-        var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], [data-overlay]');
+        var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], .modal-overlay-root, [data-overlay]');
         overlays.forEach(function(o){
-          try{ o.classList.remove('active','show'); o.classList.add('s-overlay-hide','modal-overlay-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
+          try{ o.classList.remove('active','show','modal-overlay-show'); o.classList.add('s-overlay-hide','modal-overlay-hide','csp-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
         });
-        var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, [data-modal]');
+        var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, .generic-modal-root, [data-modal], [role="dialog"]');
         modals.forEach(function(m){
-          try{ m.classList.remove('active','show'); m.classList.add('s-modal-hide','modal-wrap-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
+          try{ m.classList.remove('active','show','modal-show'); m.classList.add('s-modal-hide','modal-wrap-hide','csp-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
         });
+        try{ document.body.classList.remove('body-modal-locked','modal-open','nav-locked'); }catch(_b){}
       }catch(err){ console.warn('[__closeAnyModal] err:', err); }
     };
     // 3) ESC 键 → 关所有弹窗 + 触发页面级 closeAddModal/closeEditModal/closeDispatchModal 若存在
@@ -2195,7 +2292,7 @@
       document.addEventListener('keydown', function(e){
         if(e.key==='Escape'){
           var fns = ['closeAddModal','closeEditModal','closeDispatchModal','closeOrderViewModal','closeDeleteConfirm'];
-          for(var i=0;i[fns.length;i++){ try{ if(typeof window[fns[i]]==='function') window[fns[i]](); }catch(_){} }
+          for(var i=0;i<fns.length;i++){ try{ if(typeof window[fns[i]]==='function') window[fns[i]](); }catch(_){} }
           window.__closeAnyModal();
         }
       }, true);
@@ -2220,7 +2317,7 @@
         rbtns.forEach(function(b){
           if(b.__sBound) return;
           var txt = (b.textContent||'').replace(/\s+/g,' ').trim();
-          if(txt.indexOf('重置')]=0 && txt.indexOf('今日')<0 && txt.indexOf('密码')<0){
+          if(txt.indexOf('重置')>=0 && txt.indexOf('今日')<0 && txt.indexOf('密码')<0){
             b.addEventListener('click', function(){
               if(!window.__acqCommon('c_reset_'+Math.random().toString(36).slice(2,6),450)) return;
               var n = __resetFilterBar();
@@ -2272,8 +2369,8 @@
             var t = (li.textContent||'').replace(/\s+/g,' ').trim();
             var a = li.querySelector('a');
             if(!a || !t) return;
-            for(var j=0;j[menuMap.length;j++){
-              if(t.indexOf(menuMap[j].kw)]=0 && a.getAttribute('href') !== menuMap[j].target){
+            for(var j=0;j<menuMap.length;j++){
+              if(t.indexOf(menuMap[j].kw)>=0 && a.getAttribute('href') !== menuMap[j].target){
                 try{ a.setAttribute('href', menuMap[j].target); a.removeAttribute('onclick'); a.__sBound=1; }catch(_s){}
                 break;
               }
@@ -2286,8 +2383,7 @@
     else document.addEventListener('DOMContentLoaded', function(){ setTimeout(__bindButtonsOnce, 150); });
     console.info('[adminCommonPatchV20260730 已应用：去抖锁 + __closeAnyModal + 重置真重置 + ESC关弹窗 + 侧边栏死链修复 + 页码圆角CSS]');
   })();
-  [/script]
-  
+</script>
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
 <script>
 /* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
@@ -2356,6 +2452,7 @@ var __pT0=0;
       try{
   function __btnHasBound(btn){
     if(!btn) return false;
+    if(btn.__superPatchBound) return true;
     var oc = btn.getAttribute && btn.getAttribute('onclick');
     var hr = btn.getAttribute && btn.getAttribute('href');
     if(oc && oc.length > 3) return true;
@@ -2493,6 +2590,7 @@ var __pT0=0;
 
     }, true);
     console.info('[DeadButtonFallback 已加载：×兜底 + 保存/编辑/删除/查看/核销/导出/新增 死按钮兜底委托]');
+    try{ window.__T = __T; window.__L = __L; }catch(_){}
   })();
   
 } /* end of 防重复注入保护 if */
@@ -3081,7 +3179,16 @@ function __pLog(module,event,extra){
     console.info('[SuperPatch 5/6] 已激活 ✓');
   }catch(e){ console.warn('[SuperPatch 5/6 init err]',e); }
 
+  
+  // 功能按钮绑定（上传/新建/导出）
   try{
+    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
+    __bindBtn('openOrdersUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（订单附件）（演示模式：真实环境将上传到服务器）","info"); }; inp.click(); });
+    __bindBtn('spNewOrderBtn', function(){ __T('➕ 新增订单（演示模式：真实环境将弹出新增订单表单）','info'); });
+    __bindBtn('spExportOrdersBtn', function(){ __T('📊 正在导出订单列表（演示模式）','info'); });
+  }catch(_e){ console.warn("[upload-bind err]",_e); }
+
+try{
     console.info('[SuperPatch 6/6] 死按钮兜底 + toast通道 初始化...');
     function _hasAction(btn){
       if(!btn) return false;
@@ -3091,6 +3198,7 @@ function __pLog(module,event,extra){
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
       if(btn.__deadBtnChecked) return true;
+      if(btn.__superPatchBound) return true;
       return false;
     }
     function _txtMatch(txt, list){
@@ -3102,6 +3210,9 @@ function __pLog(module,event,extra){
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
+                // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
+        if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
+        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
         btn.__superPatchBound = 1;
@@ -3167,5 +3278,134 @@ function __pLog(module,event,extra){
 </script>
 <!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
 
+<!-- ====== 刷新bug+弹窗修复20260825：阻止表单提交 + 绑定关闭按钮 ====== -->
+<script>
+(function(){
+  if (window.__refreshBugFix20260825) return;
+  window.__refreshBugFix20260825 = true;
+
+  // 注入CSS：确保 csp-hide 能隐藏弹窗（覆盖 .modal.active 的高优先级）
+  var style = document.createElement('style');
+  style.textContent = '.modal.csp-hide,.modal-overlay.csp-hide,.modal.active.csp-hide{display:none!important}';
+  document.head.appendChild(style);
+
+  function fixRefreshBug(){
+    // 1. 阻止所有 form 的默认提交行为
+    var forms = document.querySelectorAll('form');
+    for (var i=0;i<forms.length;i++){
+      var f = forms[i];
+      if (f.getAttribute('data-refresh-fixed')) continue;
+      f.setAttribute('data-refresh-fixed','1');
+      f.setAttribute('action','javascript:void(0)');
+      f.addEventListener('submit', function(e){ e.preventDefault(); e.stopPropagation(); return false; }, true);
+    }
+    // 2. 将所有 type=submit 的按钮改为 type=button，防止触发表单提交
+    var btns = document.querySelectorAll('button[type="submit"], button:not([type])');
+    for (var j=0;j<btns.length;j++){
+      var b = btns[j];
+      if (b.getAttribute('data-type-fixed')) continue;
+      b.setAttribute('data-type-fixed','1');
+      b.setAttribute('type','button');
+    }
+    // 3. 绑定弹窗关闭按钮（×/关闭/取消）—— CSP patch 清除了内联 onclick
+    var closeBtns = document.querySelectorAll('button');
+    for (var k=0;k<closeBtns.length;k++){
+      var btn = closeBtns[k];
+      if (btn.getAttribute('data-close-fixed')) continue;
+      var txt = (btn.textContent||'').trim();
+      if (txt==='×' || txt==='✕' || txt==='关闭' || txt==='取消' || txt==='Close' || txt==='×') {
+        btn.setAttribute('data-close-fixed','1');
+        btn.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          // 向上查找最近的 modal 和 overlay，添加 csp-hide 类
+          var target = e.currentTarget;
+          var node = target;
+          for (var n=0;n<8;n++){
+            if (!node) break;
+            if (node.classList && (node.classList.contains('modal') || node.classList.contains('modal-overlay'))){
+              node.classList.add('csp-hide');
+              node.classList.remove('active');
+              node.style.display = 'none';
+            }
+            // 同时隐藏关联的 overlay（通过 id 匹配）
+            if (node.id) {
+              var overlayId = node.id.replace('Modal','Overlay').replace('Modal','Overlay');
+              var overlay = document.getElementById(overlayId);
+              if (overlay){ overlay.classList.add('csp-hide'); overlay.classList.remove('active'); overlay.style.display='none'; }
+              var modalId = node.id.replace('Overlay','Modal');
+              var modal = document.getElementById(modalId);
+              if (modal){ modal.classList.add('csp-hide'); modal.classList.remove('active'); modal.style.display='none'; }
+            }
+            node = node.parentElement;
+          }
+          console.log('[弹窗关闭修复] 已关闭弹窗');
+        }, true);
+      }
+    }
+    // 4. 点击 overlay 背景关闭弹窗
+    var overlays = document.querySelectorAll('.modal-overlay');
+    for (var m=0;m<overlays.length;m++){
+      var ov = overlays[m];
+      if (ov.getAttribute('data-overlay-fixed')) continue;
+      ov.setAttribute('data-overlay-fixed','1');
+      ov.addEventListener('click', function(e){
+        if (e.target !== e.currentTarget) return; // 只点击背景时关闭
+        e.currentTarget.classList.add('csp-hide');
+        e.currentTarget.style.display = 'none';
+        var modalId = e.currentTarget.id.replace('Overlay','Modal');
+        var modal = document.getElementById(modalId);
+        if (modal){ modal.classList.add('csp-hide'); modal.style.display='none'; }
+      }, true);
+    }
+    console.log('[刷新bug+弹窗修复20260825] forms='+forms.length+' buttons='+btns.length);
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', fixRefreshBug);
+  } else {
+    fixRefreshBug();
+  }
+  setTimeout(fixRefreshBug, 1000);
+  setTimeout(fixRefreshBug, 3000);
+})();
+</script>
+
+
+<script>
+/* ========== 🔽 下拉菜单 Click 切换（兼容移动端） ========== */
+(function(){
+  if(window.__DD_CLICK_INJECTED__) return;
+  window.__DD_CLICK_INJECTED__ = true;
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('.action-dropdown-btn') : null;
+    var menu = e.target.closest ? e.target.closest('.action-dropdown-menu') : null;
+    // 关闭所有下拉菜单
+    document.querySelectorAll('.action-dropdown-menu').forEach(function(m){
+      if(m !== menu) m.style.display = 'none';
+    });
+    // 切换当前下拉菜单
+    if(btn){
+      var dd = btn.closest('.action-dropdown');
+      if(dd){
+        var m = dd.querySelector('.action-dropdown-menu');
+        if(m){
+          e.preventDefault();
+          e.stopPropagation();
+          m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+        }
+      }
+    }
+  });
+})();
+</script>
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+(function(){
+  function __markBound(){
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
+})();</script>
 </body>
 </html>

@@ -14,6 +14,9 @@ const auditCtrl = require('../../controllers/audit');
 const customersCtrl = require('../../controllers/customers');
 const appointmentsCtrl = require('../../controllers/appointments');
 
+/* ====== 演职人员 performers 路由注册（v1）====== */
+const performersCtrl = require('../../controllers/performers');
+
 const v1 = new Router({ prefix: '/v1' });
 
 // ========== 健康检查（无鉴权，Docker HEALTHCHECK 使用）==========
@@ -390,5 +393,83 @@ v1.put(
   requireRole(['super_admin', 'ops']),
   appointmentsCtrl.setPlays
 );
+
+// ========== performers（演职人员花名册）==========
+v1.get(
+  '/performers',
+  validate(
+    {
+      paginate: true,
+      query: Joi.object({
+        keyword: Joi.string().allow('').max(100).optional(),
+        status: Joi.string().max(32).optional(),
+        gender: Joi.string().max(16).optional(),
+        primaryRole: Joi.string().max(64).optional(),
+        rankGrade: Joi.string().max(64).optional(),
+        employmentType: Joi.string().max(32).optional(),
+        department: Joi.string().max(32).optional(),
+        dept: Joi.string().max(32).optional(),
+        role: Joi.string().max(64).optional(),
+        scope: Joi.string().max(16).optional()
+      })
+    },
+    { stripUnknown: false }
+  ),
+  requireRole(['super_admin', 'ops', 'director']),
+  performersCtrl.list
+);
+v1.post(
+  '/performers',
+  validate({
+    body: Joi.object({
+      staffNo: Joi.string().trim().max(32).optional(),
+      name: Joi.string().trim().min(2).max(50).required(),
+      gender: Joi.string().valid('男', '女', 'other').allow('').optional(),
+      birthDate: Joi.string().allow('').optional(),
+      phone: Joi.string().allow('').optional(),
+      idCardNo: Joi.string().allow('').optional(),
+      rankGrade: Joi.string().allow('').optional(),
+      primaryRole: Joi.string().allow('').optional(),
+      hireDate: Joi.string().allow('').optional(),
+      employmentType: Joi.string().allow('').optional(),
+      bankAccount: Joi.string().allow('').optional(),
+      bankName: Joi.string().allow('').optional(),
+      socialSecurityNo: Joi.string().allow('').optional(),
+      status: Joi.string().default('active'),
+      remark: Joi.string().allow('').optional(),
+      avatarUrl: Joi.string().allow('').optional()
+    })
+  }),
+  requireRole(['super_admin', 'ops']),
+  performersCtrl.create
+);
+v1.get('/performers/:id', requireRole(['super_admin', 'ops', 'director']), performersCtrl.detail);
+v1.patch(
+  '/performers/:id',
+  validate({
+    body: Joi.object({
+      staffNo: Joi.string().trim().max(32).optional(),
+      name: Joi.string().trim().min(2).max(50).optional(),
+      gender: Joi.string().valid('男', '女', 'other').allow('').optional(),
+      birthDate: Joi.string().allow('').optional(),
+      phone: Joi.string().allow('').optional(),
+      idCardNo: Joi.string().allow('').optional(),
+      rankGrade: Joi.string().allow('').optional(),
+      primaryRole: Joi.string().allow('').optional(),
+      hireDate: Joi.string().allow('').optional(),
+      employmentType: Joi.string().allow('').optional(),
+      bankAccount: Joi.string().allow('').optional(),
+      bankName: Joi.string().allow('').optional(),
+      socialSecurityNo: Joi.string().allow('').optional(),
+      status: Joi.string().optional(),
+      remark: Joi.string().allow('').optional(),
+      avatarUrl: Joi.string().allow('').optional()
+    }).min(1)
+  }),
+  requireRole(['super_admin', 'ops']),
+  performersCtrl.update
+);
+v1.delete('/performers/:id', requireRole('super_admin'), performersCtrl.remove);
+/* ====== END 演职人员路由 ====== */
 
 module.exports = v1;
