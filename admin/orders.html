@@ -1886,12 +1886,12 @@
         fill('modalDate', date);
         orderModalOverlay.classList.add('active');
         orderModal.classList.add('active');
-        try { if (orderModalOverlay) orderModalOverlay.classList.remove('csp-hide'); } catch(_){}
-        try { if (orderModal) orderModal.classList.remove('csp-hide'); } catch(_){}
+        try { orderModalOverlay.classList.remove('csp-hide','modal-overlay-hide'); orderModalOverlay.style.display=''; } catch(_){}
+        try { orderModal.classList.remove('csp-hide','modal-wrap-hide'); orderModal.style.display=''; } catch(_){}
       }
       function closeOrderModal() {
-        try { if (orderModalOverlay) { orderModalOverlay.classList.remove('active'); orderModalOverlay.classList.add('csp-hide'); } } catch(_){}
-        try { if (orderModal) { orderModal.classList.remove('active'); orderModal.classList.add('csp-hide'); } } catch(_){}
+        try { if (orderModalOverlay) { orderModalOverlay.classList.remove('active'); orderModalOverlay.classList.add('csp-hide','modal-overlay-hide'); orderModalOverlay.style.display='none'; } } catch(_){}
+        try { if (orderModal) { orderModal.classList.remove('active'); orderModal.classList.add('csp-hide','modal-wrap-hide'); orderModal.style.display='none'; } } catch(_){}
       }
       document.addEventListener('click', function(e) {
         var t = e.target;
@@ -2081,13 +2081,13 @@
       document.getElementById('dpDate').textContent    = date;
       document.getElementById('dispatchOrderBadge').textContent = '订单 '+no;
       var o=document.getElementById('dispatchOverlay'), m=document.getElementById('dispatchModal');
-      o.classList.add('active'); try { o.classList.remove('csp-hide'); } catch(_){}
-      m.classList.add('active'); try { m.classList.remove('csp-hide'); } catch(_){}
+      o.classList.add('active'); o.classList.remove('csp-hide','modal-overlay-hide'); o.style.display='';
+      m.classList.add('active'); m.classList.remove('csp-hide','modal-wrap-hide'); m.style.display='';
     }
     function closeDispatch(){
       var o=document.getElementById('dispatchOverlay'), m=document.getElementById('dispatchModal');
-      try { o.classList.remove('active'); o.classList.add('csp-hide'); } catch(_){}
-      try { m.classList.remove('active'); m.classList.add('csp-hide'); } catch(_){}
+      try { o.classList.remove('active'); o.classList.add('csp-hide','modal-overlay-hide'); o.style.display='none'; } catch(_){}
+      try { m.classList.remove('active'); m.classList.add('csp-hide','modal-wrap-hide'); m.style.display='none'; } catch(_){}
       /* ★ FIX: 派工单取消后添加 toast 反馈，解决"取消无显示"问题 */
       try { (window.QinApp&&QinApp.Utils?QinApp.Utils.toast:function(m){console.info(m);})('派工单已取消，未保存更改','info'); } catch(_){}
     }
