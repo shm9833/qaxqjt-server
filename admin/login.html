@@ -1086,47 +1086,54 @@
         } catch(_e) {}
       })();
 
-      // ====== 🔒 A-2 后端 REST 鉴权占位（生产模式优先走这里，失败再回退 demo）======
-      //     真实后端接入指引：配置下面 __BACKEND_AUTH_URL，返回值按规范 {ok:true, data:{...}}
-      //     详见交付资料《后端REST鉴权规范v1.0》(E-2 文档)
-      var __BACKEND_AUTH_URL = '';   // 🔧 生产部署时填入：如 "https://api.your-troupe.com/v1/admin/login"
+      // ====== 🔒 A-2 后端 REST 鉴权（生产模式走真实后端，失败回退本地）======
+      //     __BACKEND_AUTH_URL 优先使用 QAXQJT_API_CONFIG 动态解析（免备案部署同源/HTTPS 自动适配）
       var __BACKEND_TIMEOUT_MS = 8000;
+      function _getBackendAuthUrl() {
+        try {
+          if (window.QAXQJT_API_CONFIG && typeof window.QAXQJT_API_CONFIG.resolveUrl === 'function') {
+            return window.QAXQJT_API_CONFIG.resolveUrl('/v1/auth/login');
+          }
+        } catch (_e) {}
+        return '';
+      }
       function _callBackendAuth(username, password, captcha) {
         var MODE = __getDeployMode();
-        // Demo 模式：跳过后端占位，直接走本地 PRESET_USERS
+        // Demo 模式：跳过后端，直接走本地 PRESET_USERS
         if (MODE === 'demo') return null;
-        // 未配置后端地址：友好提示
-        if (!__BACKEND_AUTH_URL) {
-          try {
-            if (window.QinApp && window.QinApp.Utils) {
-              window.QinApp.Utils.toast('🔐 生产模式：请先配置后端鉴权地址 __BACKEND_AUTH_URL（见《E-2 后端REST鉴权规范v1.0》），或本地验收切到演示模式。', 'error', 6000);
-            } else {
-              alert('生产模式：请先配置后端鉴权地址 __BACKEND_AUTH_URL（见《E-2 后端REST鉴权规范v1.0》），或本地验收切到演示模式。');
-            }
-          } catch(_) {}
-          return { _blocked: true };
-        }
-        // 🔧 真实环境：用 fetch + CSRF Token 调用后端。此处仅返回占位 null，交由上层继续流程
-        // 生产接入示例：
-        //   return fetch(__BACKEND_AUTH_URL,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json','X-CSRF-Token':_getCsrfToken()},body:JSON.stringify({username:username,password:password,captcha:captcha,remember:!!rememberEl.checked})})
-        //     .then(r=>r.json()).then(r=>{ if(r.ok) return {session:{username,password,...r.data}}; return null; });
-        return null;
+        var authUrl = _getBackendAuthUrl();
+        // 无后端地址：不阻断，返回 null 让上层走本地降级
+        if (!authUrl) return null;
+        // 生产模式：真实 fetch 调用后端 /v1/auth/login
+        return fetch(authUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ username: username, password: password, captcha: captcha || '' })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (resp) {
+          var payload = (resp && resp.data) ? resp.data : resp;
+          if (payload && payload.accessToken) {
+            return {
+              ok: true,
+              session: {
+                username: (payload.user && payload.user.username) || username,
+                name: (payload.user && (payload.user.name || payload.user.realName || payload.user.nickname)) || '管理员',
+                role: (payload.user && (payload.user.role || payload.user.roleCode)) || 'admin',
+                accessToken: payload.accessToken,
+                refreshToken: payload.refreshToken,
+                user: payload.user
+              }
+            };
+          }
+          return null;
+        })
+        .catch(function () { return null; });
       }
       window._callBackendAuth = _callBackendAuth;
 
-      function loginUser(username, password) {
-        // A-2：生产模式优先调用后端鉴权（有配置才有效）
-        var backend = _callBackendAuth(username, password, '');
-        if (backend && backend._blocked) return null;    // 未配置后端：拦截
-        if (backend && backend.session) {
-          var SESS_TTL_MS = 2 * 60 * 60 * 1000;
-          var nowMs = Date.now();
-          var se = Object.assign({ id: __secureSessId(), loginAt: new Date().toISOString(), expiresAt: nowMs + SESS_TTL_MS }, backend.session);
-          localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(se));
-          __clearAdminLegacyKeys(ADMIN_STORAGE_KEY);
-          return se;
-        }
-        // BLOCKER B8 FIX 增强：Session 有效期 2 小时（7200秒），过期强制重新登录
+      function _localLogin(username, password) {
+        // 本地降级登录：PRESET_USERS → QinApp.Admin
         var SESS_TTL_MS = 2 * 60 * 60 * 1000;
         var nowMs = Date.now();
         for (var i = 0; i < PRESET_USERS.length; i++) {
@@ -1142,7 +1149,6 @@
               expiresAt: nowMs + SESS_TTL_MS
             };
             localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(session));
-            // BLOCKER B8 FIX：登录成功后清遗留 v2/token/remember 旧 key，避免同时存在新旧多份登录态干扰logout
             __clearAdminLegacyKeys(ADMIN_STORAGE_KEY);
             return session;
           }
@@ -1165,6 +1171,35 @@
           }
         }
         return null;
+      }
+
+      function loginUser(username, password) {
+        // A-2：生产模式优先调用后端鉴权（_callBackendAuth 返回 Promise 或 null）
+        var backend = _callBackendAuth(username, password, '');
+        // demo 模式或无后端地址：_callBackendAuth 返回 null → 走本地
+        if (backend === null || backend === undefined) {
+          return _localLogin(username, password);
+        }
+        // 后端 Promise：成功则用后端会话，失败则降级本地
+        return Promise.resolve(backend).then(function (bk) {
+          if (bk && bk.session) {
+            var SESS_TTL_MS = 2 * 60 * 60 * 1000;
+            var nowMs = Date.now();
+            var se = Object.assign({ id: __secureSessId(), loginAt: new Date().toISOString(), expiresAt: nowMs + SESS_TTL_MS }, bk.session);
+            // 同步写入 token（供后续 API 请求使用）
+            try {
+              if (bk.session.accessToken && window.QAXQJT_API_CONFIG) {
+                window.QAXQJT_API_CONFIG.setAccessToken(bk.session.accessToken);
+                if (bk.session.refreshToken) window.QAXQJT_API_CONFIG.setRefreshToken(bk.session.refreshToken);
+                if (bk.session.user) window.QAXQJT_API_CONFIG.setCurrentUser(bk.session.user);
+              }
+            } catch (_t) {}
+            localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(se));
+            __clearAdminLegacyKeys(ADMIN_STORAGE_KEY);
+            return se;
+          }
+          return _localLogin(username, password);
+        });
       }
       // 🔧 B3 FIX：loginUser 暴露到 window（全局可用）
       window.loginUser = loginUser;
@@ -1191,11 +1226,13 @@
         console.groupEnd();
 
         if (!hasApi) {
-          console.warn(LOG_PFX + ' ⚠️ QAXQJT_API.login 不存在，直接降级走本地 sync loginUser(...)');
+          console.warn(LOG_PFX + ' ⚠️ QAXQJT_API.login 不存在，直接降级走 loginUser(...)');
           try {
             var r = loginUser(username, password);
-            console.info(LOG_PFX + ' ✅ 本地降级结果: ' + (r ? 'SUCCESS user=' + (r.username || r.name) : 'FAILED (null)') + ' 耗时=' + (Date.now()-t0) + 'ms');
-            return Promise.resolve(r || null);
+            return Promise.resolve(r).then(function (sess) {
+              console.info(LOG_PFX + ' ✅ 降级结果: ' + (sess ? 'SUCCESS user=' + (sess.username || sess.name) : 'FAILED (null)') + ' 耗时=' + (Date.now()-t0) + 'ms');
+              return sess || null;
+            });
           } catch (e) {
             console.error(LOG_PFX + ' ❌ 本地降级异常: ' + (e && e.message ? e.message : e));
             return Promise.reject(e);
@@ -1258,8 +1295,11 @@
               console.warn(LOG_PFX + ' 🔁 网络错误 → 降级到本地 loginUser(...) [若账号存在将离线登录成功]');
               try {
                 var fb = loginUser(username, password);
-                console.info(LOG_PFX + (fb ? ' ✅ 离线登录成功：user=' + (fb.username || fb.name) : ' ❌ 离线也失败：账号/密码不匹配'));
-                return fb || null;
+                // loginUser 可能返回 Promise（后端鉴权）或 session/null（本地降级）
+                return Promise.resolve(fb).then(function (sess) {
+                  console.info(LOG_PFX + (sess ? ' ✅ 降级登录成功：user=' + (sess.username || sess.name) : ' ❌ 降级也失败：账号/密码不匹配'));
+                  return sess || null;
+                });
               } catch (e2) {
                 console.error(LOG_PFX + ' ❌ 离线降级异常:', e2 && e2.message ? e2.message : e2);
                 return null;
