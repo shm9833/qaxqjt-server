@@ -6078,8 +6078,11 @@ form > table th:nth-child(1),
 }
 /* ========== A4 CSP合规：admin 弹窗 .modal class 通用隐藏规则（兼容 JS 用 modal-wrap-hide/modal-overlay-hide 控制 .modal 和 .modal-overlay） ========== */
 .modal.modal-wrap-hide { display: none !important; }
-.modal-overlay:not(.modal-overlay-hide) { display: block !important; }
-.modal:not(.modal-wrap-hide) { display: block !important; }
+.modal-overlay.modal-overlay-hide { display: none !important; }
+.modal-overlay:not(.modal-overlay-hide):not(.csp-hide) { display: block !important; }
+.modal:not(.modal-wrap-hide):not(.csp-hide) { display: block !important; }
+/* csp-hide 强制隐藏（优先级最高，覆盖所有显示规则） */
+.modal.csp-hide, .modal-overlay.csp-hide, .modal.active.csp-hide, .modal-overlay.active.csp-hide { display: none !important; }
 /* 对 .modal.active / .modal-overlay.active 的显示规则（双保险） */
-.modal-overlay.active { display: block !important; }
-.modal.active { display: block !important; }
+.modal-overlay.active:not(.csp-hide) { display: block !important; }
+.modal.active:not(.csp-hide) { display: block !important; }
