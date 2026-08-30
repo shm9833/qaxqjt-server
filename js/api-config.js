@@ -65,8 +65,11 @@
       var s = global.localStorage && global.localStorage.getItem(STORAGE_KEYS.API_BASE);
       if (s && /^https?:\/\//i.test(s)) return _stripTrailingSlash(s);
     } catch (_e) { /* noop */ }
-    // 免备案部署：前端托管在 GitHub Pages，API 直连后端 IP
-    return 'http://1.14.106.173';
+    // 免备案部署：HTTPS 页面(GitHub Pages)用 HTTPS API；HTTP 页面(服务器直访)用同源 /api
+    if (global.location && global.location.protocol === 'https:') {
+      return 'https://1.14.106.173';
+    }
+    return '';
   }
 
   function _stripTrailingSlash(u) { return u.replace(/\/+$/, ''); }
