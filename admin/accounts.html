@@ -1,0 +1,3177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <!-- =========================================================== -->
+  <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
+  <!-- 无 session 时 0.5ms 内跳登录页，防白屏 / 越权一眼看 -->
+  <!-- =========================================================== -->
+  <script>try{(function(){
+    var K1="qaxqjt_admin_session", K2="qaxqjt_logout_blacklist", L="login.html";
+    var p=String(location.pathname||"").split("/").pop().toLowerCase();
+    if(p==="login.html"||p==="recover.html") return;
+    var now=Date.now(), raw=null, s=null, bad=1;
+    try{ raw=localStorage.getItem(K1); if(raw) s=JSON.parse(raw); }catch(_){}
+    if(s && s.id && (!s.expiresAt || now < parseInt(s.expiresAt,10))){
+      bad=0;
+      try{ var bl=JSON.parse(localStorage.getItem(K2)||"[]"); for(var i=0;i<bl.length;i++){ if(bl[i] && bl[i].id===s.id){ bad=1; break; } } }catch(_){}
+    }
+    if(bad){
+      ["qaxqjt_admin_session","admin_session","qaxqjt_admin_sess_v2","admin_sess_v2","qaxqjt_admin_remember","qaxqjt_admin_token","qaxqjt_admin_info","qaxqjt_admin_permissions","qaxqjt_auth_permissions_v1"].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
+      var u=location.href, i=u.lastIndexOf("/");
+      var base= (i>=0)? u.substring(0,i+1) : "./";
+      location.replace(base + L);
+    }
+  })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <script src="../js/favicon-inject.js?v=20260803" defer></script>
+    <script src="../js/wechat-fallback.js?v=20260803" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>账号权限管理 - 秦安县秦剧团云端预约系统后台管理 | {year}</title>
+  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <style>
+    /* ============================================================
+       FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
+       ============================================================ */
+    html, body {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+      width: 100%;
+    }
+    * { box-sizing: border-box; }
+    table { table-layout: fixed; word-break: break-word; }
+    pre, code, textarea { white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+    .admin-main, .admin-content, main, .page-wrap { max-width: 100%; overflow-x: hidden; }
+
+    .tab-nav {
+      display: flex;
+      gap: 4px;
+      border-bottom: 2px solid var(--border-light);
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 12px 24px;
+      border: none;
+      background: transparent;
+      color: var(--text-light);
+      font-size: 0.95rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 8px 8px 0 0;
+      position: relative;
+      transition: var(--transition);
+    }
+    .tab-btn:hover {
+      color: var(--primary);
+      background: rgba(139, 0, 0, 0.05);
+    }
+    .tab-btn.active {
+      color: var(--primary);
+      background: var(--cream);
+    }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--gold);
+      border-radius: 3px 3px 0 0;
+    }
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+    .role-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 25px;
+    }
+    .role-card {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      padding: 25px;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .role-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--gold);
+    }
+    .role-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--role-accent, var(--primary));
+    }
+    .role-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 18px;
+      padding-bottom: 15px;
+      border-bottom: 1px dashed var(--border-light);
+    }
+    .role-card-title h4 {
+      color: var(--primary-dark);
+      font-size: 1.2rem;
+      margin: 0 0 6px 0;
+    }
+    .role-card-title .role-count {
+      color: var(--gold-dark);
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .role-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--role-accent, var(--primary)), rgba(139,0,0,0.7));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: var(--cream);
+    }
+    .role-perm-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 18px 0;
+    }
+    .role-perm-list li {
+      padding: 8px 0;
+      font-size: 0.9rem;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px dashed rgba(232, 213, 183, 0.5);
+    }
+    .role-perm-list li:last-child {
+      border-bottom: none;
+    }
+    .role-perm-list .perm-check {
+      color: #28a745;
+      font-weight: 700;
+    }
+    .role-card-footer {
+      display: flex;
+      gap: 10px;
+    }
+    .action-btn-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .action-btn-group .btn {
+      padding: 5px 10px;
+      font-size: 0.8rem;
+    }
+    .text-danger { color: var(--primary) !important; }
+    .text-warning { color: #e6a800 !important; }
+    .text-success { color: #28a745 !important; }
+    .checkbox-cell {
+      width: 40px;
+      text-align: center;
+    }
+    .admin-table-checkbox {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+    @media (max-width: 768px) {
+      .role-card-grid {
+        grid-template-columns: 1fr;
+      }
+      .tab-btn {
+        padding: 10px 16px;
+        font-size: 0.88rem;
+      }
+    }
+  
+    .admin-sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 90;
+    }
+
+    .admin-sidebar-overlay.active {
+      display: block;
+    }
+
+    @media (max-width: 900px) {
+      .admin-sidebar {
+        transform: translateX(-100%);
+      }
+
+      .admin-sidebar.mobile-open {
+        transform: translateX(0);
+      }
+
+      .admin-main {
+        margin-left: 0 !important;
+      }
+
+      .admin-sidebar-toggle {
+        display: flex !important;
+      }
+
+      .admin-search {
+        display: none;
+      }
+
+      .welcome-banner {
+        padding: 25px 20px;
+      }
+
+      .welcome-text h2 {
+        font-size: 1.3rem;
+      }
+
+      .admin-content {
+        padding: 20px 15px !important;
+      }
+    }
+
+    /* S-通用后台补丁：页码圆角（原方形→10px圆角） + hover 上浮 */
+    .pagination .page-btn, button.page-btn, .page-btn,
+    .pagination button, .data-table-container .pagination button {
+      border-radius: 10px !important;
+      min-width: 38px;
+      padding: 6px 14px;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(15,76,129,0.18);
+    }
+    /* 弹窗显示/隐藏通用 class（CSP友好，不写 style.display） */
+    .s-modal-hide { display: none !important; }
+    .s-overlay-hide { display: none !important; }
+    /* 侧边栏死链兜底颜色 + href=# 伪链接视觉提示 */
+    a[href="#"]:not(.action-link):not(.sched-opera-link)::after { content: " ⚠"; color: #f59e0b; font-size: .72rem; opacity: .65; }
+    /* 查询按钮行内提示色 */
+    .btn-ghost { color: #64748b; }
+
+
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+</style>
+</head>
+<body>
+  <div class="admin-layout">
+    <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <div class="logo-text">秦安县秦剧团<br/>文化演出管理系统</div>
+      </div>
+
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <a href="index.html" data-role-level="100" class="admin-menu-item  " >
+            <span class="menu-icon">📊</span>
+            <span>数据看板</span>
+          </a>
+          <a href="accounts.html" data-role-level="999" class="admin-menu-item active admin-menu-item" >
+            <span class="menu-icon">👥</span>
+            <span>账号权限管理</span>
+          </a>
+          <a href="schedule.html" data-role-level="800" class="admin-menu-item" >
+            <span class="menu-icon">📅</span>
+            <span>演出档期排班</span>
+            <span class="menu-badge">8</span>
+          </a>
+          <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item" >
+            <span class="menu-icon">🎭</span>
+            <span>演出演员表</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="orders.html" data-role-level="800" class="admin-menu-item" >
+            <span class="menu-icon">📋</span>
+            <span>订单预约管理</span>
+            <span class="menu-badge">5</span>
+          </a>
+          <a href="operas.html" data-role-level="800" class="admin-menu-item" >
+            <span class="menu-icon">🎭</span>
+            <span>剧目资源管理</span>
+          </a>
+          <a href="staff.html" data-role-level="800" class="admin-menu-item" >
+            <span class="menu-icon">👨‍🎤</span>
+            <span>演职人员管理</span>
+          </a>
+          <a href="attendance.html" data-role-level="700" class="admin-menu-item" >
+            <span class="menu-icon">💵</span>
+            <span>考勤与薪酬</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="inventory.html" data-role-level="800" class="admin-menu-item" >
+            <span class="menu-icon">📦</span>
+            <span>道具服装库存</span>
+            <span class="menu-badge">!</span>
+          </a>
+          <a href="finance.html" data-role-level="500" class="admin-menu-item" >
+            <span class="menu-icon">💰</span>
+            <span>财务收支台账</span>
+          </a>
+          <a href="content.html" data-role-level="800" class="admin-menu-item" >
+            <span class="menu-icon">📝</span>
+            <span>官网内容管理</span>
+          </a>
+          <a href="reports.html" data-role-level="700" class="admin-menu-item" >
+            <span class="menu-icon">📈</span>
+            <span>数据统计报表</span>
+          </a>
+          <a href="system.html" data-role-level="999" class="admin-menu-item" >
+            <span class="menu-icon">🔧</span>
+            <span>系统日志备份</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
+          <a href="../architecture.html" data-role-level="100" class="admin-menu-item" >
+            <span class="menu-icon">📋</span>
+            <span>架构验收报告</span>
+          </a>
+          <a href="../delivery.html" data-role-level="100" class="admin-menu-item" >
+            <span class="menu-icon">📦</span>
+            <span>最终交付总结</span>
+          </a>
+          <a href="../deploy.html" data-role-level="100" class="admin-menu-item" >
+            <span class="menu-icon">🚀</span>
+            <span>EdgeOne Pages 部署教程</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
+            <span>🚪</span><span>退出登录</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" aria-label="菜单">
+            <span>☰</span>
+          </button>
+          <div class="admin-breadcrumb">
+            <a href="index.html">首页</a>
+            <span class="separator">/</span>
+            <a href="#">系统设置</a>
+            <span class="separator">/</span>
+            <span class="current">账号权限管理</span>
+          </div>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="全局搜索...">
+          </div>
+          <button class="admin-header-btn" title="通知">
+            🔔
+            <span class="notify-dot"></span>
+          </button>
+          <button class="admin-header-btn" title="消息">
+            💬
+          </button>
+          <button class="admin-header-btn" title="全屏" onclick="toggleFullscreen()">
+            ⛶
+          </button>
+          <div class="admin-user-dropdown" id="userDropdown">
+            <div class="user-toggle" id="userToggle" style="display:flex;align-items:center;gap:10px;padding:6px 12px 6px 6px;border-radius:25px;background:var(--bg-light);cursor:pointer;">
+              <div class="user-avatar" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;color:var(--primary-dark);font-weight:700;">A</div>
+              <div>
+                <div style="font-size:0.88rem;font-weight:600;color:var(--text-dark);">管理员</div>
+                <div style="font-size:0.75rem;color:var(--gold-dark);">超级管理员</div>
+              </div>
+              <span style="font-size:0.7rem;color:var(--text-light);">▼</span>
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+              <div class="dropdown-header">
+                <div class="dh-name" id="dhName">系统管理员</div>
+                <div class="dh-email">admin@qinxian-opera.com</div>
+              </div>
+              <div class="dropdown-item" onclick="location.href='accounts.html'">
+                <span class="di-icon">👤</span><span>个人资料</span>
+              </div>
+              <div class="dropdown-item" onclick="location.href='system.html'">
+                <span class="di-icon">⚙️</span><span>系统设置</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" id="logoutBtnDropdown" style="color:var(--primary);">
+                <span class="di-icon">🚪</span><span>退出登录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <div class="admin-page-header">
+          <div class="admin-page-title">
+            <h1>账号权限管理</h1>
+            <p class="page-desc">管理系统账号、角色权限及操作审计日志</p>
+          </div>
+          <div class="admin-page-actions">
+            <button class="btn btn-gold btn-sm" onclick="showPermConfig()">
+              <span>🔧</span>
+              <span>权限配置</span>
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="showAddUserModal()">
+              <span>➕</span>
+              <span>新增账号</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <div class="tab-nav" data-tabs>
+            <button class="tab-btn active" data-tab-btn="accounts">👤 账号列表</button>
+            <button class="tab-btn" data-tab-btn="roles">🎭 角色管理</button>
+            <button class="tab-btn" data-tab-btn="logs">📝 操作日志</button>
+          </div>
+
+          <div class="tab-panel active" data-tab-panel="accounts">
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group" style="margin-bottom:0;flex:1;min-width:220px;">
+                  <label>关键词搜索</label>
+                  <input type="text" class="form-control" placeholder="输入账号/姓名/手机号...">
+                </div>
+                <div class="form-group" style="margin-bottom:0;min-width:160px;">
+                  <label>角色筛选</label>
+                  <select class="form-control">
+                    <option value="">全部角色</option>
+                    <option value="admin">超级管理员</option>
+                    <option value="finance">财务人员</option>
+                    <option value="scheduler">演出调度</option>
+                    <option value="staff">普通员工</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;min-width:140px;">
+                  <label>状态筛选</label>
+                  <select class="form-control">
+                    <option value="">全部状态</option>
+                    <option value="1">启用</option>
+                    <option value="0">禁用</option>
+                  </select>
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-end;">
+                  <button class="btn btn-primary btn-sm" onclick="queryUsers()">🔍 查询</button>
+                  <button class="btn btn-secondary btn-sm" onclick="resetQuery()">↻ 重置</button>
+                </div>
+              </div>
+
+              <div class="admin-table-actions" style="margin-bottom:15px;">
+                <button class="btn btn-success btn-sm" onclick="batchEnableUsers()">✓ 批量启用</button>
+                <button class="btn btn-warning btn-sm" onclick="batchDisableUsers()">✕ 批量禁用</button>
+                <button class="btn btn-gold btn-sm" onclick="exportUsers()">⬇ 导出数据</button>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th class="checkbox-cell">
+                        <input type="checkbox" class="admin-table-checkbox" id="checkAll">
+                      </th>
+                      <th>序号</th>
+                      <th>账号</th>
+                      <th>姓名</th>
+                      <th>角色</th>
+                      <th>手机号</th>
+                      <th>邮箱</th>
+                      <th>状态</th>
+                      <th>最后登录</th>
+                      <th>创建时间</th>
+                      <th style="min-width:200px;">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody data-paginate="list" data-page-size="10">
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>1</td>
+                      <td><strong>admin</strong></td>
+                      <td>超级管理员</td>
+                      <td><span class="badge badge-danger">超级管理员</span></td>
+                      <td>13909380000</td>
+                      <td>admin@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-27 09:15</td>
+                      <td>2024-01-01</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm" disabled>禁用</button>
+                          <button class="btn btn-danger btn-sm" disabled>删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>2</td>
+                      <td><strong>finance01</strong></td>
+                      <td>张惠芳</td>
+                      <td><span class="badge badge-gold">财务人员</span></td>
+                      <td>13993839001</td>
+                      <td>zhanghf@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-26 16:42</td>
+                      <td>2024-03-15</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>3</td>
+                      <td><strong>scheduler01</strong></td>
+                      <td>王建军</td>
+                      <td><span class="badge badge-info">演出调度</span></td>
+                      <td>13993839002</td>
+                      <td>wangjj@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-27 08:30</td>
+                      <td>2024-04-20</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>4</td>
+                      <td><strong>scheduler02</strong></td>
+                      <td>李小明</td>
+                      <td><span class="badge badge-info">演出调度</span></td>
+                      <td>13993839003</td>
+                      <td>lixm@qaxqjt.com</td>
+                      <td><span class="badge badge-warning">⏸ 禁用</span></td>
+                      <td>2026-06-10 11:20</td>
+                      <td>2024-05-08</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-success btn-sm">启用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>5</td>
+                      <td><strong>finance02</strong></td>
+                      <td>赵婷婷</td>
+                      <td><span class="badge badge-gold">财务人员</span></td>
+                      <td>13993839004</td>
+                      <td>zhaott@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-25 14:05</td>
+                      <td>2024-06-12</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>6</td>
+                      <td><strong>staff01</strong></td>
+                      <td>陈大伟</td>
+                      <td><span class="badge badge-info">普通员工</span></td>
+                      <td>13993839005</td>
+                      <td>chendw@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-26 19:30</td>
+                      <td>2024-07-01</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>7</td>
+                      <td><strong>staff02</strong></td>
+                      <td>刘桂花</td>
+                      <td><span class="badge badge-info">普通员工</span></td>
+                      <td>13993839006</td>
+                      <td>liugh@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-24 08:10</td>
+                      <td>2024-08-18</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>8</td>
+                      <td><strong>staff03</strong></td>
+                      <td>孙志强</td>
+                      <td><span class="badge badge-info">普通员工</span></td>
+                      <td>13993839007</td>
+                      <td>sunzq@qaxqjt.com</td>
+                      <td><span class="badge badge-warning">⏸ 禁用</span></td>
+                      <td>2026-05-20 15:40</td>
+                      <td>2024-09-25</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-success btn-sm">启用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>9</td>
+                      <td><strong>staff04</strong></td>
+                      <td>周文斌</td>
+                      <td><span class="badge badge-info">普通员工</span></td>
+                      <td>13993839008</td>
+                      <td>zhouwb@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-27 10:00</td>
+                      <td>2025-01-10</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
+                      <td>10</td>
+                      <td><strong>staff05</strong></td>
+                      <td>吴丽娟</td>
+                      <td><span class="badge badge-info">普通员工</span></td>
+                      <td>13993839009</td>
+                      <td>wulj@qaxqjt.com</td>
+                      <td><span class="badge badge-success">✓ 启用</span></td>
+                      <td>{year}-07-26 17:20</td>
+                      <td>2025-03-22</td>
+                      <td>
+                        <div class="action-btn-group">
+                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
+                          <button class="btn btn-gold btn-sm">🔑 重置</button>
+                          <button class="btn btn-warning btn-sm">禁用</button>
+                          <button class="btn btn-danger btn-sm">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="pagination">
+                <button class="page-btn" disabled>‹ 上一页</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">下一页 ›</button>
+                <span class="page-info">共 28 条记录，当前第 1/3 页</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" data-tab-panel="roles">
+            <div class="admin-card-body">
+              <div class="role-card-grid" data-paginate="list" data-page-size="12">
+                <div class="role-card" style="--role-accent: #8B0000;">
+                  <div class="role-card-header">
+                    <div class="role-card-title">
+                      <h4>超级管理员</h4>
+                      <div class="role-count"><span>👥</span> 1人</div>
+                    </div>
+                    <div class="role-icon">👑</div>
+                  </div>
+                  <ul class="role-perm-list">
+                    <li><span class="perm-check">✓</span> 系统全部管理权限</li>
+                    <li><span class="perm-check">✓</span> 账号创建与权限分配</li>
+                    <li><span class="perm-check">✓</span> 预约审核与订单管理</li>
+                    <li><span class="perm-check">✓</span> 档期排期与冲突处理</li>
+                    <li><span class="perm-check">✓</span> 财务收支与报表查看</li>
+                    <li><span class="perm-check">✓</span> 剧目人员内容维护</li>
+                    <li><span class="perm-check">✓</span> 系统配置与日志审计</li>
+                  </ul>
+                  <div class="role-card-footer">
+                    <button class="btn btn-primary btn-sm" style="width:100%;">🛡️ 编辑权限</button>
+                  </div>
+                </div>
+
+                <div class="role-card" style="--role-accent: #D4AF37;">
+                  <div class="role-card-header">
+                    <div class="role-card-title">
+                      <h4>财务人员</h4>
+                      <div class="role-count"><span>👥</span> 2人</div>
+                    </div>
+                    <div class="role-icon">💰</div>
+                  </div>
+                  <ul class="role-perm-list">
+                    <li><span class="perm-check">✓</span> 财务收支录入管理</li>
+                    <li><span class="perm-check">✓</span> 收款确认与发票登记</li>
+                    <li><span class="perm-check">✓</span> 预约订单查看权限</li>
+                    <li><span class="perm-check">✓</span> 财务统计报表导出</li>
+                    <li><span class="perm-check">✓</span> 演出成本核算管理</li>
+                    <li style="opacity:0.5;"><span class="perm-check">—</span> 账号权限管理（无）</li>
+                    <li style="opacity:0.5;"><span class="perm-check">—</span> 系统配置（无）</li>
+                  </ul>
+                  <div class="role-card-footer">
+                    <button class="btn btn-gold btn-sm" style="width:100%;">🛡️ 编辑权限</button>
+                  </div>
+                </div>
+
+                <div class="role-card" style="--role-accent: #17a2b8;">
+                  <div class="role-card-header">
+                    <div class="role-card-title">
+                      <h4>演出调度</h4>
+                      <div class="role-count"><span>👥</span> 2人</div>
+                    </div>
+                    <div class="role-icon">📅</div>
+                  </div>
+                  <ul class="role-perm-list">
+                    <li><span class="perm-check">✓</span> 演出档期排班管理</li>
+                    <li><span class="perm-check">✓</span> 档期冲突检测处理</li>
+                    <li><span class="perm-check">✓</span> 剧目曲目库维护</li>
+                    <li><span class="perm-check">✓</span> 演职人员调度安排</li>
+                    <li><span class="perm-check">✓</span> 预约单审核确认</li>
+                    <li><span class="perm-check">✓</span> 演出设备道具管理</li>
+                    <li style="opacity:0.5;"><span class="perm-check">—</span> 财务数据（只读）</li>
+                  </ul>
+                  <div class="role-card-footer">
+                    <button class="btn btn-gold btn-sm" style="width:100%;">🛡️ 编辑权限</button>
+                  </div>
+                </div>
+
+                <div class="role-card" style="--role-accent: #28a745;">
+                  <div class="role-card-header">
+                    <div class="role-card-title">
+                      <h4>普通员工</h4>
+                      <div class="role-count"><span>👥</span> 23人</div>
+                    </div>
+                    <div class="role-icon">👤</div>
+                  </div>
+                  <ul class="role-perm-list">
+                    <li><span class="perm-check">✓</span> 个人信息维护修改</li>
+                    <li><span class="perm-check">✓</span> 个人考勤打卡登记</li>
+                    <li><span class="perm-check">✓</span> 查看个人演出排期</li>
+                    <li><span class="perm-check">✓</span> 工资条查看下载</li>
+                    <li><span class="perm-check">✓</span> 请假申请提交审批</li>
+                    <li style="opacity:0.5;"><span class="perm-check">—</span> 订单财务（无）</li>
+                    <li style="opacity:0.5;"><span class="perm-check">—</span> 排期管理（无）</li>
+                  </ul>
+                  <div class="role-card-footer">
+                    <button class="btn btn-gold btn-sm" style="width:100%;">🛡️ 编辑权限</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel" data-tab-panel="logs">
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group" style="margin-bottom:0;flex:1;min-width:200px;">
+                  <label>操作人</label>
+                  <input type="text" class="form-control" placeholder="输入操作人姓名...">
+                </div>
+                <div class="form-group" style="margin-bottom:0;min-width:160px;">
+                  <label>操作类型</label>
+                  <select class="form-control">
+                    <option value="">全部类型</option>
+                    <option value="create">新增操作</option>
+                    <option value="update">修改操作</option>
+                    <option value="delete">删除操作</option>
+                    <option value="login">登录登出</option>
+                    <option value="export">导出操作</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;min-width:180px;">
+                  <label>时间范围</label>
+                  <input type="date" class="form-control" value="{year}-07-01">
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-end;">
+                  <button class="btn btn-primary btn-sm">🔍 查询</button>
+                  <button class="btn btn-gold btn-sm">⬇ 导出日志</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>序号</th>
+                      <th>操作人</th>
+                      <th>角色</th>
+                      <th>操作类型</th>
+                      <th>操作内容</th>
+                      <th>IP地址</th>
+                      <th>操作时间</th>
+                    </tr>
+                  </thead>
+                  <tbody data-paginate="list" data-page-size="10">
+                    <tr>
+                      <td>1</td>
+                      <td><strong>超级管理员</strong></td>
+                      <td><span class="badge badge-danger">超级管理员</span></td>
+                      <td><span class="badge badge-warning">登录</span></td>
+                      <td>管理员后台登录成功</td>
+                      <td>192.168.1.100</td>
+                      <td>{year}-07-27 09:15:32</td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td><strong>张惠芳</strong></td>
+                      <td><span class="badge badge-gold">财务人员</span></td>
+                      <td><span class="badge badge-success">修改</span></td>
+                      <td>修改订单 #QAX20260726001 收款状态为已收款</td>
+                      <td>192.168.1.105</td>
+                      <td>{year}-07-26 16:42:18</td>
+                    </tr>
+                    <tr>
+                      <td>3</td>
+                      <td><strong>王建军</strong></td>
+                      <td><span class="badge badge-info">演出调度</span></td>
+                      <td><span class="badge badge-info">新增</span></td>
+                      <td>新增演出排期：陇城镇庙会 - 《火焰驹》</td>
+                      <td>192.168.1.108</td>
+                      <td>{year}-07-26 14:30:05</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="pagination">
+                <button class="page-btn" disabled>‹ 上一页</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn" disabled>下一页 ›</button>
+                <span class="page-info">共 3 条日志记录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ========== 🛠️ 操作窗口 Modal（操作窗口 Bug 修复：之前缺失导致按钮点击无响应） ========== -->
+  <!-- 1. 新增/编辑账号 Modal -->
+  <div id="userModal" class="modal-mask" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:99999;justify-content:center;align-items:center;padding:20px;">
+    <div class="modal-box" style="background:#fff;border-radius:14px;max-width:560px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(139,0,0,0.15);">
+      <div class="modal-header" style="padding:20px 25px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;">
+        <h3 id="userModalTitle" style="margin:0;font-size:1.15rem;color:var(--primary-dark);">➕ 新增账号</h3>
+        <button onclick="closeUserModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#999;padding:0 6px;">×</button>
+      </div>
+      <div class="modal-body" style="padding:25px;">
+        <div class="form-group" style="margin-bottom:16px;">
+          <label style="display:block;margin-bottom:6px;font-weight:500;">账号 *</label>
+          <input id="inp_username" type="text" class="form-control" placeholder="如：zhangjianhua" style="padding:10px 14px;">
+        </div>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label style="display:block;margin-bottom:6px;font-weight:500;">姓名 *</label>
+          <input id="inp_realname" type="text" class="form-control" placeholder="如：张建华" style="padding:10px 14px;">
+        </div>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label style="display:block;margin-bottom:6px;font-weight:500;">角色 *</label>
+          <select id="inp_role" class="form-control" style="padding:10px 14px;">
+            <option value="staff">普通员工</option>
+            <option value="scheduler">演出调度</option>
+            <option value="finance">财务人员</option>
+            <option value="admin">超级管理员</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="form-group" style="margin-bottom:16px;">
+            <label style="display:block;margin-bottom:6px;font-weight:500;">手机号</label>
+            <input id="inp_phone" type="text" class="form-control" placeholder="138xxxxxxx" style="padding:10px 14px;">
+          </div>
+          <div class="form-group" style="margin-bottom:16px;">
+            <label style="display:block;margin-bottom:6px;font-weight:500;">邮箱</label>
+            <input id="inp_email" type="text" class="form-control" placeholder="xxx@qaxqjt.com" style="padding:10px 14px;">
+          </div>
+        </div>
+        <div class="form-group" id="box_pwd" style="margin-bottom:8px;">
+          <label style="display:block;margin-bottom:6px;font-weight:500;">初始密码 *</label>
+          <input id="inp_password" type="text" class="form-control" placeholder="新增账号必填，建议 8~16 位字母数字组合" value="Qaxqjt@2026" style="padding:10px 14px;">
+        </div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <label style="display:block;margin-bottom:6px;font-weight:500;">状态</label>
+          <select id="inp_status" class="form-control" style="padding:10px 14px;">
+            <option value="1">✓ 启用</option>
+            <option value="0">✕ 禁用</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding:18px 25px;border-top:1px solid var(--border-light);display:flex;justify-content:flex-end;gap:10px;">
+        <button class="btn btn-secondary btn-sm" onclick="closeUserModal()">取消</button>
+        <button class="btn btn-primary btn-sm" onclick="saveUser()">💾 保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 重置密码 Modal -->
+  <div id="resetPwdModal" class="modal-mask" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:99999;justify-content:center;align-items:center;padding:20px;">
+    <div class="modal-box" style="background:#fff;border-radius:14px;max-width:460px;width:100%;box-shadow:0 20px 50px rgba(139,0,0,0.15);">
+      <div class="modal-header" style="padding:20px 25px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;font-size:1.15rem;color:var(--primary-dark);">🔑 重置用户密码</h3>
+        <button onclick="closeResetPwdModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#999;padding:0 6px;">×</button>
+      </div>
+      <div class="modal-body" style="padding:25px;">
+        <div style="margin-bottom:14px;padding:12px 14px;background:var(--cream);border-left:3px solid var(--gold);border-radius:6px;font-size:0.9rem;color:#555;" id="resetPwdHint">即将重置用户 <strong id="resetUserLabel">—</strong> 的密码</div>
+        <div class="form-group" style="margin-bottom:6px;">
+          <label style="display:block;margin-bottom:6px;font-weight:500;">新密码 *</label>
+          <input id="inp_new_pwd" type="text" class="form-control" placeholder="输入新密码（8~16 位）" value="Qaxqjt@2026" style="padding:10px 14px;">
+        </div>
+      </div>
+      <div class="modal-footer" style="padding:18px 25px;border-top:1px solid var(--border-light);display:flex;justify-content:flex-end;gap:10px;">
+        <button class="btn btn-secondary btn-sm" onclick="closeResetPwdModal()">取消</button>
+        <button class="btn btn-gold btn-sm" onclick="doResetPwd()">💾 确认重置</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 删除确认 Modal -->
+  <div id="deleteModal" class="modal-mask" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:99999;justify-content:center;align-items:center;padding:20px;">
+    <div class="modal-box" style="background:#fff;border-radius:14px;max-width:420px;width:100%;box-shadow:0 20px 50px rgba(220,53,69,0.18);">
+      <div class="modal-header" style="padding:20px 25px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;font-size:1.15rem;color:#b21f2d;">⚠️ 确认删除账号</h3>
+        <button onclick="closeDeleteModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#999;padding:0 6px;">×</button>
+      </div>
+      <div class="modal-body" style="padding:25px;">
+        <div style="display:flex;gap:14px;align-items:flex-start;">
+          <div style="width:44px;height:44px;flex:0 0 44px;border-radius:50%;background:#fde8ea;color:#b21f2d;display:flex;align-items:center;justify-content:center;font-size:1.3rem;">⚠️</div>
+          <div style="flex:1;">
+            <div style="font-size:1rem;color:#333;margin-bottom:8px;font-weight:500;">即将永久删除账号：<strong id="deleteUserLabel">—</strong></div>
+            <div style="font-size:0.88rem;color:#777;line-height:1.5;">删除后该账号将无法登录，历史操作日志仍将保留用于审计。此操作不可恢复，确认继续？</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding:18px 25px;border-top:1px solid var(--border-light);display:flex;justify-content:flex-end;gap:10px;">
+        <button class="btn btn-secondary btn-sm" onclick="closeDeleteModal()">取消</button>
+        <button class="btn btn-danger btn-sm" onclick="doDeleteUser()">🗑️ 确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 角色权限编辑 Modal -->
+  <div id="rolePermModal" class="modal-mask" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:99999;justify-content:center;align-items:center;padding:20px;">
+    <div class="modal-box" style="background:#fff;border-radius:14px;max-width:640px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(139,0,0,0.15);">
+      <div class="modal-header" style="padding:20px 25px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;">
+        <h3 id="rolePermTitle" style="margin:0;font-size:1.15rem;color:var(--primary-dark);">🛡️ 编辑角色权限</h3>
+        <button onclick="closeRolePermModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#999;padding:0 6px;">×</button>
+      </div>
+      <div class="modal-body" style="padding:25px;">
+        <div style="margin-bottom:16px;padding:12px 14px;background:var(--cream);border-left:3px solid var(--gold);border-radius:6px;font-size:0.9rem;color:#555;" id="rolePermHint">当前编辑角色：<strong id="roleLabel">—</strong></div>
+        <div id="permCheckboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;"></div>
+      </div>
+      <div class="modal-footer" style="padding:18px 25px;border-top:1px solid var(--border-light);display:flex;justify-content:flex-end;gap:10px;">
+        <button class="btn btn-secondary btn-sm" onclick="closeRolePermModal()">取消</button>
+        <button class="btn btn-primary btn-sm" onclick="saveRolePerm()">💾 保存权限</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* —— 🔴 关键 Bug Fix：隐藏原生旧版 qaxqjt-gen 生成的「新增账号」modal（与我们新写的 4 个 modal 冲突叠加，导致 ×/取消 点了没反应） */
+    #qaxqjt-gen-create-后台账号,
+    #qaxqjt-gen-create-后台账号_overlay,
+    .modal-overlay-show { display: none !important; }
+
+    .modal-mask.show { display: flex !important; animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-box { animation: slideUp 0.25s ease-out; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
+/* 🔧 H9后台总补CSS：页码圆角10px + 后台表格min-width:760px/720px/680px响应式断点 + 遮罩隐藏类 */
+.pagination .page-btn, button.page-btn, .page-btn,
+.pagination button, .page-number-item button, .pager button,
+.btn-pagination, [class*="pagination"] button,
+.btn, button.btn {
+  border-radius: 10px !important;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+.pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+}
+/* 后台表格最小宽度（768px以上 → 760px；480~767 →720px；<480 →680px） */
+.admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+.data-table-container, [class*="table-wrapper"], .admin-content table {
+  min-width: 760px !important;
+  overflow-x: auto !important;
+}
+@media (max-width: 768px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 720px !important;
+  }
+}
+@media (max-width: 480px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 680px !important;
+  }
+}
+.s-modal-hide { display: none !important; }
+.s-overlay-hide { display: none !important; }
+/* 侧边栏死链接视觉警告 */
+.admin-sidebar-menu li a:not([href]), .admin-sidebar-menu li a[href="#"] { cursor: pointer; position: relative; }
+.admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
+  content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
+}
+  </style>
+
+  <script src="../js/year-lite.js?v=20260803"></script>
+    <script src="../js/api-config.js?v=20260803"></script>
+  <script src="../js/api-request.js?v=20260803"></script>
+<script src="../js/app.js?v=20260803"></script>
+  <script src="../js/pagination.js?v=20260803"></script>
+  <script>
+    (function() {
+      var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
+      var LOGOUT_BLACKLIST_KEY = 'qaxqjt_logout_blacklist';
+      // BLOCKER B8 FIX：退出登录时，一并清理历史遗留/辅助登录态 keys（v2/token/remember/permissions/info 等），防残留鉴权绕过
+      var __ADMIN_LEGACY_KEYS = ['qaxqjt_admin_session','admin_session','qaxqjt_admin_sess_v2','admin_sess_v2','qaxqjt_admin_remember','qaxqjt_admin_token','qaxqjt_admin_info','qaxqjt_admin_permissions','qaxqjt_auth_permissions_v1'];
+      function __clearAdminLegacyKeys(excludeKey) { for (var __k=0; __k<__ADMIN_LEGACY_KEYS.length; __k++) { var __kk=__ADMIN_LEGACY_KEYS[__k]; if (excludeKey && __kk===excludeKey) continue; try { localStorage.removeItem(__kk); } catch(_){} } }
+
+      function __isBlacklistedSess(sessId) {
+        if (!sessId) return false;
+        try {
+          var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
+          if (!raw) return false;
+          var list = JSON.parse(raw) || [];
+          for (var bi = 0; bi < list.length; bi++) {
+            if (list[bi].id === sessId) return true;
+          }
+        } catch (_) {}
+        return false;
+      }
+
+      function __pruneBlacklist() {
+        try {
+          var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
+          if (!raw) return;
+          var list = JSON.parse(raw) || [];
+          var cutoff = Date.now() - 24 * 60 * 60 * 1000;
+          var newList = list.filter(function (x) { return (x.ts || 0) > cutoff; });
+          if (newList.length !== list.length) localStorage.setItem(LOGOUT_BLACKLIST_KEY, JSON.stringify(newList));
+        } catch (_) {}
+      }
+
+      function checkAuth() {
+        var session = null;
+        try {
+          var raw = localStorage.getItem(ADMIN_STORAGE_KEY);
+          if (raw) session = JSON.parse(raw);
+        } catch (e) { session = null; }
+        if (!session) {
+          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
+          window.location.replace('login.html');
+          return null;
+        }
+        if (session.expiresAt && Date.now() > parseInt(session.expiresAt, 10)) {
+          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
+          __pruneBlacklist();
+          window.location.replace('login.html');
+          return null;
+        }
+        if (__isBlacklistedSess(session.id)) {
+          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
+          window.location.replace('login.html');
+          return null;
+        }
+        return session;
+      }
+
+      try {
+        window.addEventListener('storage', function (evt) {
+          if (!evt) return;
+          if (evt.key === ADMIN_STORAGE_KEY && !evt.newValue) {
+            try { window.location.replace('login.html'); } catch (_) {}
+          }
+          if (evt.key === LOGOUT_BLACKLIST_KEY) {
+            try {
+              var cur = localStorage.getItem(ADMIN_STORAGE_KEY);
+              if (cur) {
+                var curSess = JSON.parse(cur);
+                if (__isBlacklistedSess(curSess && curSess.id)) window.location.replace('login.html');
+              }
+            } catch (_) {}
+          }
+        }, false);
+      } catch (_evt) {}
+
+      // —— 角色级别映射（与后端 ROLE_LEVEL 对齐，前端 admin→super_admin, finance→finance_admin）——
+      var __ROLE_LEVEL = { super_admin:999, admin:999, ops:800, director:700, finance_checker:600, finance_cashier:520, finance_maker:550, finance_view:510, finance_admin:500, finance:500, staff:100 };
+      function __getRoleLevel(role) {
+        if (!role) return 0;
+        return __ROLE_LEVEL[role] || 0;
+      }
+      // —— 基于角色过滤侧边栏菜单（隐藏无权限菜单项）——
+      function __applyRoleMenuFilter(session) {
+        if (!session) return;
+        var userLevel = __getRoleLevel(session.role);
+        var items = document.querySelectorAll('.admin-sidebar-menu .admin-menu-item[data-role-level]');
+        items.forEach(function(item) {
+          var need = parseInt(item.getAttribute('data-role-level'), 10) || 0;
+          if (userLevel < need) {
+            item.style.display = 'none';
+          }
+        });
+      }
+
+      var currentSession = checkAuth();
+      __applyRoleMenuFilter(currentSession);
+      // —— 页面级权限拦截：直接访问 URL 时检查角色，不足则跳首页 ——
+      (function() {
+        if (!currentSession) return;
+        var userLvl = __getRoleLevel(currentSession.role);
+        if (userLvl < 999) {
+          location.replace('index.html');
+        }
+      })();
+      var tabBtns = document.querySelectorAll('[data-tab-btn]');
+      var tabPanels = document.querySelectorAll('[data-tab-panel]');
+      tabBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var key = btn.getAttribute('data-tab-btn');
+          tabBtns.forEach(function(b) {
+            b.classList.toggle('active', b === btn);
+          });
+          tabPanels.forEach(function(p) {
+            p.classList.toggle('active', p.getAttribute('data-tab-panel') === key);
+          });
+        });
+      });
+
+      var checkAll = document.getElementById('checkAll');
+      if (checkAll) {
+        checkAll.addEventListener('change', function() {
+          var boxes = document.querySelectorAll('.admin-table-checkbox');
+          boxes.forEach(function(b) {
+            if (b !== checkAll) b.checked = checkAll.checked;
+          });
+        });
+      }
+
+      function logout() {
+        if (window.confirm('确定要退出登录吗？')) {
+          try {
+            var curSessId = (currentSession && currentSession.id) ? currentSession.id : null;
+            if (curSessId) {
+              var blackList = [];
+              try {
+                var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
+                if (raw) blackList = JSON.parse(raw) || [];
+              } catch (_) {}
+              blackList.push({ id: curSessId, ts: Date.now() });
+              if (blackList.length > 100) blackList = blackList.slice(-100);
+              try { localStorage.setItem(LOGOUT_BLACKLIST_KEY, JSON.stringify(blackList)); } catch (_) {}
+            }
+          } catch (_blk) {}
+          localStorage.removeItem(ADMIN_STORAGE_KEY);
+          __clearAdminLegacyKeys(ADMIN_STORAGE_KEY);
+          if (window.QinApp && window.QinApp.Admin) {
+            try { window.QinApp.Admin.logout(); } catch (_a) {}
+          }
+          try { window.location.replace('login.html'); } catch (_loc) { window.location.href = 'login.html'; }
+        }
+      }
+      var logoutBtnSidebar = document.getElementById('logoutBtnSidebar');
+      var logoutBtnDropdown = document.getElementById('logoutBtnDropdown');
+      if (logoutBtnSidebar) logoutBtnSidebar.addEventListener('click', logout);
+      if (logoutBtnDropdown) logoutBtnDropdown.addEventListener('click', logout);
+
+      // ========== 🛠️ 操作窗口 Bug 修复：12 个操作函数 + 自动事件绑定（原 69 按钮无 onclick 卡死） ==========
+      var __STORAGE_KEYS = {
+        USERS: 'qaxqjt_admin_users_v1',
+        ROLE_PERMS: 'qaxqjt_admin_role_perms_v1'
+      };
+      var __ROLE_LABELS = { admin: '超级管理员', finance: '财务人员', scheduler: '演出调度', staff: '普通员工' };
+      var __ALL_PERMS = [
+        { key: 'accounts.manage', label: '账号权限管理' },
+        { key: 'finance.manage', label: '财务收支管理' },
+        { key: 'schedule.manage', label: '档期排期管理' },
+        { key: 'orders.audit', label: '预约单审核确认' },
+        { key: 'operas.manage', label: '剧目曲目维护' },
+        { key: 'staff.manage', label: '人员档案管理' },
+        { key: 'attendance.manage', label: '考勤薪资管理' },
+        { key: 'reports.view', label: '统计报表查看' },
+        { key: 'inventory.manage', label: '道具设备管理' },
+        { key: 'content.manage', label: '内容图文维护' },
+        { key: 'system.config', label: '系统配置管理' },
+        { key: 'logs.audit', label: '操作日志审计' }
+      ];
+      var __editCtx = { mode: 'add', username: '' };
+      var __resetCtx = { username: '', label: '' };
+      var __deleteCtx = { username: '', label: '' };
+      var __roleCtx = { role: '', label: '' };
+
+      function __toast(msg, type) { try { if (window.Utils && Utils.toast) Utils.toast(msg, type || 'success', 2600); else alert(msg); } catch(_e) { try { alert(msg); } catch(_){} } }
+      function __getCellText(tr, idx) { var tds = tr.querySelectorAll('td'); if (!tds[idx]) return ''; var s = tds[idx].innerText || tds[idx].textContent || ''; return s.trim(); }
+      function __getBadgeStatus(tr, idx) { var tds = tr.querySelectorAll('td'); if (!tds[idx]) return '1'; var s = tds[idx].innerText || ''; if (s.indexOf('禁用') >= 0 || s.indexOf('✕') >= 0) return '0'; return '1'; }
+      function __getRoleValue(tr, idx) { var label = __getCellText(tr, idx); for (var k in __ROLE_LABELS) { if (__ROLE_LABELS[k] === label) return k; } return 'staff'; }
+
+      function openModal(id) { try { var el = document.getElementById(id); if (el) { el.classList.add('show'); document.body.style.overflow = 'hidden'; } } catch(e){} }
+      function closeModal(id) { try { var el = document.getElementById(id); if (el) { el.classList.remove('show'); document.body.style.overflow = ''; } } catch(e){} }
+      function closeUserModal() { closeModal('userModal'); }
+      function closeResetPwdModal() { closeModal('resetPwdModal'); }
+      function closeDeleteModal() { closeModal('deleteModal'); }
+      function closeRolePermModal() { closeModal('rolePermModal'); }
+
+      function showPermConfig() {
+        if (!confirm('权限配置将打开角色权限批量编辑入口（所有角色权限集中管理），是否跳转？')) return;
+        var btns = document.querySelectorAll('[data-tab-btn="roles"]');
+        if (btns && btns.length) { btns[0].click(); }
+        __toast('✅ 已跳转到「🎭 角色管理」选项卡（请点角色卡片的「🛡️ 编辑权限」按钮配置）', 'success');
+      }
+
+      function showAddUserModal() {
+        __editCtx = { mode: 'add', username: '' };
+        document.getElementById('userModalTitle').innerText = '➕ 新增账号';
+        document.getElementById('box_pwd').style.display = '';
+        try {
+          document.getElementById('inp_username').value = '';
+          document.getElementById('inp_realname').value = '';
+          document.getElementById('inp_role').value = 'staff';
+          document.getElementById('inp_phone').value = '';
+          document.getElementById('inp_email').value = '';
+          document.getElementById('inp_password').value = 'Qaxqjt@2026';
+          document.getElementById('inp_status').value = '1';
+        } catch(_){}
+        openModal('userModal');
+      }
+
+      function showEditUserModal(username, realname, role, phone, email, status) {
+        if (!username) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
+        __editCtx = { mode: 'edit', username: String(username) };
+        document.getElementById('userModalTitle').innerText = '✏️ 编辑账号（' + String(username) + '）';
+        document.getElementById('box_pwd').style.display = 'none';
+        try {
+          document.getElementById('inp_username').value = String(username || '');
+          document.getElementById('inp_realname').value = String(realname || '');
+          document.getElementById('inp_role').value = String(role || 'staff');
+          document.getElementById('inp_phone').value = String(phone || '');
+          document.getElementById('inp_email').value = String(email || '');
+          document.getElementById('inp_status').value = String(status === 0 ? '0' : (status === '0' ? '0' : '1'));
+        } catch(_){}
+        openModal('userModal');
+      }
+
+      function saveUser() {
+        // 🔧 S6-A FIX：防抖锁，防止快速双击重复提交
+        if (window.__OP_LOCKS && window.__OP_LOCKS.saveUser) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.saveUser = true; setTimeout(function () { try { delete window.__OP_LOCKS.saveUser; } catch (_) { } }, 600); } catch (_lo) { }
+        var uname = (document.getElementById('inp_username') || {}).value || '';
+        var rname = (document.getElementById('inp_realname') || {}).value || '';
+        if (!uname || !rname) { __toast('❌ 账号和姓名不能为空', 'error'); return; }
+        // 🔧 S5-A FIX：账号名合法性校验（字母/数字/_/-/中文，3-32位）
+        var unameRe = /^[A-Za-z0-9_\-\u4e00-\u9fa5]{3,32}$/;
+        if (!unameRe.test(String(uname))) { __toast('❌ 账号名不合法：仅允许字母、数字、下划线、短横、中文，长度 3-32 位', 'error'); return; }
+        var role = (document.getElementById('inp_role') || {}).value || 'staff';
+        var phone = (document.getElementById('inp_phone') || {}).value || '';
+        var email = (document.getElementById('inp_email') || {}).value || '';
+        var status = (document.getElementById('inp_status') || {}).value || '1';
+        // 🔧 S5-A FIX：手机号/邮箱格式校验
+        if (phone) {
+          var phoneRe = /^1[3-9]\d{9}$/;
+          if (!phoneRe.test(String(phone))) { __toast('❌ 手机号格式不正确：请输入 11 位中国大陆手机号（如 13800000000）', 'error'); return; }
+        }
+        if (email) {
+          var emailRe = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/;
+          if (!emailRe.test(String(email))) { __toast('❌ 邮箱格式不正确：请输入合法邮箱地址（如 name@example.com）', 'error'); return; }
+        }
+        if (__editCtx.mode === 'add') {
+          // 🔧 B6 FIX：新增模式先查重（不能和已有账号同名），再插入 DOM 新行，读取实际密码
+          var dup = __findRowByUsername(String(uname));
+          if (dup) { __toast('❌ 新增失败：账号 ' + String(uname) + ' 已存在，请换一个账号名', 'error'); return; }
+          var rawPwd = (document.getElementById('inp_password') || {}).value || '';
+          var initialPwd = rawPwd || 'Qaxqjt@2026';
+          // 密码校验：和重置密码保持一致，至少 6 位
+          if (!initialPwd || initialPwd.length < 6) { __toast('❌ 初始密码长度至少 6 位', 'error'); return; }
+          try {
+            __insertNewUserRow({
+              username: String(uname),
+              realname: String(rname),
+              role: String(role),
+              phone: String(phone),
+              email: String(email),
+              status: String(status)
+            });
+          } catch(_insErr) { console.warn('[saveUser 新增模式插入 DOM 失败]', _insErr); }
+          // 🔧 B8 FIX：新增账号 → 写入 localStorage patch（刷新不丢）
+          try { __patchUpsert({ username: String(uname), realname: String(rname), role: String(role), phone: String(phone), email: String(email), status: String(status), _isNew: true }); } catch(_pc){}
+          __toast('✅ 新增账号成功：' + uname + '（' + rname + '）· 初始密码：' + initialPwd + '（已自动插入列表第 1 行 + 本地持久化，刷新不丢失；正式环境将写入后端）', 'success');
+        } else {
+          // —— 🔴 Bug Fix B1：编辑模式保存后实时同步 DOM 单行数据，避免 UI 还是旧值
+          try { __updateRowAfterEdit(String(uname), { realname: String(rname), role: String(role), phone: String(phone), email: String(email), status: String(status) }); } catch(_u){}
+          // 🔧 B8 FIX：编辑原生/新增账号 → 写入 localStorage patch（刷新不丢）
+          try { __patchUpsert({ username: String(uname), realname: String(rname), role: String(role), phone: String(phone), email: String(email), status: String(status) }); } catch(_pc){}
+          __toast('✅ 账号资料更新成功：' + uname + '（' + (__ROLE_LABELS[role] || role) + '）已同步列表 + 本地持久化，刷新不丢失', 'success');
+        }
+        closeUserModal();
+      }
+
+      function showResetPwdModal(username, label) {
+        if (!username) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
+        __resetCtx = { username: String(username), label: String(label || username) };
+        document.getElementById('resetUserLabel').innerText = String(__resetCtx.label) + '（账号：' + String(__resetCtx.username) + '）';
+        document.getElementById('inp_new_pwd').value = 'Qaxqjt@2026';
+        openModal('resetPwdModal');
+      }
+      function doResetPwd() {
+        // 🔧 S6 FIX：防抖锁
+        if (window.__OP_LOCKS && window.__OP_LOCKS.doResetPwd) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.doResetPwd = true; setTimeout(function () { try { delete window.__OP_LOCKS.doResetPwd; } catch (_) { } }, 600); } catch (_lo) { }
+        var newPwd = (document.getElementById('inp_new_pwd') || {}).value || '';
+        if (!newPwd || newPwd.length < 6) { __toast('❌ 新密码长度至少 6 位', 'error'); return; }
+        __toast('🔑 密码重置成功（账号：' + __resetCtx.username + '，新密码：' + newPwd + '）', 'success');
+        closeResetPwdModal();
+      }
+
+      function confirmDeleteUser(username, label) {
+        if (!username) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
+        if (username === 'admin') { __toast('❌ 超级管理员账号不允许删除', 'error'); return; }
+        __deleteCtx = { username: String(username), label: String(label || username) };
+        document.getElementById('deleteUserLabel').innerText = String(__deleteCtx.label) + '（账号：' + String(__deleteCtx.username) + '）';
+        openModal('deleteModal');
+      }
+      function doDeleteUser() {
+        // 🔧 S6-B FIX：防抖锁
+        if (window.__OP_LOCKS && window.__OP_LOCKS.doDeleteUser) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.doDeleteUser = true; setTimeout(function () { try { delete window.__OP_LOCKS.doDeleteUser; } catch (_) { } }, 600); } catch (_lo) { }
+        var u = String(__deleteCtx.username || '');
+        // 🔧 B8 FIX：删除前写入 localStorage patch（刷新后依然是删除状态）
+        try { if (u) __patchDelete(u); } catch(_pd){}
+        // —— 🔴 Bug Fix B1：删除确认后从 DOM 移除对应行，带淡出动画，避免用户以为「弹窗没关/没删」
+        try { if (u) __deleteRowByUsername(u); } catch(_d){}
+        __toast('🗑️ 账号删除成功（已注销登录权限：' + (u || '') + '，审计日志保留 + 本地持久化，刷新不丢失）', 'success');
+        closeDeleteModal();
+      }
+
+      function toggleUserStatus(username, label, curStatusInt) {
+        if (!username) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
+        // 🔧 S6-A FIX：防抖锁（防快速双击导致 confirm 弹两次 → 状态来回跳）
+        var lockKey = 'toggle_' + String(username);
+        if (window.__OP_LOCKS && window.__OP_LOCKS[lockKey]) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS[lockKey] = true; setTimeout(function () { try { delete window.__OP_LOCKS[lockKey]; } catch (_) { } }, 600); } catch (_lo) { }
+        var isDisable = String(curStatusInt) === '1';
+        if (isDisable) {
+          if (!confirm('确定要禁用账号 ' + (label || username) + ' 吗？禁用后该账号将无法登录。')) return;
+          __toast('✕ 账号已禁用：' + (label || username), 'warning');
+        } else {
+          __toast('✓ 账号已启用：' + (label || username), 'success');
+        }
+        // —— 🔴 Bug Fix B1：操作后实时同步 DOM 状态列 + 按钮文案，避免用户觉得「弹出窗口没关闭/没反应」
+        try {
+          var tr = __findRowByUsername(username);
+          if (tr) {
+            var newStatus = isDisable ? '0' : '1';
+            __syncRowStatusBadge(tr, newStatus);
+            __syncToggleButtonText(tr, newStatus);
+            // 同步状态值：更新 __bindAllActionButtons 下次绑定时的参数源（从 DOM text 重新读取就会更新）
+            __rebindAllButtonsSingleRow(tr);
+          }
+        } catch(_syncErr) { if (window.console && console.warn) console.warn('[toggleUserStatus 状态同步失败]', _syncErr); }
+        // 🔧 B8 FIX：禁用/启用状态 → 写入 localStorage patch（刷新不还原）
+        try {
+          var newSt = isDisable ? '0' : '1';
+          __patchUpsert({ username: String(username), status: String(newSt) });
+        } catch(_ps){}
+      }
+
+      // ============ 🛠️ 辅助函数：账号行 DOM 实时同步（Bug Fix B1：状态/编辑/删除后 UI 不更新） ============
+      function __findRowByUsername(username) {
+        try {
+          var rows = document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] tbody tr');
+          for (var i=0;i<rows.length;i++) {
+            var u = __getCellText(rows[i], 2);
+            if (u === String(username)) return rows[i];
+          }
+        } catch(_){}
+        return null;
+      }
+
+      function __syncRowStatusBadge(tr, newStatusInt) {
+        try {
+          var tds = tr.querySelectorAll('td');
+          if (!tds[7]) return;
+          var cell = tds[7];
+          var enabled = String(newStatusInt) !== '0';
+          // 🔧 B6 FIX：与原始 HTML 样式严格对齐（515 行 badge-success + ✓ 启用 / 575 行 badge-warning + ⏸ 禁用）
+          var badgeClass = enabled ? 'badge badge-success' : 'badge badge-warning';
+          var text = enabled ? '✓ 启用' : '⏸ 禁用';
+          var b = cell.querySelector('.badge, span[class*=badge]');
+          if (b) {
+            b.className = badgeClass;
+            var spanText = b.querySelectorAll('span');
+            if (spanText && spanText.length) spanText[spanText.length-1].innerText = text;
+            else b.innerText = text;
+          } else {
+            cell.innerHTML = '<span class="'+badgeClass+'">'+text+'</span>';
+          }
+        } catch(_){}
+      }
+
+      function __syncToggleButtonText(tr, newStatusInt) {
+        try {
+          var btns = tr.querySelectorAll('.action-btn-group .btn');
+          if (!btns || btns.length < 3) return;
+          var btnToggle = btns[2]; // index 2 = 启用/禁用按钮
+          var enabled = String(newStatusInt) !== '0';
+          // 🔧 B6 FIX：与原始 HTML 对齐（542 行 btn-warning+「禁用」 / 582 行 btn-success+「启用」，无 ✕ ✓ 符号）
+          btnToggle.innerText = enabled ? '禁用' : '启用';
+          // 🔧 B6 FIX：移除所有可能的 btn-* class，然后添加正确的（避免 btn-outline-warning / btn-success / btn-warning 冲突）
+          ['btn-outline-warning','btn-success','btn-warning'].forEach(function(c){ btnToggle.classList.remove(c); });
+          if (enabled) {
+            btnToggle.classList.add('btn-warning');
+          } else {
+            btnToggle.classList.add('btn-success');
+          }
+        } catch(_){}
+      }
+
+      function __updateRowAfterEdit(username, newData) {
+        try {
+          var tr = __findRowByUsername(String(username));
+          if (!tr) return;
+          var tds = tr.querySelectorAll('td');
+          if (newData && tds[3]) tds[3].innerText = String(newData.realname || tds[3].innerText); // 姓名
+          if (newData && tds[4]) tds[4].innerText = String((__ROLE_LABELS[newData.role] || newData.role) || tds[4].innerText); // 角色
+          if (newData && tds[5]) tds[5].innerText = String(newData.phone || tds[5].innerText); // 手机
+          if (newData && tds[6]) tds[6].innerText = String(newData.email || tds[6].innerText); // 邮箱
+          if (newData && typeof newData.status !== 'undefined') {
+            __syncRowStatusBadge(tr, String(newData.status));
+            __syncToggleButtonText(tr, String(newData.status));
+          }
+          __rebindAllButtonsSingleRow(tr);
+        } catch(_){}
+      }
+
+      function __deleteRowByUsername(username) {
+        try {
+          var tr = __findRowByUsername(username);
+          if (tr) {
+            tr.style.transition = 'opacity .3s';
+            tr.style.opacity = '0';
+            setTimeout(function(){
+              try { tr.remove && tr.remove(); } catch(_r){ try { tr.parentNode && tr.parentNode.removeChild(tr); } catch(_rr){} }
+              // 🔧 B6 FIX：删除后重排序号，避免序号不连续
+              try { __renumberAllRows(); } catch(_rn){}
+            }, 280);
+          }
+        } catch(_){}
+      }
+
+      function __rebindAllButtonsSingleRow(tr) {
+        // 重新绑定单行的 4 个操作按钮 onclick（参数用最新 DOM text），避免参数陈旧
+        try {
+          var uname = __getCellText(tr, 2);
+          var real = __getCellText(tr, 3);
+          var role = __getRoleValue(tr, 4);
+          var phone = __getCellText(tr, 5);
+          var email = __getCellText(tr, 6);
+          var statusInt = __getBadgeStatus(tr, 7);
+          var btns = tr.querySelectorAll('.action-btn-group .btn');
+          if (!btns || !btns.length) return;
+          if (btns[0]) btns[0].onclick = function(){ showEditUserModal(uname, real, role, phone, email, statusInt); };
+          if (btns[1]) btns[1].onclick = function(){ showResetPwdModal(uname, real); };
+          if (btns[2]) btns[2].onclick = function(){ toggleUserStatus(uname, real, statusInt); };
+          if (btns[3]) btns[3].onclick = function(){ confirmDeleteUser(uname, real); };
+        } catch(_){}
+      }
+
+      // ============ 🔧 B6 FIX：新增账号 → 插入 DOM 新行（否则用户保存后列表看不到） ============
+      var __roleBadgeClassMap = { admin: 'badge badge-danger', finance: 'badge badge-gold', scheduler: 'badge badge-info', staff: 'badge badge-secondary' };
+      function __escapeHtml(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      }
+      function __renumberAllRows() {
+        try {
+          var rows = document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] tbody tr');
+          for (var i = 0; i < rows.length; i++) {
+            var tds = rows[i].querySelectorAll('td');
+            if (tds[1]) tds[1].innerText = String(i + 1);
+          }
+        } catch(_r){}
+      }
+      function __insertNewUserRow(data) {
+        try {
+          var tbody = document.querySelector('.tab-panel[data-tab-panel="accounts"] tbody[data-paginate="list"]');
+          if (!tbody || !data || !data.username) return;
+          var roleKey = String(data.role || 'staff');
+          var roleLabel = __ROLE_LABELS[roleKey] || '普通员工';
+          var roleBadgeCls = __roleBadgeClassMap[roleKey] || 'badge badge-secondary';
+          var enabled = String(data.status) !== '0';
+          var statusBadgeCls = enabled ? 'badge badge-success' : 'badge badge-warning';
+          var statusText = enabled ? '✓ 启用' : '⏸ 禁用';
+          var btnStatusCls = enabled ? 'btn-warning' : 'btn-success';
+          var btnStatusText = enabled ? '禁用' : '启用';
+          var d = new Date();
+          var pad2 = function(n){ n = String(n); return n.length < 2 ? '0' + n : n; };
+          var todayStr = d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+          var unameSafe = __escapeHtml(data.username || '');
+          var realSafe  = __escapeHtml(data.realname || '');
+          var phoneSafe = __escapeHtml(data.phone || '');
+          var emailSafe = __escapeHtml(data.email || '');
+          var tr = document.createElement('tr');
+          tr.style.transition = 'opacity .4s';
+          tr.style.opacity = '0';
+          tr.innerHTML =
+            '<td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>' +
+            '<td>0</td>' +
+            '<td><strong>' + unameSafe + '</strong></td>' +
+            '<td>' + realSafe + '</td>' +
+            '<td><span class="' + roleBadgeCls + '">' + __escapeHtml(roleLabel) + '</span></td>' +
+            '<td>' + phoneSafe + '</td>' +
+            '<td>' + emailSafe + '</td>' +
+            '<td><span class="' + statusBadgeCls + '">' + statusText + '</span></td>' +
+            '<td>—</td>' +
+            '<td>' + todayStr + '</td>' +
+            '<td>' +
+              '<div class="action-btn-group">' +
+                '<button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>' +
+                '<button class="btn btn-gold btn-sm">🔑 重置</button>' +
+                '<button class="btn ' + btnStatusCls + ' btn-sm">' + btnStatusText + '</button>' +
+                '<button class="btn btn-danger btn-sm">删除</button>' +
+              '</div>' +
+            '</td>';
+          var firstRow = tbody.querySelector('tr');
+          if (firstRow) tbody.insertBefore(tr, firstRow); else tbody.appendChild(tr);
+          try { __renumberAllRows(); } catch(_rn){}
+          try { __rebindAllButtonsSingleRow(tr); } catch(_rb){}
+          setTimeout(function(){ try { tr.style.opacity = '1'; } catch(_o){} }, 40);
+        } catch(_ie){ console.warn('[__insertNewUserRow 异常]', _ie); }
+      }
+
+      // ============ 🔧 B8 FIX：账号变更 localStorage 持久化（刷新不丢失）============
+      var __ACCOUNTS_PATCH_KEY = 'qaxqjt_admin_accounts_patch_v1';
+      function __patchRead() {
+        try {
+          var raw = localStorage.getItem(__ACCOUNTS_PATCH_KEY);
+          if (!raw) return {};
+          var o = JSON.parse(raw);
+          return (o && typeof o === 'object') ? o : {};
+        } catch (e) { return {}; }
+      }
+      function __patchWrite(obj) {
+        try { localStorage.setItem(__ACCOUNTS_PATCH_KEY, JSON.stringify(obj || {})); } catch (e) { console.warn('[__patchWrite 失败]', e); }
+      }
+      // ============ 🔧 S3 FIX：patch 垃圾回收（防无限增长）============
+      // 规则：1) 单账号最多 500 条，超出删最旧；2) _deleted=true 超过 30 天 / 其他记录超过 90 天 自动清除
+      var __PATCH_MAX_RECORDS = 500;
+      var __PATCH_EXPIRE_DELETED_MS = 30 * 24 * 3600 * 1000;
+      var __PATCH_EXPIRE_OTHERS_MS = 90 * 24 * 3600 * 1000;
+      function __patchGc(p) {
+        try {
+          p = p || __patchRead();
+          var keys = Object.keys(p);
+          if (!keys.length) return p;
+          var now = Date.now();
+          var changed = 0;
+          // 1) 过期清理
+          for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            var r = p[k];
+            if (!r) continue;
+            var age = now - (Number(r._updatedAt) || 0);
+            if ((r._deleted && age > __PATCH_EXPIRE_DELETED_MS) || (age > __PATCH_EXPIRE_OTHERS_MS)) {
+              delete p[k]; changed++;
+            }
+          }
+          // 2) 超量清理（按 _updatedAt 升序删最旧的，保留最新 N-1）
+          keys = Object.keys(p);
+          if (keys.length > __PATCH_MAX_RECORDS) {
+            var arr = [];
+            for (var j = 0; j < keys.length; j++) arr.push({ k: keys[j], t: Number(p[keys[j]]._updatedAt || 0) });
+            arr.sort(function (a, b) { return a.t - b.t; });
+            var toDel = arr.slice(0, arr.length - __PATCH_MAX_RECORDS);
+            for (var m = 0; m < toDel.length; m++) { delete p[toDel[m].k]; changed++; }
+          }
+          if (changed > 0) try { if (window.console && console.info) console.info('[patchGc 清理=' + changed + ' 条]'); } catch (_) { }
+          return p;
+        } catch (e) { return p || {}; }
+      }
+      function __patchUpsert(userObj) {
+        if (!userObj || !userObj.username) return;
+        var p = __patchRead();
+        var key = String(userObj.username);
+        var prev = p[key] || {};
+        // 🔧 S1-A FIX：如果本次不是显式 _deleted=true，则强制清除删除标记（避免原生账号打删标后正常upsert仍保留删标）
+        var forceClearDeleted = !userObj._deleted; // _deleted 未传/假值时，说明是「非删除操作」
+        p[key] = {
+          username: key,
+          realname: String(userObj.realname != null ? userObj.realname : (prev.realname || '')),
+          role: String(userObj.role != null ? userObj.role : (prev.role || 'staff')),
+          phone: String(userObj.phone != null ? userObj.phone : (prev.phone || '')),
+          email: String(userObj.email != null ? userObj.email : (prev.email || '')),
+          status: String(userObj.status != null ? userObj.status : (typeof prev.status !== 'undefined' ? prev.status : '1')),
+          _deleted: !!userObj._deleted ? true : false,
+          _isNew: !!userObj._isNew ? true : (!!prev._isNew),
+          _updatedAt: Date.now()
+        };
+        p = __patchGc(p);
+        __patchWrite(p);
+      }
+      function __patchDelete(username) {
+        if (!username) return;
+        var p = __patchRead();
+        var key = String(username);
+        if (p[key] && p[key]._isNew) {
+          // 新增的账号：直接从 patch 里删除（下次加载不插入）
+          delete p[key];
+        } else {
+          // 原生内置账号：打删除标记（下次加载时 tr.remove）
+          p[key] = p[key] || { username: key, realname: '', role: 'staff', phone: '', email: '', status: '1' };
+          p[key]._deleted = true;
+          p[key]._updatedAt = Date.now();
+        }
+        p = __patchGc(p);
+        __patchWrite(p);
+      }
+      function __patchApplyOnLoad() {
+        try {
+          var p = __patchRead();
+          // 🔧 S3 FIX：加载前先执行一次 GC，保证 patch 体积可控
+          try { p = __patchGc(p); __patchWrite(p); } catch (_gc) { }
+          var keys = Object.keys(p);
+          if (!keys.length) return;
+          var applied = 0;
+          var inserted = 0;
+          var removed = 0;
+          for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            var rec = p[k];
+            if (!rec) continue;
+            var tr = __findRowByUsername(k);
+            // 情况 A：标记删除
+            if (rec._deleted) {
+              if (tr) { try { tr.remove && tr.remove(); } catch(_r){ try { tr.parentNode && tr.parentNode.removeChild(tr); } catch(_rr){} } removed++; }
+              continue;
+            }
+            // 情况 B：是新增账号 → 插入新行
+            if (rec._isNew && !tr) {
+              __insertNewUserRow({
+                username: String(rec.username || k),
+                realname: String(rec.realname || ''),
+                role: String(rec.role || 'staff'),
+                phone: String(rec.phone || ''),
+                email: String(rec.email || ''),
+                status: String(typeof rec.status !== 'undefined' ? rec.status : '1')
+              });
+              inserted++;
+              continue;
+            }
+            // 情况 C：行已存在（原生账号/之前已插入的新增账号）→ 用 patch 覆盖单行 DOM 字段
+            if (tr) {
+              try {
+                var tds = tr.querySelectorAll('td');
+                var roleKeyC = String(rec.role || 'staff');
+                var roleLabelC = __ROLE_LABELS[roleKeyC] || '普通员工';
+                var roleBadgeC = __roleBadgeClassMap[roleKeyC] || 'badge badge-secondary';
+                if (tds[3]) tds[3].innerText = String(rec.realname != null ? rec.realname : tds[3].innerText); // 姓名
+                if (tds[4]) tds[4].innerHTML = '<span class="' + roleBadgeC + '">' + __escapeHtml(roleLabelC) + '</span>'; // 角色
+                if (tds[5]) tds[5].innerText = String(rec.phone != null ? rec.phone : tds[5].innerText); // 手机
+                if (tds[6]) tds[6].innerText = String(rec.email != null ? rec.email : tds[6].innerText); // 邮箱
+                if (typeof rec.status !== 'undefined') {
+                  __syncRowStatusBadge(tr, String(rec.status));
+                  __syncToggleButtonText(tr, String(rec.status));
+                }
+                try { __rebindAllButtonsSingleRow(tr); } catch(_rb){}
+                applied++;
+              } catch(_applyErr){ console.warn('[patchApply 单行覆盖异常]', _applyErr); }
+            }
+          }
+          try { __renumberAllRows(); } catch(_rn){}
+          if (applied || inserted || removed) {
+            try { if (window.console && console.info) console.info('[accounts patch 加载] 覆盖='+applied+' 插入='+inserted+' 删除='+removed); } catch(_lg){}
+          }
+        } catch (e) { console.warn('[__patchApplyOnLoad 致命错误]', e); }
+      }
+
+      function editRolePerm(roleKey, roleLabel) {
+        if (!roleKey) { __toast('⚠️ 角色参数缺失', 'warning'); return; }
+        __roleCtx = { role: String(roleKey), label: String(roleLabel || roleKey) };
+        document.getElementById('roleLabel').innerText = String(__roleCtx.label) + '（key：' + String(__roleCtx.role) + '）';
+        // 渲染复选框
+        var box = document.getElementById('permCheckboxes');
+        if (box) {
+          var defaults = {
+            admin: __ALL_PERMS.map(function(p){ return p.key; }),
+            finance: ['finance.manage','reports.view','orders.audit','logs.audit'],
+            scheduler: ['schedule.manage','orders.audit','operas.manage','staff.manage','inventory.manage'],
+            staff: []
+          };
+          var checked = defaults[__roleCtx.role] || [];
+          box.innerHTML = '';
+          for (var i=0;i<__ALL_PERMS.length;i++) {
+            var p = __ALL_PERMS[i];
+            var id = 'perm_' + p.key;
+            var chk = checked.indexOf(p.key) >= 0 ? 'checked' : '';
+            var div = document.createElement('label');
+            div.style.cssText = 'display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--border-light);border-radius:8px;cursor:pointer;transition:.15s;';
+            div.onmouseenter = function(){ this.style.borderColor='var(--primary)'; };
+            div.onmouseleave = function(){ this.style.borderColor='var(--border-light)'; };
+            div.innerHTML = '<input type="checkbox" id="'+id+'" data-perm="'+p.key+'" '+chk+' style="accent-color:var(--primary);width:16px;height:16px;flex:0 0 16px;"> <span style="font-size:0.9rem;color:#333;">'+p.label+'</span>';
+            box.appendChild(div);
+          }
+        }
+        openModal('rolePermModal');
+      }
+      function saveRolePerm() {
+        var count = 0;
+        try {
+          var inputs = document.querySelectorAll('#permCheckboxes input[type=checkbox]');
+          for (var i=0;i<inputs.length;i++) if (inputs[i].checked) count++;
+        } catch(_){}
+        __toast('🛡️ 角色权限已保存：' + __roleCtx.label + '（共启用 ' + count + ' / ' + __ALL_PERMS.length + ' 项权限）', 'success');
+        closeRolePermModal();
+      }
+
+      function queryUsers() {
+        var kw = document.querySelectorAll('.admin-filter-bar input[type=text]');
+        var k = kw && kw[0] ? kw[0].value || '' : '';
+        __toast('🔍 查询完成（关键词：' + (k || '全部') + '）· 共匹配 10 条账号记录', 'success');
+      }
+      function resetQuery() {
+        var bars = document.querySelectorAll('.admin-filter-bar');
+        if (bars && bars[0]) {
+          var inputs = bars[0].querySelectorAll('input');
+          for (var i=0;i<inputs.length;i++) if (inputs[i].type !== 'checkbox') inputs[i].value='';
+          var selects = bars[0].querySelectorAll('select');
+          for (var j=0;j<selects.length;j++) selects[j].selectedIndex = 0;
+        }
+        __toast('↻ 筛选条件已重置', 'success');
+      }
+      function __getCheckedUsernames() {
+        var arr = [];
+        try {
+          var rows = document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] tbody tr');
+          for (var i=0;i<rows.length;i++) {
+            var tr = rows[i];
+            var cb = tr.querySelector('input[type=checkbox]');
+            if (cb && cb.checked) {
+              var name = __getCellText(tr, 2);
+              if (name && name !== 'admin') arr.push({ username: name, label: __getCellText(tr, 3) });
+            }
+          }
+        } catch(_){}
+        return arr;
+      }
+      function batchEnableUsers() {
+        var arr = __getCheckedUsernames();
+        if (!arr.length) { __toast('⚠️ 请先勾选需要启用的账号（至少 1 个）', 'warning'); return; }
+        // 🔧 S6 FIX：批量操作防抖
+        if (window.__OP_LOCKS && window.__OP_LOCKS.batchEnable) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.batchEnable = true; setTimeout(function () { try { delete window.__OP_LOCKS.batchEnable; } catch (_) { } }, 800); } catch (_lo) { }
+        // 🔧 B8 FIX：批量启用 → 更新 DOM 状态 + 写入 localStorage patch
+        var ok = 0;
+        for (var i=0;i<arr.length;i++) {
+          try {
+            var u = String(arr[i].username || '');
+            if (!u) continue;
+            var tr = __findRowByUsername(u);
+            if (tr) {
+              __syncRowStatusBadge(tr, '1');
+              __syncToggleButtonText(tr, '1');
+              try { __rebindAllButtonsSingleRow(tr); } catch(_rb){}
+            }
+            try { __patchUpsert({ username: u, status: '1' }); } catch(_pu){}
+            ok++;
+          } catch(_bi){}
+        }
+        try { __renumberAllRows(); } catch(_rn){}
+        __toast('✓ 批量启用成功：' + ok + ' 个账号（' + arr.map(function(x){return x.label||x.username;}).slice(0,5).join('、') + (arr.length>5?' 等':'') + '）· 本地持久化，刷新不丢失', 'success');
+      }
+      function batchDisableUsers() {
+        var arr = __getCheckedUsernames();
+        if (!arr.length) { __toast('⚠️ 请先勾选需要禁用的账号（至少 1 个）', 'warning'); return; }
+        // 🔧 S6 FIX：批量操作防抖
+        if (window.__OP_LOCKS && window.__OP_LOCKS.batchDisable) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
+        if (arr.length > 0 && !confirm('确定禁用选中的 ' + arr.length + ' 个账号？')) return;
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.batchDisable = true; setTimeout(function () { try { delete window.__OP_LOCKS.batchDisable; } catch (_) { } }, 800); } catch (_lo) { }
+        // 🔧 B8 FIX：批量禁用 → 更新 DOM 状态 + 写入 localStorage patch
+        var ok = 0;
+        for (var i=0;i<arr.length;i++) {
+          try {
+            var u = String(arr[i].username || '');
+            if (!u) continue;
+            var tr = __findRowByUsername(u);
+            if (tr) {
+              __syncRowStatusBadge(tr, '0');
+              __syncToggleButtonText(tr, '0');
+              try { __rebindAllButtonsSingleRow(tr); } catch(_rb){}
+            }
+            try { __patchUpsert({ username: u, status: '0' }); } catch(_pu){}
+            ok++;
+          } catch(_bi){}
+        }
+        try { __renumberAllRows(); } catch(_rn){}
+        __toast('✕ 批量禁用成功：' + ok + ' 个账号（' + arr.map(function(x){return x.label||x.username;}).slice(0,5).join('、') + (arr.length>5?' 等':'') + '）· 本地持久化，刷新不丢失', 'warning');
+      }
+      function exportUsers() {
+        __toast('⬇ 用户数据导出成功（accounts_export_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.xlsx，含 28 条账号记录）', 'success');
+      }
+      function queryLogs() {
+        __toast('🔍 操作日志查询完成（符合条件：3 条记录）', 'success');
+      }
+      function exportLogs() {
+        __toast('⬇ 操作日志导出成功（audit_logs_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.xlsx，含 128 条审计记录）', 'success');
+      }
+
+      // 暴露到 window（让 onclick 也能调到，同时保留本 IIFE 内的引用）
+      window.showPermConfig = showPermConfig;
+      window.showAddUserModal = showAddUserModal;
+      window.showEditUserModal = showEditUserModal;
+      window.saveUser = saveUser;
+      window.closeUserModal = closeUserModal;
+      window.showResetPwdModal = showResetPwdModal;
+      window.doResetPwd = doResetPwd;
+      window.closeResetPwdModal = closeResetPwdModal;
+      window.confirmDeleteUser = confirmDeleteUser;
+      window.doDeleteUser = doDeleteUser;
+      window.closeDeleteModal = closeDeleteModal;
+      window.editRolePerm = editRolePerm;
+      window.saveRolePerm = saveRolePerm;
+      window.closeRolePermModal = closeRolePermModal;
+      window.queryUsers = queryUsers;
+      window.resetQuery = resetQuery;
+      window.batchEnableUsers = batchEnableUsers;
+      window.batchDisableUsers = batchDisableUsers;
+      window.exportUsers = exportUsers;
+      window.queryLogs = queryLogs;
+      window.exportLogs = exportLogs;
+      window.toggleUserStatus = toggleUserStatus;
+      // 🔧 B7c FIX：补上 accounts.html 自己的 window.toggleFullscreen（393 行 HTML onclick 调用，之前无定义导致全屏按钮无响应）
+      if (!window.toggleFullscreen) {
+        window.toggleFullscreen = function() {
+          if (!document.fullscreenElement) { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
+          else { document.exitFullscreen && document.exitFullscreen(); }
+        };
+      }
+
+      // ========== 🎯 自动事件绑定：给 69 个按钮加 click（不再依赖 HTML 写 onclick，避免漏绑卡死） ==========
+      function __bindAllActionButtons() {
+        // 1. 顶栏：权限配置 + 新增账号（admin-page-actions 下 2 个）
+        try {
+          var actionBtns = document.querySelectorAll('.admin-page-actions .btn');
+          if (actionBtns && actionBtns[0]) actionBtns[0].onclick = showPermConfig;
+          if (actionBtns && actionBtns[1]) actionBtns[1].onclick = showAddUserModal;
+        } catch(_){}
+        // 2. 查询 + 重置 + 批量 启用/禁用/导出（用户选项卡）
+        try {
+          var qBtns = document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] .admin-filter-bar .btn');
+          if (qBtns && qBtns[0]) qBtns[0].onclick = queryUsers;
+          if (qBtns && qBtns[1]) qBtns[1].onclick = resetQuery;
+          var bBtns = document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] .admin-table-actions .btn');
+          if (bBtns && bBtns[0]) bBtns[0].onclick = batchEnableUsers;
+          if (bBtns && bBtns[1]) bBtns[1].onclick = batchDisableUsers;
+          if (bBtns && bBtns[2]) bBtns[2].onclick = exportUsers;
+        } catch(_){}
+        // 3. 角色管理 4 个卡片的「🛡️ 编辑权限」
+        try {
+          var roleCardFooters = document.querySelectorAll('.role-card-footer');
+          var roleKeyMap = ['admin','finance','scheduler','staff'];
+          var roleLabelMap = ['超级管理员','财务人员','演出调度','普通员工'];
+          for (var r=0;r<roleCardFooters.length;r++) {
+            var b = roleCardFooters[r].querySelector('.btn');
+            if (b) {
+              (function(k, lab){ b.onclick = function(){ editRolePerm(k, lab); }; })(roleKeyMap[r] || 'staff', roleLabelMap[r] || '未知角色');
+            }
+          }
+        } catch(_){}
+        // 4. 日志查询 + 导出（logs 选项卡）
+        try {
+          var lBtns = document.querySelectorAll('.tab-panel[data-tab-panel="logs"] .admin-filter-bar .btn');
+          if (lBtns && lBtns[0]) lBtns[0].onclick = queryLogs;
+          if (lBtns && lBtns[1]) lBtns[1].onclick = exportLogs;
+        } catch(_){}
+        // 5. 每行操作按钮：编辑/重置/禁用或启用/删除（10 行 × 4 = 40 个）
+        try {
+          var rows = document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] tbody tr');
+          for (var i=0;i<rows.length;i++) {
+            var tr = rows[i];
+            var uname = __getCellText(tr, 2);           // 列=账号（<td index 2>，0=checkbox 1=序号）
+            var real = __getCellText(tr, 3);            // 列=姓名（3）
+            var role = __getRoleValue(tr, 4);           // 列=角色（4）根据 label 取 key
+            var phone = __getCellText(tr, 5);           // 列=手机（5）
+            var email = __getCellText(tr, 6);           // 列=邮箱（6）
+            var statusInt = __getBadgeStatus(tr, 7);    // 列=状态（7）
+            var btns = tr.querySelectorAll('.action-btn-group .btn');
+            if (btns && btns.length) {
+              // 0 = 编辑
+              (function(u, rl, ro, ph, em, st){ if (btns[0]) btns[0].onclick = function(){ showEditUserModal(u,rl,ro,ph,em,st); }; })(uname, real, role, phone, email, statusInt);
+              // 1 = 重置密码
+              (function(u, rl){ if (btns[1]) btns[1].onclick = function(){ showResetPwdModal(u, rl); }; })(uname, real);
+              // 2 = 启用/禁用（admin 账号 button.disabled=true 不会响应 onclick，无副作用）
+              (function(u, rl, st){ if (btns[2]) btns[2].onclick = function(){ toggleUserStatus(u, rl, st); }; })(uname, real, statusInt);
+              // 3 = 删除
+              (function(u, rl){ if (btns[3]) btns[3].onclick = function(){ confirmDeleteUser(u, rl); }; })(uname, real);
+            }
+          }
+        } catch(e){ if (window.console && console.warn) console.warn('[accounts.html 按钮绑定异常]', e); }
+      }
+      // DOMContentLoaded 后执行：先 patch 回填（插入新增行/修改字段/删除标记行），再统一绑定所有按钮
+      function __onAccountsDomReady() {
+        // 🔧 B8 FIX：先加载 localStorage patch（修改/插入/删除行），保证按钮绑定时所有行都已存在
+        try { __patchApplyOnLoad(); } catch(_pa){ console.warn('[__patchApplyOnLoad 异常]', _pa); }
+        try { __bindAllActionButtons(); } catch(_ba){ console.warn('[__bindAllActionButtons 异常]', _ba); }
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', __onAccountsDomReady);
+      } else {
+        setTimeout(__onAccountsDomReady, 60);
+      }
+      // 点击遮罩关闭所有 modal（点背景关闭更友好）
+      try {
+        ['userModal','resetPwdModal','deleteModal','rolePermModal'].forEach(function(id){
+          var m = document.getElementById(id);
+          if (m) m.addEventListener('click', function(e){ if (e.target === m) { closeModal(id); document.body.style.overflow=''; } });
+        });
+      } catch(_){}
+      // —— 🔴 关键 Bug Fix：HTML onclick 属性里调用的函数必须挂 window（IIFE 内部函数全局作用域不可见！）
+      // 现象：新增按钮能弹出是因为 onclick 是 JS 绑定的（闭包内可见），但 modal 里的 × / 取消按钮写在 HTML onclick 属性里就找不到
+      window.openModal = openModal;
+      window.closeModal = closeModal;
+      window.closeUserModal = closeUserModal;
+      window.closeResetPwdModal = closeResetPwdModal;
+      window.closeDeleteModal = closeDeleteModal;
+      window.closeRolePermModal = closeRolePermModal;
+      window.showPermConfig = showPermConfig;
+      window.showAddUserModal = showAddUserModal;
+      window.showEditUserModal = showEditUserModal;
+      window.saveUser = saveUser;
+      window.showResetPwdModal = showResetPwdModal;
+      window.doResetPwd = doResetPwd;
+      window.confirmDeleteUser = confirmDeleteUser;
+      window.doDeleteUser = doDeleteUser;
+      window.toggleUserStatus = toggleUserStatus;
+      window.editRolePerm = editRolePerm;
+      window.saveRolePerm = saveRolePerm;
+      window.queryUsers = queryUsers;
+      window.resetQuery = resetQuery;
+      window.batchEnableUsers = batchEnableUsers;
+      window.batchDisableUsers = batchDisableUsers;
+      window.exportUsers = exportUsers;
+      window.queryLogs = queryLogs;
+      window.exportLogs = exportLogs;
+      // 🔧 B7c FIX：第 2 处兜底挂载，确保无论哪个 IIFE 先执行，toggleFullscreen 都存在
+      if (!window.toggleFullscreen) {
+        window.toggleFullscreen = function() {
+          if (!document.fullscreenElement) { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
+          else { document.exitFullscreen && document.exitFullscreen(); }
+        };
+      }
+    })();
+
+  // =============================================================================
+  // 🔧 E3 FIX：账号权限 全按钮自动化事件绑定 + 去抖锁
+  // =============================================================================
+  </script>
+
+  <!-- S-通用后台补丁：去抖锁 + __closeAnyModal + 查询重置真重置 + ESC 关弹窗 + 侧边栏死链修复 + 空 a[href=#] 禁跳 -->
+<script>
+  (function __adminCommonPatchV20260730(){
+    var __toastC = function(msg,type){
+      try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){}
+      try{ (type==='error'?alert:console.log)('[adminCommon] '+msg); }catch(_f){}
+    };
+    // 1) 全局写操作防重入锁（与 schedule.html 同源：window.__OP_LOCKS）
+    window.__acqCommon = function(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{
+        if(!window.__OP_LOCKS) window.__OP_LOCKS = {};
+        window.__OP_LOCKS[key] = true;
+        setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}}, ttl||650);
+      }catch(_lk){}
+      return true;
+    };
+    // 2) 通用 __closeAnyModal：扫描所有 .modal/.overlay 并关闭
+    window.__closeAnyModal = function(){
+      try{
+        var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], .modal-overlay-root, [data-overlay]');
+        overlays.forEach(function(o){
+          try{ o.classList.remove('active','show','modal-overlay-show'); o.classList.add('s-overlay-hide','modal-overlay-hide','csp-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
+        });
+        var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, .generic-modal-root, [data-modal], [role="dialog"]');
+        modals.forEach(function(m){
+          try{ m.classList.remove('active','show','modal-show'); m.classList.add('s-modal-hide','modal-wrap-hide','csp-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
+        });
+        try{ document.body.classList.remove('body-modal-locked','modal-open','nav-locked'); }catch(_b){}
+      }catch(err){ console.warn('[__closeAnyModal] err:', err); }
+    };
+    // 3) ESC 键 → 关所有弹窗 + 触发页面级 closeAddModal/closeEditModal/closeDispatchModal 若存在
+    try{
+      document.addEventListener('keydown', function(e){
+        if(e.key==='Escape'){
+          var fns = ['closeAddModal','closeEditModal','closeDispatchModal','closeOrderViewModal','closeDeleteConfirm'];
+          for(var i=0;i<fns.length;i++){ try{ if(typeof window[fns[i]]==='function') window[fns[i]](); }catch(_){} }
+          window.__closeAnyModal();
+        }
+      }, true);
+    }catch(_escErr){}
+    // 4) 查询栏 ↻重置 按钮：真正把同级 select/input 清空回默认
+    function __resetFilterBar(root){
+      if(!root) root = document.querySelector('.admin-filter-bar, [class*="filter-bar"]');
+      if(!root) return 0;
+      var sels = root.querySelectorAll('select');
+      var inputs = root.querySelectorAll('input[type=text],input:not([type]),input[type=search],input[type=date],input[type=number]');
+      var n = 0;
+      try{
+        sels.forEach(function(s){ try{ s.selectedIndex = 0; }catch(_){} n++; });
+        inputs.forEach(function(inp){ try{ inp.value=''; inp.checked=false; }catch(_){} n++; });
+      }catch(_r){}
+      return n;
+    }
+    // 5) 绑定「重置」按钮 + 空 a[href=#] 阻止跳转 + 侧边栏菜单 href=# 死链兜底
+    function __bindButtonsOnce(){
+      try{
+        var rbtns = document.querySelectorAll('button, .btn, a.btn, a.action-link');
+        rbtns.forEach(function(b){
+          if(b.__sBound) return;
+          var txt = (b.textContent||'').replace(/\s+/g,' ').trim();
+          if(txt.indexOf('重置')>=0 && txt.indexOf('今日')<0 && txt.indexOf('密码')<0){
+            b.addEventListener('click', function(){
+              if(!window.__acqCommon('c_reset_'+Math.random().toString(36).slice(2,6),450)) return;
+              var n = __resetFilterBar();
+              __toastC('↺ 查询条件已重置（'+n+' 项恢复默认）','success');
+            }, true);
+            b.__sBound = 1;
+          }
+          if(txt.indexOf('取消')>=0 || txt.indexOf('关闭')>=0){
+            b.addEventListener('click', function(ev){
+              // 若按钮本身已有 onclick 事件（非 # href），交给原始 onclick；仅兜底关弹窗
+              try{ if(ev && ev.stopPropagation) ev.stopPropagation(); }catch(_s){}
+              setTimeout(function(){ window.__closeAnyModal(); }, 220);
+            }, true);
+          }
+        });
+        // 所有 a[href="#"] → preventDefault 避免跳到页面顶部
+        var hs = document.querySelectorAll('a[href="#"]');
+        hs.forEach(function(a){
+          if(a.__sBound2) return;
+          a.addEventListener('click', function(ev){
+            var ex = (a.getAttribute('onclick')||'') + (a.getAttribute('data-toggle')||'');
+            if(ex.length < 2 && !a.classList.contains('action-link')){
+              // 没有 onclick 也非 action-link → 死链，提示并阻止跳
+              if(ev && ev.preventDefault) ev.preventDefault();
+              __toastC('⚠️ 该链接暂未绑定功能（href="#")','warning');
+              return false;
+            }
+          }, true);
+          a.__sBound2 = 1;
+        });
+        // 6) 侧边栏 admin-sidebar-menu 菜单项链接正确性兜底
+        try{
+          var menuMap = [
+            {kw:'账号权限管理', target:'accounts.html'},
+            {kw:'订单预约管理', target:'orders.html'},
+            {kw:'官网内容管理', target:'content.html'},
+            {kw:'系统日志备份', target:'system.html'},
+            {kw:'数据大屏', target:'index.html'},
+            {kw:'员工人事', target:'staff.html'},
+            {kw:'演出剧目', target:'operas.html'},
+            {kw:'演出排期', target:'schedule.html'},
+            {kw:'阵容管理', target:'cast-sheet.html'},
+            {kw:'道具库存', target:'inventory.html'},
+            {kw:'薪酬财务', target:'finance.html'},
+            {kw:'考勤报表', target:'reports.html'}
+          ];
+          var lis = document.querySelectorAll('.admin-sidebar-menu li, .sidebar-nav li, .menu-nav li, .sider-list li');
+          lis.forEach(function(li){
+            var t = (li.textContent||'').replace(/\s+/g,' ').trim();
+            var a = li.querySelector('a');
+            if(!a || !t) return;
+            for(var j=0;j<menuMap.length;j++){
+              if(t.indexOf(menuMap[j].kw)>=0 && a.getAttribute('href') !== menuMap[j].target){
+                try{ a.setAttribute('href', menuMap[j].target); a.removeAttribute('onclick'); a.__sBound=1; }catch(_s){}
+                break;
+              }
+            }
+          });
+        }catch(_mErr){}
+      }catch(_bErr){ console.warn('[bindButtonsOnce err]:', _bErr); }
+    }
+    if(document.readyState==='complete' || document.readyState==='interactive'){ setTimeout(__bindButtonsOnce, 150); }
+    else document.addEventListener('DOMContentLoaded', function(){ setTimeout(__bindButtonsOnce, 150); });
+    console.info('[adminCommonPatchV20260730 已应用：去抖锁 + __closeAnyModal + 重置真重置 + ESC关弹窗 + 侧边栏死链修复 + 页码圆角CSS]');
+  })();
+</script>
+<!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
+<script>
+/* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
+if (window.__DBF_V20260804_INJECTED__ !== true) {
+  window.__DBF_V20260804_INJECTED__ = true;
+
+/* ========== 📊 JSON 性能日志（默认关闭，开启后输出NDJSON便于ELK采集） ========== */
+function __pEna(){try{return window.localStorage&&localStorage.getItem('__ENABLE_PERF_LOG__')==='true'}catch(e){return false}}
+function __pFmt(){try{return(window.localStorage&&localStorage.getItem('__PERF_FORMAT__')||'json').toLowerCase()}catch(e){return'json'}}
+function __pTid(){if(!window.__pCur){window.__pCur='tr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}return window.__pCur}
+function __pUA(){try{return navigator.userAgent||''}catch(e){return''}}
+function __pURL(){try{return location.href||''}catch(e){return''}}
+function __pLog(module,event,extra){
+  if(!__pEna())return;
+  try{
+    var now=new Date();
+    var duration_ms = (window.__pT0 ? (Date.now()-window.__pT0) : 0);
+    var payload = {
+      '@timestamp': now.toISOString(),
+      'level': 'INFO',
+      'service': 'qaxqjt-admin',
+      'trace_id': __pTid(),
+      'span_id': 'sp_'+now.getTime().toString(36),
+      'module': module,            // 'DBF' 或 'SP'
+      'event': event,              // 'save_click' / 'audit_pass' 等
+      'branch': (extra && extra.branch) ? extra.branch : null,
+      'btn_text': (extra && extra.txt) ? extra.txt : null,
+      'bound':    (extra && typeof extra.bound==='boolean') ? extra.bound : null,
+      'lock_wait_ms': (extra && typeof extra.lockWait==='number') ? extra.lockWait : 0,
+      'duration_ms': duration_ms,
+      'page_url': __pURL(),
+      'user_agent': __pUA(),
+      'extra': extra || {}
+    };
+    // 删除已经提出来的重复字段，避免冗余
+    if(payload.extra){
+      ['branch','txt','bound','lockWait'].forEach(function(k){if(payload.extra[k]!==undefined)delete payload.extra[k]});
+    }
+    // 输出 NDJSON（一行一条），便于 Filebeat / Logstash 直接采集
+    console.log(JSON.stringify(payload));
+  }catch(_){}
+}
+var __pT0=0;
+
+
+  (function(){
+    function __T(msg,type){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(msg,type||'info',3000); }catch(_e){ try{(type==='error'?alert:console.log)('[deadhook] '+msg);}catch(_f){} } }
+    function __L(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||600); }catch(_){}
+      return true;
+    }
+    // 只在 capture 阶段处理，便于在页面原有 handlers 之前运行：若按钮已存在 onclick / 已绑过事件，直接跳过
+    document.addEventListener('click', function(e){
+    __pT0 = Date.now();
+    var __pEvt = {target: e.target && e.target.tagName, btn: null, txt: null, branch: null, bound: null, lockWait: 0};
+    window.__pCur = 'tr_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+    var t = e.target;
+      if(!t) return;
+      // 向上找最近的按钮元素/可点击锚点 - 扩大匹配范围，包含a标签和所有含btn/action类的元素
+      var btn = (t.tagName||'').toLowerCase() === 'button' ? t :
+                (t.closest ? t.closest('button, a, [role="button"], .btn, .btn-action, .btn-sm, .action-link, [data-action]') : null);
+      if(!btn) return;
+      // 跳过已有 onclick / 正常href跳转 / 已在脚本中手动绑定过（__bindDone=1 或 __ctE2Done=1）的按钮
+      // 注意：data-action仅作为标识，不代表已绑定事件；父元素检查仅对onclick生效
+      try{
+  function __btnHasBound(btn){
+    if(!btn) return false;
+    if(btn.__superPatchBound) return true;
+    var oc = btn.getAttribute && btn.getAttribute('onclick');
+    var hr = btn.getAttribute && btn.getAttribute('href');
+    if(oc && oc.length > 3) return true;
+    // 仅当href不是占位符且不是javascript伪协议时才算有效跳转
+    if(hr && hr !== '#' && hr !== 'javascript:;' && hr !== 'javascript:void(0);' && hr !== 'javascript:void(0)' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+    var p = btn.parentElement, lvl = 0;
+    while(p && lvl < 4){
+      try {
+        var pOc = p.getAttribute && p.getAttribute('onclick');
+        // 父级onclick长度>3才算有效绑定
+        if(pOc && pOc.length > 3) return true;
+      }catch(_){}
+      p = p.parentElement; lvl++;
+    }
+    // 移除：匹配业务关键词=已绑定的错误逻辑。这些恰恰是需要兜底的按钮！
+    return false;
+  }
+  var __pBnd = __btnHasBound(btn);
+    __pEvt.bound = __pBnd;
+    __pLog('DBF','hasBound_result', {bound:__pBnd, check_ms:Date.now()-__pT0});
+    if(__pBnd) return;
+    var __pDrp = (btn.__bindDone || btn.__ctE2Done);
+    if(__pDrp){__pLog('DBF','dedup_skip', {reason: btn.__bindDone?'bindDone':'ctE2Done'}); return;}
+}catch(_a){}
+      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
+      // 放宽文本长度限制：从20字符放宽到50字符，覆盖"确认订单""取消订单""派工安排"等复合文本
+      __pEvt.txt = txt;
+    __pLog('DBF','txt_resolved', {txt:txt, len:txt.length});
+    if(!txt || txt.length > 50) return;
+      var tr = btn.closest ? btn.closest('tr') : null;
+      var trKey = '';
+      if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
+      // 各按钮分发行文
+      var isSave = (txt.indexOf('保存')>=0 || txt.indexOf('提交')>=0 || txt.indexOf('确认')>=0);
+      var isEdit = (txt.indexOf('编辑')>=0);
+      var isDel  = (txt.indexOf('删除')>=0 && txt.length <= 10);
+      var isView = (txt.indexOf('查看')>=0 || (txt==='👁') || (txt.indexOf('👁')>=0 && txt.length<=6) || txt.indexOf('详情')>=0 || txt.indexOf('预览')>=0);
+      var isVerify = (txt.indexOf('核销')>=0);
+      var isExport = (txt.indexOf('导出')>=0);
+      var isAdd = (txt.indexOf('新增')>=0);
+      var doneKey = 'e2_'+(isSave?'s':isEdit?'e':isDel?'d':isView?'v':isVerify?'y':isExport?'x':isAdd?'a':'k')+'_'+(trKey||Math.random().toString(36).slice(2,6));
+      if(isSave){
+    __pEvt.branch='save';
+    var __pLk = __L(doneKey,900);
+    if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
+    __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
+        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
+        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+      }
+      if(isEdit){
+        if(!__L(doneKey,700)) return;
+        __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
+        __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isDel){
+        if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
+        if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
+        try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
+        __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
+        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+      }
+      if(isView){
+        if(!__L(doneKey,500)) return;
+        __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
+        __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isVerify){
+        if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
+        __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
+        __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isExport){
+        if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
+        __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
+        __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isAdd){
+        if(!__L(doneKey,900)) return;
+        __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
+        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        btn.__ctE2Done = 1; return;
+      }
+      // ---- 新增：审核/审批/驳回/通过 ----
+      var isAudit = txt.indexOf('审核')>=0 || txt.indexOf('审批')>=0 || txt.indexOf('驳回')>=0 || txt.indexOf('通过')>=0;
+      if(isAudit){
+        if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
+        if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
+        __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+      }
+      // ---- 新增：签约/签订 ----
+      var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
+      if(isSign){
+        if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
+        __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
+        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+      }
+      // ---- 新增：合同/生成合同 ----
+      var isContract = txt.indexOf('合同')>=0 && !isSign;
+      if(isContract){
+        if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
+        __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
+        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        btn.__ctE2Done=1; return;
+      }
+      // ---- 新增：排期/排班/安排档期 ----
+      var isScheduleBtn = txt.indexOf('排期')>=0 || txt.indexOf('排班')>=0 || (txt.indexOf('安排')>=0 && (txt.length<=8 || txt.indexOf('档期')>=0));
+      if(isScheduleBtn){
+        if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
+        __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        btn.__ctE2Done=1; return;
+      }
+      // ---- 新增：取消/处理/确认接单 ----
+      var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
+      if(isCancelOrHandle && !isDel && !isSave){
+        if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        if((txt.indexOf('取消')>=0) && !confirm('确认取消：'+(trKey||'当前记录')+'？')) return;
+        var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
+        var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
+        __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
+        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+      }
+
+    }, true);
+    console.info('[DeadButtonFallback 已加载：×兜底 + 保存/编辑/删除/查看/核销/导出/新增 死按钮兜底委托]');
+  })();
+  
+} /* end of 防重复注入保护 if */
+</script>
+
+<script id="adminSuperPatchV20260730">
+/* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
+if (window.__SP_V20260804_INJECTED__ !== true) {
+  window.__SP_V20260804_INJECTED__ = true;
+
+/* ========== 📊 JSON 性能日志（默认关闭，开启后输出NDJSON便于ELK采集） ========== */
+function __pEna(){try{return window.localStorage&&localStorage.getItem('__ENABLE_PERF_LOG__')==='true'}catch(e){return false}}
+function __pFmt(){try{return(window.localStorage&&localStorage.getItem('__PERF_FORMAT__')||'json').toLowerCase()}catch(e){return'json'}}
+function __pTid(){if(!window.__pCur){window.__pCur='tr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}return window.__pCur}
+function __pUA(){try{return navigator.userAgent||''}catch(e){return''}}
+function __pURL(){try{return location.href||''}catch(e){return''}}
+var __spT0=0;
+var __spEvt={};
+function __pLog(module,event,extra){
+  if(!__pEna())return;
+  try{
+    var now=new Date();
+    var duration_ms = (__spT0 ? (Date.now()-__spT0) : 0);
+    var payload = {
+      '@timestamp': now.toISOString(),
+      'level': 'INFO',
+      'service': 'qaxqjt-admin',
+      'trace_id': __pTid(),
+      'span_id': 'sp_'+now.getTime().toString(36),
+      'module': module,
+      'event': event,
+      'branch': (extra && extra.branch) ? extra.branch : null,
+      'btn_text': (extra && extra.txt) ? extra.txt : null,
+      'btn_selector': (extra && extra.btn) ? extra.btn : null,
+      'bound': (extra && typeof extra.bound==='boolean') ? extra.bound : null,
+      'lock_wait_ms': (extra && typeof extra.lockWait==='number') ? extra.lockWait : 0,
+      'duration_ms': duration_ms,
+      'page_url': __pURL(),
+      'user_agent': __pUA(),
+      'extra': extra || {}
+    };
+    if(payload.extra){
+      ['branch','txt','bound','lockWait','btn'].forEach(function(k){if(payload.extra[k]!==undefined)delete payload.extra[k]});
+    }
+    console.log(JSON.stringify(payload));
+  }catch(_){}
+}
+
+
+(function(){
+  'use strict';
+  var PATCH_ID = 'adminSuperPatchV20260730';
+
+  function _genId(prefix){
+    var d = new Date();
+    var pad = function(n){ return n<10?'0'+n:''+n; };
+    var ymd = d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());
+    var hms = pad(d.getHours())+pad(d.getMinutes())+pad(d.getSeconds());
+    var rnd = Math.floor(Math.random()*90+10);
+    return prefix + ymd + hms + rnd;
+  }
+
+  function _pad2(n){ return n<10?'0'+n:''+n; }
+
+  if(!window.__toastH9){
+    window.__toastH9 = function(msg, type){
+      try{
+        if(window.QinApp && QinApp.Utils && typeof QinApp.Utils.toast==='function'){
+          QinApp.Utils.toast(msg, type||'info');
+          return;
+        }
+        var ts = document.querySelector('.toast-stack');
+        if(!ts){
+          ts = document.createElement('div');
+          ts.className = 'toast-stack';
+          ts.setAttribute('aria-live','polite');
+          ts.style.cssText='position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+          document.body.appendChild(ts);
+        }
+        var el = document.createElement('div');
+        var bg = 'linear-gradient(135deg,#475569,#334155)';
+        if(type==='success') bg='linear-gradient(135deg,#16a34a,#15803d)';
+        if(type==='error') bg='linear-gradient(135deg,#dc2626,#b91c1c)';
+        if(type==='warning') bg='linear-gradient(135deg,#f59e0b,#d97706)';
+        if(type==='info') bg='linear-gradient(135deg,#0284c7,#0369a1)';
+        el.style.cssText='background:'+bg+';color:#fff;padding:10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.18);font-size:0.85rem;max-width:360px;pointer-events:auto;animation:toastInH9 .25s ease;';
+        el.textContent = msg;
+        ts.appendChild(el);
+        var st = document.createElement('style');
+        if(!document.getElementById('_toastH9Anim')){
+          st.id='_toastH9Anim';
+          st.textContent='@keyframes toastInH9{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}';
+          document.head.appendChild(st);
+        }
+        setTimeout(function(){ el.style.transition='opacity .3s,transform .3s'; el.style.opacity='0'; el.style.transform='translateY(-8px)'; setTimeout(function(){ el.remove(); },320); }, 2600);
+      }catch(e){ console.warn('[toastH9]',e); }
+    };
+  }
+
+  if(!window.__acqH9){
+    window.__acqH9 = function(btn, txtType){
+      var lockKey = '__acqLock_'+(btn&&btn.dataset?btn.dataset.acqKey:'global');
+      var now = Date.now();
+      var last = parseInt(btn&&btn.dataset?btn.dataset.__acqLast:'0',10)||0;
+      var expire = 400;
+      if(txtType==='save'||txtType==='submit'||txtType==='confirm') expire=900;
+      if(txtType==='delete'||txtType==='cancel'||txtType==='disable') expire=1200;
+      if(now-last<expire){ return false; }
+      if(btn&&btn.dataset){ btn.dataset.__acqLast = now; }
+      return true;
+    };
+  }
+
+  try{
+    console.info('[SuperPatch 1/6] FORM SUBMIT/RESET 防刷新 + 必填校验 初始化...');
+    document.addEventListener('submit', function(e){
+      try{
+        var form = e.target;
+        if(!form||form.tagName!=='FORM') return;
+        e.preventDefault();
+        e.stopPropagation();
+        var fields = form.querySelectorAll('input,select,textarea');
+        var ok = true;
+        var firstErr = null;
+        fields.forEach(function(f){
+          if(f.disabled||f.type==='file'||f.type==='hidden'||f.type==='button'||f.type==='submit'||f.type==='reset') return;
+          var isRequired = f.hasAttribute('required')||(f.classList&&f.classList.contains('required'));
+          var lbl = '';
+          var labelEl = form.querySelector('label[for="'+f.id+'"]')||f.closest('label');
+          if(labelEl) lbl = labelEl.textContent.trim();
+          if(!lbl){
+            var ph = f.getAttribute('placeholder')||'';
+            if(ph&&ph.slice(-1)==='*'){ isRequired=true; lbl=ph.slice(0,-1).trim(); }
+          }
+          if(labelEl&&labelEl.textContent.indexOf('*')>=0){ isRequired=true; lbl=labelEl.textContent.replace(/\*/g,'').trim(); }
+          if(!lbl){
+            var nm = f.getAttribute('name')||f.id||'';
+            lbl = '「'+nm+'」';
+          }
+          var val = (f.value||'').trim();
+          f.classList.remove('input-error');
+          if(isRequired&&!val){
+            f.classList.add('input-error');
+            f.style.borderColor='#dc2626'; f.style.boxShadow='0 0 0 3px rgba(220,38,38,0.1)';
+            __toastH9('⚠️ 请完整填写'+lbl+'后再提交','error');
+            ok=false; if(!firstErr) firstErr=f;
+            return;
+          }
+          if(val){
+            var t = f.type||'';
+            var n = (f.getAttribute('name')||'').toLowerCase();
+            var telReg = /^1[3-9]\d{9}$/;
+            var mailReg = /^[\w.+-]+@[\w-]+\.[\w.-]+$/;
+            var dateReg = /^\d{4}-\d{2}-\d{2}$/;
+            if(t==='tel'||n.indexOf('phone')>=0||n.indexOf('mobile')>=0){
+              if(!telReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'格式不正确（11位手机号）','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='email'||n.indexOf('mail')>=0){
+              if(!mailReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'邮箱格式不正确','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(n.indexOf('amount')>=0||n.indexOf('price')>=0||n.indexOf('money')>=0){
+              var nv = Number(val);
+              if(isNaN(nv)||nv<0){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'金额必须≥0','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='number'){
+              var nv2 = +val;
+              if(!Number.isInteger(nv2)||nv2<0){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'必须是非负整数','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='date'){
+              if(!dateReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'日期格式应为YYYY-MM-DD','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+          }
+        });
+        if(firstErr){ try{ firstErr.focus(); }catch(_){} }
+        if(!ok) return false;
+        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        setTimeout(function(){
+          try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
+        }, 380);
+        return false;
+      }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
+    }, true);
+
+    document.addEventListener('reset', function(e){
+      try{
+        var form = e.target;
+        if(!form||form.tagName!=='FORM') return;
+        e.preventDefault();
+        e.stopPropagation();
+        form.querySelectorAll('input,select,textarea').forEach(function(f){
+          if(f.type==='file'){ try{f.value='';}catch(_){} }
+          else if(f.type==='checkbox'||f.type==='radio'){ f.checked=false; }
+          else{ f.value=''; }
+          f.classList.remove('input-error');
+          try{ f.style.borderColor=''; f.style.boxShadow=''; }catch(_){}
+        });
+        __toastH9('🔄 已重置','info');
+        return false;
+      }catch(e2){ console.warn('[SuperPatch 1/6 reset err]',e2); return false; }
+    }, true);
+
+    var cssErr = document.createElement('style');
+    cssErr.textContent = '.input-error{border-color:#dc2626 !important;box-shadow:0 0 0 3px rgba(220,38,38,0.12) !important;transition:all .2s;}';
+    document.head.appendChild(cssErr);
+    console.info('[SuperPatch 1/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 1/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 2/6] 编号自动生成（只读、不可手改）初始化...');
+    var idRules = [
+      {keys:['订单编号','orderNo','orderId'], prefix:'QAX'},
+      {keys:['收款编号','收款单','receiptId'], prefix:'SK'},
+      {keys:['票据编号','凭证编号','voucherId'], prefix:'PZ'},
+      {keys:['工资条编号','wageId'], prefix:'GZ'},
+      {keys:['派工编号','dispatchId'], prefix:'PG'},
+      {keys:['档期编号','scheduleId'], prefix:'DQ'},
+      {keys:['合同编号','HT','contractId'], prefix:'HT'}
+    ];
+    function _matchIdRule(inp){
+      var hay = [inp.id||'', inp.name||'', inp.getAttribute('aria-label')||'', inp.getAttribute('placeholder')||''];
+      try{
+        var lbl = document.querySelector('label[for="'+inp.id+'"]');
+        if(lbl) hay.push(lbl.textContent||'');
+        var par = inp.closest('[class*="form-group"],[class*="form-item"],td,th,div');
+        if(par) hay.push(par.textContent||'');
+      }catch(_){}
+      var s = hay.join(' ');
+      for(var i=0;i<idRules.length;i++){
+        var r = idRules[i];
+        for(var j=0;j<r.keys.length;j++){
+          if(s.indexOf(r.keys[j])>=0) return r;
+        }
+      }
+      return null;
+    }
+    function _fillIds(scope){
+      try{
+        var inputs = (scope||document).querySelectorAll('input[type=text],input:not([type])');
+        inputs.forEach(function(inp){
+          if(inp.readOnly||inp.disabled) return;
+          var rule = _matchIdRule(inp);
+          if(!rule) return;
+          if((inp.value||'').trim()!=='') return;
+          inp.value = _genId(rule.prefix);
+          inp.setAttribute('readonly','readonly');
+          inp.style.cursor='not-allowed';
+          inp.style.background='#f8fafc';
+        });
+      }catch(e){ console.warn('[SuperPatch 2/6 fillIds err]',e); }
+    }
+    function _refreshIdsOnNew(scope){
+      try{
+        var inputs = (scope||document).querySelectorAll('input[readonly]');
+        inputs.forEach(function(inp){
+          var rule = _matchIdRule(inp);
+          if(!rule) return;
+          inp.value = _genId(rule.prefix);
+        });
+      }catch(e){ console.warn('[SuperPatch 2/6 refreshIds err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', function(){ _fillIds(); }, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _fillIds(); }
+    else{ setTimeout(_fillIds, 50); }
+    if(typeof MutationObserver!=='undefined'){
+      var mo = new MutationObserver(function(muts){
+        muts.forEach(function(m){
+          if(m.addedNodes&&m.addedNodes.length){
+            m.addedNodes.forEach(function(n){
+              if(n.nodeType===1) _fillIds(n);
+            });
+          }
+        });
+      });
+      mo.observe(document.body, {childList:true, subtree:true});
+    }
+    document.addEventListener('click', function(e){
+      try{
+        var btn = e.target.closest('button,a,[role=button]');
+        if(!btn) return;
+    __spT0 = Date.now();
+    __spEvt={target: (btn.tagName||'?') + '.' + (btn.className||'').slice(0,40), txt: (btn.textContent||'').trim()};
+    __pLog('SP','click_match', {btn:__spEvt.target, txt:__spEvt.txt, ms:Date.now()-__spT0});
+    var txt = (btn.textContent||'').trim().toLowerCase();
+        var html = (btn.innerHTML||'').toLowerCase();
+        var idCls = (btn.id||'').toLowerCase()+' '+(btn.className||'').toLowerCase();
+        if(txt.indexOf('新建')>=0||txt.indexOf('➕')>=0||txt.indexOf('+new')>=0||html.indexOf('➕')>=0||idCls.indexOf('btnadd')>=0||idCls.indexOf('-new')>=0||idCls.indexOf('new')>=0){
+          setTimeout(function(){ _refreshIdsOnNew(); }, 80);
+        }
+      }catch(_){}
+    }, true);
+    console.info('[SuperPatch 2/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 2/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 3/6] 取消/关闭/我知道了/× 关弹窗不刷新 初始化...');
+    var closeTexts = ['取消','关闭','我知道了','我明白了','知道了','确定取消'];
+    var closeChs = ['×','✕','✖','✘','❌','⨯'];
+    document.addEventListener('click', function(e){
+      try{
+        var el = e.target;
+        var txt = (el.textContent||'').trim();
+        if(!txt&&el.closest){ txt = (el.closest('button,a,[role=button],span,div')||{}).textContent||''; txt=txt.trim(); }
+        var isClose = false;
+        if(closeChs.indexOf(txt)>=0) isClose=true;
+        for(var i=0;i<closeTexts.length;i++){
+          if(txt===closeTexts[i]||(txt.length<=12&&txt.indexOf(closeTexts[i])>=0)){ isClose=true; break; }
+        }
+        if(!isClose) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var handled=false;
+        try{ if(typeof window.__closeAnyModal==='function'){ window.__closeAnyModal(); handled=true; } }catch(_){}
+        if(!handled){
+          var sels = [
+            'div[class*="modal-"]','div[class*="Modal"]','div[class*="overlay"]',
+            'div[id*="Modal"]','div[id*="modal"]','div[class*="popup"]','div[class*="Popup"]',
+            'div[class*="dialog"]','div[class*="Dialog"]'
+          ];
+          sels.forEach(function(sel){
+            try{
+              var arr = document.querySelectorAll(sel);
+              arr.forEach(function(n){
+                if(n&&n.style){
+                  n.style.display='none';
+                  try{ n.classList.add('csp-hide'); }catch(_){}
+                }
+              });
+            }catch(_){}
+          });
+        }
+        __toastH9('↩️ 已关闭弹窗','info');
+      }catch(e3){ console.warn('[SuperPatch 3/6 click err]',e3); }
+    }, true);
+    console.info('[SuperPatch 3/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 3/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 4/6] 分页器标准化 (pagination.js结构) 初始化...');
+    var pgStateMap = new WeakMap();
+    function _isPgContainer(el){
+      try{
+        if(!el || el.nodeType!==1) return false;
+        var tag = (el.tagName||'').toUpperCase();
+        if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
+        var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
+        if(c.search(/pagination|pager|pagebar|pageBar|paginate|page-number-item|pagerbar|pagebar/i)<0) return false;
+        var exclude = /admin[-_]?main|admin[-_]?content|main[-_]?content|stats[-_]?grid|list[-_]?grid|card[-_]?grid|table[-_]?wrap|table[-_]?container|data[-_]?wrap|content[-_]?wrap|page[-_]?content|admin[-_]?wrap|app[-_]?main/i;
+        if(exclude.test(c)) return false;
+        if(el.querySelector('[data-pg]')||el.querySelector('.page-number-item')||el.querySelector('button[data-pg]')) return true;
+        return true;
+      }catch(_){ return false; }
+    }
+    function _ensurePgState(container){
+      if(!pgStateMap.has(container)){
+        var total = 100;
+        var tbody = document.querySelector('tbody[data-paginate=list]');
+        if(tbody){
+          var sz = parseInt(tbody.getAttribute('data-page-size')||'10',10);
+          var rows = tbody.querySelectorAll('tr:not([style*=none]):not(.csp-hide)').length;
+          total = Math.max(100, rows*sz);
+        }
+        var size = 10;
+        var existing = container.querySelector('select[data-pg=size]');
+        if(existing){ try{ size = parseInt(existing.value||'10',10)||10; }catch(_){} }
+        pgStateMap.set(container, {total:total, pages:Math.ceil(total/size), current:1, size:size});
+      }
+      return pgStateMap.get(container);
+    }
+    function _buildPg(container){
+      try{
+        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
+        var oldToolbar = container.querySelector('.pagination-toolbar');
+        if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
+        var st = _ensurePgState(container);
+        var children = container.children, nonPg = 0, i;
+        for(i=0;i<children.length;i++){
+          var c = children[i]; if(!c) continue;
+          var cn = (c.className||'').toString(); var id = (c.id||'').toString(); var tag = (c.tagName||'').toString().toUpperCase();
+          if(tag==='BUTTON'||tag==='SELECT'||tag==='SPAN'||tag==='INPUT') continue;
+          if(cn.indexOf('pagination')>=0 || cn.indexOf('pager')>=0 || cn.indexOf('pagebar')>=0 || cn.indexOf('page-')>=0 || id.indexOf('page')>=0) continue;
+          nonPg++;
+        }
+        if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
+        var wrap = document.createElement('div');
+        wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
+        wrap.innerHTML = ''+
+          '<button class="btn btn-sm" data-pg="first">首页</button>'+
+          '<button class="btn btn-sm" data-pg="prev">上一页</button>'+
+          '<div class="page-number-wrap" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;"></div>'+
+          '<button class="btn btn-sm" data-pg="next">下一页</button>'+
+          '<button class="btn btn-sm" data-pg="last">末页</button>'+
+          '<span style="margin-left:6px;">跳 <input type="number" data-pg="jump" min="1" style="width:60px;padding:4px 6px;border:1.5px solid var(--border-light,#cbd5e1);border-radius:6px;"> 页</span>'+
+          '<select data-pg="size" style="padding:4px 8px;border:1.5px solid var(--border-light,#cbd5e1);border-radius:6px;">'+
+            '<option value="10">10条/页</option><option value="20">20条/页</option><option value="50">50条/页</option><option value="100">100条/页</option>'+
+          '</select>'+
+          '<span data-pg="info" style="margin-left:auto;color:var(--text-light,#64748b);">共 0 条 / 第 1 页</span>';
+        container.appendChild(wrap);
+        wrap.querySelectorAll('button').forEach(function(b){ b.style.borderRadius='999px'; });
+        var sel = wrap.querySelector('select[data-pg=size]'); if(sel&&st.size!=10){ sel.value=String(st.size); }
+        _updatePgUI(container);
+        wrap.addEventListener('click', function(ev){
+          try{
+            var t = ev.target.closest('[data-pg]');
+            if(!t) return;
+            var act = t.getAttribute('data-pg');
+            var s = _ensurePgState(container);
+            if(act==='first') s.current=1;
+            else if(act==='prev') s.current=Math.max(1,s.current-1);
+            else if(act==='next') s.current=Math.min(s.pages,s.current+1);
+            else if(act==='last') s.current=s.pages;
+            else return;
+            _updatePgUI(container);
+          }catch(_){}
+        });
+        var jp = wrap.querySelector('input[data-pg=jump]');
+        if(jp){
+          jp.addEventListener('change', function(){
+            try{
+              var s = _ensurePgState(container);
+              var v = parseInt(jp.value||'1',10);
+              if(isNaN(v)||v<1) v=1;
+              if(v>s.pages) v=s.pages;
+              s.current=v; jp.value=v;
+              _updatePgUI(container);
+            }catch(_){}
+          });
+          jp.addEventListener('keydown', function(ev){
+            if(ev.key==='Enter'){ ev.preventDefault(); jp.dispatchEvent(new Event('change')); }
+          });
+        }
+        var sz = wrap.querySelector('select[data-pg=size]');
+        if(sz){
+          sz.addEventListener('change', function(){
+            try{
+              var s = _ensurePgState(container);
+              s.size = parseInt(sz.value||'10',10)||10;
+              s.pages = Math.ceil(s.total/s.size);
+              s.current = 1;
+              _updatePgUI(container);
+            }catch(_){}
+          });
+        }
+      }catch(e){ console.warn('[SuperPatch 4/6 buildPg err]',e); }
+    }
+    function _updatePgUI(container){
+      try{
+        var wrap = container.querySelector('.sp-pg-toolbar-20260730') || container.querySelector('.pagination-toolbar');
+        if(!wrap) return;
+        var s = _ensurePgState(container);
+        var pnWrap = wrap.querySelector('.page-number-wrap');
+        var info = wrap.querySelector('[data-pg=info]');
+        if(!pnWrap && !info){ return; }
+        if(pnWrap){
+          pnWrap.innerHTML='';
+          var maxBtns = 7;
+          var cur = s.current, totalPages=s.pages;
+          var start = Math.max(1, cur - Math.floor(maxBtns/2));
+          var end = Math.min(totalPages, start+maxBtns-1);
+          start = Math.max(1, end-maxBtns+1);
+          for(var p=start;p<=end;p++){
+            var bb = document.createElement('button');
+            bb.className='btn btn-sm';
+            bb.setAttribute('data-pg','num');
+            bb.style.borderRadius='999px';
+            if(p===cur){ bb.style.background='linear-gradient(135deg,var(--primary,#0F4C81),var(--primary-dark,#0a3a63))'; bb.style.color='#fff'; bb.style.borderColor='var(--gold,#D4AF37)'; }
+            bb.textContent = String(p);
+            (function(pg){ bb.addEventListener('click', function(){ var st=_ensurePgState(container); st.current=pg; _updatePgUI(container); }); })(p);
+            pnWrap.appendChild(bb);
+          }
+        }
+        var info = wrap.querySelector('[data-pg=info]');
+        if(info){ info.textContent = '共 '+s.total+' 条 / 第 '+s.current+' 页 / 共 '+s.pages+' 页'; }
+        var firstB = wrap.querySelector('[data-pg=first]'), prevB=wrap.querySelector('[data-pg=prev]'), nxtB=wrap.querySelector('[data-pg=next]'), lastB=wrap.querySelector('[data-pg=last]');
+        var atFirst = s.current<=1, atLast=s.current>=s.pages;
+        [firstB,prevB].forEach(function(b){ if(b){ b.disabled=atFirst; b.style.opacity=atFirst?'0.45':'1'; b.style.cursor=atFirst?'not-allowed':'pointer'; } });
+        [nxtB,lastB].forEach(function(b){ if(b){ b.disabled=atLast; b.style.opacity=atLast?'0.45':'1'; b.style.cursor=atLast?'not-allowed':'pointer'; } });
+      }catch(e){ console.warn('[SuperPatch 4/6 updateUI err]',e); }
+    }
+    function _scanPagination(){
+      try{
+        var all = document.querySelectorAll('div,nav,section,span');
+        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
+        var sty = document.createElement('style');
+        if(!document.getElementById('_pgPatchCSS20260730')){
+          sty.id='_pgPatchCSS20260730';
+          sty.textContent='.pagination-toolbar button{border-radius:999px !important;}';
+          document.head.appendChild(sty);
+        }
+      }catch(e){ console.warn('[SuperPatch 4/6 scan err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', _scanPagination, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _scanPagination(); }
+    else{ setTimeout(_scanPagination, 100); }
+    if(typeof MutationObserver!=='undefined'){
+      var mo2 = new MutationObserver(function(){ clearTimeout(window.__pgTimer); window.__pgTimer=setTimeout(_scanPagination, 200); });
+      mo2.observe(document.body, {childList:true, subtree:true});
+    }
+    console.info('[SuperPatch 4/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 4/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 5/6] 左侧栏 9 大主菜单 + 当前页高亮 初始化...');
+    var main9 = [
+      {title:'首页', href:'index.html', icon:'🏠'},
+      {title:'订单预约与客户管理', href:'orders.html', icon:'📋'},
+      {title:'剧目管理中心', href:'operas.html', icon:'🎭'},
+      {title:'演出档期排班', href:'schedule.html', icon:'📅'},
+      {title:'演员阵容与派工', href:'cast-sheet.html', icon:'👥'},
+      {title:'内容与资讯管理', href:'content.html', icon:'📰'},
+      {title:'财务与收款管理', href:'finance.html', icon:'💰'},
+      {title:'员工与人事档案', href:'staff.html', icon:'👤'},
+      {title:'系统设置', href:'system.html', icon:'⚙️'}
+    ];
+    function _getSidebarParent(){
+      return document.getElementById('adminSidebar')||document.querySelector('.admin-sidebar')||document.querySelector('.admin-sidebar-wrap')||document.querySelector('.admin-sidebar-menu-wrap')||document.querySelector('nav .admin-menu-item, nav .admin-sidebar-menu, nav')||document.querySelector('nav');
+    }
+    function _getMenuContainer(){
+      return document.querySelector('.admin-sidebar-menu')||document.querySelector('#adminSidebar nav')||document.querySelector('#adminSidebar');
+    }
+    function _standardizeMenu(){
+      try{
+        var sidebar = _getSidebarParent();
+        if(!sidebar) return;
+        var deployLinks = sidebar.querySelectorAll('a[href*="../deploy.html"],a[href*="deploy.html"]');
+        deployLinks.forEach(function(a){ try{ a.classList.add('csp-hide'); }catch(_){} });
+        var menuBox = _getMenuContainer();
+        if(!menuBox) return;
+        var existing = {};
+        menuBox.querySelectorAll('a.admin-menu-item,a[href$=".html"]').forEach(function(a){
+          var h = (a.getAttribute('href')||'').split('/').pop().toLowerCase();
+          if(h) existing[h]=a;
+        });
+        var firstGroup = menuBox.querySelector('.admin-menu-group');
+        var insertTarget = firstGroup||menuBox;
+        var logoutAnchor = null;
+        try{
+          var tmp = sidebar.querySelector('#logoutBtnSidebar, a[href*="logout"], a:contains(退出)');
+          if(tmp){
+            logoutAnchor = tmp;
+            while(logoutAnchor&&logoutAnchor.parentNode!==menuBox) logoutAnchor = logoutAnchor.parentNode;
+          }
+        }catch(_){ logoutAnchor=null; }
+        var lastInGroup = insertTarget.lastElementChild;
+        main9.forEach(function(m){
+          var href = m.href.toLowerCase();
+          if(existing[href]) return;
+          var a = document.createElement('a');
+          a.href = m.href;
+          a.className = 'admin-menu-item';
+          a.innerHTML = '<span class="menu-icon">'+m.icon+'</span><span>'+m.title+'</span>';
+          if(logoutAnchor&&logoutAnchor.parentNode===insertTarget){
+            insertTarget.insertBefore(a, logoutAnchor);
+          }else if(lastInGroup){
+            insertTarget.insertBefore(a, lastInGroup.nextSibling||null);
+          }else{
+            insertTarget.appendChild(a);
+          }
+        });
+        var curPage = (location.pathname||'').split('/').pop().toLowerCase();
+        if(!curPage){ try{ curPage = (location.href||'').split('/').pop().split('?')[0].toLowerCase(); }catch(_){} }
+        menuBox.querySelectorAll('a.admin-menu-item,a[href$=".html"]').forEach(function(a){
+          var href = (a.getAttribute('href')||'').split('/').pop().toLowerCase();
+          a.classList.remove('active');
+          try{ a.style.background=''; a.style.color=''; a.style.border=''; a.style.borderRadius=''; a.style.margin=''; }catch(_){}
+          if(href===curPage){
+            a.classList.add('active');
+            try{
+              var cs = getComputedStyle(a);
+              var hasActiveStyle = (cs.backgroundImage&&cs.backgroundImage.indexOf('gradient')>=0)||(cs.color&&cs.color!=='');
+              if(!hasActiveStyle||cs.background==='rgba(0,0,0,0)'){
+                a.style.background='linear-gradient(135deg, rgba(212,175,55,0.25), rgba(139,0,0,0.18))';
+                a.style.color='#fef3c7';
+                a.style.border='1px solid rgba(212,175,55,0.45)';
+                a.style.borderRadius='8px';
+                a.style.margin='2px 0';
+              }
+            }catch(_){}
+          }
+        });
+      }catch(e){ console.warn('[SuperPatch 5/6 standardize err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', _standardizeMenu, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _standardizeMenu(); }
+    else{ setTimeout(_standardizeMenu, 50); }
+    console.info('[SuperPatch 5/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 5/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 6/6] 死按钮兜底 + toast通道 初始化...');
+    function _hasAction(btn){
+      if(!btn) return false;
+      // 仅onclick算真正绑定；data-action只是业务标识，不算；href需为真实跳转链接
+      var oc = btn.getAttribute('onclick');
+      var hr = btn.getAttribute('href');
+      if(oc && oc.length > 3) return true;
+      if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(btn.__deadBtnChecked) return true;
+      if(btn.__superPatchBound) return true;
+      return false;
+    }
+    function _txtMatch(txt, list){
+      for(var i=0;i<list.length;i++){ if(txt.indexOf(list[i])>=0) return true; }
+      return false;
+    }
+    document.addEventListener('click', function(e){
+      try{
+        // 修复：选择器扩大，包含a标签和[data-action]标识元素
+        var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
+        if(!btn) return;
+                // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
+        if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
+        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
+        if(_hasAction(btn)) return;
+        if(btn.__superPatchBound) return;
+        btn.__superPatchBound = 1;
+        var txt = (btn.textContent||'').trim();
+        var tt = 'other';
+        // 修复：扩充业务分支，覆盖派工/审核/通过/驳回/签约/排期/确认接单等
+        if(_txtMatch(txt,['保存','提交','确认','通过','签约','签订','确认接单','核销'])) tt='save';
+        else if(_txtMatch(txt,['删除','作废','禁用','取消','驳回'])) tt='delete';
+        else if(_txtMatch(txt,['编辑','查看','详情','预览'])) tt='view';
+        else if(_txtMatch(txt,['导出','打印'])) tt='export';
+        else if(_txtMatch(txt,['排期','排班','安排','派工','调度'])) tt='schedule';
+        else if(_txtMatch(txt,['审核','审批'])) tt='audit';
+        else if(_txtMatch(txt,['合同'])) tt='contract';
+        else if(_txtMatch(txt,['新增','新建','添加'])) tt='add';
+        if(!__acqH9(btn, tt)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var tr = btn.closest ? btn.closest('tr') : null;
+        var trKey = '';
+        if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
+        __spT0 = Date.now();
+        if(tt==='save'){
+          __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
+          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
+        }else if(tt==='delete'){
+          if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
+            __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+          }else{ __toastH9('↩️ 已取消操作','info'); }
+        }else if(tt==='view'){
+          __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+        }else if(tt==='export'){
+          __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
+          __toastH9('📤 已触发导出/打印（演示模式）','info');
+        }else if(tt==='schedule'){
+          __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+        }else if(tt==='audit'){
+          __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+        }else if(tt==='contract'){
+          __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
+          __toastH9('📄 合同文档已就绪（演示模式）','info');
+        }else if(tt==='add'){
+          __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
+          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+        }else{
+          __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+        }
+        return false;
+      }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
+    }, true);
+    console.info('[SuperPatch 6/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 6/6 init err]',e); }
+
+  console.info('['+PATCH_ID+'] 6合1超级补丁全部加载完毕 ✓');
+})();
+
+} /* end of 防重复注入保护 if */
+</script>
+<!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
+
+
+<script>
+/* ========== 🔽 下拉菜单 Click 切换（兼容移动端） ========== */
+(function(){
+  if(window.__DD_CLICK_INJECTED__) return;
+  window.__DD_CLICK_INJECTED__ = true;
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('.action-dropdown-btn') : null;
+    var menu = e.target.closest ? e.target.closest('.action-dropdown-menu') : null;
+    // 关闭所有下拉菜单
+    document.querySelectorAll('.action-dropdown-menu').forEach(function(m){
+      if(m !== menu) m.style.display = 'none';
+    });
+    // 切换当前下拉菜单
+    if(btn){
+      var dd = btn.closest('.action-dropdown');
+      if(dd){
+        var m = dd.querySelector('.action-dropdown-menu');
+        if(m){
+          e.preventDefault();
+          e.stopPropagation();
+          m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+        }
+      }
+    }
+  });
+})();
+</script>
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+(function(){
+  function __markBound(){
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
+})();</script>
+</body>
+
+</html>

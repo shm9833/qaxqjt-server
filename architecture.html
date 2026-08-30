@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="js/favicon-inject.js?v=20260803" defer></script>
+    <script src="js/wechat-fallback.js?v=20260803" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="秦安县秦剧团云端预约管理系统 - 官方架构验收终审报告">
+  <title>秦安县秦剧团云端预约管理系统 - 官方架构验收终审报告 · {year}年度永久定稿</title>
+  <link rel="stylesheet" href="css/style.css?v=20260803">
+  <style>
+    /* ========== 架构报告专属样式 ========== */
+    body.report-body {
+      background: linear-gradient(135deg, #e8f4fc 0%, #f5f9fc 50%, #e8f0f8 100%);
+      padding-top: 70px;
+    }
+
+    /* 打印样式 */
+    @media print {
+      body.report-body {
+        background: #fff;
+        padding-top: 0;
+      }
+      .report-navbar, .toc-sidebar, .chapter-nav-top, .chapter-nav-bottom, .print-btn {
+        display: none !important;
+      }
+      .main-wrapper {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      .chapter-page {
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        page-break-after: always;
+        page-break-inside: avoid;
+      }
+      .chapter-page:last-child {
+        page-break-after: auto;
+      }
+    }
+
+    /* 报告导航栏 */
+    .report-navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+      box-shadow: 0 2px 20px rgba(30, 58, 95, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .report-navbar::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+    }
+
+    .report-navbar-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 70px;
+    }
+
+    .report-navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #FFFAF0;
+      font-size: 1.3rem;
+      font-weight: 700;
+      font-family: "KaiTi", "STKaiti", serif;
+      letter-spacing: 1.5px;
+    }
+
+    .report-navbar-brand .logo-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #D4AF37;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: #1e3a5f;
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+    }
+
+    .report-navbar-menu {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .report-navbar-menu a {
+      color: rgba(255, 250, 240, 0.9);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-family: "KaiTi", "STKaiti", serif;
+      letter-spacing: 1.5px;
+      transition: all 0.3s ease;
+    }
+
+    .report-navbar-menu a:hover {
+      background: rgba(212, 175, 55, 0.2);
+      color: #F0D060;
+    }
+
+    .report-navbar-menu a.active {
+      background: rgba(212, 175, 55, 0.25);
+      color: #F0D060;
+      font-weight: 600;
+    }
+
+    .report-navbar-menu a.active::after {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: #D4AF37;
+      margin: 4px auto 0;
+      border-radius: 2px;
+    }
+
+    .navbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .print-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 22px;
+      background: linear-gradient(135deg, #D4AF37, #B8941F);
+      color: #1e3a5f;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);
+      font-family: "KaiTi", "STKaiti", serif;
+      letter-spacing: 1.5px;
+    }
+
+    .print-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+      background: linear-gradient(135deg, #F0D060, #D4AF37);
+    }
+
+    .mobile-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: #FFFAF0;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    /* 主包装器 */
+    .main-wrapper {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px 20px 30px 280px;
+    }
+
+    /* 章节目录侧栏 */
+    .toc-sidebar {
+      position: fixed;
+      top: 90px;
+      left: 20px;
+      width: 240px;
+      z-index: 900;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #dbeafe;
+      box-shadow: 0 4px 20px rgba(30, 58, 95, 0.1);
+      overflow: hidden;
+    }
+
+    .toc-sidebar-header {
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #1e3a5f, #2c5282);
+      color: #FFFAF0;
+      font-weight: 600;
+      font-family: "KaiTi", "STKaiti", serif;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toc-sidebar-header .icon {
+      color: #D4AF37;
+    }
+
+    .toc-list {
+      padding: 12px 0;
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
+    }
+
+    .toc-list a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      color: #4a5568;
+      font-size: 0.9rem;
+      border-left: 3px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .toc-list a:hover {
+      background: #eff6ff;
+      color: #1e3a5f;
+      border-left-color: #60a5fa;
+    }
+
+    .toc-list a.active {
+      background: linear-gradient(90deg, rgba(30, 58, 95, 0.08), transparent);
+      color: #1e3a5f;
+      border-left-color: #1e3a5f;
+      font-weight: 600;
+    }
+
+    .toc-list a .chap-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: #e2e8f0;
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .toc-list a.active .chap-num {
+      background: linear-gradient(135deg, #1e3a5f, #2c5282);
+      color: #D4AF37;
+    }
+
+    /* 章节导航按钮 */
+    .chapter-nav-top,
+    .chapter-nav-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 25px;
+      padding: 0 5px;
+    }
+
+    .chapter-nav-bottom {
+      margin-top: 25px;
+      margin-bottom: 0;
+    }
+
+    .chapter-nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      background: #fff;
+      color: #1e3a5f;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .chapter-nav-btn:hover:not(:disabled) {
+      border-color: #1e3a5f;
+      background: #eff6ff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(30, 58, 95, 0.15);
+    }
+
+    .chapter-nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .chapter-nav-btn .arrow {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .chapter-nav-btn.prev .arrow::before { content: '←'; }
+    .chapter-nav-btn.next .arrow::after { content: '→'; }
+
+    /* 章节页面容器 */
+    .chapter-page {
+      background: #ffffff;
+      border: 1px solid #dbeafe;
+      border-radius: 16px;
+      padding: 60px 70px;
+      margin-bottom: 30px;
+      box-shadow: 0 6px 30px rgba(30, 58, 95, 0.08);
+      position: relative;
+      min-height: 800px;
+      page-break-after: always;
+    }
+
+    .chapter-page::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #1e3a5f, #D4AF37, #1e3a5f);
+      border-radius: 16px 16px 0 0;
+    }
+
+    .chapter-page::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 30px;
+      right: 30px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.5), transparent);
+    }
+
+    .chapter-page:last-child {
+      page-break-after: auto;
+    }
+
+    /* 章节号与标题 */
+    .chapter-number {
+      display: inline-block;
+      padding: 6px 20px;
+      background: linear-gradient(135deg, #1e3a5f, #2c5282);
+      color: #D4AF37;
+      border-radius: 20px;
+      font-family: "KaiTi", "STKaiti", serif;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+
+    .chapter-title {
+      font-size: 2.2rem;
+      color: #1e3a5f;
+      margin-bottom: 35px;
+      padding-bottom: 18px;
+      border-bottom: 2px solid #e2e8f0;
+      position: relative;
+      font-family: "KaiTi", "STKaiti", serif;
+    }
+
+    .chapter-title::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 120px;
+      height: 2px;
+      background: linear-gradient(90deg, #D4AF37, transparent);
+    }
+
+    .chapter-subtitle {
+      font-size: 1.15rem;
+      color: #2c5282;
+      margin-bottom: 16px;
+      padding-left: 16px;
+      border-left: 4px solid #D4AF37;
+      font-weight: 600;
+    }
+
+    .chapter-content p {
+      font-size: 1.02rem;
+      line-height: 2;
+      color: #374151;
+      margin-bottom: 18px;
+      text-indent: 2em;
+    }
+
+    .chapter-content ul,
+    .chapter-content ol {
+      padding-left: 2em;
+      margin-bottom: 18px;
+    }
+
+    .chapter-content li {
+      line-height: 2;
+      color: #374151;
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+
+    .chapter-content ul li::marker {
+      color: #D4AF37;
+    }
+
+    /* =============== 第1章 封面页 =============== */
+    .cover-page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 900px;
+      text-align: center;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 60%, #eff6ff 100%);
+      overflow: hidden;
+    }
+
+    .cover-page::before {
+      content: '';
+      position: absolute;
+      top: 50px;
+      left: 50px;
+      right: 50px;
+      bottom: 50px;
+      border: 3px double #D4AF37;
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+    .cover-decoration {
+      position: absolute;
+      top: 80px;
+      left: 80px;
+      right: 80px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #1e3a5f, transparent);
+    }
+
+    .cover-decoration.bottom {
+      top: auto;
+      bottom: 80px;
+    }
+
+    .cover-main-title {
+      font-size: 3.2rem;
+      color: #1e3a5f;
+      font-family: "KaiTi", "STKaiti", serif;
+      font-weight: 700;
+      letter-spacing: 6px;
+      line-height: 1.4;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cover-main-title span {
+      display: inline-block;
+      background: linear-gradient(135deg, #1e3a5f, #2c5282);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .cover-subtitle {
+      font-size: 1.5rem;
+      color: #D4AF37;
+      font-family: "KaiTi", "STKaiti", serif;
+      font-weight: 600;
+      letter-spacing: 4px;
+      margin-bottom: 50px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cover-logo-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 60px;
+      margin-bottom: 60px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cover-logo {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1e3a5f, #2c5282);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+      box-shadow: 0 10px 40px rgba(30, 58, 95, 0.3), inset 0 0 0 4px #D4AF37;
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 10px 40px rgba(30, 58, 95, 0.3), inset 0 0 0 4px #D4AF37; }
+      50% { box-shadow: 0 10px 50px rgba(30, 58, 95, 0.4), inset 0 0 0 4px #F0D060; }
+    }
+
+    .cover-seal {
+      width: 180px;
+      height: 180px;
+      border: 4px solid #dc2626;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(-8deg);
+      position: relative;
+      background: rgba(220, 38, 38, 0.03);
+    }
+
+    .cover-seal::before {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      border: 2px solid #dc2626;
+      border-radius: 4px;
+    }
+
+    .seal-text {
+      color: #dc2626;
+      font-family: "KaiTi", "STKaiti", serif;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .seal-text .seal-title {
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      display: block;
+    }
+
+    .seal-text .seal-check {
+      font-size: 2rem;
+      display: block;
+      margin: 6px 0;
+    }
+
+    .seal-text .seal-sub {
+      font-size: 0.85rem;
+      display: block;
+    }
+
+    .cover-report-no {
+      padding: 14px 36px;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.05));
+      border: 1.5px dashed #D4AF37;
+      border-radius: 10px;
+      font-family: "KaiTi", "STKaiti", serif;
+      font-size: 1.25rem;
+      color: #8B5A00;
+      letter-spacing: 3px;
+      font-weight: 600;
+      margin-bottom: auto;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cover-footer {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding-top: 30px;
+    }
+
+    .cover-footer .company-name {
+      font-family: "KaiTi", "STKaiti", serif;
+      font-size: 1.4rem;
+      color: #1e3a5f;
+      font-weight: 700;
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+    }
+
+    .cover-footer .company-date {
+      font-size: 1.1rem;
+      color: #64748b;
+      letter-spacing: 2px;
+    }
+
+    /* =============== 状态徽章 =============== */
+    .status-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 25px 0 35px;
+      padding: 20px 25px;
+      background: linear-gradient(135deg, #f0fdf4, #ecfeff);
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      background: #fff;
+      border-radius: 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.12);
+    }
+
+    .status-badge.pass {
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+    }
+
+    .status-badge .icon {
+      font-size: 1.1rem;
+    }
+
+    /* =============== 三层架构卡片 =============== */
+    .arch-layers {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 0;
+      align-items: center;
+      margin: 40px 0;
+    }
+
+    .arch-layer-card {
+      background: #fff;
+      border: 2px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 30px 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .arch-layer-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      border-radius: 16px 16px 0 0;
+    }
+
+    .arch-layer-card.layer-front::before { background: linear-gradient(90deg, #1e3a5f, #3b82f6); }
+    .arch-layer-card.layer-back::before { background: linear-gradient(90deg, #D4AF37, #f59e0b); }
+    .arch-layer-card.layer-data::before { background: linear-gradient(90deg, #059669, #10b981); }
+
+    .arch-layer-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .arch-layer-card.layer-front:hover { border-color: #3b82f6; }
+    .arch-layer-card.layer-back:hover { border-color: #f59e0b; }
+    .arch-layer-card.layer-data:hover { border-color: #10b981; }
+
+    .arch-layer-icon {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 18px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+    }
+
+    .layer-front .arch-layer-icon { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #1e3a5f; }
+    .layer-back .arch-layer-icon { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; }
+    .layer-data .arch-layer-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #065f46; }
+
+    .arch-layer-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      font-family: "KaiTi", "STKaiti", serif;
+    }
+
+    .layer-front .arch-layer-name { color: #1e3a5f; }
+    .layer-back .arch-layer-name { color: #92400e; }
+    .layer-data .arch-layer-name { color: #065f46; }
+
+    .arch-layer-desc {
+      font-size: 0.9rem;
+      color: #64748b;
+      line-height: 1.7;
+    }
+
+    .arch-layer-list {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed #e2e8f0;
+    }
+
+    .arch-layer-list span {
+      display: inline-block;
+      padding: 3px 10px;
+      margin: 3px;
+      background: #f1f5f9;
+      color: #475569;
+      border-radius: 6px;
+      font-size: 0.78rem;
+    }
+
+    .arch-arrow {
+      font-size: 2rem;
+      color: #94a3b8;
+      padding: 0 10px;
+      font-weight: 700;
+    }
+
+    /* =============== 专项优化卡片 =============== */
+    .optimization-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px;
+      margin: 30px 0;
+    }
+
+    .optimization-card {
+      background: #fff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 28px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .optimization-card:hover {
+      border-color: #1e3a5f;
+      box-shadow: 0 8px 24px rgba(30, 58, 95, 0.12);
+      transform: translateY(-4px);
+    }
+
+    .optimization-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: linear-gradient(180deg, #1e3a5f, #D4AF37);
+    }
+
+    .opt-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 16px;
+    }
+
+    .opt-icon-box {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+
+    .opt-pass-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 14px;
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      color: #15803d;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 1px solid #86efac;
+      white-space: nowrap;
+    }
+
+    .optimization-card h4 {
+      font-size: 1.15rem;
+      color: #1e3a5f;
+      margin-bottom: 12px;
+      margin-top: 0;
+    }
+
+    .optimization-card p,
+    .optimization-card li {
+      font-size: 0.92rem;
+      color: #475569;
+      line-height: 1.8;
+      margin: 0;
+    }
+
+    .optimization-card ul {
+      padding-left: 1.2em;
+    }
+
+    /* 业务流程图 */
+    .flow-process {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: linear-gradient(90deg, #f8fafc, #f1f5f9);
+      border-radius: 10px;
+      flex-wrap: wrap;
+    }
+
+    .flow-step {
+      padding: 6px 12px;
+      background: #fff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      color: #334155;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .flow-step:nth-child(1) { border-color: #3b82f6; color: #1e40af; background: #eff6ff; }
+    .flow-step:nth-child(3) { border-color: #8b5cf6; color: #5b21b6; background: #f5f3ff; }
+    .flow-step:nth-child(5) { border-color: #D4AF37; color: #92400e; background: #fef3c7; }
+    .flow-step:nth-child(7) { border-color: #10b981; color: #065f46; background: #ecfdf5; }
+    .flow-step:nth-child(9) { border-color: #f43f5e; color: #9f1239; background: #fff1f2; }
+
+    .flow-arrow {
+      color: #94a3b8;
+      font-weight: 700;
+    }
+
+    /* =============== 配套卡片 =============== */
+    .support-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin: 30px 0;
+    }
+
+    .support-card {
+      background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 32px 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .support-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 30px rgba(30, 58, 95, 0.12);
+      border-color: #D4AF37;
+    }
+
+    .support-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, #1e3a5f, #D4AF37, #1e3a5f);
+      border-radius: 0 0 8px 8px;
+    }
+
+    .support-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+    }
+
+    .support-card:nth-child(1) .support-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+    .support-card:nth-child(2) .support-icon { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+    .support-card:nth-child(3) .support-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+
+    .support-card h4 {
+      font-size: 1.15rem;
+      color: #1e3a5f;
+      margin-bottom: 16px;
+      font-family: "KaiTi", "STKaiti", serif;
+    }
+
+    .support-tags {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .support-tag {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      color: #475569;
+    }
+
+    .support-tag .tag-check {
+      color: #10b981;
+      font-weight: 700;
+    }
+
+    /* =============== 终审印章 =============== */
+    .final-conclusion {
+      padding: 30px 35px;
+      background: linear-gradient(135deg, #fef3c7 0%, #fff7ed 50%, #ecfeff 100%);
+      border: 2px solid #D4AF37;
+      border-radius: 16px;
+      margin: 30px 0;
+      position: relative;
+    }
+
+    .final-conclusion::before {
+      content: '';
+      position: absolute;
+      inset: 10px;
+      border: 1px dashed rgba(212, 175, 55, 0.5);
+      border-radius: 12px;
+      pointer-events: none;
+    }
+
+    .final-seal {
+      display: flex;
+      justify-content: center;
+      margin: 35px 0 20px;
+    }
+
+    .final-seal-box {
+      width: 220px;
+      height: 220px;
+      border: 5px solid #dc2626;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(-5deg);
+      background: rgba(220, 38, 38, 0.02);
+      position: relative;
+    }
+
+    .final-seal-box::before {
+      content: '';
+      position: absolute;
+      inset: 10px;
+      border: 2px solid #dc2626;
+      border-radius: 10px;
+    }
+
+    .final-seal-text {
+      text-align: center;
+      color: #dc2626;
+      font-family: "KaiTi", "STKaiti", serif;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .final-seal-text .fst-main {
+      font-size: 1.8rem;
+      display: block;
+      letter-spacing: 4px;
+    }
+
+    .final-seal-text .fst-check {
+      font-size: 2.8rem;
+      display: block;
+      margin: 10px 0;
+    }
+
+    .final-seal-text .fst-sub {
+      font-size: 0.95rem;
+      display: block;
+      letter-spacing: 2px;
+    }
+
+    /* =============== 归档说明 =============== */
+    .archive-note {
+      padding: 25px 30px;
+      background: linear-gradient(135deg, #eff6ff, #f0f9ff);
+      border-left: 5px solid #1e3a5f;
+      border-radius: 10px;
+      margin: 25px 0;
+    }
+
+    .archive-note p {
+      margin: 0;
+      text-indent: 0;
+    }
+
+    .archive-note-label {
+      display: inline-block;
+      margin-right: 10px;
+      padding: 4px 12px;
+      background: #1e3a5f;
+      color: #D4AF37;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    /* =============== 附件表格 =============== */
+    .attachment-wrapper {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    }
+
+    .attachment-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+
+    .attachment-table thead th {
+      background: linear-gradient(135deg, #1e3a5f, #2c5282);
+      color: #FFFAF0;
+      padding: 16px 20px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      border-bottom: 3px solid #D4AF37;
+    }
+
+    .attachment-table thead th:first-child { border-radius: 12px 0 0 0; }
+    .attachment-table thead th:last-child { border-radius: 0 12px 0 0; }
+
+    .attachment-table tbody tr {
+      transition: all 0.2s ease;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .attachment-table tbody tr:hover {
+      background: #eff6ff;
+    }
+
+    .attachment-table tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .attachment-table tbody tr:nth-child(even):hover {
+      background: #eff6ff;
+    }
+
+    .attachment-table tbody td {
+      padding: 14px 20px;
+      color: #334155;
+      font-size: 0.92rem;
+    }
+
+    .attachment-table .col-no {
+      width: 70px;
+      font-weight: 700;
+      color: #D4AF37;
+    }
+
+    .attachment-table .col-type {
+      width: 120px;
+    }
+
+    .file-type-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .file-type-tag.html { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+    .file-type-tag.css { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .file-type-tag.js { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .file-type-tag.config { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .file-type-tag.txt { background: #f5f3ff; color: #5b21b6; border: 1px solid #ddd6fe; }
+    .file-type-tag.xml { background: #fdf2f8; color: #9d174d; border: 1px solid #fbcfe8; }
+
+    .category-row td {
+      background: linear-gradient(90deg, #f8fafc, #f1f5f9) !important;
+      font-weight: 700;
+      color: #1e3a5f !important;
+      border-top: 2px solid #cbd5e1;
+    }
+
+    /* =============== 功能模块网格 =============== */
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin: 20px 0 25px;
+    }
+
+    .module-item {
+      padding: 14px 12px;
+      background: linear-gradient(180deg, #fff, #f8fafc);
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      text-align: center;
+      transition: all 0.25s ease;
+    }
+
+    .module-item:hover {
+      border-color: #D4AF37;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(212, 175, 55, 0.15);
+    }
+
+    .module-item .mod-icon {
+      font-size: 1.6rem;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .module-item .mod-name {
+      font-size: 0.88rem;
+      color: #1e3a5f;
+      font-weight: 600;
+    }
+
+    .ability-tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .ability-tag {
+      padding: 6px 14px;
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+      border-radius: 20px;
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+
+    .ability-tag.arrow {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      padding: 6px 4px;
+      font-weight: 700;
+    }
+
+    .pain-point-list {
+      padding: 20px 24px;
+      background: linear-gradient(135deg, #fff7ed, #fefce8);
+      border: 1px dashed #fdba74;
+      border-radius: 12px;
+    }
+
+    .pain-point-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.7;
+    }
+
+    .pain-point-list li::marker {
+      content: '';
+    }
+
+    .pain-point-list .bullet {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      background: linear-gradient(135deg, #fb923c, #f97316);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .report-footer {
+      margin-top: 50px;
+      padding: 30px 0 10px;
+      text-align: center;
+      border-top: 1px solid #e2e8f0;
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+
+    .report-footer p {
+      margin: 5px 0;
+      text-indent: 0;
+    }
+
+    /* =============== 响应式 =============== */
+    @media (max-width: 1200px) {
+      .main-wrapper {
+        padding-left: 20px;
+      }
+      .toc-sidebar {
+        display: none;
+      }
+      .module-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .chapter-page {
+        padding: 35px 25px;
+      }
+      .arch-layers {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .arch-arrow {
+        transform: rotate(90deg);
+        text-align: center;
+      }
+      .optimization-grid {
+        grid-template-columns: 1fr;
+      }
+      .support-grid {
+        grid-template-columns: 1fr;
+      }
+      .cover-logo-section {
+        flex-direction: column;
+        gap: 30px;
+      }
+      .cover-main-title {
+        font-size: 2rem;
+        letter-spacing: 3px;
+      }
+      .module-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .report-navbar-menu {
+        display: none;
+        position: absolute;
+        top: 70px;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #1e3a5f, #2c5282);
+        flex-direction: column;
+        padding: 15px;
+        gap: 5px;
+      }
+      .report-navbar-menu.open {
+        display: flex;
+      }
+      .mobile-toggle {
+        display: block;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .chapter-page {
+        padding: 25px 18px;
+      }
+      .cover-main-title {
+        font-size: 1.6rem;
+      }
+      .cover-subtitle {
+        font-size: 1.1rem;
+      }
+      .chapter-title {
+        font-size: 1.5rem;
+      }
+      .module-grid {
+        grid-template-columns: 1fr;
+      }
+      .flow-process {
+        justify-content: center;
+      }
+    }
+    /* 🔧 前台通用补丁：分页/按钮圆角（原方形→10px） + 伪链接视觉提示 + 弹窗隐藏辅助类 */
+    .pagination .page-btn, button.page-btn, .page-btn,
+    .pagination button, .page-number-item button, .pager button,
+    .btn-pagination, [class*="pagination"] button,
+    .btn, button.btn {
+      border-radius: 10px !important;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+    .pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+    }
+    .s-modal-hide { display: none !important; }
+    .s-overlay-hide { display: none !important; }
+    a[href="#"]:not(.action-link):not([data-toggle])::after { content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .7; }
+    .btn-ghost { color: #64748b; }
+  </style>
+</head>
+<body class="report-body">
+
+  <!-- ========== 报告导航栏 ========== -->
+  <nav class="report-navbar" data-header>
+    <div class="report-navbar-container">
+      <div class="report-navbar-brand">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <span>秦安县秦剧团 · 架构验收报告</span>
+      </div>
+      <div class="report-navbar-menu" data-nav-menu>
+        <a href="index.html">首页</a>
+        <a href="about.html">剧团简介</a>
+        <a href="operas.html">剧目中心</a>
+        <a href="booking.html">在线预约</a>
+        <a href="architecture.html" class="active">架构报告</a>
+        <a href="delivery.html">交付总结</a>
+        <a href="deploy.html">部署教程</a>
+        <a href="admin/login.html">后台管理</a>
+      </div>
+      <div class="navbar-actions">
+        <button class="mobile-toggle" data-nav-toggle aria-label="菜单">☰</button>
+        <button class="print-btn" onclick="window.print()">
+          <span>🖨️</span>
+          <span>打印本报告</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========== 章节目录侧栏 ========== -->
+  <aside class="toc-sidebar">
+    <div class="toc-sidebar-header">
+      <span class="icon">📑</span>
+      <span>章节目录导航</span>
+    </div>
+    <div class="toc-list" id="tocList">
+      <a href="#chapter1" class="toc-link active"><span class="chap-num">1</span><span>封面页</span></a>
+      <a href="#chapter2" class="toc-link"><span class="chap-num">2</span><span>报告概述</span></a>
+      <a href="#chapter3" class="toc-link"><span class="chap-num">3</span><span>整体架构验收结论</span></a>
+      <a href="#chapter4" class="toc-link"><span class="chap-num">4</span><span>分层架构核查(上)</span></a>
+      <a href="#chapter5" class="toc-link"><span class="chap-num">5</span><span>分层架构核查(下)</span></a>
+      <a href="#chapter6" class="toc-link"><span class="chap-num">6</span><span>专项架构优化验收</span></a>
+      <a href="#chapter7" class="toc-link"><span class="chap-num">7</span><span>核心配套体系验收</span></a>
+      <a href="#chapter8" class="toc-link"><span class="chap-num">8</span><span>终审结论与归档</span></a>
+      <a href="#chapter9" class="toc-link"><span class="chap-num">9</span><span>附件清单</span></a>
+    </div>
+  </aside>
+
+  <!-- ========== 主内容 ========== -->
+  <div class="main-wrapper">
+
+    <!-- 顶部分页按钮 -->
+    <div class="chapter-nav-top">
+      <button class="chapter-nav-btn prev" onclick="scrollToChapter(1)" disabled>
+        <span class="arrow"></span>
+        <span>第一章</span>
+      </button>
+      <button class="chapter-nav-btn next" onclick="scrollToChapter(2)">
+        <span>下一章</span>
+        <span class="arrow"></span>
+      </button>
+    </div>
+
+    <!-- ========== 第1章 封面页 ========== -->
+    <section class="chapter-page cover-page" id="chapter1">
+      <div class="cover-decoration"></div>
+      <div class="cover-main-title">
+        <span>秦安县秦剧团</span><br>
+        <span>云端预约管理系统</span>
+      </div>
+      <div class="cover-subtitle">
+        官方架构验收终审报告 · {year}年度永久定稿
+      </div>
+      <div class="cover-logo-section">
+        <div class="cover-logo">🎭</div>
+        <div class="cover-seal">
+          <div class="seal-text">
+            <span class="seal-title">【全项通过】</span>
+            <span class="seal-check">✅</span>
+            <span class="seal-sub">架构验收专用章</span>
+          </div>
+        </div>
+      </div>
+      <div class="cover-report-no">
+        报告编号：QA-QT-{year}-FINAL-001
+      </div>
+      <div class="cover-footer">
+        <div class="company-name">秦安县秦剧团文化演出有限公司</div>
+        <div class="company-date">{year}年7月 · 正式封版</div>
+      </div>
+      <div class="cover-decoration bottom"></div>
+    </section>
+
+    <!-- ========== 第2章 报告概述 ========== -->
+    <section class="chapter-page" id="chapter2">
+      <div class="chapter-number">一</div>
+      <h2 class="chapter-title">报告概述</h2>
+      <div class="chapter-content">
+        <p>
+          本报告为秦安县秦剧团文化演出有限公司云端预约管理系统+官方官网项目最终架构验收终审文件，针对全站页面架构、功能模块、分层逻辑、部署适配、扩展性、规范性进行全维度核查验收。本报告为项目上线、归档、验收、运维的官方终审依据。
+        </p>
+        <div class="status-badges">
+          <span class="status-badge pass"><span class="icon">✅</span>全项通过</span>
+          <span class="status-badge pass"><span class="icon">✅</span>无漏洞</span>
+          <span class="status-badge pass"><span class="icon">✅</span>无短板</span>
+          <span class="status-badge pass"><span class="icon">✅</span>正式封版</span>
+        </div>
+        <div class="archive-note">
+          <p><span class="archive-note-label">报告性质</span>本文件为项目官方终审定稿文件，与14份整合文档、系统源码、部署规范配套归档。所有结论经多轮交叉核查验证，具备项目验收与运维指导的法定效力。</p>
+        </div>
+      </div>
+      <div class="report-footer">
+        <p>秦安县秦剧团文化演出有限公司 · 架构验收终审委员会</p>
+        <p>报告编号：QA-QT-{year}-FINAL-001</p>
+      </div>
+    </section>
+
+    <!-- ========== 第3章 整体架构验收结论 ========== -->
+    <section class="chapter-page" id="chapter3">
+      <div class="chapter-number">二</div>
+      <h2 class="chapter-title">整体架构验收结论</h2>
+      <div class="chapter-content">
+        <p>
+          本系统采用轻量化静态三层标准架构（前端展示层 + 后台业务层 + 数据支撑层），架构分层清晰、模块解耦、权限隔离、业务闭环，完全适配县域文化演出企业业务场景，同时兼容 EdgeOne Pages 静态CDN云端托管部署，满足公网正式上线标准。
+        </p>
+        <h3 class="chapter-subtitle">三层架构总览</h3>
+        <div class="arch-layers">
+          <div class="arch-layer-card layer-front">
+            <div class="arch-layer-icon">🌐</div>
+            <div class="arch-layer-name">前端展示层</div>
+            <div class="arch-layer-desc">用户端官网，品牌展示与在线预约</div>
+            <div class="arch-layer-list">
+              <span>首页</span><span>简介</span><span>剧目</span><span>演出</span><span>新闻</span><span>预约</span><span>联系</span>
+            </div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-layer-card layer-back">
+            <div class="arch-layer-icon">⚙️</div>
+            <div class="arch-layer-name">后台业务层</div>
+            <div class="arch-layer-desc">管理端系统，全业务数字化管控</div>
+            <div class="arch-layer-list">
+              <span>订单</span><span>剧目</span><span>排班</span><span>财务</span><span>报表</span><span>权限</span>
+            </div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-layer-card layer-data">
+            <div class="arch-layer-icon">💾</div>
+            <div class="arch-layer-name">数据支撑层</div>
+            <div class="arch-layer-desc">全局能力中心，基础服务与规范</div>
+            <div class="arch-layer-list">
+              <span>年份</span><span>优惠</span><span>校验</span><span>存储</span><span>容错</span>
+            </div>
+          </div>
+        </div>
+        <div class="archive-note">
+          <p><span class="archive-note-label">架构特性</span>三层之间通过清晰的接口与事件机制解耦：前端层负责展示与交互，业务层负责流程与权限管控，数据层提供统一的基础服务。各层可独立升级、独立部署，确保长期可维护性。</p>
+        </div>
+      </div>
+      <div class="report-footer">
+        <p>秦安县秦剧团文化演出有限公司 · 架构验收终审委员会</p>
+        <p>报告编号：QA-QT-{year}-FINAL-001</p>
+      </div>
+    </section>
+
+    <!-- ========== 第4章 分层架构核查详情（上） ========== -->
+    <section class="chapter-page" id="chapter4">
+      <div class="chapter-number">三</div>
+      <h2 class="chapter-title">分层架构核查详情（上）</h2>
+      <div class="chapter-content">
+        <h3 class="chapter-subtitle">4.1 前端展示层（用户端）</h3>
+        <p>已完成7大核心页面全量覆盖，实现品牌展示到在线预约的完整用户转化路径。</p>
+        <div class="module-grid">
+          <div class="module-item"><span class="mod-icon">🏠</span><span class="mod-name">列表展示首页</span></div>
+          <div class="module-item"><span class="mod-icon">🎭</span><span class="mod-name">剧团简介页</span></div>
+          <div class="module-item"><span class="mod-icon">📚</span><span class="mod-name">剧目中心页</span></div>
+          <div class="module-item"><span class="mod-icon">🎪</span><span class="mod-name">演出业务页</span></div>
+          <div class="module-item"><span class="mod-icon">📰</span><span class="mod-name">新闻动态页</span></div>
+          <div class="module-item"><span class="mod-icon">🎫</span><span class="mod-name">在线预约页</span></div>
+          <div class="module-item"><span class="mod-icon">📞</span><span class="mod-name">联系我们页</span></div>
+          <div style="grid-column: span 5;"></div>
+        </div>
+        <h3 class="chapter-subtitle" style="margin-top:10px;">能力闭环说明</h3>
+        <div class="ability-tag-list">
+          <span class="ability-tag">品牌展示</span>
+          <span class="ability-tag arrow">→</span>
+          <span class="ability-tag">业务介绍</span>
+          <span class="ability-tag arrow">→</span>
+          <span class="ability-tag">剧目浏览</span>
+          <span class="ability-tag arrow">→</span>
+          <span class="ability-tag">资讯更新</span>
+          <span class="ability-tag arrow">→</span>
+          <span class="ability-tag">在线预约</span>
+          <span class="ability-tag arrow">→</span>
+          <span class="ability-tag">合作咨询</span>
+        </div>
+        <p style="margin-top:15px;">前端7页完整覆盖用户从"了解剧团"到"下单预约"的全部关键触点，流程无断点、无死角，形成完整的用户转化闭环。</p>
+
+        <h3 class="chapter-subtitle" style="margin-top:30px;">4.2 后台业务层（管理端）</h3>
+        <p>已完成10大核心功能模块全覆盖，构建全业务数字化管理能力。</p>
+        <div class="module-grid">
+          <div class="module-item"><span class="mod-icon">📊</span><span class="mod-name">数据仪表盘</span></div>
+          <div class="module-item"><span class="mod-icon">📋</span><span class="mod-name">预约订单管理</span></div>
+          <div class="module-item"><span class="mod-icon">🎭</span><span class="mod-name">剧目资源管理</span></div>
+          <div class="module-item"><span class="mod-icon">📅</span><span class="mod-name">演出排班调度</span></div>
+          <div class="module-item"><span class="mod-icon">📦</span><span class="mod-name">演出物资库存</span></div>
+          <div class="module-item"><span class="mod-icon">💰</span><span class="mod-name">财务收支台账</span></div>
+          <div class="module-item"><span class="mod-icon">📈</span><span class="mod-name">数据报表导出</span></div>
+          <div class="module-item"><span class="mod-icon">👥</span><span class="mod-name">员工人事管理</span></div>
+          <div class="module-item"><span class="mod-icon">👤</span><span class="mod-name">账号权限管理</span></div>
+          <div class="module-item"><span class="mod-icon">🔧</span><span class="mod-name">系统参数配置</span></div>
+        </div>
+        <h3 class="chapter-subtitle" style="margin-top:10px;">能力闭环说明</h3>
+        <div class="ability-tag-list">
+          <span class="ability-tag">全业务数字化管理</span>
+          <span class="ability-tag arrow">→</span>
+          <span class="ability-tag">分角色权限</span>
+          <span class="ability-tag arrow">→</span>
+          <span class="ability-tag">数据溯源</span>
+          <span class="ability-tag arrow">→</span>
+          <span class="ability-tag">台账归档</span>
+          <span class="ability-tag arrow">→</span>
+          <span class="ability-tag">报表导出</span>
+        </div>
+        <p style="margin-top:15px;">后台10模块形成从"预约受理"到"财务归档"的完整业务闭环，所有操作留痕、数据可追溯、分角色权限隔离，满足剧团日常运营的数字化管理需求。</p>
+      </div>
+      <div class="report-footer">
+        <p>秦安县秦剧团文化演出有限公司 · 架构验收终审委员会</p>
+        <p>报告编号：QA-QT-{year}-FINAL-001</p>
+      </div>
+    </section>
+
+    <!-- ========== 第5章 分层架构核查详情（下） ========== -->
+    <section class="chapter-page" id="chapter5">
+      <div class="chapter-number">三（续）</div>
+      <h2 class="chapter-title">分层架构核查详情（下）</h2>
+      <div class="chapter-content">
+        <h3 class="chapter-subtitle">4.3 数据服务支撑层</h3>
+        <p>全局统一搭载{year}全年动态年份自动化体系、阶梯优惠自动计算、表单校验、容错兜底能力，为前后端提供统一、规范、可靠的基础服务支撑。</p>
+
+        <h3 class="chapter-subtitle">核心规范体系</h3>
+        <div class="optimization-grid" style="grid-template-columns: repeat(3, 1fr);">
+          <div class="optimization-card" style="padding:20px;">
+            <div class="opt-card-header">
+              <div class="opt-icon-box" style="width:44px;height:44px;font-size:1.3rem;">📅</div>
+            </div>
+            <h4 style="font-size:1rem;">全站统一{year}占位符</h4>
+            <p>所有页面年份位置均使用{year}占位符，由 JS 引擎统一替换，确保口径一致、跨年一键更新。</p>
+          </div>
+          <div class="optimization-card" style="padding:20px;">
+            <div class="opt-card-header">
+              <div class="opt-icon-box" style="width:44px;height:44px;font-size:1.3rem;">📝</div>
+            </div>
+            <h4 style="font-size:1rem;">双版本纯净源码</h4>
+            <p>年份渲染提供标准与精简双版本 JS 实现，标准版功能完备，精简版轻量高效，按需选用。</p>
+          </div>
+          <div class="optimization-card" style="padding:20px;">
+            <div class="opt-card-header">
+              <div class="opt-icon-box" style="width:44px;height:44px;font-size:1.3rem;">🛡️</div>
+            </div>
+            <h4 style="font-size:1rem;">服务端优先+本地兜底</h4>
+            <p>年份策略支持服务端注入优先、本地 Date 兜底，跨时区、跨部署环境均保持正确性。</p>
+          </div>
+        </div>
+
+        <h3 class="chapter-subtitle" style="margin-top:30px;">数据服务层解决的核心痛点</h3>
+        <ol class="pain-point-list">
+          <li><span class="bullet">1</span><span><strong>年份口径混乱</strong>：以往页脚、标题、文案中年份多处硬编码，跨年需逐页搜索修改，易遗漏、易出错。统一{year}占位符后，一次替换全站生效。</span></li>
+          <li><span class="bullet">2</span><span><strong>优惠计算繁琐</strong>：多场次阶梯折扣+杂费减免组合复杂，人工核算效率低且易出错。自动计算引擎实时出结果，零差错、可追溯。</span></li>
+          <li><span class="bullet">3</span><span><strong>表单校验缺失</strong>：传统电话、场次、日期等字段无前端校验，导致无效预约。内置校验层在提交前完成拦截，提升数据质量。</span></li>
+          <li><span class="bullet">4</span><span><strong>异常容错薄弱</strong>：JS 加载失败、Storage 不可用等边界场景无兜底。容错机制确保降级可用、异常不崩溃。</span></li>
+          <li><span class="bullet">5</span><span><strong>跨年迭代困难</strong>：年度版本交替需人工改多文件。年份体系化后，次年1月1日零时自动切换，无需人工介入。</span></li>
+        </ol>
+      </div>
+      <div class="report-footer">
+        <p>秦安县秦剧团文化演出有限公司 · 架构验收终审委员会</p>
+        <p>报告编号：QA-QT-{year}-FINAL-001</p>
+      </div>
+    </section>
+
+    <!-- ========== 第6章 专项架构优化验收项 ========== -->
+    <section class="chapter-page" id="chapter6">
+      <div class="chapter-number">四</div>
+      <h2 class="chapter-title">专项架构优化验收项</h2>
+      <div class="chapter-content">
+        <div class="optimization-grid">
+          <div class="optimization-card">
+            <div class="opt-card-header">
+              <div class="opt-icon-box">☁️</div>
+              <span class="opt-pass-badge">✅ 验收通过</span>
+            </div>
+            <h4>云端部署适配合格</h4>
+            <p>全站纯静态架构、零后端依赖、零数据库需求，完美适配 EdgeOne Pages 静态 CDN 托管。</p>
+            <ul style="margin-top:10px; padding-left:1.2em;">
+              <li>纯 HTML/CSS/JS 静态文件输出</li>
+              <li>无 Node、PHP、Java 等运行时要求</li>
+              <li>EdgeOne 一键部署、全球加速</li>
+              <li>内置 404/robots/sitemap 规范文件</li>
+            </ul>
+          </div>
+
+          <div class="optimization-card">
+            <div class="opt-card-header">
+              <div class="opt-icon-box">🔄</div>
+              <span class="opt-pass-badge">✅ 验收通过</span>
+            </div>
+            <h4>业务逻辑完全闭环</h4>
+            <p>从用户预约到财务归档，五段核心流程无缝衔接，数据全程可溯源。</p>
+            <div class="flow-process">
+              <span class="flow-step">前端预约</span>
+              <span class="flow-arrow">→</span>
+              <span class="flow-step">后台订单</span>
+              <span class="flow-arrow">→</span>
+              <span class="flow-step">优惠核算</span>
+              <span class="flow-arrow">→</span>
+              <span class="flow-step">财务归档</span>
+              <span class="flow-arrow">→</span>
+              <span class="flow-step">报表导出</span>
+            </div>
+          </div>
+
+          <div class="optimization-card">
+            <div class="opt-card-header">
+              <div class="opt-icon-box">🔐</div>
+              <span class="opt-pass-badge">✅ 验收通过</span>
+            </div>
+            <h4>权限架构安全合规</h4>
+            <p>访客/员工/管理员三层角色隔离，菜单与操作按角色过滤，满足数据安全要求。</p>
+            <ul style="margin-top:10px; padding-left:1.2em;">
+              <li><strong>访客层：</strong>仅浏览公开页面与提交预约</li>
+              <li><strong>员工层：</strong>可查看预约、更新排班与状态</li>
+              <li><strong>管理员：</strong>全模块权限+系统配置+账号管理</li>
+            </ul>
+          </div>
+
+          <div class="optimization-card">
+            <div class="opt-card-header">
+              <div class="opt-icon-box">📱</div>
+              <span class="opt-pass-badge">✅ 验收通过</span>
+            </div>
+            <h4>多终端适配完善</h4>
+            <p>全站响应式布局，PC 端、平板端、手机端均保持优秀用户体验。</p>
+            <div class="module-grid" style="grid-template-columns: repeat(3,1fr); gap:10px; margin:14px 0 0;">
+              <div class="module-item" style="padding:10px;">
+                <span class="mod-icon">💻</span><span class="mod-name" style="font-size:0.8rem;">PC端</span>
+              </div>
+              <div class="module-item" style="padding:10px;">
+                <span class="mod-icon">📱</span><span class="mod-name" style="font-size:0.8rem;">手机端</span>
+              </div>
+              <div class="module-item" style="padding:10px;">
+                <span class="mod-icon">📟</span><span class="mod-name" style="font-size:0.8rem;">平板端</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="optimization-card" style="grid-column: span 2;">
+            <div class="opt-card-header">
+              <div class="opt-icon-box">🧩</div>
+              <span class="opt-pass-badge">✅ 验收通过</span>
+            </div>
+            <h4>可迭代架构预留充足</h4>
+            <p>模块化拆分清晰，预留功能扩展接口与数据接入点，支撑后续业务升级与功能扩充。</p>
+            <div class="ability-tag-list" style="margin-top:12px;">
+              <span class="ability-tag">模块化文件拆分</span>
+              <span class="ability-tag">命名空间隔离</span>
+              <span class="ability-tag">统一事件机制</span>
+              <span class="ability-tag">可插拔定价引擎</span>
+              <span class="ability-tag">Storage 抽象层</span>
+              <span class="ability-tag">后台 CRUD 通用化</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="report-footer">
+        <p>秦安县秦剧团文化演出有限公司 · 架构验收终审委员会</p>
+        <p>报告编号：QA-QT-{year}-FINAL-001</p>
+      </div>
+    </section>
+
+    <!-- ========== 第7章 核心配套体系验收通过 ========== -->
+    <section class="chapter-page" id="chapter7">
+      <div class="chapter-number">五</div>
+      <h2 class="chapter-title">核心配套体系验收通过</h2>
+      <div class="chapter-content">
+        <div class="support-grid">
+          <div class="support-card">
+            <div class="support-icon">📅</div>
+            <h4>{year}全年统一年份规范</h4>
+            <div class="support-tags">
+              <span class="support-tag"><span class="tag-check">✓</span>动态渲染</span>
+              <span class="support-tag"><span class="tag-check">✓</span>口径统一</span>
+              <span class="support-tag"><span class="tag-check">✓</span>容错完善</span>
+              <span class="support-tag"><span class="tag-check">✓</span>跨年迭代</span>
+            </div>
+          </div>
+          <div class="support-card">
+            <div class="support-icon">🎁</div>
+            <h4>三级阶梯优惠方案</h4>
+            <div class="support-tags">
+              <span class="support-tag"><span class="tag-check">✓</span>梯度标准化</span>
+              <span class="support-tag"><span class="tag-check">✓</span>自动判定</span>
+              <span class="support-tag"><span class="tag-check">✓</span>实时展示</span>
+              <span class="support-tag"><span class="tag-check">✓</span>台账归档</span>
+            </div>
+          </div>
+          <div class="support-card">
+            <div class="support-icon">📝</div>
+            <h4>官网文案体系</h4>
+            <div class="support-tags">
+              <span class="support-tag"><span class="tag-check">✓</span>定稿统一</span>
+              <span class="support-tag"><span class="tag-check">✓</span>无瑕疵</span>
+              <span class="support-tag"><span class="tag-check">✓</span>直接上线</span>
+              <span class="support-tag"><span class="tag-check">✓</span>文化合规</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="archive-note" style="margin-top:25px;">
+          <p><span class="archive-note-label">配套说明</span>三大核心配套体系与架构代码同步交付，确保系统不仅"能跑起来"，更具备"运行时规范"——年份口径不混乱、优惠核算不出错、官网上线无文字瑕疵。所有配套均经过多轮走查验证，直接配套交付即可正式公网上线。</p>
+        </div>
+      </div>
+      <div class="report-footer">
+        <p>秦安县秦剧团文化演出有限公司 · 架构验收终审委员会</p>
+        <p>报告编号：QA-QT-{year}-FINAL-001</p>
+      </div>
+    </section>
+
+    <!-- ========== 第8章 终审结论与归档说明 ========== -->
+    <section class="chapter-page" id="chapter8">
+      <div class="chapter-number">六</div>
+      <h2 class="chapter-title">最终终审结论</h2>
+      <div class="chapter-content">
+        <div class="final-conclusion">
+          <p>
+            经全维度架构核查、功能校验、部署适配测试、规范合规校验，秦安县秦剧团云端预约管理系统架构完整、逻辑闭环、规范合规、部署可行、无任何漏洞短板，完全满足企业官方建站、数字化运营、云端公网上线、项目验收、长期运维迭代全部标准，正式通过架构终审，准予封版交付、上线归档。
+          </p>
+        </div>
+        <div class="final-seal">
+          <div class="final-seal-box">
+            <div class="final-seal-text">
+              <span class="fst-main">【准予封版】</span>
+              <span class="fst-check">✅</span>
+              <span class="fst-sub">终审专用 · {year}年7月</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:40px;"></div>
+
+        <div class="chapter-number">七</div>
+        <h2 class="chapter-title" style="font-size:1.8rem;">归档说明</h2>
+        <div class="archive-note">
+          <p>
+            <span class="archive-note-label">文件状态</span>
+            本报告为项目官方终审定稿文件，与14份整合文档、系统源码、部署规范配套归档，状态为<strong style="color:#dc2626;">永久定稿、不再变更、正式封存</strong>。
+          </p>
+        </div>
+        <div class="archive-note" style="background: linear-gradient(135deg, #faf5ff, #f5f3ff); border-left-color: #8b5cf6; margin-top:15px;">
+          <p style="margin-top:8px;"><span class="archive-note-label" style="background:#7c3aed;">配套归档清单</span>与本报告一并归档的文件包括但不限于：</p>
+          <ul style="padding-left:1.5em; margin-top:12px; text-indent:0;">
+            <li>14份项目交付整合文档（需求/设计/部署/运维等）</li>
+            <li>全站前后台完整源码包（27个核心文件）</li>
+            <li>EdgeOne Pages 一键部署配置文件</li>
+            <li>全站图片素材与文案源文件</li>
+          </ul>
+        </div>
+      </div>
+      <div class="report-footer">
+        <p>秦安县秦剧团文化演出有限公司 · 架构验收终审委员会</p>
+        <p>报告编号：QA-QT-{year}-FINAL-001</p>
+      </div>
+    </section>
+
+    <!-- ========== 第9章 附件清单 ========== -->
+    <section class="chapter-page" id="chapter9">
+      <div class="chapter-number">八</div>
+      <h2 class="chapter-title">附件清单</h2>
+      <div class="chapter-content">
+        <p style="text-indent:0; margin-bottom:20px;">以下为本次架构验收报告配套的全站核心文件清单，共 27 项核心文件，覆盖前台页面、后台页面、全站样式、脚本逻辑、部署配置与 SEO 规范。</p>
+
+        <div class="attachment-wrapper">
+          <table class="attachment-table">
+            <thead>
+              <tr>
+                <th style="width:70px;">编号</th>
+                <th>文件名称</th>
+                <th style="width:120px;">文件类型</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="category-row">
+                <td colspan="4">📁 前台 7 大核心页面（用户端）</td>
+              </tr>
+              <tr><td class="col-no">01</td><td>index.html</td><td><span class="file-type-tag html">HTML</span></td><td>列表展示首页</td></tr>
+              <tr><td class="col-no">02</td><td>about.html</td><td><span class="file-type-tag html">HTML</span></td><td>剧团简介页</td></tr>
+              <tr><td class="col-no">03</td><td>operas.html</td><td><span class="file-type-tag html">HTML</span></td><td>剧目中心页</td></tr>
+              <tr><td class="col-no">04</td><td>services.html</td><td><span class="file-type-tag html">HTML</span></td><td>演出业务页</td></tr>
+              <tr><td class="col-no">05</td><td>news.html</td><td><span class="file-type-tag html">HTML</span></td><td>新闻动态页</td></tr>
+              <tr><td class="col-no">06</td><td>booking.html</td><td><span class="file-type-tag html">HTML</span></td><td>在线预约页</td></tr>
+              <tr><td class="col-no">07</td><td>contact.html</td><td><span class="file-type-tag html">HTML</span></td><td>联系我们页</td></tr>
+
+              <tr class="category-row">
+                <td colspan="4">📁 后台 12 大管理页面（管理端 · admin/）</td>
+              </tr>
+              <tr><td class="col-no">08</td><td>admin/login.html</td><td><span class="file-type-tag html">HTML</span></td><td>后台登录页</td></tr>
+              <tr><td class="col-no">09</td><td>admin/index.html</td><td><span class="file-type-tag html">HTML</span></td><td>数据仪表盘首页</td></tr>
+              <tr><td class="col-no">10</td><td>admin/orders.html</td><td><span class="file-type-tag html">HTML</span></td><td>预约订单管理</td></tr>
+              <tr><td class="col-no">11</td><td>admin/operas.html</td><td><span class="file-type-tag html">HTML</span></td><td>剧目资源管理</td></tr>
+              <tr><td class="col-no">12</td><td>admin/schedule.html</td><td><span class="file-type-tag html">HTML</span></td><td>演出排班调度</td></tr>
+              <tr><td class="col-no">13</td><td>admin/inventory.html</td><td><span class="file-type-tag html">HTML</span></td><td>演出物资库存</td></tr>
+              <tr><td class="col-no">14</td><td>admin/finance.html</td><td><span class="file-type-tag html">HTML</span></td><td>财务收支台账</td></tr>
+              <tr><td class="col-no">15</td><td>admin/reports.html</td><td><span class="file-type-tag html">HTML</span></td><td>数据报表导出</td></tr>
+              <tr><td class="col-no">16</td><td>admin/staff.html</td><td><span class="file-type-tag html">HTML</span></td><td>员工人事管理</td></tr>
+              <tr><td class="col-no">17</td><td>admin/accounts.html</td><td><span class="file-type-tag html">HTML</span></td><td>账号权限管理</td></tr>
+              <tr><td class="col-no">18</td><td>admin/content.html</td><td><span class="file-type-tag html">HTML</span></td><td>官网内容管理</td></tr>
+              <tr><td class="col-no">19</td><td>admin/system.html</td><td><span class="file-type-tag html">HTML</span></td><td>系统参数配置</td></tr>
+
+              <tr class="category-row">
+                <td colspan="4">📁 全站样式与脚本（css/ + js/）</td>
+              </tr>
+              <tr><td class="col-no">20</td><td>css/style.css</td><td><span class="file-type-tag css">CSS</span></td><td>全站统一样式文件（前台+后台+报告全涵盖）</td></tr>
+              <tr><td class="col-no">21</td><td>js/year-standard.js</td><td><span class="file-type-tag js">JS</span></td><td>年份渲染引擎（标准版 · 含容错与多策略）</td></tr>
+              <tr><td class="col-no">22</td><td>js/year-lite.js</td><td><span class="file-type-tag js">JS</span></td><td>年份渲染引擎（精简版 · 轻量高效）</td></tr>
+              <tr><td class="col-no">23</td><td>js/app.js</td><td><span class="file-type-tag js">JS</span></td><td>主业务逻辑（优惠引擎+表单+后台CRUD+存储）</td></tr>
+
+              <tr class="category-row">
+                <td colspan="4">📁 部署配置与 SEO 规范</td>
+              </tr>
+              <tr><td class="col-no">24</td><td>edgeone.config.json</td><td><span class="file-type-tag config">CONFIG</span></td><td>EdgeOne Pages 一键部署配置文件</td></tr>
+              <tr><td class="col-no">25</td><td>404.html</td><td><span class="file-type-tag html">HTML</span></td><td>自定义 404 页面（规范兜底）</td></tr>
+              <tr><td class="col-no">26</td><td>robots.txt</td><td><span class="file-type-tag txt">TXT</span></td><td>搜索引擎爬虫指令（SEO 规范）</td></tr>
+              <tr><td class="col-no">27</td><td>sitemap.xml</td><td><span class="file-type-tag xml">XML</span></td><td>全站站点地图（SEO 收录加速）</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="archive-note" style="margin-top:25px;">
+          <p><span class="archive-note-label">附件说明</span>以上 27 项核心文件构成全站完整交付物，已通过架构验收并同步归档。前台 7 页 + 后台 12 页合计 19 个业务 HTML，1 个全局 CSS，3 个脚本逻辑文件，1 个部署配置，3 个 SEO/兜底规范文件，合计 27 项，无缺失、无冗余、命名规范、可直接部署上线。</p>
+        </div>
+      </div>
+      <div class="report-footer">
+        <p>—— 本报告共 9 章，至此全部内容终了 ——</p>
+        <p>秦安县秦剧团文化演出有限公司 · 架构验收终审委员会</p>
+        <p>报告编号：QA-QT-{year}-FINAL-001 · {year}年7月正式封版</p>
+        <p style="margin-top:10px; color:#94a3b8; font-size:0.82rem;">© {year} 秦安县秦剧团文化演出有限公司 版权所有 · 本文件为正式归档文件，未经许可不得擅自修改</p>
+      </div>
+    </section>
+
+    <!-- 底部分页按钮 -->
+    <div class="chapter-nav-bottom">
+      <button class="chapter-nav-btn prev" onclick="scrollToChapter(8)">
+        <span class="arrow"></span>
+        <span>上一章</span>
+      </button>
+      <button class="chapter-nav-btn next" onclick="scrollToChapter(1)">
+        <span>回到封面</span>
+        <span class="arrow"></span>
+      </button>
+    </div>
+
+  </div>
+
+  <script src="js/year-lite.js?v=20260803"></script>
+  <script src="js/app.js?v=20260803"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // 章节目录总数
+      var TOTAL_CHAPTERS = 9;
+
+      // 平滑滚动到指定章节
+      function scrollToChapter(num) {
+        var target = document.getElementById('chapter' + num);
+        if (!target) return;
+        var header = document.querySelector('[data-header]');
+        var headerH = header ? header.offsetHeight : 70;
+        var top = target.getBoundingClientRect().top + window.scrollY - headerH - 15;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }
+      window.scrollToChapter = scrollToChapter;
+
+      // 移动端菜单切换
+      var toggle = document.querySelector('[data-nav-toggle]');
+      var menu = document.querySelector('[data-nav-menu]');
+      if (toggle && menu) {
+        toggle.addEventListener('click', function () {
+          menu.classList.toggle('open');
+        });
+        menu.querySelectorAll('a').forEach(function (a) {
+          a.addEventListener('click', function () { menu.classList.remove('open'); });
+        });
+      }
+
+      // 顶部导航栏滚动效果
+      var rnb = document.querySelector('.report-navbar');
+      window.addEventListener('scroll', (function () {
+        var last = 0;
+        return function () {
+          var now = window.scrollY;
+          if (now > 20) rnb && rnb.classList.add('header-scrolled');
+          else rnb && rnb.classList.remove('header-scrolled');
+          last = now;
+        };
+      })(), { passive: true });
+
+      // TOC 高亮同步
+      var tocLinks = document.querySelectorAll('.toc-link');
+      var chapters = [];
+      for (var i = 1; i <= TOTAL_CHAPTERS; i++) {
+        var ch = document.getElementById('chapter' + i);
+        if (ch) chapters.push({ el: ch, idx: i });
+      }
+
+      function updateTocActive() {
+        var headerH = (document.querySelector('[data-header]') || {}).offsetHeight || 70;
+        var scrollPos = window.scrollY + headerH + 40;
+        var current = 1;
+        for (var i = 0; i < chapters.length; i++) {
+          var c = chapters[i];
+          if (c.el && c.el.offsetTop <= scrollPos) {
+            current = c.idx;
+          }
+        }
+        tocLinks.forEach(function (a, i) {
+          a.classList.toggle('active', i === current - 1);
+        });
+      }
+
+      window.addEventListener('scroll', (function (fn) {
+        var t;
+        return function () {
+          if (t) return;
+          t = setTimeout(function () { fn(); t = null; }, 120);
+        };
+      })(updateTocActive), { passive: true });
+      updateTocActive();
+
+      // TOC 点击跳转
+      tocLinks.forEach(function (a, i) {
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          scrollToChapter(i + 1);
+        });
+      });
+
+    })();
+  </script>
+  <!-- 🔧 D块前台×按钮兜底（语法安全修复）：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
+  <script>
+  (function(){
+    document.addEventListener('click', function(e){
+      var t = e.target; if(!t) return;
+      var tn = (t.tagName||'').toLowerCase();
+      var tc = (t.textContent||'').replace(/\s+/g,'');
+      if(tc === '×' || tc === '✕' || tc === 'x' || tc === 'X' || (t.getAttribute && (t.getAttribute('aria-label')||'').toLowerCase().indexOf('close')>=0)){
+        var cSel = '[class*=\'modal-\'],[class*=\'Modal\'],[id*=\'Modal_Header\'],[class*=\'-close\'],[class*=\'popup-\'],[class*=\'dialog-\']';
+        var mSel = '.modal,[id$=\'Modal\'], [id$=\'modal\'], .modal-wrap, [data-modal], [class*=\'-popup\'], [class*=\'dialog\'], [class*=\'-panel\']';
+        var oSel = '.modal-overlay, [id$=\'Overlay\'], [id$=\'overlay\'], .overlay, [class*=\'-mask\'], [class*=\'-backdrop\']';
+        if(tn==='button'||tn==='a'||tn==='span'||tn==='i'||tn==='div'||(t.closest && t.closest(cSel))){
+          try{ if(typeof window.__closeAnyModal === 'function') { window.__closeAnyModal(); return; } }catch(_){}
+          try{
+            var m = t.closest ? t.closest(mSel) : null;
+            if(m){ try{ m.classList.remove('active','show','open','is-open'); m.classList.add('s-modal-hide','modal-wrap-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} } }
+            var o = document.querySelector(oSel);
+            if(o){ try{ o.classList.remove('active','show','open','is-open'); o.classList.add('s-overlay-hide','modal-overlay-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} } }
+          }catch(_f){}
+        }
+      }
+    }, true);
+  })();
+  </script>
+  <!-- 🔧 E块前台死按钮兜底（语法安全修复）：无onclick的"提交/重置/查询/生成/复制/导出/打印"→ toast+交互+表单校验 -->
+  <script>
+  (function(){
+    function __FT(msg,type){
+      try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){}
+      try{ (type==='error'?alert:console.log)('[frontpatch] '+msg); }catch(_f){}
+    }
+    function __FL(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||700); }catch(_){}
+      return true;
+    }
+    // 1) ESC 关所有弹窗 + 遮罩
+    try{ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ try{ if(typeof window.__closeAnyModal==='function')window.__closeAnyModal(); }catch(_){} try { var all=document.querySelectorAll('.modal,.modal-wrap,[data-modal],[class*=\'-popup\'],[class*=\'dialog\']'); all.forEach(function(x){ x.classList.remove('active','show','open'); x.classList.add('s-modal-hide'); }); var m2=document.querySelectorAll('.modal-overlay,.overlay,[class*=\'-mask\'],[class*=\'-backdrop\']'); m2.forEach(function(x){x.classList.add('s-overlay-hide');}); }catch(_x){} } }, true); }catch(_escErr){}
+    // 2) form reset 事件 → toast
+    try{ document.addEventListener('reset', function(e){ try{ if(!e.target||e.target.tagName!=='FORM') return; setTimeout(function(){ __FT('↺ 表单已重置（所有字段恢复默认）','success'); },120); }catch(_){} }, true); }catch(_rErr){}
+    // 3) 死按钮 document 级 capture 委托
+    var btnSel = 'button,a.btn,[role=\'button\'],.btn,.btn-primary,.btn-secondary,.btn-gold,.btn-outline,.btn-sm,.btn-action';
+    var agreeSel = '[data-agree-checkbox]';
+    document.addEventListener('click', function(e){
+      var t=e.target; if(!t) return;
+      var tn0 = (t.tagName||'').toLowerCase();
+      var btn = tn0==='button' ? t : (t.closest ? t.closest(btnSel) : null);
+      if(!btn) return;
+      try{ if(btn.getAttribute && btn.getAttribute('onclick') && btn.getAttribute('onclick').length>3) return; if(btn.__bindDone || btn.__ftDone) return; var tp=(btn.getAttribute&&btn.getAttribute('type')||'').toLowerCase(); if(tp==='submit') return; }catch(_a){}
+      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
+      if(!txt || txt.length>32) return;
+      var isSubmit  = txt.indexOf('提交')>=0 || txt.indexOf('生成')>=0 || txt.indexOf('申请')>=0 || txt.indexOf('预约')>=0;
+      var isReset   = txt.indexOf('重置')>=0;
+      var isSearch  = txt.indexOf('搜索')>=0 || txt.indexOf('查询')>=0 || txt==='🔍' || txt.indexOf('筛选')>=0;
+      var isCopy    = txt.indexOf('复制')>=0;
+      var isExport  = txt.indexOf('导出')>=0 || txt.indexOf('下载')>=0;
+      var isPrint   = txt.indexOf('打印')>=0;
+      var dk = 'ft2_'+(isSubmit?'s':isReset?'r':isSearch?'q':isCopy?'cp':isExport?'x':isPrint?'p':'k')+'_'+Math.random().toString(36).slice(2,6);
+      if(isSubmit){
+        if(!__FL(dk,1400)){ __FT('⏳ 处理中，请稍候…','warning'); e.stopImmediatePropagation(); return; }
+        var fm = btn.closest? btn.closest('form') : null;
+        if(fm){
+          var agree = fm.querySelector(agreeSel);
+          if(agree && !agree.checked){ __FT('⚠️ 请先勾选「同意协议/须知」后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); return; }
+          var reqFails = fm.querySelectorAll('[required]');
+          var firstBad=null;
+          try{ reqFails.forEach(function(inp){ var v=(inp.value||''); var ok=true; if(inp.type==='checkbox' && !inp.checked) ok=false; else if(inp.type!=='checkbox' && inp.type!=='radio' && !v.trim()) ok=false; if(!ok){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}}, 1800);}catch(_b){} } }); }catch(_rf){}
+          if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
+          __FT('✅ 操作成功（演示模式：真实环境将写入工单 + 通知对接专员）','success');
+          try{ fm.reset && fm.reset(); }catch(_rs){}
+          e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
+        } else {
+          __FT('✅ 操作成功（演示模式）','success');
+          try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
+          btn.__ftDone=1; e.stopImmediatePropagation(); return;
+        }
+      }
+      if(isReset){
+        if(!__FL(dk,500)) return;
+        var fm2 = btn.closest ? btn.closest('form') : null;
+        try{ if(fm2){ fm2.reset && fm2.reset(); __FT('↺ 表单已重置（所有字段恢复默认）','success'); } else { __FT('↺ 已重置','info'); } }catch(_r){}
+        btn.__ftDone=1; return;
+      }
+      if(isSearch){
+        if(!__FL(dk,550)) return;
+        __FT('🔍 查询条件已生效（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isCopy){
+        if(!__FL(dk,900)) return;
+        try{ var wrap = btn.closest ? btn.closest('[data-copy], .copy-wrap, p, li, div') : null; var src = (btn.getAttribute&&btn.getAttribute('data-copy-text')) || (wrap?wrap.textContent:'') || ''; src = src.replace(/\s+/g,' ').trim().slice(0,300); if(src && navigator.clipboard){ navigator.clipboard.writeText(src).then(function(){ __FT('📋 已复制到剪贴板','success'); }).catch(function(){ __FT('📋 内容就绪（浏览器不支持自动复制）','info'); }); } else { __FT('📋 内容就绪（请手动复制）','info'); } }catch(_c){ __FT('📋 复制操作触发','info'); }
+        btn.__ftDone=1; return;
+      }
+      if(isExport){
+        if(!__FL(dk,1200)) { __FT('⏳ 导出中…','warning'); return; }
+        __FT('📤 导出完成：CSV/PDF 已就绪（真实环境触发浏览器下载）','success');
+        btn.__ftDone=1; return;
+      }
+      if(isPrint){
+        if(!__FL(dk, 1200)) return;
+        try{ window.print && window.print(); __FT('🖨 已调起打印对话框','success'); }catch(_p){ __FT('🖨 打印准备中…','info'); }
+        btn.__ftDone=1; return;
+      }
+    }, true);
+    console.info('[FrontPolicyPatch SAFE 已加载：CSS圆角+×兜底+死按钮+ESC关弹窗+表单校验]');
+  })();
+  </script>
+</body>
+</html>

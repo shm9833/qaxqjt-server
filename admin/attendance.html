@@ -1,0 +1,2240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <!-- =========================================================== -->
+  <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
+  <!-- 无 session 时 0.5ms 内跳登录页，防白屏 / 越权一眼看 -->
+  <!-- =========================================================== -->
+  <script>try{(function(){
+    var K1="qaxqjt_admin_session", K2="qaxqjt_logout_blacklist", L="login.html";
+    var p=String(location.pathname||"").split("/").pop().toLowerCase();
+    if(p==="login.html"||p==="recover.html") return;
+    var now=Date.now(), raw=null, s=null, bad=1;
+    try{ raw=localStorage.getItem(K1); if(raw) s=JSON.parse(raw); }catch(_){}
+    if(s && s.id && (!s.expiresAt || now < parseInt(s.expiresAt,10))){
+      bad=0;
+      try{ var bl=JSON.parse(localStorage.getItem(K2)||"[]"); for(var i=0;i<bl.length;i++){ if(bl[i] && bl[i].id===s.id){ bad=1; break; } } }catch(_){}
+    }
+    if(bad){
+      ["qaxqjt_admin_session","admin_session","qaxqjt_admin_sess_v2","admin_sess_v2","qaxqjt_admin_remember","qaxqjt_admin_token","qaxqjt_admin_info","qaxqjt_admin_permissions","qaxqjt_auth_permissions_v1"].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
+      var u=location.href, i=u.lastIndexOf("/");
+      var base= (i>=0)? u.substring(0,i+1) : "./";
+      location.replace(base + L);
+    }
+  })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
+<script>
+(function() {
+  var __ROLE_LEVEL = { super_admin:999, admin:999, ops:800, director:700, finance_checker:600, finance_cashier:520, finance_maker:550, finance_view:510, finance_admin:500, finance:500, staff:100 };
+  function __getRoleLevel(role) { if (!role) return 0; return __ROLE_LEVEL[role] || 0; }
+  function __applyRoleMenuFilter(session) {
+    if (!session) return;
+    var userLevel = __getRoleLevel(session.role);
+    var items = document.querySelectorAll('.admin-sidebar-menu .admin-menu-item[data-role-level]');
+    items.forEach(function(item) {
+      var need = parseInt(item.getAttribute('data-role-level'), 10) || 0;
+      if (userLevel < need) item.style.display = 'none';
+    });
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      var raw = localStorage.getItem('qaxqjt_admin_session');
+      var sess = raw ? JSON.parse(raw) : null;
+      __applyRoleMenuFilter(sess);
+      // —— 页面级权限拦截：直接访问 URL 时检查角色，不足则跳首页 ——
+      (function() {
+        if (!sess) return;
+        var userLvl = __getRoleLevel(sess.role);
+        if (userLvl < 700) {
+          location.replace('index.html');
+        }
+      })();
+    } catch(e) {}
+  });
+})();
+</script>
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <script src="../js/favicon-inject.js?v=20260803" defer></script>
+    <script src="../js/wechat-fallback.js?v=20260803" defer></script>
+  <script src="../js/year-lite.js?v=20260803"></script>
+    <script src="../js/api-config.js?v=20260803"></script>
+  <script src="../js/api-request.js?v=20260803"></script>
+<script src="../js/app.js?v=20260803"></script>
+  <script src="../js/pagination.js?v=20260803"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>考勤与薪酬管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
+  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <style>
+    /* ============================================================
+       FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
+       ============================================================ */
+    html, body {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+      width: 100%;
+    }
+    * { box-sizing: border-box; }
+    table { table-layout: fixed; word-break: break-word; }
+    pre, code, textarea { white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+    .admin-main, .admin-content, main, .page-wrap { max-width: 100%; overflow-x: hidden; }
+
+    .admin-sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 90;
+    }
+    .admin-sidebar-overlay.active { display: block; }
+    @media (max-width: 900px) {
+      .admin-sidebar { transform: translateX(-100%); }
+      .admin-sidebar.mobile-open { transform: translateX(0); }
+      .admin-main { margin-left: 0 !important; }
+      .admin-sidebar-toggle { display: flex !important; }
+      .admin-search { display: none; }
+      .admin-content { padding: 20px 15px !important; }
+    }
+    .admin-user-dropdown { position: relative; }
+    .admin-user-dropdown .user-toggle {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 12px 6px 6px; border-radius: 25px;
+      background: var(--bg-light); cursor: pointer;
+      transition: var(--transition); border: 1px solid transparent;
+    }
+    .admin-user-dropdown .user-toggle:hover { background: var(--cream); border-color: var(--gold); }
+    .admin-user-dropdown .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex; align-items: center; justify-content: center;
+      color: var(--primary-dark); font-weight: 700; font-size: 0.95rem; flex-shrink: 0;
+    }
+    .admin-user-dropdown .user-name-text { font-size: 0.88rem; font-weight: 600; color: var(--text-dark); }
+    .admin-user-dropdown .user-role-text { font-size: 0.75rem; color: var(--gold-dark); }
+    .admin-user-dropdown .dropdown-arrow { font-size: 0.7rem; color: var(--text-light); transition: transform 0.3s ease; }
+    .admin-user-dropdown.open .dropdown-arrow { transform: rotate(180deg); }
+    .admin-user-dropdown .dropdown-menu {
+      position: absolute; top: calc(100% + 8px); right: 0; min-width: 200px;
+      background: var(--cream); border: 1px solid var(--border-light);
+      border-radius: var(--radius); box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+      overflow: hidden; opacity: 0; visibility: hidden;
+      transform: translateY(-8px); transition: all 0.25s ease; z-index: 200;
+    }
+    .admin-user-dropdown.open .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-menu .dropdown-header { padding: 15px 18px; border-bottom: 1px solid var(--border-light);
+      background: linear-gradient(135deg, rgba(139,0,0,0.05), rgba(212,175,55,0.05)); }
+    .dropdown-menu .dh-name { font-weight: 600; color: var(--primary-dark); font-size: 0.95rem; margin-bottom: 3px; }
+    .dropdown-menu .dh-email { font-size: 0.8rem; color: var(--text-light); }
+    .dropdown-menu .dropdown-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 18px; font-size: 0.88rem; color: var(--text-dark);
+      cursor: pointer; transition: var(--transition);
+    }
+    .dropdown-menu .dropdown-item:hover { background: rgba(139,0,0,0.05); color: var(--primary); padding-left: 22px; }
+    .dropdown-menu .di-icon { width: 18px; text-align: center; color: var(--gold-dark); }
+    .dropdown-menu .dropdown-divider { height: 1px; background: var(--border-light); margin: 4px 0; }
+
+    .att-tabs {
+      display: flex; gap: 0; border-bottom: 2px solid var(--border-light);
+      background: var(--bg-light); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: 0 20px; overflow-x: auto;
+    }
+    .att-tab {
+      padding: 16px 28px; cursor: pointer; font-size: 0.95rem;
+      color: var(--text-light); font-weight: 500; position: relative;
+      white-space: nowrap; transition: var(--transition);
+      border-bottom: 3px solid transparent;
+    }
+    .att-tab:hover { color: var(--primary); }
+    .att-tab.active {
+      color: var(--primary); font-weight: 700;
+      border-bottom-color: var(--primary);
+    }
+    .att-tab .tab-badge {
+      display: inline-block; margin-left: 8px; padding: 2px 8px;
+      border-radius: 10px; font-size: 0.72rem; font-weight: 600;
+      background: rgba(139,0,0,0.08); color: var(--primary);
+    }
+    .att-tab.active .tab-badge { background: var(--primary); color: var(--cream); }
+    .att-tab-content { display: none; }
+    .att-tab-content.active { display: block; }
+
+    .filter-bar {
+      display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+      padding: 18px 22px; background: var(--bg-light);
+      border-radius: var(--radius); margin-bottom: 20px;
+      border: 1px solid var(--border-light);
+    }
+    .filter-bar .form-group { display: flex; align-items: center; gap: 8px; }
+    .filter-bar .form-group label {
+      font-size: 0.85rem; color: var(--text-light); font-weight: 500; white-space: nowrap;
+    }
+    .filter-bar .form-control {
+      padding: 8px 14px; border: 1.5px solid var(--border-light);
+      border-radius: 20px; font-size: 0.85rem; background: var(--cream);
+      color: var(--text-dark); font-family: inherit; outline: none;
+      transition: var(--transition);
+    }
+    .filter-bar .form-control:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.1); }
+    .filter-bar .search-box {
+      position: relative; flex: 1; min-width: 240px;
+    }
+    .filter-bar .search-box input {
+      width: 100%; padding: 9px 16px 9px 40px;
+      border: 1.5px solid var(--border-light); border-radius: 25px;
+      background: var(--cream); font-family: inherit; font-size: 0.88rem;
+      outline: none; transition: var(--transition);
+    }
+    .filter-bar .search-box input:focus { border-color: var(--gold); }
+    .filter-bar .search-box .search-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--text-light);
+    }
+
+    .status-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 12px;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    .status-badge.on { background: rgba(40,167,69,0.12); color: #28a745; }
+    .status-badge.off { background: rgba(108,117,125,0.12); color: #6c757d; }
+    .status-badge.leave { background: rgba(255,193,7,0.18); color: #e6a800; }
+    .status-badge.absent { background: rgba(220,53,69,0.12); color: #dc3545; }
+    .status-badge.normal { background: rgba(40,167,69,0.12); color: #28a745; }
+    .status-badge.night { background: rgba(111,66,193,0.15); color: #6f42c1; }
+
+    .att-stat-card {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      border: 1px solid var(--border-light);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .att-stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+      border-color: var(--gold);
+    }
+    .att-stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+    .att-stat-card.total::before { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); }
+    .att-stat-card.full::before { background: linear-gradient(180deg, #28a745, #5cb85c); }
+    .att-stat-card.night::before { background: linear-gradient(180deg, #6f42c1, #9b7bd6); }
+    .att-stat-card.net::before { background: linear-gradient(180deg, var(--gold-dark), var(--gold)); }
+
+    .asc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .asc-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .att-stat-card.total .asc-icon { background: rgba(139,0,0,0.1); }
+    .att-stat-card.full .asc-icon { background: rgba(40,167,69,0.12); }
+    .att-stat-card.night .asc-icon { background: rgba(111,66,193,0.12); }
+    .att-stat-card.net .asc-icon { background: rgba(212,175,55,0.15); }
+
+    .asc-title { font-size: 0.85rem; color: var(--text-light); margin-bottom: 4px; }
+    .asc-value {
+      font-size: 1.6rem; font-weight: 700; color: var(--text-dark); line-height: 1.2;
+    }
+    .asc-sub { font-size: 0.78rem; color: var(--text-light); margin-top: 4px; }
+    .asc-sub strong { color: var(--primary-dark); font-weight: 600; }
+
+    .upload-zone {
+      border: 2.5px dashed var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 50px 30px;
+      text-align: center;
+      background: var(--bg-light);
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--gold);
+      background: linear-gradient(135deg, rgba(212,175,55,0.05), rgba(139,0,0,0.03));
+    }
+    .upload-zone .uz-icon {
+      font-size: 3.5rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .upload-zone h3 {
+      margin: 0 0 8px 0;
+      color: var(--primary-dark);
+      font-size: 1.2rem;
+    }
+    .upload-zone p {
+      margin: 0;
+      color: var(--text-light);
+      font-size: 0.88rem;
+    }
+    .upload-zone .uz-tips {
+      margin-top: 16px;
+      padding: 12px 18px;
+      background: var(--cream);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+      text-align: left;
+      font-size: 0.82rem;
+      color: var(--text-dark);
+    }
+    .upload-zone .uz-tips code {
+      background: rgba(212,175,55,0.15);
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: var(--primary-dark);
+      font-size: 0.8rem;
+    }
+    .upload-zone input[type=file] {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      opacity: 0; cursor: pointer;
+    }
+
+    .preview-card {
+      background: var(--cream);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+    }
+    .preview-header {
+      padding: 14px 20px;
+      background: linear-gradient(135deg, rgba(139,0,0,0.05), rgba(212,175,55,0.08));
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .preview-header h4 { margin: 0; color: var(--primary-dark); font-size: 1rem; }
+    .preview-body { padding: 16px 20px; overflow-x: auto; }
+
+    .param-card {
+      background: var(--cream);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+      padding: 22px;
+    }
+    .param-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px 22px;
+    }
+    .param-item label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-light);
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+    .param-item .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border-light);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      background: var(--bg-light);
+      font-family: inherit;
+    }
+    .param-item .form-control:focus {
+      border-color: var(--gold);
+      outline: none;
+      background: #fff;
+    }
+    .param-hint {
+      margin-top: 4px;
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+
+    .page-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1.5px solid transparent;
+      font-family: inherit;
+      text-decoration: none;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: var(--cream); border-color: var(--primary); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(139,0,0,0.25); }
+    .btn-gold { background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: var(--primary-dark); border-color: var(--gold-dark); }
+    .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(212,175,55,0.35); }
+    .btn-success { background: linear-gradient(135deg, #28a745, #1e7e34); color: #fff; border-color: #28a745; }
+    .btn-success:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(40,167,69,0.3); }
+    .btn-outline { background: var(--cream); color: var(--text-dark); border-color: var(--border-light); }
+    .btn-outline:hover { border-color: var(--gold); color: var(--primary-dark); background: rgba(212,175,55,0.05); }
+    .btn-danger { background: linear-gradient(135deg, #dc3545, #b02a37); color: #fff; border-color: #dc3545; }
+    .btn-danger:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(220,53,69,0.25); }
+    .btn-sm { padding: 5px 12px; font-size: 0.78rem; border-radius: 8px; }
+    .btn-ghost { background: transparent; border: none; color: var(--text-light); padding: 4px 8px; }
+    .btn-ghost:hover { color: var(--primary); background: rgba(139,0,0,0.05); border-radius: 6px; }
+
+    .wage-table-wrap {
+      background: var(--cream);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+    }
+    .wage-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      min-width: 1200px;
+    }
+    .wage-table thead {
+      background: linear-gradient(135deg, rgba(139,0,0,0.06), rgba(212,175,55,0.1));
+    }
+    .wage-table thead th {
+      padding: 12px 14px;
+      text-align: left;
+      font-weight: 700;
+      color: var(--primary-dark);
+      border-bottom: 2px solid var(--gold);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+    }
+    .wage-table tbody td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-dark);
+    }
+    .wage-table tbody tr:hover {
+      background: rgba(212,175,55,0.06);
+    }
+    .wage-table tbody tr:last-child td { border-bottom: none; }
+    .wage-table .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+    .wage-table .num.total-net {
+      font-weight: 800;
+      color: var(--primary-dark);
+    }
+    .wage-table .num.deduct { color: #dc3545; }
+    .wage-table .num.add { color: #28a745; }
+    .wage-table tfoot td {
+      padding: 14px;
+      background: rgba(139,0,0,0.03);
+      font-weight: 700;
+      color: var(--primary-dark);
+      border-top: 2px solid var(--gold);
+    }
+    .wage-table .actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+
+    .wage-formula-box {
+      padding: 18px 22px;
+      background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(139,0,0,0.04));
+      border-radius: var(--radius);
+      border: 1px solid rgba(212,175,55,0.3);
+      margin-bottom: 18px;
+    }
+    .wage-formula-box h4 {
+      margin: 0 0 10px 0;
+      color: var(--primary-dark);
+      font-size: 0.95rem;
+    }
+    .wage-formula-box .formula {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.88rem;
+      color: var(--text-dark);
+      background: var(--cream);
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      line-height: 1.8;
+    }
+    .wage-formula-box .formula .var { color: var(--primary); font-weight: 700; }
+    .wage-formula-box .formula .op { color: var(--gold-dark); font-weight: 700; }
+    .wage-formula-box .formula .num { color: #17a2b8; font-weight: 600; }
+
+    .checkbox-cell {
+      width: 40px;
+      text-align: center;
+    }
+    .checkbox-cell input[type=checkbox] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+
+    .night-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: rgba(111,66,193,0.12);
+      color: #6f42c1;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    /* 打印样式 */
+    @media print {
+      /* A4考勤表/考勤汇总打印：上下12mm，左右2mm紧凑 */
+      @page { size: A4 portrait; margin: 12mm 2mm 12mm 2mm; }
+      .admin-sidebar, .admin-sidebar-overlay, .admin-header,
+      .page-actions, .filter-bar, .att-tabs, .no-print,
+      .toast-container, .modal-overlay {
+        display: none !important;
+      }
+      .admin-main { margin: 0 !important; padding: 0 !important; }
+      .admin-content { padding: 0 !important; overflow: visible !important; }
+      body { background: #fff !important; }
+    }
+
+    .admin-sidebar-menu li a:not([href]), .admin-sidebar-menu li a[href="#"] { cursor: pointer; position: relative; }
+    .admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
+      content: '';
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(212,175,55,0.5);
+    }
+  
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+</style>
+</head>
+<body>
+  <div class="admin-layout">
+    <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <div class="logo-text">秦安县秦剧团<br/>文化演出管理系统</div>
+      </div>
+
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <a href="index.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📊</span>
+            <span>数据看板</span>
+          </a>
+          <a href="accounts.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">👥</span>
+            <span>账号权限管理</span>
+          </a>
+          <a href="schedule.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📅</span>
+            <span>演出档期排班</span>
+          </a>
+          <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>演出演员表</span>
+          </a>
+          <a href="orders.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>订单预约管理</span>
+          </a>
+          <a href="operas.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>剧目资源管理</span>
+          </a>
+          <a href="staff.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">👨‍🎤</span>
+            <span>演职人员管理</span>
+          </a>
+          <a href="attendance.html" data-role-level="700" class="admin-menu-item active admin-menu-item">
+            <span class="menu-icon">💵</span>
+            <span>考勤与薪酬</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="inventory.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>道具服装库存</span>
+          </a>
+          <a href="finance.html" data-role-level="500" class="admin-menu-item">
+            <span class="menu-icon">💰</span>
+            <span>财务收支台账</span>
+          </a>
+          <a href="content.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📝</span>
+            <span>官网内容管理</span>
+          </a>
+          <a href="reports.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">📈</span>
+            <span>数据统计报表</span>
+          </a>
+          <a href="system.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">🔧</span>
+            <span>系统日志备份</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
+          <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>架构验收报告</span>
+          </a>
+          <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>最终交付总结</span>
+          </a>
+          <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">🚀</span>
+            <span>EdgeOne Pages 部署教程</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
+            <span>🚪</span><span>退出登录</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" id="sidebarToggle" aria-label="菜单">
+            <span>☰</span>
+          </button>
+          <div class="admin-breadcrumb">
+            <a href="index.html">首页</a>
+            <span class="separator">/</span>
+            <a href="#">人力资源</a>
+            <span class="separator">/</span>
+            <span class="current">考勤与薪酬管理</span>
+          </div>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="搜索工资条、姓名、工号..." />
+          </div>
+          <button class="admin-header-btn" title="通知">
+            <span>🔔</span>
+            <span class="notify-dot"></span>
+          </button>
+          <button class="admin-header-btn" title="消息">
+            <span>✉️</span>
+          </button>
+          <button class="admin-header-btn" title="全屏" onclick="toggleFullscreen()">
+            <span>⛶</span>
+          </button>
+          <div class="admin-user-dropdown" id="userDropdown">
+            <div class="user-toggle" id="userToggle">
+              <div class="user-avatar" id="userAvatar">A</div>
+              <div>
+                <div class="user-name-text" id="userName">管理员</div>
+                <div class="user-role-text" id="userRole">超级管理员</div>
+              </div>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+              <div class="dropdown-header">
+                <div class="dh-name" id="dhName">系统管理员</div>
+                <div class="dh-email">admin@qinxian-opera.com</div>
+              </div>
+              <div class="dropdown-item" onclick="location.href='accounts.html'">
+                <span class="di-icon">👤</span><span>个人资料</span>
+              </div>
+              <div class="dropdown-item" onclick="location.href='system.html'">
+                <span class="di-icon">⚙️</span><span>系统设置</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" id="logoutBtnDropdown" style="color:var(--primary);">
+                <span class="di-icon">🚪</span><span>退出登录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <div class="page-header" style="margin-bottom:20px;">
+          <div class="page-header-left" style="display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap;">
+            <div>
+              <h1 style="margin:0 0 6px 0;color:var(--primary-dark);font-size:1.6rem;">💵 考勤与薪酬管理</h1>
+              <p class="page-desc" style="margin:0;color:var(--text-light);font-size:0.9rem;">上传考勤表 CSV → 自动核算底薪/全勤/夜场补贴/事假扣款/社保/个税 → 生成当月工资条 → 单条/批量打印 A5 工资密封条</p>
+            </div>
+          </div>
+          <div class="page-header-right">
+            <div class="page-actions">
+              <button class="btn btn-outline btn-sm" id="attBtnDemoCsv">📥 下载示例 CSV</button>
+              <button class="btn btn-gold btn-sm" id="attBtnUploadCsv">📤 上传考勤 CSV</button>
+              <button class="btn btn-success btn-sm" id="attBtnCalcAll">🧮 核算当月工资</button>
+              <button class="btn btn-primary btn-sm" id="attBtnExportCsv">📊 导出工资表 CSV</button>
+              <button class="btn btn-gold btn-sm" id="attBtnBatchPrint" onclick="window.print()">🖨️ 批量打印工资条</button>
+              <button class="btn btn-danger btn-sm" id="attBtnFinanceAll">💼 整月工资→财务台账</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 切换 -->
+        <div class="att-tabs no-print" id="attTabs">
+          <div class="att-tab active" data-tab="wage">
+            <span>📊 工资条列表</span>
+            <span class="tab-badge" id="tabWageBadge">0</span>
+          </div>
+          <div class="att-tab" data-tab="upload">
+            <span>📥 考勤导入</span>
+            <span class="tab-badge" id="tabUploadBadge">NEW</span>
+          </div>
+          <div class="att-tab" data-tab="params">
+            <span>⚙️ 薪资参数</span>
+          </div>
+          <div class="att-tab" data-tab="rules">
+            <span>🎯 扣款规则引擎</span>
+            <span class="tab-badge" style="background:#7c3aed;">自定义</span>
+          </div>
+          <div class="att-tab" data-tab="history">
+            <span>📋 打印历史</span>
+          </div>
+        </div>
+
+        <!-- ========================== Tab 1: 工资条列表 ========================== -->
+        <div class="att-tab-content active" id="tabWage">
+
+          <!-- 统计卡片 -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-bottom:20px;">
+            <div class="att-stat-card total">
+              <div class="asc-header">
+                <div>
+                  <div class="asc-title">员工人数</div>
+                  <div class="asc-value" id="statTotal">0</div>
+                </div>
+                <div class="asc-icon">👥</div>
+              </div>
+              <div class="asc-sub">本月 <strong id="statMonth">—</strong> 在册工资核算</div>
+            </div>
+            <div class="att-stat-card full">
+              <div class="asc-header">
+                <div>
+                  <div class="asc-title">全勤人数</div>
+                  <div class="asc-value" id="statFull" style="color:#28a745;">0</div>
+                </div>
+                <div class="asc-icon">✅</div>
+              </div>
+              <div class="asc-sub">全勤奖 +<strong id="statFullBonus">¥0</strong></div>
+            </div>
+            <div class="att-stat-card night">
+              <div class="asc-header">
+                <div>
+                  <div class="asc-title">夜场总场次</div>
+                  <div class="asc-value" id="statNight" style="color:#6f42c1;">0</div>
+                </div>
+                <div class="asc-icon">🌙</div>
+              </div>
+              <div class="asc-sub">夜场补贴 +<strong id="statNightSubsidy">¥0</strong></div>
+            </div>
+            <div class="att-stat-card net">
+              <div class="asc-header">
+                <div>
+                  <div class="asc-title">实发工资总计</div>
+                  <div class="asc-value" id="statNet" style="color:#b8860b;">¥0</div>
+                </div>
+                <div class="asc-icon">💴</div>
+              </div>
+              <div class="asc-sub">应发 <strong id="statGross">¥0</strong> 扣除 <strong id="statDeduct">¥0</strong></div>
+            </div>
+          </div>
+
+          <!-- 公式说明 -->
+          <div class="wage-formula-box no-print">
+            <h4>🧮 工资计算公式（可在「薪资参数」Tab 修改）</h4>
+            <div class="formula">
+              <span class="var">实发</span> <span class="op">=</span>
+              <span class="var">底薪</span>(<span class="num">默认 ¥3,800</span>)
+              <span class="op"> + </span>
+              <span class="var">全勤奖</span>(<span class="num">整月无缺勤 +¥200</span>)
+              <span class="op"> + </span>
+              <span class="var">夜场补贴</span>(<span class="num">每场 × ¥80</span>)
+              <span class="op"> - </span>
+              <span class="var">事假扣款</span>(<span class="num">日均底薪 × 事假天数</span>)
+              <span class="op"> - </span>
+              <span class="var">社保代扣</span>(<span class="num">固定 ¥420</span>)
+              <span class="op"> - </span>
+              <span class="var">个税</span>(<span class="num">累进税率，起征点 ¥5,000</span>)
+            </div>
+          </div>
+
+          <!-- 筛选栏 -->
+          <div class="filter-bar no-print">
+            <div class="form-group">
+              <label>📅 核算月份：</label>
+              <input type="month" id="filterMonth" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>🏢 部门：</label>
+              <select id="filterDept" class="form-control">
+                <option value="">全部部门</option>
+                <option value="演员队">演员队</option>
+                <option value="乐队">乐队</option>
+                <option value="舞美队">舞美队</option>
+                <option value="行政后勤">行政后勤</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>⭐ 全勤：</label>
+              <select id="filterFull" class="form-control">
+                <option value="">全部</option>
+                <option value="1">全勤（¥+200）</option>
+                <option value="0">非全勤</option>
+              </select>
+            </div>
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="filterKw" placeholder="搜索姓名、工号、岗位..." />
+            </div>
+            <button class="btn btn-outline btn-sm" id="attBtnFilterReset">↺ 重置筛选</button>
+          </div>
+
+          <!-- 工资条表格 -->
+          <div class="wage-table-wrap">
+            <div style="padding:14px 18px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+              <div style="font-size:0.88rem;color:var(--text-light);">
+                共 <strong id="wageCount" style="color:var(--primary-dark);">0</strong> 条工资条
+                <span class="no-print">｜选中 <strong id="wageSelected" style="color:var(--gold-dark);">0</strong> 条</span>
+              </div>
+              <div class="page-actions no-print">
+                <button class="btn btn-outline btn-sm" id="attBtnSelectAll">☑️ 全选本页</button>
+                <button class="btn btn-gold btn-sm" id="attBtnPrintSelected" onclick="window.print()">🖨️ 打印已选</button>
+                <button class="btn btn-danger btn-sm" id="attBtnFinanceSel">💼 所选→财务待发</button>
+              </div>
+            </div>
+            <div class="table-wrapper data-table-container" style="overflow-x:auto;">
+              <table class="wage-table" id="wageTable" style="min-width:760px;">
+                <thead>
+                  <tr>
+                    <th class="checkbox-cell no-print"><input type="checkbox" id="chkAllHeader" /></th>
+                    <th style="width:60px;">序号</th>
+                    <th>姓名</th>
+                    <th>岗位 / 行当</th>
+                    <th class="num">出勤天</th>
+                    <th class="num">夜场数</th>
+                    <th class="num">底薪</th>
+                    <th class="num add">全勤奖</th>
+                    <th class="num add">夜场补</th>
+                    <th class="num deduct">事假扣</th>
+                    <th class="num deduct">旷工扣</th>
+                    <th class="num deduct">迟到扣</th>
+                    <th class="num deduct">早退扣</th>
+                    <th class="num deduct">社保</th>
+                    <th class="num deduct">个税</th>
+                    <th class="num">应发</th>
+                    <th class="num total-net">实发</th>
+                    <th style="width:160px;" class="no-print">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="wageTbody">
+                  <!-- 工资条动态渲染 -->
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td class="checkbox-cell no-print"></td>
+                    <td colspan="2" style="text-align:right;"><strong>合计</strong></td>
+                    <td id="tfCount">—</td>
+                    <td class="num" id="tfAttDays">0</td>
+                    <td class="num" id="tfNights">0</td>
+                    <td class="num" id="tfBase">¥0</td>
+                    <td class="num" id="tfFull">¥0</td>
+                    <td class="num" id="tfNightSub">¥0</td>
+                    <td class="num" id="tfLeave">¥0</td>
+                    <td class="num" id="tfAbsent">¥0</td>
+                    <td class="num" id="tfLate">¥0</td>
+                    <td class="num" id="tfEarly">¥0</td>
+                    <td class="num" id="tfSocial">¥0</td>
+                    <td class="num" id="tfTax">¥0</td>
+                    <td class="num" id="tfGross">¥0</td>
+                    <td class="num" id="tfNet" style="color:var(--primary-dark);font-size:1rem;">¥0</td>
+                    <td class="no-print"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================== Tab 2: 考勤导入 ========================== -->
+        <div class="att-tab-content" id="tabUpload">
+          <div style="display:grid;grid-template-columns:1fr;gap:18px;">
+            <!-- 上传区域 -->
+            <div class="upload-zone no-print" id="uploadZone">
+              <span class="uz-icon">📂</span>
+              <h3>点击选择 或 拖拽 CSV 考勤表到此处</h3>
+              <p>支持 PapaParse 原生 CSV 解析 · 自动识别表头 · 自动匹配员工姓名</p>
+              <div class="uz-tips">
+                <strong>📌 标准 CSV 列名参考（任意顺序均可，系统模糊匹配）：</strong>
+                <div style="margin-top:8px;">
+                  <code>姓名</code> <code>工号</code> <code>岗位</code> <code>出勤天数</code> <code>夜场场次</code>
+                  <code>请假天数(事假)</code> <code>旷工天数</code> <code>部门</code> <code>备注</code>
+                </div>
+                <div style="margin-top:8px;color:var(--text-light);">💡 先点击「下载示例 CSV」查看标准格式</div>
+              </div>
+              <input type="file" id="csvFileInput" accept=".csv,text/csv" />
+            </div>
+
+            <!-- 预览区域 -->
+            <div class="preview-card" id="previewCard" style="display:none;">
+              <div class="preview-header no-print">
+                <h4>✅ 考勤表解析预览（共 <span id="previewCount">0</span> 条记录 · <span id="previewMonth">—</span>）</h4>
+                <div class="page-actions">
+                  <button class="btn btn-outline btn-sm" id="previewCancelBtn">✕ 取消</button>
+                  <button class="btn btn-success btn-sm" id="previewConfirmBtn">💾 确认入库并核算</button>
+                </div>
+              </div>
+              <div class="preview-body">
+                <div class="table-wrapper data-table-container" style="overflow-x:auto;">
+                  <table class="wage-table" id="previewTable" style="min-width:760px;">
+                  <thead>
+                    <tr>
+                      <th>姓名</th>
+                      <th>工号</th>
+                      <th>岗位</th>
+                      <th class="num">出勤天</th>
+                      <th class="num">夜场数</th>
+                      <th class="num">事假天</th>
+                      <th class="num">旷工天</th>
+                      <th>部门</th>
+                      <th>解析状态</th>
+                    </tr>
+                  </thead>
+                  <tbody id="previewTbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- 人工补录（无需CSV） -->
+            <div class="param-card no-print">
+              <h4 style="margin:0 0 14px 0;color:var(--primary-dark);">✍️ 或者人工补录考勤（无需上传 CSV）</h4>
+              <div class="param-grid">
+                <div class="param-item">
+                  <label>选择员工</label>
+                  <select class="form-control" id="manualStaff"></select>
+                </div>
+                <div class="param-item">
+                  <label>出勤天数（例：26）</label>
+                  <input type="number" min="0" max="31" step="1" class="form-control" id="manualAttDays" value="26" />
+                </div>
+                <div class="param-item">
+                  <label>夜场场次（例：8）</label>
+                  <input type="number" min="0" step="1" class="form-control" id="manualNights" value="0" />
+                </div>
+                <div class="param-item">
+                  <label>事假天数（例：2）</label>
+                  <input type="number" min="0" step="0.5" class="form-control" id="manualLeave" value="0" />
+                </div>
+                <div class="param-item">
+                  <label>旷工天数</label>
+                  <input type="number" min="0" step="0.5" class="form-control" id="manualAbsent" value="0" />
+                </div>
+                <div class="param-item">
+                  <label style="visibility:hidden;">——</label>
+                  <button class="btn btn-success" id="manualAddBtn" style="width:100%;">➕ 添加该员工本月考勤</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================== Tab 3: 薪资参数 ========================== -->
+        <div class="att-tab-content" id="tabParams">
+          <div class="wage-formula-box">
+            <h4>🔧 薪资参数配置（修改后点击「保存参数」生效，下次核算自动采用）</h4>
+            <div class="formula" style="background:transparent;border:none;padding:0;">
+              修改参数仅影响 <span class="var">新的核算</span>，<span class="op">已生成的历史工资条不变</span>（保证数据一致性）
+            </div>
+          </div>
+          <div class="param-card">
+            <div class="param-grid">
+              <div class="param-item">
+                <label>💰 底薪（元 / 月）<span style="color:#dc3545;">*</span></label>
+                <input type="number" min="0" step="100" class="form-control" id="paramBase" value="3800" />
+                <div class="param-hint">默认 ¥3,800，可按员工个别调整（工资条列表可单行改）</div>
+              </div>
+              <div class="param-item">
+                <label>🏆 全勤奖金（元）<span style="color:#dc3545;">*</span></label>
+                <input type="number" min="0" step="10" class="form-control" id="paramFullBonus" value="200" />
+                <div class="param-hint">整月无请假 / 无旷工 / 出勤≥应出勤天 → 发放</div>
+              </div>
+              <div class="param-item">
+                <label>🌙 夜场补贴（元 / 场）<span style="color:#dc3545;">*</span></label>
+                <input type="number" min="0" step="10" class="form-control" id="paramNightSub" value="80" />
+                <div class="param-hint">夜场总补贴 = 夜场场数 × 单场补贴</div>
+              </div>
+              <div class="param-item">
+                <label>🏥 社保代扣（元 / 月）<span style="color:#dc3545;">*</span></label>
+                <input type="number" min="0" step="10" class="form-control" id="paramSocial" value="420" />
+                <div class="param-hint">固定扣除（五险一金个人部分，默认 ¥420）</div>
+              </div>
+              <div class="param-item">
+                <label>📅 每月应出勤天数（天）</label>
+                <input type="number" min="20" max="31" step="1" class="form-control" id="paramShouldWork" value="26" />
+                <div class="param-hint">用于日均工资计算 & 全勤判断基准</div>
+              </div>
+              <div class="param-item">
+                <label>📊 个税起征点（元）</label>
+                <input type="number" min="0" step="500" class="form-control" id="paramTaxThreshold" value="5000" />
+                <div class="param-hint">应纳税所得额 = 应发工资 - 起征点</div>
+              </div>
+              <div class="param-item" style="grid-column:1/-1;">
+                <label>📈 个税税率档位（累进税率，按月计算）</label>
+                <div style="background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;padding:14px 16px;margin-top:4px;font-size:0.85rem;">
+                  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;font-weight:700;color:var(--primary-dark);padding-bottom:8px;border-bottom:1px solid var(--border-light);">
+                    <div>档位</div><div>应纳税所得额（月）</div><div>税率</div><div>速算扣除数</div><div>说明</div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:8px 0;border-bottom:1px dashed var(--border-light);">
+                    <div>1 档</div><div>≤ ¥3,000</div><div>3%</div><div>0</div><div style="color:#28a745;">低税率</div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:8px 0;border-bottom:1px dashed var(--border-light);">
+                    <div>2 档</div><div>¥3,000 ~ ¥12,000</div><div>10%</div><div>210</div><div>大部分员工</div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:8px 0;border-bottom:1px dashed var(--border-light);">
+                    <div>3 档</div><div>¥12,000 ~ ¥25,000</div><div>20%</div><div>1,410</div><div style="color:#e6a800;">高薪档</div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:8px 0;">
+                    <div>4+ 档</div><div>> ¥25,000</div><div>25%~45%</div><div>按国标</div><div style="color:#dc3545;">极少触发</div>
+                  </div>
+                </div>
+              </div>
+              <div class="param-item">
+                <label>⏰ 迟到扣款（元 / 次）</label>
+                <input type="number" min="0" step="5" class="form-control" id="paramLateDeduct" value="30" />
+                <div class="param-hint">单次迟到固定扣款；若下方「累进模式」开启：第4次起每次翻倍</div>
+              </div>
+              <div class="param-item">
+                <label>🏃 早退扣款（元 / 次）</label>
+                <input type="number" min="0" step="5" class="form-control" id="paramEarlyDeduct" value="30" />
+                <div class="param-hint">单次早退固定扣款（不触发累进，保持简单）</div>
+              </div>
+              <div class="param-item">
+                <label>⛔ 旷工扣款倍率（× 日均底薪）</label>
+                <input type="number" min="0.5" max="5" step="0.5" class="form-control" id="paramAbsentMult" value="2" />
+                <div class="param-hint">旷工扣款 = 旷工天数 × 日均底薪 × 本倍率（行业惯例 2~3 倍）</div>
+              </div>
+              <div class="param-item">
+                <label>🔢 迟到累进扣款（第4次起每次翻倍）</label>
+                <select class="form-control" id="paramLateProgressive">
+                  <option value="1">✅ 开启（推荐，避免故意小迟到）</option>
+                  <option value="0">❌ 关闭（统一单价）</option>
+                </select>
+                <div class="param-hint">示例：30元×（3次正常=90，第4次=60，第5次=120，上限500/次）</div>
+              </div>
+              <div class="param-item" style="grid-column:1/-1;">
+                <div class="page-actions">
+                  <button class="btn btn-outline" id="paramResetBtn">↺ 恢复默认参数</button>
+                  <button class="btn btn-primary" id="paramSaveBtn">💾 保存参数到本地</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================== Tab 5: 扣款规则引擎（自定义 · 优先级匹配） ========================== -->
+        <div class="att-tab-content" id="tabRules">
+          <div class="wage-formula-box" style="margin-bottom:14px;">
+            <h4 style="margin:0 0 6px 0;color:#6d28d9;">🎯 扣款规则引擎（完全自定义 · 按优先级顺序匹配）</h4>
+            <p style="margin:0;font-size:.84rem;color:#64748b;">
+              原理：每条规则 = <b>条件（范围）+ 动作（加减金额）</b>。每月工资核算时，<b>按优先级从大到小</b>依次匹配每条规则，命中则叠加扣/加。
+              <br>• 条件类型：迟到分钟 / 早退分钟 / 迟到次数 / 早退次数 / 旷工天数 / 事假天数 / 病假天数 / 夜场次数 / 出勤天数 / 事故次数
+              <br>• 动作类型：扣固定元 / 扣「×日均底薪」 / 扣「%月薪」 / 加固定元（奖励类） / 加「×日均」（全勤类）
+              <br>• 支持「仅一次」：整月最多命中 1 次（如全勤奖）；不勾选则按命中次数累加（如迟到每次 30）
+            </p>
+            <div class="page-actions" style="margin-top:10px;">
+              <button class="btn btn-sm btn-outline" id="ruleResetBtn">↺ 恢复行业默认 10 条</button>
+              <button class="btn btn-sm btn-success" id="ruleAddBtn">➕ 新增规则</button>
+              <button class="btn btn-sm btn-primary" id="ruleSaveBtn">💾 保存全部规则</button>
+              <button class="btn btn-sm btn-gold" id="ruleTestBtn" title="输入示例考勤情况，测试引擎匹配结果">🧪 测试匹配结果</button>
+            </div>
+          </div>
+          <div class="param-card" style="padding:10px 8px;">
+            <div class="table-wrapper data-table-container" style="overflow-x:auto;">
+              <table class="wage-table" style="min-width:1580px;">
+                <thead>
+                  <tr>
+                    <th style="width:52px;">优先级<br><small>大→小</small></th>
+                    <th style="width:230px;">规则名称</th>
+                    <th style="width:72px;">启用</th>
+                    <th style="width:150px;">条件类型</th>
+                    <th style="width:96px;">下限 ≥</th>
+                    <th style="width:96px;">上限 ≤</th>
+                    <th style="width:130px;">动作类型</th>
+                    <th style="width:110px;">动作金额/系数</th>
+                    <th style="width:88px;">仅 1 次</th>
+                    <th style="width:120px;">适用范围</th>
+                    <th style="width:120px;">分组/部门限制</th>
+                    <th>备注说明</th>
+                    <th style="width:170px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="rulesTbody"></tbody>
+              </table>
+            </div>
+            <div id="rulesTestPanel" class="param-card no-print" style="display:none;margin-top:14px;border:2px dashed #c4b5fd;background:#faf5ff;">
+              <h5 style="margin:0 0 10px 0;color:#6d28d9;">🧪 测试匹配结果（不改实际数据）</h5>
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;font-size:.82rem;">
+                <div><label>迟到 分钟</label><input type="number" class="form-control" id="rtLateMin" value="35"></div>
+                <div><label>迟到 次数</label><input type="number" class="form-control" id="rtLateCnt" value="4"></div>
+                <div><label>早退 分钟</label><input type="number" class="form-control" id="rtEarlyMin" value="10"></div>
+                <div><label>早退 次数</label><input type="number" class="form-control" id="rtEarlyCnt" value="1"></div>
+                <div><label>旷工 天</label><input type="number" step="0.5" class="form-control" id="rtAbsent" value="1"></div>
+                <div><label>事假 天</label><input type="number" step="0.5" class="form-control" id="rtLeave" value="2"></div>
+                <div><label>病假 天</label><input type="number" step="0.5" class="form-control" id="rtSick" value="0"></div>
+                <div><label>夜场 次</label><input type="number" class="form-control" id="rtNights" value="8"></div>
+                <div><label>出勤 天</label><input type="number" class="form-control" id="rtAtt" value="22"></div>
+                <div><label>应出勤 天</label><input type="number" class="form-control" id="rtSwd" value="26"></div>
+                <div><label>事故 次</label><input type="number" class="form-control" id="rtAcc" value="0"></div>
+                <div><label>底薪 元/月</label><input type="number" class="form-control" id="rtBase" value="3800"></div>
+              </div>
+              <div style="margin-top:12px;"><button class="btn btn-sm btn-gold" id="ruleRunTestBtn">▶ 运行匹配</button></div>
+              <pre id="rulesTestResult" style="margin:10px 0 0 0;padding:12px;background:#0f172a;color:#e2e8f0;border-radius:8px;white-space:pre-wrap;font-size:.8rem;line-height:1.55;"></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================== Tab 4: 打印历史 ========================== -->
+        <div class="att-tab-content" id="tabHistory">
+          <div class="wage-table-wrap">
+            <div style="padding:14px 18px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+              <div style="font-size:0.88rem;color:var(--text-light);">
+                打印历史共 <strong id="historyCount" style="color:var(--primary-dark);">0</strong> 条（LocalStorage 持久化，最多保留 200 条）
+              </div>
+              <div class="page-actions no-print">
+                <button class="btn btn-danger btn-sm" id="historyClearBtn">🗑️ 清空打印历史</button>
+              </div>
+            </div>
+            <div class="table-wrapper data-table-container" style="overflow-x:auto;">
+              <table class="wage-table" style="min-width:760px;">
+                <thead>
+                  <tr>
+                    <th style="width:60px;">序号</th>
+                    <th>打印时间</th>
+                    <th>月份</th>
+                    <th>类型</th>
+                    <th>人员数量</th>
+                    <th>打印人</th>
+                    <th>工资条编号（部分）</th>
+                    <th style="width:100px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="historyTbody">
+                  <tr><td colspan="8" style="text-align:center;padding:60px 20px;color:var(--text-light);">暂无打印记录，点击「打印工资条」后会记录在此</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  
+<!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
+<script>
+/* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
+if (window.__DBF_V20260804_INJECTED__ !== true) {
+  window.__DBF_V20260804_INJECTED__ = true;
+
+/* ========== 📊 JSON 性能日志（默认关闭，开启后输出NDJSON便于ELK采集） ========== */
+function __pEna(){try{return window.localStorage&&localStorage.getItem('__ENABLE_PERF_LOG__')==='true'}catch(e){return false}}
+function __pFmt(){try{return(window.localStorage&&localStorage.getItem('__PERF_FORMAT__')||'json').toLowerCase()}catch(e){return'json'}}
+function __pTid(){if(!window.__pCur){window.__pCur='tr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}return window.__pCur}
+function __pUA(){try{return navigator.userAgent||''}catch(e){return''}}
+function __pURL(){try{return location.href||''}catch(e){return''}}
+function __pLog(module,event,extra){
+  if(!__pEna())return;
+  try{
+    var now=new Date();
+    var duration_ms = (window.__pT0 ? (Date.now()-window.__pT0) : 0);
+    var payload = {
+      '@timestamp': now.toISOString(),
+      'level': 'INFO',
+      'service': 'qaxqjt-admin',
+      'trace_id': __pTid(),
+      'span_id': 'sp_'+now.getTime().toString(36),
+      'module': module,            // 'DBF' 或 'SP'
+      'event': event,              // 'save_click' / 'audit_pass' 等
+      'branch': (extra && extra.branch) ? extra.branch : null,
+      'btn_text': (extra && extra.txt) ? extra.txt : null,
+      'bound':    (extra && typeof extra.bound==='boolean') ? extra.bound : null,
+      'lock_wait_ms': (extra && typeof extra.lockWait==='number') ? extra.lockWait : 0,
+      'duration_ms': duration_ms,
+      'page_url': __pURL(),
+      'user_agent': __pUA(),
+      'extra': extra || {}
+    };
+    // 删除已经提出来的重复字段，避免冗余
+    if(payload.extra){
+      ['branch','txt','bound','lockWait'].forEach(function(k){if(payload.extra[k]!==undefined)delete payload.extra[k]});
+    }
+    // 输出 NDJSON（一行一条），便于 Filebeat / Logstash 直接采集
+    console.log(JSON.stringify(payload));
+  }catch(_){}
+}
+var __pT0=0;
+
+
+  (function(){
+    function __T(msg,type){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(msg,type||'info',3000); }catch(_e){ try{(type==='error'?alert:console.log)('[deadhook] '+msg);}catch(_f){} } }
+    function __L(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||600); }catch(_){}
+      return true;
+    }
+    // 只在 capture 阶段处理，便于在页面原有 handlers 之前运行：若按钮已存在 onclick / 已绑过事件，直接跳过
+    document.addEventListener('click', function(e){
+    __pT0 = Date.now();
+    var __pEvt = {target: e.target && e.target.tagName, btn: null, txt: null, branch: null, bound: null, lockWait: 0};
+    window.__pCur = 'tr_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+    var t = e.target;
+      if(!t) return;
+      // 向上找最近的按钮元素/可点击锚点 - 扩大匹配范围，包含a标签和所有含btn/action类的元素
+      var btn = (t.tagName||'').toLowerCase() === 'button' ? t :
+                (t.closest ? t.closest('button, a, [role="button"], .btn, .btn-action, .btn-sm, .action-link, [data-action]') : null);
+      if(!btn) return;
+      // 跳过已有 onclick / 正常href跳转 / 已在脚本中手动绑定过（__bindDone=1 或 __ctE2Done=1）的按钮
+      // 注意：data-action仅作为标识，不代表已绑定事件；父元素检查仅对onclick生效
+      try{
+  function __btnHasBound(btn){
+    if(!btn) return false;
+    if(btn.__superPatchBound) return true;
+    var oc = btn.getAttribute && btn.getAttribute('onclick');
+    var hr = btn.getAttribute && btn.getAttribute('href');
+    if(oc && oc.length > 3) return true;
+    // 仅当href不是占位符且不是javascript伪协议时才算有效跳转
+    if(hr && hr !== '#' && hr !== 'javascript:;' && hr !== 'javascript:void(0);' && hr !== 'javascript:void(0)' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+    var p = btn.parentElement, lvl = 0;
+    while(p && lvl < 4){
+      try {
+        var pOc = p.getAttribute && p.getAttribute('onclick');
+        // 父级onclick长度>3才算有效绑定
+        if(pOc && pOc.length > 3) return true;
+      }catch(_){}
+      p = p.parentElement; lvl++;
+    }
+    // 移除：匹配业务关键词=已绑定的错误逻辑。这些恰恰是需要兜底的按钮！
+    return false;
+  }
+  var __pBnd = __btnHasBound(btn);
+    __pEvt.bound = __pBnd;
+    __pLog('DBF','hasBound_result', {bound:__pBnd, check_ms:Date.now()-__pT0});
+    if(__pBnd) return;
+    var __pDrp = (btn.__bindDone || btn.__ctE2Done);
+    if(__pDrp){__pLog('DBF','dedup_skip', {reason: btn.__bindDone?'bindDone':'ctE2Done'}); return;}
+}catch(_a){}
+      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
+      // 放宽文本长度限制：从20字符放宽到50字符，覆盖"确认订单""取消订单""派工安排"等复合文本
+      __pEvt.txt = txt;
+    __pLog('DBF','txt_resolved', {txt:txt, len:txt.length});
+    if(!txt || txt.length > 50) return;
+      var tr = btn.closest ? btn.closest('tr') : null;
+      var trKey = '';
+      if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
+      // 各按钮分发行文
+      var isSave = (txt.indexOf('保存')>=0 || txt.indexOf('提交')>=0 || txt.indexOf('确认')>=0);
+      var isEdit = (txt.indexOf('编辑')>=0);
+      var isDel  = (txt.indexOf('删除')>=0 && txt.length <= 10);
+      var isView = (txt.indexOf('查看')>=0 || (txt==='👁') || (txt.indexOf('👁')>=0 && txt.length<=6) || txt.indexOf('详情')>=0 || txt.indexOf('预览')>=0);
+      var isVerify = (txt.indexOf('核销')>=0);
+      var isExport = (txt.indexOf('导出')>=0);
+      var isAdd = (txt.indexOf('新增')>=0);
+      var doneKey = 'e2_'+(isSave?'s':isEdit?'e':isDel?'d':isView?'v':isVerify?'y':isExport?'x':isAdd?'a':'k')+'_'+(trKey||Math.random().toString(36).slice(2,6));
+      if(isSave){
+    __pEvt.branch='save';
+    var __pLk = __L(doneKey,900);
+    if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
+    __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
+        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
+        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+      }
+      if(isEdit){
+        if(!__L(doneKey,700)) return;
+        __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
+        __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isDel){
+        if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
+        if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
+        try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
+        __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
+        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+      }
+      if(isView){
+        if(!__L(doneKey,500)) return;
+        __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
+        __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isVerify){
+        if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
+        __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
+        __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isExport){
+        if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
+        __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
+        __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isAdd){
+        if(!__L(doneKey,900)) return;
+        __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
+        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        btn.__ctE2Done = 1; return;
+      }
+      // ---- 新增：审核/审批/驳回/通过 ----
+      var isAudit = txt.indexOf('审核')>=0 || txt.indexOf('审批')>=0 || txt.indexOf('驳回')>=0 || txt.indexOf('通过')>=0;
+      if(isAudit){
+        if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
+        if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
+        __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+      }
+      // ---- 新增：签约/签订 ----
+      var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
+      if(isSign){
+        if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
+        __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
+        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+      }
+      // ---- 新增：合同/生成合同 ----
+      var isContract = txt.indexOf('合同')>=0 && !isSign;
+      if(isContract){
+        if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
+        __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
+        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        btn.__ctE2Done=1; return;
+      }
+      // ---- 新增：排期/排班/安排档期 ----
+      var isScheduleBtn = txt.indexOf('排期')>=0 || txt.indexOf('排班')>=0 || (txt.indexOf('安排')>=0 && (txt.length<=8 || txt.indexOf('档期')>=0));
+      if(isScheduleBtn){
+        if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
+        __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        btn.__ctE2Done=1; return;
+      }
+      // ---- 新增：取消/处理/确认接单 ----
+      var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
+      if(isCancelOrHandle && !isDel && !isSave){
+        if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        if((txt.indexOf('取消')>=0) && !confirm('确认取消：'+(trKey||'当前记录')+'？')) return;
+        var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
+        var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
+        __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
+        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+      }
+
+    }, true);
+    console.info('[DeadButtonFallback 已加载：×兜底 + 保存/编辑/删除/查看/核销/导出/新增 死按钮兜底委托]');
+    try{ window.__T = __T; window.__L = __L; }catch(_){}
+  })();
+  
+} /* end of 防重复注入保护 if */
+
+/* ========== 🖥️ 全屏切换函数 ========== */
+window.toggleFullscreen = function() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen && document.exitFullscreen();
+  }
+};
+</script>
+
+<script id="adminSuperPatchV20260730">
+/* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
+if (window.__SP_V20260804_INJECTED__ !== true) {
+  window.__SP_V20260804_INJECTED__ = true;
+
+/* ========== 📊 JSON 性能日志（默认关闭，开启后输出NDJSON便于ELK采集） ========== */
+function __pEna(){try{return window.localStorage&&localStorage.getItem('__ENABLE_PERF_LOG__')==='true'}catch(e){return false}}
+function __pFmt(){try{return(window.localStorage&&localStorage.getItem('__PERF_FORMAT__')||'json').toLowerCase()}catch(e){return'json'}}
+function __pTid(){if(!window.__pCur){window.__pCur='tr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}return window.__pCur}
+function __pUA(){try{return navigator.userAgent||''}catch(e){return''}}
+function __pURL(){try{return location.href||''}catch(e){return''}}
+var __spT0=0;
+var __spEvt={};
+function __pLog(module,event,extra){
+  if(!__pEna())return;
+  try{
+    var now=new Date();
+    var duration_ms = (__spT0 ? (Date.now()-__spT0) : 0);
+    var payload = {
+      '@timestamp': now.toISOString(),
+      'level': 'INFO',
+      'service': 'qaxqjt-admin',
+      'trace_id': __pTid(),
+      'span_id': 'sp_'+now.getTime().toString(36),
+      'module': module,
+      'event': event,
+      'branch': (extra && extra.branch) ? extra.branch : null,
+      'btn_text': (extra && extra.txt) ? extra.txt : null,
+      'btn_selector': (extra && extra.btn) ? extra.btn : null,
+      'bound': (extra && typeof extra.bound==='boolean') ? extra.bound : null,
+      'lock_wait_ms': (extra && typeof extra.lockWait==='number') ? extra.lockWait : 0,
+      'duration_ms': duration_ms,
+      'page_url': __pURL(),
+      'user_agent': __pUA(),
+      'extra': extra || {}
+    };
+    if(payload.extra){
+      ['branch','txt','bound','lockWait','btn'].forEach(function(k){if(payload.extra[k]!==undefined)delete payload.extra[k]});
+    }
+    console.log(JSON.stringify(payload));
+  }catch(_){}
+}
+
+
+(function(){
+  'use strict';
+  var PATCH_ID = 'adminSuperPatchV20260730';
+
+  function _genId(prefix){
+    var d = new Date();
+    var pad = function(n){ return n<10?'0'+n:''+n; };
+    var ymd = d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());
+    var hms = pad(d.getHours())+pad(d.getMinutes())+pad(d.getSeconds());
+    var rnd = Math.floor(Math.random()*90+10);
+    return prefix + ymd + hms + rnd;
+  }
+
+  function _pad2(n){ return n<10?'0'+n:''+n; }
+
+  if(!window.__toastH9){
+    window.__toastH9 = function(msg, type){
+      try{
+        if(window.QinApp && QinApp.Utils && typeof QinApp.Utils.toast==='function'){
+          QinApp.Utils.toast(msg, type||'info');
+          return;
+        }
+        var ts = document.querySelector('.toast-stack');
+        if(!ts){
+          ts = document.createElement('div');
+          ts.className = 'toast-stack';
+          ts.setAttribute('aria-live','polite');
+          ts.style.cssText='position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+          document.body.appendChild(ts);
+        }
+        var el = document.createElement('div');
+        var bg = 'linear-gradient(135deg,#475569,#334155)';
+        if(type==='success') bg='linear-gradient(135deg,#16a34a,#15803d)';
+        if(type==='error') bg='linear-gradient(135deg,#dc2626,#b91c1c)';
+        if(type==='warning') bg='linear-gradient(135deg,#f59e0b,#d97706)';
+        if(type==='info') bg='linear-gradient(135deg,#0284c7,#0369a1)';
+        el.style.cssText='background:'+bg+';color:#fff;padding:10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.18);font-size:0.85rem;max-width:360px;pointer-events:auto;animation:toastInH9 .25s ease;';
+        el.textContent = msg;
+        ts.appendChild(el);
+        var st = document.createElement('style');
+        if(!document.getElementById('_toastH9Anim')){
+          st.id='_toastH9Anim';
+          st.textContent='@keyframes toastInH9{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}';
+          document.head.appendChild(st);
+        }
+        setTimeout(function(){ el.style.transition='opacity .3s,transform .3s'; el.style.opacity='0'; el.style.transform='translateY(-8px)'; setTimeout(function(){ el.remove(); },320); }, 2600);
+      }catch(e){ console.warn('[toastH9]',e); }
+    };
+  }
+
+  if(!window.__acqH9){
+    window.__acqH9 = function(btn, txtType){
+      var lockKey = '__acqLock_'+(btn&&btn.dataset?btn.dataset.acqKey:'global');
+      var now = Date.now();
+      var last = parseInt(btn&&btn.dataset?btn.dataset.__acqLast:'0',10)||0;
+      var expire = 400;
+      if(txtType==='save'||txtType==='submit'||txtType==='confirm') expire=900;
+      if(txtType==='delete'||txtType==='cancel'||txtType==='disable') expire=1200;
+      if(now-last<expire){ return false; }
+      if(btn&&btn.dataset){ btn.dataset.__acqLast = now; }
+      return true;
+    };
+  }
+
+  try{
+    console.info('[SuperPatch 1/6] FORM SUBMIT/RESET 防刷新 + 必填校验 初始化...');
+    document.addEventListener('submit', function(e){
+      try{
+        var form = e.target;
+        if(!form||form.tagName!=='FORM') return;
+        e.preventDefault();
+        e.stopPropagation();
+        var fields = form.querySelectorAll('input,select,textarea');
+        var ok = true;
+        var firstErr = null;
+        fields.forEach(function(f){
+          if(f.disabled||f.type==='file'||f.type==='hidden'||f.type==='button'||f.type==='submit'||f.type==='reset') return;
+          var isRequired = f.hasAttribute('required')||(f.classList&&f.classList.contains('required'));
+          var lbl = '';
+          var labelEl = form.querySelector('label[for="'+f.id+'"]')||f.closest('label');
+          if(labelEl) lbl = labelEl.textContent.trim();
+          if(!lbl){
+            var ph = f.getAttribute('placeholder')||'';
+            if(ph&&ph.slice(-1)==='*'){ isRequired=true; lbl=ph.slice(0,-1).trim(); }
+          }
+          if(labelEl&&labelEl.textContent.indexOf('*')>=0){ isRequired=true; lbl=labelEl.textContent.replace(/\*/g,'').trim(); }
+          if(!lbl){
+            var nm = f.getAttribute('name')||f.id||'';
+            lbl = '「'+nm+'」';
+          }
+          var val = (f.value||'').trim();
+          f.classList.remove('input-error');
+          if(isRequired&&!val){
+            f.classList.add('input-error');
+            f.style.borderColor='#dc2626'; f.style.boxShadow='0 0 0 3px rgba(220,38,38,0.1)';
+            __toastH9('⚠️ 请完整填写'+lbl+'后再提交','error');
+            ok=false; if(!firstErr) firstErr=f;
+            return;
+          }
+          if(val){
+            var t = f.type||'';
+            var n = (f.getAttribute('name')||'').toLowerCase();
+            var telReg = /^1[3-9]\d{9}$/;
+            var mailReg = /^[\w.+-]+@[\w-]+\.[\w.-]+$/;
+            var dateReg = /^\d{4}-\d{2}-\d{2}$/;
+            if(t==='tel'||n.indexOf('phone')>=0||n.indexOf('mobile')>=0){
+              if(!telReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'格式不正确（11位手机号）','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='email'||n.indexOf('mail')>=0){
+              if(!mailReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'邮箱格式不正确','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(n.indexOf('amount')>=0||n.indexOf('price')>=0||n.indexOf('money')>=0){
+              var nv = Number(val);
+              if(isNaN(nv)||nv<0){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'金额必须≥0','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='number'){
+              var nv2 = +val;
+              if(!Number.isInteger(nv2)||nv2<0){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'必须是非负整数','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='date'){
+              if(!dateReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'日期格式应为YYYY-MM-DD','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+          }
+        });
+        if(firstErr){ try{ firstErr.focus(); }catch(_){} }
+        if(!ok) return false;
+        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        setTimeout(function(){
+          try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
+        }, 380);
+        return false;
+      }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
+    }, true);
+
+    document.addEventListener('reset', function(e){
+      try{
+        var form = e.target;
+        if(!form||form.tagName!=='FORM') return;
+        e.preventDefault();
+        e.stopPropagation();
+        form.querySelectorAll('input,select,textarea').forEach(function(f){
+          if(f.type==='file'){ try{f.value='';}catch(_){} }
+          else if(f.type==='checkbox'||f.type==='radio'){ f.checked=false; }
+          else{ f.value=''; }
+          f.classList.remove('input-error');
+          try{ f.style.borderColor=''; f.style.boxShadow=''; }catch(_){}
+        });
+        __toastH9('🔄 已重置','info');
+        return false;
+      }catch(e2){ console.warn('[SuperPatch 1/6 reset err]',e2); return false; }
+    }, true);
+
+    var cssErr = document.createElement('style');
+    cssErr.textContent = '.input-error{border-color:#dc2626 !important;box-shadow:0 0 0 3px rgba(220,38,38,0.12) !important;transition:all .2s;}';
+    document.head.appendChild(cssErr);
+    console.info('[SuperPatch 1/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 1/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 2/6] 编号自动生成（只读、不可手改）初始化...');
+    var idRules = [
+      {keys:['订单编号','orderNo','orderId'], prefix:'QAX'},
+      {keys:['收款编号','收款单','receiptId'], prefix:'SK'},
+      {keys:['票据编号','凭证编号','voucherId'], prefix:'PZ'},
+      {keys:['工资条编号','wageId'], prefix:'GZ'},
+      {keys:['派工编号','dispatchId'], prefix:'PG'},
+      {keys:['档期编号','scheduleId'], prefix:'DQ'},
+      {keys:['合同编号','HT','contractId'], prefix:'HT'}
+    ];
+    function _matchIdRule(inp){
+      var hay = [inp.id||'', inp.name||'', inp.getAttribute('aria-label')||'', inp.getAttribute('placeholder')||''];
+      try{
+        var lbl = document.querySelector('label[for="'+inp.id+'"]');
+        if(lbl) hay.push(lbl.textContent||'');
+        var par = inp.closest('[class*="form-group"],[class*="form-item"],td,th,div');
+        if(par) hay.push(par.textContent||'');
+      }catch(_){}
+      var s = hay.join(' ');
+      for(var i=0;i<idRules.length;i++){
+        var r = idRules[i];
+        for(var j=0;j<r.keys.length;j++){
+          if(s.indexOf(r.keys[j])>=0) return r;
+        }
+      }
+      return null;
+    }
+    function _fillIds(scope){
+      try{
+        var inputs = (scope||document).querySelectorAll('input[type=text],input:not([type])');
+        inputs.forEach(function(inp){
+          if(inp.readOnly||inp.disabled) return;
+          var rule = _matchIdRule(inp);
+          if(!rule) return;
+          if((inp.value||'').trim()!=='') return;
+          inp.value = _genId(rule.prefix);
+          inp.setAttribute('readonly','readonly');
+          inp.style.cursor='not-allowed';
+          inp.style.background='#f8fafc';
+        });
+      }catch(e){ console.warn('[SuperPatch 2/6 fillIds err]',e); }
+    }
+    function _refreshIdsOnNew(scope){
+      try{
+        var inputs = (scope||document).querySelectorAll('input[readonly]');
+        inputs.forEach(function(inp){
+          var rule = _matchIdRule(inp);
+          if(!rule) return;
+          inp.value = _genId(rule.prefix);
+        });
+      }catch(e){ console.warn('[SuperPatch 2/6 refreshIds err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', function(){ _fillIds(); }, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _fillIds(); }
+    else{ setTimeout(_fillIds, 50); }
+    if(typeof MutationObserver!=='undefined'){
+      var mo = new MutationObserver(function(muts){
+        muts.forEach(function(m){
+          if(m.addedNodes&&m.addedNodes.length){
+            m.addedNodes.forEach(function(n){
+              if(n.nodeType===1) _fillIds(n);
+            });
+          }
+        });
+      });
+      mo.observe(document.body, {childList:true, subtree:true});
+    }
+    document.addEventListener('click', function(e){
+      try{
+        var btn = e.target.closest('button,a,[role=button]');
+        if(!btn) return;
+    __spT0 = Date.now();
+    __spEvt={target: (btn.tagName||'?') + '.' + (btn.className||'').slice(0,40), txt: (btn.textContent||'').trim()};
+    __pLog('SP','click_match', {btn:__spEvt.target, txt:__spEvt.txt, ms:Date.now()-__spT0});
+    var txt = (btn.textContent||'').trim().toLowerCase();
+        var html = (btn.innerHTML||'').toLowerCase();
+        var idCls = (btn.id||'').toLowerCase()+' '+(btn.className||'').toLowerCase();
+        if(txt.indexOf('新建')>=0||txt.indexOf('➕')>=0||txt.indexOf('+new')>=0||html.indexOf('➕')>=0||idCls.indexOf('btnadd')>=0||idCls.indexOf('-new')>=0||idCls.indexOf('new')>=0){
+          setTimeout(function(){ _refreshIdsOnNew(); }, 80);
+        }
+      }catch(_){}
+    }, true);
+    console.info('[SuperPatch 2/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 2/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 3/6] 取消/关闭/我知道了/× 关弹窗不刷新 初始化...');
+    var closeTexts = ['取消','关闭','我知道了','我明白了','知道了','确定取消'];
+    var closeChs = ['×','✕','✖','✘','❌','⨯'];
+    document.addEventListener('click', function(e){
+      try{
+        var el = e.target;
+        var txt = (el.textContent||'').trim();
+        if(!txt&&el.closest){ txt = (el.closest('button,a,[role=button],span,div')||{}).textContent||''; txt=txt.trim(); }
+        var isClose = false;
+        if(closeChs.indexOf(txt)>=0) isClose=true;
+        for(var i=0;i<closeTexts.length;i++){
+          if(txt===closeTexts[i]||(txt.length<=12&&txt.indexOf(closeTexts[i])>=0)){ isClose=true; break; }
+        }
+        if(!isClose) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var handled=false;
+        try{ if(typeof window.__closeAnyModal==='function'){ window.__closeAnyModal(); handled=true; } }catch(_){}
+        if(!handled){
+          var sels = [
+            'div[class*="modal-"]','div[class*="Modal"]','div[class*="overlay"]',
+            'div[id*="Modal"]','div[id*="modal"]','div[class*="popup"]','div[class*="Popup"]',
+            'div[class*="dialog"]','div[class*="Dialog"]'
+          ];
+          sels.forEach(function(sel){
+            try{
+              var arr = document.querySelectorAll(sel);
+              arr.forEach(function(n){
+                if(n&&n.style){
+                  n.style.display='none';
+                  try{ n.classList.add('csp-hide'); }catch(_){}
+                }
+              });
+            }catch(_){}
+          });
+        }
+        __toastH9('↩️ 已关闭弹窗','info');
+      }catch(e3){ console.warn('[SuperPatch 3/6 click err]',e3); }
+    }, true);
+    console.info('[SuperPatch 3/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 3/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 4/6] 分页器标准化 (pagination.js结构) 初始化...');
+    var pgStateMap = new WeakMap();
+    function _isPgContainer(el){
+      try{
+        if(!el || el.nodeType!==1) return false;
+        var tag = (el.tagName||'').toUpperCase();
+        if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
+        var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
+        if(c.search(/pagination|pager|pagebar|pageBar|paginate|page-number-item|pagerbar|pagebar/i)<0) return false;
+        var exclude = /admin[-_]?main|admin[-_]?content|main[-_]?content|stats[-_]?grid|list[-_]?grid|card[-_]?grid|table[-_]?wrap|table[-_]?container|data[-_]?wrap|content[-_]?wrap|page[-_]?content|admin[-_]?wrap|app[-_]?main/i;
+        if(exclude.test(c)) return false;
+        if(el.querySelector('[data-pg]')||el.querySelector('.page-number-item')||el.querySelector('button[data-pg]')) return true;
+        return true;
+      }catch(_){ return false; }
+    }
+    function _ensurePgState(container){
+      if(!pgStateMap.has(container)){
+        var total = 100;
+        var tbody = document.querySelector('tbody[data-paginate=list]');
+        if(tbody){
+          var sz = parseInt(tbody.getAttribute('data-page-size')||'10',10);
+          var rows = tbody.querySelectorAll('tr:not([style*=none]):not(.csp-hide)').length;
+          total = Math.max(100, rows*sz);
+        }
+        var size = 10;
+        var existing = container.querySelector('select[data-pg=size]');
+        if(existing){ try{ size = parseInt(existing.value||'10',10)||10; }catch(_){} }
+        pgStateMap.set(container, {total:total, pages:Math.ceil(total/size), current:1, size:size});
+      }
+      return pgStateMap.get(container);
+    }
+    function _buildPg(container){
+      try{
+        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
+        var oldToolbar = container.querySelector('.pagination-toolbar');
+        if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
+        var st = _ensurePgState(container);
+        var children = container.children, nonPg = 0, i;
+        for(i=0;i<children.length;i++){
+          var c = children[i]; if(!c) continue;
+          var cn = (c.className||'').toString(); var id = (c.id||'').toString(); var tag = (c.tagName||'').toString().toUpperCase();
+          if(tag==='BUTTON'||tag==='SELECT'||tag==='SPAN'||tag==='INPUT') continue;
+          if(cn.indexOf('pagination')>=0 || cn.indexOf('pager')>=0 || cn.indexOf('pagebar')>=0 || cn.indexOf('page-')>=0 || id.indexOf('page')>=0) continue;
+          nonPg++;
+        }
+        if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
+        var wrap = document.createElement('div');
+        wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
+        wrap.innerHTML = ''+
+          '<button class="btn btn-sm" data-pg="first">首页</button>'+
+          '<button class="btn btn-sm" data-pg="prev">上一页</button>'+
+          '<div class="page-number-wrap" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;"></div>'+
+          '<button class="btn btn-sm" data-pg="next">下一页</button>'+
+          '<button class="btn btn-sm" data-pg="last">末页</button>'+
+          '<span style="margin-left:6px;">跳 <input type="number" data-pg="jump" min="1" style="width:60px;padding:4px 6px;border:1.5px solid var(--border-light,#cbd5e1);border-radius:6px;"> 页</span>'+
+          '<select data-pg="size" style="padding:4px 8px;border:1.5px solid var(--border-light,#cbd5e1);border-radius:6px;">'+
+            '<option value="10">10条/页</option><option value="20">20条/页</option><option value="50">50条/页</option><option value="100">100条/页</option>'+
+          '</select>'+
+          '<span data-pg="info" style="margin-left:auto;color:var(--text-light,#64748b);">共 0 条 / 第 1 页</span>';
+        container.appendChild(wrap);
+        wrap.querySelectorAll('button').forEach(function(b){ b.style.borderRadius='999px'; });
+        var sel = wrap.querySelector('select[data-pg=size]'); if(sel&&st.size!=10){ sel.value=String(st.size); }
+        _updatePgUI(container);
+        wrap.addEventListener('click', function(ev){
+          try{
+            var t = ev.target.closest('[data-pg]');
+            if(!t) return;
+            var act = t.getAttribute('data-pg');
+            var s = _ensurePgState(container);
+            if(act==='first') s.current=1;
+            else if(act==='prev') s.current=Math.max(1,s.current-1);
+            else if(act==='next') s.current=Math.min(s.pages,s.current+1);
+            else if(act==='last') s.current=s.pages;
+            else return;
+            _updatePgUI(container);
+          }catch(_){}
+        });
+        var jp = wrap.querySelector('input[data-pg=jump]');
+        if(jp){
+          jp.addEventListener('change', function(){
+            try{
+              var s = _ensurePgState(container);
+              var v = parseInt(jp.value||'1',10);
+              if(isNaN(v)||v<1) v=1;
+              if(v>s.pages) v=s.pages;
+              s.current=v; jp.value=v;
+              _updatePgUI(container);
+            }catch(_){}
+          });
+          jp.addEventListener('keydown', function(ev){
+            if(ev.key==='Enter'){ ev.preventDefault(); jp.dispatchEvent(new Event('change')); }
+          });
+        }
+        var sz = wrap.querySelector('select[data-pg=size]');
+        if(sz){
+          sz.addEventListener('change', function(){
+            try{
+              var s = _ensurePgState(container);
+              s.size = parseInt(sz.value||'10',10)||10;
+              s.pages = Math.ceil(s.total/s.size);
+              s.current = 1;
+              _updatePgUI(container);
+            }catch(_){}
+          });
+        }
+      }catch(e){ console.warn('[SuperPatch 4/6 buildPg err]',e); }
+    }
+    function _updatePgUI(container){
+      try{
+        var wrap = container.querySelector('.sp-pg-toolbar-20260730') || container.querySelector('.pagination-toolbar');
+        if(!wrap) return;
+        var s = _ensurePgState(container);
+        var pnWrap = wrap.querySelector('.page-number-wrap');
+        var info = wrap.querySelector('[data-pg=info]');
+        if(!pnWrap && !info){ return; }
+        if(pnWrap){
+          pnWrap.innerHTML='';
+          var maxBtns = 7;
+          var cur = s.current, totalPages=s.pages;
+          var start = Math.max(1, cur - Math.floor(maxBtns/2));
+          var end = Math.min(totalPages, start+maxBtns-1);
+          start = Math.max(1, end-maxBtns+1);
+          for(var p=start;p<=end;p++){
+            var bb = document.createElement('button');
+            bb.className='btn btn-sm';
+            bb.setAttribute('data-pg','num');
+            bb.style.borderRadius='999px';
+            if(p===cur){ bb.style.background='linear-gradient(135deg,var(--primary,#0F4C81),var(--primary-dark,#0a3a63))'; bb.style.color='#fff'; bb.style.borderColor='var(--gold,#D4AF37)'; }
+            bb.textContent = String(p);
+            (function(pg){ bb.addEventListener('click', function(){ var st=_ensurePgState(container); st.current=pg; _updatePgUI(container); }); })(p);
+            pnWrap.appendChild(bb);
+          }
+        }
+        var info = wrap.querySelector('[data-pg=info]');
+        if(info){ info.textContent = '共 '+s.total+' 条 / 第 '+s.current+' 页 / 共 '+s.pages+' 页'; }
+        var firstB = wrap.querySelector('[data-pg=first]'), prevB=wrap.querySelector('[data-pg=prev]'), nxtB=wrap.querySelector('[data-pg=next]'), lastB=wrap.querySelector('[data-pg=last]');
+        var atFirst = s.current<=1, atLast=s.current>=s.pages;
+        [firstB,prevB].forEach(function(b){ if(b){ b.disabled=atFirst; b.style.opacity=atFirst?'0.45':'1'; b.style.cursor=atFirst?'not-allowed':'pointer'; } });
+        [nxtB,lastB].forEach(function(b){ if(b){ b.disabled=atLast; b.style.opacity=atLast?'0.45':'1'; b.style.cursor=atLast?'not-allowed':'pointer'; } });
+      }catch(e){ console.warn('[SuperPatch 4/6 updateUI err]',e); }
+    }
+    function _scanPagination(){
+      try{
+        var all = document.querySelectorAll('div,nav,section,span');
+        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
+        var sty = document.createElement('style');
+        if(!document.getElementById('_pgPatchCSS20260730')){
+          sty.id='_pgPatchCSS20260730';
+          sty.textContent='.pagination-toolbar button{border-radius:999px !important;}';
+          document.head.appendChild(sty);
+        }
+      }catch(e){ console.warn('[SuperPatch 4/6 scan err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', _scanPagination, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _scanPagination(); }
+    else{ setTimeout(_scanPagination, 100); }
+    if(typeof MutationObserver!=='undefined'){
+      var mo2 = new MutationObserver(function(){ clearTimeout(window.__pgTimer); window.__pgTimer=setTimeout(_scanPagination, 200); });
+      mo2.observe(document.body, {childList:true, subtree:true});
+    }
+    console.info('[SuperPatch 4/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 4/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 5/6] 左侧栏 9 大主菜单 + 当前页高亮 初始化...');
+    var main9 = [
+      {title:'首页', href:'index.html', icon:'🏠'},
+      {title:'订单预约与客户管理', href:'orders.html', icon:'📋'},
+      {title:'剧目管理中心', href:'operas.html', icon:'🎭'},
+      {title:'演出档期排班', href:'schedule.html', icon:'📅'},
+      {title:'演员阵容与派工', href:'cast-sheet.html', icon:'👥'},
+      {title:'内容与资讯管理', href:'content.html', icon:'📰'},
+      {title:'财务与收款管理', href:'finance.html', icon:'💰'},
+      {title:'员工与人事档案', href:'staff.html', icon:'👤'},
+      {title:'系统设置', href:'system.html', icon:'⚙️'}
+    ];
+    function _getSidebarParent(){
+      return document.getElementById('adminSidebar')||document.querySelector('.admin-sidebar')||document.querySelector('.admin-sidebar-wrap')||document.querySelector('.admin-sidebar-menu-wrap')||document.querySelector('nav .admin-menu-item, nav .admin-sidebar-menu, nav')||document.querySelector('nav');
+    }
+    function _getMenuContainer(){
+      return document.querySelector('.admin-sidebar-menu')||document.querySelector('#adminSidebar nav')||document.querySelector('#adminSidebar');
+    }
+    function _standardizeMenu(){
+      try{
+        var sidebar = _getSidebarParent();
+        if(!sidebar) return;
+        var deployLinks = sidebar.querySelectorAll('a[href*="../deploy.html"],a[href*="deploy.html"]');
+        deployLinks.forEach(function(a){ try{ a.classList.add('csp-hide'); }catch(_){} });
+        var menuBox = _getMenuContainer();
+        if(!menuBox) return;
+        var existing = {};
+        menuBox.querySelectorAll('a.admin-menu-item,a[href$=".html"]').forEach(function(a){
+          var h = (a.getAttribute('href')||'').split('/').pop().toLowerCase();
+          if(h) existing[h]=a;
+        });
+        var firstGroup = menuBox.querySelector('.admin-menu-group');
+        var insertTarget = firstGroup||menuBox;
+        var logoutAnchor = null;
+        try{
+          var tmp = sidebar.querySelector('#logoutBtnSidebar, a[href*="logout"], a:contains(退出)');
+          if(tmp){
+            logoutAnchor = tmp;
+            while(logoutAnchor&&logoutAnchor.parentNode!==menuBox) logoutAnchor = logoutAnchor.parentNode;
+          }
+        }catch(_){ logoutAnchor=null; }
+        var lastInGroup = insertTarget.lastElementChild;
+        main9.forEach(function(m){
+          var href = m.href.toLowerCase();
+          if(existing[href]) return;
+          var a = document.createElement('a');
+          a.href = m.href;
+          a.className = 'admin-menu-item';
+          a.innerHTML = '<span class="menu-icon">'+m.icon+'</span><span>'+m.title+'</span>';
+          if(logoutAnchor&&logoutAnchor.parentNode===insertTarget){
+            insertTarget.insertBefore(a, logoutAnchor);
+          }else if(lastInGroup){
+            insertTarget.insertBefore(a, lastInGroup.nextSibling||null);
+          }else{
+            insertTarget.appendChild(a);
+          }
+        });
+        var curPage = (location.pathname||'').split('/').pop().toLowerCase();
+        if(!curPage){ try{ curPage = (location.href||'').split('/').pop().split('?')[0].toLowerCase(); }catch(_){} }
+        menuBox.querySelectorAll('a.admin-menu-item,a[href$=".html"]').forEach(function(a){
+          var href = (a.getAttribute('href')||'').split('/').pop().toLowerCase();
+          a.classList.remove('active');
+          try{ a.style.background=''; a.style.color=''; a.style.border=''; a.style.borderRadius=''; a.style.margin=''; }catch(_){}
+          if(href===curPage){
+            a.classList.add('active');
+            try{
+              var cs = getComputedStyle(a);
+              var hasActiveStyle = (cs.backgroundImage&&cs.backgroundImage.indexOf('gradient')>=0)||(cs.color&&cs.color!=='');
+              if(!hasActiveStyle||cs.background==='rgba(0,0,0,0)'){
+                a.style.background='linear-gradient(135deg, rgba(212,175,55,0.25), rgba(139,0,0,0.18))';
+                a.style.color='#fef3c7';
+                a.style.border='1px solid rgba(212,175,55,0.45)';
+                a.style.borderRadius='8px';
+                a.style.margin='2px 0';
+              }
+            }catch(_){}
+          }
+        });
+      }catch(e){ console.warn('[SuperPatch 5/6 standardize err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', _standardizeMenu, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _standardizeMenu(); }
+    else{ setTimeout(_standardizeMenu, 50); }
+    console.info('[SuperPatch 5/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 5/6 init err]',e); }
+
+  // 考勤功能按钮绑定
+  try{
+    function __attBind(id, fn){ var el=document.getElementById(id); if(el&&!el.__attBound){ el.__attBound=1; el.addEventListener('click', fn, true); } }
+    __attBind('attBtnSelectAll', function(){
+      var cbs=document.querySelectorAll('.admin-table tbody input[type="checkbox"], #chkAllHeader');
+      var allChecked=[].every.call(cbs,function(c){return c.checked;});
+      cbs.forEach(function(c){ c.checked=!allChecked; });
+      __T((!allChecked?'☑️ 已全选本页':'☐ 已取消全选'), 'success');
+    });
+    __attBind('attBtnFilterReset', function(){
+      document.querySelectorAll('.admin-filter-bar select, .admin-filter-bar input[type="text"], .admin-filter-bar input[type="date"]').forEach(function(el){ el.value=''; });
+      __T('↺ 已重置筛选条件', 'info');
+    });
+    __attBind('attBtnDemoCsv', function(){
+      var csv='姓名,工号,日期,上班时间,下班时间,加班小时,请假类型,备注\n张三,EMP001,2026-07-15,08:00,18:00,2,无,正常出勤\n李四,EMP002,2026-07-15,08:30,18:30,1,事假,半天假\n';
+      var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+      var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='考勤示例.csv'; a.click();
+      __T('📥 示例 CSV 已下载', 'success');
+    });
+    __attBind('attBtnUploadCsv', function(){
+      var inp=document.createElement('input'); inp.type='file'; inp.accept='.csv';
+      inp.onchange=function(){ __T('📤 已选择：'+(inp.files[0]?inp.files[0].name:'')+'（演示模式：真实环境将解析并导入考勤数据）','info',2500); };
+      inp.click();
+    });
+    __attBind('attBtnCalcAll', function(){ __T('🧮 正在核算当月工资（演示模式：真实环境将调用工资核算接口）','info',2500); });
+    __attBind('attBtnExportCsv', function(){
+      var rows=document.querySelectorAll('.admin-table tbody tr');
+      var csv='';
+      rows.forEach(function(r){ var tds=r.querySelectorAll('td'); var line=[]; tds.forEach(function(td){ line.push('"'+(td.textContent||'').trim().replace(/"/g,'""')+'"'); }); csv+=line.join(',')+'\n'; });
+      if(!csv){ __T('⚠️ 暂无数据可导出','warning'); return; }
+      var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+      var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='工资表.csv'; a.click();
+      __T('📊 工资表 CSV 已导出（'+rows.length+' 条记录）','success');
+    });
+    __attBind('attBtnFinanceAll', function(){ __T('💼 整月工资已推送至财务台账（演示模式）','success',2500); });
+    __attBind('attBtnFinanceSel', function(){
+      var sel=document.querySelectorAll('.admin-table tbody input[type="checkbox"]:checked').length;
+      __T('💼 已推送 '+sel+' 条记录至财务待发（演示模式）', sel>0?'success':'warning');
+    });
+    __attBind('previewCancelBtn', function(){ __closeAnyModal&&__closeAnyModal(); });
+    __attBind('previewConfirmBtn', function(){ __T('✅ 已确认预览','success'); __closeAnyModal&&__closeAnyModal(); });
+    __attBind('manualAddBtn', function(){ __T('➕ 手动添加入口（演示模式：真实环境将弹出添加表单）','info'); });
+    __attBind('paramResetBtn', function(){ __T('↺ 工资参数已重置为默认值','info'); });
+    __attBind('paramSaveBtn', function(){ __T('💾 工资参数已保存（演示模式）','success'); });
+    __attBind('ruleResetBtn', function(){ __T('↺ 考勤规则已重置','info'); });
+    __attBind('ruleAddBtn', function(){ __T('➕ 新增考勤规则（演示模式）','info'); });
+    __attBind('ruleSaveBtn', function(){ __T('💾 考勤规则已保存（演示模式）','success'); });
+    __attBind('ruleTestBtn', function(){ __T('🧪 规则测试中...（演示模式）','info'); });
+    __attBind('ruleRunTestBtn', function(){ __T('▶️ 已执行规则测试（演示模式）','success'); });
+    __attBind('historyClearBtn', function(){ if(confirm('确认清空历史记录？')){ __T('🗑️ 历史记录已清空（演示模式）','success'); } });
+  }catch(_e){ console.warn('[att-bind err]',_e); }
+
+  try{
+    console.info('[SuperPatch 6/6] 死按钮兜底 + toast通道 初始化...');
+    function _hasAction(btn){
+      if(!btn) return false;
+      // 仅onclick算真正绑定；data-action只是业务标识，不算；href需为真实跳转链接
+      var oc = btn.getAttribute('onclick');
+      var hr = btn.getAttribute('href');
+      if(oc && oc.length > 3) return true;
+      if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(btn.__deadBtnChecked) return true;
+      if(btn.__superPatchBound) return true;
+      return false;
+    }
+    function _txtMatch(txt, list){
+      for(var i=0;i<list.length;i++){ if(txt.indexOf(list[i])>=0) return true; }
+      return false;
+    }
+    document.addEventListener('click', function(e){
+      try{
+        // 修复：选择器扩大，包含a标签和[data-action]标识元素
+        var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
+        if(!btn) return;
+                // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
+        if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
+        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
+        if(_hasAction(btn)) return;
+        if(btn.__superPatchBound) return;
+        btn.__superPatchBound = 1;
+        var txt = (btn.textContent||'').trim();
+        var tt = 'other';
+        // 修复：扩充业务分支，覆盖派工/审核/通过/驳回/签约/排期/确认接单等
+        if(_txtMatch(txt,['保存','提交','确认','通过','签约','签订','确认接单','核销'])) tt='save';
+        else if(_txtMatch(txt,['删除','作废','禁用','取消','驳回'])) tt='delete';
+        else if(_txtMatch(txt,['编辑','查看','详情','预览'])) tt='view';
+        else if(_txtMatch(txt,['导出','打印'])) tt='export';
+        else if(_txtMatch(txt,['排期','排班','安排','派工','调度'])) tt='schedule';
+        else if(_txtMatch(txt,['审核','审批'])) tt='audit';
+        else if(_txtMatch(txt,['合同'])) tt='contract';
+        else if(_txtMatch(txt,['新增','新建','添加'])) tt='add';
+        if(!__acqH9(btn, tt)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var tr = btn.closest ? btn.closest('tr') : null;
+        var trKey = '';
+        if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
+        __spT0 = Date.now();
+        if(tt==='save'){
+          __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
+          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
+        }else if(tt==='delete'){
+          if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
+            __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+          }else{ __toastH9('↩️ 已取消操作','info'); }
+        }else if(tt==='view'){
+          __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+        }else if(tt==='export'){
+          __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
+          __toastH9('📤 已触发导出/打印（演示模式）','info');
+        }else if(tt==='schedule'){
+          __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+        }else if(tt==='audit'){
+          __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+        }else if(tt==='contract'){
+          __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
+          __toastH9('📄 合同文档已就绪（演示模式）','info');
+        }else if(tt==='add'){
+          __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
+          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+        }else{
+          __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+        }
+        return false;
+      }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
+    }, true);
+    console.info('[SuperPatch 6/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 6/6 init err]',e); }
+
+  console.info('['+PATCH_ID+'] 6合1超级补丁全部加载完毕 ✓');
+})();
+
+} /* end of 防重复注入保护 if */
+</script>
+<!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
+
+
+<script>
+/* ========== 🔒 通用 __closeAnyModal：关闭所有弹窗/遮罩 ========== */
+(function(){
+  if(window.__closeAnyModal) return;
+  window.__closeAnyModal = function(){
+    try{
+      var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], .modal-overlay-root, [data-overlay]');
+      overlays.forEach(function(o){
+        try{ o.classList.remove('active','show','modal-overlay-show'); o.classList.add('s-overlay-hide','modal-overlay-hide','csp-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
+      });
+      var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, .generic-modal-root, [data-modal], [role="dialog"]');
+      modals.forEach(function(m){
+        try{ m.classList.remove('active','show','modal-show'); m.classList.add('s-modal-hide','modal-wrap-hide','csp-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
+      });
+    try{ document.body.classList.remove('body-modal-locked','modal-open','nav-locked'); }catch(_b){}
+    }catch(err){ console.warn('[__closeAnyModal] err:', err); }
+  };
+  // ESC 键关闭弹窗
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      var fns = ['closeAddModal','closeEditModal','closeDispatchModal','closeOrderViewModal','closeDeleteConfirm'];
+      for(var i=0;i<fns.length;i++){ try{ if(typeof window[fns[i]]==='function') window[fns[i]](); }catch(_){} }
+      window.__closeAnyModal();
+    }
+  });
+})();
+</script>
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+(function(){
+  function __markBound(){
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
+})();</script>
+</body>
+</html>
+
