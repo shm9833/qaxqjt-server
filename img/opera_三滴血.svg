@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg4" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d5f5e3"/>
+      <stop offset="100%" stop-color="#a9dfbf"/>
+    </linearGradient>
+    <linearGradient id="gold4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d4ac0d"/>
+      <stop offset="100%" stop-color="#7d6608"/>
+    </linearGradient>
+  </defs>
+  <!-- 背景：公堂 -->
+  <rect width="800" height="450" fill="url(#bg4)"/>
+  <rect y="320" width="800" height="130" fill="#8b6f47"/>
+  <!-- 屏风 -->
+  <rect x="200" y="80" width="400" height="240" fill="#f5cba7" rx="10"/>
+  <rect x="215" y="95" width="370" height="210" fill="#fdebd0" rx="6"/>
+  <!-- 屏风画：滴血认亲 -->
+  <circle cx="400" cy="160" r="35" fill="#d4efdf" stroke="#27ae60" stroke-width="2"/>
+  <circle cx="388" cy="158" r="6" fill="#e74c3c" opacity="0.8"/>
+  <circle cx="412" cy="162" r="6" fill="#c0392b" opacity="0.8"/>
+  <text x="400" y="225" text-anchor="middle" font-family="KaiTi,serif" font-size="18" fill="#196f3d" font-weight="bold">滴血认亲</text>
+  <!-- 公案桌 -->
+  <rect x="280" y="290" width="240" height="40" fill="#6e2c00"/>
+  <rect x="295" y="260" width="20" height="35" fill="#6e2c00"/>
+  <rect x="485" y="260" width="20" height="35" fill="#6e2c00"/>
+  <!-- 签筒 -->
+  <rect x="310" y="245" width="30" height="50" fill="#784212"/>
+  <path d="M320,248 L318,230 M325,248 L328,228 M315,248 L312,232" stroke="#5d4037" stroke-width="3"/>
+  <!-- 人物 -->
+  <g transform="translate(400,270)">
+    <!-- 县官（晋信书） -->
+    <ellipse cx="0" cy="-30" rx="40" ry="30" fill="#1a5276"/>
+    <circle cx="0" cy="-65" r="25" fill="#f8dcc4"/>
+    <!-- 乌纱帽 -->
+    <path d="M-28,-82 L28,-82 L25,-92 L-25,-92 Z" fill="#1a1a1a"/>
+    <ellipse cx="-35" cy="-87" rx="10" ry="6" fill="#1a1a1a"/>
+    <ellipse cx="35" cy="-87" rx="10" ry="6" fill="#1a1a1a"/>
+    <!-- 八字胡 -->
+    <path d="M-15,-58 Q-8,-54 -2,-57 M15,-58 Q8,-54 2,-57" stroke="#1a1a1a" stroke-width="2" fill="none"/>
+  </g>
+  <!-- 两侧人物：父子 -->
+  <g transform="translate(200,310)">
+    <ellipse cx="0" cy="0" rx="30" ry="45" fill="#935116"/>
+    <circle cx="0" cy="-50" r="22" fill="#f8dcc4"/>
+  </g>
+  <g transform="translate(600,310)">
+    <ellipse cx="0" cy="0" rx="30" ry="45" fill="#a04000"/>
+    <circle cx="0" cy="-50" r="22" fill="#f8dcc4"/>
+  </g>
+  <text x="400" y="420" text-anchor="middle" font-family="STXingkai,KaiTi,serif" font-size="28" fill="url(#gold4)" font-weight="bold" letter-spacing="8">《三滴血》· 啼笑因缘</text>
+</svg>

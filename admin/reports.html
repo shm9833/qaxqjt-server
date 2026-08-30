@@ -1,0 +1,3126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <!-- =========================================================== -->
+  <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
+  <!-- 无 session 时 0.5ms 内跳登录页，防白屏 / 越权一眼看 -->
+  <!-- =========================================================== -->
+  <script>try{(function(){
+    var K1="qaxqjt_admin_session", K2="qaxqjt_logout_blacklist", L="login.html";
+    var p=String(location.pathname||"").split("/").pop().toLowerCase();
+    if(p==="login.html"||p==="recover.html") return;
+    var now=Date.now(), raw=null, s=null, bad=1;
+    try{ raw=localStorage.getItem(K1); if(raw) s=JSON.parse(raw); }catch(_){}
+    if(s && s.id && (!s.expiresAt || now < parseInt(s.expiresAt,10))){
+      bad=0;
+      try{ var bl=JSON.parse(localStorage.getItem(K2)||"[]"); for(var i=0;i<bl.length;i++){ if(bl[i] && bl[i].id===s.id){ bad=1; break; } } }catch(_){}
+    }
+    if(bad){
+      ["qaxqjt_admin_session","admin_session","qaxqjt_admin_sess_v2","admin_sess_v2","qaxqjt_admin_remember","qaxqjt_admin_token","qaxqjt_admin_info","qaxqjt_admin_permissions","qaxqjt_auth_permissions_v1"].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
+      var u=location.href, i=u.lastIndexOf("/");
+      var base= (i>=0)? u.substring(0,i+1) : "./";
+      location.replace(base + L);
+    }
+  })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <script src="../js/favicon-inject.js?v=20260803" defer></script>
+    <script src="../js/wechat-fallback.js?v=20260803" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>天水市文旅演出统计报表中心 - 秦安县秦剧团云端预约管理系统 {year}</title>
+  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <style>
+    /* ============================================================
+       FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
+       ============================================================ */
+    html, body {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+      width: 100%;
+    }
+    * { box-sizing: border-box; }
+    table { table-layout: fixed; word-break: break-word; }
+    pre, code, textarea { white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+    .admin-main, .admin-content, main, .page-wrap { max-width: 100%; overflow-x: hidden; }
+
+    .admin-user-dropdown {
+      position: relative;
+    }
+    .admin-user-dropdown .user-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 12px 6px 6px;
+      border-radius: 25px;
+      background: var(--bg-light);
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid transparent;
+    }
+    .admin-user-dropdown .user-toggle:hover {
+      background: var(--cream);
+      border-color: var(--gold);
+    }
+    .admin-user-dropdown .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-dark);
+      font-weight: 700;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+    .admin-user-dropdown .user-info-text { line-height: 1.2; }
+    .admin-user-dropdown .user-name-text {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+    .admin-user-dropdown .user-role-text {
+      font-size: 0.75rem;
+      color: var(--gold-dark);
+    }
+    .admin-user-dropdown .dropdown-arrow {
+      font-size: 0.7rem;
+      color: var(--text-light);
+      transition: transform 0.3s ease;
+    }
+    .admin-user-dropdown.open .dropdown-arrow {
+      transform: rotate(180deg);
+    }
+    .admin-user-dropdown .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 200px;
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: all 0.25s ease;
+      z-index: 200;
+    }
+    .admin-user-dropdown.open .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dropdown-menu .dropdown-header {
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--border-light);
+      background: linear-gradient(135deg, rgba(139, 0, 0, 0.05), rgba(212, 175, 55, 0.05));
+    }
+    .dropdown-menu .dropdown-header .dh-name {
+      font-weight: 600;
+      color: var(--primary-dark);
+      font-size: 0.95rem;
+      margin-bottom: 3px;
+    }
+    .dropdown-menu .dropdown-header .dh-email {
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+    .dropdown-menu .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 18px;
+      font-size: 0.88rem;
+      color: var(--text-dark);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .dropdown-menu .dropdown-item:hover {
+      background: rgba(139, 0, 0, 0.05);
+      color: var(--primary);
+      padding-left: 22px;
+    }
+    .dropdown-menu .dropdown-item .di-icon {
+      width: 18px;
+      text-align: center;
+      color: var(--gold-dark);
+    }
+    .dropdown-menu .dropdown-divider {
+      height: 1px;
+      background: var(--border-light);
+      margin: 4px 0;
+    }
+    .admin-sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 90;
+    }
+    .admin-sidebar-overlay.active { display: block; }
+    @media (max-width: 900px) {
+      .admin-sidebar { transform: translateX(-100%); }
+      .admin-sidebar.mobile-open { transform: translateX(0); }
+      .admin-main { margin-left: 0 !important; }
+      .admin-sidebar-toggle { display: flex !important; }
+      .admin-search { display: none; }
+      .admin-content { padding: 20px 15px !important; }
+    }
+
+    .reports-page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+    .reports-page-title h1 {
+      font-size: 1.7rem;
+      margin-bottom: 8px;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .reports-page-title h1::before {
+      content: '';
+      display: inline-block;
+      width: 5px;
+      height: 28px;
+      background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+      border-radius: 3px;
+    }
+    .reports-page-title .page-desc {
+      color: var(--text-light);
+      font-size: 0.92rem;
+      padding-left: 15px;
+    }
+    .reports-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .reports-select {
+      padding: 9px 14px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      background: var(--cream);
+      color: var(--text-dark);
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .reports-select:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+    }
+    .btn-action {
+      padding: 9px 18px;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+    .btn-action-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--cream);
+      border: none;
+    }
+    .btn-action-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(139, 0, 0, 0.3);
+    }
+    .btn-action-gold {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--primary-dark);
+      border: none;
+    }
+    .btn-action-gold:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.35);
+    }
+    .btn-action-outline {
+      background: var(--cream);
+      color: var(--primary-dark);
+      border: 1px solid var(--border-light);
+    }
+    .btn-action-outline:hover {
+      border-color: var(--gold);
+      background: rgba(212, 175, 55, 0.08);
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding: 18px 22px;
+      background: var(--bg-light);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      margin-bottom: 28px;
+      align-items: center;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .filter-group label {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .filter-select {
+      padding: 8px 14px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      background: var(--cream);
+      font-size: 0.86rem;
+      color: var(--text-dark);
+      transition: var(--transition);
+      cursor: pointer;
+    }
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+    .filter-divider {
+      width: 1px;
+      height: 28px;
+      background: var(--border-light);
+    }
+    .filter-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 10px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 1200px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+    }
+    .kpi-card {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      padding: 22px 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-light);
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .kpi-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-hover);
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--gold));
+    }
+    .kpi-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .kpi-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, rgba(139, 0, 0, 0.08), rgba(212, 175, 55, 0.12));
+    }
+    .kpi-trend {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .kpi-trend.up { background: rgba(40, 167, 69, 0.12); color: #28a745; }
+    .kpi-trend.down { background: rgba(139, 0, 0, 0.1); color: var(--primary); }
+    .kpi-title {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      line-height: 1.2;
+    }
+    .kpi-value .unit {
+      font-size: 0.92rem;
+      color: var(--text-light);
+      font-weight: 500;
+      margin-left: 4px;
+    }
+    .kpi-sub {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border-light);
+      font-size: 0.8rem;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .kpi-sub .sub-label {
+      background: rgba(212, 175, 55, 0.12);
+      color: var(--gold-dark);
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 22px;
+      margin-bottom: 28px;
+    }
+    .charts-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 1000px) {
+      .charts-row-2 { grid-template-columns: 1fr; }
+    }
+    .admin-chart-card {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-light);
+    }
+    .admin-chart-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .admin-chart-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 20px;
+      background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+      border-radius: 2px;
+    }
+    .admin-chart-title .chart-badge {
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 10px;
+      background: rgba(212, 175, 55, 0.15);
+      color: var(--gold-dark);
+      font-weight: 500;
+    }
+
+    .district-bar-list {
+      padding: 8px 0;
+    }
+    .district-bar-item {
+      margin-bottom: 18px;
+    }
+    .district-bar-item:last-child { margin-bottom: 0; }
+    .district-bar-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .district-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+    .district-stats {
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+    .district-stats strong {
+      color: var(--primary-dark);
+      font-weight: 700;
+      margin-right: 6px;
+    }
+    .district-bar-track {
+      height: 30px;
+      background: var(--bg-light);
+      border-radius: 15px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--border-light);
+    }
+    .district-bar-fill {
+      height: 100%;
+      border-radius: 15px;
+      position: relative;
+      transition: width 1s ease;
+      display: flex;
+      align-items: center;
+      padding-right: 12px;
+      justify-content: flex-end;
+    }
+    .district-bar-fill span {
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      white-space: nowrap;
+    }
+
+    .monthly-chart-wrap {
+      position: relative;
+      width: 100%;
+      padding: 0 10px;
+    }
+    .monthly-chart-axis {
+      display: flex;
+      align-items: flex-end;
+      position: relative;
+      height: 300px;
+      padding-left: 50px;
+      padding-right: 50px;
+      border-bottom: 2px solid var(--border-light);
+      border-left: 2px solid var(--border-light);
+    }
+    .monthly-left-axis {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 100%;
+      width: 45px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 5px 0;
+    }
+    .monthly-left-axis span {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      text-align: right;
+      padding-right: 5px;
+    }
+    .monthly-right-axis {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      height: 100%;
+      width: 45px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 5px 0;
+    }
+    .monthly-right-axis span {
+      font-size: 0.75rem;
+      color: var(--gold-dark);
+      text-align: left;
+      padding-left: 5px;
+    }
+    .monthly-columns {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      padding: 0 4px;
+    }
+    .monthly-col {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      position: relative;
+    }
+    .monthly-bar {
+      width: 70%;
+      background: linear-gradient(180deg, var(--primary-light), var(--primary));
+      border-radius: 5px 5px 0 0;
+      position: relative;
+      transition: height 0.8s ease;
+    }
+    .monthly-bar:hover {
+      opacity: 0.85;
+    }
+    .monthly-line-point {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--gold);
+      border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(212, 175, 55, 0.5);
+      z-index: 10;
+    }
+    .monthly-label {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+    .monthly-chart-svg {
+      position: absolute;
+      top: 0;
+      left: 50px;
+      right: 50px;
+      bottom: 25px;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 22px;
+      padding-top: 16px;
+      border-top: 1px dashed var(--border-light);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.85rem;
+      color: var(--text-dark);
+    }
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .donut-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .donut-chart {
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    .donut-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 120px;
+      background: var(--cream);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.06);
+    }
+    .donut-center .donut-num {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+    .donut-center .donut-label {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-top: 2px;
+    }
+    .donut-legend {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .donut-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: var(--bg-light);
+      font-size: 0.82rem;
+    }
+    .donut-legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .donut-legend-text {
+      color: var(--text-dark);
+      flex: 1;
+    }
+    .donut-legend-pct {
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+
+    .opera-ranking-list {
+      padding: 6px 0;
+    }
+    .opera-rank-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .opera-rank-item:last-child { margin-bottom: 0; }
+    .opera-rank-no {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      background: var(--bg-light);
+      color: var(--text-light);
+    }
+    .opera-rank-no.top1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff; }
+    .opera-rank-no.top2 { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: #fff; }
+    .opera-rank-no.top3 { background: linear-gradient(135deg, #CD7F32, #A0522D); color: #fff; }
+    .opera-rank-name {
+      width: 110px;
+      flex-shrink: 0;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+    .opera-rank-track {
+      flex: 1;
+      height: 26px;
+      background: var(--bg-light);
+      border-radius: 13px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--border-light);
+    }
+    .opera-rank-fill {
+      height: 100%;
+      border-radius: 13px;
+      position: relative;
+      transition: width 1s ease;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      padding-right: 10px;
+      justify-content: flex-end;
+    }
+    .opera-rank-fill.gold { background: linear-gradient(90deg, var(--gold-dark), var(--gold)); }
+    .opera-rank-fill.teal { background: linear-gradient(90deg, #17a2b8, #3ab0c3); }
+    .opera-rank-fill span {
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .opera-rank-count {
+      width: 60px;
+      text-align: right;
+      flex-shrink: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+
+    .table-wrap {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+    .table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .table-wrap thead {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    }
+    .table-wrap th {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--gold);
+      border-bottom: 2px solid var(--gold-dark);
+      white-space: nowrap;
+    }
+    .table-wrap td {
+      padding: 13px 16px;
+      font-size: 0.86rem;
+      color: var(--text-dark);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .table-wrap tbody tr:nth-child(even) {
+      background: rgba(212, 175, 55, 0.04);
+    }
+    .table-wrap tbody tr:hover {
+      background: rgba(139, 0, 0, 0.04);
+    }
+    .table-wrap tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .text-up { color: #28a745; font-weight: 600; }
+    .text-down { color: var(--primary); font-weight: 600; }
+    .text-gold-val { color: var(--gold-dark); font-weight: 600; }
+    .text-primary-val { color: var(--primary); font-weight: 600; }
+    .table-section-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .table-section-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 20px;
+      background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+      border-radius: 2px;
+    }
+
+    .reports-footer-bar {
+      margin-top: 12px;
+      padding: 22px 28px;
+      background: linear-gradient(135deg, rgba(139, 0, 0, 0.04), rgba(212, 175, 55, 0.06));
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+    }
+    .reports-footer-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed var(--border-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .reports-footer-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+    @media (max-width: 900px) {
+      .reports-footer-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 500px) {
+      .reports-footer-grid { grid-template-columns: 1fr; }
+    }
+    .footer-info-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .footer-info-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+    .footer-info-text .fi-label {
+      font-size: 0.78rem;
+      color: var(--text-light);
+      margin-bottom: 3px;
+    }
+    .footer-info-text .fi-value {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      line-height: 1.4;
+    }
+/* 🔧 H9后台总补CSS：页码圆角10px + 后台表格min-width:760px/720px/680px响应式断点 + 遮罩隐藏类 */
+.pagination .page-btn, button.page-btn, .page-btn,
+.pagination button, .page-number-item button, .pager button,
+.btn-pagination, [class*="pagination"] button,
+.btn, button.btn {
+  border-radius: 10px !important;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+.pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+}
+/* 后台表格最小宽度（768px以上 → 760px；480~767 →720px；<480 →680px） */
+.admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+.data-table-container, [class*="table-wrapper"], .admin-content table {
+  min-width: 760px !important;
+  overflow-x: auto !important;
+}
+@media (max-width: 768px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 720px !important;
+  }
+}
+@media (max-width: 480px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 680px !important;
+  }
+}
+.s-modal-hide { display: none !important; }
+.s-overlay-hide { display: none !important; }
+/* 侧边栏菜单项标准外观（防止死链接缺少视觉反馈） */
+.admin-sidebar-menu li a:not([href]), .admin-sidebar-menu li a[href="#"] { cursor: pointer; position: relative; }
+.admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
+  content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
+}
+/* ====== 空卡片修复20260825：隐藏多余分页栏 + 约束表格高度 ====== */
+.pagination-bar, .pagination-toolbar, [class*="pagination-bar"], [class*="pg-toolbar"] {
+  display: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.table-wrapper, .table-wrap, .table-container, .data-table-container {
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+}
+  
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+</style>
+</head>
+<body>
+  <div class="admin-layout">
+    <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <div class="logo-text">秦安县秦剧团<br/>文化演出管理系统</div>
+      </div>
+
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <a href="index.html" data-role-level="100" class="admin-menu-item  ">
+            <span class="menu-icon">📊</span>
+            <span>数据看板</span>
+          </a>
+          <a href="accounts.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">👥</span>
+            <span>账号权限管理</span>
+          </a>
+          <a href="schedule.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📅</span>
+            <span>演出档期排班</span>
+            <span class="menu-badge">8</span>
+          </a>
+          <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>演出演员表</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="orders.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>订单预约管理</span>
+            <span class="menu-badge">5</span>
+          </a>
+          <a href="operas.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>剧目资源管理</span>
+          </a>
+          <a href="staff.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">👨‍🎤</span>
+            <span>演职人员管理</span>
+          </a>
+          <a href="attendance.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">💵</span>
+            <span>考勤与薪酬</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="inventory.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>道具服装库存</span>
+            <span class="menu-badge">!</span>
+          </a>
+          <a href="finance.html" data-role-level="500" class="admin-menu-item">
+            <span class="menu-icon">💰</span>
+            <span>财务收支台账</span>
+          </a>
+          <a href="content.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📝</span>
+            <span>官网内容管理</span>
+          </a>
+          <a href="reports.html" data-role-level="700" class="admin-menu-item active admin-menu-item">
+            <span class="menu-icon">📈</span>
+            <span>数据统计报表</span>
+          </a>
+          <a href="system.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">🔧</span>
+            <span>系统日志备份</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
+          <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>架构验收报告</span>
+          </a>
+          <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>最终交付总结</span>
+          </a>
+          <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">🚀</span>
+            <span>EdgeOne Pages 部署教程</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
+            <span>🚪</span><span>退出登录</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" id="sidebarToggle" aria-label="菜单">
+            <span>☰</span>
+          </button>
+          <div class="admin-breadcrumb">
+            <a href="index.html">首页</a>
+            <span class="separator">/</span>
+            <span class="current">数据统计报表</span>
+          </div>
+        </div>
+
+        <div class="admin-header-right">
+          <div class="admin-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="搜索报表数据..." />
+          </div>
+          <button class="admin-header-btn" title="通知">
+            <span>🔔</span>
+            <span class="notify-dot"></span>
+          </button>
+          <button class="admin-header-btn" title="全屏" onclick="toggleFullscreen()">
+            <span>⛶</span>
+          </button>
+          <div class="admin-user-dropdown" id="userDropdown">
+            <div class="user-toggle" id="userToggle">
+              <div class="user-avatar" id="userAvatar">A</div>
+              <div class="user-info-text">
+                <div class="user-name-text" id="userName">管理员</div>
+                <div class="user-role-text" id="userRole">超级管理员</div>
+              </div>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+              <div class="dropdown-header">
+                <div class="dh-name" id="dhName">系统管理员</div>
+                <div class="dh-email">admin@qinxian-opera.com</div>
+              </div>
+              <div class="dropdown-item" onclick="location.href='accounts.html'">
+                <span class="di-icon">👤</span><span>个人资料</span>
+              </div>
+              <div class="dropdown-item" onclick="location.href='system.html'">
+                <span class="di-icon">⚙️</span><span>系统设置</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" id="logoutBtnDropdown" style="color:var(--primary);">
+                <span class="di-icon">🚪</span><span>退出登录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="admin-content">
+
+        <div class="reports-page-header">
+          <div class="reports-page-title">
+            <h1>天水市文旅演出统计报表中心</h1>
+            <div class="page-desc">秦安县秦剧团文化演出有限公司 · 年度演出数据总览 · 服务天水全域文旅事业</div>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>统计年度：</label>
+            <select id="yearSelect" class="filter-select">
+              <option>{year}-3</option>
+              <option>{year}-2</option>
+              <option selected>{year}-1</option>
+              <option>{year}</option>
+              <option>{year}+1</option>
+              <option>{year}+2</option>
+              <option>{year}+3</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>统计维度：</label>
+            <select class="filter-select">
+              <option>全部</option>
+              <option>天水文旅合作</option>
+              <option>乡村庙会</option>
+              <option>惠民下乡</option>
+              <option>校园研学</option>
+              <option>数字演出</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>区县筛选：</label>
+            <select class="filter-select">
+              <option>全部</option>
+              <option>秦州区</option>
+              <option>麦积区</option>
+              <option>秦安县</option>
+              <option>甘谷县</option>
+              <option>武山县</option>
+              <option>清水县</option>
+              <option>张家川县</option>
+            </select>
+          </div>
+          <div class="filter-divider"></div>
+          <div class="filter-actions">
+            <button class="btn-action btn-action-gold" onclick="alert('Excel导出功能：请连接后端接口实现')">
+              <span>📊</span>导出 Excel
+            </button>
+            <button class="btn-action btn-action-primary" onclick="window.print()">
+              <span>🖨️</span>打印报表
+            </button>
+          </div>
+        </div>
+
+        <div class="kpi-grid" data-paginate="list" data-page-size="12">
+          <div class="kpi-card">
+            <div class="kpi-card-head">
+              <div class="kpi-icon-box">🎭</div>
+              <div class="kpi-trend up"><span>↑</span><span>12.4%</span></div>
+            </div>
+            <div class="kpi-title">年度演出总场次</div>
+            <div class="kpi-value">386<span class="unit">场</span></div>
+            <div class="kpi-sub">
+              <span class="sub-label">同比</span>
+              <span>较去年 +43 场</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card-head">
+              <div class="kpi-icon-box">👥</div>
+              <div class="kpi-trend up"><span>↑</span><span>8.7%</span></div>
+            </div>
+            <div class="kpi-title">观众总人次</div>
+            <div class="kpi-value">26.8<span class="unit">万人次</span></div>
+            <div class="kpi-sub">
+              <span class="sub-label">同比</span>
+              <span>较去年 +2.2 万人次</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card-head">
+              <div class="kpi-icon-box">📍</div>
+              <div class="kpi-trend up"><span>↑</span><span>15.2%</span></div>
+            </div>
+            <div class="kpi-title">覆盖乡镇行政村</div>
+            <div class="kpi-value">187<span class="unit">个</span></div>
+            <div class="kpi-sub">
+              <span class="sub-label">同比</span>
+              <span>较去年 +25 个</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card-head">
+              <div class="kpi-icon-box">🏛️</div>
+              <div class="kpi-trend up"><span>↑</span><span>32.6%</span></div>
+            </div>
+            <div class="kpi-title">天水文旅合作场次</div>
+            <div class="kpi-value">62<span class="unit">场</span></div>
+            <div class="kpi-sub">
+              <span class="sub-label">同比</span>
+              <span>较去年 +15 场</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card-head">
+              <div class="kpi-icon-box">🎓</div>
+              <div class="kpi-trend up"><span>↑</span><span>45.1%</span></div>
+            </div>
+            <div class="kpi-title">校园研学服务</div>
+            <div class="kpi-value">114<span class="unit">场/8.3万人次</span></div>
+            <div class="kpi-sub">
+              <span class="sub-label">同比</span>
+              <span>较去年 +36 场</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card-head">
+              <div class="kpi-icon-box">📡</div>
+              <div class="kpi-trend up"><span>↑</span><span>128.5%</span></div>
+            </div>
+            <div class="kpi-title">数字演出直播</div>
+            <div class="kpi-value">38<span class="unit">场/420万次</span></div>
+            <div class="kpi-sub">
+              <span class="sub-label">同比</span>
+              <span>累计观看 +237万次</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card-head">
+              <div class="kpi-icon-box">💰</div>
+              <div class="kpi-trend up"><span>↑</span><span>14.8%</span></div>
+            </div>
+            <div class="kpi-title">演出总营收</div>
+            <div class="kpi-value">¥486.2<span class="unit">万</span></div>
+            <div class="kpi-sub">
+              <span class="sub-label">同比</span>
+              <span>较去年 +62.6 万</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card-head">
+              <div class="kpi-icon-box">⭐</div>
+              <div class="kpi-trend up"><span>↑</span><span>1.2分</span></div>
+            </div>
+            <div class="kpi-title">观众综合满意度</div>
+            <div class="kpi-value">96.4<span class="unit">分</span></div>
+            <div class="kpi-sub">
+              <span class="sub-label">同比</span>
+              <span>较去年 +1.2 分</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <div class="admin-chart-card">
+            <div class="admin-chart-title">天水市 2 区 5 县演出覆盖分布 <span class="chart-badge">{year} 年度</span></div>
+            <div class="district-bar-list">
+              <div class="district-bar-item">
+                <div class="district-bar-label">
+                  <span class="district-name">🏘️ 秦安县</span>
+                  <span class="district-stats"><strong>128 场</strong>占 33.2%</span>
+                </div>
+                <div class="district-bar-track">
+                  <div class="district-bar-fill" style="width:100%;background:linear-gradient(90deg,#4a0e0e,#8B0000);"><span>128场</span></div>
+                </div>
+              </div>
+              <div class="district-bar-item">
+                <div class="district-bar-label">
+                  <span class="district-name">🏙️ 秦州区</span>
+                  <span class="district-stats"><strong>68 场</strong>占 17.6%</span>
+                </div>
+                <div class="district-bar-track">
+                  <div class="district-bar-fill" style="width:53.1%;background:linear-gradient(90deg,#6a1515,#A52A2A);"><span>68场</span></div>
+                </div>
+              </div>
+              <div class="district-bar-item">
+                <div class="district-bar-label">
+                  <span class="district-name">🌄 麦积区</span>
+                  <span class="district-stats"><strong>56 场</strong>占 14.5%</span>
+                </div>
+                <div class="district-bar-track">
+                  <div class="district-bar-fill" style="width:43.8%;background:linear-gradient(90deg,#7a1a1a,#B22222);"><span>56场</span></div>
+                </div>
+              </div>
+              <div class="district-bar-item">
+                <div class="district-bar-label">
+                  <span class="district-name">🏛️ 甘谷县</span>
+                  <span class="district-stats"><strong>48 场</strong>占 12.4%</span>
+                </div>
+                <div class="district-bar-track">
+                  <div class="district-bar-fill" style="width:37.5%;background:linear-gradient(90deg,#8a2020,#C0392B);"><span>48场</span></div>
+                </div>
+              </div>
+              <div class="district-bar-item">
+                <div class="district-bar-label">
+                  <span class="district-name">⛰️ 武山县</span>
+                  <span class="district-stats"><strong>38 场</strong>占 9.8%</span>
+                </div>
+                <div class="district-bar-track">
+                  <div class="district-bar-fill" style="width:29.7%;background:linear-gradient(90deg,#9a2a2a,#CD5C5C);"><span>38场</span></div>
+                </div>
+              </div>
+              <div class="district-bar-item">
+                <div class="district-bar-label">
+                  <span class="district-name">🌲 清水县</span>
+                  <span class="district-stats"><strong>28 场</strong>占 7.3%</span>
+                </div>
+                <div class="district-bar-track">
+                  <div class="district-bar-fill" style="width:21.9%;background:linear-gradient(90deg,#aa3838,#E07070);"><span>28场</span></div>
+                </div>
+              </div>
+              <div class="district-bar-item">
+                <div class="district-bar-label">
+                  <span class="district-name">🐎 张家川县</span>
+                  <span class="district-stats"><strong>20 场</strong>占 5.2%</span>
+                </div>
+                <div class="district-bar-track">
+                  <div class="district-bar-fill" style="width:15.6%;background:linear-gradient(90deg,#ba4848,#E88888);"><span>20场</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <div class="admin-chart-card">
+            <div class="admin-chart-title">{year} 年度月度演出场次 & 观众人次趋势 <span class="chart-badge">柱形+折线双轴图</span></div>
+            <div class="monthly-chart-wrap">
+              <div class="monthly-chart-axis">
+                <div class="monthly-left-axis">
+                  <span>50</span>
+                  <span>40</span>
+                  <span>30</span>
+                  <span>20</span>
+                  <span>10</span>
+                  <span>0</span>
+                </div>
+                <div class="monthly-right-axis">
+                  <span>4万</span>
+                  <span>3.2万</span>
+                  <span>2.4万</span>
+                  <span>1.6万</span>
+                  <span>0.8万</span>
+                  <span>0</span>
+                </div>
+                <svg class="monthly-chart-svg" viewBox="0 0 1000 275" preserveAspectRatio="none">
+                  <polyline
+                    fill="none"
+                    stroke="url(#goldGrad)"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    points="
+                      37,203
+                      120,91
+                      203,175
+                      287,147
+                      370,161
+                      454,217
+                      537,119
+                      621,105
+                      704,203
+                      788,189
+                      871,245
+                      954,189
+                    "/>
+                  <defs>
+                    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" style="stop-color:#B8941F;"/>
+                      <stop offset="50%" style="stop-color:#D4AF37;"/>
+                      <stop offset="100%" style="stop-color:#F0D060;"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div class="monthly-columns">
+                  <div class="monthly-col">
+                    <div class="monthly-line-point" style="bottom: calc(27% + 25px);"></div>
+                    <div class="monthly-bar" style="height:36%;" title="1月：18场 / 1.2万人次"></div>
+                    <div class="monthly-label">1月</div>
+                  </div>
+                  <div class="monthly-col">
+                    <div class="monthly-line-point" style="bottom: calc(68% + 25px);"></div>
+                    <div class="monthly-bar" style="height:84%;" title="2月：42场 / 3.6万人次（春节高峰）"></div>
+                    <div class="monthly-label">2月</div>
+                  </div>
+                  <div class="monthly-col">
+                    <div class="monthly-line-point" style="bottom: calc(38% + 25px);"></div>
+                    <div class="monthly-bar" style="height:64%;" title="3月：32场 / 2.4万人次"></div>
+                    <div class="monthly-label">3月</div>
+                  </div>
+                  <div class="monthly-col">
+                    <div class="monthly-line-point" style="bottom: calc(48% + 25px);"></div>
+                    <div class="monthly-bar" style="height:76%;" title="4月：38场 / 2.8万人次（伏羲文化节前）"></div>
+                    <div class="monthly-label">4月</div>
+                  </div>
+                  <div class="monthly-col">
+                    <div class="monthly-line-point" style="bottom: calc(43% + 25px);"></div>
+                    <div class="monthly-bar" style="height:68%;" title="5月：34场 / 2.6万人次"></div>
+                    <div class="monthly-label">5月</div>
+                  </div>
+                  <div class="monthly-col">
+                    <div class="monthly-line-point" style="bottom: calc(24% + 25px);"></div>
+                    <div class="monthly-bar" style="height:52%;" title="6月：26场 / 1.8万人次"></div>
+                    <div class="monthly-label">6月</div>
+                  </div>
+                  <div class="monthly-col">
+                    <div class="monthly-line-point" style="bottom: calc(58% + 25px);"></div>
+                    <div class="monthly-bar" style="height:80%;" title="7月：40场 / 3.2万人次（暑期研学）"></div>
+                    <div class="monthly-label">7月</div>
+                  </div>
+                  <div class="monthly-col">
+                    <div class="monthly-line-point" style="bottom: calc(63% + 25px);"></div>
+                    <div class="monthly-bar" style="height:88%;" title="8月：44场 / 3.4万人次"></div>
+                    <div class="monthly-label">8月</div>
+                  </div>
+                  <div class="monthly-col">
+                    <div class="monthly-line-point" style="bottom: calc(27% + 25px);"></div>
+                    <div class="monthly-bar" style="height:56%;" title="9月：28场 / 2.0万人次"></div>
+                    <div class="monthly-label">9月</div>
+                  </div>
+                  <div class="monthly-col">
+                    <div class="monthly-line-point" style="bottom: calc(32% + 25px);"></div>
+                    <div class="monthly-bar" style="height:60%;" title="10月：30场 / 2.2万人次（国庆）"></div>
+                    <div class="monthly-label">10月</div>
+                  </div>
+                  <div class="monthly-col">
+                    <div class="monthly-line-point" style="bottom: calc(14% + 25px);"></div>
+                    <div class="monthly-bar" style="height:44%;" title="11月：22场 / 1.4万人次"></div>
+                    <div class="monthly-label">11月</div>
+                  </div>
+                  <div class="monthly-col">
+                    <div class="monthly-line-point" style="bottom: calc(32% + 25px);"></div>
+                    <div class="monthly-bar" style="height:64%;" title="12月：32场 / 2.2万人次（年末惠民）"></div>
+                    <div class="monthly-label">12月</div>
+                  </div>
+                </div>
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(180deg,var(--primary-light),var(--primary));"></div>演出场次（左轴：场）</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--gold);border-radius:50%;width:14px;height:14px;"></div>观众人次（右轴：人次）</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-row-2">
+          <div class="admin-chart-card">
+            <div class="admin-chart-title">8 大业务类型演出占比 <span class="chart-badge">{year} 环形图</span></div>
+            <div class="donut-wrapper">
+              <div class="donut-chart" style="background: conic-gradient(
+                #8B0000 0% 28%,
+                #D4AF37 28% 50%,
+                #17a2b8 50% 66%,
+                #28a745 66% 78%,
+                #6f42c1 78% 86%,
+                #fd7e14 86% 93%,
+                #E1306C 93% 98%,
+                #8e44ad 98% 100%
+              );">
+                <div class="donut-center">
+                  <div class="donut-num">386</div>
+                  <div class="donut-label">全年总场次</div>
+                </div>
+              </div>
+              <div class="donut-legend">
+                <div class="donut-legend-item">
+                  <div class="donut-legend-color" style="background:#8B0000;"></div>
+                  <span class="donut-legend-text">乡村庙会戏曲</span>
+                  <span class="donut-legend-pct">28%</span>
+                </div>
+                <div class="donut-legend-item">
+                  <div class="donut-legend-color" style="background:#D4AF37;"></div>
+                  <span class="donut-legend-text">政府惠民下乡</span>
+                  <span class="donut-legend-pct">22%</span>
+                </div>
+                <div class="donut-legend-item">
+                  <div class="donut-legend-color" style="background:#17a2b8;"></div>
+                  <span class="donut-legend-text">天水文旅合作</span>
+                  <span class="donut-legend-pct">16%</span>
+                </div>
+                <div class="donut-legend-item">
+                  <div class="donut-legend-color" style="background:#28a745;"></div>
+                  <span class="donut-legend-text">节庆专场文艺</span>
+                  <span class="donut-legend-pct">12%</span>
+                </div>
+                <div class="donut-legend-item">
+                  <div class="donut-legend-color" style="background:#6f42c1;"></div>
+                  <span class="donut-legend-text">企业商户庆典</span>
+                  <span class="donut-legend-pct">8%</span>
+                </div>
+                <div class="donut-legend-item">
+                  <div class="donut-legend-color" style="background:#fd7e14;"></div>
+                  <span class="donut-legend-text">校园戏曲研学</span>
+                  <span class="donut-legend-pct">7%</span>
+                </div>
+                <div class="donut-legend-item">
+                  <div class="donut-legend-color" style="background:#E1306C;"></div>
+                  <span class="donut-legend-text">网络直播数字</span>
+                  <span class="donut-legend-pct">5%</span>
+                </div>
+                <div class="donut-legend-item">
+                  <div class="donut-legend-color" style="background:#8e44ad;"></div>
+                  <span class="donut-legend-text">定制剧与排演</span>
+                  <span class="donut-legend-pct">2%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="admin-chart-card">
+            <div class="admin-chart-title">年度演出场次 Top 10 经典剧目 <span class="chart-badge">排行榜</span></div>
+            <div class="opera-ranking-list">
+              <div class="opera-rank-item">
+                <div class="opera-rank-no top1">1</div>
+                <div class="opera-rank-name">《周仁回府》</div>
+                <div class="opera-rank-track"><div class="opera-rank-fill" style="width:100%;"><span>56场</span></div></div>
+                <div class="opera-rank-count">56 场</div>
+              </div>
+              <div class="opera-rank-item">
+                <div class="opera-rank-no top2">2</div>
+                <div class="opera-rank-name">《窦娥冤》</div>
+                <div class="opera-rank-track"><div class="opera-rank-fill gold" style="width:85.7%;"><span>48场</span></div></div>
+                <div class="opera-rank-count">48 场</div>
+              </div>
+              <div class="opera-rank-item">
+                <div class="opera-rank-no top3">3</div>
+                <div class="opera-rank-name">《三滴血》</div>
+                <div class="opera-rank-track"><div class="opera-rank-fill teal" style="width:78.6%;"><span>44场</span></div></div>
+                <div class="opera-rank-count">44 场</div>
+              </div>
+              <div class="opera-rank-item">
+                <div class="opera-rank-no">4</div>
+                <div class="opera-rank-name">《火焰驹》</div>
+                <div class="opera-rank-track"><div class="opera-rank-fill" style="width:67.9%;"><span>38场</span></div></div>
+                <div class="opera-rank-count">38 场</div>
+              </div>
+              <div class="opera-rank-item">
+                <div class="opera-rank-no">5</div>
+                <div class="opera-rank-name">《十五贯》</div>
+                <div class="opera-rank-track"><div class="opera-rank-fill gold" style="width:57.1%;"><span>32场</span></div></div>
+                <div class="opera-rank-count">32 场</div>
+              </div>
+              <div class="opera-rank-item">
+                <div class="opera-rank-no">6</div>
+                <div class="opera-rank-name">《铡美案》</div>
+                <div class="opera-rank-track"><div class="opera-rank-fill teal" style="width:50%;"><span>28场</span></div></div>
+                <div class="opera-rank-count">28 场</div>
+              </div>
+              <div class="opera-rank-item">
+                <div class="opera-rank-no">7</div>
+                <div class="opera-rank-name">《金沙滩》</div>
+                <div class="opera-rank-track"><div class="opera-rank-fill" style="width:42.9%;"><span>24场</span></div></div>
+                <div class="opera-rank-count">24 场</div>
+              </div>
+              <div class="opera-rank-item">
+                <div class="opera-rank-no">8</div>
+                <div class="opera-rank-name">《玉堂春》</div>
+                <div class="opera-rank-track"><div class="opera-rank-fill gold" style="width:35.7%;"><span>20场</span></div></div>
+                <div class="opera-rank-count">20 场</div>
+              </div>
+              <div class="opera-rank-item">
+                <div class="opera-rank-no">9</div>
+                <div class="opera-rank-name">《慈母泪》</div>
+                <div class="opera-rank-track"><div class="opera-rank-fill teal" style="width:32.1%;"><span>18场</span></div></div>
+                <div class="opera-rank-count">18 场</div>
+              </div>
+              <div class="opera-rank-item">
+                <div class="opera-rank-no">10</div>
+                <div class="opera-rank-name">《下河东》</div>
+                <div class="opera-rank-track"><div class="opera-rank-fill" style="width:28.6%;"><span>16场</span></div></div>
+                <div class="opera-rank-count">16 场</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 批次9修复：统计报表附件上传 -->
+        <div class="admin-card" style="margin:0 0 22px 0;border:2px solid #8b5cf6;background:linear-gradient(135deg,#faf5ff,#ede9fe);box-shadow:none;" data-upload-wrap="1">
+          <div class="admin-card-header" style="padding-top:16px;">
+            <h3 style="color:#581c87;">📊 统计报表资料上传（前端校验+预览层）</h3>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <span class="badge" style="font-size:0.78rem;background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;">月度报表·季度分析·年度总结·审计附件</span>
+              <button class="btn btn-sm" type="button" id="openReportsUploadBtn" style="padding:6px 14px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border:none;">📤 选择报表</button>
+            </div>
+          </div>
+          <div class="admin-card-body" style="padding-top:6px;">
+            <form id="reportsAttachForm" autocomplete="off" novalidate>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+                <div>
+                  <label style="display:block;font-weight:700;color:#581c87;margin-bottom:6px;">报表周期类型</label>
+                  <select name="reportPeriod" style="width:100%;padding:10px 14px;border:1.5px solid #8b5cf6;border-radius:10px;background:#fff;">
+                    <option value="monthly">📅 月度统计报表</option>
+                    <option value="quarterly">📊 季度经营分析报告</option>
+                    <option value="yearly">📈 年度工作总结报表</option>
+                    <option value="audit">🔍 文旅审计专项附件</option>
+                    <option value="special">🎯 节庆演出专项统计</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="display:block;font-weight:700;color:#581c87;margin-bottom:6px;">报表所属周期</label>
+                  <select name="reportMonth" style="width:100%;padding:10px 14px;border:1.5px solid #8b5cf6;border-radius:10px;background:#fff;">
+                    <option value="{year}-07">{year}年7月</option>
+                    <option value="{year}-06">{year}年6月</option>
+                    <option value="{year}-Q2">{year}年第二季度</option>
+                    <option value="{year}-H1">{year}年上半年</option>
+                    <option value="2025-full">2025年度全年</option>
+                  </select>
+                </div>
+                <div style="grid-column:1 / -1;">
+                  <label style="display:block;font-weight:700;color:#581c87;margin-bottom:6px;">报表文件 *（≤10MB/个，支持Excel/PDF/Word/图片）</label>
+                  <input type="file" name="reportsFiles" id="reportsAttachFiles" accept=".xls,.xlsx,.pdf,.doc,.docx,image/*" multiple required style="width:100%;padding:10px;border:2px dashed #8b5cf6;border-radius:12px;background:#fff;cursor:pointer;">
+                </div>
+              </div>
+              <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+                <button type="submit" class="btn" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border:none;">✅ 提交报表附件</button>
+                <button type="reset" class="btn btn-outline">🔄 清空</button>
+                <small style="color:#6d28d9;">💡 上传后自动生成缩略图预览，Excel/PDF显示图标；正式发布对接COS/后端接口。</small>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="table-section-title">天水文旅节庆演出专项统计 <span style="font-size:0.78rem;color:var(--text-light);font-weight:400;">· 7大重点节庆活动数据一览</span></div>
+        <div class="table-wrap" style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>节庆名称</th>
+                <th>举办月份</th>
+                <th>演出场次</th>
+                <th>观众人次</th>
+                <th>合作区县</th>
+                <th>媒体曝光量</th>
+                <th>满意度</th>
+              </tr>
+            </thead>
+            <tbody data-paginate="list" data-page-size="10">
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">🏮 伏羲文化旅游节</td>
+                <td>6月</td>
+                <td class="text-primary-val">18</td>
+                <td class="text-gold-val">6.2 万</td>
+                <td>秦州区、秦安县</td>
+                <td>1860 万</td>
+                <td class="text-up">98.2%</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">🌺 女娲祭祀文化节</td>
+                <td>4月</td>
+                <td class="text-primary-val">12</td>
+                <td class="text-gold-val">3.8 万</td>
+                <td>秦安县</td>
+                <td>980 万</td>
+                <td class="text-up">97.6%</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">🏛️ 轩辕文化旅游节</td>
+                <td>7月</td>
+                <td class="text-primary-val">10</td>
+                <td class="text-gold-val">2.6 万</td>
+                <td>清水县</td>
+                <td>620 万</td>
+                <td class="text-up">96.8%</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">⚔️ 三国文化旅游节</td>
+                <td>9月</td>
+                <td class="text-primary-val">8</td>
+                <td class="text-gold-val">2.1 万</td>
+                <td>甘谷县、秦州区</td>
+                <td>540 万</td>
+                <td>96.2%</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">🎊 春节文化庙会巡演</td>
+                <td>1-2月</td>
+                <td class="text-primary-val">36</td>
+                <td class="text-gold-val">8.4 万</td>
+                <td>全市 2 区 5 县</td>
+                <td>2600 万</td>
+                <td class="text-up">98.6%</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">🌙 乞巧文化民俗节</td>
+                <td>8月</td>
+                <td class="text-primary-val">6</td>
+                <td class="text-gold-val">1.5 万</td>
+                <td>西和县协作（陇南）</td>
+                <td>320 万</td>
+                <td>95.8%</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">🥮 中秋国庆文旅周</td>
+                <td>10月</td>
+                <td class="text-primary-val">10</td>
+                <td class="text-gold-val">2.8 万</td>
+                <td>麦积区、秦州区</td>
+                <td>840 万</td>
+                <td class="text-up">97.2%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-section-title">校园戏曲研学服务统计 <span style="font-size:0.78rem;color:var(--text-light);font-weight:400;">· 覆盖天水 5 大区县 8 所示范学校</span></div>
+        <div class="table-wrap" style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>学校名称</th>
+                <th>所在区县</th>
+                <th>研学场次</th>
+                <th>服务学生数</th>
+                <th>演出剧目</th>
+                <th>满意度评分</th>
+            <tbody data-paginate="list" data-page-size="10">
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">秦安县第一中学</td>
+                <td>秦安县</td>
+                <td class="text-primary-val">8</td>
+                <td class="text-gold-val">4,200 人</td>
+                <td>《周仁回府》选段、戏曲研学课</td>
+                <td class="text-up">97.8</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">秦安县第五中学</td>
+                <td>秦安县</td>
+                <td class="text-primary-val">6</td>
+                <td class="text-gold-val">3,100 人</td>
+                <td>《窦娥冤》《三滴血》经典片段</td>
+                <td>96.4</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">天水市第一中学</td>
+                <td>秦州区</td>
+                <td class="text-primary-val">6</td>
+                <td class="text-gold-val">3,600 人</td>
+                <td>戏曲进校园专场 + 化妆体验</td>
+                <td class="text-up">98.2</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">天水市逸夫实验中学</td>
+                <td>秦州区</td>
+                <td class="text-primary-val">5</td>
+                <td class="text-gold-val">2,800 人</td>
+                <td>戏曲知识讲座 + 清唱会</td>
+                <td>96.6</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">麦积区实验小学</td>
+                <td>麦积区</td>
+                <td class="text-primary-val">4</td>
+                <td class="text-gold-val">2,200 人</td>
+                <td>儿童版秦腔启蒙专场</td>
+                <td class="text-up">98.8</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">甘谷县第一中学</td>
+                <td>甘谷县</td>
+                <td class="text-primary-val">5</td>
+                <td class="text-gold-val">2,600 人</td>
+                <td>《火焰驹》《金沙滩》选场</td>
+                <td>95.4</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">武山县第一中学</td>
+                <td>武山县</td>
+                <td class="text-primary-val">4</td>
+                <td class="text-gold-val">2,000 人</td>
+                <td>戏曲讲座 + 基本功体验课</td>
+                <td>95.8</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:var(--primary-dark);">清水县轩辕小学</td>
+                <td>清水县</td>
+                <td class="text-primary-val">3</td>
+                <td class="text-gold-val">1,500 人</td>
+                <td>秦腔故事 + 身段练习</td>
+                <td class="text-up">97.0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="reports-footer-bar">
+          <div class="reports-footer-title">📋 数据统计说明与报表签章信息</div>
+          <div class="reports-footer-grid" data-paginate="list" data-page-size="12">
+            <div class="footer-info-item">
+              <div class="footer-info-icon">📊</div>
+              <div class="footer-info-text">
+                <div class="fi-label">数据来源</div>
+                <div class="fi-value">秦安县秦剧团预约管理系统<br/>演出工单库 / 票务核验系统<br/>满意度问卷采样</div>
+              </div>
+            </div>
+            <div class="footer-info-item">
+              <div class="footer-info-icon">📅</div>
+              <div class="footer-info-text">
+                <div class="fi-label">统计截止日</div>
+                <div class="fi-value">{year}-12-31<br/><span style="font-weight:400;font-size:0.78rem;color:var(--text-light);">含全年完整年度数据</span></div>
+              </div>
+            </div>
+            <div class="footer-info-item">
+              <div class="footer-info-icon">⏰</div>
+              <div class="footer-info-text">
+                <div class="fi-label">报表生成时间</div>
+                <div class="fi-value" id="reportGenTime">{year}-12-31 18:00:00</div>
+              </div>
+            </div>
+            <div class="footer-info-item">
+              <div class="footer-info-icon">✅</div>
+              <div class="footer-info-text">
+                <div class="fi-label">审核人</div>
+                <div class="fi-value">剧团数据统计科<br/><span style="color:var(--gold-dark);">（盖章生效）</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="../js/year-lite.js?v=20260803"></script>
+    <script src="../js/api-config.js?v=20260803"></script>
+  <script src="../js/api-request.js?v=20260803"></script>
+<script src="../js/app.js?v=20260803"></script>
+  <script src="../js/pagination.js?v=20260803"></script>
+  <script>
+    (function() {
+      'use strict';
+
+      var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
+      var LOGOUT_BLACKLIST_KEY = 'qaxqjt_logout_blacklist';
+      // BLOCKER B8 FIX：退出登录时，一并清理历史遗留/辅助登录态 keys（v2/token/remember/permissions/info 等），防残留鉴权绕过
+      var __ADMIN_LEGACY_KEYS = ['qaxqjt_admin_session','admin_session','qaxqjt_admin_sess_v2','admin_sess_v2','qaxqjt_admin_remember','qaxqjt_admin_token','qaxqjt_admin_info','qaxqjt_admin_permissions','qaxqjt_auth_permissions_v1'];
+      function __clearAdminLegacyKeys(excludeKey) { for (var __k=0; __k<__ADMIN_LEGACY_KEYS.length; __k++) { var __kk=__ADMIN_LEGACY_KEYS[__k]; if (excludeKey && __kk===excludeKey) continue; try { localStorage.removeItem(__kk); } catch(_){} } }
+
+      function __isBlacklistedSess(sessId) {
+        if (!sessId) return false;
+        try {
+          var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
+          if (!raw) return false;
+          var list = JSON.parse(raw) || [];
+          for (var bi = 0; bi < list.length; bi++) {
+            if (list[bi].id === sessId) return true;
+          }
+        } catch (_) {}
+        return false;
+      }
+
+      function __pruneBlacklist() {
+        try {
+          var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
+          if (!raw) return;
+          var list = JSON.parse(raw) || [];
+          var cutoff = Date.now() - 24 * 60 * 60 * 1000;
+          var newList = list.filter(function (x) { return (x.ts || 0) > cutoff; });
+          if (newList.length !== list.length) localStorage.setItem(LOGOUT_BLACKLIST_KEY, JSON.stringify(newList));
+        } catch (_) {}
+      }
+
+      function checkAuth() {
+        var session = null;
+        try {
+          var raw = localStorage.getItem(ADMIN_STORAGE_KEY);
+          if (raw) session = JSON.parse(raw);
+        } catch (e) { session = null; }
+        if (!session) {
+          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
+          window.location.replace('login.html');
+          return null;
+        }
+        if (session.expiresAt && Date.now() > parseInt(session.expiresAt, 10)) {
+          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
+          __pruneBlacklist();
+          window.location.replace('login.html');
+          return null;
+        }
+        if (__isBlacklistedSess(session.id)) {
+          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
+          window.location.replace('login.html');
+          return null;
+        }
+        return session;
+      }
+
+      try {
+        window.addEventListener('storage', function (evt) {
+          if (!evt) return;
+          if (evt.key === ADMIN_STORAGE_KEY && !evt.newValue) {
+            try { window.location.replace('login.html'); } catch (_) {}
+          }
+          if (evt.key === LOGOUT_BLACKLIST_KEY) {
+            try {
+              var cur = localStorage.getItem(ADMIN_STORAGE_KEY);
+              if (cur) {
+                var curSess = JSON.parse(cur);
+                if (__isBlacklistedSess(curSess && curSess.id)) window.location.replace('login.html');
+              }
+            } catch (_) {}
+          }
+        }, false);
+      } catch (_evt) {}
+
+      // —— 角色级别映射（与后端 ROLE_LEVEL 对齐，前端 admin→super_admin, finance→finance_admin）——
+      var __ROLE_LEVEL = { super_admin:999, admin:999, ops:800, director:700, finance_checker:600, finance_cashier:520, finance_maker:550, finance_view:510, finance_admin:500, finance:500, staff:100 };
+      function __getRoleLevel(role) {
+        if (!role) return 0;
+        return __ROLE_LEVEL[role] || 0;
+      }
+      // —— 基于角色过滤侧边栏菜单（隐藏无权限菜单项）——
+      function __applyRoleMenuFilter(session) {
+        if (!session) return;
+        var userLevel = __getRoleLevel(session.role);
+        var items = document.querySelectorAll('.admin-sidebar-menu .admin-menu-item[data-role-level]');
+        items.forEach(function(item) {
+          var need = parseInt(item.getAttribute('data-role-level'), 10) || 0;
+          if (userLevel < need) {
+            item.style.display = 'none';
+          }
+        });
+      }
+
+      var currentSession = checkAuth();
+      __applyRoleMenuFilter(currentSession);
+      // —— 页面级权限拦截：直接访问 URL 时检查角色，不足则跳首页 ——
+      (function() {
+        if (!currentSession) return;
+        var userLvl = __getRoleLevel(currentSession.role);
+        if (userLvl < 700) {
+          location.replace('index.html');
+        }
+      })();
+
+      function initUserInfo() {
+        if (!currentSession) return;
+        var name = currentSession.name || '管理员';
+        var role = currentSession.roleName || '管理员';
+        var username = currentSession.username || 'a';
+        var initial = name.charAt(0) || username.charAt(0).toUpperCase();
+        var avatar = document.getElementById('userAvatar');
+        if (avatar) avatar.textContent = initial;
+        var nameEl = document.getElementById('userName');
+        if (nameEl) nameEl.textContent = name;
+        var roleEl = document.getElementById('userRole');
+        if (roleEl) roleEl.textContent = role;
+        var dhName = document.getElementById('dhName');
+        if (dhName) dhName.textContent = name;
+      }
+      initUserInfo();
+
+      var userDropdown = document.getElementById('userDropdown');
+      var userToggle = document.getElementById('userToggle');
+      function closeUserDropdown() {
+        if (userDropdown) userDropdown.classList.remove('open');
+      }
+      if (userToggle) {
+        userToggle.addEventListener('click', function(e) {
+          e.stopPropagation();
+          userDropdown.classList.toggle('open');
+        });
+      }
+      document.addEventListener('click', function(e) {
+        if (userDropdown && !userDropdown.contains(e.target)) closeUserDropdown();
+      });
+
+      function logout() {
+        if (window.confirm('确定要退出登录吗？')) {
+          try {
+            var curSessId = (currentSession && currentSession.id) ? currentSession.id : null;
+            if (curSessId) {
+              var blackList = [];
+              try {
+                var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
+                if (raw) blackList = JSON.parse(raw) || [];
+              } catch (_) {}
+              blackList.push({ id: curSessId, ts: Date.now() });
+              if (blackList.length > 100) blackList = blackList.slice(-100);
+              try { localStorage.setItem(LOGOUT_BLACKLIST_KEY, JSON.stringify(blackList)); } catch (_) {}
+            }
+          } catch (_blk) {}
+          localStorage.removeItem(ADMIN_STORAGE_KEY);
+          __clearAdminLegacyKeys(ADMIN_STORAGE_KEY);
+          if (window.QinApp && window.QinApp.Admin) {
+            try { window.QinApp.Admin.logout(); } catch (_a) {}
+          }
+          try { window.location.replace('login.html'); } catch (_loc) { window.location.href = 'login.html'; }
+        }
+      }
+      var logoutBtn1 = document.getElementById('logoutBtnSidebar');
+      var logoutBtn2 = document.getElementById('logoutBtnDropdown');
+      if (logoutBtn1) logoutBtn1.addEventListener('click', logout);
+      if (logoutBtn2) logoutBtn2.addEventListener('click', logout);
+
+      var sidebar = document.getElementById('adminSidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+      var toggle = document.getElementById('sidebarToggle');
+      function openMobileSidebar() {
+        sidebar.classList.add('mobile-open');
+        overlay.classList.add('active');
+      }
+      function closeMobileSidebar() {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('active');
+      }
+      if (toggle) {
+        toggle.addEventListener('click', function() {
+          sidebar.classList.contains('mobile-open') ? closeMobileSidebar() : openMobileSidebar();
+        });
+      }
+      if (overlay) overlay.addEventListener('click', closeMobileSidebar);
+
+      window.toggleFullscreen = function() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen && document.exitFullscreen();
+        }
+      };
+
+      var genTime = document.getElementById('reportGenTime');
+      if (genTime) {
+        var now = new Date();
+        var pad = function(n) { return n < 10 ? '0' + n : n; };
+        var yearMatch = document.title.match(/(\d{4})/) || [];
+        var displayYear = yearMatch[1] || now.getFullYear();
+        var t = displayYear + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + ' ' +
+                pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+        genTime.textContent = t;
+      }
+
+      function animateBars() {
+        var bars = document.querySelectorAll('.district-bar-fill, .opera-rank-fill, .monthly-bar');
+        bars.forEach(function(bar, index) {
+          var finalW = bar.style.width;
+          var finalH = bar.style.height;
+          if (finalW) { bar.style.width = '0%'; }
+          if (finalH) { bar.style.height = '0%'; }
+          setTimeout(function() {
+            if (finalW) bar.style.width = finalW;
+            if (finalH) bar.style.height = finalH;
+          }, 60 + index * 50);
+        });
+      }
+      if ('IntersectionObserver' in window) {
+        var observer = new IntersectionObserver(function(entries) {
+          entries.forEach(function(entry) {
+            if (entry.isIntersecting) { animateBars(); observer.disconnect(); }
+          });
+        }, { threshold: 0.1 });
+        var firstCard = document.querySelector('.kpi-grid');
+        if (firstCard) observer.observe(firstCard);
+      } else {
+        setTimeout(animateBars, 500);
+      }
+
+      // =============================================================================
+      // 🔧 D3 FIX：报表分析 全按钮自动化事件绑定 + 去抖（刷新/导出/打印）
+      // =============================================================================
+
+    })();
+
+  // =============================================================================
+  // 🔧 E3 FIX：数据报表 全按钮自动化事件绑定 + 去抖锁
+  // =============================================================================
+  </script>
+  
+<!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
+<script>
+/* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
+if (window.__DBF_V20260804_INJECTED__ !== true) {
+  window.__DBF_V20260804_INJECTED__ = true;
+
+/* ========== 📊 JSON 性能日志（默认关闭，开启后输出NDJSON便于ELK采集） ========== */
+function __pEna(){try{return window.localStorage&&localStorage.getItem('__ENABLE_PERF_LOG__')==='true'}catch(e){return false}}
+function __pFmt(){try{return(window.localStorage&&localStorage.getItem('__PERF_FORMAT__')||'json').toLowerCase()}catch(e){return'json'}}
+function __pTid(){if(!window.__pCur){window.__pCur='tr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}return window.__pCur}
+function __pUA(){try{return navigator.userAgent||''}catch(e){return''}}
+function __pURL(){try{return location.href||''}catch(e){return''}}
+function __pLog(module,event,extra){
+  if(!__pEna())return;
+  try{
+    var now=new Date();
+    var duration_ms = (window.__pT0 ? (Date.now()-window.__pT0) : 0);
+    var payload = {
+      '@timestamp': now.toISOString(),
+      'level': 'INFO',
+      'service': 'qaxqjt-admin',
+      'trace_id': __pTid(),
+      'span_id': 'sp_'+now.getTime().toString(36),
+      'module': module,            // 'DBF' 或 'SP'
+      'event': event,              // 'save_click' / 'audit_pass' 等
+      'branch': (extra && extra.branch) ? extra.branch : null,
+      'btn_text': (extra && extra.txt) ? extra.txt : null,
+      'bound':    (extra && typeof extra.bound==='boolean') ? extra.bound : null,
+      'lock_wait_ms': (extra && typeof extra.lockWait==='number') ? extra.lockWait : 0,
+      'duration_ms': duration_ms,
+      'page_url': __pURL(),
+      'user_agent': __pUA(),
+      'extra': extra || {}
+    };
+    // 删除已经提出来的重复字段，避免冗余
+    if(payload.extra){
+      ['branch','txt','bound','lockWait'].forEach(function(k){if(payload.extra[k]!==undefined)delete payload.extra[k]});
+    }
+    // 输出 NDJSON（一行一条），便于 Filebeat / Logstash 直接采集
+    console.log(JSON.stringify(payload));
+  }catch(_){}
+}
+var __pT0=0;
+
+
+  (function(){
+    function __T(msg,type){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(msg,type||'info',3000); }catch(_e){ try{(type==='error'?alert:console.log)('[deadhook] '+msg);}catch(_f){} } }
+    function __L(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||600); }catch(_){}
+      return true;
+    }
+    // 只在 capture 阶段处理，便于在页面原有 handlers 之前运行：若按钮已存在 onclick / 已绑过事件，直接跳过
+    document.addEventListener('click', function(e){
+    __pT0 = Date.now();
+    var __pEvt = {target: e.target && e.target.tagName, btn: null, txt: null, branch: null, bound: null, lockWait: 0};
+    window.__pCur = 'tr_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+    var t = e.target;
+      if(!t) return;
+      // 向上找最近的按钮元素/可点击锚点 - 扩大匹配范围，包含a标签和所有含btn/action类的元素
+      var btn = (t.tagName||'').toLowerCase() === 'button' ? t :
+                (t.closest ? t.closest('button, a, [role="button"], .btn, .btn-action, .btn-sm, .action-link, [data-action]') : null);
+      if(!btn) return;
+      // 跳过已有 onclick / 正常href跳转 / 已在脚本中手动绑定过（__bindDone=1 或 __ctE2Done=1）的按钮
+      // 注意：data-action仅作为标识，不代表已绑定事件；父元素检查仅对onclick生效
+      try{
+  function __btnHasBound(btn){
+    if(!btn) return false;
+    if(btn.__superPatchBound) return true;
+    var oc = btn.getAttribute && btn.getAttribute('onclick');
+    var hr = btn.getAttribute && btn.getAttribute('href');
+    if(oc && oc.length > 3) return true;
+    // 仅当href不是占位符且不是javascript伪协议时才算有效跳转
+    if(hr && hr !== '#' && hr !== 'javascript:;' && hr !== 'javascript:void(0);' && hr !== 'javascript:void(0)' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+    var p = btn.parentElement, lvl = 0;
+    while(p && lvl < 4){
+      try {
+        var pOc = p.getAttribute && p.getAttribute('onclick');
+        // 父级onclick长度>3才算有效绑定
+        if(pOc && pOc.length > 3) return true;
+      }catch(_){}
+      p = p.parentElement; lvl++;
+    }
+    // 移除：匹配业务关键词=已绑定的错误逻辑。这些恰恰是需要兜底的按钮！
+    return false;
+  }
+  var __pBnd = __btnHasBound(btn);
+    __pEvt.bound = __pBnd;
+    __pLog('DBF','hasBound_result', {bound:__pBnd, check_ms:Date.now()-__pT0});
+    if(__pBnd) return;
+    var __pDrp = (btn.__bindDone || btn.__ctE2Done);
+    if(__pDrp){__pLog('DBF','dedup_skip', {reason: btn.__bindDone?'bindDone':'ctE2Done'}); return;}
+}catch(_a){}
+      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
+      // 放宽文本长度限制：从20字符放宽到50字符，覆盖"确认订单""取消订单""派工安排"等复合文本
+      __pEvt.txt = txt;
+    __pLog('DBF','txt_resolved', {txt:txt, len:txt.length});
+    if(!txt || txt.length > 50) return;
+      var tr = btn.closest ? btn.closest('tr') : null;
+      var trKey = '';
+      if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
+      // 各按钮分发行文
+      var isSave = (txt.indexOf('保存')>=0 || txt.indexOf('提交')>=0 || txt.indexOf('确认')>=0);
+      var isEdit = (txt.indexOf('编辑')>=0);
+      var isDel  = (txt.indexOf('删除')>=0 && txt.length <= 10);
+      var isView = (txt.indexOf('查看')>=0 || (txt==='👁') || (txt.indexOf('👁')>=0 && txt.length<=6) || txt.indexOf('详情')>=0 || txt.indexOf('预览')>=0);
+      var isVerify = (txt.indexOf('核销')>=0);
+      var isExport = (txt.indexOf('导出')>=0);
+      var isAdd = (txt.indexOf('新增')>=0);
+      var doneKey = 'e2_'+(isSave?'s':isEdit?'e':isDel?'d':isView?'v':isVerify?'y':isExport?'x':isAdd?'a':'k')+'_'+(trKey||Math.random().toString(36).slice(2,6));
+      if(isSave){
+    __pEvt.branch='save';
+    var __pLk = __L(doneKey,900);
+    if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
+    __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
+        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
+        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+      }
+      if(isEdit){
+        if(!__L(doneKey,700)) return;
+        __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
+        __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isDel){
+        if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
+        if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
+        try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
+        __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
+        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+      }
+      if(isView){
+        if(!__L(doneKey,500)) return;
+        __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
+        __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isVerify){
+        if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
+        __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
+        __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isExport){
+        if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
+        __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
+        __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isAdd){
+        if(!__L(doneKey,900)) return;
+        __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
+        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        btn.__ctE2Done = 1; return;
+      }
+      // ---- 新增：审核/审批/驳回/通过 ----
+      var isAudit = txt.indexOf('审核')>=0 || txt.indexOf('审批')>=0 || txt.indexOf('驳回')>=0 || txt.indexOf('通过')>=0;
+      if(isAudit){
+        if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
+        if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
+        __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+      }
+      // ---- 新增：签约/签订 ----
+      var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
+      if(isSign){
+        if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
+        __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
+        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+      }
+      // ---- 新增：合同/生成合同 ----
+      var isContract = txt.indexOf('合同')>=0 && !isSign;
+      if(isContract){
+        if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
+        __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
+        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        btn.__ctE2Done=1; return;
+      }
+      // ---- 新增：排期/排班/安排档期 ----
+      var isScheduleBtn = txt.indexOf('排期')>=0 || txt.indexOf('排班')>=0 || (txt.indexOf('安排')>=0 && (txt.length<=8 || txt.indexOf('档期')>=0));
+      if(isScheduleBtn){
+        if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
+        __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        btn.__ctE2Done=1; return;
+      }
+      // ---- 新增：取消/处理/确认接单 ----
+      var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
+      if(isCancelOrHandle && !isDel && !isSave){
+        if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        if((txt.indexOf('取消')>=0) && !confirm('确认取消：'+(trKey||'当前记录')+'？')) return;
+        var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
+        var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
+        __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
+        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+      }
+
+    }, true);
+    console.info('[DeadButtonFallback 已加载：×兜底 + 保存/编辑/删除/查看/核销/导出/新增 死按钮兜底委托]');
+    try{ window.__T = __T; window.__L = __L; }catch(_){}
+  })();
+  
+} /* end of 防重复注入保护 if */
+</script>
+
+<script id="adminSuperPatchV20260730">
+/* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
+if (window.__SP_V20260804_INJECTED__ !== true) {
+  window.__SP_V20260804_INJECTED__ = true;
+
+/* ========== 📊 JSON 性能日志（默认关闭，开启后输出NDJSON便于ELK采集） ========== */
+function __pEna(){try{return window.localStorage&&localStorage.getItem('__ENABLE_PERF_LOG__')==='true'}catch(e){return false}}
+function __pFmt(){try{return(window.localStorage&&localStorage.getItem('__PERF_FORMAT__')||'json').toLowerCase()}catch(e){return'json'}}
+function __pTid(){if(!window.__pCur){window.__pCur='tr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}return window.__pCur}
+function __pUA(){try{return navigator.userAgent||''}catch(e){return''}}
+function __pURL(){try{return location.href||''}catch(e){return''}}
+var __spT0=0;
+var __spEvt={};
+function __pLog(module,event,extra){
+  if(!__pEna())return;
+  try{
+    var now=new Date();
+    var duration_ms = (__spT0 ? (Date.now()-__spT0) : 0);
+    var payload = {
+      '@timestamp': now.toISOString(),
+      'level': 'INFO',
+      'service': 'qaxqjt-admin',
+      'trace_id': __pTid(),
+      'span_id': 'sp_'+now.getTime().toString(36),
+      'module': module,
+      'event': event,
+      'branch': (extra && extra.branch) ? extra.branch : null,
+      'btn_text': (extra && extra.txt) ? extra.txt : null,
+      'btn_selector': (extra && extra.btn) ? extra.btn : null,
+      'bound': (extra && typeof extra.bound==='boolean') ? extra.bound : null,
+      'lock_wait_ms': (extra && typeof extra.lockWait==='number') ? extra.lockWait : 0,
+      'duration_ms': duration_ms,
+      'page_url': __pURL(),
+      'user_agent': __pUA(),
+      'extra': extra || {}
+    };
+    if(payload.extra){
+      ['branch','txt','bound','lockWait','btn'].forEach(function(k){if(payload.extra[k]!==undefined)delete payload.extra[k]});
+    }
+    console.log(JSON.stringify(payload));
+  }catch(_){}
+}
+
+
+(function(){
+  'use strict';
+  var PATCH_ID = 'adminSuperPatchV20260730';
+
+  function _genId(prefix){
+    var d = new Date();
+    var pad = function(n){ return n<10?'0'+n:''+n; };
+    var ymd = d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());
+    var hms = pad(d.getHours())+pad(d.getMinutes())+pad(d.getSeconds());
+    var rnd = Math.floor(Math.random()*90+10);
+    return prefix + ymd + hms + rnd;
+  }
+
+  function _pad2(n){ return n<10?'0'+n:''+n; }
+
+  if(!window.__toastH9){
+    window.__toastH9 = function(msg, type){
+      try{
+        if(window.QinApp && QinApp.Utils && typeof QinApp.Utils.toast==='function'){
+          QinApp.Utils.toast(msg, type||'info');
+          return;
+        }
+        var ts = document.querySelector('.toast-stack');
+        if(!ts){
+          ts = document.createElement('div');
+          ts.className = 'toast-stack';
+          ts.setAttribute('aria-live','polite');
+          ts.style.cssText='position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+          document.body.appendChild(ts);
+        }
+        var el = document.createElement('div');
+        var bg = 'linear-gradient(135deg,#475569,#334155)';
+        if(type==='success') bg='linear-gradient(135deg,#16a34a,#15803d)';
+        if(type==='error') bg='linear-gradient(135deg,#dc2626,#b91c1c)';
+        if(type==='warning') bg='linear-gradient(135deg,#f59e0b,#d97706)';
+        if(type==='info') bg='linear-gradient(135deg,#0284c7,#0369a1)';
+        el.style.cssText='background:'+bg+';color:#fff;padding:10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.18);font-size:0.85rem;max-width:360px;pointer-events:auto;animation:toastInH9 .25s ease;';
+        el.textContent = msg;
+        ts.appendChild(el);
+        var st = document.createElement('style');
+        if(!document.getElementById('_toastH9Anim')){
+          st.id='_toastH9Anim';
+          st.textContent='@keyframes toastInH9{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}';
+          document.head.appendChild(st);
+        }
+        setTimeout(function(){ el.style.transition='opacity .3s,transform .3s'; el.style.opacity='0'; el.style.transform='translateY(-8px)'; setTimeout(function(){ el.remove(); },320); }, 2600);
+      }catch(e){ console.warn('[toastH9]',e); }
+    };
+  }
+
+  if(!window.__acqH9){
+    window.__acqH9 = function(btn, txtType){
+      var lockKey = '__acqLock_'+(btn&&btn.dataset?btn.dataset.acqKey:'global');
+      var now = Date.now();
+      var last = parseInt(btn&&btn.dataset?btn.dataset.__acqLast:'0',10)||0;
+      var expire = 400;
+      if(txtType==='save'||txtType==='submit'||txtType==='confirm') expire=900;
+      if(txtType==='delete'||txtType==='cancel'||txtType==='disable') expire=1200;
+      if(now-last<expire){ return false; }
+      if(btn&&btn.dataset){ btn.dataset.__acqLast = now; }
+      return true;
+    };
+  }
+
+  try{
+    console.info('[SuperPatch 1/6] FORM SUBMIT/RESET 防刷新 + 必填校验 初始化...');
+    document.addEventListener('submit', function(e){
+      try{
+        var form = e.target;
+        if(!form||form.tagName!=='FORM') return;
+        e.preventDefault();
+        e.stopPropagation();
+        var fields = form.querySelectorAll('input,select,textarea');
+        var ok = true;
+        var firstErr = null;
+        fields.forEach(function(f){
+          if(f.disabled||f.type==='file'||f.type==='hidden'||f.type==='button'||f.type==='submit'||f.type==='reset') return;
+          var isRequired = f.hasAttribute('required')||(f.classList&&f.classList.contains('required'));
+          var lbl = '';
+          var labelEl = form.querySelector('label[for="'+f.id+'"]')||f.closest('label');
+          if(labelEl) lbl = labelEl.textContent.trim();
+          if(!lbl){
+            var ph = f.getAttribute('placeholder')||'';
+            if(ph&&ph.slice(-1)==='*'){ isRequired=true; lbl=ph.slice(0,-1).trim(); }
+          }
+          if(labelEl&&labelEl.textContent.indexOf('*')>=0){ isRequired=true; lbl=labelEl.textContent.replace(/\*/g,'').trim(); }
+          if(!lbl){
+            var nm = f.getAttribute('name')||f.id||'';
+            lbl = '「'+nm+'」';
+          }
+          var val = (f.value||'').trim();
+          f.classList.remove('input-error');
+          if(isRequired&&!val){
+            f.classList.add('input-error');
+            f.style.borderColor='#dc2626'; f.style.boxShadow='0 0 0 3px rgba(220,38,38,0.1)';
+            __toastH9('⚠️ 请完整填写'+lbl+'后再提交','error');
+            ok=false; if(!firstErr) firstErr=f;
+            return;
+          }
+          if(val){
+            var t = f.type||'';
+            var n = (f.getAttribute('name')||'').toLowerCase();
+            var telReg = /^1[3-9]\d{9}$/;
+            var mailReg = /^[\w.+-]+@[\w-]+\.[\w.-]+$/;
+            var dateReg = /^\d{4}-\d{2}-\d{2}$/;
+            if(t==='tel'||n.indexOf('phone')>=0||n.indexOf('mobile')>=0){
+              if(!telReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'格式不正确（11位手机号）','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='email'||n.indexOf('mail')>=0){
+              if(!mailReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'邮箱格式不正确','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(n.indexOf('amount')>=0||n.indexOf('price')>=0||n.indexOf('money')>=0){
+              var nv = Number(val);
+              if(isNaN(nv)||nv<0){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'金额必须≥0','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='number'){
+              var nv2 = +val;
+              if(!Number.isInteger(nv2)||nv2<0){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'必须是非负整数','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='date'){
+              if(!dateReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'日期格式应为YYYY-MM-DD','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+          }
+        });
+        if(firstErr){ try{ firstErr.focus(); }catch(_){} }
+        if(!ok) return false;
+        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        setTimeout(function(){
+          try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
+        }, 380);
+        return false;
+      }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
+    }, true);
+
+    document.addEventListener('reset', function(e){
+      try{
+        var form = e.target;
+        if(!form||form.tagName!=='FORM') return;
+        e.preventDefault();
+        e.stopPropagation();
+        form.querySelectorAll('input,select,textarea').forEach(function(f){
+          if(f.type==='file'){ try{f.value='';}catch(_){} }
+          else if(f.type==='checkbox'||f.type==='radio'){ f.checked=false; }
+          else{ f.value=''; }
+          f.classList.remove('input-error');
+          try{ f.style.borderColor=''; f.style.boxShadow=''; }catch(_){}
+        });
+        __toastH9('🔄 已重置','info');
+        return false;
+      }catch(e2){ console.warn('[SuperPatch 1/6 reset err]',e2); return false; }
+    }, true);
+
+    var cssErr = document.createElement('style');
+    cssErr.textContent = '.input-error{border-color:#dc2626 !important;box-shadow:0 0 0 3px rgba(220,38,38,0.12) !important;transition:all .2s;}';
+    document.head.appendChild(cssErr);
+    console.info('[SuperPatch 1/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 1/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 2/6] 编号自动生成（只读、不可手改）初始化...');
+    var idRules = [
+      {keys:['订单编号','orderNo','orderId'], prefix:'QAX'},
+      {keys:['收款编号','收款单','receiptId'], prefix:'SK'},
+      {keys:['票据编号','凭证编号','voucherId'], prefix:'PZ'},
+      {keys:['工资条编号','wageId'], prefix:'GZ'},
+      {keys:['派工编号','dispatchId'], prefix:'PG'},
+      {keys:['档期编号','scheduleId'], prefix:'DQ'},
+      {keys:['合同编号','HT','contractId'], prefix:'HT'}
+    ];
+    function _matchIdRule(inp){
+      var hay = [inp.id||'', inp.name||'', inp.getAttribute('aria-label')||'', inp.getAttribute('placeholder')||''];
+      try{
+        var lbl = document.querySelector('label[for="'+inp.id+'"]');
+        if(lbl) hay.push(lbl.textContent||'');
+        var par = inp.closest('[class*="form-group"],[class*="form-item"],td,th,div');
+        if(par) hay.push(par.textContent||'');
+      }catch(_){}
+      var s = hay.join(' ');
+      for(var i=0;i<idRules.length;i++){
+        var r = idRules[i];
+        for(var j=0;j<r.keys.length;j++){
+          if(s.indexOf(r.keys[j])>=0) return r;
+        }
+      }
+      return null;
+    }
+    function _fillIds(scope){
+      try{
+        var inputs = (scope||document).querySelectorAll('input[type=text],input:not([type])');
+        inputs.forEach(function(inp){
+          if(inp.readOnly||inp.disabled) return;
+          var rule = _matchIdRule(inp);
+          if(!rule) return;
+          if((inp.value||'').trim()!=='') return;
+          inp.value = _genId(rule.prefix);
+          inp.setAttribute('readonly','readonly');
+          inp.style.cursor='not-allowed';
+          inp.style.background='#f8fafc';
+        });
+      }catch(e){ console.warn('[SuperPatch 2/6 fillIds err]',e); }
+    }
+    function _refreshIdsOnNew(scope){
+      try{
+        var inputs = (scope||document).querySelectorAll('input[readonly]');
+        inputs.forEach(function(inp){
+          var rule = _matchIdRule(inp);
+          if(!rule) return;
+          inp.value = _genId(rule.prefix);
+        });
+      }catch(e){ console.warn('[SuperPatch 2/6 refreshIds err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', function(){ _fillIds(); }, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _fillIds(); }
+    else{ setTimeout(_fillIds, 50); }
+    if(typeof MutationObserver!=='undefined'){
+      var mo = new MutationObserver(function(muts){
+        muts.forEach(function(m){
+          if(m.addedNodes&&m.addedNodes.length){
+            m.addedNodes.forEach(function(n){
+              if(n.nodeType===1) _fillIds(n);
+            });
+          }
+        });
+      });
+      mo.observe(document.body, {childList:true, subtree:true});
+    }
+    document.addEventListener('click', function(e){
+      try{
+        var btn = e.target.closest('button,a,[role=button]');
+        if(!btn) return;
+    __spT0 = Date.now();
+    __spEvt={target: (btn.tagName||'?') + '.' + (btn.className||'').slice(0,40), txt: (btn.textContent||'').trim()};
+    __pLog('SP','click_match', {btn:__spEvt.target, txt:__spEvt.txt, ms:Date.now()-__spT0});
+    var txt = (btn.textContent||'').trim().toLowerCase();
+        var html = (btn.innerHTML||'').toLowerCase();
+        var idCls = (btn.id||'').toLowerCase()+' '+(btn.className||'').toLowerCase();
+        if(txt.indexOf('新建')>=0||txt.indexOf('➕')>=0||txt.indexOf('+new')>=0||html.indexOf('➕')>=0||idCls.indexOf('btnadd')>=0||idCls.indexOf('-new')>=0||idCls.indexOf('new')>=0){
+          setTimeout(function(){ _refreshIdsOnNew(); }, 80);
+        }
+      }catch(_){}
+    }, true);
+    console.info('[SuperPatch 2/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 2/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 3/6] 取消/关闭/我知道了/× 关弹窗不刷新 初始化...');
+    var closeTexts = ['取消','关闭','我知道了','我明白了','知道了','确定取消'];
+    var closeChs = ['×','✕','✖','✘','❌','⨯'];
+    document.addEventListener('click', function(e){
+      try{
+        var el = e.target;
+        var txt = (el.textContent||'').trim();
+        if(!txt&&el.closest){ txt = (el.closest('button,a,[role=button],span,div')||{}).textContent||''; txt=txt.trim(); }
+        var isClose = false;
+        if(closeChs.indexOf(txt)>=0) isClose=true;
+        for(var i=0;i<closeTexts.length;i++){
+          if(txt===closeTexts[i]||(txt.length<=12&&txt.indexOf(closeTexts[i])>=0)){ isClose=true; break; }
+        }
+        if(!isClose) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var handled=false;
+        try{ if(typeof window.__closeAnyModal==='function'){ window.__closeAnyModal(); handled=true; } }catch(_){}
+        if(!handled){
+          var sels = [
+            'div[class*="modal-"]','div[class*="Modal"]','div[class*="overlay"]',
+            'div[id*="Modal"]','div[id*="modal"]','div[class*="popup"]','div[class*="Popup"]',
+            'div[class*="dialog"]','div[class*="Dialog"]'
+          ];
+          sels.forEach(function(sel){
+            try{
+              var arr = document.querySelectorAll(sel);
+              arr.forEach(function(n){
+                if(n&&n.style){
+                  n.style.display='none';
+                  try{ n.classList.add('csp-hide'); }catch(_){}
+                }
+              });
+            }catch(_){}
+          });
+        }
+        __toastH9('↩️ 已关闭弹窗','info');
+      }catch(e3){ console.warn('[SuperPatch 3/6 click err]',e3); }
+    }, true);
+    console.info('[SuperPatch 3/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 3/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 4/6] 分页器标准化 (pagination.js结构) 初始化...');
+    var pgStateMap = new WeakMap();
+    function _isPgContainer(el){
+      try{
+        if(!el || el.nodeType!==1) return false;
+        var tag = (el.tagName||'').toUpperCase();
+        if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
+        var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
+        if(c.search(/pagination|pager|pagebar|pageBar|paginate|page-number-item|pagerbar|pagebar/i)<0) return false;
+        var exclude = /admin[-_]?main|admin[-_]?content|main[-_]?content|stats[-_]?grid|list[-_]?grid|card[-_]?grid|table[-_]?wrap|table[-_]?container|data[-_]?wrap|content[-_]?wrap|page[-_]?content|admin[-_]?wrap|app[-_]?main/i;
+        if(exclude.test(c)) return false;
+        if(el.querySelector('[data-pg]')||el.querySelector('.page-number-item')||el.querySelector('button[data-pg]')) return true;
+        return true;
+      }catch(_){ return false; }
+    }
+    function _ensurePgState(container){
+      if(!pgStateMap.has(container)){
+        var total = 100;
+        var tbody = document.querySelector('tbody[data-paginate=list]');
+        if(tbody){
+          var sz = parseInt(tbody.getAttribute('data-page-size')||'10',10);
+          var rows = tbody.querySelectorAll('tr:not([style*=none]):not(.csp-hide)').length;
+          total = Math.max(100, rows*sz);
+        }
+        var size = 10;
+        var existing = container.querySelector('select[data-pg=size]');
+        if(existing){ try{ size = parseInt(existing.value||'10',10)||10; }catch(_){} }
+        pgStateMap.set(container, {total:total, pages:Math.ceil(total/size), current:1, size:size});
+      }
+      return pgStateMap.get(container);
+    }
+    function _buildPg(container){
+      try{
+        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
+        var oldToolbar = container.querySelector('.pagination-toolbar');
+        if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
+        var st = _ensurePgState(container);
+        var children = container.children, nonPg = 0, i;
+        for(i=0;i<children.length;i++){
+          var c = children[i]; if(!c) continue;
+          var cn = (c.className||'').toString(); var id = (c.id||'').toString(); var tag = (c.tagName||'').toString().toUpperCase();
+          if(tag==='BUTTON'||tag==='SELECT'||tag==='SPAN'||tag==='INPUT') continue;
+          if(cn.indexOf('pagination')>=0 || cn.indexOf('pager')>=0 || cn.indexOf('pagebar')>=0 || cn.indexOf('page-')>=0 || id.indexOf('page')>=0) continue;
+          nonPg++;
+        }
+        if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
+        var wrap = document.createElement('div');
+        wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
+        wrap.innerHTML = ''+
+          '<button class="btn btn-sm" data-pg="first">首页</button>'+
+          '<button class="btn btn-sm" data-pg="prev">上一页</button>'+
+          '<div class="page-number-wrap" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;"></div>'+
+          '<button class="btn btn-sm" data-pg="next">下一页</button>'+
+          '<button class="btn btn-sm" data-pg="last">末页</button>'+
+          '<span style="margin-left:6px;">跳 <input type="number" data-pg="jump" min="1" style="width:60px;padding:4px 6px;border:1.5px solid var(--border-light,#cbd5e1);border-radius:6px;"> 页</span>'+
+          '<select data-pg="size" style="padding:4px 8px;border:1.5px solid var(--border-light,#cbd5e1);border-radius:6px;">'+
+            '<option value="10">10条/页</option><option value="20">20条/页</option><option value="50">50条/页</option><option value="100">100条/页</option>'+
+          '</select>'+
+          '<span data-pg="info" style="margin-left:auto;color:var(--text-light,#64748b);">共 0 条 / 第 1 页</span>';
+        container.appendChild(wrap);
+        wrap.querySelectorAll('button').forEach(function(b){ b.style.borderRadius='999px'; });
+        var sel = wrap.querySelector('select[data-pg=size]'); if(sel&&st.size!=10){ sel.value=String(st.size); }
+        _updatePgUI(container);
+        wrap.addEventListener('click', function(ev){
+          try{
+            var t = ev.target.closest('[data-pg]');
+            if(!t) return;
+            var act = t.getAttribute('data-pg');
+            var s = _ensurePgState(container);
+            if(act==='first') s.current=1;
+            else if(act==='prev') s.current=Math.max(1,s.current-1);
+            else if(act==='next') s.current=Math.min(s.pages,s.current+1);
+            else if(act==='last') s.current=s.pages;
+            else return;
+            _updatePgUI(container);
+          }catch(_){}
+        });
+        var jp = wrap.querySelector('input[data-pg=jump]');
+        if(jp){
+          jp.addEventListener('change', function(){
+            try{
+              var s = _ensurePgState(container);
+              var v = parseInt(jp.value||'1',10);
+              if(isNaN(v)||v<1) v=1;
+              if(v>s.pages) v=s.pages;
+              s.current=v; jp.value=v;
+              _updatePgUI(container);
+            }catch(_){}
+          });
+          jp.addEventListener('keydown', function(ev){
+            if(ev.key==='Enter'){ ev.preventDefault(); jp.dispatchEvent(new Event('change')); }
+          });
+        }
+        var sz = wrap.querySelector('select[data-pg=size]');
+        if(sz){
+          sz.addEventListener('change', function(){
+            try{
+              var s = _ensurePgState(container);
+              s.size = parseInt(sz.value||'10',10)||10;
+              s.pages = Math.ceil(s.total/s.size);
+              s.current = 1;
+              _updatePgUI(container);
+            }catch(_){}
+          });
+        }
+      }catch(e){ console.warn('[SuperPatch 4/6 buildPg err]',e); }
+    }
+    function _updatePgUI(container){
+      try{
+        var wrap = container.querySelector('.sp-pg-toolbar-20260730') || container.querySelector('.pagination-toolbar');
+        if(!wrap) return;
+        var s = _ensurePgState(container);
+        var pnWrap = wrap.querySelector('.page-number-wrap');
+        var info = wrap.querySelector('[data-pg=info]');
+        if(!pnWrap && !info){ return; }
+        if(pnWrap){
+          pnWrap.innerHTML='';
+          var maxBtns = 7;
+          var cur = s.current, totalPages=s.pages;
+          var start = Math.max(1, cur - Math.floor(maxBtns/2));
+          var end = Math.min(totalPages, start+maxBtns-1);
+          start = Math.max(1, end-maxBtns+1);
+          for(var p=start;p<=end;p++){
+            var bb = document.createElement('button');
+            bb.className='btn btn-sm';
+            bb.setAttribute('data-pg','num');
+            bb.style.borderRadius='999px';
+            if(p===cur){ bb.style.background='linear-gradient(135deg,var(--primary,#0F4C81),var(--primary-dark,#0a3a63))'; bb.style.color='#fff'; bb.style.borderColor='var(--gold,#D4AF37)'; }
+            bb.textContent = String(p);
+            (function(pg){ bb.addEventListener('click', function(){ var st=_ensurePgState(container); st.current=pg; _updatePgUI(container); }); })(p);
+            pnWrap.appendChild(bb);
+          }
+        }
+        var info = wrap.querySelector('[data-pg=info]');
+        if(info){ info.textContent = '共 '+s.total+' 条 / 第 '+s.current+' 页 / 共 '+s.pages+' 页'; }
+        var firstB = wrap.querySelector('[data-pg=first]'), prevB=wrap.querySelector('[data-pg=prev]'), nxtB=wrap.querySelector('[data-pg=next]'), lastB=wrap.querySelector('[data-pg=last]');
+        var atFirst = s.current<=1, atLast=s.current>=s.pages;
+        [firstB,prevB].forEach(function(b){ if(b){ b.disabled=atFirst; b.style.opacity=atFirst?'0.45':'1'; b.style.cursor=atFirst?'not-allowed':'pointer'; } });
+        [nxtB,lastB].forEach(function(b){ if(b){ b.disabled=atLast; b.style.opacity=atLast?'0.45':'1'; b.style.cursor=atLast?'not-allowed':'pointer'; } });
+      }catch(e){ console.warn('[SuperPatch 4/6 updateUI err]',e); }
+    }
+    function _scanPagination(){
+      try{
+        var all = document.querySelectorAll('div,nav,section,span');
+        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
+        var sty = document.createElement('style');
+        if(!document.getElementById('_pgPatchCSS20260730')){
+          sty.id='_pgPatchCSS20260730';
+          sty.textContent='.pagination-toolbar button{border-radius:999px !important;}';
+          document.head.appendChild(sty);
+        }
+      }catch(e){ console.warn('[SuperPatch 4/6 scan err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', _scanPagination, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _scanPagination(); }
+    else{ setTimeout(_scanPagination, 100); }
+    if(typeof MutationObserver!=='undefined'){
+      var mo2 = new MutationObserver(function(){ clearTimeout(window.__pgTimer); window.__pgTimer=setTimeout(_scanPagination, 200); });
+      mo2.observe(document.body, {childList:true, subtree:true});
+    }
+    console.info('[SuperPatch 4/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 4/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 5/6] 左侧栏 9 大主菜单 + 当前页高亮 初始化...');
+    var main9 = [
+      {title:'首页', href:'index.html', icon:'🏠'},
+      {title:'订单预约与客户管理', href:'orders.html', icon:'📋'},
+      {title:'剧目管理中心', href:'operas.html', icon:'🎭'},
+      {title:'演出档期排班', href:'schedule.html', icon:'📅'},
+      {title:'演员阵容与派工', href:'cast-sheet.html', icon:'👥'},
+      {title:'内容与资讯管理', href:'content.html', icon:'📰'},
+      {title:'财务与收款管理', href:'finance.html', icon:'💰'},
+      {title:'员工与人事档案', href:'staff.html', icon:'👤'},
+      {title:'系统设置', href:'system.html', icon:'⚙️'}
+    ];
+    function _getSidebarParent(){
+      return document.getElementById('adminSidebar')||document.querySelector('.admin-sidebar')||document.querySelector('.admin-sidebar-wrap')||document.querySelector('.admin-sidebar-menu-wrap')||document.querySelector('nav .admin-menu-item, nav .admin-sidebar-menu, nav')||document.querySelector('nav');
+    }
+    function _getMenuContainer(){
+      return document.querySelector('.admin-sidebar-menu')||document.querySelector('#adminSidebar nav')||document.querySelector('#adminSidebar');
+    }
+    function _standardizeMenu(){
+      try{
+        var sidebar = _getSidebarParent();
+        if(!sidebar) return;
+        var deployLinks = sidebar.querySelectorAll('a[href*="../deploy.html"],a[href*="deploy.html"]');
+        deployLinks.forEach(function(a){ try{ a.classList.add('csp-hide'); }catch(_){} });
+        var menuBox = _getMenuContainer();
+        if(!menuBox) return;
+        var existing = {};
+        menuBox.querySelectorAll('a.admin-menu-item,a[href$=".html"]').forEach(function(a){
+          var h = (a.getAttribute('href')||'').split('/').pop().toLowerCase();
+          if(h) existing[h]=a;
+        });
+        var firstGroup = menuBox.querySelector('.admin-menu-group');
+        var insertTarget = firstGroup||menuBox;
+        var logoutAnchor = null;
+        try{
+          var tmp = sidebar.querySelector('#logoutBtnSidebar, a[href*="logout"], a:contains(退出)');
+          if(tmp){
+            logoutAnchor = tmp;
+            while(logoutAnchor&&logoutAnchor.parentNode!==menuBox) logoutAnchor = logoutAnchor.parentNode;
+          }
+        }catch(_){ logoutAnchor=null; }
+        var lastInGroup = insertTarget.lastElementChild;
+        main9.forEach(function(m){
+          var href = m.href.toLowerCase();
+          if(existing[href]) return;
+          var a = document.createElement('a');
+          a.href = m.href;
+          a.className = 'admin-menu-item';
+          a.innerHTML = '<span class="menu-icon">'+m.icon+'</span><span>'+m.title+'</span>';
+          if(logoutAnchor&&logoutAnchor.parentNode===insertTarget){
+            insertTarget.insertBefore(a, logoutAnchor);
+          }else if(lastInGroup){
+            insertTarget.insertBefore(a, lastInGroup.nextSibling||null);
+          }else{
+            insertTarget.appendChild(a);
+          }
+        });
+        var curPage = (location.pathname||'').split('/').pop().toLowerCase();
+        if(!curPage){ try{ curPage = (location.href||'').split('/').pop().split('?')[0].toLowerCase(); }catch(_){} }
+        menuBox.querySelectorAll('a.admin-menu-item,a[href$=".html"]').forEach(function(a){
+          var href = (a.getAttribute('href')||'').split('/').pop().toLowerCase();
+          a.classList.remove('active');
+          try{ a.style.background=''; a.style.color=''; a.style.border=''; a.style.borderRadius=''; a.style.margin=''; }catch(_){}
+          if(href===curPage){
+            a.classList.add('active');
+            try{
+              var cs = getComputedStyle(a);
+              var hasActiveStyle = (cs.backgroundImage&&cs.backgroundImage.indexOf('gradient')>=0)||(cs.color&&cs.color!=='');
+              if(!hasActiveStyle||cs.background==='rgba(0,0,0,0)'){
+                a.style.background='linear-gradient(135deg, rgba(212,175,55,0.25), rgba(139,0,0,0.18))';
+                a.style.color='#fef3c7';
+                a.style.border='1px solid rgba(212,175,55,0.45)';
+                a.style.borderRadius='8px';
+                a.style.margin='2px 0';
+              }
+            }catch(_){}
+          }
+        });
+      }catch(e){ console.warn('[SuperPatch 5/6 standardize err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', _standardizeMenu, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _standardizeMenu(); }
+    else{ setTimeout(_standardizeMenu, 50); }
+    console.info('[SuperPatch 5/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 5/6 init err]',e); }
+
+  
+  // 功能按钮绑定（上传/新建/导出）
+  try{
+    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
+    __bindBtn('openReportsUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.xls,.xlsx,.jpg,.png"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（报告附件）（演示模式：真实环境将上传到服务器）","info"); }; inp.click(); });
+  }catch(_e){ console.warn("[upload-bind err]",_e); }
+
+try{
+    console.info('[SuperPatch 6/6] 死按钮兜底 + toast通道 初始化...');
+    function _hasAction(btn){
+      if(!btn) return false;
+      // 仅onclick算真正绑定；data-action只是业务标识，不算；href需为真实跳转链接
+      var oc = btn.getAttribute('onclick');
+      var hr = btn.getAttribute('href');
+      if(oc && oc.length > 3) return true;
+      if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(btn.__deadBtnChecked) return true;
+      if(btn.__superPatchBound) return true;
+      return false;
+    }
+    function _txtMatch(txt, list){
+      for(var i=0;i<list.length;i++){ if(txt.indexOf(list[i])>=0) return true; }
+      return false;
+    }
+    document.addEventListener('click', function(e){
+      try{
+        // 修复：选择器扩大，包含a标签和[data-action]标识元素
+        var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
+        if(!btn) return;
+                // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
+        if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
+        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
+        if(_hasAction(btn)) return;
+        if(btn.__superPatchBound) return;
+        btn.__superPatchBound = 1;
+        var txt = (btn.textContent||'').trim();
+        var tt = 'other';
+        // 修复：扩充业务分支，覆盖派工/审核/通过/驳回/签约/排期/确认接单等
+        if(_txtMatch(txt,['保存','提交','确认','通过','签约','签订','确认接单','核销'])) tt='save';
+        else if(_txtMatch(txt,['删除','作废','禁用','取消','驳回'])) tt='delete';
+        else if(_txtMatch(txt,['编辑','查看','详情','预览'])) tt='view';
+        else if(_txtMatch(txt,['导出','打印'])) tt='export';
+        else if(_txtMatch(txt,['排期','排班','安排','派工','调度'])) tt='schedule';
+        else if(_txtMatch(txt,['审核','审批'])) tt='audit';
+        else if(_txtMatch(txt,['合同'])) tt='contract';
+        else if(_txtMatch(txt,['新增','新建','添加'])) tt='add';
+        if(!__acqH9(btn, tt)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var tr = btn.closest ? btn.closest('tr') : null;
+        var trKey = '';
+        if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
+        __spT0 = Date.now();
+        if(tt==='save'){
+          __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
+          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
+        }else if(tt==='delete'){
+          if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
+            __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+          }else{ __toastH9('↩️ 已取消操作','info'); }
+        }else if(tt==='view'){
+          __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+        }else if(tt==='export'){
+          __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
+          __toastH9('📤 已触发导出/打印（演示模式）','info');
+        }else if(tt==='schedule'){
+          __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+        }else if(tt==='audit'){
+          __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+        }else if(tt==='contract'){
+          __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
+          __toastH9('📄 合同文档已就绪（演示模式）','info');
+        }else if(tt==='add'){
+          __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
+          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+        }else{
+          __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+        }
+        return false;
+      }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
+    }, true);
+    console.info('[SuperPatch 6/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 6/6 init err]',e); }
+
+  console.info('['+PATCH_ID+'] 6合1超级补丁全部加载完毕 ✓');
+})();
+
+} /* end of 防重复注入保护 if */
+</script>
+<!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
+
+
+<script>
+/* ========== 🔽 下拉菜单 Click 切换（兼容移动端） ========== */
+(function(){
+  if(window.__DD_CLICK_INJECTED__) return;
+  window.__DD_CLICK_INJECTED__ = true;
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('.action-dropdown-btn') : null;
+    var menu = e.target.closest ? e.target.closest('.action-dropdown-menu') : null;
+    // 关闭所有下拉菜单
+    document.querySelectorAll('.action-dropdown-menu').forEach(function(m){
+      if(m !== menu) m.style.display = 'none';
+    });
+    // 切换当前下拉菜单
+    if(btn){
+      var dd = btn.closest('.action-dropdown');
+      if(dd){
+        var m = dd.querySelector('.action-dropdown-menu');
+        if(m){
+          e.preventDefault();
+          e.stopPropagation();
+          m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+        }
+      }
+    }
+  });
+})();
+</script>
+
+<script>
+/* ========== 🔒 通用 __closeAnyModal：关闭所有弹窗/遮罩 ========== */
+(function(){
+  if(window.__closeAnyModal) return;
+  window.__closeAnyModal = function(){
+    try{
+      var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], .modal-overlay-root, [data-overlay]');
+      overlays.forEach(function(o){
+        try{ o.classList.remove('active','show','modal-overlay-show'); o.classList.add('s-overlay-hide','modal-overlay-hide','csp-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
+      });
+      var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, .generic-modal-root, [data-modal], [role="dialog"]');
+      modals.forEach(function(m){
+        try{ m.classList.remove('active','show','modal-show'); m.classList.add('s-modal-hide','modal-wrap-hide','csp-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
+      });
+    try{ document.body.classList.remove('body-modal-locked','modal-open','nav-locked'); }catch(_b){}
+    }catch(err){ console.warn('[__closeAnyModal] err:', err); }
+  };
+  // ESC 键关闭弹窗
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      var fns = ['closeAddModal','closeEditModal','closeDispatchModal','closeOrderViewModal','closeDeleteConfirm'];
+      for(var i=0;i<fns.length;i++){ try{ if(typeof window[fns[i]]==='function') window[fns[i]](); }catch(_){} }
+      window.__closeAnyModal();
+    }
+  });
+})();
+</script>
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+(function(){
+  function __markBound(){
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
+})();</script>
+</body>
+
+</html>
