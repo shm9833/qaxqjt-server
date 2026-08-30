@@ -65,7 +65,10 @@
       var s = global.localStorage && global.localStorage.getItem(STORAGE_KEYS.API_BASE);
       if (s && /^https?:\/\//i.test(s)) return _stripTrailingSlash(s);
     } catch (_e) { /* noop */ }
-    // 同源部署：默认走 Nginx /api 反代 → 后端 3001
+    // 免备案部署：HTTPS 页面(GitHub Pages)用 HTTPS API；HTTP 页面(服务器直访)用同源 /api
+    if (global.location && global.location.protocol === 'https:') {
+      return 'https://1.14.106.173';
+    }
     return '';
   }
 
