@@ -2209,22 +2209,30 @@ tbody tr:nth-child(even):hover td {
   background: var(--cream-dark);
   background-image: none;
   min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .admin-layout {
   display: flex;
-  min-height: 100vh;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
 }
 
 .admin-sidebar {
   width: 240px;
   background: linear-gradient(180deg, #1565C0 0%, #0F4C81 40%, #1976D2 100%);
   color: #fff;
-  flex-shrink: 0;
-  position: sticky;
+  flex: 0 0 240px;
+  position: relative;
   top: 0;
-  height: 100vh;
+  height: 100%;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   border-right: 3px solid var(--gold);
   box-shadow: 4px 0 20px rgba(15, 76, 129, 0.25), inset 0 0 60px rgba(255,255,255,0.04);
 }
@@ -2326,10 +2334,13 @@ tbody tr:nth-child(even):hover td {
 }
 
 .admin-main {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .admin-header {
@@ -2343,6 +2354,7 @@ tbody tr:nth-child(even):hover td {
   position: sticky;
   top: 0;
   z-index: 100;
+  flex: 0 0 auto;
 }
 
 .admin-header-title {
@@ -2408,8 +2420,13 @@ tbody tr:nth-child(even):hover td {
 }
 
 .admin-content {
-  flex: 1;
+  flex: 1 1 auto;
   padding: 30px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ========== 统计卡片 ========== */
@@ -3339,8 +3356,8 @@ tbody tr:nth-child(even):hover td {
   animation: slideInLeft 0.5s ease forwards;
 }
 
-/* ========== 响应式设计 - 桌面大尺寸 ========== */
-@media (max-width: 1199px) {
+/* ========== 响应式设计 - 桌面大尺寸（断点1：≤1200px） ========== */
+@media (max-width: 1200px) {
   .container {
     max-width: 960px;
   }
@@ -3362,6 +3379,18 @@ tbody tr:nth-child(even):hover td {
 
   .document-container {
     padding: 45px 50px;
+  }
+
+  /* ===== 断点1：≤1200px admin布局微调 ===== */
+  .admin-sidebar {
+    width: 220px;
+    flex-basis: 220px;
+  }
+  .admin-content {
+    padding: 24px;
+  }
+  .admin-header {
+    padding: 14px 24px;
   }
 }
 
@@ -3674,15 +3703,29 @@ tbody tr:nth-child(even):hover td {
     justify-content: center;
   }
 
+  /* ===== 断点2：≤768px admin高度统一（侧栏顶部横滑） ===== */
+  .admin-body {
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    display: block;
+  }
   .admin-layout {
     flex-direction: column;
+    height: auto;
+    min-height: 100vh;
   }
 
   .admin-sidebar {
     width: 100%;
     height: auto;
+    flex: 0 0 auto;
     position: sticky;
     top: 0;
+    z-index: 200;
+    max-height: 38vh;
+    min-height: 0;
     border-right: none;
     border-bottom: 3px solid var(--gold);
     box-shadow: 0 4px 18px rgba(15, 76, 129, 0.25), inset 0 0 40px rgba(255,255,255,0.04);
@@ -3715,6 +3758,7 @@ tbody tr:nth-child(even):hover td {
     display: flex;
     gap: 6px;
     overflow-x: auto;
+    overflow-y: hidden;
     padding: 10px 10px 12px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
@@ -3767,8 +3811,17 @@ tbody tr:nth-child(even):hover td {
     text-shadow: 0 1px 3px rgba(0,0,0,0.25), 0 0 10px rgba(255, 224, 130, 0.35);
   }
 
+  .admin-main {
+    height: auto;
+    min-height: calc(100vh - 38vh);
+    overflow: visible;
+  }
+
   .admin-content {
     padding: 20px 16px;
+    overflow-y: visible;
+    height: auto;
+    min-height: calc(100vh - 38vh - 58px);
   }
 
   .stats-grid {
@@ -4201,13 +4254,78 @@ tbody tr:nth-child(even):hover td {
     height: 38px;
     font-size: 0.95rem;
   }
+
+  /* ===== 断点3：≤480px admin高度统一（小屏手机） ===== */
+  .admin-sidebar {
+    max-height: 42vh;
+  }
+  .admin-main {
+    min-height: calc(100vh - 42vh);
+  }
+  .admin-content {
+    padding: 14px 12px;
+    min-height: calc(100vh - 42vh - 54px);
+  }
+  .admin-header {
+    padding: 10px 12px;
+  }
+  .admin-header-title {
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-logo {
+    padding: 12px 14px 10px;
+  }
+  .admin-logo h2 {
+    font-size: 1rem;
+    letter-spacing: 2px;
+  }
+  .admin-logo p {
+    font-size: 0.7rem;
+  }
+  .admin-nav {
+    padding: 8px 8px 10px;
+    gap: 4px;
+  }
+  .admin-nav-item {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+  }
 }
 
 /* ========== 打印样式 ========== */
 @media print {
+  /* ===== A4 打印单一权威边距：上下12mm，左右2mm（紧凑） ===== */
+  @page {
+    size: A4 portrait;
+    margin: 12mm 2mm 12mm 2mm;
+  }
+  @page :first {
+    margin: 12mm 2mm 12mm 2mm;
+  }
+  /* 横版卡式打印同样左右2mm紧凑 */
+  @page landscape {
+    size: A4 landscape;
+    margin: 10mm 2mm 10mm 2mm;
+  }
+
   * {
     box-shadow: none !important;
     text-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  html, body {
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
   }
 
   body {
@@ -4216,6 +4334,20 @@ tbody tr:nth-child(even):hover td {
     color: #000 !important;
     font-size: 12pt;
     line-height: 1.6;
+  }
+
+  /* A4 容器统一 padding（和 @page 左右2mm匹配，不再加额外内边距防止重复扣减） */
+  .a4-container,
+  .admin-content,
+  .page-wrap,
+  main,
+  .print-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow: visible !important;
+    box-sizing: border-box;
   }
 
   header,
@@ -4230,7 +4362,8 @@ tbody tr:nth-child(even):hover td {
   .pagination,
   .search-box,
   .filter-bar,
-  .modal-overlay {
+  .modal-overlay,
+  .no-print {
     display: none !important;
   }
 
@@ -5945,8 +6078,11 @@ form > table th:nth-child(1),
 }
 /* ========== A4 CSP合规：admin 弹窗 .modal class 通用隐藏规则（兼容 JS 用 modal-wrap-hide/modal-overlay-hide 控制 .modal 和 .modal-overlay） ========== */
 .modal.modal-wrap-hide { display: none !important; }
-.modal-overlay:not(.modal-overlay-hide) { display: block !important; }
-.modal:not(.modal-wrap-hide) { display: block !important; }
+.modal-overlay.modal-overlay-hide { display: none !important; }
+.modal-overlay:not(.modal-overlay-hide):not(.csp-hide) { display: block !important; }
+.modal:not(.modal-wrap-hide):not(.csp-hide) { display: block !important; }
+/* csp-hide 强制隐藏（优先级最高，覆盖所有显示规则） */
+.modal.csp-hide, .modal-overlay.csp-hide, .modal.active.csp-hide, .modal-overlay.active.csp-hide { display: none !important; }
 /* 对 .modal.active / .modal-overlay.active 的显示规则（双保险） */
-.modal-overlay.active { display: block !important; }
-.modal.active { display: block !important; }
+.modal-overlay.active:not(.csp-hide) { display: block !important; }
+.modal.active:not(.csp-hide) { display: block !important; }
