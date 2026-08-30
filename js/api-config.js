@@ -65,6 +65,10 @@
       var s = global.localStorage && global.localStorage.getItem(STORAGE_KEYS.API_BASE);
       if (s && /^https?:\/\//i.test(s)) return _stripTrailingSlash(s);
     } catch (_e) { /* noop */ }
+    // EdgeOne Pages：同源 /api 由 Edge Function 反代到后端（免备案首选）
+    if (global.location && /\.edgeone\.app$/i.test(global.location.hostname)) {
+      return '';
+    }
     // 免备案部署：HTTPS 页面(GitHub Pages)用 HTTPS API；HTTP 页面(服务器直访)用同源 /api
     if (global.location && global.location.protocol === 'https:') {
       return 'https://1.14.106.173';
