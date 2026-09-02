@@ -9,7 +9,7 @@
   <script>try{(function(){
     var K1="qaxqjt_admin_session", K2="qaxqjt_logout_blacklist", L="login.html";
     var p=String(location.pathname||"").split("/").pop().toLowerCase();
-    if(p==="login.html"||p==="recover.html") return;
+    if(p==="login.html"||p==="recover.html"||p==="change-password.html") return;
     var now=Date.now(), raw=null, s=null, bad=1;
     try{ raw=localStorage.getItem(K1); if(raw) s=JSON.parse(raw); }catch(_){}
     if(s && s.id && (!s.expiresAt || now < parseInt(s.expiresAt,10))){
@@ -21,6 +21,12 @@
       var u=location.href, i=u.lastIndexOf("/");
       var base= (i>=0)? u.substring(0,i+1) : "./";
       location.replace(base + L);
+    }
+    // ★ FIX M-14: 首次登录强制改密码 —— forcePwdChange=true 时跳转改密页
+    if(s && s.forcePwdChange){
+      var u2=location.href, i2=u2.lastIndexOf("/");
+      var base2=(i2>=0)? u2.substring(0,i2+1) : "./";
+      location.replace(base2 + "change-password.html");
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
 

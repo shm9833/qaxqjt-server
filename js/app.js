@@ -32,6 +32,38 @@
     try{ if(console && console.log) console.log('[toast]['+(type||'info')+'] '+msg); }catch(_){}
   }
 
+  // ★ FIX 导出功能：自动加载 xlsx 库（SheetJS），多路径降级
+  (function _loadXlsx() {
+    try {
+      if (global.XLSX && typeof global.XLSX.writeFile === 'function') return;
+      var cdns = [
+        'js/xlsx.min.js',
+        '../js/xlsx.min.js',
+        'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
+      ];
+      var idx = 0, done = false;
+      function next() {
+        if (done || idx >= cdns.length) return;
+        var s = document.createElement('script');
+        s.src = cdns[idx++];
+        s.onload = function () {
+          if (global.XLSX && typeof global.XLSX.writeFile === 'function') {
+            done = true;
+            try { console.info('[xlsx] loaded from: ' + s.src); } catch (_) {}
+          } else { next(); }
+        };
+        s.onerror = function () { next(); };
+        s.async = false;
+        try { document.head.appendChild(s); } catch (_) { next(); }
+      }
+      if (document && document.head) next();
+      else if (document && document.addEventListener) {
+        document.addEventListener('DOMContentLoaded', next, { once: true });
+      }
+    } catch (_) {}
+  })();
+
   // ============================================================
   // 模块 0: 通用工具函数 Utils
   // ============================================================
@@ -513,6 +545,106 @@
       for (var i = 0; i < list.length; i++) { if (list[i].parentNode) list[i].parentNode.removeChild(list[i]); }
       // B7 CSP合规：移除body-modal-locked 替代 body.style.overflow=''
       try { document.body.classList.remove('body-modal-locked'); } catch (e) {}
+    },
+
+    /**
+     * ★ FIX 导出功能：通用 xlsx 导出工具
+     * 从数据数组 + 表头导出为 .xlsx 文件
+     * @param {Array<Array>} data 二维数组（不含表头）
+     * @param {Array<string>} headers 表头数组
+     * @param {string} filename 文件名（不含扩展名）
+     * @param {string} sheetName 工作表名
+     */
+    exportDataToXlsx: function (data, headers, filename, sheetName) {
+      try {
+        if (!window.XLSX || typeof window.XLSX.utils === 'undefined') {
+          Utils.toast('⚠️ xlsx 库未加载，请刷新页面后重试', 'error');
+          return false;
+        }
+        var aoa = [];
+        if (Array.isArray(headers) && headers.length > 0) aoa.push(headers);
+        if (Array.isArray(data)) {
+          for (var i = 0; i < data.length; i++) {
+            if (Array.isArray(data[i])) aoa.push(data[i]);
+          }
+        }
+        if (aoa.length === 0) {
+          Utils.toast('⚠️ 没有可导出的数据', 'warning');
+          return false;
+        }
+        var ws = window.XLSX.utils.aoa_to_sheet(aoa);
+        var wb = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(wb, ws, (sheetName || 'Sheet1').slice(0, 31));
+        var fname = (filename || ('export_' + new Date().toISOString().slice(0, 10))) + '.xlsx';
+        window.XLSX.writeFile(wb, fname);
+        Utils.toast('✅ 已导出 ' + (data ? data.length : 0) + ' 条记录：' + fname, 'success');
+        return true;
+      } catch (e) {
+        Utils.toast('❌ 导出失败：' + (e && e.message ? e.message : e), 'error');
+        return false;
+      }
+    },
+
+    /**
+     * ★ FIX 导出功能：从页面表格 DOM 导出为 xlsx
+     * @param {HTMLElement|string} tableEl 表格元素或选择器
+     * @param {string} filename 文件名
+     */
+    exportTableToXlsx: function (tableEl, filename) {
+      try {
+        var tbl = (typeof tableEl === 'string') ? document.querySelector(tableEl) : tableEl;
+        if (!tbl) { Utils.toast('⚠️ 未找到可导出的表格', 'warning'); return false; }
+        var rows = tbl.querySelectorAll('tr');
+        if (!rows || rows.length === 0) { Utils.toast('⚠️ 表格为空', 'warning'); return false; }
+        var aoa = [];
+        for (var i = 0; i < rows.length; i++) {
+          var cells = rows[i].querySelectorAll('th,td');
+          var row = [];
+          for (var j = 0; j < cells.length; j++) {
+            row.push((cells[j].textContent || '').replace(/\s+/g, ' ').trim());
+          }
+          aoa.push(row);
+        }
+        var headers = aoa.shift();
+        return Utils.exportDataToXlsx(aoa, headers, filename, '数据导出');
+      } catch (e) {
+        Utils.toast('❌ 表格导出失败：' + (e && e.message ? e.message : e), 'error');
+        return false;
+      }
+    },
+
+    /**
+     * ★ FIX 导出功能：智能导出当前页面主数据表格
+     * 自动寻找页面上最可能的数据表格并导出
+     */
+    autoExportXlsx: function (filename) {
+      try {
+        // 优先找带 id 或 class 的数据表格
+        var selectors = [
+          'table[data-export-table]',
+          '#dataTable', '#mainTable', '#listTable',
+          'table.data-table', 'table.admin-table',
+          '.table-responsive table',
+          'table'
+        ];
+        var tbl = null;
+        for (var s = 0; s < selectors.length; s++) {
+          var found = document.querySelector(selectors[s]);
+          if (found) {
+            // 确保表格有数据行（>1行）
+            var r = found.querySelectorAll('tr');
+            if (r && r.length > 1) { tbl = found; break; }
+          }
+        }
+        if (!tbl) {
+          Utils.toast('⚠️ 当前页面无可导出的表格数据', 'warning');
+          return false;
+        }
+        return Utils.exportTableToXlsx(tbl, filename);
+      } catch (e) {
+        Utils.toast('❌ 自动导出失败：' + (e && e.message ? e.message : e), 'error');
+        return false;
+      }
     }
   };
 
@@ -6210,7 +6342,24 @@
         }
         if (hasAny(text, ['导出'], btn)) {
           e.preventDefault();
-          Utils.toast('📤 正在生成导出文件...（正式环境对接后端生成 .xlsx / .pdf）', 'info');
+          // ★ FIX 导出功能：真正调用 xlsx 导出当前页面表格
+          try {
+            // 如果页面定义了特定的导出函数，优先调用
+            if (typeof window.exportPageData === 'function') {
+              window.exportPageData();
+            } else {
+              // 自动从按钮文本推断文件名
+              var fname = 'export_' + new Date().toISOString().slice(0,10).replace(/-/g,'');
+              var t = stripEmoji(text);
+              if (t) {
+                var m = t.match(/导出([^，,（(]*)/);
+                if (m && m[1]) fname = m[1].trim() + '_' + new Date().toISOString().slice(0,10).replace(/-/g,'');
+              }
+              Utils.autoExportXlsx(fname);
+            }
+          } catch (expErr) {
+            Utils.toast('❌ 导出失败：' + (expErr && expErr.message ? expErr.message : expErr), 'error');
+          }
           return;
         }
         if (hasAny(text, ['批量启用', '批量禁用', '批量补卡', '批量核销', '批量删除', '批量发布', '批量上架', '批量下架', '批量报废', '批量标记', '批量确认', '批量导出', '批量'], btn)) {

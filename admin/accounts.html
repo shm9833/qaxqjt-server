@@ -593,7 +593,7 @@
               </div>
 
               <div class="table-wrapper">
-                <table>
+                <table id="accountsTable" data-export-table="1">
                   <thead>
                     <tr>
                       <th class="checkbox-cell">
@@ -1964,7 +1964,23 @@
         __toast('✕ 批量禁用成功：' + ok + ' 个账号（' + arr.map(function(x){return x.label||x.username;}).slice(0,5).join('、') + (arr.length>5?' 等':'') + '）· 本地持久化，刷新不丢失', 'warning');
       }
       function exportUsers() {
-        __toast('⬇ 用户数据导出成功（accounts_export_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.xlsx，含 28 条账号记录）', 'success');
+        // ★ FIX 导出功能：真正调用 xlsx 导出账号表格
+        try {
+          if (window.Utils && typeof window.Utils.exportTableToXlsx === 'function') {
+            var fname = 'accounts_export_' + new Date().toISOString().slice(0,10).replace(/-/g,'');
+            window.Utils.exportTableToXlsx('#accountsTable', fname);
+          } else if (window.XLSX) {
+            var tbl = document.getElementById('accountsTable');
+            var ws = window.XLSX.utils.table_to_sheet(tbl);
+            var wb = window.XLSX.utils.book_new();
+            window.XLSX.utils.book_append_sheet(wb, ws, '账号列表');
+            window.XLSX.writeFile(wb, 'accounts_export_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.xlsx');
+          } else {
+            __toast('⚠️ xlsx 库未加载，请刷新后重试', 'error');
+          }
+        } catch (e) {
+          __toast('❌ 导出失败：' + (e && e.message ? e.message : e), 'error');
+        }
       }
       function queryLogs() {
         __toast('🔍 操作日志查询完成（符合条件：3 条记录）', 'success');
