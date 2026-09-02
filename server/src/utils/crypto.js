@@ -4,7 +4,7 @@
  * src/utils/crypto.js —— bcrypt 密码 + JWT（access/refresh 双 token）
  * M-11：access 30min + refresh 7day，M-14：bcrypt rounds 可配置
  */
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { nanoid } = require('nanoid');
 const { env, nowMs, idByCtx } = require('../config');

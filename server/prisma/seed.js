@@ -6,7 +6,7 @@
  * 作用：在空库中插入 settings / admin / roles / wage_rules 等最小必需数据
  */
 const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const { nanoid } = require('nanoid');
 
 const prisma = new PrismaClient();

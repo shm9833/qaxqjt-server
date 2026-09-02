@@ -998,8 +998,9 @@
             try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch(_e2){}
             return null;
           }
-          // 有效登录态 → 跳后台首页
-          try { window.location.replace('index.html'); } catch(_n1){ try { window.location.href = 'index.html'; } catch(_n2){} }
+          // 有效登录态 → 跳后台首页（首次登录需改密码则跳改密页）
+          var tgt = (session.forcePwdChange) ? 'change-password.html' : 'index.html';
+          try { window.location.replace(tgt); } catch(_n1){ try { window.location.href = tgt; } catch(_n2){} }
           return session;
         } catch (_ca) { return null; }
       }
@@ -1114,15 +1115,17 @@
         .then(function (resp) {
           var payload = (resp && resp.data) ? resp.data : resp;
           if (payload && payload.accessToken) {
+            var _usr = payload.user || {};
             return {
               ok: true,
               session: {
-                username: (payload.user && payload.user.username) || username,
-                name: (payload.user && (payload.user.name || payload.user.realName || payload.user.nickname)) || '管理员',
-                role: (payload.user && (payload.user.role || payload.user.roleCode)) || 'admin',
+                username: _usr.username || username,
+                name: (_usr.name || _usr.realName || _usr.nickname) || '管理员',
+                role: (_usr.role || _usr.roleCode) || 'admin',
                 accessToken: payload.accessToken,
                 refreshToken: payload.refreshToken,
-                user: payload.user
+                user: payload.user,
+                forcePwdChange: !!_usr.forcePwdChange
               }
             };
           }
@@ -1263,7 +1266,8 @@
               roleName: userObj.roleName || userObj.roleDisplayName || '系统管理员',
               loginAt: new Date().toISOString(),
               expiresAt: nowMs + SESS_TTL_MS,
-              fromApi: true
+              fromApi: true,
+              forcePwdChange: !!userObj.forcePwdChange
             };
             localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(session));
             __clearAdminLegacyKeys(ADMIN_STORAGE_KEY);
@@ -1411,13 +1415,23 @@
               p.then(function(session) {
                 var dt = Date.now() - t0;
                 if (session) {
-                  console.info(LOG_PFX + ' ✅ 登录成功！总耗时=' + dt + 'ms  user=' + (session.username || session.name) + '  role=' + (session.roleName || session.role) + (session.fromApi ? '  [来源=API]' : '  [来源=本地降级]') + '  → 600ms 后跳 index.html');
+                  console.info(LOG_PFX + ' ✅ 登录成功！总耗时=' + dt + 'ms  user=' + (session.username || session.name) + '  role=' + (session.roleName || session.role) + (session.fromApi ? '  [来源=API]' : '  [来源=本地降级]') + '  forcePwdChange=' + !!session.forcePwdChange);
                   try { saveRemembered(username, password, remember); } catch (e) { console.warn(LOG_PFX + ' ⚠️ 保存记住密码失败:', e && e.message ? e.message : e); }
-                  __TOAST_FN('登录成功！正在跳转...', 'success');
-                  setTimeout(function() {
-                    try { window.location.assign('index.html'); }
-                    catch (e) { try { window.location.href = 'index.html'; } catch(_ee){} }
-                  }, 600);
+                  /* ★ FIX M-14: 首次登录强制改密码 —— forcePwdChange=true 时跳转改密页而非 index.html */
+                  var needChangePwd = !!session.forcePwdChange;
+                  if (needChangePwd) {
+                    __TOAST_FN('首次登录需修改密码，请设置新密码', 'warning');
+                    setTimeout(function() {
+                      try { window.location.assign('change-password.html'); }
+                      catch (e) { try { window.location.href = 'change-password.html'; } catch(_ee){} }
+                    }, 600);
+                  } else {
+                    __TOAST_FN('登录成功！正在跳转...', 'success');
+                    setTimeout(function() {
+                      try { window.location.assign('index.html'); }
+                      catch (e) { try { window.location.href = 'index.html'; } catch(_ee){} }
+                    }, 600);
+                  }
                 } else {
                   __fail('账号或密码错误（Promise 返回 null）');
                 }
@@ -1691,13 +1705,23 @@
             p.then(function(sess) {
               var dt = Date.now() - t0;
               if (sess) {
-                console.info(LOG_PFX2 + ' ✅ 登录成功！总耗时=' + dt + 'ms  user=' + (sess.username || sess.name) + '  role=' + (sess.roleName || sess.role) + (sess.fromApi ? '  [来源=API]' : '  [来源=本地降级]') + '  → 600ms 后跳 index.html');
+                console.info(LOG_PFX2 + ' ✅ 登录成功！总耗时=' + dt + 'ms  user=' + (sess.username || sess.name) + '  role=' + (sess.roleName || sess.role) + (sess.fromApi ? '  [来源=API]' : '  [来源=本地降级]') + '  forcePwdChange=' + !!sess.forcePwdChange);
                 try { if (typeof window.saveRemembered === 'function') window.saveRemembered(username, password, remember); } catch(_rm){ console.warn(LOG_PFX2 + ' ⚠️ 保存记住密码失败:', _rm && _rm.message ? _rm.message : _rm); }
-                __TOAST('登录成功！正在跳转...', 'success');
-                setTimeout(function() {
-                  try { window.location.assign('index.html'); }
-                  catch (_nav1) { try { window.location.href = 'index.html'; } catch(_nav2){} }
-                }, 600);
+                /* ★ FIX M-14: 首次登录强制改密码 */
+                var needChg = !!sess.forcePwdChange;
+                if (needChg) {
+                  __TOAST('首次登录需修改密码，请设置新密码', 'warning');
+                  setTimeout(function() {
+                    try { window.location.assign('change-password.html'); }
+                    catch (_nav1) { try { window.location.href = 'change-password.html'; } catch(_nav2){} }
+                  }, 600);
+                } else {
+                  __TOAST('登录成功！正在跳转...', 'success');
+                  setTimeout(function() {
+                    try { window.location.assign('index.html'); }
+                    catch (_nav1) { try { window.location.href = 'index.html'; } catch(_nav2){} }
+                  }, 600);
+                }
               } else {
                 __fail('账号或密码错误（Promise 返回 null）');
               }
