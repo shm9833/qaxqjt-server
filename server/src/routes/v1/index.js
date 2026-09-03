@@ -51,6 +51,21 @@ v1.post(
 v1.post('/auth/logout', authCtrl.logout);
 v1.get('/auth/me', authCtrl.me);
 
+// ========== 扫码登录 ==========
+v1.post('/auth/qrcode/create', authCtrl.qrcodeCreate);
+v1.get('/auth/qrcode/status/:token', authCtrl.qrcodeStatus);
+v1.post(
+  '/auth/qrcode/confirm',
+  validate({
+    body: Joi.object({
+      token: Joi.string().required(),
+      username: Joi.string().trim().min(3).max(64).required(),
+      password: Joi.string().min(6).max(128).required()
+    })
+  }),
+  authCtrl.qrcodeConfirm
+);
+
 // ========== accounts（IAM）==========
 v1.get(
   '/accounts',

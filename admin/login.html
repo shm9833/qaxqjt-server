@@ -630,6 +630,14 @@
           <p class="subtitle">请输入您的账号信息以访问管理系统</p>
         </div>
 
+        <!-- 登录方式切换 Tab -->
+        <div class="login-tabs" style="display:flex; gap:0; margin-bottom:20px; border-bottom:2px solid #e8d5b7;">
+          <button type="button" id="tabPwd" class="login-tab active" onclick="window.__switchLoginTab('pwd')" style="flex:1; padding:12px; background:none; border:none; cursor:pointer; font-size:15px; font-weight:600; color:#8b0000; border-bottom:3px solid #8b0000; margin-bottom:-2px;">账号密码登录</button>
+          <button type="button" id="tabQr" class="login-tab" onclick="window.__switchLoginTab('qr')" style="flex:1; padding:12px; background:none; border:none; cursor:pointer; font-size:15px; color:#94a3b8; border-bottom:3px solid transparent; margin-bottom:-2px;">扫码登录</button>
+        </div>
+
+        <!-- 账号密码登录 -->
+        <div id="pwdLoginPanel">
         <form id="adminLoginForm" class="login-form" autocomplete="off">
           <div class="form-group">
             <label for="admin-username">账号</label>
@@ -728,6 +736,23 @@
             © {year} 秦安县秦剧团云端预约管理系统 · All Rights Reserved
           </div>
         </form>
+        </div><!-- /pwdLoginPanel -->
+
+        <!-- 扫码登录面板 -->
+        <div id="qrLoginPanel" style="display:none; text-align:center; padding:10px 0;">
+          <div style="margin-bottom:16px;">
+            <div id="qrCodeBox" style="display:inline-block; padding:16px; background:#fff; border:1px solid #e8d5b7; border-radius:12px; box-shadow:0 4px 16px rgba(139,0,0,0.08);">
+              <canvas id="qrCanvas" width="220" height="220" style="display:block;"></canvas>
+            </div>
+          </div>
+          <p id="qrStatusText" style="color:#64748b; font-size:14px; margin:8px 0;">📱 请使用手机扫描二维码登录</p>
+          <p id="qrSubText" style="color:#94a3b8; font-size:12px; margin:4px 0;">扫码后在手机上输入账号密码确认</p>
+          <button type="button" id="qrRefreshBtn" onclick="window.__refreshQrCode()" style="margin-top:12px; padding:8px 20px; background:#8b0000; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:13px; display:none;">🔄 刷新二维码</button>
+          <div class="login-divider" style="margin:20px 0;"><span>更多操作</span></div>
+          <div class="back-home">
+            <a href="../index.html"><span>🏠</span><span>返回官网首页</span></a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -736,6 +761,7 @@
     <script src="../js/api-config.js?v=20260830"></script>
   <script src="../js/api-request.js?v=20260830"></script>
 <script src="../js/app.js?v=20260830"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script>
     (function() {
       'use strict';
@@ -1743,6 +1769,135 @@
           }
         }, 500);
       };
+    })();
+
+    // ==================== 扫码登录 ====================
+    (function () {
+      var QR_POLL_INTERVAL = 2000;
+      var qrPollTimer = null;
+      var currentQrToken = null;
+
+      function getApiBase() {
+        try {
+          if (window.QAXQJT_API_CONFIG && typeof window.QAXQJT_API_CONFIG.resolveUrl === 'function') {
+            return window.QAXQJT_API_CONFIG.resolveUrl('/v1');
+          }
+        } catch (e) {}
+        // 兜底：同源 /api/v1
+        var origin = window.location.origin;
+        return origin + '/api/v1';
+      }
+
+      function setQrStatus(text, subText, showRefresh) {
+        var t = document.getElementById('qrStatusText');
+        var s = document.getElementById('qrSubText');
+        var b = document.getElementById('qrRefreshBtn');
+        if (t) t.textContent = text;
+        if (s) s.textContent = subText || '';
+        if (b) b.style.display = showRefresh ? 'inline-block' : 'none';
+      }
+
+      function drawQrCode(text) {
+        var canvas = document.getElementById('qrCanvas');
+        if (!canvas || !window.QRCode) return;
+        QRCode.toCanvas(canvas, text, { width: 220, margin: 2, color: { dark: '#6b0000', light: '#ffffff' } }, function (err) {
+          if (err) console.error('QR render error:', err);
+        });
+      }
+
+      window.__switchLoginTab = function (tab) {
+        var pwdPanel = document.getElementById('pwdLoginPanel');
+        var qrPanel = document.getElementById('qrLoginPanel');
+        var tabPwd = document.getElementById('tabPwd');
+        var tabQr = document.getElementById('tabQr');
+
+        if (tab === 'qr') {
+          if (pwdPanel) pwdPanel.style.display = 'none';
+          if (qrPanel) qrPanel.style.display = 'block';
+          if (tabPwd) { tabPwd.style.color = '#94a3b8'; tabPwd.style.borderBottomColor = 'transparent'; tabPwd.style.fontWeight = '400'; }
+          if (tabQr) { tabQr.style.color = '#8b0000'; tabQr.style.borderBottomColor = '#8b0000'; tabQr.style.fontWeight = '600'; }
+          window.__refreshQrCode();
+        } else {
+          if (pwdPanel) pwdPanel.style.display = 'block';
+          if (qrPanel) qrPanel.style.display = 'none';
+          if (tabPwd) { tabPwd.style.color = '#8b0000'; tabPwd.style.borderBottomColor = '#8b0000'; tabPwd.style.fontWeight = '600'; }
+          if (tabQr) { tabQr.style.color = '#94a3b8'; tabQr.style.borderBottomColor = 'transparent'; tabQr.style.fontWeight = '400'; }
+          // 停止轮询
+          if (qrPollTimer) { clearInterval(qrPollTimer); qrPollTimer = null; }
+        }
+      };
+
+      window.__refreshQrCode = function () {
+        if (qrPollTimer) { clearInterval(qrPollTimer); qrPollTimer = null; }
+        setQrStatus('📱 请使用手机扫描二维码登录', '扫码后在手机上输入账号密码确认', false);
+
+        fetch(getApiBase() + '/auth/qrcode/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data && data.ok && data.data && data.data.token) {
+              currentQrToken = data.data.token;
+              var qrUrl = window.location.origin + '/admin/qr-login.html?token=' + encodeURIComponent(currentQrToken);
+              drawQrCode(qrUrl);
+              startPolling(currentQrToken);
+            } else {
+              setQrStatus('❌ 二维码生成失败', '请点击刷新重试', true);
+            }
+          })
+          .catch(function () {
+            setQrStatus('❌ 网络异常', '请点击刷新重试', true);
+          });
+      };
+
+      function startPolling(token) {
+        qrPollTimer = setInterval(function () {
+          fetch(getApiBase() + '/auth/qrcode/status/' + encodeURIComponent(token), {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+          })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+              if (!data || !data.data) return;
+              var status = data.data.status;
+              if (status === 'pending') {
+                setQrStatus('📱 请使用手机扫描二维码登录', '扫码后在手机上输入账号密码确认', false);
+              } else if (status === 'confirmed') {
+                if (qrPollTimer) { clearInterval(qrPollTimer); qrPollTimer = null; }
+                handleQrConfirmed(data.data);
+              } else if (status === 'expired') {
+                if (qrPollTimer) { clearInterval(qrPollTimer); qrPollTimer = null; }
+                setQrStatus('⏰ 二维码已过期', '请点击刷新获取新二维码', true);
+              }
+            })
+            .catch(function () {});
+        }, QR_POLL_INTERVAL);
+      }
+
+      function handleQrConfirmed(data) {
+        setQrStatus('✅ 登录成功，正在跳转…', '', false);
+        try {
+          var session = {
+            username: data.user.username,
+            name: data.user.realName,
+            role: data.user.role,
+            roleName: data.user.role,
+            token: data.accessToken,
+            refreshToken: data.refreshToken,
+            forcePwdChange: data.user.forcePwdChange,
+            fromApi: true,
+            loginAt: Date.now()
+          };
+          localStorage.setItem('qaxqjt_admin_session', JSON.stringify(session));
+          var tgt = data.user.forcePwdChange ? 'change-password.html' : 'index.html';
+          setTimeout(function () {
+            try { window.location.assign(tgt); } catch (e) { window.location.href = tgt; }
+          }, 800);
+        } catch (e) {
+          console.error('QR login handle error:', e);
+        }
+      }
     })();
   </script>
 
