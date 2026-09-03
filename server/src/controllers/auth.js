@@ -166,6 +166,129 @@ const me = async ctx => {
   });
 };
 
+// ========== 扫码登录：内存 token 存储（5 分钟过期）==========
+const QR_TTL_MS = 5 * 60 * 1000;
+const qrStore = new Map(); // token -> { status, accountId, accessToken, refreshToken, user, expiresAt }
+
+function _cleanQrStore() {
+  const now = Date.now();
+  for (const [k, v] of qrStore) {
+    if (v.expiresAt < now) qrStore.delete(k);
+  }
+}
+
+// 创建扫码登录 token
+const qrcodeCreate = async ctx => {
+  _cleanQrStore();
+  const token = nanoid(32);
+  qrStore.set(token, {
+    status: 'pending',
+    accountId: null,
+    accessToken: null,
+    refreshToken: null,
+    user: null,
+    createdAt: new Date(),
+    expiresAt: new Date(Date.now() + QR_TTL_MS)
+  });
+  return success(ctx, { token, expiresAt: new Date(Date.now() + QR_TTL_MS).toISOString() });
+};
+
+// 查询扫码登录状态
+const qrcodeStatus = async ctx => {
+  const { token } = ctx.params;
+  const entry = qrStore.get(token);
+  if (!entry) return success(ctx, { status: 'expired' });
+  if (entry.expiresAt < new Date()) {
+    qrStore.delete(token);
+    return success(ctx, { status: 'expired' });
+  }
+  const resp = { status: entry.status };
+  if (entry.status === 'confirmed') {
+    resp.accessToken = entry.accessToken;
+    resp.refreshToken = entry.refreshToken;
+    resp.user = entry.user;
+    // 确认后立即清理，防止重放
+    qrStore.delete(token);
+  }
+  return success(ctx, resp);
+};
+
+// 手机端确认登录（输入账号密码后调用）
+const qrcodeConfirm = async ctx => {
+  const { token, username, password } = ctx.request.body;
+  if (!token || !username || !password) {
+    throw new BusinessError('VALIDATION_ERROR', 'token、username、password 必填');
+  }
+  const entry = qrStore.get(token);
+  if (!entry || entry.expiresAt < new Date()) {
+    throw new BusinessError('NOT_FOUND', '二维码已过期，请刷新');
+  }
+  if (entry.status === 'confirmed') {
+    throw new BusinessError('FORBIDDEN', '该二维码已被使用');
+  }
+
+  // 校验账号密码（复用登录逻辑，但不触发 IP 限流和账号锁定）
+  const acc = await prisma.accountsV2.findUnique({
+    where: { username },
+    include: { userRoles: { include: { role: true } } }
+  });
+  if (!acc || acc.status !== 'active') {
+    throw new BusinessError('UNAUTHORIZED', '用户名或密码错误');
+  }
+  // 扫码登录不受账号锁定限制（作为锁定后的备用登录方式）
+  const pwdOk = await verifyPassword(password, acc.passwordHash);
+  if (!pwdOk) {
+    throw new BusinessError('UNAUTHORIZED', '用户名或密码错误');
+  }
+
+  const ip = ctx.ip;
+  const ua = (ctx.get('user-agent') || '').slice(0, 480);
+  const payload = {
+    sub: acc.id,
+    username: acc.username,
+    role: acc.role,
+    realName: acc.realName,
+    roles: (acc.userRoles || []).map(ur => ur.role?.name).filter(Boolean)
+  };
+  const accessToken = signAccess(payload);
+  const refreshToken = signRefresh(payload);
+
+  await prisma.accountsV2.update({
+    where: { id: acc.id },
+    data: { lastLoginAt: new Date(), lastLoginIp: ip, failedLoginCount: 0, lockedUntil: null, ts: BigInt(now()) }
+  });
+  await prisma.adminSession.create({
+    data: {
+      id: idByCtx('session', 16, nanoid),
+      accountId: acc.id,
+      tokenHash: refreshToken.slice(-16),
+      ipAddress: ip,
+      userAgent: ua,
+      expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000),
+      ts: BigInt(now())
+    }
+  });
+  await audit({ ctx, module: 'auth', action: 'LOGIN_QRCODE', targetId: acc.id });
+
+  entry.status = 'confirmed';
+  entry.accountId = acc.id;
+  entry.accessToken = accessToken;
+  entry.refreshToken = refreshToken;
+  entry.user = {
+    id: acc.id,
+    username: acc.username,
+    realName: acc.realName,
+    role: acc.role,
+    roles: payload.roles,
+    forcePwdChange: acc.forcePwdChange,
+    avatarUrl: acc.avatarUrl,
+    phone: acc.phone,
+    email: acc.email
+  };
+
+  return success(ctx, { ok: true });
+};
+
 // ========== 辅助：记录登录尝试 ==========
 async function _recordAttempt({ username, ip, success, reason }) {
   try {
@@ -185,4 +308,4 @@ async function _recordAttempt({ username, ip, success, reason }) {
   }
 }
 
-module.exports = { login, refresh, logout, me, _hashPwdForSeed: hashPassword };
+module.exports = { login, refresh, logout, me, qrcodeCreate, qrcodeStatus, qrcodeConfirm, _hashPwdForSeed: hashPassword };

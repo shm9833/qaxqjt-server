@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>扫码登录确认 - 秦安县秦剧团</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #fdf8f0 0%, #f5e6cc 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      width: 100%;
+      max-width: 400px;
+      background: #fffaf0;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(139, 0, 0, 0.15);
+      border: 1px solid #e8d5b7;
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #8b0000 0%, #6b0000 100%);
+      color: #fffaf0;
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .header h1 { font-size: 20px; margin-bottom: 6px; }
+    .header p { font-size: 13px; opacity: 0.85; }
+    .body { padding: 24px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      color: #6b0000;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #e8d5b7;
+      border-radius: 8px;
+      font-size: 15px;
+      background: #fff;
+      color: #333;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus { border-color: #8b0000; }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #8b0000 0%, #6b0000 100%);
+      color: #fffaf0;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn:active { opacity: 0.85; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
+    .msg {
+      text-align: center;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 12px;
+      font-size: 14px;
+      display: none;
+    }
+    .msg.success { background: #ecfdf5; color: #065f46; display: block; }
+    .msg.error { background: #fef2f2; color: #991b1b; display: block; }
+    .success-box {
+      text-align: center;
+      padding: 40px 24px;
+    }
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background: #10b981;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .success-box h2 { color: #065f46; margin-bottom: 8px; font-size: 20px; }
+    .success-box p { color: #6b7280; font-size: 14px; line-height: 1.6; }
+    .expired-box {
+      text-align: center;
+      padding: 40px 24px;
+    }
+    .expired-icon {
+      width: 64px;
+      height: 64px;
+      background: #f59e0b;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .footer {
+      text-align: center;
+      padding: 16px;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>秦安县秦剧团</h1>
+      <p>扫码登录确认</p>
+    </div>
+
+    <!-- 登录表单 -->
+    <div id="loginForm" class="body">
+      <div class="form-group">
+        <label for="username">账号</label>
+        <input type="text" id="username" class="form-control" placeholder="请输入管理员账号" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="password">密码</label>
+        <input type="password" id="password" class="form-control" placeholder="请输入登录密码" autocomplete="current-password" />
+      </div>
+      <button id="confirmBtn" class="btn" onclick="confirmLogin()">确认登录</button>
+      <div id="msg" class="msg"></div>
+    </div>
+
+    <!-- 成功提示 -->
+    <div id="successBox" style="display:none;">
+      <div class="success-box">
+        <div class="success-icon">✓</div>
+        <h2>登录成功</h2>
+        <p>您已成功确认登录<br/>请回到电脑端查看</p>
+      </div>
+    </div>
+
+    <!-- 过期提示 -->
+    <div id="expiredBox" style="display:none;">
+      <div class="expired-box">
+        <div class="expired-icon">⏰</div>
+        <h2 style="color:#92400e; margin-bottom:8px;">二维码已过期</h2>
+        <p style="color:#6b7280; font-size:14px;">请在电脑端刷新二维码后重新扫码</p>
+      </div>
+    </div>
+
+    <div class="footer">© 2026 秦安县秦剧团云端预约系统</div>
+  </div>
+
+  <script>
+    var token = new URLSearchParams(window.location.search).get('token') || '';
+
+    function getApiBase() {
+      var origin = window.location.origin;
+      return origin + '/api/v1';
+    }
+
+    function showMsg(text, type) {
+      var el = document.getElementById('msg');
+      el.textContent = text;
+      el.className = 'msg ' + type;
+    }
+
+    function confirmLogin() {
+      var username = document.getElementById('username').value.trim();
+      var password = document.getElementById('password').value;
+      var btn = document.getElementById('confirmBtn');
+
+      if (!token) { showMsg('无效的二维码，请重新扫码', 'error'); return; }
+      if (!username) { showMsg('请输入账号', 'error'); return; }
+      if (!password) { showMsg('请输入密码', 'error'); return; }
+
+      btn.disabled = true;
+      btn.textContent = '登录中…';
+
+      fetch(getApiBase() + '/auth/qrcode/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token, username: username, password: password })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data && data.ok) {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('successBox').style.display = 'block';
+          } else {
+            var msg = (data && data.error && data.error.message) ? data.error.message : '登录失败，请重试';
+            showMsg(msg, 'error');
+            btn.disabled = false;
+            btn.textContent = '确认登录';
+          }
+        })
+        .catch(function () {
+          showMsg('网络异常，请重试', 'error');
+          btn.disabled = false;
+          btn.textContent = '确认登录';
+        });
+    }
+
+    // 回车提交
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') confirmLogin();
+    });
+  </script>
+</body>
+</html>
