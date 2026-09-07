@@ -72,11 +72,11 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
+<script src="../js/app.js?v=20260906g"></script>
   <script src="../js/pagination.js?v=20260803"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>系统日志与数据备份 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260906">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -2016,6 +2016,55 @@ function __pLog(module,event,extra){
       }catch(e){ console.warn('[SuperPatch 2/6 refreshIds err]',e); }
     }
     document.addEventListener('DOMContentLoaded', function(){ _fillIds(); }, {once:true});
+    // v20260907k：系统设置 API 对接（从 /v1/system/settings 加载 + 保存）
+    async function __loadSystemSettings() {
+      var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+      if (!QinFetch || typeof QinFetch.request !== 'function') return;
+      // 1. 系统信息概览
+      try {
+        var info = await QinFetch.request('GET', '/v1/system/info', { query: {} });
+        if (info && info.data) {
+          var els = document.querySelectorAll('[data-stat="settings-total"]');
+          els.forEach(function(el){ el.textContent = info.data.totalSettings || 0; });
+          var pub = document.querySelectorAll('[data-stat="settings-public"]');
+          pub.forEach(function(el){ el.textContent = info.data.publicSettings || 0; });
+        }
+      } catch(_e) { console.warn('[system] info fail:', _e); }
+      // 2. 设置项列表
+      try {
+        var resp = await QinFetch.request('GET', '/v1/system/settings', { query: { pageSize: 100 } });
+        var rows = (resp && resp.data) ? resp.data : [];
+        // 回填到表单字段（按 key 匹配 input[data-setting-key]）
+        rows.forEach(function(r) {
+          var inputs = document.querySelectorAll('[data-setting-key="' + r.key + '"]');
+          inputs.forEach(function(inp) {
+            if (inp.tagName === 'INPUT' || inp.tagName === 'TEXTAREA' || inp.tagName === 'SELECT') {
+              inp.value = r.value;
+            } else {
+              inp.textContent = r.value;
+            }
+          });
+        });
+      } catch(_e) { console.warn('[system] settings list fail:', _e); }
+    }
+    // 保存单个设置项
+    async function __saveSetting(key, value, group, description) {
+      var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+      if (!QinFetch || typeof QinFetch.request !== 'function') {
+        console.warn('[system] API 未就绪，无法保存设置');
+        return false;
+      }
+      try {
+        await QinFetch.request('POST', '/v1/system/settings/batch', {
+          body: { items: [{ key: key, value: value, group: group || 'general', description: description || null }] }
+        });
+        return true;
+      } catch(err) {
+        console.warn('[system] save fail:', err);
+        return false;
+      }
+    }
+    document.addEventListener('DOMContentLoaded', function(){ __loadSystemSettings(); }, {once:true});
     if(document.readyState==='complete'||document.readyState==='interactive'){ _fillIds(); }
     else{ setTimeout(_fillIds, 50); }
     if(typeof MutationObserver!=='undefined'){
@@ -2236,6 +2285,7 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
+        if (window.QinPagination) return; // 真分页器已接管，跳过假分页注入（orders/finance 同款修复范式）
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -2352,6 +2402,7 @@ function __pLog(module,event,extra){
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -2365,6 +2416,7 @@ function __pLog(module,event,extra){
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
+        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return; // 分页条按钮放行（orders/finance 同款修复）
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
@@ -2461,14 +2513,28 @@ function __pLog(module,event,extra){
   });
 })();
 </script>
-<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停真实弹窗（含无 id 按钮、动态重绘行 MutationObserver 补标） */
 (function(){
+  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
+  var SEL = 'button, a.btn, .btn, .btn-action, [role="button"], [data-action]';
   function __markBound(){
-    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
-    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+    try{
+      var els=document.querySelectorAll(SEL);
+      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
+    }catch(_){}
   }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
-  else { __markBound(); setTimeout(__markBound,500); }
+  function __boot(){
+    __markBound();
+    try{
+      if(window.MutationObserver){
+        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
+        mo.observe(document.documentElement,{childList:true,subtree:true});
+      }
+    }catch(_){}
+    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
+  else { __boot(); }
 })();</script>
 </body>
 </html>

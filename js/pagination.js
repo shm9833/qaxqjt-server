@@ -522,4 +522,15 @@
   } else {
     setTimeout(function () { instance.initAll(); }, 0);
   }
+
+  // bfcache 恢复时重置分页到第1页（防止后退/返回残留分页状态导致空白页）
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted && instance._instances.length) {
+      for (var i = 0; i < instance._instances.length; i++) {
+        instance._instances[i].currentPage = 1;
+        instance._instances[i].searchKeyword = '';
+      }
+      instance.refreshAll();
+    }
+  });
 })(typeof window !== 'undefined' ? window : this);

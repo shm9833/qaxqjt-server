@@ -41,7 +41,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>演职人员人事管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260906">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -55,6 +55,37 @@
     table { table-layout: fixed; word-break: break-word; }
     pre, code, textarea { white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
     .admin-main, .admin-content, main, .page-wrap { max-width: 100%; overflow-x: hidden; }
+    /* ============================================================
+       FIX: 花名册等多列表格文字掺插重叠（2026-09-06）
+       根因：全局 table-layout:fixed 把 13 列均分到 ~66px，style.css 的
+       nowrap 单元格内容（部门/行当标签、状态徽章、剧目、操作按钮）溢出
+       越界到相邻列 → 文字互相掺插。app.js 注入的 H9 总补CSS 有
+       min-width:760px!important，压制普通 min-width，故需同优先级+
+       更高特异性选择器 .table-wrapper > table.roster-table 才能覆盖。
+       方案：花名册表 fixed+指定列宽（th:nth-child，min-width 1150 横向滚动），
+       其余 wrapper 表格恢复自动布局；单元格溢出改为省略号截断。
+       ============================================================ */
+    .table-wrapper > table { table-layout: auto !important; }
+    .table-wrapper > table td,
+    .table-wrapper > table th { word-break: normal !important; }
+    .table-wrapper > table.roster-table { table-layout: fixed !important; min-width: 1150px !important; }
+    .roster-table th:nth-child(1){width:46px}
+    .roster-table th:nth-child(2){width:76px}
+    .roster-table th:nth-child(3){width:84px}
+    .roster-table th:nth-child(4){width:52px}
+    .roster-table th:nth-child(5){width:52px}
+    .roster-table th:nth-child(6){width:84px}
+    .roster-table th:nth-child(7){width:84px}
+    .roster-table th:nth-child(8){width:64px}
+    .roster-table th:nth-child(9){width:110px}
+    .roster-table th:nth-child(11){width:96px}
+    .roster-table th:nth-child(12){width:64px}
+    .roster-table th:nth-child(13){width:210px}
+    table.roster-table td { overflow: hidden; text-overflow: ellipsis; }
+    table.roster-table td:nth-child(10) { white-space: normal; }
+    table.roster-table td .dept-tag,
+    table.roster-table td .role-tag,
+    table.roster-table td .status-badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
 
     .admin-sidebar-overlay {
       display: none;
@@ -622,7 +653,7 @@
               </div>
             </div>
             <div class="stat-card-title">在职人员总数</div>
-            <div class="stat-card-value">32<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">人</span></div>
+            <div class="stat-card-value">0<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">人</span></div>
             <div class="stat-card-sub">
               <span>演员20</span>
               <span class="divider"></span>
@@ -639,11 +670,11 @@
               </div>
             </div>
             <div class="stat-card-title">本月在岗率</div>
-            <div class="stat-card-value">98.7<span style="font-size:1.1rem;margin-left:2px;">%</span></div>
+            <div class="stat-card-value">0<span style="font-size:1.1rem;margin-left:2px;">%</span></div>
             <div class="stat-card-sub">
               <span>较上月</span>
               <span class="divider"></span>
-              <span style="color:#28a745;">+1.2%</span>
+              <span style="color:var(--text-light);">—</span>
             </div>
           </div>
           <div class="stat-card stat-card--gold">
@@ -693,15 +724,7 @@
                 <div>
                   <label style="display:block;font-weight:700;color:#0c4a6e;margin-bottom:6px;">关联人员（工号·姓名）</label>
                   <select name="staffId" style="width:100%;padding:10px 14px;border:1.5px solid #0ea5e9;border-radius:10px;background:#fff;">
-                    <option value="">请选择要补充档案的演职人员</option>
-                    <option>STF-001 · 张志明（老生·一级演员）</option>
-                    <option>STF-002 · 李秀琴（青衣·二级演员）</option>
-                    <option>STF-003 · 王建国（花脸·演员队队长）</option>
-                    <option>STF-004 · 赵美玲（花旦·优秀青年）</option>
-                    <option>STF-005 · 陈德胜（司鼓·乐队队长）</option>
-                    <option>STF-006 · 刘海峰（板胡·首席）</option>
-                    <option>✨ 新入职人员</option>
-                  </select>
+                    <option value="">请选择要补充档案的演职人员</option></select>
                 </div>
                 <div>
                   <label style="display:block;font-weight:700;color:#0c4a6e;margin-bottom:6px;">档案附件类型</label>
@@ -796,7 +819,7 @@
               </div>
 
               <div class="table-wrapper">
-                <table>
+                <table class="roster-table">
                   <thead>
                     <tr>
                       <th style="width:46px;text-align:center;"><input type="checkbox" onclick="var c=this.checked,tb=this.closest('table');if(tb){tb.querySelectorAll('tbody tr').forEach(function(r){var cb=r.querySelector('td:first-child input[type=checkbox]');if(cb)cb.checked=c;})}" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></th>
@@ -815,328 +838,7 @@
                     </tr>
                   </thead>
                   <tbody data-paginate="list" data-page-size="10">
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH001</strong></td>
-                      <td><strong>张建国</strong></td>
-                      <td>男</td>
-                      <td>45</td>
-                      <td><span class="dept-tag actor">演员队</span></td>
-                      <td><span class="role-tag">须生</span></td>
-                      <td>2014</td>
-                      <td>139****1234</td>
-                      <td style="max-width:180px;">《三滴血》《铡美案》《打金枝》</td>
-                      <td><span class="status-badge on">● 在岗</span></td>
-                      <td style="color:var(--primary);font-weight:700;">18场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm" title="查看详情">👁</button>
-                          <button class="btn btn-primary btn-sm" title="编辑">✏️</button>
-                          <button class="btn btn-gold btn-sm" title="考勤录入">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;" title="排班">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" title="禁用">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH002</strong></td>
-                      <td><strong>李秀兰</strong></td>
-                      <td>女</td>
-                      <td>38</td>
-                      <td><span class="dept-tag actor">演员队</span></td>
-                      <td><span class="role-tag">青衣</span></td>
-                      <td>2015</td>
-                      <td>138****2345</td>
-                      <td style="max-width:180px;">《窦娥冤》《火焰驹》《白蛇传》</td>
-                      <td><span class="status-badge on">● 在岗</span></td>
-                      <td style="color:var(--primary);font-weight:700;">21场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH003</strong></td>
-                      <td><strong>王志强</strong></td>
-                      <td>男</td>
-                      <td>52</td>
-                      <td><span class="dept-tag actor">演员队</span></td>
-                      <td><span class="role-tag">花脸</span></td>
-                      <td>2008</td>
-                      <td>137****3456</td>
-                      <td style="max-width:180px;">《铡美案》《将相和》《赤桑镇》</td>
-                      <td><span class="status-badge on">● 在岗</span></td>
-                      <td style="color:var(--primary);font-weight:700;">16场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH004</strong></td>
-                      <td><strong>赵丽华</strong></td>
-                      <td>女</td>
-                      <td>29</td>
-                      <td><span class="dept-tag actor">演员队</span></td>
-                      <td><span class="role-tag">花旦</span></td>
-                      <td>2019</td>
-                      <td>136****4567</td>
-                      <td style="max-width:180px;">《拾玉镯》《红娘》《柜中缘》</td>
-                      <td><span class="status-badge on">● 在岗</span></td>
-                      <td style="color:var(--primary);font-weight:700;">19场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH005</strong></td>
-                      <td><strong>刘海涛</strong></td>
-                      <td>男</td>
-                      <td>35</td>
-                      <td><span class="dept-tag actor">演员队</span></td>
-                      <td><span class="role-tag">小生</span></td>
-                      <td>2016</td>
-                      <td>135****5678</td>
-                      <td style="max-width:180px;">《西厢记》《白蛇传》《柳毅传书》</td>
-                      <td><span class="status-badge leave">● 休假</span></td>
-                      <td style="color:var(--text-light);font-weight:500;">12场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH006</strong></td>
-                      <td><strong>孙美玲</strong></td>
-                      <td>女</td>
-                      <td>48</td>
-                      <td><span class="dept-tag actor">演员队</span></td>
-                      <td><span class="role-tag">老旦</span></td>
-                      <td>2010</td>
-                      <td>134****6789</td>
-                      <td style="max-width:180px;">《岳母刺字》《赤桑镇》《钓金龟》</td>
-                      <td><span class="status-badge on">● 在岗</span></td>
-                      <td style="color:var(--primary);font-weight:700;">14场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH007</strong></td>
-                      <td><strong>周德胜</strong></td>
-                      <td>男</td>
-                      <td>42</td>
-                      <td><span class="dept-tag actor">演员队</span></td>
-                      <td><span class="role-tag">丑角</span></td>
-                      <td>2012</td>
-                      <td>133****7890</td>
-                      <td style="max-width:180px;">《七品芝麻官》《徐九经升官记》</td>
-                      <td><span class="status-badge on">● 在岗</span></td>
-                      <td style="color:var(--primary);font-weight:700;">17场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH008</strong></td>
-                      <td><strong>吴建军</strong></td>
-                      <td>男</td>
-                      <td>55</td>
-                      <td><span class="dept-tag music">乐队</span></td>
-                      <td><span class="role-tag">板胡</span></td>
-                      <td>2005</td>
-                      <td>132****8901</td>
-                      <td style="max-width:180px;">精通秦腔板胡演奏、曲牌设计</td>
-                      <td><span class="status-badge on">● 在岗</span></td>
-                      <td style="color:var(--primary);font-weight:700;">22场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH009</strong></td>
-                      <td><strong>郑宝华</strong></td>
-                      <td>男</td>
-                      <td>50</td>
-                      <td><span class="dept-tag music">乐队</span></td>
-                      <td><span class="role-tag">司鼓</span></td>
-                      <td>2007</td>
-                      <td>131****9012</td>
-                      <td style="max-width:180px;">司鼓、打击乐编排</td>
-                      <td><span class="status-badge on">● 在岗</span></td>
-                      <td style="color:var(--primary);font-weight:700;">20场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH010</strong></td>
-                      <td><strong>陈小红</strong></td>
-                      <td>女</td>
-                      <td>33</td>
-                      <td><span class="dept-tag music">乐队</span></td>
-                      <td><span class="role-tag">二胡</span></td>
-                      <td>2017</td>
-                      <td>130****0123</td>
-                      <td style="max-width:180px;">二胡中胡演奏、弦乐编配</td>
-                      <td><span class="status-badge on">● 在岗</span></td>
-                      <td style="color:var(--primary);font-weight:700;">18场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH011</strong></td>
-                      <td><strong>马晓峰</strong></td>
-                      <td>男</td>
-                      <td>40</td>
-                      <td><span class="dept-tag music">乐队</span></td>
-                      <td><span class="role-tag">扬琴</span></td>
-                      <td>2013</td>
-                      <td>159****1234</td>
-                      <td style="max-width:180px;">扬琴演奏、弹拨乐组声部长</td>
-                      <td><span class="status-badge on">● 在岗</span></td>
-                      <td style="color:var(--primary);font-weight:700;">16场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH012</strong></td>
-                      <td><strong>黄春林</strong></td>
-                      <td>男</td>
-                      <td>44</td>
-                      <td><span class="dept-tag stage">舞美队</span></td>
-                      <td><span class="role-tag">灯光设计</span></td>
-                      <td>2011</td>
-                      <td>158****2345</td>
-                      <td style="max-width:180px;">舞台灯光设计、专业调光台操作</td>
-                      <td><span class="status-badge on">● 在岗</span></td>
-                      <td style="color:var(--primary);font-weight:700;">24场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH013</strong></td>
-                      <td><strong>林志远</strong></td>
-                      <td>男</td>
-                      <td>36</td>
-                      <td><span class="dept-tag stage">舞美队</span></td>
-                      <td><span class="role-tag">音响师</span></td>
-                      <td>2015</td>
-                      <td>157****3456</td>
-                      <td style="max-width:180px;">专业音响调试、无线麦管理</td>
-                      <td><span class="status-badge on">● 在岗</span></td>
-                      <td style="color:var(--primary);font-weight:700;">23场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">GH014</strong></td>
-                      <td><strong>段秀芬</strong></td>
-                      <td>女</td>
-                      <td>47</td>
-                      <td><span class="dept-tag stage">舞美队</span></td>
-                      <td><span class="role-tag">服装管理</span></td>
-                      <td>2009</td>
-                      <td>156****4567</td>
-                      <td style="max-width:180px;">戏服管理、演员造型设计</td>
-                      <td><span class="status-badge on">● 在岗</span></td>
-                      <td style="color:var(--primary);font-weight:700;">19场</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🕐</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📅</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🚫</button>
-                        </div>
-                      </td>
-                    </tr>
+                    <tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text-light);">暂无演职人员数据，请点击「新增人员」添加</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1172,12 +874,7 @@
                   <label>人员：</label>
                   <select class="form-control">
                     <option value="">全部人员</option>
-                    <option>GH001 张建国</option>
-                    <option>GH002 李秀兰</option>
-                    <option>GH003 王志强</option>
-                    <option>GH008 吴建军</option>
-                    <option>GH012 黄春林</option>
-                  </select>
+                    </select>
                 </div>
                 <div style="margin-left:auto;">
                   <button class="btn btn-secondary btn-sm">📥 导出考勤表</button>
@@ -1258,131 +955,7 @@
                       <th>操作</th>
                     </tr>
                   </thead>
-                  <tbody data-paginate="list" data-page-size="10">
-                    <tr>
-                      <td>2026-07-25 <span style="color:var(--text-light);font-size:0.75rem;">周六</span></td>
-                      <td><strong>GH003 王志强</strong></td>
-                      <td><span class="badge badge-gold">白班</span></td>
-                      <td style="color:#ff9800;font-weight:600;">09:28</td>
-                      <td>18:05</td>
-                      <td>8.6h</td>
-                      <td><span class="status-badge late">● 迟到28分钟</span></td>
-                      <td style="color:var(--text-light);font-size:0.82rem;">车辆故障</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-primary btn-sm">审批</button>
-                          <button class="btn btn-secondary btn-sm">详情</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>2026-07-24 <span style="color:var(--text-light);font-size:0.75rem;">周五</span></td>
-                      <td><strong>GH005 刘海涛</strong></td>
-                      <td><span class="badge badge-info">晚场</span></td>
-                      <td>17:58</td>
-                      <td style="color:#7b1fa2;font-weight:600;">22:30</td>
-                      <td>4.5h</td>
-                      <td><span class="status-badge late">● 早退1小时</span></td>
-                      <td style="color:var(--text-light);font-size:0.82rem;">家人生病请假</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-primary btn-sm">审批</button>
-                          <button class="btn btn-secondary btn-sm">详情</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>2026-07-22 <span style="color:var(--text-light);font-size:0.75rem;">周三</span></td>
-                      <td><strong>GH010 陈小红</strong></td>
-                      <td><span class="badge badge-gold">白班</span></td>
-                      <td style="color:#dc3545;font-weight:600;">--:--</td>
-                      <td style="color:#dc3545;font-weight:600;">--:--</td>
-                      <td style="color:#dc3545;">0h</td>
-                      <td><span class="status-badge absent">● 缺勤</span></td>
-                      <td style="color:var(--text-light);font-size:0.82rem;">未打卡未报备</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-primary btn-sm">审批</button>
-                          <button class="btn btn-secondary btn-sm">详情</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>2026-07-27 <span style="color:var(--primary);font-size:0.75rem;font-weight:600;">今天</span></td>
-                      <td><strong>GH001 张建国</strong></td>
-                      <td><span class="badge badge-gold">白班</span></td>
-                      <td style="color:#28a745;font-weight:600;">08:42</td>
-                      <td><span style="color:var(--text-light);">进行中</span></td>
-                      <td>--</td>
-                      <td><span class="status-badge normal">● 正常</span></td>
-                      <td>--</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">详情</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>2026-07-27 <span style="color:var(--primary);font-size:0.75rem;font-weight:600;">今天</span></td>
-                      <td><strong>GH002 李秀兰</strong></td>
-                      <td><span class="badge badge-gold">白班</span></td>
-                      <td style="color:#28a745;font-weight:600;">08:55</td>
-                      <td><span style="color:var(--text-light);">进行中</span></td>
-                      <td>--</td>
-                      <td><span class="status-badge normal">● 正常</span></td>
-                      <td>--</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">详情</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>2026-07-27 <span style="color:var(--primary);font-size:0.75rem;font-weight:600;">今天</span></td>
-                      <td><strong>GH008 吴建军</strong></td>
-                      <td><span class="badge badge-gold">白班</span></td>
-                      <td style="color:#28a745;font-weight:600;">08:38</td>
-                      <td><span style="color:var(--text-light);">进行中</span></td>
-                      <td>--</td>
-                      <td><span class="status-badge normal">● 正常</span></td>
-                      <td>--</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">详情</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>2026-07-21 <span style="color:var(--text-light);font-size:0.75rem;">周二</span></td>
-                      <td><strong>GH004 赵丽华</strong></td>
-                      <td><span class="badge badge-warning">休假</span></td>
-                      <td>--:--</td>
-                      <td>--:--</td>
-                      <td style="color:#e6a800;">年假</td>
-                      <td><span class="status-badge leave">● 请假</span></td>
-                      <td style="color:var(--text-light);font-size:0.82rem;">7.21-7.25 年假5天</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">详情</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>2026-07-20 <span style="color:var(--text-light);font-size:0.75rem;">周一</span></td>
-                      <td><strong>GH012 黄春林</strong></td>
-                      <td><span class="badge badge-info">晚场</span></td>
-                      <td style="color:#28a745;font-weight:600;">17:45</td>
-                      <td style="color:#28a745;font-weight:600;">23:30</td>
-                      <td>5.8h</td>
-                      <td><span class="status-badge normal">● 正常</span></td>
-                      <td style="color:var(--text-light);font-size:0.82rem;">陇城镇庙会演出</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">详情</button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
+                  <tbody data-paginate="list" data-page-size="10"><!-- 演示考勤数据已清，真实考勤由打卡/补卡录入 --></tbody>
                 </table>
               </div>
             </div>
@@ -1586,89 +1159,7 @@
                 </div>
               </div>
 
-              <div class="staff-bar-chart" style="margin-bottom:25px;">
-                <div class="staff-bar-item">
-                  <div class="staff-bar-rank top1">1</div>
-                  <div class="staff-bar-label">GH012 黄春林<small>舞美 · 灯光设计</small></div>
-                  <div class="staff-bar-track">
-                    <div class="staff-bar-fill gold" style="width:96%;"><span class="val">96场</span></div>
-                  </div>
-                  <div class="staff-bar-count">96场<small>出勤99%</small></div>
-                </div>
-                <div class="staff-bar-item">
-                  <div class="staff-bar-rank top2">2</div>
-                  <div class="staff-bar-label">GH008 吴建军<small>乐队 · 板胡</small></div>
-                  <div class="staff-bar-track">
-                    <div class="staff-bar-fill" style="width:92%;"><span class="val">92场</span></div>
-                  </div>
-                  <div class="staff-bar-count">92场<small>出勤98%</small></div>
-                </div>
-                <div class="staff-bar-item">
-                  <div class="staff-bar-rank top3">3</div>
-                  <div class="staff-bar-label">GH013 林志远<small>舞美 · 音响师</small></div>
-                  <div class="staff-bar-track">
-                    <div class="staff-bar-fill teal" style="width:90%;"><span class="val">90场</span></div>
-                  </div>
-                  <div class="staff-bar-count">90场<small>出勤99%</small></div>
-                </div>
-                <div class="staff-bar-item">
-                  <div class="staff-bar-rank">4</div>
-                  <div class="staff-bar-label">GH009 郑宝华<small>乐队 · 司鼓</small></div>
-                  <div class="staff-bar-track">
-                    <div class="staff-bar-fill green" style="width:88%;"><span class="val">88场</span></div>
-                  </div>
-                  <div class="staff-bar-count">88场<small>出勤97%</small></div>
-                </div>
-                <div class="staff-bar-item">
-                  <div class="staff-bar-rank">5</div>
-                  <div class="staff-bar-label">GH002 李秀兰<small>演员 · 青衣</small></div>
-                  <div class="staff-bar-track">
-                    <div class="staff-bar-fill purple" style="width:85%;"><span class="val">85场</span></div>
-                  </div>
-                  <div class="staff-bar-count">85场<small>出勤96%</small></div>
-                </div>
-                <div class="staff-bar-item">
-                  <div class="staff-bar-rank">6</div>
-                  <div class="staff-bar-label">GH001 张建国<small>演员 · 须生</small></div>
-                  <div class="staff-bar-track">
-                    <div class="staff-bar-fill orange" style="width:82%;"><span class="val">82场</span></div>
-                  </div>
-                  <div class="staff-bar-count">82场<small>出勤95%</small></div>
-                </div>
-                <div class="staff-bar-item">
-                  <div class="staff-bar-rank">7</div>
-                  <div class="staff-bar-label">GH010 陈小红<small>乐队 · 二胡</small></div>
-                  <div class="staff-bar-track">
-                    <div class="staff-bar-fill gold" style="width:78%;"><span class="val">78场</span></div>
-                  </div>
-                  <div class="staff-bar-count">78场<small>出勤94%</small></div>
-                </div>
-                <div class="staff-bar-item">
-                  <div class="staff-bar-rank">8</div>
-                  <div class="staff-bar-label">GH004 赵丽华<small>演员 · 花旦</small></div>
-                  <div class="staff-bar-track">
-                    <div class="staff-bar-fill" style="width:74%;"><span class="val">74场</span></div>
-                  </div>
-                  <div class="staff-bar-count">74场<small>出勤92%</small></div>
-                </div>
-                <div class="staff-bar-item">
-                  <div class="staff-bar-rank">9</div>
-                  <div class="staff-bar-label">GH003 王志强<small>演员 · 花脸</small></div>
-                  <div class="staff-bar-track">
-                    <div class="staff-bar-fill teal" style="width:70%;"><span class="val">70场</span></div>
-                  </div>
-                  <div class="staff-bar-count">70场<small>出勤91%</small></div>
-                </div>
-                <div class="staff-bar-item">
-                  <div class="staff-bar-rank">10</div>
-                  <div class="staff-bar-label">GH007 周德胜<small>演员 · 丑角</small></div>
-                  <div class="staff-bar-track">
-                    <div class="staff-bar-fill green" style="width:65%;"><span class="val">65场</span></div>
-                  </div>
-                  <div class="staff-bar-count">65场<small>出勤93%</small></div>
-                </div>
-              </div>
-
+              <div class="staff-bar-chart" style="margin-bottom:25px;text-align:center;padding:30px;color:var(--text-light);">暂无出勤统计数据，真实考勤数据随打卡/补卡录入后生成</div>
               <div class="table-wrapper">
                 <table>
                   <thead>
@@ -1684,129 +1175,8 @@
                       <th>总场次</th>
                       <th>出勤率</th>
                     </tr>
-    <tbody data-paginate="list" data-page-size="10">       </thead>
-                  <tbody>
-                    <tr>
-                      <td><strong style="display:inline-block;padding:4px 10px;border-radius:8px;background:linear-gradient(135deg,#FFD700,#FFA000);color:#fff;">🥇 1</strong></td>
-                      <td><strong style="color:var(--primary);">GH012</strong></td>
-                      <td><strong>黄春林</strong></td>
-                      <td><span class="role-tag">灯光设计</span></td>
-                      <td>38</td>
-                      <td>30</td>
-                      <td>16</td>
-                      <td>12</td>
-                      <td style="color:var(--gold-dark);font-weight:700;font-size:1.05rem;">96</td>
-                      <td><span style="color:#28a745;font-weight:600;">99.0%</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong style="display:inline-block;padding:4px 10px;border-radius:8px;background:linear-gradient(135deg,#C0C0C0,#9E9E9E);color:#fff;">🥈 2</strong></td>
-                      <td><strong style="color:var(--primary);">GH008</strong></td>
-                      <td><strong>吴建军</strong></td>
-                      <td><span class="role-tag">板胡</span></td>
-                      <td>36</td>
-                      <td>28</td>
-                      <td>16</td>
-                      <td>12</td>
-                      <td style="color:var(--gold-dark);font-weight:700;font-size:1.05rem;">92</td>
-                      <td><span style="color:#28a745;font-weight:600;">98.0%</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong style="display:inline-block;padding:4px 10px;border-radius:8px;background:linear-gradient(135deg,#CD7F32,#A0522D);color:#fff;">🥉 3</strong></td>
-                      <td><strong style="color:var(--primary);">GH013</strong></td>
-                      <td><strong>林志远</strong></td>
-                      <td><span class="role-tag">音响师</span></td>
-                      <td>35</td>
-                      <td>30</td>
-                      <td>15</td>
-                      <td>10</td>
-                      <td style="color:var(--gold-dark);font-weight:700;font-size:1.05rem;">90</td>
-                      <td><span style="color:#28a745;font-weight:600;">99.0%</span></td>
-                    </tr>
-                    <tr>
-                      <td style="font-weight:600;color:var(--text-light);">4</td>
-                      <td><strong style="color:var(--primary);">GH009</strong></td>
-                      <td><strong>郑宝华</strong></td>
-                      <td><span class="role-tag">司鼓</span></td>
-                      <td>35</td>
-                      <td>27</td>
-                      <td>14</td>
-                      <td>12</td>
-                      <td style="font-weight:700;">88</td>
-                      <td><span style="color:#28a745;font-weight:600;">97.0%</span></td>
-                    </tr>
-                    <tr>
-                      <td style="font-weight:600;color:var(--text-light);">5</td>
-                      <td><strong style="color:var(--primary);">GH002</strong></td>
-                      <td><strong>李秀兰</strong></td>
-                      <td><span class="role-tag">青衣</span></td>
-                      <td>42</td>
-                      <td>22</td>
-                      <td>12</td>
-                      <td>9</td>
-                      <td style="font-weight:700;">85</td>
-                      <td><span style="color:#28a745;font-weight:600;">96.0%</span></td>
-                    </tr>
-                    <tr>
-                      <td style="font-weight:600;color:var(--text-light);">6</td>
-                      <td><strong style="color:var(--primary);">GH001</strong></td>
-                      <td><strong>张建国</strong></td>
-                      <td><span class="role-tag">须生</span></td>
-                      <td>40</td>
-                      <td>20</td>
-                      <td>13</td>
-                      <td>9</td>
-                      <td style="font-weight:700;">82</td>
-                      <td><span style="color:#28a745;font-weight:600;">95.0%</span></td>
-                    </tr>
-                    <tr>
-                      <td style="font-weight:600;color:var(--text-light);">7</td>
-                      <td><strong style="color:var(--primary);">GH010</strong></td>
-                      <td><strong>陈小红</strong></td>
-                      <td><span class="role-tag">二胡</span></td>
-                      <td>30</td>
-                      <td>24</td>
-                      <td>14</td>
-                      <td>10</td>
-                      <td style="font-weight:700;">78</td>
-                      <td><span style="color:#28a745;font-weight:600;">94.0%</span></td>
-                    </tr>
-                    <tr>
-                      <td style="font-weight:600;color:var(--text-light);">8</td>
-                      <td><strong style="color:var(--primary);">GH004</strong></td>
-                      <td><strong>赵丽华</strong></td>
-                      <td><span class="role-tag">花旦</span></td>
-                      <td>36</td>
-                      <td>20</td>
-                      <td>10</td>
-                      <td>8</td>
-                      <td style="font-weight:700;">74</td>
-                      <td><span style="color:#28a745;font-weight:600;">92.0%</span></td>
-                    </tr>
-                    <tr>
-                      <td style="font-weight:600;color:var(--text-light);">9</td>
-                      <td><strong style="color:var(--primary);">GH003</strong></td>
-                      <td><strong>王志强</strong></td>
-                      <td><span class="role-tag">花脸</span></td>
-                      <td>32</td>
-                      <td>20</td>
-                      <td>10</td>
-                      <td>8</td>
-                      <td style="font-weight:700;">70</td>
-                      <td><span style="color:#28a745;font-weight:600;">91.0%</span></td>
-                    </tr>
-                    <tr>
-                      <td style="font-weight:600;color:var(--text-light);">10</td>
-                      <td><strong style="color:var(--primary);">GH007</strong></td>
-                      <td><strong>周德胜</strong></td>
-                      <td><span class="role-tag">丑角</span></td>
-                      <td>28</td>
-                      <td>22</td>
-                      <td>10</td>
-                      <td>5</td>
-                      <td style="font-weight:700;">65</td>
-                      <td><span style="color:#28a745;font-weight:600;">93.0%</span></td>
-                    </tr>
-                  </tbody>
+                  </thead>
+                  <tbody><!-- 演示排名已清，真实统计由考勤数据生成 --></tbody>
                 </table>
               </div>
 </div>
@@ -2047,7 +1417,7 @@
                 <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:20px;">
                   <div class="wage-stat-card"><div class="label">📜 历史工资条总数</div><div class="value" id="wageHistTotalCount">0</div><div class="sub">条记录</div></div>
                   <div class="wage-stat-card"><div class="label">💸 累计实发总额</div><div class="value" id="wageHistTotalNet">¥0</div><div class="sub">全员历史合计</div></div>
-                  <div class="wage-stat-card"><div class="label">✅ 已发放 / 待发</div><div class="value" id="wageHistPaidLabel">0 / 0</div><div class="sub"><span style="color:#28a745;">已发</span> · <span style="color:#ff9800;">待发</span></div></div>
+                  <div class="wage-stat-card"><div class="label">✅ 已发放 / 待发</div><div class="value" id="wageHistPaidLabel">0 / 0</div><div class="sub"><span style="color:var(--text-light);">—</span> · <span style="color:#ff9800;">待发</span></div></div>
                   <div class="wage-stat-card"><div class="label">🎭 累计演出补助</div><div class="value" id="wageHistPerform">¥0</div><div class="sub">本戏+折子+下乡等</div></div>
                 </div>
 
@@ -2093,7 +1463,7 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
+<script src="../js/app.js?v=20260906g"></script>
   <script src="../js/pagination.js?v=20260803"></script>
   <script>
     (function() {
@@ -2368,51 +1738,29 @@
         };
         var pad = function (s, n, c) { s = String(s); while (s.length < n) s = (c || '0') + s; return s; };
 
-        // 模拟花名册（与页面展示的GH001-032对应）
-        var MOCK_STAFF = (function () {
+        // 工资模块人员来源：真实花名册（staff API 接线写入 window.__PF_ROWS__）。
+        // 无在册人员时返回空数组（不再内置 GH001-032 演示人员，避免生成假工资条）。
+        function getWageStaffList() {
+          var rows = window.__PF_ROWS__ || [];
           var list = [];
-          var samples = [
-            ['GH001','张建国','须生','一级演员','演员队',2014],
-            ['GH002','李秀兰','青衣','二级演员','演员队',2015],
-            ['GH003','王志强','花脸','二级演员','演员队',2008],
-            ['GH004','赵丽华','花旦','优秀青年','演员队',2019],
-            ['GH005','刘海涛','小生','三级演员','演员队',2016],
-            ['GH006','孙美玲','老旦','二级演员','演员队',2010],
-            ['GH007','周德胜','丑角','三级演员','演员队',2012],
-            ['GH008','吴建军','板胡','首席','乐队',2005],
-            ['GH009','郑宝华','司鼓','队长','乐队',2007],
-            ['GH010','陈小红','二胡','三级演奏员','乐队',2013],
-            ['GH011','王美丽','扬琴','二级演奏员','乐队',2011],
-            ['GH012','黄春林','灯光','高级舞美','舞美队',2009],
-            ['GH013','林志远','音响','舞美师','舞美队',2012],
-            ['GH014','赵雅琴','服装','舞美员','舞美队',2017],
-            ['GH015','钱文博','道具','技术员','舞美队',2020],
-            ['GH016','孙晓燕','化妆','舞美师','舞美队',2014],
-            ['GH017','李建峰','布景','高级舞美','舞美队',2006],
-            ['GH018','周慧敏','花旦','学员','演员队',2023],
-            ['GH019','吴国栋','老生','一级演员','演员队',2004],
-            ['GH020','郑丽华','老旦','三级演员','演员队',2018],
-            ['GH021','冯志远','板胡伴奏','三级演奏员','乐队',2015],
-            ['GH022','陈春梅','笛子','演奏员','乐队',2019],
-            ['GH023','褚海涛','唢呐','二级演奏员','乐队',2010],
-            ['GH024','卫志强','打击乐','三级演奏员','乐队',2016],
-            ['GH025','蒋文斌','龙套','三级演员','演员队',2017],
-            ['GH026','沈月娥','青衣','优秀青年','演员队',2021],
-            ['GH027','韩少华','小生','二级演员','演员队',2013],
-            ['GH028','杨秀英','花旦','三级演员','演员队',2018],
-            ['GH029','朱鹏辉','灯光','技术员','舞美队',2022],
-            ['GH030','秦晓燕','青衣','学员','演员队',2024],
-            ['GH031','尤志刚','司鼓','一级演奏员','乐队',2003],
-            ['GH032','许慧中','板胡','二级演奏员','乐队',2011]
-          ];
-          samples.forEach(function (s, i) {
+          for (var i = 0; i < rows.length; i++) {
+            var p = rows[i];
+            if (!p || !p.name) continue;
+            var hy = null;
+            if (p.hireDate) { var t = new Date(p.hireDate); if (!isNaN(t.getTime())) hy = t.getFullYear(); }
             list.push({
-              id: s[0], name: s[1], roleCategory: s[2], level: s[3],
-              dept: s[4], hireYear: s[5], status: 'on', index: i
+              id: p.staffNo || ('PF' + (p.id || (i + 1))),
+              name: p.name,
+              roleCategory: p.primaryRole || '',
+              level: p.rankGrade || '',
+              dept: p.employmentType || '',
+              hireYear: hy,
+              status: p.status === 'inactive' ? 'off' : 'on',
+              index: list.length
             });
-          });
+          }
           return list;
-        })();
+        }
 
         // 行当分组到三类（演员/乐队/舞美）的列名映射
         var ACTOR_ROLES = ['青衣','老生','须生','花脸','小生','老旦','花旦','丑角','龙套'];
@@ -2622,11 +1970,11 @@
           var monthEl = $('wageGenMonth');
           var m = (monthEl && monthEl.value) || '';
           var ml = $('wageGenMonthLabel'); if (ml) ml.textContent = m || '—';
-          var sc = $('wageGenStaffCount'); if (sc) sc.textContent = MOCK_STAFF.length;
+          var sc = $('wageGenStaffCount'); if (sc) sc.textContent = getWageStaffList().length;
           // 估算
           var grossEst = 0, netEst = 0;
           var rules = W.getDefaultRules();
-          MOCK_STAFF.forEach(function (st) {
+          getWageStaffList().forEach(function (st) {
             var base = W.getBaseDailyWage(st.roleCategory, st.level, rules);
             var sy = st.hireYear ? Math.max(0, new Date().getFullYear() - st.hireYear) : 0;
             var sen = Math.round(sy * (rules.seniorityPerYear || 200));
@@ -2654,11 +2002,13 @@
           if (!W) return;
           var m = $('wageGenMonth') && $('wageGenMonth').value;
           if (!m) { U && U.toast && U.toast('⚠️ 请先选择结算月份', 'warning'); return; }
+          var staff = getWageStaffList();
+          if (!staff.length) { U && U.toast && U.toast('⚠️ 花名册暂无在册人员，请先在「花名册」录入演职人员后再生成工资条', 'warning'); return; }
           var remark = $('wageGenRemark') && $('wageGenRemark').value;
           var result;
           if (previewOnly) {
             // 预览：直接计算但不保存
-            result = W.generateMonthlyPayslips(m, MOCK_STAFF, null, { overwrite: true });
+            result = W.generateMonthlyPayslips(m, staff, null, { overwrite: true });
             // 预览后删除，避免污染真实数据
             W.deletePayslipsByMonth(m);
             renderPayslipRows(result.items, $('wageGenTbody'), true);
@@ -2666,7 +2016,7 @@
             if (lbl) lbl.textContent = '（预览·' + (result.items && result.items.length || 0) + ' 条，未保存）';
             U && U.toast && U.toast('🔍 预览完成，共 ' + (result.items&&result.items.length||0) + ' 条（尚未保存到存储）', 'info');
           } else {
-            result = W.generateMonthlyPayslips(m, MOCK_STAFF, null, { overwrite: true });
+            result = W.generateMonthlyPayslips(m, staff, null, { overwrite: true });
             if (remark && result.items) {
               for (var i = 0; i < result.items.length; i++) {
                 result.items[i].remark = remark;
@@ -2757,7 +2107,8 @@
           var it = w.items || {};
           var su = w.summary || {};
           var staff = null;
-          for (var i = 0; i < MOCK_STAFF.length; i++) { if (MOCK_STAFF[i].id === w.staffId || MOCK_STAFF[i].name === w.staffName) { staff = MOCK_STAFF[i]; break; } }
+          var _msl = getWageStaffList();
+          for (var i = 0; i < _msl.length; i++) { if (_msl[i].id === w.staffId || _msl[i].name === w.staffName) { staff = _msl[i]; break; } }
           var staffLine = staff ? ('工号 ' + staff.id + ' · ' + staff.dept + ' · ' + (staff.hireYear + '入职')) : '';
           var html =
             '<div class="payslip-detail-modal" onclick="event.stopPropagation()">'
@@ -3644,12 +2995,18 @@ var __pT0=0;
       var btn = (t.tagName||'').toLowerCase() === 'button' ? t :
                 (t.closest ? t.closest('button, a, [role="button"], .btn, .btn-action, .btn-sm, .action-link, [data-action]') : null);
       if(!btn) return;
+      // 修复：模态框内的按钮跳过 DBF 兜底，让事件传播到模态框真实 handler（保存/取消/关闭）
+      try{
+        if(btn.closest && (btn.closest('.modal-mask, .generic-modal-root, .modal-overlay-root, [role="dialog"]') || btn.closest('[id$="Modal"], [id$="modal"]'))) return;
+        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
+      }catch(_mskip){}
       // 跳过已有 onclick / 正常href跳转 / 已在脚本中手动绑定过（__bindDone=1 或 __ctE2Done=1）的按钮
       // 注意：data-action仅作为标识，不代表已绑定事件；父元素检查仅对onclick生效
       try{
   function __btnHasBound(btn){
     if(!btn) return false;
     if(btn.__superPatchBound) return true;
+    if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 DBF 兜底拦截（曾导致行按钮第一次点击被吞）
     var oc = btn.getAttribute && btn.getAttribute('onclick');
     var hr = btn.getAttribute && btn.getAttribute('href');
     if(oc && oc.length > 3) return true;
@@ -4096,6 +3453,11 @@ function __pLog(module,event,extra){
           if(txt===closeTexts[i]||(txt.length<=12&&txt.indexOf(closeTexts[i])>=0)){ isClose=true; break; }
         }
         if(!isClose) return;
+        // 修复：已有真实绑定（inline onclick attribute / JS property）的关闭按钮直接放行，交给原 handler 干净地关弹窗
+        try{
+          var cb = el.closest ? el.closest('button, a, [role="button"]') : null;
+          if (cb && (typeof cb.onclick === 'function' || ((cb.getAttribute && cb.getAttribute('onclick')) || '').length > 3)) return;
+        }catch(_c3s){}
         e.preventDefault();
         e.stopPropagation();
         var handled=false;
@@ -4269,6 +3631,9 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
+        // 修复：pagination.js 已提供真分页（含真实翻页逻辑）时，本补丁的假分页工具栏绝不注入——
+        // 曾把 .pagination-bar 当作待标准化容器：innerHTML='' 清空真控件后塞入只改计数器不切行的假分页 → “点页码表格不动”
+        if (window.QinPagination) return;
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -4392,6 +3757,7 @@ try{
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -4408,6 +3774,8 @@ try{
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
+        // 修复：分页条按钮由 pagination.js 自管，禁止 SuperPatch 兜底拦截
+        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
         btn.__superPatchBound = 1;
@@ -4529,14 +3897,489 @@ try{
   });
 })();
 </script>
-<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停真实弹窗（含无 id 按钮、动态重绘行 MutationObserver 补标） */
 (function(){
+  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
+  var SEL = 'button, a.btn, .btn, .btn-action, [role="button"], [data-action]';
   function __markBound(){
-    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
-    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+    try{
+      var els=document.querySelectorAll(SEL);
+      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
+    }catch(_){}
   }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
-  else { __markBound(); setTimeout(__markBound,500); }
+  function __boot(){
+    __markBound();
+    try{
+      if(window.MutationObserver){
+        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
+        mo.observe(document.documentElement,{childList:true,subtree:true});
+      }
+    }catch(_){}
+    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
+  else { __boot(); }
 })();</script>
+
+<!-- 🔧 演职人员花名册：编辑/查看弹窗（真实功能，保存后原地刷新列表 + localStorage 持久化） -->
+<div id="staffEditModal" class="modal-mask" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:99999;justify-content:center;align-items:center;padding:20px;">
+  <div style="background:#fff;border-radius:14px;max-width:560px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(15,76,129,0.18);">
+    <div style="padding:20px 25px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">
+      <h3 id="staffEditTitle" style="margin:0;font-size:1.15rem;color:#0F4C81;">✏️ 编辑演职人员</h3>
+      <button type="button" onclick="closeStaffEditModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#999;padding:0 6px;">×</button>
+    </div>
+    <div style="padding:25px;">
+      <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">工号</label><input id="inp_stf_gh" type="text" readonly style="width:100%;padding:10px 14px;background:#f5f5f5;border:1px solid #ddd;border-radius:8px;color:#666;box-sizing:border-box;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">姓名 *</label><input id="inp_stf_name" type="text" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">性别</label><select id="inp_stf_gender" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option>男</option><option>女</option></select></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">年龄</label><input id="inp_stf_age" type="number" min="16" max="90" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">队别</label><select id="inp_stf_dept" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option>演员队</option><option>乐队</option><option>舞美队</option><option>服装道具</option><option>行政</option></select></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">行当/职务</label><input id="inp_stf_role" type="text" placeholder="如：须生 / 司鼓" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">入团年份</label><input id="inp_stf_year" type="number" min="1950" max="2100" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+      </div>
+      <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">联系电话</label><input id="inp_stf_phone" type="text" placeholder="138xxxxxxx" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+      <div style="margin-bottom:8px;"><label style="display:block;margin-bottom:6px;font-weight:500;">代表剧目</label><input id="inp_stf_rep" type="text" placeholder="如：《三滴血》《铡美案》" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+    </div>
+    <div style="padding:18px 25px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:10px;">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="closeStaffEditModal()">取消</button>
+      <button type="button" id="staffEditSaveBtn" class="btn btn-primary btn-sm" onclick="saveStaffEdit()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<script>/* ========== 🔧 演职人员花名册：行按钮真实功能（查看/编辑/考勤/排班/停启用）+ 原地刷新 + localStorage 持久化 ========== */
+(function(){
+  if (window.__STF_ROSTER_V1__) return;
+  window.__STF_ROSTER_V1__ = true;
+
+  var PATCH_KEY = 'qaxqjt_admin_staff_patch_v1';
+  var DEPTS = ['演员队','乐队','舞美队','服装道具','行政'];
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function toast(msg, type){
+    try { if (typeof window.__T === 'function') { window.__T(msg, type||'info'); return; } } catch(_e){}
+    try { if (typeof window.__toastH9 === 'function') { window.__toastH9(msg, type||'info'); return; } } catch(_e2){}
+    try { window.QinApp && QinApp.Utils && QinApp.Utils.toast(msg, type||'info', 3000); return; } catch(_e3){}
+    (type==='error' ? alert : console.log)(msg);
+  }
+
+  // 花名册 = 页面第一个 data-paginate tbody；行结构：1复选 2工号 3姓名 4性别 5年龄 6队别 7行当 8年份 9电话 10剧目 11状态 12场次 13操作
+  function rosterTbody(){
+    var list = document.querySelectorAll('tbody[data-paginate="list"]');
+    return (list && list.length) ? list[0] : null;
+  }
+  function rowCells(tr){ return tr ? tr.querySelectorAll('td') : null; }
+  function cellText(tr, idx){
+    var t = rowCells(tr);
+    return (t && t[idx] ? (t[idx].textContent||'').replace(/\s+/g,' ').trim() : '');
+  }
+  function findRowByGh(gh){
+    var tb = rosterTbody(); if(!tb || !gh) return null;
+    var rows = tb.querySelectorAll('tr');
+    for (var i=0;i<rows.length;i++){ if (cellText(rows[i],1) === String(gh)) return rows[i]; }
+    return null;
+  }
+
+  // ---- localStorage patch 持久化（刷新不丢）----
+  function patchRead(){ try { return JSON.parse(localStorage.getItem(PATCH_KEY)||'{}')||{}; } catch(_){ return {}; } }
+  function patchWrite(obj){ try { localStorage.setItem(PATCH_KEY, JSON.stringify(obj||{})); } catch(e){ console.warn('[staff patch 写入失败]', e); } }
+  function patchUpsert(gh, fields){
+    if(!gh) return;
+    var obj = patchRead();
+    obj[String(gh)] = Object.assign({}, obj[String(gh)]||{}, fields||{}, { _updatedAt: new Date().toISOString() });
+    patchWrite(obj);
+  }
+  function applyPatchToRow(tr, p){
+    if(!tr || !p) return;
+    var t = rowCells(tr); if(!t || t.length < 11) return;
+    if (typeof p.name === 'string' && t[2]) t[2].innerHTML = '<strong>'+esc(p.name)+'</strong>';
+    if (typeof p.gender === 'string' && t[3]) t[3].innerText = p.gender;
+    if (p.age !== undefined && p.age !== null && p.age !== '' && t[4]) t[4].innerText = String(p.age);
+    if (typeof p.dept === 'string' && t[5]) t[5].innerHTML = '<span class="dept-tag actor">'+esc(p.dept)+'</span>';
+    if (typeof p.role === 'string' && t[6]) t[6].innerHTML = '<span class="role-tag">'+esc(p.role)+'</span>';
+    if (p.year !== undefined && p.year !== null && p.year !== '' && t[7]) t[7].innerText = String(p.year);
+    if (typeof p.phone === 'string' && p.phone && t[8]) t[8].innerText = p.phone;
+    if (typeof p.rep === 'string' && p.rep && t[9]) t[9].innerText = p.rep;
+    if (p.status === 'on' || p.status === 'off') syncStatus(tr, p.status, true);
+  }
+  function applyAllPatches(){
+    var obj = patchRead();
+    var ghs = Object.keys(obj);
+    for (var i=0;i<ghs.length;i++){
+      var tr = findRowByGh(ghs[i]);
+      if (tr) applyPatchToRow(tr, obj[ghs[i]]);
+    }
+  }
+
+  // ---- 状态同步（原地刷新 badge + 🚫按钮文案）----
+  function syncStatus(tr, status, silent){
+    var t = rowCells(tr); if(!t || !t[10]) return;
+    var on = status !== 'off';
+    var badge = t[10].querySelector('.status-badge');
+    if (badge){ badge.className = 'status-badge ' + (on ? 'on' : 'off'); badge.innerText = on ? '● 在岗' : '○ 停用'; }
+    else { t[10].innerHTML = '<span class="status-badge '+(on?'on':'off')+'">'+(on?'● 在岗':'○ 停用')+'</span>'; }
+    var acts = t[12] ? t[12].querySelectorAll('.admin-table-actions button') : null;
+    if (acts && acts[4]){
+      var b = acts[4];
+      b.innerText = on ? '🚫' : '✅';
+      b.title = on ? '禁用' : '启用';
+      b.style.background = on ? 'rgba(220,53,69,0.1)' : 'rgba(40,167,69,0.12)';
+      b.style.color = on ? '#dc3545' : '#28a745';
+    }
+    if (!silent) toast(on ? '✓ 已启用：'+cellText(tr,2) : '✕ 已停用：'+cellText(tr,2)+'（刷新不丢失）', on ? 'success' : 'warning');
+  }
+
+  // ---- 查看/编辑弹窗 ----
+  var editCtx = { gh: '', readonly: false };
+  function fillForm(tr){
+    $('inp_stf_gh').value = cellText(tr,1);
+    $('inp_stf_name').value = cellText(tr,2);
+    $('inp_stf_gender').value = cellText(tr,3) || '男';
+    $('inp_stf_age').value = cellText(tr,4);
+    var dept = cellText(tr,5); if (DEPTS.indexOf(dept) < 0) dept = '演员队';
+    $('inp_stf_dept').value = dept;
+    $('inp_stf_role').value = cellText(tr,6);
+    $('inp_stf_year').value = cellText(tr,7);
+    // 修复：列表里手机号是脱敏格式（139****1234），原样填入会导致保存时校验必然失败（弹窗关不上、列表不刷新）
+    var rawPhone = cellText(tr,8);
+    var phoneMasked = /[*＊]/.test(rawPhone);
+    $('inp_stf_phone').value = phoneMasked ? '' : rawPhone;
+    $('inp_stf_phone').placeholder = phoneMasked ? ('原号码 ' + rawPhone + '，留空表示不修改') : '';
+    $('inp_stf_rep').value = cellText(tr,9);
+    editCtx.phoneMasked = phoneMasked ? rawPhone : '';
+  }
+  window.openStaffEditModal = function(gh, readonly){
+    var tr = findRowByGh(gh);
+    if (!tr){ toast('⚠️ 未找到工号 '+gh+' 对应的记录','warning'); return; }
+    editCtx = { gh: String(gh), readonly: !!readonly };
+    fillForm(tr);
+    ['inp_stf_name','inp_stf_gender','inp_stf_age','inp_stf_dept','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_rep'].forEach(function(id){
+      var el = $(id); if (el){ el.disabled = !!readonly; el.style.background = readonly ? '#f5f5f5' : '#fff'; }
+    });
+    $('staffEditTitle').innerText = readonly ? ('👁 查看详情 · '+cellText(tr,2)) : ('✏️ 编辑演职人员 · '+cellText(tr,2));
+    $('staffEditSaveBtn').style.display = readonly ? 'none' : '';
+    $('staffEditModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  };
+  window.closeStaffEditModal = function(){
+    var m = $('staffEditModal'); if (m) m.style.display = 'none';
+    document.body.style.overflow = '';
+  };
+  window.saveStaffEdit = function(){
+    if (editCtx.readonly) return;
+    if (window.__OP_LOCKS && window.__OP_LOCKS.saveStaffEdit){ toast('⏳ 正在保存，请稍候…','warning'); return; }
+    try { window.__OP_LOCKS = window.__OP_LOCKS || {}; window.__OP_LOCKS.saveStaffEdit = true; setTimeout(function(){ try{ delete window.__OP_LOCKS.saveStaffEdit; }catch(_){} }, 600); } catch(_l){}
+    var name = ($('inp_stf_name').value||'').trim();
+    if (!name){ toast('❌ 姓名不能为空','error'); return; }
+    var phone = ($('inp_stf_phone').value||'').trim();
+    if (phone && /[*＊]/.test(phone)) phone = ''; // 兜底：残留脱敏号码一律视为“不修改”
+    if (phone && !/^1[3-9]\d{9}$/.test(phone)){ toast('❌ 手机号格式不正确（11 位中国大陆手机号）','error'); return; }
+    var age = ($('inp_stf_age').value||'').trim();
+    if (age !== '' && (parseInt(age,10) < 16 || parseInt(age,10) > 90)){ toast('❌ 年龄需在 16~90 之间','error'); return; }
+    var data = {
+      name: name,
+      gender: $('inp_stf_gender').value || '男',
+      age: age === '' ? '' : parseInt(age,10),
+      dept: $('inp_stf_dept').value || '演员队',
+      role: ($('inp_stf_role').value||'').trim(),
+      year: ($('inp_stf_year').value||'').trim(),
+      phone: phone,
+      rep: ($('inp_stf_rep').value||'').trim()
+    };
+    var tr = findRowByGh(editCtx.gh);
+    // v20260907k：调用后端 API 持久化（PATCH 更新 / POST 新增）
+    var apiPayload = {
+      name: data.name,
+      gender: data.gender,
+      primaryRole: data.role || data.dept,
+      department: data.dept,
+      phone: phone || undefined,
+      hireDate: data.year ? (data.year + '-01-01') : undefined
+    };
+    // 移除 undefined 字段
+    Object.keys(apiPayload).forEach(function(k){ if(apiPayload[k]===undefined) delete apiPayload[k]; });
+    var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+    var isNewPerformer = editCtx.isNew || false;
+    var apiMethod = isNewPerformer ? 'POST' : 'PATCH';
+    var apiUrl = isNewPerformer ? '/v1/performers' : ('/v1/performers/' + encodeURIComponent(editCtx.gh));
+    if (!QinFetch || typeof QinFetch.request !== 'function') {
+      // 降级：localStorage
+      try { patchUpsert(editCtx.gh, persisted); } catch(_){}
+      if (tr){
+        var t = rowCells(tr);
+        if (t[2]) t[2].innerHTML = '<strong>'+esc(data.name)+'</strong>';
+        if (t[3]) t[3].innerText = data.gender;
+        if (t[4]) t[4].innerText = (data.age === '' ? '—' : String(data.age));
+        if (t[5]) t[5].innerHTML = '<span class="dept-tag actor">'+esc(data.dept)+'</span>';
+        if (t[6]) t[6].innerHTML = '<span class="role-tag">'+esc(data.role)+'</span>';
+      }
+      closeStaffEditModal();
+      toast('✅ 已保存（降级 localStorage）：'+data.name,'success');
+      return;
+    }
+    toast('⏳ 正在保存到后端...','info', 2000);
+    QinFetch.request(apiMethod, apiUrl, { body: apiPayload }).then(function(resp){
+      var saved = resp && resp.data ? resp.data : {};
+      // 更新 UI
+      if (tr){
+        var t = rowCells(tr);
+        if (t[2]) t[2].innerHTML = '<strong>'+esc(data.name)+'</strong>';
+        if (t[3]) t[3].innerText = data.gender;
+        if (t[4]) t[4].innerText = (data.age === '' ? '—' : String(data.age));
+        if (t[5]) t[5].innerHTML = '<span class="dept-tag actor">'+esc(data.dept)+'</span>';
+        if (t[6]) t[6].innerHTML = '<span class="role-tag">'+esc(data.role)+'</span>';
+        if (t[7]) t[7].innerText = data.year || '—';
+        if (t[8] && phone) t[8].innerText = phone;
+        if (t[9]) t[9].innerText = (data.rep || '—');
+      }
+      closeStaffEditModal();
+      toast('✅ 已保存：'+data.name+'（'+data.dept+(data.role ? ' · '+data.role : '')+'），已同步后端 /v1/performers','success', 3500);
+    }).catch(function(err){
+      console.warn('[saveStaffEdit] API fail:', err);
+      // 降级 localStorage
+      try { patchUpsert(editCtx.gh, persisted); } catch(_){}
+      closeStaffEditModal();
+      toast('⚠️ 后端保存失败，已降级本地存储：'+(err && err.message ? err.message : '网络错误'),'warning', 4000);
+    });
+  };
+
+  // ---- 行按钮动作分发（事件委托 + 初始化打标防兜底拦截）----
+  function markRosterButtons(){
+    var tb = rosterTbody(); if(!tb) return;
+    var btns = tb.querySelectorAll('.admin-table-actions button');
+    for (var i=0;i<btns.length;i++){ btns[i].__superPatchBound = 1; btns[i].__stfBound = 1; }
+  }
+  function bindRosterDelegation(){
+    var tb = rosterTbody(); if(!tb || tb.__stfDelegated) return;
+    tb.__stfDelegated = true;
+    tb.addEventListener('click', function(e){
+      var btn = e.target && e.target.closest ? e.target.closest('.admin-table-actions button') : null;
+      if (!btn || !tb.contains(btn)) return;
+      // 修复：行按钮 title（编辑/查看/考勤录入/排班）会被 app.js 全局委托劫持再开一套通用弹窗，
+      // 我们这层保存关闭后 overlay 残留导致页面假死 → 在 tbody 层截断冒泡，app.js 的 document 委托收不到
+      e.stopPropagation();
+      e.preventDefault();
+      var tr = btn.closest('tr'); if (!tr) return;
+      var gh = cellText(tr,1), name = cellText(tr,2);
+      var acts = tr.querySelectorAll('.admin-table-actions button');
+      var idx = -1; for (var i=0;i<acts.length;i++){ if (acts[i] === btn){ idx = i; break; } }
+      if (idx === 0){ openStaffEditModal(gh, true); }                    // 👁 查看详情
+      else if (idx === 1){ openStaffEditModal(gh, false); }              // ✏️ 编辑
+      else if (idx === 2){                                               // 🕐 考勤录入 → 切到考勤管理页签
+        try {
+          var tab = document.querySelector('#staffTabs .staff-tab[data-tab="attendance"]');
+          if (tab) tab.click();
+          toast('🕐 已切换到「考勤管理」页签，可为 '+name+'（'+gh+'）录入考勤','info');
+        } catch(_t){ toast('🕐 请前往「考勤管理」页签为 '+name+'（'+gh+'）录入考勤','info'); }
+      }
+      else if (idx === 3){                                               // 📅 排班 → 排班管理页
+        if (confirm('是否跳转到「排班管理」页面为 '+name+'（'+gh+'）安排档期？')){ window.location.href = 'schedule.html'; }
+      }
+      else if (idx === 4){                                               // 🚫/✅ 停用/启用
+        var curOff = (cellText(tr,10).indexOf('停用') >= 0) || ((btn.innerText||'').indexOf('✅') >= 0);
+        var next = curOff ? 'on' : 'off';
+        if (!curOff && !confirm('确定要停用 '+name+'（'+gh+'）吗？停用后该员工将无法接单/排班。')) return;
+        syncStatus(tr, next);
+        patchUpsert(gh, { status: next });
+      }
+    });
+  }
+  function init(){ markRosterButtons(); bindRosterDelegation(); applyAllPatches(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+  setTimeout(init, 600); // 兜底脚本/分页就绪后再补一轮（幂等）
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){ var m = $('staffEditModal'); if (m && m.style.display !== 'none') closeStaffEditModal(); }
+  });
+})();
+</script>
+
+<script>/* ========== 🔌 花名册真实后端接线 v20260906f：/v1/performers 列表渲染 + 新增/编辑/停启用写库（后端不可达时保留演示数据） ========== */
+(function(){
+  if (window.__STF_API_V1__) return; window.__STF_API_V1__ = true;
+  var API = window.QAXQJT_API;
+  if (!API || typeof API.get !== 'function') return;
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function toast(msg, type){
+    try { if (typeof window.__T === 'function') { window.__T(msg, type||'info'); return; } } catch(_e){}
+    try { if (typeof window.__toastH9 === 'function') { window.__toastH9(msg, type||'info'); return; } } catch(_e2){}
+    try { window.QinApp && QinApp.Utils && QinApp.Utils.toast(msg, type||'info', 3000); return; } catch(_e3){}
+    console.log(msg);
+  }
+  function tb(){
+    // 花名册 = table.roster-table 的 tbody（HeightGuard 可能剥掉 data-paginate 属性，
+    // 导致 querySelectorAll('[data-paginate]')[0] 错认成考勤 tab 的 tbody，误渲染到隐藏表）
+    var rt = document.querySelector('table.roster-table');
+    if (rt) { var b = rt.querySelector('tbody'); if (b) return b; }
+    var l = document.querySelectorAll('tbody[data-paginate="list"]');
+    for (var i = 0; i < l.length; i++) {
+      var t = l[i].closest('table');
+      if (t && (t.textContent || '').indexOf('工号') >= 0) return l[i];
+    }
+    return l && l.length ? l[0] : null;
+  }
+  var MAP = {}; window.__PF_MAP__ = MAP;
+  window.__PF_EDIT__ = null;
+
+  function maskPhone(p){ if(!p) return '—'; if(String(p).length<7) return esc(p); return esc(String(p).slice(0,3)+'****'+String(p).slice(-4)); }
+  function ageOf(b){ if(!b) return '—'; try{ var d=new Date(b); if(isNaN(d.getTime())) return '—'; var n=new Date(); var a=n.getFullYear()-d.getFullYear(); var m=n.getMonth()-d.getMonth(); if(m<0||(m===0&&n.getDate()<d.getDate())) a--; return (a>10&&a<90)?String(a):'—'; }catch(_){ return '—'; } }
+  function yearOf(d){ if(!d) return '—'; var m=String(d).match(/(19|20)\d{2}/); return m?m[0]:'—'; }
+  function isOn(p){ return p.status!=='inactive' && p.status!=='disabled' && p.status!=='off' && p.status!=='离职'; }
+  function deptHtml(emp){
+    if(!emp) return '—';
+    var cls = /乐队/.test(emp) ? 'music' : (/舞美/.test(emp) ? 'stage' : (/服装|道具/.test(emp) ? 'prop' : 'actor'));
+    return '<span class="dept-tag '+cls+'">'+esc(emp)+'</span>';
+  }
+  function rowHtml(p){
+    var on = isOn(p);
+    var gh = p.staffNo || ('PF'+String(p.id||'').slice(0,6));
+    return '<tr data-performer-id="'+esc(p.id)+'" data-staff-no="'+esc(gh)+'">'
+      +'<td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>'
+      +'<td><strong style="color:var(--primary);">'+esc(gh)+'</strong></td>'
+      +'<td><strong>'+esc(p.name)+'</strong></td>'
+      +'<td>'+esc(p.gender||'—')+'</td>'
+      +'<td>'+ageOf(p.birthDate)+'</td>'
+      +'<td>'+deptHtml(p.employmentType)+'</td>'
+      +'<td>'+(p.primaryRole?'<span class="role-tag">'+esc(p.primaryRole)+'</span>':'—')+'</td>'
+      +'<td>'+yearOf(p.hireDate)+'</td>'
+      +'<td>'+maskPhone(p.phone)+'</td>'
+      +'<td style="max-width:180px;">'+esc(p.remark||'—')+'</td>'
+      +'<td><span class="status-badge '+(on?'on':'off')+'">'+(on?'● 在岗':'○ 停用')+'</span></td>'
+      +'<td style="color:var(--primary);font-weight:700;">—</td>'
+      +'<td><div class="admin-table-actions">'
+      +'<button class="btn btn-secondary btn-sm" title="查看详情">👁</button>'
+      +'<button class="btn btn-primary btn-sm" title="编辑">✏️</button>'
+      +'<button class="btn btn-gold btn-sm" title="考勤录入">🕐</button>'
+      +'<button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;" title="排班">📅</button>'
+      +'<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" title="'+(on?'禁用':'启用')+'">'+(on?'🚫':'✅')+'</button>'
+      +'</div></td></tr>';
+  }
+  function render(rows){
+    var t = tb(); if(!t) return;
+    var list = rows || [];
+    t.innerHTML = list.length
+      ? list.map(rowHtml).join('')
+      : '<tr><td colspan="20" style="text-align:center;padding:36px 20px;color:var(--text-light,#999);font-size:0.92rem;">暂无演职人员数据，点击右上角「➕ 新增人员」录入真实花名册</td></tr>';
+    t.querySelectorAll('button').forEach(function(b){ b.__superPatchBound=1; b.__stfBound=1; });
+    try { if(!t.getAttribute('data-paginate')) t.setAttribute('data-paginate','list'); if(!t.getAttribute('data-page-size')) t.setAttribute('data-page-size','10'); }catch(_){}
+    try { window.QinPagination && QinPagination.refresh && QinPagination.refresh(); }catch(_){}
+  }
+  function load(){
+    return API.get('/v1/performers', { query:{page:1,pageSize:500}, showErrorToast:false, timeoutMs:8000, fallbackRead:function(){return null;} })
+      .then(function(res){
+        var rows = Array.isArray(res) ? res : (res && res.items) || [];
+        MAP = {}; window.__PF_MAP__ = MAP;
+        rows.forEach(function(p){ if(p.staffNo) MAP[p.staffNo]=p; });
+        window.__PF_ROWS__ = rows;
+        render(rows);
+        bindToggle();
+        console.info('[staffApi] 已渲染真实演职人员 '+rows.length+' 条');
+      });
+  }
+
+  /* ---- 编辑弹窗：包装原函数，记录 API 上下文并回填完整手机号 ---- */
+  var _origOpen = window.openStaffEditModal;
+  window.openStaffEditModal = function(gh, readonly){
+    window.__PF_EDIT__ = { mode:'edit', staffNo:String(gh), readonly:!!readonly, id:(MAP[gh]||{}).id||null };
+    if (_origOpen) _origOpen(gh, readonly);
+    try {
+      var p = MAP[gh];
+      if (p){
+        if (p.phone && $('inp_stf_phone')){ $('inp_stf_phone').value = p.phone; $('inp_stf_phone').placeholder=''; }
+        if (p.staffNo && $('inp_stf_gh')) $('inp_stf_gh').value = p.staffNo;
+      }
+    }catch(_){}
+  };
+
+  /* ---- 新增人员：接「➕ 新增人员」演示按钮 ---- */
+  function openNew(){
+    window.__PF_EDIT__ = { mode:'new' };
+    ['inp_stf_gh','inp_stf_name','inp_stf_age','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_rep'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
+    if ($('inp_stf_gender')) $('inp_stf_gender').value='男';
+    if ($('inp_stf_dept')) $('inp_stf_dept').value='演员队';
+    if ($('staffEditTitle')) $('staffEditTitle').innerText='➕ 新增演职人员';
+    if ($('staffEditSaveBtn')) $('staffEditSaveBtn').style.display='';
+    ['inp_stf_name','inp_stf_gender','inp_stf_age','inp_stf_dept','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_rep'].forEach(function(id){ var el=$(id); if(el){ el.disabled=false; el.style.background='#fff'; } });
+    if ($('inp_stf_gh')) $('inp_stf_gh').value='（保存后自动生成）';
+    if ($('staffEditModal')) $('staffEditModal').style.display='flex';
+    document.body.style.overflow='hidden';
+  }
+  window.openNewStaff = openNew;
+  document.addEventListener('click', function(e){
+    var btn = e.target && e.target.closest ? e.target.closest('.admin-page-actions button') : null;
+    if (btn && (btn.textContent||'').indexOf('新增人员')>=0){ e.preventDefault(); e.stopPropagation(); openNew(); }
+  }, true);
+
+  /* ---- 保存：新增 POST / 编辑 PATCH ---- */
+  var _origSave = window.saveStaffEdit;
+  window.saveStaffEdit = function(){
+    var ed = window.__PF_EDIT__;
+    var name = ($('inp_stf_name').value||'').trim();
+    if(!name){ toast('❌ 姓名不能为空','error'); return; }
+    var phone = ($('inp_stf_phone').value||'').trim();
+    if(phone && /[*＊]/.test(phone)) phone='';
+    if(phone && !/^1[3-9]\d{9}$/.test(phone)){ toast('❌ 手机号格式不正确（11 位中国大陆手机号）','error'); return; }
+    var age = ($('inp_stf_age').value||'').trim();
+    if(age!=='' && (parseInt(age,10)<16||parseInt(age,10)>90)){ toast('❌ 年龄需在 16~90 之间','error'); return; }
+    var year = ($('inp_stf_year').value||'').trim();
+    var body = {
+      name: name,
+      gender: $('inp_stf_gender').value || '男',
+      primaryRole: ($('inp_stf_role').value||'').trim(),
+      employmentType: $('inp_stf_dept').value || '演员队',
+      remark: ($('inp_stf_rep').value||'').trim()
+    };
+    if (phone) body.phone = phone;
+    if (age !== '') body.birthDate = (new Date().getFullYear()-parseInt(age,10))+'-01-01';
+    if (year && /^\d{4}$/.test(year)) body.hireDate = year+'-06-01';
+    var done = function(){ try{ window.closeStaffEditModal && window.closeStaffEditModal(); }catch(_){} toast('✅ 已保存：'+name,'success'); load(); };
+    var fail = function(err){ toast('❌ 保存失败：'+((err&&err.message)||'网络/服务异常'),'error'); };
+    if (ed && ed.mode==='new'){
+      var max = 0;
+      Object.keys(MAP).forEach(function(k){ var m=String(k).match(/PF(\d+)/i); if(m) max=Math.max(max,parseInt(m[1],10)); });
+      body.staffNo = 'PF'+String(max+1).padStart(3,'0');
+      API.post('/v1/performers', body, { showErrorToast:false }).then(done).catch(fail);
+    } else if (ed && ed.id){
+      API.patch('/v1/performers/'+ed.id, body, { showErrorToast:false }).then(done).catch(fail);
+    } else if (_origSave){
+      _origSave();
+    }
+  };
+
+  /* ---- 停/启用：捕获阶段接管 API 行（旧本地逻辑处理不到 API 行） ---- */
+  function bindToggle(){
+    var t = tb(); if(!t || t.__pfCapBound) return; t.__pfCapBound = true;
+    t.addEventListener('click', function(e){
+      var btn = e.target && e.target.closest ? e.target.closest('.admin-table-actions button') : null;
+      if(!btn || !t.contains(btn)) return;
+      var tr = btn.closest('tr'); if(!tr) return;
+      var acts = tr.querySelectorAll('.admin-table-actions button');
+      var idx=-1; for(var i=0;i<acts.length;i++){ if(acts[i]===btn){idx=i;break;} }
+      if(idx!==4) return;
+      var p = MAP[tr.getAttribute('data-staff-no')];
+      if(!p || !p.id) return;
+      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+      var on = isOn(p);
+      if(on && !confirm('确定要停用 '+p.name+'（'+(p.staffNo||'')+'）吗？停用后该员工将无法接单/排班。')) return;
+      API.patch('/v1/performers/'+p.id, { status: on?'inactive':'active' }, { showErrorToast:false })
+        .then(function(){ toast(on?('✕ 已停用：'+p.name):('✓ 已启用：'+p.name), on?'warning':'success'); load(); })
+        .catch(function(err){ toast('❌ 操作失败：'+((err&&err.message)||'网络/服务异常'),'error'); });
+    }, true);
+  }
+
+  function init(){ load().then(bindToggle).catch(function(){}); bindToggle(); }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(init,900); });
+  else setTimeout(init,900);
+  setTimeout(init,2200);
+})();
+</script>
 </body>
 </html>

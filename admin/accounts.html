@@ -37,11 +37,11 @@
     <meta property="og:image" content="favicon.svg">
 
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-    <script src="../js/favicon-inject.js?v=20260803" defer></script>
-    <script src="../js/wechat-fallback.js?v=20260803" defer></script>
+    <script src="../js/favicon-inject.js?v=20260902" defer></script>
+    <script src="../js/wechat-fallback.js?v=20260902" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>账号权限管理 - 秦安县秦剧团云端预约系统后台管理 | {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260906">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -593,7 +593,7 @@
               </div>
 
               <div class="table-wrapper">
-                <table>
+                <table id="accountsTable" data-export-table="1">
                   <thead>
                     <tr>
                       <th class="checkbox-cell">
@@ -611,212 +611,14 @@
                       <th style="min-width:200px;">操作</th>
                     </tr>
                   </thead>
-                  <tbody data-paginate="list" data-page-size="10">
-                    <tr>
-                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
-                      <td>1</td>
-                      <td><strong>admin</strong></td>
-                      <td>超级管理员</td>
-                      <td><span class="badge badge-danger">超级管理员</span></td>
-                      <td>13909380000</td>
-                      <td>admin@qaxqjt.com</td>
-                      <td><span class="badge badge-success">✓ 启用</span></td>
-                      <td>{year}-07-27 09:15</td>
-                      <td>2024-01-01</td>
-                      <td>
-                        <div class="action-btn-group">
-                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
-                          <button class="btn btn-gold btn-sm">🔑 重置</button>
-                          <button class="btn btn-warning btn-sm" disabled>禁用</button>
-                          <button class="btn btn-danger btn-sm" disabled>删除</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
-                      <td>2</td>
-                      <td><strong>finance01</strong></td>
-                      <td>张惠芳</td>
-                      <td><span class="badge badge-gold">财务人员</span></td>
-                      <td>13993839001</td>
-                      <td>zhanghf@qaxqjt.com</td>
-                      <td><span class="badge badge-success">✓ 启用</span></td>
-                      <td>{year}-07-26 16:42</td>
-                      <td>2024-03-15</td>
-                      <td>
-                        <div class="action-btn-group">
-                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
-                          <button class="btn btn-gold btn-sm">🔑 重置</button>
-                          <button class="btn btn-warning btn-sm">禁用</button>
-                          <button class="btn btn-danger btn-sm">删除</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
-                      <td>3</td>
-                      <td><strong>scheduler01</strong></td>
-                      <td>王建军</td>
-                      <td><span class="badge badge-info">演出调度</span></td>
-                      <td>13993839002</td>
-                      <td>wangjj@qaxqjt.com</td>
-                      <td><span class="badge badge-success">✓ 启用</span></td>
-                      <td>{year}-07-27 08:30</td>
-                      <td>2024-04-20</td>
-                      <td>
-                        <div class="action-btn-group">
-                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
-                          <button class="btn btn-gold btn-sm">🔑 重置</button>
-                          <button class="btn btn-warning btn-sm">禁用</button>
-                          <button class="btn btn-danger btn-sm">删除</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
-                      <td>4</td>
-                      <td><strong>scheduler02</strong></td>
-                      <td>李小明</td>
-                      <td><span class="badge badge-info">演出调度</span></td>
-                      <td>13993839003</td>
-                      <td>lixm@qaxqjt.com</td>
-                      <td><span class="badge badge-warning">⏸ 禁用</span></td>
-                      <td>2026-06-10 11:20</td>
-                      <td>2024-05-08</td>
-                      <td>
-                        <div class="action-btn-group">
-                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
-                          <button class="btn btn-gold btn-sm">🔑 重置</button>
-                          <button class="btn btn-success btn-sm">启用</button>
-                          <button class="btn btn-danger btn-sm">删除</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
-                      <td>5</td>
-                      <td><strong>finance02</strong></td>
-                      <td>赵婷婷</td>
-                      <td><span class="badge badge-gold">财务人员</span></td>
-                      <td>13993839004</td>
-                      <td>zhaott@qaxqjt.com</td>
-                      <td><span class="badge badge-success">✓ 启用</span></td>
-                      <td>{year}-07-25 14:05</td>
-                      <td>2024-06-12</td>
-                      <td>
-                        <div class="action-btn-group">
-                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
-                          <button class="btn btn-gold btn-sm">🔑 重置</button>
-                          <button class="btn btn-warning btn-sm">禁用</button>
-                          <button class="btn btn-danger btn-sm">删除</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
-                      <td>6</td>
-                      <td><strong>staff01</strong></td>
-                      <td>陈大伟</td>
-                      <td><span class="badge badge-info">普通员工</span></td>
-                      <td>13993839005</td>
-                      <td>chendw@qaxqjt.com</td>
-                      <td><span class="badge badge-success">✓ 启用</span></td>
-                      <td>{year}-07-26 19:30</td>
-                      <td>2024-07-01</td>
-                      <td>
-                        <div class="action-btn-group">
-                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
-                          <button class="btn btn-gold btn-sm">🔑 重置</button>
-                          <button class="btn btn-warning btn-sm">禁用</button>
-                          <button class="btn btn-danger btn-sm">删除</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
-                      <td>7</td>
-                      <td><strong>staff02</strong></td>
-                      <td>刘桂花</td>
-                      <td><span class="badge badge-info">普通员工</span></td>
-                      <td>13993839006</td>
-                      <td>liugh@qaxqjt.com</td>
-                      <td><span class="badge badge-success">✓ 启用</span></td>
-                      <td>{year}-07-24 08:10</td>
-                      <td>2024-08-18</td>
-                      <td>
-                        <div class="action-btn-group">
-                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
-                          <button class="btn btn-gold btn-sm">🔑 重置</button>
-                          <button class="btn btn-warning btn-sm">禁用</button>
-                          <button class="btn btn-danger btn-sm">删除</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
-                      <td>8</td>
-                      <td><strong>staff03</strong></td>
-                      <td>孙志强</td>
-                      <td><span class="badge badge-info">普通员工</span></td>
-                      <td>13993839007</td>
-                      <td>sunzq@qaxqjt.com</td>
-                      <td><span class="badge badge-warning">⏸ 禁用</span></td>
-                      <td>2026-05-20 15:40</td>
-                      <td>2024-09-25</td>
-                      <td>
-                        <div class="action-btn-group">
-                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
-                          <button class="btn btn-gold btn-sm">🔑 重置</button>
-                          <button class="btn btn-success btn-sm">启用</button>
-                          <button class="btn btn-danger btn-sm">删除</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
-                      <td>9</td>
-                      <td><strong>staff04</strong></td>
-                      <td>周文斌</td>
-                      <td><span class="badge badge-info">普通员工</span></td>
-                      <td>13993839008</td>
-                      <td>zhouwb@qaxqjt.com</td>
-                      <td><span class="badge badge-success">✓ 启用</span></td>
-                      <td>{year}-07-27 10:00</td>
-                      <td>2025-01-10</td>
-                      <td>
-                        <div class="action-btn-group">
-                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
-                          <button class="btn btn-gold btn-sm">🔑 重置</button>
-                          <button class="btn btn-warning btn-sm">禁用</button>
-                          <button class="btn btn-danger btn-sm">删除</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>
-                      <td>10</td>
-                      <td><strong>staff05</strong></td>
-                      <td>吴丽娟</td>
-                      <td><span class="badge badge-info">普通员工</span></td>
-                      <td>13993839009</td>
-                      <td>wulj@qaxqjt.com</td>
-                      <td><span class="badge badge-success">✓ 启用</span></td>
-                      <td>{year}-07-26 17:20</td>
-                      <td>2025-03-22</td>
-                      <td>
-                        <div class="action-btn-group">
-                          <button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>
-                          <button class="btn btn-gold btn-sm">🔑 重置</button>
-                          <button class="btn btn-warning btn-sm">禁用</button>
-                          <button class="btn btn-danger btn-sm">删除</button>
-                        </div>
-                      </td>
+                  <tbody id="accountsListTbody" data-paginate="list" data-page-size="10">
+                    <!-- v20260907k：账号列表由 __loadAccounts() 动态渲染，原硬编码演示行已删除 -->
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              <div class="pagination">
+              <div class="pagination" style="display:none;">
                 <button class="page-btn" disabled>‹ 上一页</button>
                 <button class="page-btn active">1</button>
                 <button class="page-btn">2</button>
@@ -961,43 +763,17 @@
                       <th>操作时间</th>
                     </tr>
                   </thead>
-                  <tbody data-paginate="list" data-page-size="10">
-                    <tr>
-                      <td>1</td>
-                      <td><strong>超级管理员</strong></td>
-                      <td><span class="badge badge-danger">超级管理员</span></td>
-                      <td><span class="badge badge-warning">登录</span></td>
-                      <td>管理员后台登录成功</td>
-                      <td>192.168.1.100</td>
-                      <td>{year}-07-27 09:15:32</td>
-                    </tr>
-                    <tr>
-                      <td>2</td>
-                      <td><strong>张惠芳</strong></td>
-                      <td><span class="badge badge-gold">财务人员</span></td>
-                      <td><span class="badge badge-success">修改</span></td>
-                      <td>修改订单 #QAX20260726001 收款状态为已收款</td>
-                      <td>192.168.1.105</td>
-                      <td>{year}-07-26 16:42:18</td>
-                    </tr>
-                    <tr>
-                      <td>3</td>
-                      <td><strong>王建军</strong></td>
-                      <td><span class="badge badge-info">演出调度</span></td>
-                      <td><span class="badge badge-info">新增</span></td>
-                      <td>新增演出排期：陇城镇庙会 - 《火焰驹》</td>
-                      <td>192.168.1.108</td>
-                      <td>{year}-07-26 14:30:05</td>
-                    </tr>
+                  <tbody id="auditLogTbody" data-paginate="list" data-page-size="10">
+          <!-- v20260907k：操作日志由 __loadAuditLogs() 动态渲染，原空白态保留 -->
                   </tbody>
                 </table>
               </div>
 
-              <div class="pagination">
+              <div class="pagination" style="display:none;">
                 <button class="page-btn" disabled>‹ 上一页</button>
                 <button class="page-btn active">1</button>
                 <button class="page-btn" disabled>下一页 ›</button>
-                <span class="page-info">共 3 条日志记录</span>
+                <span class="page-info">共 0 条日志记录</span>
               </div>
             </div>
           </div>
@@ -1173,11 +949,22 @@
 }
   </style>
 
-  <script src="../js/year-lite.js?v=20260803"></script>
-    <script src="../js/api-config.js?v=20260803"></script>
-  <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
-  <script src="../js/pagination.js?v=20260803"></script>
+  <script src="../js/year-lite.js?v=20260902"></script>
+    <script src="../js/api-config.js?v=20260902"></script>
+  <script src="../js/api-request.js?v=20260902"></script>
+<script src="../js/app.js?v=20260906g"></script>
+<script>/* 生产空白态守卫配置 */
+window.__ADMIN_BLANK_CFG__ = [
+  { sel: '.tab-panel[data-tab-panel="logs"] tbody', as: 'tbody', cols: 8, msg: '暂无操作日志，真实操作将自动记录' },
+  { fn: function (h) {
+      var pi = document.querySelector('.tab-panel[data-tab-panel="logs"] .page-info');
+      if (pi && pi.textContent.indexOf('暂无') < 0) pi.textContent = '共 0 条日志记录';
+  } }
+];
+</script>
+<script src="../js/admin-blank.js?v=20260906g"></script>
+
+  <script src="../js/pagination.js?v=20260902"></script>
   <script>
     (function() {
       var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
@@ -1964,7 +1751,23 @@
         __toast('✕ 批量禁用成功：' + ok + ' 个账号（' + arr.map(function(x){return x.label||x.username;}).slice(0,5).join('、') + (arr.length>5?' 等':'') + '）· 本地持久化，刷新不丢失', 'warning');
       }
       function exportUsers() {
-        __toast('⬇ 用户数据导出成功（accounts_export_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.xlsx，含 28 条账号记录）', 'success');
+        // ★ FIX 导出功能：真正调用 xlsx 导出账号表格
+        try {
+          if (window.Utils && typeof window.Utils.exportTableToXlsx === 'function') {
+            var fname = 'accounts_export_' + new Date().toISOString().slice(0,10).replace(/-/g,'');
+            window.Utils.exportTableToXlsx('#accountsTable', fname);
+          } else if (window.XLSX) {
+            var tbl = document.getElementById('accountsTable');
+            var ws = window.XLSX.utils.table_to_sheet(tbl);
+            var wb = window.XLSX.utils.book_new();
+            window.XLSX.utils.book_append_sheet(wb, ws, '账号列表');
+            window.XLSX.writeFile(wb, 'accounts_export_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.xlsx');
+          } else {
+            __toast('⚠️ xlsx 库未加载，请刷新后重试', 'error');
+          }
+        } catch (e) {
+          __toast('❌ 导出失败：' + (e && e.message ? e.message : e), 'error');
+        }
       }
       function queryLogs() {
         __toast('🔍 操作日志查询完成（符合条件：3 条记录）', 'success');
@@ -2070,6 +1873,79 @@
         // 🔧 B8 FIX：先加载 localStorage patch（修改/插入/删除行），保证按钮绑定时所有行都已存在
         try { __patchApplyOnLoad(); } catch(_pa){ console.warn('[__patchApplyOnLoad 异常]', _pa); }
         try { __bindAllActionButtons(); } catch(_ba){ console.warn('[__bindAllActionButtons 异常]', _ba); }
+        // v20260907k：从后端 /v1/accounts 加载真实账号数据
+        try { __loadAccounts(); } catch(_la){ console.warn('[__loadAccounts 异常]', _la); }
+        try { __loadAuditLogs(); } catch(_al){ console.warn('[__loadAuditLogs 异常]', _al); }
+      }
+      // v20260907k：账号管理 API 对接
+      async function __loadAccounts() {
+        var tbody = document.getElementById('accountsListTbody');
+        if (!tbody) return;
+        try {
+          var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+          if (!QinFetch || typeof QinFetch.request !== 'function') {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-light);">⚠️ API 未就绪，无法加载账号列表</td></tr>';
+            return;
+          }
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-light);">⏳ 正在加载账号列表...</td></tr>';
+          var resp = await QinFetch.request('GET', '/v1/accounts', { query: { pageSize: 50 } });
+          var rows = (resp && resp.data) ? resp.data : [];
+          if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无账号数据</td></tr>';
+            return;
+          }
+          function _hx(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+          function _statusBadge(s) {
+            var map = { active: '<span class="badge badge-success">启用</span>', disabled: '<span class="badge badge-secondary">禁用</span>', locked: '<span class="badge badge-danger">锁定</span>' };
+            return map[s] || '<span class="badge badge-info">' + _hx(s || '未知') + '</span>';
+          }
+          var html = '';
+          rows.forEach(function(r, i) {
+            html += '<tr data-id="' + _hx(r.id) + '">';
+            html += '<td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>';
+            html += '<td>' + (i+1) + '</td>';
+            html += '<td><strong>' + _hx(r.username) + '</strong></td>';
+            html += '<td>' + _hx(r.displayName || r.realName || '') + '</td>';
+            html += '<td><span class="badge badge-primary">' + _hx(r.role || r.roleName || '') + '</span></td>';
+            html += '<td>' + _hx(r.phone || '') + '</td>';
+            html += '<td>' + _hx(r.email || '') + '</td>';
+            html += '<td>' + _statusBadge(r.status) + '</td>';
+            html += '<td>' + _hx(r.createdAt ? String(r.createdAt).substring(0,10) : '') + '</td>';
+            html += '<td><div class="admin-table-actions">';
+            html += '<button class="btn btn-secondary btn-sm" data-act="view" data-id="' + _hx(r.id) + '">👁</button>';
+            html += '<button class="btn btn-primary btn-sm" data-act="edit" data-id="' + _hx(r.id) + '">✏️</button>';
+            html += '<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" data-act="del" data-id="' + _hx(r.id) + '">🗑️</button>';
+            html += '</div></td>';
+            html += '</tr>';
+          });
+          tbody.innerHTML = html;
+          if (window.QinPagination) try { QinPagination.scan(); } catch (_) {}
+          // 重新绑定按钮
+          try { __bindAllActionButtons(); } catch(_){}
+        } catch (err) {
+          console.warn('[__loadAccounts] err:', err);
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-light);">⚠️ 加载失败：' + (err && err.message ? err.message : '网络错误') + '</td></tr>';
+        }
+      }
+      async function __loadAuditLogs() {
+        var tbody = document.getElementById('auditLogTbody');
+        if (!tbody) return;
+        try {
+          var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+          if (!QinFetch || typeof QinFetch.request !== 'function') return;
+          var resp = await QinFetch.request('GET', '/v1/audit-logs', { query: { pageSize: 20 } });
+          var rows = (resp && resp.data) ? resp.data : [];
+          if (rows.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无操作日志</td></tr>'; return; }
+          function _hx(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+          var html = '';
+          rows.forEach(function(r) {
+            html += '<tr><td>' + _hx(r.id) + '</td><td>' + _hx(r.username || r.user) + '</td><td>' + _hx(r.action) + '</td><td>' + _hx(r.targetType || '') + '</td><td>' + _hx(r.ip || '') + '</td><td>' + _hx(r.createdAt ? String(r.createdAt).substring(0,19).replace('T',' ') : '') + '</td></tr>';
+          });
+          tbody.innerHTML = html;
+        } catch (err) {
+          console.warn('[__loadAuditLogs] err:', err);
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light);">⚠️ 加载失败：' + (err && err.message ? err.message : '网络错误') + '</td></tr>';
+        }
       }
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', __onAccountsDomReady);
@@ -2314,12 +2190,18 @@ var __pT0=0;
       var btn = (t.tagName||'').toLowerCase() === 'button' ? t :
                 (t.closest ? t.closest('button, a, [role="button"], .btn, .btn-action, .btn-sm, .action-link, [data-action]') : null);
       if(!btn) return;
+      // 修复：模态框内的按钮跳过 DBF 兜底，让事件传播到模态框真实 handler（保存/取消/关闭）
+      try{
+        if(btn.closest && (btn.closest('.modal-mask, .generic-modal-root, .modal-overlay-root, [role="dialog"]') || btn.closest('[id$="Modal"], [id$="modal"]'))) return;
+        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
+      }catch(_mskip){}
       // 跳过已有 onclick / 正常href跳转 / 已在脚本中手动绑定过（__bindDone=1 或 __ctE2Done=1）的按钮
       // 注意：data-action仅作为标识，不代表已绑定事件；父元素检查仅对onclick生效
       try{
   function __btnHasBound(btn){
     if(!btn) return false;
     if(btn.__superPatchBound) return true;
+    if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 DBF 兜底拦截（曾导致行按钮第一次点击被吞）
     var oc = btn.getAttribute && btn.getAttribute('onclick');
     var hr = btn.getAttribute && btn.getAttribute('href');
     if(oc && oc.length > 3) return true;
@@ -2765,6 +2647,11 @@ function __pLog(module,event,extra){
           if(txt===closeTexts[i]||(txt.length<=12&&txt.indexOf(closeTexts[i])>=0)){ isClose=true; break; }
         }
         if(!isClose) return;
+        // 修复：已有真实绑定（inline onclick attribute / JS property）的关闭按钮直接放行，交给原 handler 干净地关弹窗
+        try{
+          var cb = el.closest ? el.closest('button, a, [role="button"]') : null;
+          if (cb && (typeof cb.onclick === 'function' || ((cb.getAttribute && cb.getAttribute('onclick')) || '').length > 3)) return;
+        }catch(_c3s){}
         e.preventDefault();
         e.stopPropagation();
         var handled=false;
@@ -2938,6 +2825,9 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
+        // 修复：pagination.js 已提供真分页（含真实翻页逻辑）时，本补丁的假分页工具栏绝不注入——
+        // 曾把 .pagination-bar 当作待标准化容器：innerHTML='' 清空真控件后塞入只改计数器不切行的假分页 → “点页码表格不动”
+        if (window.QinPagination) return;
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -3054,6 +2944,7 @@ function __pLog(module,event,extra){
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -3070,6 +2961,8 @@ function __pLog(module,event,extra){
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
+        // 修复：分页条按钮（上一页/页码/下一页）由 pagination.js 自管且页码每次重渲染，绝不能兜底拦截（曾导致页码永远点不动）
+        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
         btn.__superPatchBound = 1;
@@ -3163,14 +3056,59 @@ function __pLog(module,event,extra){
   });
 })();
 </script>
-<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停真实弹窗（含无 id 按钮、动态重绘行 MutationObserver 补标） */
 (function(){
+  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
+  var SEL = 'button, a.btn, .btn, .btn-action, [role="button"], [data-action]';
   function __markBound(){
-    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
-    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+    try{
+      var els=document.querySelectorAll(SEL);
+      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
+    }catch(_){}
   }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
-  else { __markBound(); setTimeout(__markBound,500); }
+  function __boot(){
+    __markBound();
+    try{
+      if(window.MutationObserver){
+        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
+        mo.observe(document.documentElement,{childList:true,subtree:true});
+      }
+    }catch(_){}
+    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
+  else { __boot(); }
+})();</script>
+<script>/* 🔧 修复“连续编辑第二轮点不动”：行内操作按钮 & 账号弹窗按钮的点击在中间层截断冒泡，
+   防止 app.js document 级委托按 title/text（编辑/保存/删除…）再开一套通用弹窗，
+   其 overlay 残留会把页面整个挡死（表现为列表“不刷新/卡住”）。 */
+(function(){
+  if (window.__ACC_NOHIJACK_V1__) return;
+  window.__ACC_NOHIJACK_V1__ = true;
+  var MODAL_SEL = '#userModal, #resetPwdModal, #deleteModal, #rolePermModal';
+  function guard(root){
+    if (!root || root.__noHijackBound) return;
+    root.__noHijackBound = true;
+    root.addEventListener('click', function(e){
+      try {
+        var inActions = e.target.closest && e.target.closest('.action-btn-group');
+        var inModal   = e.target.closest && e.target.closest(MODAL_SEL);
+        if (inActions || inModal) e.stopPropagation(); // 阻断外泄到 app.js 全局委托，不影响本页 onclick 正常执行
+      } catch(_e){}
+    }, false);
+  }
+  function init(){
+    try {
+      document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] tbody').forEach(guard);
+      document.querySelectorAll(MODAL_SEL).forEach(guard);
+    } catch(_i){}
+  }
+  if (document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', init); }
+  else { init(); }
+  setTimeout(init, 600); // 分页/脚本就绪后兜底补一轮（幂等）
+  try { // 分页重渲染替换 tbody 后自动补绑
+    new MutationObserver(function(){ init(); }).observe(document.body, { childList: true, subtree: true });
+  } catch(_mo){}
 })();</script>
 </body>
 

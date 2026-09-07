@@ -41,7 +41,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>财务收支台账管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260906">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -781,7 +781,7 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
             <button class="btn btn-gold">
               📊 月度对账
             </button>
-            <button class="btn btn-secondary">
+            <button class="btn btn-secondary" onclick="__exportFinanceExcel()">
               📥 导出Excel
             </button>
             <button class="btn btn-gold" style="background:linear-gradient(135deg,#b8860b,#8b6914);color:#fff;border-color:#8b6914;">
@@ -803,8 +803,8 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
               <span class="fsc-trend up">↑ 15.2%</span>
             </div>
             <div class="fsc-title">{year}年度总收入</div>
-            <div class="fsc-value">¥1,568,400</div>
-            <div class="fsc-sub">同比去年 <strong>+¥206,800</strong> · 目标完成率 92.3%</div>
+            <div class="fsc-value">¥0</div>
+            <div class="fsc-sub">同比去年 <strong>—</strong> · 暂无数据</div>
           </div>
           <div class="finance-stat-card expense">
             <div class="fsc-header">
@@ -812,8 +812,8 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
               <span class="fsc-trend up">↑ 8.7%</span>
             </div>
             <div class="fsc-title">{year}年度总支出</div>
-            <div class="fsc-value">¥986,500</div>
-            <div class="fsc-sub">同比去年 <strong>+¥79,100</strong> · 成本控制达标</div>
+            <div class="fsc-value">¥0</div>
+            <div class="fsc-sub">同比去年 <strong>—</strong> · 暂无数据</div>
           </div>
           <div class="finance-stat-card month-income">
             <div class="fsc-header">
@@ -821,8 +821,8 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
               <span class="fsc-trend up">↑ 18.6%</span>
             </div>
             <div class="fsc-title">当月营收</div>
-            <div class="fsc-value">¥156,800</div>
-            <div class="fsc-sub">较上月 <strong>+¥24,500</strong> · 12笔收入</div>
+            <div class="fsc-value">¥0</div>
+            <div class="fsc-sub">较上月 <strong>—</strong> · 0笔收入</div>
           </div>
           <div class="finance-stat-card month-expense">
             <div class="fsc-header">
@@ -830,8 +830,8 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
               <span class="fsc-trend flat">— 2.1%</span>
             </div>
             <div class="fsc-title">当月支出</div>
-            <div class="fsc-value">¥89,300</div>
-            <div class="fsc-sub">较上月 <strong>+¥1,800</strong> · 28笔支出</div>
+            <div class="fsc-value">¥0</div>
+            <div class="fsc-sub">较上月 <strong>—</strong> · 0笔支出</div>
           </div>
           <div class="finance-stat-card profit">
             <div class="fsc-header">
@@ -839,8 +839,8 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
               <span class="fsc-trend up">↑ 42.5%</span>
             </div>
             <div class="fsc-title">当月净利润</div>
-            <div class="fsc-value">¥67,500</div>
-            <div class="fsc-sub">利润率 <strong>43.0%</strong> · 超月度目标12%</div>
+            <div class="fsc-value">¥0</div>
+            <div class="fsc-sub">利润率 <strong>—</strong> · 暂无数据</div>
           </div>
           <div class="finance-stat-card pending">
             <div class="fsc-header">
@@ -848,8 +848,8 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
               <span class="fsc-trend down">↓ 2笔</span>
             </div>
             <div class="fsc-title">待收账款</div>
-            <div class="fsc-value">¥48,600 <span style="font-size:0.95rem;color:var(--text-light);">(5笔)</span></div>
-            <div class="fsc-sub">逾期 <strong style="color:var(--primary);">¥12,000</strong> · 最长32天</div>
+            <div class="fsc-value">¥0 <span style="font-size:0.95rem;color:var(--text-light);">(0笔)</span></div>
+            <div class="fsc-sub">逾期 <strong style="color:var(--text-light);">¥0</strong> · 暂无逾期</div>
           </div>
         </div>
 
@@ -1829,7 +1829,7 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
+<script src="../js/app.js?v=20260906g"></script>
   <script src="../js/pagination.js?v=20260803"></script>
   <script>
     (function() {
@@ -2711,6 +2711,9 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
+        // 修复（v20260906d）：pagination.js 已提供真分页（含真实翻页逻辑）时，本补丁的假分页工具栏绝不注入——
+        // 曾把 .pagination-bar 当作待标准化容器：innerHTML='' 清空真控件后塞入只改计数器不切行的假分页 → "点页码表格不动"
+        if (window.QinPagination) return;
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -2834,6 +2837,7 @@ try{
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -2850,6 +2854,8 @@ try{
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
+        // 修复（v20260906d）：分页条按钮（上一页/页码/下一页）由 pagination.js 自管且页码每次重渲染，绝不能兜底拦截（曾导致页码永远点不动）
+        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
         btn.__superPatchBound = 1;
@@ -2969,16 +2975,475 @@ try{
       window.__closeAnyModal();
     }
   });
+
+  /* 导出 Excel/CSV（v20260907k）：替代 DBF/SuperPatch 演示 toast 的矛盾提示 */
+  window.__exportFinanceExcel = function(){
+    try{
+      var rows = document.querySelectorAll('.finance-table tbody tr, table tbody tr');
+      var dataRows = Array.prototype.filter.call(rows, function(r){
+        return !r.classList.contains('admin-blank-row') && r.cells.length > 1;
+      });
+      if(!dataRows.length){
+        if(window.__T) __T('⚠️ 当前暂无可导出的流水数据','warning');
+        else alert('当前暂无可导出的流水数据');
+        return;
+      }
+      var csv = '\uFEFF序号,日期,类型,摘要,金额(元),经办人\n';
+      dataRows.forEach(function(r, i){
+        var cells = Array.prototype.map.call(r.cells, function(c){ return (c.textContent||'').replace(/[\n\r,]/g,' ').trim(); });
+        csv += (i+1) + ',' + cells.slice(0,5).join(',') + '\n';
+      });
+      var blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = '财务流水_' + new Date().toISOString().slice(0,10) + '.csv';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+      if(window.__T) __T('📤 已导出 ' + dataRows.length + ' 条流水记录（CSV）','success');
+    }catch(ex){
+      if(window.__T) __T('❌ 导出失败：' + (ex.message||ex),'error');
+      else alert('导出失败：' + (ex.message||ex));
+    }
+  };
 })();
 </script>
-<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停真实弹窗（含无 id 按钮、动态重绘行 MutationObserver 补标） */
 (function(){
+  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
+  var SEL = 'button, a.btn, .btn, .btn-action, [role="button"], [data-action]';
   function __markBound(){
-    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
-    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+    try{
+      var els=document.querySelectorAll(SEL);
+      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
+    }catch(_){}
   }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
-  else { __markBound(); setTimeout(__markBound,500); }
+  function __boot(){
+    __markBound();
+    try{
+      if(window.MutationObserver){
+        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
+        mo.observe(document.documentElement,{childList:true,subtree:true});
+      }
+    }catch(_){}
+    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
+  else { __boot(); }
+})();</script>
+<script>/* ========== 🔌 财务台账真实后端接线 v20260906d：/v1/fin/ledger 列表+新增/编辑/删除+汇总卡片+搜索分页修复（后端不可达时保留演示数据） ========== */
+(function(){
+  if(window.__QAX_FIN_WIRE__) return;
+  window.__QAX_FIN_WIRE__ = true;
+
+  var API = window.QAXQJT_API;
+  var rowsMap = {}; // id -> row
+
+  function _toast(msg, type) {
+    try {
+      if (window.QinApp && QinApp.Utils && QinApp.Utils.toast) { QinApp.Utils.toast(msg, type || 'info', 3000); return; }
+    } catch (_e) {}
+    if (typeof window.showToast === 'function') { try { window.showToast(msg, type || 'info'); return; } catch (_f) {} }
+    try { console.info('[toast]', type, msg); } catch (_g) {}
+  }
+  function _money(n) { return '¥' + Number(n || 0).toLocaleString('zh-CN'); }
+  function _pad(n) { return String(n).padStart(2, '0'); }
+  function _fmtD(v) { try { var d = new Date(v); return isNaN(d) ? '—' : d.getFullYear() + '-' + _pad(d.getMonth() + 1) + '-' + _pad(d.getDate()); } catch (_e) { return '—'; } }
+  var STATUS_MAP = {
+    draft: ['草稿', 'badge'],
+    checked: ['已复核', 'badge badge-info'],
+    paid: ['已到账', 'badge badge-success'],
+    reconciled: ['已对账', 'badge badge-success'],
+    written_off: ['已核销', 'badge badge-info']
+  };
+  var TYPE_MAP = { receipt: 'receipt', payment: 'expense', transfer: 'receipt', adjustment: 'expense' };
+
+  /* ====== 台账 tbody 定位（v20260906d）：固定锁定 #tab-流水 内、表头含「凭证号」的 tbody。
+     根因：app.js HeightGuard 的 __purgeEmptyPaginate（加载后 0s/2.4s/7.5s 三轮）会对
+     「行数≤1 的 tbody[data-paginate]」移除 data-paginate 属性 —— 筛选 0 条时台账 tbody 为空，
+     属性被移除后，全页 querySelectorAll('tbody[data-paginate]') 只剩隐藏的 #tab-统计 汇总表，
+     旧的全页模糊匹配会把真实台账误渲染进隐藏的统计表，表现为「重置后行全不可见、分页张冠李戴」。
+     这里改为按 tab 容器精确定位，并兜底恢复属性。 ====== */
+  function _findTbody() {
+    var scope = document.getElementById('tab-流水') || document;
+    var tb = scope.querySelector('tbody[data-paginate="list"]');
+    if (!tb) {
+      // data-paginate 可能已被 HeightGuard 移除：用表头「凭证号」从流水 tab 内找回
+      var tbs = scope.querySelectorAll('tbody');
+      for (var i = 0; i < tbs.length; i++) {
+        var table = tbs[i].closest('table');
+        if (table && (table.textContent || '').indexOf('凭证号') >= 0) { tb = tbs[i]; break; }
+      }
+    }
+    if (tb) {
+      // 恢复被 HeightGuard 移除的分页标记，保证分页状态/后续识别始终一致
+      try {
+        if (!tb.getAttribute('data-paginate')) tb.setAttribute('data-paginate', 'list');
+        if (!tb.getAttribute('data-page-size')) tb.setAttribute('data-page-size', '10');
+      } catch (_e) {}
+    }
+    return tb;
+  }
+
+  function _rowHtml(l) {
+    var isIncome = Number(l.creditAmount || 0) > 0;
+    var amt = isIncome ? Number(l.creditAmount) : Number(l.debitAmount || 0);
+    var typeCls = isIncome ? 'income' : 'expense';
+    var st = STATUS_MAP[l.status] || [l.status || '—', 'badge'];
+    return (
+      '<tr data-ledger-id="' + l.id + '">' +
+      '<td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>' +
+      '<td class="stat-voucher-id"><strong style="color:var(--primary);">' + (l.voucherNo || '—') + '</strong></td>' +
+      '<td>' + _fmtD(l.voucherDate) + '</td>' +
+      '<td>' + (l.summary || '—') + '</td>' +
+      '<td><span class="type-badge ' + typeCls + '">' + (isIncome ? '● 收入' : '● 支出') + '</span></td>' +
+      '<td>' + (l.voucherCategory || '其他') + '</td>' +
+      '<td>' + (l.orderId ? '<a href="#" style="color:var(--primary);font-family:monospace;">' + l.orderId + '</a>' : '—') + '</td>' +
+      '<td class="' + (isIncome ? 'amount-income' : 'amount-expense') + '">' + (isIncome ? '+' : '-') + _money(amt) + '</td>' +
+      '<td>' + (l.offsetAccount || '—') + '</td>' +
+      '<td><span class="' + st[1] + '">' + st[0] + '</span></td>' +
+      '<td>' + (l.makerAccountId || '—') + '</td>' +
+      '<td>' +
+        '<div class="admin-table-actions">' +
+          '<button class="btn btn-secondary btn-sm fin-view-btn">👁 查看</button>' +
+          '<button class="btn btn-primary btn-sm fin-edit-btn">✏️ 编辑</button>' +
+          '<button class="btn btn-outline-dark btn-sm fin-del-btn">🗑 删除</button>' +
+        '</div>' +
+      '</td>' +
+      '</tr>'
+    );
+  }
+
+  function _render(rows) {
+    var tbody = _findTbody();
+    if (!tbody) return;
+    rowsMap = {};
+    (rows || []).forEach(function (l) { rowsMap[l.id] = l; });
+    tbody.innerHTML = rows.map(_rowHtml).join('');
+    tbody.querySelectorAll('button, a, input').forEach(function (el) { el.__superPatchBound = 1; });
+    try { window.QinPagination && QinPagination.refresh && QinPagination.refresh(); } catch (_e) {}
+    _showRealPaginationBar();
+    console.info('[finWire] 已渲染真实台账 ' + rows.length + ' 条');
+  }
+
+  /* ====== 分页条显隐修复（v20260906d）：旧版 CSS「空卡片修复20260825」用 display:none!important
+     隐藏了全部 .pagination-bar，导致 QinPagination 为真实台账表生成的分页条也被误隐藏；
+     同时静态假分页（共 68 条 / 4 页）按钮无功能，需一并隐藏。 ====== */
+  function _finState() {
+    try {
+      var tb = _findTbody();
+      var list = (window.QinPagination && QinPagination._raw && QinPagination._raw._instances) || [];
+      for (var i = 0; i < list.length; i++) {
+        var st = list[i];
+        if (st && (st.host === tb || st.container === tb)) return st;
+      }
+    } catch (_e) {}
+    return null;
+  }
+  function _hideFakePagination() {
+    try {
+      var scope = document.getElementById('tab-流水');
+      if (!scope) return;
+      // 静态假分页：div.pagination（内含 .page-btn + .page-info「共 68 条 / 4 页」），注意不命中 .pagination-bar
+      scope.querySelectorAll('div.pagination').forEach(function (d) {
+        if (d.querySelector('.page-btn, .page-info') && !d.classList.contains('pagination-bar')) {
+          d.style.setProperty('display', 'none', 'important');
+        }
+      });
+    } catch (_e) {}
+  }
+  function _showRealPaginationBar() {
+    try {
+      _hideFakePagination();
+      var st = _finState();
+      if (!st || !st.bar) return;
+      var bar = st.bar;
+      bar.style.setProperty('display', 'block', 'important');
+      bar.style.setProperty('max-height', 'none', 'important');
+      bar.style.setProperty('overflow', 'visible', 'important');
+      bar.style.setProperty('margin', '30px 0 0 0', 'important');
+      bar.style.setProperty('padding', '18px 22px', 'important');
+      bar.style.setProperty('position', 'static', 'important');
+    } catch (_e) {}
+  }
+  // 分页实例由 pagination.js 在 DOMContentLoaded 时创建，此处轮询兜底（演示数据/后端不可达也显示真分页）
+  function _ensurePaginationUI() {
+    var tries = 0;
+    (function tick() {
+      _showRealPaginationBar();
+      if (_finState()) return;
+      tries++;
+      if (tries < 40) setTimeout(tick, 250);
+    })();
+  }
+
+  /* ====== 本地筛选栏真实接线（v20260906d）：关键词/收支类型/账目分类/日期区间 → 客户端过滤已加载真实台账，
+     过滤结果交给 QinPagination 分页（重置回到第 1 页）。后端不可达/无真实数据时不接管演示筛选栏。 ====== */
+  var _allRows = [];
+  function _bindFilterBar() {
+    try {
+      var scope = document.getElementById('tab-流水');
+      var bar = scope ? scope.querySelector('.admin-filter-bar') : null;
+      if (!bar || bar.__finFilterBound) return true;
+      var inp = bar.querySelector('input[placeholder*="凭证号"]');
+      var sels = bar.querySelectorAll('select');
+      var dates = bar.querySelectorAll('input[type="date"]');
+      if (!inp || sels.length < 2) return false;
+      var typeSel = sels[0], catSel = sels[1];   // 收支类型 / 账目分类
+      var fromD = dates[0] || null, toD = dates[1] || null;
+      if (fromD) fromD.value = '';
+      if (toD) toD.value = '';
+      var btnQuery = null, btnReset = null;
+      bar.querySelectorAll('button').forEach(function (b) {
+        var t = b.textContent || '';
+        if (t.indexOf('查询') >= 0 && !btnQuery) btnQuery = b;
+        else if (t.indexOf('重置') >= 0) btnReset = b;
+        b.__superPatchBound = 1; // 防 SuperPatch 6/6 兜底劫持
+      });
+
+      function apply() {
+        if (!_allRows.length) { _toast('后端暂无真实台账数据', 'info'); return; }
+        var kw = (inp.value || '').trim().toLowerCase();
+        var typeIdx = typeSel ? typeSel.selectedIndex : 0;   // 1=收入 2=支出
+        var catTxt = catSel && catSel.selectedIndex > 0 ? (catSel.options[catSel.selectedIndex].textContent || '').trim() : '';
+        var fv = fromD && fromD.value ? new Date(fromD.value + 'T00:00:00') : null;
+        var tv = toD && toD.value ? new Date(toD.value + 'T23:59:59') : null;
+        if (fv && isNaN(fv)) fv = null;
+        if (tv && isNaN(tv)) tv = null;
+        var rows = _allRows.filter(function (l) {
+          var isIncome = Number(l.creditAmount || 0) > 0;
+          if (typeIdx === 1 && !isIncome) return false;
+          if (typeIdx === 2 && isIncome) return false;
+          if (catTxt) {
+            var cat = String(l.voucherCategory || '');
+            if (cat.indexOf(catTxt) < 0 && catTxt.indexOf(cat) < 0) return false;
+          }
+          if (kw) {
+            var hay = [l.voucherNo, l.summary, l.orderId, l.voucherCategory, l.offsetAccount, l.makerAccountId, l.remark]
+              .join(' ').toLowerCase();
+            if (hay.indexOf(kw) < 0) return false;
+          }
+          if (fv || tv) {
+            var d = l.voucherDate ? new Date(l.voucherDate) : null;
+            if (d && !isNaN(d)) {
+              if (fv && d < fv) return false;
+              if (tv && d > tv) return false;
+            }
+          }
+          return true;
+        });
+        var pg = _finState();
+        if (pg) { pg.currentPage = 1; if (pg.searchKeyword) pg.searchKeyword = ''; }
+        _render(rows);
+        _toast('筛选完成，共 ' + rows.length + ' 条台账', 'info');
+      }
+      function reset() {
+        inp.value = '';
+        if (typeSel) typeSel.selectedIndex = 0;
+        if (catSel) catSel.selectedIndex = 0;
+        if (fromD) fromD.value = '';
+        if (toD) toD.value = '';
+        var pg = _finState();
+        if (pg) { pg.currentPage = 1; pg.searchKeyword = ''; }
+        _render(_allRows);
+      }
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); apply(); } });
+      if (btnQuery) btnQuery.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); apply(); });
+      if (btnReset) btnReset.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); reset(); });
+      bar.__finFilterBound = 1;
+      console.info('[finWire] 本地筛选栏已绑定（关键词/收支类型/分类/日期）');
+      return true;
+    } catch (_e) { return false; }
+  }
+  function _applyFilters() {
+    if (!_allRows.length) { _render(_allRows); return; }
+    var scope = document.getElementById('tab-流水');
+    var bar = scope ? scope.querySelector('.admin-filter-bar') : null;
+    if (!bar || !bar.__finFilterBound) { _render(_allRows); return; }
+    var btnQuery = null;
+    bar.querySelectorAll('button').forEach(function (b) { if (!btnQuery && (b.textContent || '').indexOf('查询') >= 0) btnQuery = b; });
+    if (btnQuery) btnQuery.click(); else _render(_allRows);
+  }
+
+  function _load(silent) {
+    if (!API || typeof API.get !== 'function') return;
+    API.get('/v1/fin/ledger', {
+      query: { page: 1, pageSize: 200 },
+      showErrorToast: false,
+      timeoutMs: 8000,
+      fallbackRead: function () { return null; }
+    }).then(function (res) {
+      var rows = Array.isArray(res) ? res : (res && res.items) || [];
+      // 生产模式：后端可达即以服务端为唯一数据源（含 0 条），清空静态演示行，显示空状态
+      _allRows = Array.isArray(rows) ? rows : [];
+      _bindFilterBar();
+      _render(_allRows);
+    }).catch(function () { /* 后端不可达：保留演示数据 */ });
+  }
+
+  /* ---- 汇总卡片：近 12 月汇总 ---- */
+  function _loadSummary() {
+    if (!API || typeof API.get !== 'function') return;
+    API.get('/v1/fin/summary', {
+      query: { months: 12 },
+      showErrorToast: false,
+      timeoutMs: 8000,
+      fallbackRead: function () { return null; }
+    }).then(function (rows) {
+      if (!Array.isArray(rows) || !rows.length) return;
+      var cards = document.querySelectorAll('.finance-stat-card');
+      var sum = function (k) { return rows.reduce(function (s, r) { return s + Number(r[k] || 0); }, 0); };
+      var last = rows[rows.length - 1];
+      var vals = [
+        sum('totalIncome'), sum('totalExpense'),
+        Number(last.totalIncome || 0), Number(last.totalExpense || 0),
+        sum('totalIncome') - sum('totalExpense')
+      ];
+      for (var i = 0; i < cards.length && i < vals.length; i++) {
+        var v = cards[i].querySelector('.fsc-value');
+        if (v) v.textContent = _money(vals[i]);
+      }
+      console.info('[finWire] 汇总卡片已更新（近12月）');
+    }).catch(function () {});
+  }
+
+  /* ---- 新增（收入/支出）：轻量 prompt 流程 ---- */
+  function _quickCreate(kind) {
+    var summary = window.prompt(kind === 'income' ? '【新增收入】请输入摘要：' : '【新增支出】请输入摘要：');
+    if (summary === null) return;
+    summary = (summary || '').trim();
+    if (!summary) { _toast('⚠️ 摘要不能为空', 'error'); return; }
+    var amtStr = window.prompt('请输入金额（元，纯数字）：');
+    if (amtStr === null) return;
+    var amt = Number(amtStr);
+    if (!(amt > 0)) { _toast('⚠️ 金额必须大于 0', 'error'); return; }
+    var body = { summary: summary, voucherCategory: kind === 'income' ? '演出收入' : '其他', status: 'paid' };
+    if (kind === 'income') body.creditAmount = amt; else body.debitAmount = amt;
+    API.post('/v1/fin/ledger', body, { showErrorToast: false })
+      .then(function () { _toast('✅ 台账已创建', 'success'); _load(true); _loadSummary(); })
+      .catch(function (err) { _toast('❌ 创建失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
+  }
+
+  var _locks = {};
+  function _lock(key, ms) {
+    if (_locks[key]) return false;
+    _locks[key] = true;
+    setTimeout(function () { delete _locks[key]; }, ms || 1200);
+    return true;
+  }
+
+  document.addEventListener('click', function (e) {
+    /* 顶部按钮 */
+    var t = e.target.closest ? e.target.closest('.admin-page-actions .btn') : null;
+    if (t) {
+      var txt = (t.textContent || '').trim();
+      if (txt.indexOf('新增收入') >= 0) { e.preventDefault(); e.stopPropagation(); _quickCreate('income'); return; }
+      if (txt.indexOf('新增支出') >= 0) { e.preventDefault(); e.stopPropagation(); _quickCreate('expense'); return; }
+    }
+    /* 行按钮 */
+    var btn = e.target.closest ? e.target.closest('.fin-view-btn, .fin-edit-btn, .fin-del-btn') : null;
+    if (!btn) return;
+    var tr = btn.closest ? btn.closest('tr[data-ledger-id]') : null;
+    if (!tr) return;
+    var l = rowsMap[tr.getAttribute('data-ledger-id')];
+    if (!l) return;
+
+    if (btn.classList.contains('fin-view-btn')) {
+      e.preventDefault(); e.stopPropagation();
+      var isIncome = Number(l.creditAmount || 0) > 0;
+      window.alert(
+        '凭证号：' + (l.voucherNo || '—') + '\n日期：' + _fmtD(l.voucherDate) +
+        '\n摘要：' + (l.summary || '—') + '\n类型：' + (isIncome ? '收入' : '支出') +
+        '\n分类：' + (l.voucherCategory || '其他') + '\n金额：' + _money(isIncome ? l.creditAmount : l.debitAmount) +
+        '\n支付方式：' + (l.offsetAccount || '—') + '\n状态：' + ((STATUS_MAP[l.status] || [l.status])[0] || '—')
+      );
+      return;
+    }
+    if (btn.classList.contains('fin-edit-btn')) {
+      e.preventDefault(); e.stopPropagation();
+      var ns = window.prompt('修改摘要（原：' + (l.summary || '—') + '）：', l.summary || '');
+      if (ns === null) return;
+      ns = ns.trim();
+      if (!ns) { _toast('⚠️ 摘要不能为空', 'error'); return; }
+      var patch = { summary: ns };
+      var na = window.prompt('修改金额（元，留空跳过）：');
+      if (na !== null && na.trim() !== '') {
+        var nv = Number(na);
+        if (!(nv > 0)) { _toast('⚠️ 金额必须大于 0', 'error'); return; }
+        if (Number(l.creditAmount || 0) > 0) patch.creditAmount = nv; else patch.debitAmount = nv;
+      }
+      if (!_lock('fin_' + l.id)) return;
+      API.patch('/v1/fin/ledger/' + l.id, patch, { showErrorToast: false })
+        .then(function () { _toast('✅ 凭证已更新', 'success'); _load(true); _loadSummary(); })
+        .catch(function (err) { _toast('❌ 更新失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
+      return;
+    }
+    if (btn.classList.contains('fin-del-btn')) {
+      e.preventDefault(); e.stopPropagation();
+      if (!window.confirm('确认删除凭证 ' + (l.voucherNo || l.id) + '？删除后不可恢复。')) return;
+      if (!_lock('fin_' + l.id)) return;
+      API.del('/v1/fin/ledger/' + l.id, { showErrorToast: false })
+        .then(function () { _toast('✅ 凭证已删除', 'success'); _load(true); _loadSummary(); })
+        .catch(function (err) { _toast('❌ 删除失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
+      return;
+    }
+  }, true);
+
+  /* ====== 「项目」「统计」两个 tab 为纯静态演示内容（演出项目卡片/月度收支图表均为假数据），
+     生产空白态下替换为空态提示；真实数据积累后由对应真实接线渲染。 ====== */
+  function _neutralizeDemoTabs() {
+    try {
+      var EMPTY = 'text-align:center;padding:60px 24px;color:var(--text-light,#94a3b8);font-size:0.92rem;line-height:1.9;';
+      var proj = document.getElementById('tab-项目');
+      if (proj && !proj.querySelector('.fin-empty-h9')) {
+        var badge = proj.querySelector('.admin-card-header .badge');
+        if (badge) badge.textContent = '共 0 个项目';
+        var body = proj.querySelector('.admin-card-body');
+        if (body) {
+          proj.querySelectorAll('.project-account-card').forEach(function (c) { c.remove(); });
+          body.innerHTML = '<div class="fin-empty-h9" style="' + EMPTY + '">暂无演出项目账目<br/>真实项目结算数据将随订单签约、定金/尾款登记自动生成</div>';
+        }
+      }
+      var stat = document.getElementById('tab-统计');
+      if (stat && !stat.querySelector('.fin-empty-h9')) {
+        stat.innerHTML = '<div class="admin-card"><div class="admin-card-header"><h3>📊 年度收入支出统计</h3>'
+          + '<span class="badge badge-info">暂无数据</span></div>'
+          + '<div class="admin-card-body"><div class="fin-empty-h9" style="' + EMPTY + '">暂无财务统计数据<br/>真实台账积累后，将自动生成收支对比与月度图表</div></div></div>';
+      }
+    } catch (_e) {}
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { _neutralizeDemoTabs(); _ensurePaginationUI(); _load(false); _loadSummary(); }, 300); });
+  else setTimeout(function () { _neutralizeDemoTabs(); _ensurePaginationUI(); _load(false); _loadSummary(); }, 300);
+
+  /* ====== 关联订单下拉动态填充（v20260907m）：凭证表单「关联账目」从 /v1/orders 拉取，替代硬编码旧订单号 ====== */
+  (function _fillFinanceOrderSelects() {
+    function fill(select, emptyTip) {
+      if (!select) return;
+      select.innerHTML = '<option value="">' + emptyTip + '</option>';
+      API.get('/v1/orders', { pageSize: 100, showErrorToast: false, timeoutMs: 8000 })
+        .then(function (d) {
+          var rows = (d && Array.isArray(d.data)) ? d.data : (Array.isArray(d) ? d : (d && Array.isArray(d.rows)) ? d.rows : []);
+          if (!rows.length) {
+            select.innerHTML = '<option value="">暂无订单可选（新增订单后自动出现）</option>';
+            return;
+          }
+          var html = '<option value="">' + emptyTip + '</option>';
+          rows.forEach(function (o) {
+            html += '<option value="' + (o.id || '') + '">关联订单: ' + (o.orderNo || o.id) + ' · ' + (o.customerName || '—') + '</option>';
+          });
+          select.innerHTML = html;
+        })
+        .catch(function () {
+          select.innerHTML = '<option value="">订单列表加载失败</option>';
+        });
+    }
+    var run = function () {
+      var refSel = document.querySelector('select[name="financeRef"]');
+      fill(refSel, '选择关联账目（可不选）');
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(run, 600); });
+    else setTimeout(run, 600);
+  })();
 })();</script>
 </body>
 </html>

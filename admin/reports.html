@@ -41,7 +41,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>天水市文旅演出统计报表中心 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260906">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -939,14 +939,7 @@
 .admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
   content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
 }
-/* ====== 空卡片修复20260825：隐藏多余分页栏 + 约束表格高度 ====== */
-.pagination-bar, .pagination-toolbar, [class*="pagination-bar"], [class*="pg-toolbar"] {
-  display: none !important;
-  max-height: 0 !important;
-  overflow: hidden !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
+/* ====== 20260906 修复：真分页条恢复显示（QinPagination 渲染），仅保留表格高度约束 ====== */
 .table-wrapper, .table-wrap, .table-container, .data-table-container {
   max-height: 400px !important;
   overflow-y: auto !important;
@@ -1241,7 +1234,7 @@
           </div>
           <div class="filter-divider"></div>
           <div class="filter-actions">
-            <button class="btn-action btn-action-gold" onclick="alert('Excel导出功能：请连接后端接口实现')">
+            <button class="btn-action btn-action-gold" onclick="__exportReportsExcel()">
               <span>📊</span>导出 Excel
             </button>
             <button class="btn-action btn-action-primary" onclick="window.print()">
@@ -1473,62 +1466,62 @@
                 <div class="monthly-columns">
                   <div class="monthly-col">
                     <div class="monthly-line-point" style="bottom: calc(27% + 25px);"></div>
-                    <div class="monthly-bar" style="height:36%;" title="1月：18场 / 1.2万人次"></div>
+                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
                     <div class="monthly-label">1月</div>
                   </div>
                   <div class="monthly-col">
                     <div class="monthly-line-point" style="bottom: calc(68% + 25px);"></div>
-                    <div class="monthly-bar" style="height:84%;" title="2月：42场 / 3.6万人次（春节高峰）"></div>
+                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
                     <div class="monthly-label">2月</div>
                   </div>
                   <div class="monthly-col">
                     <div class="monthly-line-point" style="bottom: calc(38% + 25px);"></div>
-                    <div class="monthly-bar" style="height:64%;" title="3月：32场 / 2.4万人次"></div>
+                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
                     <div class="monthly-label">3月</div>
                   </div>
                   <div class="monthly-col">
                     <div class="monthly-line-point" style="bottom: calc(48% + 25px);"></div>
-                    <div class="monthly-bar" style="height:76%;" title="4月：38场 / 2.8万人次（伏羲文化节前）"></div>
+                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
                     <div class="monthly-label">4月</div>
                   </div>
                   <div class="monthly-col">
                     <div class="monthly-line-point" style="bottom: calc(43% + 25px);"></div>
-                    <div class="monthly-bar" style="height:68%;" title="5月：34场 / 2.6万人次"></div>
+                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
                     <div class="monthly-label">5月</div>
                   </div>
                   <div class="monthly-col">
                     <div class="monthly-line-point" style="bottom: calc(24% + 25px);"></div>
-                    <div class="monthly-bar" style="height:52%;" title="6月：26场 / 1.8万人次"></div>
+                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
                     <div class="monthly-label">6月</div>
                   </div>
                   <div class="monthly-col">
                     <div class="monthly-line-point" style="bottom: calc(58% + 25px);"></div>
-                    <div class="monthly-bar" style="height:80%;" title="7月：40场 / 3.2万人次（暑期研学）"></div>
+                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
                     <div class="monthly-label">7月</div>
                   </div>
                   <div class="monthly-col">
                     <div class="monthly-line-point" style="bottom: calc(63% + 25px);"></div>
-                    <div class="monthly-bar" style="height:88%;" title="8月：44场 / 3.4万人次"></div>
+                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
                     <div class="monthly-label">8月</div>
                   </div>
                   <div class="monthly-col">
                     <div class="monthly-line-point" style="bottom: calc(27% + 25px);"></div>
-                    <div class="monthly-bar" style="height:56%;" title="9月：28场 / 2.0万人次"></div>
+                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
                     <div class="monthly-label">9月</div>
                   </div>
                   <div class="monthly-col">
                     <div class="monthly-line-point" style="bottom: calc(32% + 25px);"></div>
-                    <div class="monthly-bar" style="height:60%;" title="10月：30场 / 2.2万人次（国庆）"></div>
+                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
                     <div class="monthly-label">10月</div>
                   </div>
                   <div class="monthly-col">
                     <div class="monthly-line-point" style="bottom: calc(14% + 25px);"></div>
-                    <div class="monthly-bar" style="height:44%;" title="11月：22场 / 1.4万人次"></div>
+                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
                     <div class="monthly-label">11月</div>
                   </div>
                   <div class="monthly-col">
                     <div class="monthly-line-point" style="bottom: calc(32% + 25px);"></div>
-                    <div class="monthly-bar" style="height:64%;" title="12月：32场 / 2.2万人次（年末惠民）"></div>
+                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
                     <div class="monthly-label">12月</div>
                   </div>
                 </div>
@@ -1731,70 +1724,8 @@
                 <th>满意度</th>
               </tr>
             </thead>
-            <tbody data-paginate="list" data-page-size="10">
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">🏮 伏羲文化旅游节</td>
-                <td>6月</td>
-                <td class="text-primary-val">18</td>
-                <td class="text-gold-val">6.2 万</td>
-                <td>秦州区、秦安县</td>
-                <td>1860 万</td>
-                <td class="text-up">98.2%</td>
-              </tr>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">🌺 女娲祭祀文化节</td>
-                <td>4月</td>
-                <td class="text-primary-val">12</td>
-                <td class="text-gold-val">3.8 万</td>
-                <td>秦安县</td>
-                <td>980 万</td>
-                <td class="text-up">97.6%</td>
-              </tr>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">🏛️ 轩辕文化旅游节</td>
-                <td>7月</td>
-                <td class="text-primary-val">10</td>
-                <td class="text-gold-val">2.6 万</td>
-                <td>清水县</td>
-                <td>620 万</td>
-                <td class="text-up">96.8%</td>
-              </tr>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">⚔️ 三国文化旅游节</td>
-                <td>9月</td>
-                <td class="text-primary-val">8</td>
-                <td class="text-gold-val">2.1 万</td>
-                <td>甘谷县、秦州区</td>
-                <td>540 万</td>
-                <td>96.2%</td>
-              </tr>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">🎊 春节文化庙会巡演</td>
-                <td>1-2月</td>
-                <td class="text-primary-val">36</td>
-                <td class="text-gold-val">8.4 万</td>
-                <td>全市 2 区 5 县</td>
-                <td>2600 万</td>
-                <td class="text-up">98.6%</td>
-              </tr>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">🌙 乞巧文化民俗节</td>
-                <td>8月</td>
-                <td class="text-primary-val">6</td>
-                <td class="text-gold-val">1.5 万</td>
-                <td>西和县协作（陇南）</td>
-                <td>320 万</td>
-                <td>95.8%</td>
-              </tr>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">🥮 中秋国庆文旅周</td>
-                <td>10月</td>
-                <td class="text-primary-val">10</td>
-                <td class="text-gold-val">2.8 万</td>
-                <td>麦积区、秦州区</td>
-                <td>840 万</td>
-                <td class="text-up">97.2%</td>
-              </tr>
+            <tbody id="festivalsReportTbody" data-paginate="list" data-page-size="10">
+              <!-- v20260907k：节庆演出报表由 __loadFestivalsReport() 动态渲染，原硬编码演示行已删除 -->
             </tbody>
           </table>
         </div>
@@ -1810,74 +1741,10 @@
                 <th>服务学生数</th>
                 <th>演出剧目</th>
                 <th>满意度评分</th>
-            <tbody data-paginate="list" data-page-size="10">
             </thead>
-            <tbody>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">秦安县第一中学</td>
-                <td>秦安县</td>
-                <td class="text-primary-val">8</td>
-                <td class="text-gold-val">4,200 人</td>
-                <td>《周仁回府》选段、戏曲研学课</td>
-                <td class="text-up">97.8</td>
-              </tr>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">秦安县第五中学</td>
-                <td>秦安县</td>
-                <td class="text-primary-val">6</td>
-                <td class="text-gold-val">3,100 人</td>
-                <td>《窦娥冤》《三滴血》经典片段</td>
-                <td>96.4</td>
-              </tr>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">天水市第一中学</td>
-                <td>秦州区</td>
-                <td class="text-primary-val">6</td>
-                <td class="text-gold-val">3,600 人</td>
-                <td>戏曲进校园专场 + 化妆体验</td>
-                <td class="text-up">98.2</td>
-              </tr>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">天水市逸夫实验中学</td>
-                <td>秦州区</td>
-                <td class="text-primary-val">5</td>
-                <td class="text-gold-val">2,800 人</td>
-                <td>戏曲知识讲座 + 清唱会</td>
-                <td>96.6</td>
-              </tr>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">麦积区实验小学</td>
-                <td>麦积区</td>
-                <td class="text-primary-val">4</td>
-                <td class="text-gold-val">2,200 人</td>
-                <td>儿童版秦腔启蒙专场</td>
-                <td class="text-up">98.8</td>
-              </tr>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">甘谷县第一中学</td>
-                <td>甘谷县</td>
-                <td class="text-primary-val">5</td>
-                <td class="text-gold-val">2,600 人</td>
-                <td>《火焰驹》《金沙滩》选场</td>
-                <td>95.4</td>
-              </tr>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">武山县第一中学</td>
-                <td>武山县</td>
-                <td class="text-primary-val">4</td>
-                <td class="text-gold-val">2,000 人</td>
-                <td>戏曲讲座 + 基本功体验课</td>
-                <td>95.8</td>
-              </tr>
-              <tr>
-                <td style="font-weight:600;color:var(--primary-dark);">清水县轩辕小学</td>
-                <td>清水县</td>
-                <td class="text-primary-val">3</td>
-                <td class="text-gold-val">1,500 人</td>
-                <td>秦腔故事 + 身段练习</td>
-                <td class="text-up">97.0</td>
-              </tr>
-            </tbody>
+            <tbody id="campusReportTbody">
+                  <!-- v20260907k：校园研学报表由 __loadCampusReport() 动态渲染，原空白态保留 -->
+                </tbody>
           </table>
         </div>
 
@@ -1922,7 +1789,24 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
+<script src="../js/app.js?v=20260906g"></script>
+<script>/* 生产空白态守卫配置 */
+window.__ADMIN_BLANK_CFG__ = [
+  { fn: function (h) {
+      var lg = document.querySelector('.donut-legend');
+      if (lg) lg.innerHTML = h.emptyBoxHtml('暂无数据，真实订单完成后自动生成占比统计');
+      var dn = document.querySelector('.donut-num');
+      if (dn) dn.textContent = '0';
+      var rk = document.querySelector('.opera-ranking-list');
+      if (rk) rk.innerHTML = h.emptyBoxHtml('暂无演出数据，真实排期完成后自动生成剧目排名');
+      document.querySelectorAll('section.admin-content .table-wrap tbody').forEach(function (tb) {
+        tb.innerHTML = h.emptyRowHtml(8, '暂无报表数据，真实业务数据积累后自动生成');
+      });
+  } }
+];
+</script>
+<script src="../js/admin-blank.js?v=20260906g"></script>
+
   <script src="../js/pagination.js?v=20260803"></script>
   <script>
     (function() {
@@ -2631,6 +2515,109 @@ function __pLog(module,event,extra){
         });
       }catch(e){ console.warn('[SuperPatch 2/6 refreshIds err]',e); }
     }
+    // v20260907k：报表中心 API 聚合（订单统计 + 财务汇总 + 演职人员统计 + 节庆/校园报表）
+    async function __loadReportsData() {
+      var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+      if (!QinFetch || typeof QinFetch.request !== 'function') return;
+      try {
+        // 1. 订单统计
+        var orderStats = await QinFetch.request('GET', '/v1/orders/stats', { query: {} });
+        __renderOrderStatsCard(orderStats && orderStats.data ? orderStats.data : {});
+      } catch(_e) { console.warn('[reports] orders/stats fail:', _e); }
+      try {
+        // 2. 财务汇总
+        var finSummary = await QinFetch.request('GET', '/v1/fin/summary', { query: {} });
+        __renderFinanceSummaryCard(finSummary && finSummary.data ? finSummary.data : {});
+      } catch(_e) { console.warn('[reports] fin/summary fail:', _e); }
+      try {
+        // 3. 演职人员统计
+        var performers = await QinFetch.request('GET', '/v1/performers', { query: { pageSize: 100 } });
+        __renderPerformersCard(performers && performers.data ? performers.data : []);
+      } catch(_e) { console.warn('[reports] performers fail:', _e); }
+      try {
+        // 4. 节庆演出报表（从订单中筛选 keyword=庙会/节庆/旅游节）
+        var festivals = await QinFetch.request('GET', '/v1/orders', { query: { keyword: '庙会', pageSize: 50 } });
+        __renderFestivalsReport(festivals && festivals.data ? festivals.data : []);
+      } catch(_e) { console.warn('[reports] festivals fail:', _e); }
+      try {
+        // 5. 校园研学报表（从订单中筛选 keyword=校园/研学/学校）
+        var campus = await QinFetch.request('GET', '/v1/orders', { query: { keyword: '学校', pageSize: 50 } });
+        __renderCampusReport(campus && campus.data ? campus.data : []);
+      } catch(_e) { console.warn('[reports] campus fail:', _e); }
+    }
+    function __renderOrderStatsCard(s) {
+      // 更新订单统计卡片
+      var els = document.querySelectorAll('[data-stat="orders-total"], [data-stat="total-orders"]');
+      els.forEach(function(el){ el.textContent = s.total || 0; });
+      var draft = document.querySelectorAll('[data-stat="orders-draft"]');
+      draft.forEach(function(el){ el.textContent = s.draft || 0; });
+      var confirmed = document.querySelectorAll('[data-stat="orders-confirmed"]');
+      confirmed.forEach(function(el){ el.textContent = s.confirmed || 0; });
+      var cancelled = document.querySelectorAll('[data-stat="orders-cancelled"]');
+      cancelled.forEach(function(el){ el.textContent = s.cancelled || 0; });
+      var totalFee = document.querySelectorAll('[data-stat="orders-amount"]');
+      totalFee.forEach(function(el){ el.textContent = '¥' + Number(s.totalFee || 0).toLocaleString('zh-CN'); });
+    }
+    function __renderFinanceSummaryCard(s) {
+      var els = document.querySelectorAll('[data-stat="fin-income"]');
+      els.forEach(function(el){ el.textContent = '¥' + Number(s.totalIncome || s.income || 0).toLocaleString('zh-CN'); });
+      var exp = document.querySelectorAll('[data-stat="fin-expense"]');
+      exp.forEach(function(el){ el.textContent = '¥' + Number(s.totalExpense || s.expense || 0).toLocaleString('zh-CN'); });
+      var bal = document.querySelectorAll('[data-stat="fin-balance"]');
+      bal.forEach(function(el){ el.textContent = '¥' + Number(s.balance || 0).toLocaleString('zh-CN'); });
+    }
+    function __renderPerformersCard(list) {
+      var els = document.querySelectorAll('[data-stat="performers-total"]');
+      els.forEach(function(el){ el.textContent = list.length || 0; });
+    }
+    function __renderFestivalsReport(orders) {
+      var tbody = document.getElementById('festivalsReportTbody');
+      if (!tbody) return;
+      if (!orders || orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无节庆演出数据，订单录入时包含「庙会」关键词后将自动汇总</td></tr>';
+        return;
+      }
+      function _hx(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      var html = '';
+      orders.forEach(function(o) {
+        var month = o.performanceStartDate ? String(o.performanceStartDate).substring(5,7) + '月' : '—';
+        var audience = o.audienceSize || '—';
+        var revenue = o.finalAmount ? Number(o.finalAmount).toLocaleString('zh-CN') : '—';
+        html += '<tr>';
+        html += '<td style="font-weight:600;color:var(--primary-dark);">🏮 ' + _hx(o.orderType || o.customerName || '') + '</td>';
+        html += '<td>' + month + '</td>';
+        html += '<td>' + _hx(o.performanceCount || 1) + '</td>';
+        html += '<td>' + audience + '</td>';
+        html += '<td>' + _hx(o.venueDistrict || '') + '</td>';
+        html += '<td>' + revenue + '</td>';
+        html += '<td>—</td>';
+        html += '</tr>';
+      });
+      tbody.innerHTML = html;
+      if (window.QinPagination) try { QinPagination.scan(); } catch(_){}
+    }
+    function __renderCampusReport(orders) {
+      var tbody = document.getElementById('campusReportTbody');
+      if (!tbody) return;
+      if (!orders || orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无校园研学数据，订单录入时包含「学校」关键词后将自动汇总</td></tr>';
+        return;
+      }
+      function _hx(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      var html = '';
+      orders.forEach(function(o) {
+        html += '<tr>';
+        html += '<td>' + _hx(o.customerName || '') + '</td>';
+        html += '<td>' + _hx(o.venueDistrict || '') + '</td>';
+        html += '<td>' + _hx(o.performanceCount || 1) + '</td>';
+        html += '<td>—</td>';
+        html += '<td>' + _hx(o.orderType || '') + '</td>';
+        html += '<td>—</td>';
+        html += '</tr>';
+      });
+      tbody.innerHTML = html;
+    }
+    document.addEventListener('DOMContentLoaded', function(){ __loadReportsData(); }, {once:true});
     document.addEventListener('DOMContentLoaded', function(){ _fillIds(); }, {once:true});
     if(document.readyState==='complete'||document.readyState==='interactive'){ _fillIds(); }
     else{ setTimeout(_fillIds, 50); }
@@ -2852,6 +2839,7 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
+        if (window.QinPagination) return; // 真分页器已接管，跳过假分页注入（orders/finance 同款修复范式）
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -2975,6 +2963,7 @@ try{
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -2988,6 +2977,7 @@ try{
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
+        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return; // 分页条按钮放行（orders/finance 同款修复）
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
@@ -3110,16 +3100,65 @@ try{
       window.__closeAnyModal();
     }
   });
+
+  /* 导出 Excel/CSV（v20260907k）：替代 onclick alert + DBF/SuperPatch 演示 toast 的矛盾提示 */
+  window.__exportReportsExcel = function(){
+    try{
+      var tables = document.querySelectorAll('table');
+      var allRows = [];
+      var headers = [];
+      for(var t=0; t<tables.length; t++){
+        var trs = tables[t].querySelectorAll('tr');
+        for(var r=0; r<trs.length; r++){
+          var cells = Array.prototype.map.call(trs[r].cells, function(c){ return (c.textContent||'').replace(/[\n\r,]/g,' ').trim(); });
+          if(r===0 && !headers.length) headers = cells;
+          else if(cells.length > 1) allRows.push(cells);
+        }
+      }
+      if(!allRows.length){
+        if(window.__T) __T('⚠️ 当前暂无可导出的报表数据','warning');
+        else alert('当前暂无可导出的报表数据');
+        return;
+      }
+      var csv = '\uFEFF';
+      if(headers.length) csv += headers.join(',') + '\n';
+      allRows.forEach(function(cells){ csv += cells.join(',') + '\n'; });
+      var blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = '报表统计_' + new Date().toISOString().slice(0,10) + '.csv';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+      if(window.__T) __T('📤 已导出 ' + allRows.length + ' 条报表数据（CSV）','success');
+    }catch(ex){
+      if(window.__T) __T('❌ 导出失败：' + (ex.message||ex),'error');
+      else alert('导出失败：' + (ex.message||ex));
+    }
+  };
 })();
 </script>
-<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停真实弹窗（含无 id 按钮、动态重绘行 MutationObserver 补标） */
 (function(){
+  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
+  var SEL = 'button, a.btn, .btn, .btn-action, [role="button"], [data-action]';
   function __markBound(){
-    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
-    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+    try{
+      var els=document.querySelectorAll(SEL);
+      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
+    }catch(_){}
   }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
-  else { __markBound(); setTimeout(__markBound,500); }
+  function __boot(){
+    __markBound();
+    try{
+      if(window.MutationObserver){
+        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
+        mo.observe(document.documentElement,{childList:true,subtree:true});
+      }
+    }catch(_){}
+    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
+  else { __boot(); }
 })();</script>
 </body>
 

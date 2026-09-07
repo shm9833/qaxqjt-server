@@ -41,7 +41,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>道具服装设备库存管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260906">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -1655,7 +1655,7 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
+<script src="../js/app.js?v=20260906g"></script>
   <script src="../js/pagination.js?v=20260803"></script>
   <script>
     (function() {
@@ -2542,6 +2542,9 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
+        // 修复（v20260906e）：pagination.js 已提供真分页（含真实翻页逻辑）时，本补丁的假分页工具栏绝不注入——
+        // 曾把 .pagination-bar 当作待标准化容器：innerHTML='' 清空真控件后塞入只改计数器不切行的假分页 → "点页码表格不动"
+        if (window.QinPagination) return;
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -2665,6 +2668,7 @@ try{
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -2681,6 +2685,8 @@ try{
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
+        // 修复（v20260906e）：分页条按钮（上一页/页码/下一页）由 pagination.js 自管且页码每次重渲染，绝不能兜底拦截（曾导致页码永远点不动）
+        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
         btn.__superPatchBound = 1;
@@ -2802,14 +2808,492 @@ try{
   });
 })();
 </script>
-<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停真实弹窗（含无 id 按钮、动态重绘行 MutationObserver 补标） */
 (function(){
+  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
+  var SEL = 'button, a.btn, .btn, .btn-action, [role="button"], [data-action]';
   function __markBound(){
-    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
-    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+    try{
+      var els=document.querySelectorAll(SEL);
+      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
+    }catch(_){}
   }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
-  else { __markBound(); setTimeout(__markBound,500); }
+  function __boot(){
+    __markBound();
+    try{
+      if(window.MutationObserver){
+        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
+        mo.observe(document.documentElement,{childList:true,subtree:true});
+      }
+    }catch(_){}
+    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
+  else { __boot(); }
+})();</script>
+<script>/* ========== 🔌 库存页真实后端接线 v20260906e：/v1/inventory 物品列表+出入库+借用/归还+流水 + 搜索分页修复（后端不可达时保留演示数据） ========== */
+(function(){
+  if(window.__QAX_INV_WIRE__) return;
+  window.__QAX_INV_WIRE__ = true;
+
+  var API = window.QAXQJT_API;
+  var itemsMap = {};   // id -> item
+  var skuMap = {};     // sku -> item
+  var recIdx = 0;
+
+  function _toast(msg, type) {
+    try {
+      if (window.QinApp && QinApp.Utils && QinApp.Utils.toast) { QinApp.Utils.toast(msg, type || 'info', 3000); return; }
+    } catch (_e) {}
+    if (typeof window.showToast === 'function') { try { window.showToast(msg, type || 'info'); return; } catch (_f) {} }
+    try { console.info('[toast]', type, msg); } catch (_g) {}
+  }
+  function _pad(n) { return String(n).padStart(2, '0'); }
+  function _fmtD(v) { try { var d = new Date(v); return isNaN(d) ? '—' : d.getFullYear() + '-' + _pad(d.getMonth() + 1) + '-' + _pad(d.getDate()); } catch (_e) { return '—'; } }
+  var STATUS_MAP = {
+    in_stock:  ['在库', 'stock'],
+    borrowed:  ['借出', 'borrowed'],
+    repairing: ['维修中', 'repair'],
+    retired:   ['已报废', 'retired']
+  };
+  var OP_MAP = {
+    in:      ['📥 入库', 'borrowing'],
+    out:     ['📤 出库', 'returned'],
+    borrow:  ['📤 借用中', 'borrowing'],
+    return:  ['✅ 已归还', 'returned'],
+    loss:    ['⚠️ 报损', 'overdue']
+  };
+
+  /* ====== 物品/流水 tbody 精确定位（v20260906e）：按表头文字区分并兜底恢复被 HeightGuard 剥掉的 data-paginate。
+     根因同订单/财务页：app.js HeightGuard __purgeEmptyPaginate 会对「行数≤1 的 tbody[data-paginate]」移除属性，
+     筛选 0 条时物品 tbody 变空，data-paginate 被剥；旧 _findItemTbody 全页 querySelectorAll('tbody[data-paginate]')
+     只剩流水 tbody，误判后把真实物品行渲染进流水表（或返回 null 导致行消失）。这里按表头文字（物品编号/实际归还）
+     从所有 tbody 中找回，并恢复属性。 ====== */
+  function _theadText(tbody) {
+    try {
+      var t = tbody.closest('table');
+      var th = t && t.querySelector('thead');
+      return th ? (th.textContent || '') : '';
+    } catch (_e) { return ''; }
+  }
+  function _findTbodyByHeader(markers) {
+    var tbs = document.querySelectorAll('tbody');
+    for (var i = 0; i < tbs.length; i++) {
+      var head = _theadText(tbs[i]);
+      var ok = true;
+      for (var j = 0; j < markers.length; j++) { if (head.indexOf(markers[j]) < 0) { ok = false; break; } }
+      if (ok) {
+        var tb = tbs[i];
+        try {
+          if (!tb.getAttribute('data-paginate')) tb.setAttribute('data-paginate', 'list');
+          if (!tb.getAttribute('data-page-size')) tb.setAttribute('data-page-size', '10');
+        } catch (_e) {}
+        return tb;
+      }
+    }
+    return null;
+  }
+  function _findItemTbody() { return _findTbodyByHeader(['物品编号', '物品名称']); }
+  function _findFlowTbody() { return _findTbodyByHeader(['实际归还']); }
+
+  /* ---- 物品表格 ---- */
+  function _itemRowHtml(o) {
+    var st = STATUS_MAP[o.status] || [o.status || '在库', 'stock'];
+    var qtyCls = o.safetyStock != null && Number(o.quantity) <= Number(o.safetyStock) ? 'qty-low' : '';
+    return (
+      '<tr data-item-id="' + o.id + '">' +
+      '<td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>' +
+      '<td><strong style="color:var(--primary);">' + (o.sku || o.id.slice(-6)) + '</strong></td>' +
+      '<td><strong>' + (o.name || '—') + '</strong></td>' +
+      '<td><span class="cat-badge costume">' + (o.category || '其他') + '</span></td>' +
+      '<td>' + (o.specModel || '—') + '</td>' +
+      '<td><span class="' + qtyCls + '">' + (o.quantity != null ? o.quantity : 0) + '</span></td>' +
+      '<td>' + (o.safetyStock != null ? o.safetyStock : '—') + '</td>' +
+      '<td>' + (o.unit || '件') + '</td>' +
+      '<td>' + _fmtD(o.createdAt) + '</td>' +
+      '<td><span class="status-badge ' + st[1] + '">● ' + st[0] + '</span></td>' +
+      '<td>' + (o.borrower || '—') + '</td>' +
+      '<td>' + (o.expectedReturnDate ? _fmtD(o.expectedReturnDate) : '—') + '</td>' +
+      '<td>' + (o.lastCheckDate ? _fmtD(o.lastCheckDate) : '—') + '</td>' +
+      '<td>' +
+        '<div class="admin-table-actions">' +
+          '<button class="btn btn-secondary btn-sm" title="查看">👁</button>' +
+          '<button class="btn btn-primary btn-sm" title="编辑">✏️</button>' +
+          '<button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;" title="借用">📤</button>' +
+          '<button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;" title="报修">🔧</button>' +
+          '<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" title="报废">♻️</button>' +
+        '</div>' +
+      '</td>' +
+      '</tr>'
+    );
+  }
+
+  /* ---- 流水表格 ---- */
+  function _flowRowHtml(r) {
+    recIdx += 1;
+    var op = OP_MAP[r.opType] || [r.opType || '—', 'returned'];
+    /* 后端 join 的 item 摘要无 borrower/expectedReturnDate，与前端 itemsMap 合并取全 */
+    var it = Object.assign({}, itemsMap[r.itemId] || {}, r.item || {});
+    var isBorrow = r.opType === 'borrow';
+    var ret = r.opType === 'return' ? _fmtD(r.opDate) : '—';
+    return (
+      '<tr data-record-id="' + r.id + '">' +
+      '<td style="font-weight:600;">' + String(recIdx).padStart(3, '0') + '</td>' +
+      '<td><div><strong>' + (it.name || '—') + ' × ' + r.quantity + (it.unit || '件') + '</strong></div>' +
+      '<div style="font-size:0.75rem;color:var(--text-light);">' + (it.sku || r.itemId) + '</div></td>' +
+      '<td>' + (isBorrow ? (it.borrower || r.operator || '—') : (r.operator || '—')) + '</td>' +
+      '<td>' + _fmtD(r.opDate) + '</td>' +
+      '<td><span class="badge badge-gold">' + (isBorrow ? '商演' : '—') + '</span></td>' +
+      '<td>' + (r.remark || '—') + '</td>' +
+      '<td style="font-weight:600;">' + (isBorrow && it.expectedReturnDate ? _fmtD(it.expectedReturnDate) : '—') + '</td>' +
+      '<td>' + ret + '</td>' +
+      '<td><span class="flow-badge ' + op[1] + '">' + op[0] + '</span></td>' +
+      '<td><div class="admin-table-actions"><button class="btn btn-secondary btn-sm">详情</button></div></td>' +
+      '</tr>'
+    );
+  }
+
+  function _renderItems(rows) {
+    var tbody = _findItemTbody();
+    if (!tbody) return;
+    itemsMap = {}; skuMap = {};
+    (rows || []).forEach(function (o) {
+      itemsMap[o.id] = o;
+      if (o.sku) skuMap[o.sku] = o;
+    });
+    tbody.innerHTML = rows.map(_itemRowHtml).join('');
+    tbody.querySelectorAll('button, input').forEach(function (el) { el.__superPatchBound = 1; });
+    try { window.QinPagination && QinPagination.refresh && QinPagination.refresh(); } catch (_e) {}
+    _showRealPaginationBar(tbody);
+    console.info('[invWire] 已渲染真实物品 ' + rows.length + ' 件');
+  }
+
+  function _renderRecords(rows) {
+    var tbody = _findFlowTbody();
+    if (!tbody) return;
+    recIdx = 0;
+    tbody.innerHTML = rows.map(_flowRowHtml).join('');
+    tbody.querySelectorAll('button').forEach(function (el) { el.__superPatchBound = 1; });
+    try { window.QinPagination && QinPagination.refresh && QinPagination.refresh(); } catch (_e) {}
+    _showRealPaginationBar(tbody);
+    console.info('[invWire] 已渲染真实流水 ' + rows.length + ' 条');
+  }
+
+  /* ====== 分页条显隐修复（v20260906e）：旧版 CSS 用 display:none!important 隐藏了全部 .pagination-bar，
+     这里把物品表/流水表对应的真实分页条强制恢复显示（演示卡片的分页条保持隐藏）。 ====== */
+  function _stateFor(tbody) {
+    try {
+      var list = (window.QinPagination && QinPagination._raw && QinPagination._raw._instances) || [];
+      for (var i = 0; i < list.length; i++) {
+        var st = list[i];
+        if (st && (st.host === tbody || st.container === tbody)) return st;
+      }
+    } catch (_e) {}
+    return null;
+  }
+  function _showRealPaginationBar(tbody) {
+    try {
+      var st = _stateFor(tbody);
+      if (!st || !st.bar) return;
+      var bar = st.bar;
+      bar.style.setProperty('display', 'block', 'important');
+      bar.style.setProperty('max-height', 'none', 'important');
+      bar.style.setProperty('overflow', 'visible', 'important');
+      bar.style.setProperty('margin', '30px 0 0 0', 'important');
+      bar.style.setProperty('padding', '18px 22px', 'important');
+      bar.style.setProperty('position', 'static', 'important');
+    } catch (_e) {}
+  }
+  function _ensurePaginationUI() {
+    var tries = 0;
+    (function tick() {
+      try { _showRealPaginationBar(_findItemTbody()); _showRealPaginationBar(_findFlowTbody()); } catch (_e) {}
+      var st1 = _stateFor(_findItemTbody()), st2 = _stateFor(_findFlowTbody());
+      if (st1) { tries = 40; } else { tries++; }
+      if (tries < 40) setTimeout(tick, 250);
+    })();
+  }
+
+  /* ====== 物品筛选栏接线（v20260906e）：分类/状态/关键词 → 客户端过滤已加载真实物品，
+     结果交给 QinPagination 分页（重置回第 1 页）。库存页用 .filter-bar + .search-box，靠 🔍 图标/Enter 触发。 ====== */
+  var _allItems = [];
+  function _bindItemFilter() {
+    try {
+      var bar = document.querySelector('.filter-bar');
+      if (!bar || bar.__invFilterBound) return true;
+      var sels = bar.querySelectorAll('select');
+      var searchBox = bar.querySelector('.search-box');
+      var inp = searchBox ? searchBox.querySelector('input') : null;
+      var icon = searchBox ? searchBox.querySelector('.search-icon') : null;
+      var btnRefresh = null, btnExport = null;
+      bar.querySelectorAll('button').forEach(function (b) {
+        var t = b.textContent || '';
+        if (t.indexOf('刷新') >= 0 && !btnRefresh) btnRefresh = b;
+        else if (t.indexOf('导出') >= 0) btnExport = b;
+        b.__superPatchBound = 1;
+      });
+      if (!inp || sels.length < 2) return false;
+      var catSel = sels[0], stSel = sels[1];
+      // 状态下拉 text → 后端枚举
+      var ST_TEXT = { '在库': 'in_stock', '借出': 'borrowed', '维修中': 'repairing', '报废': 'retired' };
+
+      function apply() {
+        if (!_allItems.length) { _toast('后端暂无真实物品数据', 'info'); return; }
+        var kw = (inp.value || '').trim().toLowerCase();
+        var catTxt = catSel.selectedIndex > 0 ? (catSel.options[catSel.selectedIndex].textContent || '').trim() : '';
+        var stIdx = stSel.selectedIndex;
+        var stTxt = stIdx > 0 ? (stSel.options[stIdx].textContent || '').trim() : '';
+        var stVal = stTxt ? ST_TEXT[stTxt] : null;
+        var rows = _allItems.filter(function (o) {
+          if (catTxt) {
+            var cat = String(o.category || '');
+            if (cat.indexOf(catTxt) < 0 && catTxt.indexOf(cat) < 0) return false;
+          }
+          if (stVal && o.status !== stVal) return false;
+          if (kw) {
+            var hay = [o.sku, o.name, o.category, o.specModel, o.borrower, o.location].join(' ').toLowerCase();
+            if (hay.indexOf(kw) < 0) return false;
+          }
+          return true;
+        });
+        var pg = _stateFor(_findItemTbody());
+        if (pg) { pg.currentPage = 1; if (pg.searchKeyword) pg.searchKeyword = ''; }
+        _renderItems(rows);
+        _toast('筛选完成，共 ' + rows.length + ' 件物品', 'info');
+      }
+      function reset() {
+        inp.value = '';
+        catSel.selectedIndex = 0;
+        stSel.selectedIndex = 0;
+        var pg = _stateFor(_findItemTbody());
+        if (pg) { pg.currentPage = 1; pg.searchKeyword = ''; }
+        _renderItems(_allItems);
+      }
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); apply(); } }, true);
+      if (icon) icon.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); apply(); }, true);
+      if (btnRefresh) btnRefresh.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); reset(); });
+      if (btnExport) btnExport.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); _toast('导出清单（演示模式）', 'info'); });
+      bar.__invFilterBound = 1;
+      console.info('[invWire] 物品筛选栏已绑定（分类/状态/关键词）');
+      return true;
+    } catch (_e) { return false; }
+  }
+
+  /* ====== 流水状态过滤（v20260906e）：data-flow="all/borrowing/returned/overdue" 按钮 → 过滤真实流水行。 ====== */
+  var _allRecords = [];
+  var _flowFilter = 'all';
+  function _bindFlowFilter() {
+    try {
+      var wrap = document.querySelector('.flow-status-filter');
+      if (!wrap || wrap.__invFlowBound) return true;
+      var btns = wrap.querySelectorAll('.fs-btn');
+      btns.forEach(function (b) {
+        b.__superPatchBound = 1;
+        b.addEventListener('click', function (e) {
+          e.preventDefault(); e.stopPropagation();
+          btns.forEach(function (x) { x.classList.remove('active'); });
+          b.classList.add('active');
+          _flowFilter = b.getAttribute('data-flow') || 'all';
+          _applyFlowFilter();
+        });
+      });
+      wrap.__invFlowBound = 1;
+      console.info('[invWire] 流水状态过滤已绑定');
+      return true;
+    } catch (_e) { return false; }
+  }
+  function _applyFlowFilter() {
+    if (!_allRecords.length) { _renderRecords(_allRecords); return; }
+    var rows = _allRecords;
+    if (_flowFilter === 'borrowing') rows = _allRecords.filter(function (r) { return r.opType === 'borrow'; });
+    else if (_flowFilter === 'returned') rows = _allRecords.filter(function (r) { return r.opType === 'return'; });
+    else if (_flowFilter === 'overdue') {
+      rows = _allRecords.filter(function (r) {
+        if (r.opType !== 'borrow') return false;
+        var it = itemsMap[r.itemId] || {};
+        if (!it.expectedReturnDate) return false;
+        return new Date(it.expectedReturnDate) < new Date();
+      });
+    }
+    var pg = _stateFor(_findFlowTbody());
+    if (pg) { pg.currentPage = 1; if (pg.searchKeyword) pg.searchKeyword = ''; }
+    _renderRecords(rows);
+  }
+
+  function _load(silent) {
+    if (!API || typeof API.get !== 'function') return;
+    /* 先物品后流水：流水行需借用 itemsMap 的 borrower/sku 信息，避免并发竞态 */
+    API.get('/v1/inventory/items', {
+      query: { page: 1, pageSize: 200 },
+      showErrorToast: false, timeoutMs: 8000,
+      fallbackRead: function () { return null; }
+    }).then(function (res) {
+      var rows = Array.isArray(res) ? res : (res && res.items) || [];
+      // 生产模式：后端可达即以服务端为唯一数据源（含 0 条），清空静态演示行
+      _allItems = Array.isArray(rows) ? rows : [];
+      _bindItemFilter();
+      _renderItems(_allItems);
+      _updateStats(_allItems);
+      return API.get('/v1/inventory/records', {
+        query: { page: 1, pageSize: 200 },
+        showErrorToast: false, timeoutMs: 8000,
+        fallbackRead: function () { return null; }
+      });
+    }).then(function (res) {
+      if (!res) return;
+      var rows = Array.isArray(res) ? res : (res && res.items) || [];
+      _allRecords = Array.isArray(rows) ? rows : [];
+      _bindFlowFilter();
+      _renderRecords(_allRecords);
+    }).catch(function () {});
+  }
+
+  function _updateStats(rows) {
+    var cards = document.querySelectorAll('.stats-grid .stat-card .stat-card-value');
+    if (!cards.length) return;
+    var totalQty = rows.reduce(function (s, o) { return s + Number(o.quantity || 0); }, 0);
+    var borrowed = rows.filter(function (o) { return o.status === 'borrowed'; }).length;
+    var lowStock = rows.filter(function (o) {
+      return o.safetyStock != null && Number(o.quantity) <= Number(o.safetyStock);
+    }).length;
+    if (cards[0]) cards[0].innerHTML = totalQty + '<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">件</span>';
+    if (cards[1]) cards[1].innerHTML = borrowed + '<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">次</span>';
+    if (cards[2]) cards[2].innerHTML = lowStock + '<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">项</span>';
+  }
+
+  /* ---- 操作封装 ---- */
+  function _findItemByIdOrSku(kw) {
+    kw = (kw || '').trim();
+    if (!kw) return null;
+    return itemsMap[kw] || skuMap[kw] ||
+      Object.keys(itemsMap).map(function (k) { return itemsMap[k]; }).filter(function (o) { return o.name === kw; })[0] || null;
+  }
+  function _postRecord(itemId, opType, qty, extra) {
+    var body = Object.assign({ itemId: itemId, opType: opType, quantity: qty }, extra || {});
+    return API.post('/v1/inventory/records', body, { showErrorToast: false });
+  }
+
+  var _locks = {};
+  function _lock(key, ms) {
+    if (_locks[key]) return false;
+    _locks[key] = true;
+    setTimeout(function () { delete _locks[key]; }, ms || 1200);
+    return true;
+  }
+
+  /* ---- 顶部按钮：新购入库 / 借用登记 / 归还登记 ---- */
+  function _topCreate() {
+    var name = window.prompt('【新购入库】请输入物品名称：');
+    if (name === null) return;
+    name = name.trim();
+    if (!name) { _toast('⚠️ 名称不能为空', 'error'); return; }
+    var sku = (window.prompt('请输入物品编号（可留空）：') || '').trim();
+    var cat = (window.prompt('请输入分类（戏服/道具/头饰/乐器/其他）：') || '').trim();
+    var qty = Number(window.prompt('请输入入库数量：'));
+    if (!(qty > 0)) { _toast('⚠️ 数量必须大于 0', 'error'); return; }
+    API.post('/v1/inventory/items', { name: name, sku: sku, category: cat, quantity: qty, unit: '件' }, { showErrorToast: false })
+      .then(function () { _toast('✅ 物品已入库', 'success'); _load(true); })
+      .catch(function (err) { _toast('❌ 入库失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
+  }
+  function _topBorrow(isReturn) {
+    var kw = window.prompt(isReturn ? '【归还登记】请输入物品编号或名称：' : '【借用登记】请输入物品编号或名称：');
+    if (kw === null) return;
+    var item = _findItemByIdOrSku(kw);
+    if (!item) { _toast('⚠️ 未找到该物品（请先加载数据）', 'error'); return; }
+    var person = (window.prompt('请输入' + (isReturn ? '归还经手人' : '借用人') + '：') || '').trim();
+    if (!isReturn && !person) { _toast('⚠️ 借用人不能为空', 'error'); return; }
+    var qty = Number(window.prompt('请输入数量：'));
+    if (!(qty > 0)) { _toast('⚠️ 数量必须大于 0', 'error'); return; }
+    var extra = {};
+    if (!isReturn) {
+      var exp = window.prompt('请输入预计归还日期（YYYY-MM-DD，可留空）：');
+      if (exp && exp.trim()) extra.expectedReturnDate = exp.trim();
+    }
+    _postRecord(item.id, isReturn ? 'return' : 'borrow', qty, extra)
+      .then(function () { _toast('✅ ' + (isReturn ? '归还' : '借用') + '登记成功', 'success'); _load(true); })
+      .catch(function (err) { _toast('❌ 登记失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
+  }
+
+  /* ---- 行内操作（capture 委托） ---- */
+  document.addEventListener('click', function (e) {
+    /* 顶部按钮 */
+    var t = e.target.closest ? e.target.closest('.admin-page-actions .btn') : null;
+    if (t) {
+      var txt = (t.textContent || '').trim();
+      if (txt.indexOf('新购入库') >= 0) { e.preventDefault(); e.stopPropagation(); _topCreate(); return; }
+      if (txt.indexOf('借用登记') >= 0) { e.preventDefault(); e.stopPropagation(); _topBorrow(false); return; }
+      if (txt.indexOf('归还登记') >= 0) { e.preventDefault(); e.stopPropagation(); _topBorrow(true); return; }
+      return;
+    }
+    /* 行按钮 */
+    var btn = e.target.closest ? e.target.closest('td button[title]') : null;
+    if (!btn) return;
+    var tr = btn.closest ? btn.closest('tr[data-item-id]') : null;
+    if (!tr) return;
+    var o = itemsMap[tr.getAttribute('data-item-id')];
+    if (!o) return;
+    var title = btn.getAttribute('title');
+
+    if (title === '查看') {
+      e.preventDefault(); e.stopPropagation();
+      window.alert(
+        '物品：' + (o.name || '—') + '（' + (o.sku || '—') + '）\n分类：' + (o.category || '其他') +
+        '\n规格：' + (o.specModel || '—') + '\n数量：' + o.quantity + ' ' + (o.unit || '件') +
+        '\n状态：' + ((STATUS_MAP[o.status] || [o.status])[0] || '—') +
+        '\n借用人：' + (o.borrower || '—') + '\n存放位置：' + (o.location || '—') +
+        '\n单价：' + (o.unitPrice != null ? '¥' + o.unitPrice : '—')
+      );
+      return;
+    }
+    if (title === '编辑') {
+      e.preventDefault(); e.stopPropagation();
+      var nq = window.prompt('修改「' + o.name + '」库存数量（当前 ' + o.quantity + '）：', String(o.quantity));
+      if (nq === null) return;
+      var nv = Number(nq);
+      if (isNaN(nv) || nv < 0) { _toast('⚠️ 数量无效', 'error'); return; }
+      if (!_lock('inv_' + o.id)) return;
+      API.patch('/v1/inventory/items/' + o.id, { quantity: nv }, { showErrorToast: false })
+        .then(function () { _toast('✅ 数量已更新', 'success'); _load(true); })
+        .catch(function (err) { _toast('❌ 更新失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
+      return;
+    }
+    if (title === '借用') {
+      e.preventDefault(); e.stopPropagation();
+      var person = (window.prompt('【借用】「' + o.name + '」请输入借用人：') || '').trim();
+      if (!person) return;
+      var qty = Number(window.prompt('请输入借用数量：'));
+      if (!(qty > 0)) { _toast('⚠️ 数量必须大于 0', 'error'); return; }
+      var extra = { borrower: person };
+      var exp = window.prompt('请输入预计归还日期（YYYY-MM-DD，可留空）：');
+      if (exp && exp.trim()) extra.expectedReturnDate = exp.trim();
+      if (!_lock('inv_' + o.id)) return;
+      _postRecord(o.id, 'borrow', qty, extra)
+        .then(function () { _toast('✅ 借用登记成功', 'success'); _load(true); })
+        .catch(function (err) { _toast('❌ 借用失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
+      return;
+    }
+    if (title === '报修') {
+      e.preventDefault(); e.stopPropagation();
+      if (!window.confirm('确认将「' + o.name + '」标记为维修中？')) return;
+      if (!_lock('inv_' + o.id)) return;
+      API.patch('/v1/inventory/items/' + o.id, { status: 'repairing' }, { showErrorToast: false })
+        .then(function () { _toast('🔧 已标记维修中', 'success'); _load(true); })
+        .catch(function (err) { _toast('❌ 操作失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
+      return;
+    }
+    if (title === '报废') {
+      e.preventDefault(); e.stopPropagation();
+      if (!window.confirm('确认报废「' + o.name + '」？该操作不可恢复。')) return;
+      if (!_lock('inv_' + o.id)) return;
+      API.patch('/v1/inventory/items/' + o.id, { status: 'retired' }, { showErrorToast: false })
+        .then(function () { _toast('♻️ 已标记报废', 'success'); _load(true); })
+        .catch(function (err) { _toast('❌ 操作失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
+      return;
+    }
+  }, true);
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { _ensurePaginationUI(); _load(false); }, 300); });
+  else setTimeout(function () { _ensurePaginationUI(); _load(false); }, 300);
 })();</script>
 </body>
 </html>
