@@ -19,8 +19,8 @@ RUN npx prisma generate
 FROM node:18-alpine3.19 AS runtime
 WORKDIR /app
 
-# 时区 + 全局安装 prisma CLI（运行时 db push 需要）
-RUN apk add --no-cache tzdata curl \
+# 时区 + openssl（Prisma 引擎在 Alpine 必需 libssl）+ 全局安装 prisma CLI（运行时 db push 需要）
+RUN apk add --no-cache tzdata curl openssl \
  && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
  && echo "Asia/Shanghai" > /etc/timezone \
  && npm install -g prisma@5.19.1 --no-audit --no-fund
