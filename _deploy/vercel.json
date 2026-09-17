@@ -8,11 +8,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://qaxqjt-api.onrender.com/$1"
+      "destination": "https://qaxqjt-api.vercel.app/$1"
     },
     {
       "source": "/v1/:path*",
-      "destination": "https://qaxqjt-api.onrender.com/v1/:path*"
+      "destination": "https://qaxqjt-api.vercel.app/v1/:path*"
     },
     {
       "source": "/admin",
