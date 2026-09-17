@@ -1,0 +1,35 @@
+# Koyeb 部署配置（免费套餐）
+# 文档：https://www.koyeb.com/docs/reference/yaml
+name: qaxqjt-api
+
+services:
+  - name: qaxqjt-api
+    type: web
+    runtime: docker
+    docker:
+      dockerfile: Dockerfile
+    ports:
+      - port: 3001
+        protocol: http
+    routes:
+      - path: /
+    env:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      - key: DATABASE_URL
+        value: "file:/app/data/prod.db"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: LOG_LEVEL
+        value: warn
+    # 持久化存储：SQLite 数据库
+    volumes:
+      - name: qaxqjt-data
+        path: /app/data
+        size: 1GB
+
+volumes:
+  - name: qaxqjt-data
+    size: 1GB
