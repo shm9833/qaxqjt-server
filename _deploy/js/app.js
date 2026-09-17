@@ -13,6 +13,32 @@
 (function (global) {
   'use strict';
 
+  // ===== 生产数据一次性清理（v20260906g）：清除浏览器端演示/本地业务数据，保留登录态与安全配置 =====
+  // v20260906g：seedDemoData 已在生产模式停用；本标记再跑一次，清掉 v20260906f 清理后被旧版重新播种的
+  // plays/appointments（王建国示例预约）。后台各页演示数据（排班/派工/花名册补丁/演示订单/剧目/统计等）
+  // 此前以 localStorage 持久化。白名单保留：登录会话/token/权限/黑名单/演示模式开关。
+  try {
+    var DEMO_WIPE_FLAG = 'qaxqjt_demo_wipe_v20260906g';
+    if (typeof localStorage !== 'undefined' && !localStorage.getItem(DEMO_WIPE_FLAG)) {
+      var KEEP_KEYS = {
+        'qaxqjt_admin_session': 1, 'qaxqjt_admin_sess_v2': 1, 'qaxqjt_admin_remember': 1,
+        'qaxqjt_admin_token': 1, 'qaxqjt_admin_permissions': 1, 'qaxqjt_admin_info': 1,
+        'qaxqjt_access_token': 1, 'qaxqjt_refresh_token': 1,
+        'qaxqjt_deploy_mode': 1, 'qaxqjt_logout_blacklist': 1
+      };
+      var removed = [];
+      for (var wi = localStorage.length - 1; wi >= 0; wi--) {
+        var wk = localStorage.key(wi);
+        if (wk && wk.indexOf('qaxqjt_') === 0 && !KEEP_KEYS[wk] && wk !== DEMO_WIPE_FLAG) {
+          removed.push(wk);
+          try { localStorage.removeItem(wk); } catch (we) {}
+        }
+      }
+      try { localStorage.setItem(DEMO_WIPE_FLAG, String(Date.now())); } catch (we2) {}
+      try { console.info('[DemoWipe] 已清理浏览器端演示数据 ' + removed.length + ' 项：' + removed.slice(0, 12).join(',')); } catch (we3) {}
+    }
+  } catch (e) {}
+
   // ===== 全局 $ 简写：document.getElementById（兼容无 jQuery/Zepto 场景）=====
   // 修复前：未定义，新写的 runHealthCheck/triggerBackup 等 10+ 函数全部 ReferenceError: $ is not defined
   // 修复后：IIFE 内部可用 + 强制挂到 global.$（不检查 undefined，避免部分旧页面有 window.$=undefined 占位导致跳过）
@@ -31,6 +57,38 @@
     try{ if(Utils && Utils.toast){ Utils.toast(msg,type||'info',dur||3000); return; } }catch(_){}
     try{ if(console && console.log) console.log('[toast]['+(type||'info')+'] '+msg); }catch(_){}
   }
+
+  // ★ FIX 导出功能：自动加载 xlsx 库（SheetJS），多路径降级
+  (function _loadXlsx() {
+    try {
+      if (global.XLSX && typeof global.XLSX.writeFile === 'function') return;
+      var cdns = [
+        '/js/xlsx.min.js',
+        '../js/xlsx.min.js',
+        'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
+      ];
+      var idx = 0, done = false;
+      function next() {
+        if (done || idx >= cdns.length) return;
+        var s = document.createElement('script');
+        s.src = cdns[idx++];
+        s.onload = function () {
+          if (global.XLSX && typeof global.XLSX.writeFile === 'function') {
+            done = true;
+            try { console.info('[xlsx] loaded from: ' + s.src); } catch (_) {}
+          } else { next(); }
+        };
+        s.onerror = function () { next(); };
+        s.async = false;
+        try { document.head.appendChild(s); } catch (_) { next(); }
+      }
+      if (document && document.head) next();
+      else if (document && document.addEventListener) {
+        document.addEventListener('DOMContentLoaded', next, { once: true });
+      }
+    } catch (_) {}
+  })();
 
   // ============================================================
   // 模块 0: 通用工具函数 Utils
@@ -274,15 +332,17 @@
         document.body.appendChild(el);
         var rAF = (global && global.requestAnimationFrame) ? global.requestAnimationFrame
           : (typeof requestAnimationFrame === 'function' ? requestAnimationFrame : null);
-        if (rAF) {
-          try {
-            rAF(function () {
-              try { el.classList.remove('toast-state-hide'); el.classList.add('toast-state-show'); } catch (_) {}
-            });
-          } catch (_) { try { el.classList.remove('toast-state-hide'); el.classList.add('toast-state-show'); } catch (_2) {} }
-        } else {
+        // ★ FIX: 页面隐藏时 requestAnimationFrame 不执行回调，导致 toast 永远停留在 hide 状态
+        // 解决方案：直接显示 toast（不依赖 RAF），用 setTimeout 做动画兜底
+        var _toastShown = false;
+        var _showToastEl = function () {
+          if (_toastShown) return;
+          _toastShown = true;
           try { el.classList.remove('toast-state-hide'); el.classList.add('toast-state-show'); } catch (_) {}
-        }
+        };
+        // 直接显示，不依赖 requestAnimationFrame（后台标签页 RAF 不执行）
+        try { el.classList.remove('toast-state-hide'); el.classList.add('toast-state-show'); } catch (_) {}
+        _toastShown = true;
 
         setTimeout(function () {
           try { el.classList.remove('toast-state-show'); el.classList.add('toast-state-hide'); } catch (_) {}
@@ -513,6 +573,106 @@
       for (var i = 0; i < list.length; i++) { if (list[i].parentNode) list[i].parentNode.removeChild(list[i]); }
       // B7 CSP合规：移除body-modal-locked 替代 body.style.overflow=''
       try { document.body.classList.remove('body-modal-locked'); } catch (e) {}
+    },
+
+    /**
+     * ★ FIX 导出功能：通用 xlsx 导出工具
+     * 从数据数组 + 表头导出为 .xlsx 文件
+     * @param {Array<Array>} data 二维数组（不含表头）
+     * @param {Array<string>} headers 表头数组
+     * @param {string} filename 文件名（不含扩展名）
+     * @param {string} sheetName 工作表名
+     */
+    exportDataToXlsx: function (data, headers, filename, sheetName) {
+      try {
+        if (!window.XLSX || typeof window.XLSX.utils === 'undefined') {
+          Utils.toast('⚠️ xlsx 库未加载，请刷新页面后重试', 'error');
+          return false;
+        }
+        var aoa = [];
+        if (Array.isArray(headers) && headers.length > 0) aoa.push(headers);
+        if (Array.isArray(data)) {
+          for (var i = 0; i < data.length; i++) {
+            if (Array.isArray(data[i])) aoa.push(data[i]);
+          }
+        }
+        if (aoa.length === 0) {
+          Utils.toast('⚠️ 没有可导出的数据', 'warning');
+          return false;
+        }
+        var ws = window.XLSX.utils.aoa_to_sheet(aoa);
+        var wb = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(wb, ws, (sheetName || 'Sheet1').slice(0, 31));
+        var fname = (filename || ('export_' + new Date().toISOString().slice(0, 10))) + '.xlsx';
+        window.XLSX.writeFile(wb, fname);
+        Utils.toast('✅ 已导出 ' + (data ? data.length : 0) + ' 条记录：' + fname, 'success');
+        return true;
+      } catch (e) {
+        Utils.toast('❌ 导出失败：' + (e && e.message ? e.message : e), 'error');
+        return false;
+      }
+    },
+
+    /**
+     * ★ FIX 导出功能：从页面表格 DOM 导出为 xlsx
+     * @param {HTMLElement|string} tableEl 表格元素或选择器
+     * @param {string} filename 文件名
+     */
+    exportTableToXlsx: function (tableEl, filename) {
+      try {
+        var tbl = (typeof tableEl === 'string') ? document.querySelector(tableEl) : tableEl;
+        if (!tbl) { Utils.toast('⚠️ 未找到可导出的表格', 'warning'); return false; }
+        var rows = tbl.querySelectorAll('tr');
+        if (!rows || rows.length === 0) { Utils.toast('⚠️ 表格为空', 'warning'); return false; }
+        var aoa = [];
+        for (var i = 0; i < rows.length; i++) {
+          var cells = rows[i].querySelectorAll('th,td');
+          var row = [];
+          for (var j = 0; j < cells.length; j++) {
+            row.push((cells[j].textContent || '').replace(/\s+/g, ' ').trim());
+          }
+          aoa.push(row);
+        }
+        var headers = aoa.shift();
+        return Utils.exportDataToXlsx(aoa, headers, filename, '数据导出');
+      } catch (e) {
+        Utils.toast('❌ 表格导出失败：' + (e && e.message ? e.message : e), 'error');
+        return false;
+      }
+    },
+
+    /**
+     * ★ FIX 导出功能：智能导出当前页面主数据表格
+     * 自动寻找页面上最可能的数据表格并导出
+     */
+    autoExportXlsx: function (filename) {
+      try {
+        // 优先找带 id 或 class 的数据表格
+        var selectors = [
+          'table[data-export-table]',
+          '#dataTable', '#mainTable', '#listTable',
+          'table.data-table', 'table.admin-table',
+          '.table-responsive table',
+          'table'
+        ];
+        var tbl = null;
+        for (var s = 0; s < selectors.length; s++) {
+          var found = document.querySelector(selectors[s]);
+          if (found) {
+            // 确保表格有数据行（>1行）
+            var r = found.querySelectorAll('tr');
+            if (r && r.length > 1) { tbl = found; break; }
+          }
+        }
+        if (!tbl) {
+          Utils.toast('⚠️ 当前页面无可导出的表格数据', 'warning');
+          return false;
+        }
+        return Utils.exportTableToXlsx(tbl, filename);
+      } catch (e) {
+        Utils.toast('❌ 自动导出失败：' + (e && e.message ? e.message : e), 'error');
+        return false;
+      }
     }
   };
 
@@ -1086,8 +1246,18 @@
 
     /**
      * 批量初始化演示数据
+     * 生产环境（默认）：不再播种任何示例剧目/示例预约/假数据——空白态，等真实预约与录入；
+     * 仅 qaxqjt_deploy_mode="demo"（本地演示验收）时写入示例数据。
      */
     seedDemoData: function () {
+      var DEPLOY_MODE_KEY = 'qaxqjt_deploy_mode';
+      var isDemo = false;
+      try { isDemo = localStorage.getItem(DEPLOY_MODE_KEY) === 'demo'; } catch (_me) {}
+      if (!isDemo) {
+        // 生产：仅保证 users 空壳存在（部分旧逻辑读取 .list 期望数组），绝不写入任何示例数据
+        try { if (!this._get(this.KEYS.USERS)) this._set(this.KEYS.USERS, []); } catch (_u) {}
+        return;
+      }
       if (this._get(this.KEYS.PLAYS)) return;
 
       var plays = [
@@ -6022,11 +6192,13 @@
         if (views && views.length) {
           views.forEach(function (btn) {
             btn.addEventListener('click', function () {
+              // 页面自带真实视图切换逻辑（schedule.html window.__switchView，含容器显隐+API渲染+提示）时交由页面处理，不弹占位 toast
+              if (typeof window.__switchView === 'function') return;
               views.forEach(function (b) { b.classList.remove('active'); });
               btn.classList.add('active');
               var map = { 'month': '📆 月度', 'week': '📋 周度', 'list': '📑 列表' };
               var label = map[btn.getAttribute('data-view')] || btn.getAttribute('data-view');
-              Utils.toast(label + '视图已切换（正式环境将对接后端日历接口渲染）', 'success');
+              Utils.toast(label + '视图已切换', 'success');
             });
           });
         }
@@ -6097,6 +6269,8 @@
         }
         var btn = e.target.closest('button, a, .btn-action');
         if (!btn) return;
+        // v20260908k：已绑定真实处理的按钮整体跳过演示兜底（schedule.html __BTN_GUARD_V2__ 全量标记 __superPatchBound；CSP 内联事件迁移同样标记；TS3 真实绑定 __ts3Done）
+        if (btn.__superPatchBound || btn.__ts3Done) return;
         if (btn.hasAttribute('onclick') && !btn.classList.contains('needs-delegate')) return;
         var href = btn.getAttribute && btn.getAttribute('href');
         if (href && href !== '#' && href !== '' && href.indexOf('javascript:') !== 0) return;
@@ -6129,11 +6303,15 @@
           return;
         }
         if (hasAny(text, ['查询'], btn)) {
+          // v20260907k：跳过已绑定真实处理的按钮（schedule.html 等 admin 页面的查询栏按钮已设 __superPatchBound）
+          if (btn.__superPatchBound || btn.__ts3Done) return;
           e.preventDefault();
           Utils.toast('🔍 查询条件已提交，正在刷新数据...', 'info');
           return;
         }
         if (hasAny(text, ['重置'], btn)) {
+          // v20260907k：跳过已绑定真实处理的按钮（schedule.html 等查询栏重置按钮已设 __superPatchBound/__ts3Done）
+          if (btn.__superPatchBound || btn.__ts3Done) return;
           e.preventDefault();
           var t3 = stripEmoji(text); if (!t3 && btn.getAttribute) t3 = stripEmoji(btn.getAttribute('title') || '');
           if (t3.indexOf('重置密码') >= 0 || (t3.indexOf('重置') >= 0 && btn.closest && btn.closest('[class*="account"]'))) {
@@ -6210,7 +6388,24 @@
         }
         if (hasAny(text, ['导出'], btn)) {
           e.preventDefault();
-          Utils.toast('📤 正在生成导出文件...（正式环境对接后端生成 .xlsx / .pdf）', 'info');
+          // ★ FIX 导出功能：真正调用 xlsx 导出当前页面表格
+          try {
+            // 如果页面定义了特定的导出函数，优先调用
+            if (typeof window.exportPageData === 'function') {
+              window.exportPageData();
+            } else {
+              // 自动从按钮文本推断文件名
+              var fname = 'export_' + new Date().toISOString().slice(0,10).replace(/-/g,'');
+              var t = stripEmoji(text);
+              if (t) {
+                var m = t.match(/导出([^，,（(]*)/);
+                if (m && m[1]) fname = m[1].trim() + '_' + new Date().toISOString().slice(0,10).replace(/-/g,'');
+              }
+              Utils.autoExportXlsx(fname);
+            }
+          } catch (expErr) {
+            Utils.toast('❌ 导出失败：' + (expErr && expErr.message ? expErr.message : expErr), 'error');
+          }
           return;
         }
         if (hasAny(text, ['批量启用', '批量禁用', '批量补卡', '批量核销', '批量删除', '批量发布', '批量上架', '批量下架', '批量报废', '批量标记', '批量确认', '批量导出', '批量'], btn)) {
@@ -6556,11 +6751,18 @@
      */
     initImageUploaders: function () {
       var FILE_MAX_MB = 10;
+      // v20260908e：isImgOnly 判定收紧——accept 拆分后全部为 image/* 才算纯图片输入。
+      // 旧判定 accept.indexOf('image')>=0 会误伤混合类型输入（如订单附件 image/*,.pdf,.doc…），
+      // 导致选 PDF/Word 扫描件被误报「仅支持 image/* 格式」，用户误以为上传失败
+      function _isImgOnlyAccept(accept) {
+        var parts = (accept || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+        return parts.length > 0 && parts.every(function (p) { return p.indexOf('image') === 0; });
+      }
       document.addEventListener('change', function (e) {
         var inp = e.target;
         if (!inp || inp.tagName !== 'INPUT' || inp.type !== 'file') return;
         var accept = (inp.getAttribute('accept') || '').toLowerCase();
-        var isImgOnly = accept.indexOf('image') >= 0;
+        var isImgOnly = _isImgOnlyAccept(accept);
         var files = inp.files;
         if (!files || !files.length) return;
         // 1. 大小/格式校验
@@ -6623,7 +6825,12 @@
       document.addEventListener('submit', function (ev) {
         var f = ev.target;
         if (f.tagName !== 'FORM') return;
-        if (!f.querySelector('input[type="file"][accept*="image"]')) return;
+        // v20260908e：仅拦「纯图片」上传表单，放过混合类型附件表单（image/*,.pdf,.doc…）
+        var hasImgOnlyInput = false;
+        f.querySelectorAll('input[type="file"]').forEach(function (fi) {
+          if (_isImgOnlyAccept((fi.getAttribute('accept') || '').toLowerCase())) hasImgOnlyInput = true;
+        });
+        if (!hasImgOnlyInput) return;
         ev.preventDefault();
         (Utils.toast || Utils.showToast) && (Utils.toast || Utils.showToast)('📤 图片已在前台校验完成，EdgeOne Pages 静态部署环境下请对接对象存储/后端上传接口后再提交保存。本前端版已完成校验+预览层。', 'info', 4500);
         return false;
@@ -8882,11 +9089,15 @@
         // —— ② 扫 2 轮：空 tbody[data-paginate] / 空 table 移除 data-paginate，避免分页器初始化时撑爆
         function __purgeEmptyPaginate(roundTag) {
           var removed = 0;
+          var kept = 0;
           try {
             var list = document.querySelectorAll('tbody[data-paginate], table[data-paginate], [data-paginate="list"]');
             for (var i = 0; i < list.length; i++) {
               var el = list[i];
               if (!el || !el.getAttribute) continue;
+              // v20260908m：带 data-paginate-keep 的元素（如 staff.html 花名册 tbody）跳过——
+              // 这些表会异步从后端加载行， purge 时虽空但稍后有数据，移除属性会导致分页器初始化失败
+              try { if (el.getAttribute('data-paginate-keep') === '1') { kept++; continue; } } catch (_keepErr) {}
               var tag = (el.tagName || '').toLowerCase();
               var rows = 0;
               if (tag === 'tbody') {
@@ -8909,7 +9120,7 @@
               }
             }
           } catch (_e) {}
-          try { if (console && console.info) console.info('[HeightGuard] Round '+roundTag+': purgeEmptyPaginate removed='+removed); } catch (_) {}
+          try { if (console && console.info) console.info('[HeightGuard] Round '+roundTag+': purgeEmptyPaginate removed='+removed+' kept='+kept); } catch (_) {}
         }
         __purgeEmptyPaginate('1-now');
         // 第 2 轮：2.4s 后再扫（等 CRUD 初始化完）

@@ -8,11 +8,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://YOUR_BACKEND_PUBLIC_HOST/$1"
+      "destination": "https://qaxqjt-api.onrender.com/$1"
     },
     {
       "source": "/v1/:path*",
-      "destination": "https://YOUR_BACKEND_PUBLIC_HOST/v1/:path*"
+      "destination": "https://qaxqjt-api.onrender.com/v1/:path*"
     },
     {
       "source": "/admin",
