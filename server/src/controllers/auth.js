@@ -138,16 +138,36 @@ const logout = async ctx => {
 const me = async ctx => {
   const u = ctx.state.user;
   if (!u) throw new BusinessError('UNAUTHORIZED', '请先登录');
-  const acc = await prisma.accountsV2.findUnique({
-    where: { id: u.sub },
-    include: { userRoles: { include: { role: { include: { rolePermissions: { include: { permission: true } } } } } } }
-  });
+  // 兼容不同版本 Prisma schema：新版 RolePermission 关联为小写 permission，
+  // 旧版生产 schema 为大写 Permission；若权限关联完全缺失则降级为仅角色查询
+  let acc = null;
+  try {
+    acc = await prisma.accountsV2.findUnique({
+      where: { id: u.sub },
+      include: { userRoles: { include: { role: { include: { rolePermissions: { include: { permission: true } } } } } } }
+    });
+  } catch (e) {
+    try {
+      acc = await prisma.accountsV2.findUnique({
+        where: { id: u.sub },
+        include: { userRoles: { include: { role: { include: { rolePermissions: { include: { Permission: true } } } } } } }
+      });
+    } catch (e2) {
+      acc = await prisma.accountsV2.findUnique({
+        where: { id: u.sub },
+        include: { userRoles: { include: { role: true } } }
+      });
+    }
+  }
   if (!acc) throw new BusinessError('NOT_FOUND', '账号不存在');
   const roles = (acc.userRoles || []).map(ur => ({
     id: ur.role.id,
     name: ur.role.name,
     level: ur.role.level,
-    perms: (ur.role.rolePermissions || []).map(rp => rp.permission.code)
+    perms: (ur.role.rolePermissions || []).map(rp => {
+      const p = rp.permission || rp.Permission;
+      return p && p.code;
+    }).filter(Boolean)
   }));
   const perms = Array.from(new Set(roles.flatMap(r => r.perms)));
   return success(ctx, {

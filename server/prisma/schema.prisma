@@ -274,21 +274,26 @@ model PlayCast {
 }
 
 model InventoryItem {
-  id        String   @id
-  sku       String?  @unique(map: "idx_inv_sku")
-  name      String
-  category  String? // 戏服/道具/头饰/乐器/其他
-  quantity  Int      @default(0)
-  unit      String?
-  unitPrice Decimal? @map("unit_price")
-  location  String?
-  status    String   @default("in_stock")
-  imageUrl  String?  @map("image_url")
-  remark    String?
-  updatedBy String?  @map("updated_by")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  ts        BigInt   @map("_ts")
+  id                String    @id
+  sku               String?   @unique(map: "idx_inv_sku")
+  name              String
+  category          String? // 戏服/道具/头饰/乐器/其他
+  specModel         String?   @map("spec_model") // 规格型号
+  quantity          Int       @default(0)
+  safetyStock       Int?      @map("safety_stock") // 安全库存
+  unit              String?
+  unitPrice         Decimal?  @map("unit_price")
+  location          String?
+  status            String    @default("in_stock")
+  borrower          String? // 当前借用人（借用中时）
+  expectedReturnDate DateTime? @map("expected_return_date") // 预计归还
+  lastCheckDate     DateTime? @map("last_check_date") // 上次盘点
+  imageUrl          String?   @map("image_url")
+  remark            String?
+  updatedBy         String?   @map("updated_by")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  ts                BigInt    @map("_ts")
 
   @@index([category], map: "idx_inv_cat")
   @@map("inventory_items")

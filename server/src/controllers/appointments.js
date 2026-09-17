@@ -45,6 +45,21 @@ const _genAppointmentNo = () => {
   );
 };
 
+// 生成订单号 ORD + yyMMddHHmm + 4位随机
+const _genOrderNo = () => {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return (
+    'ORD' +
+    String(d.getFullYear()).slice(2) +
+    pad(d.getMonth() + 1) +
+    pad(d.getDate()) +
+    pad(d.getHours()) +
+    pad(d.getMinutes()) +
+    nanoid(4).toUpperCase()
+  );
+};
+
 const list = async ctx => {
   const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
   const where = {};
@@ -198,9 +213,89 @@ const create = async ctx => {
     detail: { no: appointment.appointmentNo, packageType }
   });
 
+  // 7. 公开预约 → 自动生成关联订单（draft），后台订单页即时可见
+  //    预约（Appointment）与订单（Order）是上游/下游关系：
+  //    公开提交的预约需同步落一条 Order（status=draft），并通过 convertedOrderId 回链。
+  //    后台 /v1/orders 列表读取 Order 表，否则前台提交成功但后台订单页看不到。
+  if (isPublic) {
+    try {
+      const orderId = idByCtx('order', 12, nanoid);
+      const orderNo = _genOrderNo();
+      const venueFull = [b.venueProvince, b.venueCity, b.venueDistrict, b.venueAddress]
+        .filter(Boolean)
+        .join('');
+      const amount = b.totalPerformanceFee != null
+        ? Number(b.totalPerformanceFee)
+        : (b.estimatedBudget != null ? Number(b.estimatedBudget) : 0);
+      const order = await prisma.order.create({
+        data: {
+          id: orderId,
+          orderNo: orderNo,
+          orderType: 'performance',
+          status: 'draft',
+          customerId: customer.id,
+          customerName: b.customerName,
+          organization: b.organization || customer.organization || null,
+          phone: b.phone,
+          appointmentId: appointment.id,
+          orderDate: new Date(),
+          totalAmount: amount,
+          finalAmount: amount,
+          depositAmount: b.depositAmount != null ? Number(b.depositAmount) : 0,
+          performanceStartDate: new Date(b.preferredStartDate),
+          performanceEndDate: b.preferredEndDate ? new Date(b.preferredEndDate) : null,
+          performanceCount: Number(b.performanceCount),
+          venueFullAddress: venueFull || null,
+          specialRequirements: b.specialRequirements || null,
+          internalRemark: b.remarkInternal || null,
+          createdBy: 'public_booking',
+          ts: BigInt(nowMs())
+        }
+      });
+      // 回链预约 → convertedOrderId，便于详情页跳转订单
+      await prisma.appointment.update({
+        where: { id: appointment.id },
+        data: {
+          convertedOrderId: order.id,
+          conversionToOrderDate: new Date(),
+          updatedAt: new Date(),
+          ts: BigInt(nowMs())
+        }
+      });
+      // 同步预约-剧目 → 订单明细（items），便于后台订单页展示剧目
+      if (Array.isArray(b.plays) && b.plays.length) {
+        await prisma.orderItem.createMany({
+          data: b.plays.map(p => ({
+            id: idByCtx('orderItem', 12, nanoid),
+            orderId: order.id,
+            itemType: 'performance',
+            playId: p.playId ? String(p.playId) : null,
+            itemName: '演出服务',
+            quantity: Number(p.sortOrder) || 1,
+            unitPrice: 0,
+            subtotal: 0,
+            performanceDate: p.performanceDate ? new Date(p.performanceDate) : null,
+            remark: p.note || null,
+            ts: BigInt(nowMs())
+          }))
+        });
+      }
+      await audit({
+        ctx,
+        module: 'booking',
+        action: 'APPOINTMENT_AUTO_CONVERT_ORDER',
+        targetId: appointment.id,
+        detail: { orderNo: order.orderNo, orderId: order.id }
+      });
+    } catch (_convErr) {
+      // 订单生成失败不影响预约主流程（预约已落库，后台可人工补单）
+      console.error('[appointments] auto-convert-order failed:', _convErr && _convErr.message);
+    }
+  }
+
   const result = await prisma.appointment.findUnique({
     where: { id: appointment.id },
-    include: { plays: true, customer: true }
+    include: { plays: true, customer: true, order: true }
   });
   return created(ctx, result);
 };
