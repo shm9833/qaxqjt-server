@@ -19,7 +19,7 @@
     <script src="../js/wechat-fallback.js?v=20260830" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>后台登录 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260830">
+  <link rel="stylesheet" href="../css/style.css?v=20260906">
   <style>
     .login-page {
       min-height: 100vh;
@@ -760,8 +760,9 @@
   <script src="../js/year-lite.js?v=20260830"></script>
     <script src="../js/api-config.js?v=20260830"></script>
   <script src="../js/api-request.js?v=20260830"></script>
-<script src="../js/app.js?v=20260830"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="../js/app.js?v=20260908n"></script>
+  <!-- 修复：二维码库本地化（原 cdn.jsdelivr.net/npm/qrcode 路径在 npm 包中不存在 → 404 + ORB 拦截，二维码从未渲染） -->
+  <script src="../js/qrcode.min.js?v=20260905"></script>
   <script>
     (function() {
       'use strict';
@@ -1839,6 +1840,10 @@
           .then(function (data) {
             if (data && data.ok && data.data && data.data.token) {
               currentQrToken = data.data.token;
+              if (!window.QRCode) {
+                setQrStatus('❌ 二维码组件加载失败', '请点击刷新按钮重试', true);
+                return;
+              }
               var qrUrl = window.location.origin + '/admin/qr-login.html?token=' + encodeURIComponent(currentQrToken);
               drawQrCode(qrUrl);
               startPolling(currentQrToken);
@@ -1878,19 +1883,62 @@
       function handleQrConfirmed(data) {
         setQrStatus('✅ 登录成功，正在跳转…', '', false);
         try {
+          // 修复：session 结构必须与密码登录完全对齐（index.html 内联守卫硬性要求 s.id + s.expiresAt，
+          // 否则扫码登录后跳后台会被判为无效登录态踢回登录页）；token 须写入 QAXQJT_API_CONFIG 存储，
+          // api-request 层从 qaxqjt_access_token 读取 Authorization，放进 session.token 不会被使用。
+          var u = (data && data.user) || {};
+          var SESS_TTL_MS = 2 * 60 * 60 * 1000;
+          var nowMs = Date.now();
+          var sessId = (function () {
+            try {
+              var buf = new Uint8Array(16);
+              if (window.crypto && window.crypto.getRandomValues) {
+                window.crypto.getRandomValues(buf);
+              } else if (window.msCrypto && window.msCrypto.getRandomValues) {
+                window.msCrypto.getRandomValues(buf);
+              } else {
+                for (var _qi = 0; _qi < 16; _qi++) buf[_qi] = Math.floor(Math.random() * 256);
+              }
+              var hex = '';
+              for (var _qh = 0; _qh < buf.length; _qh++) {
+                var b = buf[_qh].toString(16);
+                hex += b.length === 1 ? '0' + b : b;
+              }
+              return 'sess_' + hex;
+            } catch (_e) {
+              return 'sess_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+            }
+          })();
           var session = {
-            username: data.user.username,
-            name: data.user.realName,
-            role: data.user.role,
-            roleName: data.user.role,
-            token: data.accessToken,
-            refreshToken: data.refreshToken,
-            forcePwdChange: data.user.forcePwdChange,
+            id: sessId,
+            username: u.username,
+            name: u.realName || u.name || u.username || '管理员',
+            role: u.role || 'admin',
+            roleName: u.role || '系统管理员',
+            loginAt: new Date().toISOString(),
+            expiresAt: nowMs + SESS_TTL_MS,
             fromApi: true,
-            loginAt: Date.now()
+            forcePwdChange: !!u.forcePwdChange,
+            token: data.accessToken,
+            refreshToken: data.refreshToken
           };
           localStorage.setItem('qaxqjt_admin_session', JSON.stringify(session));
-          var tgt = data.user.forcePwdChange ? 'change-password.html' : 'index.html';
+          try {
+            if (window.QAXQJT_API_CONFIG) {
+              if (typeof window.QAXQJT_API_CONFIG.setAccessToken === 'function') {
+                window.QAXQJT_API_CONFIG.setAccessToken(data.accessToken);
+              }
+              if (typeof window.QAXQJT_API_CONFIG.setRefreshToken === 'function') {
+                window.QAXQJT_API_CONFIG.setRefreshToken(data.refreshToken);
+              }
+              if (typeof window.QAXQJT_API_CONFIG.setCurrentUser === 'function') {
+                window.QAXQJT_API_CONFIG.setCurrentUser(u);
+              }
+            }
+          } catch (_tk) {
+            console.warn('QR login token storage warn:', _tk && _tk.message ? _tk.message : _tk);
+          }
+          var tgt = u.forcePwdChange ? 'change-password.html' : 'index.html';
           setTimeout(function () {
             try { window.location.assign(tgt); } catch (e) { window.location.href = tgt; }
           }, 800);
@@ -2705,6 +2753,7 @@ function __pLog(module,event,extra){
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;

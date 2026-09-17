@@ -9,7 +9,7 @@
   <script>try{(function(){
     var K1="qaxqjt_admin_session", K2="qaxqjt_logout_blacklist", L="login.html";
     var p=String(location.pathname||"").split("/").pop().toLowerCase();
-    if(p==="login.html"||p==="recover.html") return;
+    if(p==="login.html"||p==="recover.html"||p==="change-password.html") return;
     var now=Date.now(), raw=null, s=null, bad=1;
     try{ raw=localStorage.getItem(K1); if(raw) s=JSON.parse(raw); }catch(_){}
     if(s && s.id && (!s.expiresAt || now < parseInt(s.expiresAt,10))){
@@ -21,6 +21,12 @@
       var u=location.href, i=u.lastIndexOf("/");
       var base= (i>=0)? u.substring(0,i+1) : "./";
       location.replace(base + L);
+    }
+    // ★ FIX M-14: 首次登录强制改密码 —— forcePwdChange=true 时跳转改密页
+    if(s && s.forcePwdChange){
+      var u2=location.href, i2=u2.lastIndexOf("/");
+      var base2=(i2>=0)? u2.substring(0,i2+1) : "./";
+      location.replace(base2 + "change-password.html");
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
 
@@ -41,7 +47,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>数据看板 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260906">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -1034,7 +1040,7 @@
             <div class="welcome-text">
               <h2>👋 欢迎回来，<span class="gold" id="welcomeUserName">管理员</span>！</h2>
               <div class="date-info" id="welcomeDate">今天是 {year}年{m}月{d}日 星期{w}</div>
-              <div class="tip">今日有 <strong style="color:var(--gold)">8</strong> 个待确认档期 · <strong style="color:var(--gold)">5</strong> 条新预约订单等待处理</div>
+              <div class="tip" id="welcomePendingTip">今日有 <strong style="color:var(--gold)">0</strong> 个待确认档期 · <strong style="color:var(--gold)">0</strong> 条新预约订单等待处理</div>
             </div>
             <div class="welcome-actions">
               <a href="orders.html" data-role-level="800" class="welcome-btn welcome-btn-gold">
@@ -1056,11 +1062,11 @@
               </div>
             </div>
             <div class="stat-card-title">{year}年度演出场次</div>
-            <div class="stat-card-value">128<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">场</span></div>
+            <div class="stat-card-value">0<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">场</span></div>
             <div class="stat-card-sub">
               <span>同比去年</span>
               <span class="divider"></span>
-              <span style="color:#28a745;">+14场</span>
+              <span style="color:var(--text-light);">—</span>
             </div>
           </div>
 
@@ -1072,11 +1078,11 @@
               </div>
             </div>
             <div class="stat-card-title">本月预约订单</div>
-            <div class="stat-card-value">23<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">单</span></div>
+            <div class="stat-card-value">0<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">单</span></div>
             <div class="stat-card-sub">
               <span>较上月</span>
               <span class="divider"></span>
-              <span style="color:#28a745;">+2单</span>
+              <span style="color:var(--text-light);">—</span>
             </div>
           </div>
 
@@ -1088,11 +1094,11 @@
               </div>
             </div>
             <div class="stat-card-title">待确认档期</div>
-            <div class="stat-card-value">8<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">个</span></div>
+            <div class="stat-card-value">0<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">个</span></div>
             <div class="stat-card-sub">
               <span>较上周</span>
               <span class="divider"></span>
-              <span style="color:var(--primary);">-1个</span>
+              <span style="color:var(--text-light);">—</span>
             </div>
           </div>
 
@@ -1104,11 +1110,11 @@
               </div>
             </div>
             <div class="stat-card-title">当月营收</div>
-            <div class="stat-card-value">¥156,800</div>
+            <div class="stat-card-value">¥0</div>
             <div class="stat-card-sub">
               <span>较上月</span>
               <span class="divider"></span>
-              <span style="color:#28a745;">+¥23,900</span>
+              <span style="color:var(--text-light);">—</span>
             </div>
           </div>
 
@@ -1120,11 +1126,11 @@
               </div>
             </div>
             <div class="stat-card-title">在演职人员</div>
-            <div class="stat-card-value">32<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">人</span></div>
+            <div class="stat-card-value">0<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">人</span></div>
             <div class="stat-card-sub">
-              <span>演员24人</span>
+              <span>演员0人</span>
               <span class="divider"></span>
-              <span>后勤8人</span>
+              <span>后勤0人</span>
             </div>
           </div>
 
@@ -1136,11 +1142,9 @@
               </div>
             </div>
             <div class="stat-card-title">库存预警</div>
-            <div class="stat-card-value">2<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">项</span></div>
+            <div class="stat-card-value">0<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">项</span></div>
             <div class="stat-card-sub">
-              <span>戏服1套</span>
-              <span class="divider"></span>
-              <span>道具1件</span>
+              <span>暂无预警</span>
             </div>
           </div>
         </div>
@@ -1168,81 +1172,7 @@
                   </tr>
                 </thead>
                 <tbody data-paginate="list" data-page-size="10">
-                  <tr>
-                    <td style="font-weight:600;color:var(--primary-dark);font-family:monospace;">APT20260725001</td>
-                    <td>王建国 / 兴国镇文化站</td>
-                    <td>139****0001</td>
-                    <td>《周仁回府》等 5场</td>
-                    <td>2026-09-15</td>
-                    <td style="font-weight:600;color:var(--primary);">¥30,600</td>
-                    <td><span class="badge badge-warning">待审核</span></td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-sm btn-primary">审核</button>
-                        <button class="btn btn-sm btn-secondary">详情</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:600;color:var(--primary-dark);font-family:monospace;">APT20260724002</td>
-                    <td>李芳梅 / 莲花镇村委会</td>
-                    <td>138****0002</td>
-                    <td>《三滴血》 3场</td>
-                    <td>2026-08-20</td>
-                    <td style="font-weight:600;color:var(--primary);">¥19,800</td>
-                    <td><span class="badge badge-info">已确认</span></td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-sm btn-primary">签约</button>
-                        <button class="btn btn-sm btn-secondary">详情</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:600;color:var(--primary-dark);font-family:monospace;">APT20260723003</td>
-                    <td>张志强 / 县文化旅游局</td>
-                    <td>137****0003</td>
-                    <td>《铡美案》等 10场</td>
-                    <td>2026-10-01</td>
-                    <td style="font-weight:600;color:var(--primary);">¥54,400</td>
-                    <td><span class="badge badge-success">已收款</span></td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-sm btn-secondary">详情</button>
-                        <button class="btn btn-sm btn-outline-dark">合同</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:600;color:var(--primary-dark);font-family:monospace;">APT20260722004</td>
-                    <td>赵秀兰 / 郭嘉镇庙会</td>
-                    <td>136****0004</td>
-                    <td>《窦娥冤》 2场</td>
-                    <td>2026-08-10</td>
-                    <td style="font-weight:600;color:var(--primary);">¥13,600</td>
-                    <td><span class="badge badge-warning">待审核</span></td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-sm btn-primary">审核</button>
-                        <button class="btn btn-sm btn-secondary">详情</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:600;color:var(--primary-dark);font-family:monospace;">APT20260721005</td>
-                    <td>孙德顺 / 陇城镇商会</td>
-                    <td>135****0005</td>
-                    <td>《火焰驹》等 8场</td>
-                    <td>2026-09-28</td>
-                    <td style="font-weight:600;color:var(--primary);">¥48,000</td>
-                    <td><span class="badge badge-gold">排期中</span></td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-sm btn-primary">排期</button>
-                        <button class="btn btn-sm btn-secondary">详情</button>
-                      </div>
-                    </td>
-                  </tr>
+                  <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-light);">暂无预约订单数据</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1282,54 +1212,7 @@
             </div>
             <div class="admin-card-body">
               <div class="system-notice-list">
-                <div class="notice-item">
-                  <div class="notice-icon info">📋</div>
-                  <div class="notice-content">
-                    <div class="notice-title">新预约订单提交<span class="notice-badge new">NEW</span></div>
-                    <div class="notice-desc">郭嘉镇商会提交了8场秋季庙会演出预约，请注意审核</div>
-                  </div>
-                  <div class="notice-time">10分钟前</div>
-                </div>
-                <div class="notice-item">
-                  <div class="notice-icon success">✅</div>
-                  <div class="notice-content">
-                    <div class="notice-title">订单收款确认</div>
-                    <div class="notice-desc">文旅局10场国庆档演出款 ¥54,400 已到账</div>
-                  </div>
-                  <div class="notice-time">2小时前</div>
-                </div>
-                <div class="notice-item">
-                  <div class="notice-icon warning">⚠️</div>
-                  <div class="notice-content">
-                    <div class="notice-title">库存预警提醒<span class="notice-badge hot">HOT</span></div>
-                    <div class="notice-desc">女蟒袍1套磨损严重 · 龙头拐杖库存仅剩1件，请及时补充</div>
-                  </div>
-                  <div class="notice-time">5小时前</div>
-                </div>
-                <div class="notice-item">
-                  <div class="notice-icon info">📅</div>
-                  <div class="notice-content">
-                    <div class="notice-title">档期冲突提醒</div>
-                    <div class="notice-desc">8月15日存在2场演出地点冲突，请前往排班页处理</div>
-                  </div>
-                  <div class="notice-time">昨天</div>
-                </div>
-                <div class="notice-item">
-                  <div class="notice-icon success">🎉</div>
-                  <div class="notice-content">
-                    <div class="notice-title">月度目标超额完成</div>
-                    <div class="notice-desc">7月营收超目标18%，感谢全体同仁的辛勤付出！</div>
-                  </div>
-                  <div class="notice-time">3天前</div>
-                </div>
-                <div class="notice-item">
-                  <div class="notice-icon danger">🔧</div>
-                  <div class="notice-content">
-                    <div class="notice-title">系统维护通知</div>
-                    <div class="notice-desc">8月1日凌晨02:00-04:00将进行系统升级，期间暂停使用</div>
-                  </div>
-                  <div class="notice-time">5天前</div>
-                </div>
+                <div style="text-align:center;padding:40px;color:var(--text-light);">暂无系统动态</div>
               </div>
             </div>
           </div>
@@ -1342,64 +1225,11 @@
           </div>
           <div class="admin-card-body">
             <div class="bar-chart">
-              <div class="bar-chart-item">
-                <div class="bar-chart-label">《周仁回府》</div>
-                <div class="bar-chart-track">
-                  <div class="bar-chart-fill" style="width:95%;">
-                    <span class="bar-chart-value">38场</span>
-                  </div>
-                </div>
-                <div class="bar-chart-count">38场</div>
-              </div>
-              <div class="bar-chart-item">
-                <div class="bar-chart-label">《三滴血》</div>
-                <div class="bar-chart-track">
-                  <div class="bar-chart-fill gold" style="width:82%;">
-                    <span class="bar-chart-value">33场</span>
-                  </div>
-                </div>
-                <div class="bar-chart-count">33场</div>
-              </div>
-              <div class="bar-chart-item">
-                <div class="bar-chart-label">《铡美案》</div>
-                <div class="bar-chart-track">
-                  <div class="bar-chart-fill teal" style="width:68%;">
-                    <span class="bar-chart-value">27场</span>
-                  </div>
-                </div>
-                <div class="bar-chart-count">27场</div>
-              </div>
-              <div class="bar-chart-item">
-                <div class="bar-chart-label">《窦娥冤》</div>
-                <div class="bar-chart-track">
-                  <div class="bar-chart-fill green" style="width:55%;">
-                    <span class="bar-chart-value">22场</span>
-                  </div>
-                </div>
-                <div class="bar-chart-count">22场</div>
-              </div>
-              <div class="bar-chart-item">
-                <div class="bar-chart-label">《火焰驹》</div>
-                <div class="bar-chart-track">
-                  <div class="bar-chart-fill purple" style="width:45%;">
-                    <span class="bar-chart-value">18场</span>
-                  </div>
-                </div>
-                <div class="bar-chart-count">18场</div>
-              </div>
-              <div class="bar-chart-item">
-                <div class="bar-chart-label">《打金枝》</div>
-                <div class="bar-chart-track">
-                  <div class="bar-chart-fill warning" style="width:32%;">
-                    <span class="bar-chart-value">13场</span>
-                  </div>
-                </div>
-                <div class="bar-chart-count">13场</div>
-              </div>
+              <div style="text-align:center;padding:40px;color:var(--text-light);">暂无剧目演出频次统计数据</div>
             </div>
             <div class="bar-chart-footer">
               <div>统计周期：<strong>{year}年1月 - {year}年6月</strong></div>
-              <div>累计演出场次：<strong>151场</strong> · 覆盖剧目：<strong>28部</strong></div>
+              <div>累计演出场次：<strong>0场</strong> · 覆盖剧目：<strong>0部</strong></div>
             </div>
           </div>
         </div>
@@ -1414,8 +1244,18 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
-  <script src="../js/pagination.js?v=20260803"></script>
+<script src="../js/app.js?v=20260908n"></script>
+<script>/* 生产空白态守卫配置 */
+window.__ADMIN_BLANK_CFG__ = [
+  { title: /近期预约订单/, tbody: '暂无预约订单，真实预约提交后在此显示', cols: 8 },
+  { title: /最新系统动态/, body: '暂无系统动态，真实业务操作（审核 / 派工 / 财务）将在此提示' },
+  { title: /剧目演出频次/, body: '暂无演出数据，真实排期完成后自动统计剧目演出频次' },
+  { zeroStats: true }
+];
+</script>
+<script src="../js/admin-blank.js?v=20260906g"></script>
+
+  <script src="../js/pagination.js?v=20260908p"></script>
   <script>
     (function() {
       'use strict';
@@ -2441,6 +2281,7 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
+        if (window.QinPagination) return; // 真分页器已接管，跳过假分页注入（orders/finance 同款修复范式）
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -2557,6 +2398,7 @@ function __pLog(module,event,extra){
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -2570,6 +2412,7 @@ function __pLog(module,event,extra){
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
+        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return; // 分页条按钮放行（orders/finance 同款修复）
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
@@ -2694,15 +2537,75 @@ function __pLog(module,event,extra){
   });
 })();
 </script>
-<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停真实弹窗（含无 id 按钮、动态重绘行 MutationObserver 补标） */
 (function(){
+  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
+  var SEL = 'button, a.btn, .btn, .btn-action, [role="button"], [data-action]';
   function __markBound(){
-    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
-    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+    try{
+      var els=document.querySelectorAll(SEL);
+      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
+    }catch(_){}
   }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
-  else { __markBound(); setTimeout(__markBound,500); }
+  function __boot(){
+    __markBound();
+    try{
+      if(window.MutationObserver){
+        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
+        mo.observe(document.documentElement,{childList:true,subtree:true});
+      }
+    }catch(_){}
+    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
+  else { __boot(); }
 })();</script>
+<script>/* 首页统计卡接真实 API（v20260907k）：替代硬编码演示数字 */
+(function(){
+  function _loadDashboardStats() {
+    if (!window.API || typeof API.get !== 'function') return;
+    var cards = document.querySelectorAll('.stats-grid .stat-card');
+    if (!cards.length) return;
+    var fmtY = function(n) { return '¥' + Number(n || 0).toLocaleString('zh-CN'); };
+    function _fill(card, val, subHtml) {
+      if (!card) return;
+      var v = card.querySelector('.stat-card-value');
+      if (v) { var u = v.querySelector('span, small'); v.textContent = String(val); if (u) v.appendChild(u); }
+      var sub = card.querySelector('.stat-card-sub');
+      if (sub) sub.innerHTML = subHtml;
+      var trend = card.querySelector('.stat-card-trend');
+      if (trend) trend.style.setProperty('visibility', 'hidden');
+      try { card.__adminBlankZeroed = true; } catch (_) {}
+    }
+    API.get('/v1/orders/stats', { showErrorToast: false, timeoutMs: 8000, fallbackRead: function() { return null; } })
+      .then(function(d) {
+        d = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
+        if (cards[1]) _fill(cards[1], d.total || 0, '<span>累计金额 ' + fmtY(d.finalAmount) + '</span>');
+        if (cards[3]) _fill(cards[3], fmtY(d.finalAmount), '<span>已回款 ' + fmtY(d.paidAmount) + '</span>');
+      }).catch(function(){});
+    API.get('/v1/appointments/stats', { showErrorToast: false, timeoutMs: 8000, fallbackRead: function() { return null; } })
+      .then(function(d) {
+        d = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
+        if (cards[0]) _fill(cards[0], d.total || 0, '<span>今日新增 ' + (d.todayNew || 0) + ' 单</span>');
+        if (cards[2]) _fill(cards[2], d.pendingCount || 0, '<span>待审核确认</span>');
+        var tip = document.getElementById('welcomePendingTip');
+        if (tip) tip.innerHTML = '今日有 <strong style="color:var(--gold)">' + (d.pendingCount || 0) + '</strong> 个待确认档期 · <strong style="color:var(--gold)">' + (d.todayNew || 0) + '</strong> 条新预约订单等待处理';
+      }).catch(function(){});
+    API.get('/v1/performers', { query: { page: 1, pageSize: 500 }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function() { return null; } })
+      .then(function(res) {
+        var total = 0;
+        if (Array.isArray(res)) total = res.length;
+        else if (res && typeof res === 'object') total = res.total || (res.data ? res.data.length : 0) || 0;
+        if (cards[4]) _fill(cards[4], total, '<span>在册演职人员</span>');
+      }).catch(function(){});
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(_loadDashboardStats, 300); });
+  } else {
+    setTimeout(_loadDashboardStats, 300);
+  }
+})();
+</script>
 </body>
 
 </html>

@@ -123,10 +123,18 @@
     };
 
     var bar = this._renderBar(state);
-    if (container.nextSibling) {
-      container.parentNode.insertBefore(bar, container.nextSibling);
+    // tbody 容器的分页条必须插到 <table> 外部：div 塞进 table 会被浏览器折叠成匿名单元格，
+    // 宽度只剩一列（如花名册复选框列 46px），分页条被挤成竖条不可用 → 插到 table 的后面
+    var refParent = container.parentNode;
+    var refNext = container.nextSibling;
+    if (container.tagName === 'TBODY' && refParent && refParent.tagName === 'TABLE' && refParent.parentNode) {
+      refParent = refParent.parentNode;
+      refNext = container.parentNode.nextSibling;
+    }
+    if (refNext) {
+      refParent.insertBefore(bar, refNext);
     } else {
-      container.parentNode.appendChild(bar);
+      refParent.appendChild(bar);
     }
     state.bar = bar;
 
@@ -522,4 +530,15 @@
   } else {
     setTimeout(function () { instance.initAll(); }, 0);
   }
+
+  // bfcache 恢复时重置分页到第1页（防止后退/返回残留分页状态导致空白页）
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted && instance._instances.length) {
+      for (var i = 0; i < instance._instances.length; i++) {
+        instance._instances[i].currentPage = 1;
+        instance._instances[i].searchKeyword = '';
+      }
+      instance.refreshAll();
+    }
+  });
 })(typeof window !== 'undefined' ? window : this);
