@@ -1,0 +1,5 @@
+# Render Static Site 响应头（Netlify 兼容语法）
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

@@ -1,0 +1,6 @@
+# Render Static Site 路由规则（Netlify 兼容语法，按顺序匹配）
+# API 同源代理：/api/* 与 /v1/* 转发到后端自定义域名（Render 边缘代理，浏览器无跨域）
+/api/*     https://api.qaxqjt.cn/:splat    200
+/v1/*      https://api.qaxqjt.cn/v1/:splat 200
+/admin     /admin/login.html               200
+/*         /index.html                     200
