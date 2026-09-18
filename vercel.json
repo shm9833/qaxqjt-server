@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
+  "framework": null,
   "outputDirectory": "_deploy",
   "cleanUrls": true,
   "trailingSlash": false,
@@ -8,11 +9,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://${YOUR_BACKEND_PUBLIC_HOST}/$1"
+      "destination": "https://qaxqjt-api.vercel.app/$1"
     },
     {
       "source": "/v1/:path*",
-      "destination": "https://${YOUR_BACKEND_PUBLIC_HOST}/v1/:path*"
+      "destination": "https://qaxqjt-api.vercel.app/v1/:path*"
     },
     {
       "source": "/admin",
@@ -20,19 +21,19 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/_deploy/index.html"
+      "destination": "/index.html"
     }
   ],
 
   "headers": [
     {
-      "source": "/(.*)\\.(?:png|jpg|jpeg|gif|svg|ico|webp)$",
+      "source": "/:path*.:ext(png|jpg|jpeg|gif|svg|ico|webp)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=2592000, immutable" }
       ]
     },
     {
-      "source": "/(.*)\\.(?:css|js|woff|woff2|ttf|eot)$",
+      "source": "/:path*.:ext(css|js|woff|woff2|ttf|eot)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=604800, immutable" }
       ]

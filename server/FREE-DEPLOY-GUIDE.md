@@ -106,8 +106,10 @@ https://你的-koyeb-域名/v1/healthz
 - **Framework Preset**: `Other`
 - **Root Directory**: `_deploy`
 - **Build Command**: 留空
-- **Output Directory**: `./`
+- **Output Directory**: `.`（必须是一个点，不能写 `./`；已由 `_deploy/vercel.json` 内置，控制台留空即可自动读取）
 - **Install Command**: 留空
+
+> 说明：若控制台 Build/Output 设置被手动填过值，会覆盖 `vercel.json`。如仍报 “No Output Directory named public”，请到 Project Settings → Build and Development Settings，把 Output Directory 清空（或填 `.`）后 Redeploy。
 
 ### 4. 配置环境变量
 

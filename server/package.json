@@ -6,7 +6,7 @@
   "license": "MIT",
   "private": true,
   "engines": {
-    "node": ">=20.0.0 <25"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon -e js,prisma --exec \"node -r dotenv/config src/server.js\"",
