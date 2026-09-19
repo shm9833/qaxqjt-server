@@ -828,7 +828,42 @@ v1.patch(
   requireRole(['super_admin', 'ops', 'director']),
   playsCtrl.update
 );
-v1.delete('/plays/:id', requireRole('super_admin'), playsCtrl.remove);
+v1.delete('/plays/:id', requireRole(['super_admin']), playsCtrl.remove);
+
+/* ====== 剧目分类 play-categories 路由注册（v20260919 移植）====== */
+const playCatCtrl = require('../../controllers/play-categories');
+v1.get(
+  '/play-categories',
+  requireRole(['super_admin', 'ops', 'director', 'finance_view']),
+  playCatCtrl.list
+);
+v1.post(
+  '/play-categories',
+  validate({
+    body: Joi.object({
+      name: Joi.string().min(1).max(30).required(),
+      sortOrder: Joi.number().integer().positive().optional(),
+      status: Joi.string().valid('active', 'disabled').optional(),
+      note: Joi.string().allow('').max(200).optional()
+    })
+  }),
+  requireRole(['super_admin', 'ops', 'director']),
+  playCatCtrl.create
+);
+v1.patch(
+  '/play-categories/:id',
+  validate({
+    body: Joi.object({
+      name: Joi.string().min(1).max(30).optional(),
+      sortOrder: Joi.number().integer().positive().optional(),
+      status: Joi.string().valid('active', 'disabled').optional(),
+      note: Joi.string().allow('').max(200).optional()
+    })
+  }),
+  requireRole(['super_admin', 'ops', 'director']),
+  playCatCtrl.update
+);
+v1.delete('/play-categories/:id', requireRole(['super_admin']), playCatCtrl.remove);
 
 /* ====== 内容管理 content 路由注册（v1）====== */
 const contentCtrl = require('../../controllers/content');

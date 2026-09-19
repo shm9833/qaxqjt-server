@@ -258,6 +258,20 @@ model Play {
   @@map("plays")
 }
 
+// 剧目分类（v20260909b/v20260919 移植至 Vercel 渠道）：与 Play.genre 名称关联
+model PlayCategory {
+  id        String   @id
+  name      String   @unique
+  sortOrder Int      @default(0) @map("sort_order")
+  status    String   @default("active")
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  ts        BigInt   @map("_ts")
+
+  @@map("play_categories")
+}
+
 model PlayCast {
   id          String   @id
   playId      String   @map("play_id")
