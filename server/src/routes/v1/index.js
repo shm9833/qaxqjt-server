@@ -940,19 +940,7 @@ v1.get(
   attCtrl.list
 );
 v1.get('/attendance/stats', requireRole(['super_admin', 'ops', 'director', 'finance_view']), attCtrl.stats);
-v1.get('/attendance/:id', requireRole(['super_admin', 'ops', 'director', 'finance_view']), attCtrl.detail);
-v1.post(
-  '/attendance',
-  requireRole(['super_admin', 'ops', 'director']),
-  attCtrl.create
-);
-v1.patch(
-  '/attendance/:id',
-  requireRole(['super_admin', 'ops', 'director']),
-  attCtrl.update
-);
-v1.delete('/attendance/:id', requireRole('super_admin'), attCtrl.remove);
-// 请假申请
+// 请假申请（v20260919：必须在 /attendance/:id 之前注册，否则 leaves 被 :id 参数路由吞掉返回 404）
 v1.get(
   '/attendance/leaves',
   validate({ paginate: true, query: Joi.object({ keyword: Joi.string().optional(), staffId: Joi.string().optional(), status: Joi.string().optional() }).unknown(true) }),
@@ -969,6 +957,18 @@ v1.patch(
   requireRole(['super_admin', 'ops', 'director']),
   attCtrl.leaveApprove
 );
+v1.get('/attendance/:id', requireRole(['super_admin', 'ops', 'director', 'finance_view']), attCtrl.detail);
+v1.post(
+  '/attendance',
+  requireRole(['super_admin', 'ops', 'director']),
+  attCtrl.create
+);
+v1.patch(
+  '/attendance/:id',
+  requireRole(['super_admin', 'ops', 'director']),
+  attCtrl.update
+);
+v1.delete('/attendance/:id', requireRole(['super_admin']), attCtrl.remove);
 
 /* ====== 工资 wages 路由注册（v20260908h：无底薪工资条）====== */
 const wagesCtrl = require('../../controllers/wages');
