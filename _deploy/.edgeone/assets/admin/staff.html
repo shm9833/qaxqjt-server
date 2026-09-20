@@ -1378,6 +1378,7 @@
                           <th>行当·职级</th>
                           <th>出勤<br/>天数</th>
                           <th>本戏/折子<br/>下乡/其他</th>
+                          <th class="amt-right">协议<br/>天工资</th>
                           <th class="amt-right">基本<br/>日薪</th>
                           <th class="amt-right">演出<br/>补助</th>
                           <th class="amt-right">全勤/工龄<br/>餐交补</th>
@@ -1389,7 +1390,7 @@
                         </tr>
                       </thead>
                       <tbody id="wageGenTbody">
-                        <tr><td colspan="13" style="padding:50px 20px;color:var(--text-light);font-size:0.9rem;">
+                        <tr><td colspan="14" style="padding:50px 20px;color:var(--text-light);font-size:0.9rem;">
                           🈳 尚无数据。选择月份后，点击「预览核算」可查看预估，点击「生成当月工资条」即可批量创建 32 位员工工资单并存入 <code>qaxqjt_wages_v1</code>。
                         </td></tr>
                       </tbody>
@@ -1457,7 +1458,7 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260920c"></script>
+<script src="../js/app.js?v=20260921a"></script>
   <script src="../js/pagination.js?v=20260908p"></script>
   <script>
     (function() {
@@ -2209,7 +2210,7 @@
         function renderPayslipRows(list, tbody, isPreview) {
           if (!tbody) return;
           if (!list || !list.length) {
-            tbody.innerHTML = '<tr><td colspan="13" style="padding:50px 20px;color:var(--text-light);font-size:0.9rem;">'
+            tbody.innerHTML = '<tr><td colspan="14" style="padding:50px 20px;color:var(--text-light);font-size:0.9rem;">'
               + (isPreview ? '🈳 预览结果为空' : '🈳 尚无数据。选择月份后，点击「预览核算」可查看预估，点击「生成当月工资条」即可批量创建工资单。')
               + '</td></tr>';
             return;
@@ -2222,12 +2223,17 @@
             var tr = document.createElement('tr');
             var statusColor = w.status === 'paid' ? '#28a745' : '#ff9800';
             var statusText = w.status === 'paid' ? '✓ 已发放' : '⏳ 待发放';
+            var _rateNum = Number(w.dailyWage) || 0;
+            var _rateCell = _rateNum > 0
+              ? '<div title="本人协议天工资（扫码入职/花名册约定）" style="font-weight:800;color:var(--primary-dark);">¥' + _rateNum + '<small style="font-weight:500;color:var(--text-light);">/天</small></div><small style="color:var(--text-light);font-size:0.72rem;">×' + (su.workDays||0) + '天</small>'
+              : '<small title="未约定协议天工资，按行当×职级标准矩阵计酬" style="color:var(--text-light);font-size:0.74rem;">按职级<br/>矩阵</small>';
             tr.innerHTML =
               '<td style="font-family:Consolas,monospace;font-weight:700;color:var(--primary-dark);font-size:0.8rem;">' + (w.id||'') + '</td>'
               + '<td style="font-weight:600;">' + _escX(w.staffName||'') + '</td>'
               + '<td><span class="role-tag">' + _escX(w.roleCategory||'') + '</span><br/><small style="color:var(--text-light);font-size:0.75rem;">' + _escX(w.level||'') + '</small></td>'
               + '<td><strong style="color:var(--primary);">' + (su.workDays||0) + '</strong><br/><small style="color:var(--text-light);font-size:0.72rem;">晚' + (su.lateDays||0) + ' 旷' + (su.absentFullDays||0) + '</small></td>'
               + '<td style="font-size:0.78rem;line-height:1.5;">本' + (su.performBenxi||0) + '/折' + (su.performZhezi||0) + '<br/>乡' + (su.performXiaxiang||0) + '/其' + (su.performOther||0) + '</td>'
+              + '<td class="amt-right">' + _rateCell + '</td>'
               + '<td class="amt-right">' + fmt(it.baseSalary||0) + '</td>'
               + '<td class="amt-right" style="color:#28a745;">+' + fmt(it.performanceAllowance||0) + '</td>'
               + '<td class="amt-right" style="font-size:0.78rem;line-height:1.4;">勤+' + fmt(it.perfectBonus||0) + '<br/>龄+' + fmt(it.seniorityAllowance||0) + ' 餐交+' + fmt((it.mealAllowance||0)+(it.trafficAllowance||0)) + '</td>'
@@ -2288,10 +2294,15 @@
             + '<div>🎭 行当·职级：<strong>' + _escX(w.roleCategory||'') + ' · ' + _escX(w.level||'') + '</strong></div>'
             + '<div>🏢 ' + staffLine + '</div>'
             + '<div>📊 出勤汇总：<strong>' + (su.workDays||0) + '</strong> 天 · 本戏' + (su.performBenxi||0) + ' 场</div>'
+            + '<div>💴 协议天工资：' + ((Number(w.dailyWage)||0) > 0
+                ? ('<strong style="color:var(--primary-dark);">¥' + Number(w.dailyWage) + ' /天</strong>（×' + (su.workDays||0) + '天，扫码入职/花名册约定优先）')
+                : '<strong style="color:var(--text-light);">未约定</strong>（按行当×职级标准矩阵计酬）') + '</div>'
             + '</div></div>'
             + '<div class="payslip-detail-body">'
             + '<div class="payslip-grid">'
-              + itemCard('income', '💰 基本日薪×出勤', it.baseSalary)
+              + itemCard('income', ((Number(w.dailyWage)||0) > 0
+                  ? ('💰 基本日薪×出勤（协议 ¥' + Number(w.dailyWage) + '/天 × ' + (su.workDays||0) + '天）')
+                  : '💰 基本日薪×出勤（按职级标准矩阵）'), it.baseSalary)
               + itemCard('income', '🎬 演出场次补助', it.performanceAllowance)
               + itemCard('income', '🏆 全勤奖', it.perfectBonus)
               + itemCard('income', '🎖️ 工龄补贴（' + ((staff && staff.hireYear) ? (new Date().getFullYear() - staff.hireYear) : 0) + '年）', it.seniorityAllowance)

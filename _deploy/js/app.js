@@ -5102,6 +5102,7 @@
         staffName: staff.name || '',
         roleCategory: staff.roleCategory || '',
         level: staff.level || '',
+        dailyWage: Number(staff.dailyWage) || 0, // 本人协议天工资（元/天），0 表示按行当×职级矩阵计酬
         month: '',   // 由调用方填入 2026-07
         dailyDetails: dailyDetails,
         summary: summary,
@@ -5156,7 +5157,10 @@
             var payslip = this.calcMonthlyWage(st, att, opts.extraBonusMap ? opts.extraBonusMap[st.id] : 0,
                                                      opts.extraDeductMap ? opts.extraDeductMap[st.id] : 0, rules);
             payslip.month = monthStr;
-            payslip.id = 'WAGE-' + monthStr.replace('-', '') + '-' + Utils.pad(String(st.id || ('STF' + i)), 4, '0');
+            // 工号>4位（如 PF016 / QA-P-005）不能再经 Utils.pad 截断为4字符，否则同月工资条 id 碰撞、互相覆盖
+            var _wageStaffKey = String(st.id || ('STF' + i));
+            var _wageIdPart = /^\d+$/.test(_wageStaffKey) ? Utils.pad(_wageStaffKey, 4, '0') : _wageStaffKey;
+            payslip.id = 'WAGE-' + monthStr.replace('-', '') + '-' + _wageIdPart;
             payslip.createdAt = Date.now();
             payslip.status = 'unpaid'; // unpaid / paid
             var saved = Storage.create(Storage.KEYS.WAGES, payslip);
