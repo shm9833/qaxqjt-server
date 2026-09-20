@@ -2056,6 +2056,86 @@ function __pLog(module,event,extra){
     console.info('[SuperPatch 5/6] 已激活 ✓');
   }catch(e){ console.warn('[SuperPatch 5/6 init err]',e); }
 
+  // ====== 无底薪工资：按实际出勤天数核算（接后端 /v1/wages/generate） ======
+  window.__lastWageItems = [];
+  function __fmtYuan(n){ return '¥' + (Number(n)||0).toLocaleString('zh-CN',{minimumFractionDigits:0,maximumFractionDigits:2}); }
+  function __renderWageRows(items){
+    window.__lastWageItems = items || [];
+    var tbody = document.getElementById('wageTbody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    if(!items || !items.length){
+      tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;padding:40px;color:var(--text-light);">暂无工资数据，点击「🧮 核算当月工资」生成</td></tr>';
+      document.getElementById('wageCount').textContent = '0';
+      ['tfCount','tfAttDays','tfNights','tfBase','tfFull','tfNightSub','tfLeave','tfAbsent','tfLate','tfEarly','tfSocial','tfTax','tfGross','tfNet'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent = id==='tfCount'?'—':'¥0'; });
+      return;
+    }
+    var sum={count:items.length,att:0,nights:0,base:0,full:0,night:0,leave:0,absent:0,late:0,early:0,social:0,tax:0,gross:0,net:0};
+    items.forEach(function(w,i){
+      sum.att += Number(w.attDays)||0;
+      sum.nights += Number(w.nights)||0;
+      sum.base += Number(w.baseSalary)||0;
+      sum.full += Number(w.fullBonus)||0;
+      sum.night += Number(w.nightSubsidy)||0;
+      sum.leave += Number(w.leaveDeduction)||0;
+      sum.absent += Number(w.absentDeduction)||0;
+      sum.late += Number(w.lateDeduction)||0;
+      sum.early += Number(w.earlyDeduction)||0;
+      sum.social += Number(w.socialSecurity)||0;
+      sum.tax += Number(w.tax)||0;
+      sum.gross += Number(w.grossPay)||0;
+      sum.net += Number(w.netPay)||0;
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="checkbox-cell no-print"><input type="checkbox" class="wage-row-cb" data-id="'+(w.id||'')+'" /></td>'+
+        '<td>'+(i+1)+'</td>'+
+        '<td><strong>'+(w.name||'')+'</strong><div style="font-size:0.75rem;color:var(--text-light);">'+(w.staffNo||'')+'</div></td>'+
+        '<td>'+(w.rankGrade||'')+'</td>'+
+        '<td class="num">'+(Number(w.attDays)||0)+'</td>'+
+        '<td class="num">'+(Number(w.nights)||0)+'</td>'+
+        '<td class="num">'+__fmtYuan(w.baseSalary)+'</td>'+
+        '<td class="num add">'+__fmtYuan(w.fullBonus)+'</td>'+
+        '<td class="num add">'+__fmtYuan(w.nightSubsidy)+'</td>'+
+        '<td class="num deduct">'+__fmtYuan(w.leaveDeduction)+'</td>'+
+        '<td class="num deduct">'+__fmtYuan(w.absentDeduction)+'</td>'+
+        '<td class="num deduct">'+__fmtYuan(w.lateDeduction)+'</td>'+
+        '<td class="num deduct">'+__fmtYuan(w.earlyDeduction)+'</td>'+
+        '<td class="num deduct">'+__fmtYuan(w.socialSecurity)+'</td>'+
+        '<td class="num deduct">'+__fmtYuan(w.tax)+'</td>'+
+        '<td class="num">'+__fmtYuan(w.grossPay)+'</td>'+
+        '<td class="num total-net"><strong>'+__fmtYuan(w.netPay)+'</strong></td>'+
+        '<td class="no-print"><button class="btn btn-outline btn-sm" data-wdetail2="'+(w.id||'')+'">👁 明细</button></td>';
+      tbody.appendChild(tr);
+    });
+    document.getElementById('wageCount').textContent = sum.count;
+    var map={tfCount:sum.count,tfAttDays:sum.att,tfNights:sum.nights,tfBase:sum.base,tfFull:sum.full,tfNightSub:sum.night,tfLeave:sum.leave,tfAbsent:sum.absent,tfLate:sum.late,tfEarly:sum.early,tfSocial:sum.social,tfTax:sum.tax,tfGross:sum.gross,tfNet:sum.net};
+    Object.keys(map).forEach(function(k){ var el=document.getElementById(k); if(el){ el.textContent = (k==='tfCount'||k==='tfAttDays'||k==='tfNights') ? map[k] : __fmtYuan(map[k]); } });
+  }
+
+  async function __doGenerateWage(){
+    var monthEl = document.getElementById('filterMonth');
+    var month = (monthEl && monthEl.value) || new Date().toISOString().slice(0,7);
+    var API = window.QAXQJT_API;
+    if(!API || typeof API.post !== 'function'){ __T('⚠️ 接口未就绪','error'); return; }
+    __T('🧮 正在核算 '+month+' 无底薪工资（按实际出勤天数）...','info',4000);
+    try {
+      var res = await API.post('/v1/wages/generate', { month: month });
+      var data = res && res.data ? res.data : res;
+      var items = (data && data.items) || [];
+      if(data && data.batch) __T('✅ '+month+' 工资已生成：批次 '+data.batch.batchNo+'，共 '+(data.summary?data.summary.totalPerformers:items.length)+' 人，实发合计 '+__fmtYuan(data.summary?data.summary.totalNetPay:0),'success',5000);
+      else __T('✅ 核算完成，共 '+items.length+' 条','success');
+      __renderWageRows(items);
+    } catch(e){
+      var msg = (e && e.message) ? e.message : String(e);
+      __T('❌ 核算失败：'+msg,'error',6000);
+    }
+  }
+
+  // 初始化月份为当前月
+  try{ var mEl=document.getElementById('filterMonth'); if(mEl&&!mEl.value) mEl.value=new Date().toISOString().slice(0,7); }catch(_e){}
+  // 初始渲染空态
+  try{ __renderWageRows([]); }catch(_e){}
+
   // 考勤功能按钮绑定
   try{
     function __attBind(id, fn){ var el=document.getElementById(id); if(el&&!el.__attBound){ el.__attBound=1; el.addEventListener('click', fn, true); } }
@@ -2080,15 +2160,18 @@ function __pLog(module,event,extra){
       inp.onchange=function(){ __T('📤 已选择：'+(inp.files[0]?inp.files[0].name:'')+'（演示模式：真实环境将解析并导入考勤数据）','info',2500); };
       inp.click();
     });
-    __attBind('attBtnCalcAll', function(){ __T('🧮 正在核算当月工资（演示模式：真实环境将调用工资核算接口）','info',2500); });
+    __attBind('attBtnCalcAll', function(){ __doGenerateWage(); });
     __attBind('attBtnExportCsv', function(){
-      var rows=document.querySelectorAll('.admin-table tbody tr');
-      var csv='';
-      rows.forEach(function(r){ var tds=r.querySelectorAll('td'); var line=[]; tds.forEach(function(td){ line.push('"'+(td.textContent||'').trim().replace(/"/g,'""')+'"'); }); csv+=line.join(',')+'\n'; });
-      if(!csv){ __T('⚠️ 暂无数据可导出','warning'); return; }
-      var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
-      var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='工资表.csv'; a.click();
-      __T('📊 工资表 CSV 已导出（'+rows.length+' 条记录）','success');
+      var items = window.__lastWageItems || [];
+      if(!items.length){ __T('⚠️ 请先核算当月工资再导出','warning'); return; }
+      var header = ['工号','姓名','职级','出勤天数','夜场数','底薪','全勤奖','夜场补','事假扣','旷工扣','迟到扣','早退扣','社保','个税','应发','实发'];
+      var lines = [header.join(',')];
+      items.forEach(function(w){
+        lines.push([w.staffNo,w.name,w.rankGrade,w.attDays,w.nights,w.baseSalary,w.fullBonus,w.nightSubsidy,w.leaveDeduction,w.absentDeduction,w.lateDeduction,w.earlyDeduction,w.socialSecurity,w.tax,w.grossPay,w.netPay].map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(','));
+      });
+      var blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+      var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='工资表_'+new Date().toISOString().slice(0,7)+'.csv'; a.click();
+      __T('📊 工资表 CSV 已导出（'+items.length+' 条）','success');
     });
     __attBind('attBtnFinanceAll', function(){ __T('💼 整月工资已推送至财务台账（演示模式）','success',2500); });
     __attBind('attBtnFinanceSel', function(){
