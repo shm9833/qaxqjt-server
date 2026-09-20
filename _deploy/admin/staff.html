@@ -1906,9 +1906,13 @@
             if (p.hireDate) { var t = new Date(p.hireDate); if (!isNaN(t.getTime())) hy = t.getFullYear(); }
             list.push({
               id: p.staffNo || ('PF' + (p.id || (i + 1))),
+              performerId: p.id || '',
               name: p.name,
               roleCategory: p.primaryRole || '',
               level: p.rankGrade || '',
+              // 本人协议天工资（元）：扫码入职/编辑录入；工资引擎优先按它核算，无则回退职级日工资矩阵
+              dailyWage: (p.dailyRate != null && p.dailyRate !== '') ? Number(p.dailyRate) : 0,
+              transportType: p.transportType || '',
               dept: p.employmentType || '',
               hireYear: hy,
               status: p.status === 'inactive' ? 'off' : 'on',
@@ -2137,7 +2141,7 @@
           var grossEst = 0, netEst = 0;
           var rules = W.getDefaultRules();
           getWageStaffList().forEach(function (st) {
-            var base = W.getBaseDailyWage(st.roleCategory, st.level, rules);
+            var base = (Number(st.dailyWage) > 0) ? Math.round(Number(st.dailyWage) * 100) : W.getBaseDailyWage(st.roleCategory, st.level, rules);
             var sy = st.hireYear ? Math.max(0, new Date().getFullYear() - st.hireYear) : 0;
             var sen = Math.round(sy * (rules.seniorityPerYear || 200));
             var meal = (rules.dailySubsidy && rules.dailySubsidy.meal) || 0;
@@ -4155,7 +4159,14 @@ try{
         <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">入团年份</label><input id="inp_stf_year" type="number" min="1950" max="2100" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
       </div>
       <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">联系电话</label><input id="inp_stf_phone" type="text" placeholder="138xxxxxxx" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
-      <div style="margin-bottom:8px;"><label style="display:block;margin-bottom:6px;font-weight:500;">代表剧目</label><input id="inp_stf_rep" type="text" placeholder="如：《三滴血》《铡美案》" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">职级（工资标准档）</label><select id="inp_stf_rank" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option value="">未定级</option><option value="A+">A+（领衔/主演）</option><option value="A">A（主要演员）</option><option value="B">B（一般演员）</option><option value="C">C（学员/辅助）</option></select></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">协议天工资（元/天）</label><input id="inp_stf_rate" type="number" min="0" step="1" placeholder="如：200" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><small style="display:block;margin-top:3px;font-size:11px;color:#8a6d3b;">优先于职级标准参与工资核算</small></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">路费方式</label><select id="inp_stf_transport" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option value="">未约定</option><option value="单趟">单趟</option><option value="双趟">双趟</option></select></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">代表剧目</label><input id="inp_stf_rep" type="text" placeholder="如：《三滴血》《铡美案》" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+      </div>
     </div>
     <div style="padding:18px 25px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:10px;">
       <button type="button" class="btn btn-secondary btn-sm" onclick="closeStaffEditModal()">取消</button>
@@ -4550,6 +4561,9 @@ try{
       if (p){
         if (p.phone && $('inp_stf_phone')){ $('inp_stf_phone').value = p.phone; $('inp_stf_phone').placeholder=''; }
         if (p.staffNo && $('inp_stf_gh')) $('inp_stf_gh').value = p.staffNo;
+        if ($('inp_stf_rank')) $('inp_stf_rank').value = p.rankGrade || '';
+        if ($('inp_stf_rate')) $('inp_stf_rate').value = (p.dailyRate != null && p.dailyRate !== '') ? p.dailyRate : '';
+        if ($('inp_stf_transport')) $('inp_stf_transport').value = p.transportType || '';
       }
     }catch(_){}
   };
@@ -4557,12 +4571,12 @@ try{
   /* ---- 新增人员：接「➕ 新增人员」演示按钮 ---- */
   function openNew(){
     window.__PF_EDIT__ = { mode:'new' };
-    ['inp_stf_gh','inp_stf_name','inp_stf_age','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_rep'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
+    ['inp_stf_gh','inp_stf_name','inp_stf_age','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_rep','inp_stf_rank','inp_stf_rate','inp_stf_transport'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
     if ($('inp_stf_gender')) $('inp_stf_gender').value='男';
     if ($('inp_stf_dept')) $('inp_stf_dept').value='演员队';
     if ($('staffEditTitle')) $('staffEditTitle').innerText='➕ 新增演职人员';
     if ($('staffEditSaveBtn')) $('staffEditSaveBtn').style.display='';
-    ['inp_stf_name','inp_stf_gender','inp_stf_age','inp_stf_dept','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_rep'].forEach(function(id){ var el=$(id); if(el){ el.disabled=false; el.style.background='#fff'; } });
+    ['inp_stf_name','inp_stf_gender','inp_stf_age','inp_stf_dept','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_rep','inp_stf_rank','inp_stf_rate','inp_stf_transport'].forEach(function(id){ var el=$(id); if(el){ el.disabled=false; el.style.background='#fff'; } });
     if ($('inp_stf_gh')) $('inp_stf_gh').value='（保存后自动生成）';
     if ($('staffEditModal')) $('staffEditModal').style.display='flex';
     document.body.style.overflow='hidden';
@@ -4590,6 +4604,9 @@ try{
       gender: $('inp_stf_gender').value || '男',
       primaryRole: ($('inp_stf_role').value||'').trim(),
       employmentType: $('inp_stf_dept').value || '演员队',
+      rankGrade: $('inp_stf_rank') ? ($('inp_stf_rank').value||'') : '',
+      dailyRate: $('inp_stf_rate') ? ($('inp_stf_rate').value==='' ? '' : Number($('inp_stf_rate').value)) : '',
+      transportType: $('inp_stf_transport') ? ($('inp_stf_transport').value||'') : '',
       remark: ($('inp_stf_rep').value||'').trim()
     };
     if (phone) body.phone = phone;
@@ -4951,8 +4968,9 @@ try{
       html += '</div>';
       var info = [];
       if(p.phone) info.push('📱 ' + esc(p.phone));
-      if(p.agreedSalary) info.push('💰 ' + esc(p.agreedSalary));
-      if(p.transportType) info.push('🚌 ' + esc(p.transportType));
+      if(p.dailyRate != null && p.dailyRate !== '') info.push('💰 协议天工资 ¥' + esc(p.dailyRate) + '/天');
+      else if(p.agreedSalary) info.push('💰 ' + esc(p.agreedSalary));
+      if(p.transportType) info.push('🚌 路费' + esc(p.transportType));
       if(info.length) html += '<div style="font-size:13px;color:#555;margin-top:6px;">' + info.join('　') + '</div>';
       if(p.remark) html += '<div style="font-size:12px;color:#888;margin-top:4px;">备注：' + esc(p.remark) + '</div>';
       if(p.reviewFeedback) html += '<div style="font-size:12px;color:#c62828;margin-top:6px;background:#ffebee;padding:6px 8px;border-radius:4px;">退回原因：' + esc(p.reviewFeedback) + '</div>';

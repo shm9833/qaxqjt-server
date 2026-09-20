@@ -198,8 +198,9 @@
 
       <div class="row">
         <div class="field">
-          <label>协议工资（备注）</label>
-          <input type="text" id="agreedSalary" placeholder="如：120元/场" maxlength="50" />
+          <label>协议天工资（元/天）</label>
+          <input type="number" id="dailyRate" inputmode="decimal" min="0" step="1" placeholder="如：200" />
+          <small style="display:block;margin-top:4px;font-size:12px;color:#8a6d3b;">按天计酬，审核通过后自动作为工资核算项目基准</small>
         </div>
         <div class="field">
           <label>路费方式</label>
@@ -280,12 +281,13 @@
         btn.disabled = true;
         btn.textContent = '提交中...';
 
+        var dailyRateRaw = ($('dailyRate').value || '').trim();
         var payload = {
           name: name,
           gender: $('gender').value || '',
           phone: $('phone').value.trim() || '',
           primaryRole: $('primaryRole').value || '',
-          agreedSalary: $('agreedSalary').value.trim() || '',
+          dailyRate: dailyRateRaw === '' ? '' : Number(dailyRateRaw),
           transportType: $('transportType').value || '',
           remark: $('remark').value.trim() || '',
           regulationsConfirmed: true

@@ -4807,8 +4807,13 @@
     },
 
     // ---------- 基准日工资查询（行当+职级 → 分） ----------
-    getBaseDailyWage: function (roleCategory, level, rules) {
+    // 第4参 staff（可选）：本人协议天工资 dailyWage（元）优先于行当×职级矩阵
+    getBaseDailyWage: function (roleCategory, level, rules, staff) {
       var R = rules || this.getDefaultRules();
+      if (staff) {
+        var own = Number(staff.dailyWage);
+        if (isFinite(own) && own > 0) return Math.max(0, Math.round(own * 100));
+      }
       var cat = (roleCategory || '').trim() || '其他';
       var lv = (level || '').trim() || '普通员工';
       var catMap = R.baseDailyWage[cat];
@@ -4832,7 +4837,7 @@
       var dr = dailyRecord || {};
       var status = dr.status || 'normal';
 
-      var baseCents = this.getBaseDailyWage(st.roleCategory, st.level, R);
+      var baseCents = this.getBaseDailyWage(st.roleCategory, st.level, R, st);
       var detail = {
         date: dr.date || '',
         status: status,
@@ -5622,7 +5627,7 @@
     calcDailyWageV2: function (staff, date, clockTimeList, rules) {
       var self = this;
       var R = rules || self.getDefaultRules();
-      var baseCents = self.getBaseDailyWage(staff && staff.roleCategory, staff && staff.level, R);
+      var baseCents = self.getBaseDailyWage(staff && staff.roleCategory, staff && staff.level, R, staff);
       var record = self.calcDayRecord(staff && staff.id, date, clockTimeList);
       var pr = self.calcDayPunishReward(staff && staff.id, date, clockTimeList);
       var basePay = 0;

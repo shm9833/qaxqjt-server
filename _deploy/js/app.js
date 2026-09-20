@@ -13,32 +13,6 @@
 (function (global) {
   'use strict';
 
-  // ===== 生产数据一次性清理（v20260906g）：清除浏览器端演示/本地业务数据，保留登录态与安全配置 =====
-  // v20260906g：seedDemoData 已在生产模式停用；本标记再跑一次，清掉 v20260906f 清理后被旧版重新播种的
-  // plays/appointments（王建国示例预约）。后台各页演示数据（排班/派工/花名册补丁/演示订单/剧目/统计等）
-  // 此前以 localStorage 持久化。白名单保留：登录会话/token/权限/黑名单/演示模式开关。
-  try {
-    var DEMO_WIPE_FLAG = 'qaxqjt_demo_wipe_v20260906g';
-    if (typeof localStorage !== 'undefined' && !localStorage.getItem(DEMO_WIPE_FLAG)) {
-      var KEEP_KEYS = {
-        'qaxqjt_admin_session': 1, 'qaxqjt_admin_sess_v2': 1, 'qaxqjt_admin_remember': 1,
-        'qaxqjt_admin_token': 1, 'qaxqjt_admin_permissions': 1, 'qaxqjt_admin_info': 1,
-        'qaxqjt_access_token': 1, 'qaxqjt_refresh_token': 1,
-        'qaxqjt_deploy_mode': 1, 'qaxqjt_logout_blacklist': 1
-      };
-      var removed = [];
-      for (var wi = localStorage.length - 1; wi >= 0; wi--) {
-        var wk = localStorage.key(wi);
-        if (wk && wk.indexOf('qaxqjt_') === 0 && !KEEP_KEYS[wk] && wk !== DEMO_WIPE_FLAG) {
-          removed.push(wk);
-          try { localStorage.removeItem(wk); } catch (we) {}
-        }
-      }
-      try { localStorage.setItem(DEMO_WIPE_FLAG, String(Date.now())); } catch (we2) {}
-      try { console.info('[DemoWipe] 已清理浏览器端演示数据 ' + removed.length + ' 项：' + removed.slice(0, 12).join(',')); } catch (we3) {}
-    }
-  } catch (e) {}
-
   // ===== 全局 $ 简写：document.getElementById（兼容无 jQuery/Zepto 场景）=====
   // 修复前：未定义，新写的 runHealthCheck/triggerBackup 等 10+ 函数全部 ReferenceError: $ is not defined
   // 修复后：IIFE 内部可用 + 强制挂到 global.$（不检查 undefined，避免部分旧页面有 window.$=undefined 占位导致跳过）
@@ -63,7 +37,7 @@
     try {
       if (global.XLSX && typeof global.XLSX.writeFile === 'function') return;
       var cdns = [
-        '/js/xlsx.min.js',
+        'js/xlsx.min.js',
         '../js/xlsx.min.js',
         'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
         'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
@@ -332,17 +306,15 @@
         document.body.appendChild(el);
         var rAF = (global && global.requestAnimationFrame) ? global.requestAnimationFrame
           : (typeof requestAnimationFrame === 'function' ? requestAnimationFrame : null);
-        // ★ FIX: 页面隐藏时 requestAnimationFrame 不执行回调，导致 toast 永远停留在 hide 状态
-        // 解决方案：直接显示 toast（不依赖 RAF），用 setTimeout 做动画兜底
-        var _toastShown = false;
-        var _showToastEl = function () {
-          if (_toastShown) return;
-          _toastShown = true;
+        if (rAF) {
+          try {
+            rAF(function () {
+              try { el.classList.remove('toast-state-hide'); el.classList.add('toast-state-show'); } catch (_) {}
+            });
+          } catch (_) { try { el.classList.remove('toast-state-hide'); el.classList.add('toast-state-show'); } catch (_2) {} }
+        } else {
           try { el.classList.remove('toast-state-hide'); el.classList.add('toast-state-show'); } catch (_) {}
-        };
-        // 直接显示，不依赖 requestAnimationFrame（后台标签页 RAF 不执行）
-        try { el.classList.remove('toast-state-hide'); el.classList.add('toast-state-show'); } catch (_) {}
-        _toastShown = true;
+        }
 
         setTimeout(function () {
           try { el.classList.remove('toast-state-show'); el.classList.add('toast-state-hide'); } catch (_) {}
@@ -1246,18 +1218,8 @@
 
     /**
      * 批量初始化演示数据
-     * 生产环境（默认）：不再播种任何示例剧目/示例预约/假数据——空白态，等真实预约与录入；
-     * 仅 qaxqjt_deploy_mode="demo"（本地演示验收）时写入示例数据。
      */
     seedDemoData: function () {
-      var DEPLOY_MODE_KEY = 'qaxqjt_deploy_mode';
-      var isDemo = false;
-      try { isDemo = localStorage.getItem(DEPLOY_MODE_KEY) === 'demo'; } catch (_me) {}
-      if (!isDemo) {
-        // 生产：仅保证 users 空壳存在（部分旧逻辑读取 .list 期望数组），绝不写入任何示例数据
-        try { if (!this._get(this.KEYS.USERS)) this._set(this.KEYS.USERS, []); } catch (_u) {}
-        return;
-      }
       if (this._get(this.KEYS.PLAYS)) return;
 
       var plays = [
@@ -4812,8 +4774,6 @@
   };
 
   var WageEngine = {
-    // 工资规则在系统设置表(settings)中的固定 key
-    REMOTE_RULES_KEY: 'wage_rules_json',
     // ---------- 规则存取 ----------
     getDefaultRules: function () {
       try {
@@ -4822,64 +4782,13 @@
       } catch (e) { console.warn('[WageEngine] 读取自定义规则失败，回退默认规则', e.message); }
       return JSON.parse(JSON.stringify(DEFAULT_WAGE_RULES));
     },
-    // 从后端设置表拉取工资规则；服务端版本较新时覆盖本地缓存。返回 Promise<{updated, rules}>
-    syncRulesFromServer: function () {
-      var self = this;
-      var _win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this);
-      var API = _win.QAXQJT_API;
-      if (!(API && typeof API.get === 'function')) return Promise.resolve({ updated: false, rules: self.getDefaultRules(), offline: true });
-      return API.get('/v1/system/settings/key/' + self.REMOTE_RULES_KEY, { showErrorToast: false, timeoutMs: 8000 })
-        .then(function (row) {
-          if (!row || !row.value) return { updated: false, rules: self.getDefaultRules() };
-          var remote;
-          try { remote = JSON.parse(row.value); } catch (e) { return { updated: false, rules: self.getDefaultRules() }; }
-          if (!remote || !remote.baseDailyWage) return { updated: false, rules: self.getDefaultRules() };
-          var local = null;
-          try { local = Storage._get(Storage.KEYS.WAGE_RULES); } catch (_) {}
-          var remoteTs = Number(remote.updatedAt) || 0;
-          var localTs = local && Number(local.updatedAt) ? Number(local.updatedAt) : 0;
-          if (!local || remoteTs > localTs) {
-            Storage._set(Storage.KEYS.WAGE_RULES, remote);
-            console.info('[WageEngine] 已从服务器同步工资规则', new Date(remoteTs).toLocaleString());
-            return { updated: true, rules: remote };
-          }
-          return { updated: false, rules: local };
-        })
-        .catch(function () {
-          // 404（尚未保存过）或网络异常时静默回退本地/默认规则
-          return { updated: false, rules: self.getDefaultRules(), offline: true };
-        });
-    },
-    // 异步同步到后端设置表（不阻塞本地即时生效）
-    _saveRulesRemote: function (rules) {
-      var self = this;
-      var _win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this);
-      var API = _win.QAXQJT_API;
-      if (!(API && typeof API.post === 'function')) return Promise.resolve({ offline: true });
-      return API.post('/v1/system/settings/batch', {
-        items: [{
-          key: self.REMOTE_RULES_KEY,
-          value: JSON.stringify(rules),
-          group: 'wage',
-          description: '默认日工资规则（行当×职级矩阵、演出补助、扣款、考勤窗口）'
-        }]
-      }, { showErrorToast: false, timeoutMs: 10000 }).then(function () { return { synced: true }; });
-    },
     saveRules: function (rules) {
       try {
         if (!rules || !rules.baseDailyWage) throw new Error('规则缺少baseDailyWage字段');
         rules.updatedAt = Date.now();
         rules.version = 'custom_' + (rules.updatedAt);
-        // ① 本地即时落库（同步）——所有后续工资计算立刻使用新规则
         Storage._set(Storage.KEYS.WAGE_RULES, rules);
-        Utils.toast('✅ 日工资规则已保存并即时生效', 'success');
-        // ② 后台异步同步到服务器，跨设备/清缓存后仍可恢复
-        this._saveRulesRemote(rules).then(function (r) {
-          if (r && r.synced) console.info('[WageEngine] 工资规则已同步至服务器');
-          else console.warn('[WageEngine] 服务器同步跳过（离线/未登录），规则仅保存在本机');
-        }).catch(function (e) {
-          console.warn('[WageEngine] 工资规则同步服务器失败（本地已生效）：', e && e.message);
-        });
+        Utils.toast('✅ 日工资规则已保存并生效', 'success');
         return true;
       } catch (e) {
         Utils.toast('❌ 规则保存失败：' + (e.message || e), 'error');
@@ -4888,15 +4797,8 @@
     },
     resetRules: function () {
       try {
-        var def = JSON.parse(JSON.stringify(DEFAULT_WAGE_RULES));
-        def.updatedAt = Date.now();
-        def.version = 'default_' + def.updatedAt;
-        Storage._set(Storage.KEYS.WAGE_RULES, def);
+        Storage._set(Storage.KEYS.WAGE_RULES, JSON.parse(JSON.stringify(DEFAULT_WAGE_RULES)));
         Utils.toast('🔄 已恢复默认日工资规则表', 'success');
-        var self = this;
-        this._saveRulesRemote(def).then(function (r) {
-          if (r && r.synced) console.info('[WageEngine] 默认规则已同步至服务器');
-        }).catch(function () {});
         return true;
       } catch (e) {
         Utils.toast('❌ 恢复失败：' + (e.message || e), 'error');
@@ -4905,8 +4807,13 @@
     },
 
     // ---------- 基准日工资查询（行当+职级 → 分） ----------
-    getBaseDailyWage: function (roleCategory, level, rules) {
+    // 第4参 staff（可选）：本人协议天工资 dailyWage（元）优先于行当×职级矩阵
+    getBaseDailyWage: function (roleCategory, level, rules, staff) {
       var R = rules || this.getDefaultRules();
+      if (staff) {
+        var own = Number(staff.dailyWage);
+        if (isFinite(own) && own > 0) return Math.max(0, Math.round(own * 100));
+      }
       var cat = (roleCategory || '').trim() || '其他';
       var lv = (level || '').trim() || '普通员工';
       var catMap = R.baseDailyWage[cat];
@@ -4930,7 +4837,7 @@
       var dr = dailyRecord || {};
       var status = dr.status || 'normal';
 
-      var baseCents = this.getBaseDailyWage(st.roleCategory, st.level, R);
+      var baseCents = this.getBaseDailyWage(st.roleCategory, st.level, R, st);
       var detail = {
         date: dr.date || '',
         status: status,
@@ -5433,7 +5340,7 @@
         var before = map[key] || '常规';
         if (tag === '常规') delete map[key]; else map[key] = tag;
         Storage._set(Storage.KEYS.ATTENDANCE_MANUAL_TAGS, map);
-        self._audit('attendance.manualTag.set', [staffId], { date: date, tag: before }, { date: date, tag: tag }, opts && (opts.reason || opts.remark) ? { reason: opts.reason || opts.remark, operator: opts.operator } : null);
+        self._audit('attendance.manualTag.set', [staffId], { date: date, tag: before }, { date: date, tag: tag }, opts && opts.reason ? { reason: opts.reason } : null);
         Utils.toast('✅ ' + (staffId || '所选人员') + ' · ' + date + ' → 【' + tag + '】 已保存', 'success');
         return true;
       } catch (e) { Utils.toast('❌ 标记保存失败：' + (e.message || e), 'error'); return false; }
@@ -5720,7 +5627,7 @@
     calcDailyWageV2: function (staff, date, clockTimeList, rules) {
       var self = this;
       var R = rules || self.getDefaultRules();
-      var baseCents = self.getBaseDailyWage(staff && staff.roleCategory, staff && staff.level, R);
+      var baseCents = self.getBaseDailyWage(staff && staff.roleCategory, staff && staff.level, R, staff);
       var record = self.calcDayRecord(staff && staff.id, date, clockTimeList);
       var pr = self.calcDayPunishReward(staff && staff.id, date, clockTimeList);
       var basePay = 0;
@@ -6252,13 +6159,11 @@
         if (views && views.length) {
           views.forEach(function (btn) {
             btn.addEventListener('click', function () {
-              // 页面自带真实视图切换逻辑（schedule.html window.__switchView，含容器显隐+API渲染+提示）时交由页面处理，不弹占位 toast
-              if (typeof window.__switchView === 'function') return;
               views.forEach(function (b) { b.classList.remove('active'); });
               btn.classList.add('active');
               var map = { 'month': '📆 月度', 'week': '📋 周度', 'list': '📑 列表' };
               var label = map[btn.getAttribute('data-view')] || btn.getAttribute('data-view');
-              Utils.toast(label + '视图已切换', 'success');
+              Utils.toast(label + '视图已切换（正式环境将对接后端日历接口渲染）', 'success');
             });
           });
         }
@@ -6329,8 +6234,6 @@
         }
         var btn = e.target.closest('button, a, .btn-action');
         if (!btn) return;
-        // v20260908k：已绑定真实处理的按钮整体跳过演示兜底（schedule.html __BTN_GUARD_V2__ 全量标记 __superPatchBound；CSP 内联事件迁移同样标记；TS3 真实绑定 __ts3Done）
-        if (btn.__superPatchBound || btn.__ts3Done) return;
         if (btn.hasAttribute('onclick') && !btn.classList.contains('needs-delegate')) return;
         var href = btn.getAttribute && btn.getAttribute('href');
         if (href && href !== '#' && href !== '' && href.indexOf('javascript:') !== 0) return;
@@ -6363,15 +6266,11 @@
           return;
         }
         if (hasAny(text, ['查询'], btn)) {
-          // v20260907k：跳过已绑定真实处理的按钮（schedule.html 等 admin 页面的查询栏按钮已设 __superPatchBound）
-          if (btn.__superPatchBound || btn.__ts3Done) return;
           e.preventDefault();
           Utils.toast('🔍 查询条件已提交，正在刷新数据...', 'info');
           return;
         }
         if (hasAny(text, ['重置'], btn)) {
-          // v20260907k：跳过已绑定真实处理的按钮（schedule.html 等查询栏重置按钮已设 __superPatchBound/__ts3Done）
-          if (btn.__superPatchBound || btn.__ts3Done) return;
           e.preventDefault();
           var t3 = stripEmoji(text); if (!t3 && btn.getAttribute) t3 = stripEmoji(btn.getAttribute('title') || '');
           if (t3.indexOf('重置密码') >= 0 || (t3.indexOf('重置') >= 0 && btn.closest && btn.closest('[class*="account"]'))) {
@@ -6811,18 +6710,11 @@
      */
     initImageUploaders: function () {
       var FILE_MAX_MB = 10;
-      // v20260908e：isImgOnly 判定收紧——accept 拆分后全部为 image/* 才算纯图片输入。
-      // 旧判定 accept.indexOf('image')>=0 会误伤混合类型输入（如订单附件 image/*,.pdf,.doc…），
-      // 导致选 PDF/Word 扫描件被误报「仅支持 image/* 格式」，用户误以为上传失败
-      function _isImgOnlyAccept(accept) {
-        var parts = (accept || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-        return parts.length > 0 && parts.every(function (p) { return p.indexOf('image') === 0; });
-      }
       document.addEventListener('change', function (e) {
         var inp = e.target;
         if (!inp || inp.tagName !== 'INPUT' || inp.type !== 'file') return;
         var accept = (inp.getAttribute('accept') || '').toLowerCase();
-        var isImgOnly = _isImgOnlyAccept(accept);
+        var isImgOnly = accept.indexOf('image') >= 0;
         var files = inp.files;
         if (!files || !files.length) return;
         // 1. 大小/格式校验
@@ -6885,12 +6777,7 @@
       document.addEventListener('submit', function (ev) {
         var f = ev.target;
         if (f.tagName !== 'FORM') return;
-        // v20260908e：仅拦「纯图片」上传表单，放过混合类型附件表单（image/*,.pdf,.doc…）
-        var hasImgOnlyInput = false;
-        f.querySelectorAll('input[type="file"]').forEach(function (fi) {
-          if (_isImgOnlyAccept((fi.getAttribute('accept') || '').toLowerCase())) hasImgOnlyInput = true;
-        });
-        if (!hasImgOnlyInput) return;
+        if (!f.querySelector('input[type="file"][accept*="image"]')) return;
         ev.preventDefault();
         (Utils.toast || Utils.showToast) && (Utils.toast || Utils.showToast)('📤 图片已在前台校验完成，EdgeOne Pages 静态部署环境下请对接对象存储/后端上传接口后再提交保存。本前端版已完成校验+预览层。', 'info', 4500);
         return false;
@@ -9122,21 +9009,20 @@
         var CSS = [
           /* 1) 封横向溢出联动纵向假高（最常见「20屏假滚动」元凶） */
           'html, body { max-width: 100vw !important; overflow-x: hidden !important; }',
-          /* 2) ★ admin-layout 本身硬设最高 6 屏 + overflow:visible 不创建滚动上下文（让 body 成为滚动容器，侧栏 sticky 才能生效；横向溢出由 html,body 的 overflow-x:hidden 兜底） */
-          '.admin-layout { max-height: calc(100vh * 6) !important; overflow: visible !important; height: auto !important; min-height: 0 !important; position: relative; }',
+          /* 2) ★ admin-layout 本身硬设最高 6 屏 + 内部滚动（解连环撑爆最核心一条） */
+          '.admin-layout { max-height: calc(100vh * 6) !important; overflow-y: auto !important; overflow-x: hidden !important; height: auto !important; min-height: 0 !important; position: relative; }',
           /* 3) ★ wrapper 三层（admin-main / admin-content / main / content-wrapper / page-container）→ 继承上限、解 height:100% */
           '.admin-content, main, .admin-main, .content-wrapper, .page-container, section.admin-content { height: auto !important; min-height: 0 !important; max-height: calc(100vh * 6 - 120px) !important; overflow-y: visible !important; overflow-x: hidden !important; }',
           /* 4) pagination-bar 全类名封顶 180px（finance 只修了自己，这里覆盖所有页） */
           '[class*="pagination-bar"], [class*="pg-toolbar"], [class*="pagination-toolbar"], [class*="sp-pg-toolbar"] { max-height: 180px !important; min-height: unset !important; overflow: hidden !important; }',
           /* 5) 空 tbody / 空 table 不占空间（避免 0 行也有 200~400px 假高度） */
           'table tbody:empty, table tbody[data-paginate]:empty { display: none !important; height: 0 !important; min-height: 0 !important; }',
-          /* 6) ★ body 三重兜底：最高 6 屏、截断溢出；overflow-y:visible 让视口成为滚动容器，侧栏 sticky 才能生效 */
-          'body { --max-allow-height: calc(100vh * 6); max-height: var(--max-allow-height) !important; height: auto !important; min-height: 0 !important; overflow: visible !important; position: relative; }',
+          /* 6) ★ body 三重兜底：最高 6 屏、截断溢出、内部滚动 */
+          'body { --max-allow-height: calc(100vh * 6); max-height: var(--max-allow-height) !important; height: auto !important; min-height: 0 !important; overflow-y: auto !important; overflow-x: hidden !important; position: relative; }',
           /* 7) 防止 wrapper flex:1 把父容器越撑越大（reports/staff 常见） */
           '.flex-1, [class*="flex:1"], [style*="flex:1 1"] { min-height: 0 !important; max-height: calc(100vh * 6) !important; overflow: hidden; }',
           /* 8) 侧边栏/顶栏不参与撑高：固定/非拉伸布局（防止 dashboard 顶栏 + 侧栏 + 主区 + 底栏连环叠） */
-          '.admin-sidebar, aside[class*="sidebar"], nav[class*="sidebar"] { max-height: 100vh !important; overflow-y: auto !important; overflow-x: hidden !important; height: auto !important; }',
-          '.admin-header, header[class*="admin-header"], [class*="admin-nav"] { max-height: 100vh !important; overflow: hidden; height: auto !important; }',
+          '.admin-sidebar, aside[class*="sidebar"], nav[class*="sidebar"], .admin-header, header[class*="admin-header"], [class*="admin-nav"] { max-height: 100vh !important; overflow: hidden; height: auto !important; }',
           /* 9) ★ BUG FIX: 最新系统动态/通知列表区域限高，防止无限延长触发 HeightGuard 误判 */
           '.system-notice-list, .notice-list, .activity-list, .recent-activity { max-height: 400px !important; overflow-y: auto !important; }',
           /* 10) ★ BUG FIX: 表格容器不被 HeightGuard 兜底截断 — table/tbody 永远不设 maxHeight */
@@ -9150,15 +9036,11 @@
         // —— ② 扫 2 轮：空 tbody[data-paginate] / 空 table 移除 data-paginate，避免分页器初始化时撑爆
         function __purgeEmptyPaginate(roundTag) {
           var removed = 0;
-          var kept = 0;
           try {
             var list = document.querySelectorAll('tbody[data-paginate], table[data-paginate], [data-paginate="list"]');
             for (var i = 0; i < list.length; i++) {
               var el = list[i];
               if (!el || !el.getAttribute) continue;
-              // v20260908m：带 data-paginate-keep 的元素（如 staff.html 花名册 tbody）跳过——
-              // 这些表会异步从后端加载行， purge 时虽空但稍后有数据，移除属性会导致分页器初始化失败
-              try { if (el.getAttribute('data-paginate-keep') === '1') { kept++; continue; } } catch (_keepErr) {}
               var tag = (el.tagName || '').toLowerCase();
               var rows = 0;
               if (tag === 'tbody') {
@@ -9181,7 +9063,7 @@
               }
             }
           } catch (_e) {}
-          try { if (console && console.info) console.info('[HeightGuard] Round '+roundTag+': purgeEmptyPaginate removed='+removed+' kept='+kept); } catch (_) {}
+          try { if (console && console.info) console.info('[HeightGuard] Round '+roundTag+': purgeEmptyPaginate removed='+removed); } catch (_) {}
         }
         __purgeEmptyPaginate('1-now');
         // 第 2 轮：2.4s 后再扫（等 CRUD 初始化完）

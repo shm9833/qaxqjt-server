@@ -452,7 +452,10 @@ v1.post(
       socialSecurityNo: Joi.string().allow('').optional(),
       status: Joi.string().default('active'),
       remark: Joi.string().allow('').optional(),
-      avatarUrl: Joi.string().allow('').optional()
+      avatarUrl: Joi.string().allow('').optional(),
+      agreedSalary: Joi.string().allow('').max(100).optional(),
+      dailyRate: Joi.number().min(0).max(100000).allow('').optional(),
+      transportType: Joi.string().valid('单趟', '双趟').allow('').optional()
     })
   }),
   requireRole(['super_admin', 'ops']),
@@ -479,7 +482,10 @@ v1.patch(
       socialSecurityNo: Joi.string().allow('').optional(),
       status: Joi.string().optional(),
       remark: Joi.string().allow('').optional(),
-      avatarUrl: Joi.string().allow('').optional()
+      avatarUrl: Joi.string().allow('').optional(),
+      agreedSalary: Joi.string().allow('').max(100).optional(),
+      dailyRate: Joi.number().min(0).max(100000).allow('').optional(),
+      transportType: Joi.string().valid('单趟', '双趟').allow('').optional()
     }).min(1)
   }),
   requireRole(['super_admin', 'ops']),
@@ -495,7 +501,8 @@ v1.post(
       gender: Joi.string().valid('男', '女', 'other').allow('').optional(),
       phone: Joi.string().allow('').optional(),
       primaryRole: Joi.string().allow('').optional(),
-      agreedSalary: Joi.string().allow('').optional(),
+      agreedSalary: Joi.string().allow('').max(100).optional(),
+      dailyRate: Joi.number().min(0).max(100000).allow('').optional(),
       transportType: Joi.string().valid('单趟', '双趟').allow('').optional(),
       remark: Joi.string().allow('').optional(),
       regulationsConfirmed: Joi.boolean().required()
