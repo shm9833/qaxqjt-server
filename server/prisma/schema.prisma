@@ -224,12 +224,17 @@ model PerformersDbV1 {
   bankAccount      String?   @map("bank_account")
   bankName         String?   @map("bank_name")
   socialSecurityNo String?   @map("social_security_no")
-  status           String    @default("active")
-  remark           String?
-  avatarUrl        String?   @map("avatar_url")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
-  ts               BigInt    @map("_ts")
+  status               String    @default("active")
+  remark               String?
+  avatarUrl            String?   @map("avatar_url")
+  reviewStatus         String    @default("approved") @map("review_status") // pending/approved/rejected
+  reviewFeedback       String?   @map("review_feedback") // 审核不通过时的退回建议
+  agreedSalary         String?   @map("agreed_salary") // 协议工资（备注字段）
+  transportType        String?   @map("transport_type") // 单趟/双趟路费
+  regulationsConfirmed Boolean   @default(false) @map("regulations_confirmed") // 是否已阅读员工管理条例
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  ts                   BigInt    @map("_ts")
 
   @@map("performers_db_v1")
 }
