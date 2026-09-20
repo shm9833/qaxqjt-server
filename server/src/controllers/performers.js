@@ -72,15 +72,50 @@ const buildData = b => {
   return data;
 };
 
+// ========== 工号自动分配（后端为唯一事实来源）==========
+// 规则：扫描全表（含软删除记录——staffNo 唯一索引覆盖它们）所有 PF\d+ 工号，取最大序号 +1，格式 PF001/PF002...
+// 历史 QA-P-xxxx 工号为历史批次，保留不动、不计入 PF 序列；唯一冲突时重试。
+// 注意：不能只查在岗记录，否则停用/删除的最大号会被重新分配，触发唯一约束冲突。
+const allocateStaffNo = async (maxRetries = 3) => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const rows = await prisma.performersDbV1.findMany({
+      where: { staffNo: { not: null } },
+      select: { staffNo: true }
+    });
+    let max = 0;
+    rows.forEach(r => {
+      const m = /^PF(\d+)$/i.exec(r.staffNo || '');
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    });
+    const candidate = 'PF' + String(max + 1).padStart(3, '0');
+    const clash = rows.some(r => r.staffNo === candidate);
+    if (!clash) return candidate;
+  }
+  throw new BusinessError('INTERNAL_ERROR', '工号分配失败：序号冲突，请重试');
+};
+
 const create = async ctx => {
   const b = ctx.request.body;
-  const data = {
-    id: b.id || idByCtx('performer', 12, nanoid),
-    ...buildData(b)
-  };
-  const row = await prisma.performersDbV1.create({ data });
-  await audit({ ctx, module: 'performers', action: 'PERFORMER_CREATE', targetId: row.id, detail: { name: row.name } });
-  return created(ctx, row);
+  const manualNo = (b.staffNo || '').toString().trim();
+  let lastErr = null;
+  // 自动分配工号时带唯一冲突重试（并发新增安全）；手工指定工号则不重试
+  for (let attempt = 0; attempt < (manualNo ? 1 : 3); attempt++) {
+    const staffNo = manualNo || await allocateStaffNo();
+    const data = {
+      id: b.id || idByCtx('performer', 12, nanoid),
+      ...buildData({ ...b, staffNo })
+    };
+    try {
+      const row = await prisma.performersDbV1.create({ data });
+      await audit({ ctx, module: 'performers', action: 'PERFORMER_CREATE', targetId: row.id, detail: { name: row.name, staffNo: row.staffNo } });
+      return created(ctx, row);
+    } catch (e) {
+      lastErr = e;
+      if (!manualNo && e && e.code === 'P2002') continue; // 工号并发冲突，重新取号
+      throw e;
+    }
+  }
+  throw lastErr;
 };
 
 const detail = async ctx => {
@@ -175,11 +210,14 @@ const review = async ctx => {
 
   let patch;
   if (action === 'approve') {
+    const manualNo = (b.staffNo || '').toString().trim();
+    // 自助登记者原本无工号：审核通过即由后端统一分配正式工号
+    const staffNo = manualNo || row.staffNo || await allocateStaffNo();
     patch = {
       status: 'active',
       reviewStatus: 'approved',
       reviewFeedback: null,
-      staffNo: b.staffNo || row.staffNo, // 审核通过时可分配工号
+      staffNo,
       updatedAt: new Date(),
       ts: BigInt(nowMs())
     };
@@ -193,8 +231,8 @@ const review = async ctx => {
     };
   }
   const updated = await prisma.performersDbV1.update({ where: { id }, data: patch });
-  await audit({ ctx, module: 'performers', action: action === 'approve' ? 'PERFORMER_APPROVE' : 'PERFORMER_REJECT', targetId: id, detail: { name: updated.name, feedback: patch.reviewFeedback } });
-  return success(ctx, { id: updated.id, reviewStatus: updated.reviewStatus, status: updated.status });
+  await audit({ ctx, module: 'performers', action: action === 'approve' ? 'PERFORMER_APPROVE' : 'PERFORMER_REJECT', targetId: id, detail: { name: updated.name, staffNo: updated.staffNo, feedback: patch.reviewFeedback } });
+  return success(ctx, { id: updated.id, staffNo: updated.staffNo, reviewStatus: updated.reviewStatus, status: updated.status });
 };
 
 // ========== 统计聚合（真实数据） ==========

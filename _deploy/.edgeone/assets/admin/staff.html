@@ -4595,12 +4595,10 @@ try{
     if (phone) body.phone = phone;
     if (age !== '') body.birthDate = (new Date().getFullYear()-parseInt(age,10))+'-01-01';
     if (year && /^\d{4}$/.test(year)) body.hireDate = year+'-06-01';
-    var done = function(){ try{ window.closeStaffEditModal && window.closeStaffEditModal(); }catch(_){} toast('✅ 已保存：'+name,'success'); load(); loadStats(); };
+    var done = function(d){ try{ window.closeStaffEditModal && window.closeStaffEditModal(); }catch(_){} var sn=d&&(d.staffNo||(d.data&&d.data.staffNo)); toast('✅ 已保存：'+name+(sn?('（工号 '+sn+'）'):''),'success'); load(); loadStats(); };
     var fail = function(err){ toast('❌ 保存失败：'+((err&&err.message)||'网络/服务异常'),'error'); };
     if (ed && ed.mode==='new'){
-      var max = 0;
-      Object.keys(MAP).forEach(function(k){ var m=String(k).match(/PF(\d+)/i); if(m) max=Math.max(max,parseInt(m[1],10)); });
-      body.staffNo = 'PF'+String(max+1).padStart(3,'0');
+      // 工号由后端统一分配（全表含停用记录取号，避免与已占用/已删除号冲突）
       API.post('/v1/performers', body, { showErrorToast:false }).then(done).catch(fail);
     } else if (ed && ed.id){
       API.patch('/v1/performers/'+ed.id, body, { showErrorToast:false }).then(done).catch(fail);
@@ -4978,13 +4976,15 @@ try{
   }
 
   window.approvePending = function(id){
-    if(!confirm('确认审核通过？该人员将正式入职花名册。')) return;
+    if(!confirm('确认审核通过？系统将为其自动分配工号并正式入职花名册。')) return;
     API.patch('/v1/performers/' + id + '/review', { body: { action:'approve' } })
-      .then(function(){
-        toast('审核通过，已入职', 'success');
+      .then(function(r){
+        var sn = r && (r.staffNo || (r.data && r.data.staffNo));
+        toast('审核通过，已入职' + (sn ? ('，工号 ' + sn) : ''), 'success');
         loadPending();
         // 刷新花名册
         if(typeof loadStaffRoster === 'function') loadStaffRoster();
+        else if(typeof __STF_LOAD__ === 'function') __STF_LOAD__();
         else location.reload();
       })
       .catch(function(e){ toast('操作失败：' + (e&&e.message||''), 'error'); });
