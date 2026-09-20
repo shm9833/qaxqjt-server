@@ -1011,6 +1011,7 @@ v1.get(
 );
 v1.get('/wages/:id', requireRole(['super_admin', 'ops', 'director', 'finance_view']), wagesCtrl.detail);
 v1.post('/wages', requireRole(['super_admin', 'ops', 'director']), wagesCtrl.create);
+v1.post('/wages/generate', requireRole(['super_admin', 'ops', 'director']), wagesCtrl.generate);
 v1.patch('/wages/:id', requireRole(['super_admin', 'ops', 'director']), wagesCtrl.update);
 v1.delete('/wages/:id', requireRole('super_admin'), wagesCtrl.remove);
 v1.get('/wage-batches', requireRole(['super_admin', 'ops', 'director', 'finance_view']), wagesCtrl.batchList);

@@ -341,6 +341,189 @@ const remove = async ctx => {
   return noContent(ctx);
 };
 
+// ========== 无底薪工资批量生成：baseWage = 协议天工资 × 实际出勤天数 ==========
+// 实际出勤天数口径：full/night/double 各计 1 天，half 计 0.5 天（与 performers.stats 一致）
+const WORK_DAY_TYPES = { full: 1, night: 1, double: 1, half: 0.5 };
+
+async function _attendanceByStaff(month) {
+  // 一次性拉取该月全部考勤，按 staffId 聚合，避免 N 次查询
+  const rows = await prisma.attendanceV1.findMany({
+    where: { attendanceMonth: month },
+    select: { staffId: true, attendanceType: true }
+  });
+  const map = {};
+  for (const r of rows) {
+    const m = map[r.staffId] || { workDays: 0, nightShows: 0, absent: 0, leave: 0, late: 0 };
+    const t = r.attendanceType;
+    if (WORK_DAY_TYPES[t] != null) {
+      m.workDays += WORK_DAY_TYPES[t];
+      if (t === 'night') m.nightShows += 1;
+    } else if (t === 'absent') m.absent += 1;
+    else if (t === 'late') m.late += 1;
+    else if (t === 'leave' || t === 'outing' || t === 'study' || t === 'business' || t === 'injury') m.leave += 1;
+    map[r.staffId] = m;
+  }
+  return map;
+}
+
+function _round2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+
+// 计算单条工资（无底薪）
+// - dailyRate: 本人协议天工资（元/天），优先
+// - rule: 职级工资规则（无 dailyRate 时用 rule.baseDailyStandard 兜底）
+function _calcWageItem(perf, att, rule) {
+  const workDays = att ? att.workDays : 0;
+  const nightly = att ? att.nightShows : 0;
+  const dailyRate = perf.dailyRate != null && Number(perf.dailyRate) > 0 ? Number(perf.dailyRate) : (rule ? Number(rule.baseDailyStandard) || 0 : 0);
+
+  const baseWage = _round2(dailyRate * workDays);
+  const nightShowBonus = rule ? _round2(Number(rule.nightShowBonus) || 0) * nightly : 0;
+  // 全勤奖：当月无缺勤/请假才发
+  const isFull = att && att.absent === 0 && att.leave === 0;
+  const fullAttendanceBonus = isFull ? (rule ? Number(rule.fullAttendanceBonus) || 0 : 0) : 0;
+  const transportAllowance = rule ? Number(rule.transportAllowance) || 0 : 0;
+  const mealAllowance = rule ? Number(rule.mealAllowance) || 0 : 0;
+
+  const grossPay = _round2(baseWage + nightShowBonus + fullAttendanceBonus + transportAllowance + mealAllowance);
+  const totalDeduction = 0; // 社保/公积金/个税/扣款默认 0，可在明细里手工补
+  const netPay = _round2(grossPay - totalDeduction);
+
+  return {
+    performerId: perf.id,
+    performerName: perf.name,
+    staffNo: perf.staffNo || null,
+    rankGrade: perf.rankGrade || null,
+    attendanceDays: workDays,
+    dailyRate: dailyRate,
+    baseWage,
+    nightShowBonus,
+    fullAttendanceBonus,
+    transportAllowance,
+    mealAllowance,
+    grossPay,
+    totalDeduction,
+    netPay,
+    otherDeductionNote: JSON.stringify({ leave: 0, absent: 0, late: att ? att.late : 0, early: 0 }),
+    remark: dailyRate > 0
+      ? `无底薪：协议天工资 ¥${dailyRate}/天 × ${workDays}天`
+      : `无底薪：职级日薪 ¥${dailyRate}/天 × ${workDays}天`
+  };
+}
+
+const generate = async ctx => {
+  const b = ctx.request.body || {};
+  const month = b.month;
+  if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+    throw new BusinessError('VALIDATION_ERROR', 'month 必填（YYYY-MM）');
+  }
+  const dryRun = b.dryRun === true || b.preview === true;
+
+  const performers = await prisma.performersDbV1.findMany({
+    where: { status: { not: 'deleted' } },
+    select: { id: true, staffNo: true, name: true, rankGrade: true, dailyRate: true, employmentType: true }
+  });
+  if (!performers.length) {
+    throw new BusinessError('UNPROCESSABLE', '花名册无在册人员');
+  }
+
+  // 职级规则一次取齐
+  const ruleRows = await prisma.wageRulesV1.findMany({ where: { status: 'active' } });
+  const ruleMap = {};
+  ruleRows.forEach(r => { ruleMap[r.rankGrade] = r; });
+
+  const attMap = await _attendanceByStaff(month);
+
+  const items = [];
+  let totalBase = 0, totalAllow = 0, totalBonus = 0, totalDeduct = 0, totalNet = 0;
+  for (const p of performers) {
+    const att = attMap[p.id] || { workDays: 0, nightShows: 0, absent: 0, leave: 0, late: 0 };
+    // 无出勤且无天工资的人员跳过（避免全 0 噪声），但允许有 dailyRate 的人保留（0 天 = 0 元）
+    if (att.workDays <= 0 && (p.dailyRate == null || Number(p.dailyRate) <= 0)) continue;
+    const rule = p.rankGrade ? ruleMap[p.rankGrade] : null;
+    const calc = _calcWageItem(p, att, rule);
+    items.push(calc);
+    totalBase += calc.baseWage;
+    totalAllow += calc.transportAllowance + calc.mealAllowance;
+    totalBonus += calc.nightShowBonus + calc.fullAttendanceBonus;
+    totalDeduct += calc.totalDeduction;
+    totalNet += calc.netPay;
+  }
+
+  if (dryRun) {
+    return success(ctx, {
+      month,
+      dryRun: true,
+      totalPerformers: items.length,
+      totalBaseWage: _round2(totalBase),
+      totalAllowance: _round2(totalAllow),
+      totalBonus: _round2(totalBonus),
+      totalDeduction: _round2(totalDeduct),
+      totalNetPay: _round2(totalNet),
+      items
+    });
+  }
+
+  // 正式生成：建批次 + 批量写入明细
+  const batchNo = b.batchNo || ('WB-' + month.replace('-', '') + '-' + Date.now().toString(36).toUpperCase());
+  const batch = await prisma.wageBatchesV1.create({
+    data: {
+      id: idByCtx('wbatch', 12, nanoid),
+      batchNo,
+      wageMonth: month,
+      status: 'draft',
+      totalPerformers: items.length,
+      totalBaseWage: _round2(totalBase),
+      totalAllowance: _round2(totalAllow),
+      totalBonus: _round2(totalBonus),
+      totalDeduction: _round2(totalDeduct),
+      totalNetPay: _round2(totalNet),
+      createdBy: ctx.state.user ? ctx.state.user.username : null,
+      ts: BigInt(nowMs())
+    }
+  });
+
+  const createdItems = [];
+  for (const it of items) {
+    const row = await prisma.wageItemsV1.create({
+      data: {
+        id: idByCtx('wage', 12, nanoid),
+        batchId: batch.id,
+        performerId: it.performerId,
+        performerName: it.performerName,
+        staffNo: it.staffNo,
+        rankGrade: it.rankGrade,
+        attendanceDays: it.attendanceDays,
+        baseWage: it.baseWage,
+        nightShowBonus: it.nightShowBonus,
+        fullAttendanceBonus: it.fullAttendanceBonus,
+        transportAllowance: it.transportAllowance,
+        mealAllowance: it.mealAllowance,
+        otherDeductionNote: it.otherDeductionNote,
+        grossPay: it.grossPay,
+        totalDeduction: it.totalDeduction,
+        netPay: it.netPay,
+        remark: it.remark,
+        ts: BigInt(nowMs())
+      }
+    });
+    createdItems.push(toApi(row, batch));
+  }
+
+  try { await audit(ctx, 'wages:generate', batch.id, { batchNo, month, count: createdItems.length }); } catch (_) {}
+  return created(ctx, {
+    batch: _batchToApi(batch),
+    items: createdItems,
+    summary: {
+      totalPerformers: createdItems.length,
+      totalBaseWage: _round2(totalBase),
+      totalAllowance: _round2(totalAllow),
+      totalBonus: _round2(totalBonus),
+      totalDeduction: _round2(totalDeduct),
+      totalNetPay: _round2(totalNet)
+    }
+  });
+};
+
 // ========== 工资批次（WageBatchesV1） ==========
 const batchList = async ctx => {
   const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
@@ -437,6 +620,7 @@ module.exports = {
   create,
   update,
   remove,
+  generate,
   batchList,
   batchCreate,
   batchConfirm,
