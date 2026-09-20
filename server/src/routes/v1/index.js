@@ -458,6 +458,7 @@ v1.post(
   requireRole(['super_admin', 'ops']),
   performersCtrl.create
 );
+v1.get('/performers/stats', requireRole(['super_admin', 'ops', 'director', 'finance_view']), performersCtrl.stats);
 v1.get('/performers/:id', requireRole(['super_admin', 'ops', 'director']), performersCtrl.detail);
 v1.patch(
   '/performers/:id',
@@ -485,6 +486,29 @@ v1.patch(
   performersCtrl.update
 );
 v1.delete('/performers/:id', requireRole('super_admin'), performersCtrl.remove);
+// 演员自助入职登记（公开接口，扫码访问）
+v1.post(
+  '/performers/self-register',
+  validate({
+    body: Joi.object({
+      name: Joi.string().trim().min(2).max(50).required(),
+      gender: Joi.string().valid('男', '女', 'other').allow('').optional(),
+      phone: Joi.string().allow('').optional(),
+      primaryRole: Joi.string().allow('').optional(),
+      agreedSalary: Joi.string().allow('').optional(),
+      transportType: Joi.string().valid('单趟', '双趟').allow('').optional(),
+      remark: Joi.string().allow('').optional(),
+      regulationsConfirmed: Joi.boolean().required()
+    })
+  }),
+  performersCtrl.selfRegister
+);
+// 管理员审核（通过/退回）
+v1.patch(
+  '/performers/:id/review',
+  requireRole(['super_admin', 'ops', 'director']),
+  performersCtrl.review
+);
 /* ====== END 演职人员路由 ====== */
 
 /* ====== 订单 orders 路由注册（v1）====== */
