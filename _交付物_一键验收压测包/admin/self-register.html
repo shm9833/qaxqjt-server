@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <base href="/admin/">
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>演职人员入职登记 - 秦安县秦剧团</title>
+  <link rel="stylesheet" href="../css/style.css?v=20260919c">
+  <script src="../js/api-config.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      background: linear-gradient(135deg, #fdf8f0 0%, #f5e6cc 100%);
+      min-height: 100vh;
+      padding: 16px;
+      color: #333;
+    }
+    .wrap { max-width: 520px; margin: 0 auto; }
+    .header {
+      text-align: center;
+      padding: 20px 0 16px;
+    }
+    .header h1 {
+      font-size: 22px;
+      color: #8b0000;
+      margin-bottom: 6px;
+    }
+    .header p { font-size: 13px; color: #8a6d3b; }
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(139, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 14px;
+    }
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #5a3a1a;
+      margin-bottom: 6px;
+    }
+    .field label .req { color: #d32f2f; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #e0d0b8;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      background: #fffdf7;
+      transition: border-color .2s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline: none;
+      border-color: #8b0000;
+    }
+    .field textarea { min-height: 70px; resize: vertical; }
+    .row { display: flex; gap: 10px; }
+    .row .field { flex: 1; }
+    .regulations {
+      background: #fff8e7;
+      border: 1px solid #e8d5b7;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+    .regulations summary {
+      font-size: 14px;
+      font-weight: 600;
+      color: #8b0000;
+      cursor: pointer;
+      user-select: none;
+    }
+    .regulations .content {
+      font-size: 12.5px;
+      line-height: 1.7;
+      color: #5a4a2a;
+      margin-top: 10px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    .regulations .content p { margin-bottom: 6px; }
+    .confirm {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .confirm input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      accent-color: #8b0000;
+      cursor: pointer;
+    }
+    .confirm label {
+      font-size: 13px;
+      color: #5a3a1a;
+      cursor: pointer;
+      line-height: 1.5;
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #8b0000, #6b0000);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .submit-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+    .submit-btn:not(:disabled):active { transform: scale(.98); }
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 999;
+      display: none;
+      max-width: 90%;
+      text-align: center;
+    }
+    .toast.success { background: #2e7d32; color: #fff; display: block; }
+    .toast.error { background: #c62828; color: #fff; display: block; }
+    .result-box {
+      text-align: center;
+      padding: 30px 20px;
+    }
+    .result-box .icon { font-size: 48px; margin-bottom: 12px; }
+    .result-box h2 { color: #2e7d32; margin-bottom: 10px; }
+    .result-box p { color: #666; font-size: 14px; line-height: 1.6; }
+    .result-box .tip { margin-top: 16px; font-size: 12px; color: #999; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>秦安县秦剧团</h1>
+      <p>演职人员入职登记表</p>
+    </div>
+
+    <!-- 表单 -->
+    <div id="formCard" class="card">
+      <div class="field">
+        <label>姓名 <span class="req">*</span></label>
+        <input type="text" id="name" placeholder="请输入真实姓名" maxlength="20" />
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>性别</label>
+          <select id="gender">
+            <option value="">请选择</option>
+            <option value="男">男</option>
+            <option value="女">女</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>手机号</label>
+          <input type="tel" id="phone" placeholder="选填" maxlength="11" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>行当 / 岗位</label>
+        <select id="primaryRole">
+          <option value="">请选择（选填）</option>
+          <optgroup label="演员行当">
+            <option>花脸</option><option>二花脸</option><option>青衣</option><option>正旦</option>
+            <option>小旦</option><option>须生</option><option>小生</option><option>丑</option>
+            <option>二架男</option><option>二架女</option><option>彩女</option><option>龙套</option>
+          </optgroup>
+          <optgroup label="乐队">
+            <option>板胡</option><option>司鼓</option><option>二胡</option>
+            <option>文二手</option><option>武二手</option>
+          </optgroup>
+          <optgroup label="舞美">
+            <option>电工</option><option>服装</option><option>化妆</option><option>道具</option>
+          </optgroup>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>协议工资（备注）</label>
+          <input type="text" id="agreedSalary" placeholder="如：120元/场" maxlength="50" />
+        </div>
+        <div class="field">
+          <label>路费方式</label>
+          <select id="transportType">
+            <option value="">请选择</option>
+            <option value="单趟">单趟</option>
+            <option value="双趟">双趟</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>备注说明</label>
+        <textarea id="remark" placeholder="其他需要说明的事项（选填）" maxlength="200"></textarea>
+      </div>
+
+      <details class="regulations">
+        <summary>📋 《秦安县秦剧团员工管理条例》（点击展开阅读）</summary>
+        <div class="content">
+          <p><strong>第一条 总则</strong></p>
+          <p>本条例适用于秦安县秦剧团全体演职人员。所有人员应遵守国家法律法规，恪守职业道德，维护剧团声誉。</p>
+          <p><strong>第二条 考勤与演出</strong></p>
+          <p>演职人员须按时参加排练、演出，不得无故迟到、早退、旷工。因故不能参加须提前请假并获批准。</p>
+          <p><strong>第三条 薪酬与补贴</strong></p>
+          <p>薪酬按协议约定执行，演出补贴、路费等按团内规定标准发放。协议工资以双方确认为准。</p>
+          <p><strong>第四条 行为规范</strong></p>
+          <p>演职人员应团结协作、服从安排，认真完成各项演出任务。严禁饮酒后演出、罢演、闹场等行为。</p>
+          <p><strong>第五条 保密义务</strong></p>
+          <p>不得泄露剧团内部经营信息、演出合同、客户资料等商业秘密。</p>
+          <p><strong>第六条 离职交接</strong></p>
+          <p>离职须提前告知并办妥交接手续，归还团内财物。</p>
+          <p style="color:#8b0000;margin-top:8px;">本条例最终解释权归秦安县秦剧团所有。</p>
+        </div>
+      </details>
+
+      <div class="confirm">
+        <input type="checkbox" id="regulationsConfirmed" />
+        <label for="regulationsConfirmed">我已阅读并同意《秦安县秦剧团员工管理条例》，承诺如实填写以上信息。</label>
+      </div>
+
+      <button class="submit-btn" id="submitBtn" disabled>提交登记</button>
+    </div>
+
+    <!-- 提交结果 -->
+    <div id="resultCard" class="card result-box hidden">
+      <div class="icon" id="resultIcon">✅</div>
+      <h2 id="resultTitle">提交成功</h2>
+      <p id="resultMsg">您的入职登记已提交，等待管理员审核。<br>审核通过后将正式入职，审核不通过会退回并告知原因。</p>
+      <p class="tip">请保持手机畅通，以便接收审核通知。</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      var cb = $('regulationsConfirmed');
+      var btn = $('submitBtn');
+
+      // 勾选条例后才能提交
+      cb.addEventListener('change', function () {
+        btn.disabled = !cb.checked;
+      });
+
+      function showToast(msg, type) {
+        var t = $('toast');
+        t.textContent = msg;
+        t.className = 'toast ' + (type || 'success');
+        setTimeout(function () { t.className = 'toast'; }, 2500);
+      }
+
+      btn.addEventListener('click', function () {
+        var name = $('name').value.trim();
+        if (!name) { showToast('请填写姓名', 'error'); return; }
+        if (!cb.checked) { showToast('请先确认已阅读管理条例', 'error'); return; }
+
+        btn.disabled = true;
+        btn.textContent = '提交中...';
+
+        var payload = {
+          name: name,
+          gender: $('gender').value || null,
+          phone: $('phone').value.trim() || null,
+          primaryRole: $('primaryRole').value || null,
+          agreedSalary: $('agreedSalary').value.trim() || null,
+          transportType: $('transportType').value || null,
+          remark: $('remark').value.trim() || null,
+          regulationsConfirmed: true
+        };
+
+        var url = window.QAXQJT_API_CONFIG.resolveUrl('/v1/performers/self-register');
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(function (res) {
+          return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+        }).then(function (r) {
+          if (r.ok && r.data && r.data.ok) {
+            $('formCard').classList.add('hidden');
+            $('resultCard').classList.remove('hidden');
+          } else {
+            var msg = (r.data && r.data.error && r.data.error.message) || '提交失败，请稍后重试';
+            showToast(msg, 'error');
+            btn.disabled = false;
+            btn.textContent = '提交登记';
+          }
+        }).catch(function () {
+          showToast('网络错误，请检查网络后重试', 'error');
+          btn.disabled = false;
+          btn.textContent = '提交登记';
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

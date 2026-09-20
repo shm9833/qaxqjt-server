@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <base href="/admin/">
   <meta charset="UTF-8" />
   <!-- =========================================================== -->
   <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
@@ -18,9 +19,7 @@
     }
     if(bad){
       ["qaxqjt_admin_session","admin_session","qaxqjt_admin_sess_v2","admin_sess_v2","qaxqjt_admin_remember","qaxqjt_admin_token","qaxqjt_admin_info","qaxqjt_admin_permissions","qaxqjt_auth_permissions_v1"].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
-      var u=location.href, i=u.lastIndexOf("/");
-      var base= (i>=0)? u.substring(0,i+1) : "./";
-      location.replace(base + L);
+      location.replace(L);
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
 
@@ -41,7 +40,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>演职人员人事管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260906">
+  <link rel="stylesheet" href="../css/style.css?v=20260919c">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -482,7 +481,7 @@
           <a href="schedule.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
-            <span class="menu-badge">8</span>
+            
           </a>
           <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
@@ -492,7 +491,7 @@
           <a href="orders.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📋</span>
             <span>订单预约管理</span>
-            <span class="menu-badge">5</span>
+            
           </a>
           <a href="operas.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
@@ -510,7 +509,7 @@
           <a href="inventory.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📦</span>
             <span>道具服装库存</span>
-            <span class="menu-badge">!</span>
+            
           </a>
           <a href="finance.html" data-role-level="500" class="admin-menu-item">
             <span class="menu-icon">💰</span>
@@ -653,58 +652,58 @@
               </div>
             </div>
             <div class="stat-card-title">在职人员总数</div>
-            <div class="stat-card-value">0<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">人</span></div>
+            <div class="stat-card-value"><span id="statTotalActive">—</span><span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">人</span></div>
             <div class="stat-card-sub">
-              <span>演员20</span>
+              <span>演员<span id="statActor">0</span></span>
               <span class="divider"></span>
-              <span>乐师8</span>
+              <span>乐师<span id="statMusic">0</span></span>
               <span class="divider"></span>
-              <span>舞美4</span>
+              <span>舞美<span id="statStage">0</span></span>
             </div>
           </div>
           <div class="stat-card stat-card--success">
             <div class="stat-card-header">
               <div class="stat-card-icon">✅</div>
-              <div class="stat-card-trend up">
-                <span>↑</span><span>1.2%</span>
+              <div class="stat-card-trend" id="statAttTrend" style="color:var(--text-light);">
+                <span>—</span>
               </div>
             </div>
             <div class="stat-card-title">本月在岗率</div>
-            <div class="stat-card-value">0<span style="font-size:1.1rem;margin-left:2px;">%</span></div>
+            <div class="stat-card-value"><span id="statAttRate">—</span><span style="font-size:1.1rem;margin-left:2px;">%</span></div>
             <div class="stat-card-sub">
-              <span>较上月</span>
+              <span>出勤<span id="statPresent">0</span></span>
               <span class="divider"></span>
-              <span style="color:var(--text-light);">—</span>
+              <span style="color:var(--text-light);">异常<span id="statAttTotal">0</span></span>
             </div>
           </div>
           <div class="stat-card stat-card--gold">
             <div class="stat-card-header">
               <div class="stat-card-icon">🎬</div>
-              <div class="stat-card-trend up">
-                <span>↑</span><span>15%</span>
+              <div class="stat-card-trend" id="statPerfTrend" style="color:var(--text-light);">
+                <span>—</span>
               </div>
             </div>
-            <div class="stat-card-title">{year}年累计参演</div>
-            <div class="stat-card-value">1,856<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">人次</span></div>
+            <div class="stat-card-title"><span id="statYear">2026</span>年累计参演</div>
+            <div class="stat-card-value"><span id="statPerfTotal">—</span><span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">人次</span></div>
             <div class="stat-card-sub">
-              <span>本戏892</span>
+              <span>本戏<span id="statBenxi">0</span></span>
               <span class="divider"></span>
-              <span>折子964</span>
+              <span>折子<span id="statZhezi">0</span></span>
             </div>
           </div>
           <div class="stat-card stat-card--danger">
             <div class="stat-card-header">
               <div class="stat-card-icon">⚠️</div>
-              <div class="stat-card-trend down">
-                <span>↓</span><span>1条</span>
+              <div class="stat-card-trend" id="statExcTrend" style="color:var(--text-light);">
+                <span>—</span>
               </div>
             </div>
             <div class="stat-card-title">待考勤异常</div>
-            <div class="stat-card-value">3<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">条</span></div>
+            <div class="stat-card-value"><span id="statExcTotal">—</span><span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">条</span></div>
             <div class="stat-card-sub">
-              <span>迟到2</span>
+              <span>迟到<span id="statLate">0</span></span>
               <span class="divider"></span>
-              <span>缺勤1</span>
+              <span>缺勤<span id="statAbsent">0</span></span>
             </div>
           </div>
         </div>
@@ -753,10 +752,10 @@
         <div class="admin-card" style="padding:0;overflow:hidden;">
           <div class="staff-tabs" id="staffTabs">
             <div class="staff-tab active" data-tab="roster">
-              📋 人员花名册 <span class="tab-badge">32</span>
+              📋 人员花名册 <span class="tab-badge" id="rosterBadge">0</span>
             </div>
             <div class="staff-tab" data-tab="attendance">
-              📅 考勤管理 <span class="tab-badge">3</span>
+              📅 考勤管理 <span class="tab-badge" id="attBadge">0</span>
             </div>
             <div class="staff-tab" data-tab="attv2">
               🧾 V2 考勤与奖罚 <span class="tab-badge" id="attv2TabBadge" style="background:#fd7e14;color:#fff;">新</span>
@@ -817,6 +816,17 @@
                 </div>
               </div>
 
+              <!-- 待入职审核面板 -->
+              <div id="pendingReviewPanel" style="margin-bottom:14px;background:#fff8e7;border:1px solid #e8d5b7;border-radius:10px;display:none;">
+                <div style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f0e0c0;cursor:pointer;" onclick="var b=document.getElementById('pendingReviewBody');b.style.display=b.style.display==='none'?'block':'none';">
+                  <span style="font-weight:600;color:#8b0000;">⏳ 待入职审核 <span id="pendingCount" style="background:#d32f2f;color:#fff;border-radius:10px;padding:1px 8px;font-size:12px;margin-left:6px;">0</span></span>
+                  <span style="color:#8a6d3b;font-size:12px;">点击展开/收起</span>
+                </div>
+                <div id="pendingReviewBody" style="padding:12px 14px;display:block;max-height:360px;overflow-y:auto;">
+                  <div id="pendingReviewList"></div>
+                </div>
+              </div>
+
               <div class="table-wrapper">
                 <table class="roster-table">
                   <thead>
@@ -849,29 +859,13 @@
                   <label>考勤月份：</label>
                   <div class="month-selector">
                     <span>📅</span>
-                    <select id="attendanceYear">
-                      <option>{year}</option>
-                      <option>{year-1}</option>
-                    </select>
-                    <select id="attendanceMonth">
-                      <option value="0">1月</option>
-                      <option value="1">2月</option>
-                      <option value="2">3月</option>
-                      <option value="3">4月</option>
-                      <option value="4">5月</option>
-                      <option value="5">6月</option>
-                      <option value="6" selected>7月</option>
-                      <option value="7">8月</option>
-                      <option value="8">9月</option>
-                      <option value="9">10月</option>
-                      <option value="10">11月</option>
-                      <option value="11">12月</option>
-                    </select>
+                    <select id="attendanceYear"></select>
+                    <select id="attendanceMonth"></select>
                   </div>
                 </div>
                 <div class="form-group">
                   <label>人员：</label>
-                  <select class="form-control">
+                  <select class="form-control" id="attendanceStaff">
                     <option value="">全部人员</option>
                     </select>
                 </div>
@@ -884,7 +878,7 @@
               <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:20px;margin-bottom:25px;">
                 <div class="attendance-calendar">
                   <div class="calendar-toolbar">
-                    <h4>📆 7月考勤打卡日历</h4>
+                    <h4 id="attCalTitle">📆 本月考勤打卡日历</h4>
                     <div class="calendar-nav">
                       <button onclick="changeCalMonth(-1)">‹</button>
                       <button onclick="resetCalMonth()">今</button>
@@ -906,35 +900,35 @@
                     <div class="abnormal-item late">
                       <div class="ab-icon">⏰</div>
                       <div class="ab-info">
-                        <div class="num">2</div>
+                        <div class="num" id="attStatLate">0</div>
                         <div class="label">迟到</div>
                       </div>
                     </div>
                     <div class="abnormal-item early">
                       <div class="ab-icon">🏃</div>
                       <div class="ab-info">
-                        <div class="num">1</div>
+                        <div class="num" id="attStatEarly">0</div>
                         <div class="label">早退</div>
                       </div>
                     </div>
                     <div class="abnormal-item absent">
                       <div class="ab-icon">❌</div>
                       <div class="ab-info">
-                        <div class="num">1</div>
+                        <div class="num" id="attStatAbsent">0</div>
                         <div class="label">缺勤</div>
                       </div>
                     </div>
                     <div class="abnormal-item leave">
                       <div class="ab-icon">📝</div>
                       <div class="ab-info">
-                        <div class="num">5</div>
+                        <div class="num" id="attStatLeave">0</div>
                         <div class="label">请假</div>
                       </div>
                     </div>
                   </div>
                   <div style="padding:14px;border-radius:var(--radius);background:rgba(220,53,69,0.06);border:1px solid rgba(220,53,69,0.15);margin-bottom:14px;">
-                    <div style="font-size:0.88rem;font-weight:600;color:var(--primary);margin-bottom:8px;">⚠️ 待处理异常（3条）</div>
-                    <div style="font-size:0.82rem;color:var(--text-light);">请于3个工作日内完成异常审批处理，逾期将自动计入月度考勤考核</div>
+                    <div style="font-size:0.88rem;font-weight:600;color:var(--primary);margin-bottom:8px;">⚠️ 待处理异常（<span id="attStatPending">0</span>条）</div>
+                    <div style="font-size:0.82rem;color:var(--text-light);">待审批请假申请，请及时完成审批处理</div>
                   </div>
                 </div>
               </div>
@@ -954,7 +948,7 @@
                       <th>操作</th>
                     </tr>
                   </thead>
-                  <tbody data-paginate="list" data-page-size="10"><!-- 演示考勤数据已清，真实考勤由打卡/补卡录入 --></tbody>
+                  <tbody id="attendanceListTbody"><!-- 真实考勤记录由 /v1/attendance 渲染 --></tbody>
                 </table>
               </div>
             </div>
@@ -1333,6 +1327,7 @@
                       <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">下乡补助（元/场）</small><input type="number" id="wPaXiaxiang" class="wage-global-input" data-wkey="performanceAllowance.xiaxiang" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
                       <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">节庆专场补助（元/场）</small><input type="number" id="wPaFestival" class="wage-global-input" data-wkey="performanceAllowance.festival" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
                       <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">全勤奖（元/月）</small><input type="number" id="wPerfect" class="wage-global-input" data-wkey="perfectAttendanceBonus" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">基础日工资标准（元/天）</small><input type="number" id="wBaseDaily" class="wage-global-input" data-wkey="baseDailyStandard" min="0" step="1" placeholder="如 200" style="padding:8px 10px;border:1.5px solid var(--gold);border-radius:8px;background:#fff8e7;"></label>
                       <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">工龄补贴（元/天·年）</small><input type="number" id="wSeniority" class="wage-global-input" data-wkey="seniorityPerYear" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
                       <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">餐补（元/天）</small><input type="number" id="wMeal" class="wage-global-input" data-wkey="dailySubsidy.meal" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
                       <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">交通补（元/天）</small><input type="number" id="wTraffic" class="wage-global-input" data-wkey="dailySubsidy.traffic" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
@@ -1462,7 +1457,7 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260908n"></script>
+<script src="../js/app.js?v=20260920c"></script>
   <script src="../js/pagination.js?v=20260908p"></script>
   <script>
     (function() {
@@ -1657,30 +1652,120 @@
         });
       }
 
-      var viewYear = new Date().getFullYear();
-      var viewMonth = 6;
-      var attSamples = {
-        '1':['ok','ok','ok','late'], '2':['ok','ok'], '3':['ok','absent'],
-        '4':['ok','ok','ok'], '5':['leave'], '7':['ok','ok','ok','ok'],
-        '8':['ok','late'], '10':['ok','ok','ok'], '11':['ok','ok','leave'],
-        '12':['ok','ok','ok','ok'], '15':['ok','ok','ok'], '18':['ok','ok','late'],
-        '20':['ok','ok','ok','ok','ok'], '22':['absent'], '24':['ok','early'],
-        '25':['ok','late','ok'], '27':['ok','ok','ok']
-      };
+      var _now0 = new Date();
+      var viewYear = _now0.getFullYear();
+      var viewMonth = _now0.getMonth();
+      var attMonthCache = []; // 当月真实考勤记录（/v1/attendance）
+
+      function pad2m(n){ return String(n).padStart(2,'0'); }
+      function monthKey(){ return viewYear + '-' + pad2m(viewMonth + 1); }
+
+      // 考勤类型 → 日历点样式
+      function dotClassOf(type){
+        if (type === 'absent') return 'absent';
+        if (['SL','PL','BL','ML','AL','leave','outing','study','business','injury','rest','rainout'].indexOf(type) >= 0) return 'leave';
+        return 'ok'; // full/night/double/half
+      }
+      function hhmm(iso){
+        if (!iso) return '';
+        var t = new Date(iso); if (isNaN(t.getTime())) return '';
+        return pad2m(t.getHours()) + ':' + pad2m(t.getMinutes());
+      }
+
+      // 初始化年/月下拉
+      (function initMonthSelectors(){
+        var ys = document.getElementById('attendanceYear');
+        var ms = document.getElementById('attendanceMonth');
+        if (ys) {
+          var cy = new Date().getFullYear();
+          for (var y = cy + 1; y >= cy - 3; y--) {
+            var op = document.createElement('option');
+            op.value = String(y); op.textContent = y + '年';
+            if (y === viewYear) op.selected = true;
+            ys.appendChild(op);
+          }
+          ys.addEventListener('change', function(){ viewYear = parseInt(this.value, 10); loadAttendance(); });
+        }
+        if (ms) {
+          for (var m = 0; m < 12; m++) {
+            var o = document.createElement('option');
+            o.value = String(m); o.textContent = (m + 1) + '月';
+            if (m === viewMonth) o.selected = true;
+            ms.appendChild(o);
+          }
+          ms.addEventListener('change', function(){ viewMonth = parseInt(this.value, 10); loadAttendance(); });
+        }
+        var stf = document.getElementById('attendanceStaff');
+        if (stf) stf.addEventListener('change', function(){ loadAttendance(); });
+      })();
+
+      // 从真实花名册填充人员下拉
+      function fillAttendanceStaff(rows){
+        var sel = document.getElementById('attendanceStaff');
+        if (!sel) return;
+        var cur = sel.value;
+        sel.innerHTML = '<option value="">全部人员</option>';
+        (rows || []).forEach(function(p){
+          var op = document.createElement('option');
+          op.value = p.id; op.textContent = (p.staffNo ? p.staffNo + ' ' : '') + p.name;
+          sel.appendChild(op);
+        });
+        sel.value = cur || '';
+      }
+
       window.changeCalMonth = function(d) {
         viewMonth += d;
         if (viewMonth > 11) { viewMonth = 0; viewYear++; }
         if (viewMonth < 0) { viewMonth = 11; viewYear--; }
-        renderAttCal();
+        syncMonthSelectors();
+        loadAttendance();
       };
       window.resetCalMonth = function() {
-        viewYear = new Date().getFullYear();
-        viewMonth = 6;
-        renderAttCal();
+        var t = new Date();
+        viewYear = t.getFullYear(); viewMonth = t.getMonth();
+        syncMonthSelectors();
+        loadAttendance();
       };
+      function syncMonthSelectors(){
+        var ys = document.getElementById('attendanceYear');
+        var ms = document.getElementById('attendanceMonth');
+        if (ys) {
+          if (!Array.from(ys.options).some(function(o){ return o.value === String(viewYear); })) {
+            var op = document.createElement('option');
+            op.value = String(viewYear); op.textContent = viewYear + '年';
+            ys.appendChild(op);
+          }
+          ys.value = String(viewYear);
+        }
+        if (ms) ms.value = String(viewMonth);
+      }
+
+      // 拉取真实考勤（日历 + 异常卡 + 明细表）
+      function loadAttendance(){
+        var API = window.QAXQJT_API;
+        if (!API) { console.warn('[attendance] QAXQJT_API 未就绪'); return Promise.resolve(); }
+        var mk = monthKey();
+        var stfSel = document.getElementById('attendanceStaff');
+        var staffId = stfSel ? stfSel.value : '';
+        var query = { month: mk, page: 1, pageSize: 500 };
+        if (staffId) query.staffId = staffId;
+        var p1 = API.get('/v1/attendance', { query: query, showErrorToast: false, timeoutMs: 8000, fallbackRead: function(){ return null; } })
+          .then(function(res){
+            attMonthCache = Array.isArray(res) ? res : (res && res.items) || [];
+          }).catch(function(){ attMonthCache = []; });
+        var p2 = API.get('/v1/attendance/stats', { query: { month: mk }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function(){ return null; } })
+          .then(function(res){ renderAttStats(res || {}); })
+          .catch(function(){ renderAttStats({}); });
+        p1.then(function(){ renderAttCal(); renderAttList(); });
+        return Promise.all([p1, p2]);
+      }
+      window.__ATT_LOAD__ = loadAttendance;
+
       function renderAttCal() {
         var grid = document.getElementById('attendanceCalGrid');
         if (!grid) return;
+        var title = document.getElementById('attCalTitle');
+        if (title) title.textContent = '📆 ' + viewYear + '年' + (viewMonth + 1) + '月考勤日历';
         grid.innerHTML = '';
         var wds = ['日','一','二','三','四','五','六'];
         wds.forEach(function(d, idx) {
@@ -1688,6 +1773,20 @@
           el.className = 'cal-weekday' + (idx === 0 || idx === 6 ? ' we' : '');
           el.textContent = d;
           grid.appendChild(el);
+        });
+        // 按"日"聚合真实记录：同一天取最严重状态（absent>leave>ok）
+        var byDay = {};
+        attMonthCache.forEach(function(r){
+          var dstr = r.date || '';
+          var dayPart = parseInt(dstr.substring(8, 10), 10);
+          if (!dayPart) return;
+          var cls = dotClassOf(r.type);
+          var rank = { absent: 3, leave: 2, ok: 1 };
+          if (!byDay[dayPart] || rank[cls] > rank[byDay[dayPart].cls]) {
+            byDay[dayPart] = { cls: cls, count: (byDay[dayPart] ? byDay[dayPart].count + 1 : 1) };
+          } else {
+            byDay[dayPart].count++;
+          }
         });
         var firstDay = new Date(viewYear, viewMonth, 1).getDay();
         var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -1708,20 +1807,78 @@
           if (isCurrent && day === today.getDate()) cell.classList.add('today');
           var stEl = document.createElement('div');
           stEl.className = 'd-status';
-          var samp = attSamples[String(day)];
-          if (samp) {
-            samp.forEach(function(s) {
-              var dot = document.createElement('div');
-              dot.className = 'd-dot ' + s;
-              stEl.appendChild(dot);
-            });
-            cell.title = '考勤记录：' + samp.length + '条';
+          var info = byDay[day];
+          if (info) {
+            var dot = document.createElement('div');
+            dot.className = 'd-dot ' + info.cls;
+            stEl.appendChild(dot);
+            cell.title = viewYear + '-' + pad2m(viewMonth + 1) + '-' + pad2m(day) + ' 考勤记录：' + info.count + '条';
           }
           cell.appendChild(stEl);
           grid.appendChild(cell);
         }
       }
-      renderAttCal();
+
+      function renderAttStats(d){
+        var tb = d.typeBreakdown || {};
+        var leaveTypes = ['SL','PL','BL','ML','AL','leave','outing','study','business','injury'];
+        var leaveCount = 0;
+        leaveTypes.forEach(function(t){ leaveCount += (tb[t] || 0); });
+        function setT(id, v){ var el = document.getElementById(id); if (el) el.textContent = v; }
+        setT('attStatLate', 0);   // V1 考勤表无迟到类型（迟到在 V2 考勤机数据中统计）
+        setT('attStatEarly', 0);  // 同上
+        setT('attStatAbsent', tb.absent || 0);
+        setT('attStatLeave', leaveCount);
+        setT('attStatPending', d.pendingLeaves || 0);
+      }
+
+      var ATT_TYPE_TEXT = {
+        full:'全天班', night:'夜班', double:'双班', half:'半天班', rest:'公休',
+        SL:'病假', PL:'事假', BL:'丧假', ML:'婚假', AL:'年假', absent:'缺勤',
+        rainout:'雨休', leave:'请假', outing:'外出', study:'学习', business:'出差', injury:'工伤'
+      };
+      function renderAttList(){
+        var tb = document.getElementById('attendanceListTbody');
+        if (!tb) return;
+        if (!attMonthCache.length) {
+          tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-light,#999);">该月暂无真实考勤记录（考勤机打卡/补卡后自动显示）</td></tr>';
+          return;
+        }
+        var html = '';
+        attMonthCache.slice(0, 200).forEach(function(r){
+          var typeText = ATT_TYPE_TEXT[r.type] || r.type || '';
+          var typeColor = r.type === 'absent' ? '#dc3545' : (['SL','PL','BL','ML','AL','leave'].indexOf(r.type) >= 0 ? '#fd7e14' : '#198754');
+          html += '<tr>'
+            + '<td>' + (r.date || '') + '</td>'
+            + '<td>' + (r.staffName || '—') + '</td>'
+            + '<td>' + typeText + '</td>'
+            + '<td style="font-family:Consolas,monospace;">' + (hhmm(r.checkInTime) || '—') + '</td>'
+            + '<td style="font-family:Consolas,monospace;">' + (hhmm(r.checkOutTime) || '—') + '</td>'
+            + '<td>' + (r.workHours ? Number(r.workHours) + 'h' : '—') + '</td>'
+            + '<td><span style="color:' + typeColor + ';font-weight:600;">' + typeText + '</span></td>'
+            + '<td>' + (r.remark || '—') + '</td>'
+            + '<td style="color:var(--text-light,#999);font-size:0.8rem;">' + (r.approveStatus === 'approved' ? '已核准' : (r.approveStatus || '—')) + '</td>'
+            + '</tr>';
+        });
+        tb.innerHTML = html;
+      }
+
+      // 初始加载（花名册就绪后填充人员下拉）
+      function initAttendanceV1(){
+        var rows = window.__PF_ROWS__ || [];
+        if (rows.length) fillAttendanceStaff(rows);
+        loadAttendance();
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(initAttendanceV1, 1200); });
+      else setTimeout(initAttendanceV1, 1200);
+      // 花名册 load() 完成后也刷新一次下拉
+      var _pfWait = setInterval(function(){
+        if (window.__PF_ROWS__ && window.__PF_ROWS__.length) {
+          fillAttendanceStaff(window.__PF_ROWS__);
+          clearInterval(_pfWait);
+        }
+      }, 800);
+      setTimeout(function(){ clearInterval(_pfWait); }, 15000);
       setTimeout(animateStaffBars, 600);
 
       // ============================================================
@@ -1796,17 +1953,22 @@
           // 版本徽章
           var vb = $('wageRuleVersionBadge');
           if (vb) vb.textContent = (R.version || 'v') + (R.updatedAt ? (' · ' + new Date(R.updatedAt).toLocaleDateString('zh-CN')) : ' · 默认');
-          // 顶栏统计卡
+          // 顶栏统计卡（id, 显示文本）——保存规则/服务端同步后随 renderRulesTable 一并刷新
+          var yuan = function (cents) { return '¥' + ((cents || 0) / 100); };
           var fills = [
-            ['wstatBenxi', (R.performanceAllowance.benxi||0)/100, '元/场'],
-            ['wstatZhezi', (R.performanceAllowance.zhezi||0)/100, '元/场'],
-            ['wstatXiaxiang', (R.performanceAllowance.xiaxiang||0)/100, '元/场'],
-            ['wstatPerfect', (R.perfectAttendanceBonus||0)/100, '元/月'],
-            ['wstatSeniority', (R.seniorityPerYear||0)/100, '元/天·年'],
-            ['wstatMeal', ((R.dailySubsidy.meal||0)/100) + '/¥' + ((R.dailySubsidy.traffic||0)/100), '元/天'],
-            ['wstatSocial', (R.deductions.socialInsurance||'') + '/' + (R.deductions.housingFund||''), '按折算月基数'],
-            ['wstatStdDay', R.standardWorkDays || 21.75, '天/月（法定）']
+            ['wstatBenxi', yuan(R.performanceAllowance.benxi)],
+            ['wstatZhezi', yuan(R.performanceAllowance.zhezi)],
+            ['wstatXiaxiang', yuan(R.performanceAllowance.xiaxiang)],
+            ['wstatPerfect', yuan(R.perfectAttendanceBonus)],
+            ['wstatSeniority', yuan(R.seniorityPerYear)],
+            ['wstatMeal', yuan(R.dailySubsidy.meal) + '/' + yuan(R.dailySubsidy.traffic)],
+            ['wstatSocial', (R.deductions.socialInsurance || '—') + '/' + (R.deductions.housingFund || '—')],
+            ['wstatStdDay', String(R.standardWorkDays != null ? R.standardWorkDays : 21.75)]
           ];
+          fills.forEach(function (f) {
+            var el = $(f[0]);
+            if (el) el.textContent = f[1];
+          });
           // actor rows
           var actorBody = $('wrule-actor-body');
           if (actorBody) {
@@ -1871,6 +2033,7 @@
             ['wPaXiaxiang', R.performanceAllowance.xiaxiang/100],
             ['wPaFestival', (R.performanceAllowance.festival||0)/100],
             ['wPerfect', (R.perfectAttendanceBonus||0)/100],
+            ['wBaseDaily', (R.baseDailyStandard||0)/100],
             ['wSeniority', (R.seniorityPerYear||0)/100],
             ['wMeal', (R.dailySubsidy.meal||0)/100],
             ['wTraffic', (R.dailySubsidy.traffic||0)/100],
@@ -2371,6 +2534,18 @@
             refreshHistTable();
             updateHistStats();
             updateBadgeCount();
+            // 从服务器同步已保存的工资规则；服务端版本较新时用服务器规则刷新界面
+            if (typeof W.syncRulesFromServer === 'function') {
+              W.syncRulesFromServer().then(function (res) {
+                if (res && res.updated) {
+                  renderRulesTable();
+                  refreshGenTable();
+                  refreshHistTable();
+                  updateHistStats();
+                  console.info('[WageUI] 服务器工资规则已应用到当前页面');
+                }
+              }).catch(function () {});
+            }
           }
         };
       })();
@@ -2417,42 +2592,19 @@
       return Math.abs(h);
     }
     function deterministicClocksFor(staff, dateStr) {
-      var W = getW();
-      if (!W) return [];
       var S = getStorage();
       var key = staff.id + '_' + dateStr;
       try {
         var all = (S && S._get && S.KEYS && S.KEYS.ATTENDANCE_CLOCKS_V2) ? (S._get(S.KEYS.ATTENDANCE_CLOCKS_V2) || {}) : {};
         if (Array.isArray(all[key]) && all[key].length) return all[key].slice();
       } catch(e) {}
-      var h = hashStr(staff.id + '|' + dateStr + '|c2');
-      var list = [];
-      var seed = h;
-      function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
-      if (rnd() < 0.78) {
-        var pmBase = 13*60 + 30;
-        var latePm = Math.floor(rnd() < 0.55 ? (rnd()*38) : (rnd()*5));
-        var hh = Math.floor((pmBase + latePm) / 60);
-        var mm = Math.floor((pmBase + latePm) % 60);
-        list.push(dateStr + ' ' + pad2(hh) + ':' + pad2(mm) + ':' + pad2(Math.floor(rnd()*60)));
-      } else if (rnd() < 0.12) {
-        var extra = 5 + Math.floor(rnd()*15);
-        list.push(dateStr + ' 14:' + pad2(extra) + ':' + pad2(Math.floor(rnd()*60)));
-      }
-      if (rnd() < 0.72) {
-        var ntBase = 19*60 + 30;
-        var lateNt = Math.floor(rnd() < 0.45 ? (rnd()*36) : (rnd()*6));
-        var h2 = Math.floor((ntBase + lateNt) / 60);
-        var m2 = Math.floor((ntBase + lateNt) % 60);
-        list.push(dateStr + ' ' + pad2(h2) + ':' + pad2(m2) + ':' + pad2(Math.floor(rnd()*60)));
-      } else if (rnd() < 0.1) {
-        var extraNt = 3 + Math.floor(rnd()*18);
-        list.push(dateStr + ' 20:' + pad2(extraNt) + ':' + pad2(Math.floor(rnd()*60)));
-      }
-      return list;
+      // 无真实打卡（考勤机 ISAPI / 手工录入）时返回空，不再伪随机造假
+      return [];
     }
     function staffNameById(id) {
       try {
+        var remote = window.__ATT_V2_STAFF__ || [];
+        for (var r = 0; r < remote.length; r++) if (remote[r].id === id) return remote[r].name || id;
         var S = getStorage();
         var list = (S && S.Staff && S.Staff.list) ? S.Staff.list() : [];
         for (var i=0; i<list.length; i++) if (list[i].id === id) return list[i].name || id;
@@ -2492,8 +2644,34 @@
         return isDanger ? false : true;
       }
     }
-    var AttV2UI = {
-      state: { date: '', roleCategory: '', keyword: '', selectedIds: [] },
+    // 真实演职人员 → V2 岗位八分类
+      function roleToCategory(role, dept) {
+        var r = String(role || ''), d = String(dept || '');
+        if (/龙套|宫女|彩女/.test(r)) return '龙套';
+        if (/导演|编剧/.test(r)) return '编剧/导演';
+        if (/青衣|正旦|小旦|二架女/.test(r)) return '旦角';
+        if (/须生|小生|二架男/.test(r)) return '生角';
+        if (/生/.test(r)) return '生角';
+        if (/旦/.test(r)) return '旦角';
+        if (/净|花脸/.test(r)) return '净角';
+        if (/丑/.test(r)) return '丑角';
+        if (/板胡|司鼓|二胡|高胡|中胡|扬琴|月琴|琵琶|三弦|笛子|笙|唢呐|大提琴|贝斯|电子琴|打击乐|梆子|锣|铙钹|铰子|碰铃|琴师|鼓师|乐队|文场|武场|文二手|武二手|二手/.test(r) || /乐队/.test(d)) return '乐队';
+        if (/灯光|音响|服装|道具|化妆|布景|装置|字幕|电工|舞美|舞台|后勤/.test(r) || /舞美|后勤/.test(d)) return '后勤';
+        return /演员/.test(d) ? '生角' : '后勤';
+      }
+      function mapPerformerToV2(p) {
+        return {
+          id: p.id,
+          name: p.name,
+          roleCategory: roleToCategory(p.primaryRole, p.employmentType),
+          level: p.rankGrade || '',
+          workNo: p.staffNo || '',
+          phone: p.phone || '',
+          status: p.status === 'inactive' ? 'off' : 'on'
+        };
+      }
+      var AttV2UI = {
+        state: { date: '', roleCategory: '', keyword: '', selectedIds: [] },
       init: function () {
         var self = this;
         var today = new Date();
@@ -2512,29 +2690,19 @@
         if ($('attv2RoleCategory')) $('attv2RoleCategory').addEventListener('change', function () { self.state.roleCategory = this.value; self.saveState(); self.render(); });
         if ($('attv2Keyword')) $('attv2Keyword').addEventListener('input', function (e) { self.state.keyword = e.target.value || ''; clearTimeout(self._kwT); self._kwT = setTimeout(function(){self.render();},180); });
         setTimeout(function () { self.render(); }, 220);
+        this.loadRemoteStaff();
       },
       saveState: function () {
         try { localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ date: this.state.date, roleCategory: this.state.roleCategory })); } catch(e) {}
       },
       getFilteredStaff: function () {
-        var S = getStorage();
-        var arr = (S && S.Staff && S.Staff.list) ? S.Staff.list() : [];
-        if (!Array.isArray(arr) || !arr.length) {
-          var cats = ['生角','旦角','净角','丑角','乐队','龙套','编剧/导演','后勤'];
-          var lvls = ['一级','二级','三级','学员'];
-          var names = ['王俊民','李芳兰','陈海霞','张保平','刘小梅','赵志强','孙艳红','周建国','吴秀琴','郑金平',
-                       '冯玉梅','许慧敏','朱军伟','韩丽萍','何小军','徐建民','高玉英','翟翠萍','杨宝林','范淑珍','魏志刚','马丽娟','姚红刚','廖玉琴',
-                       '牛晓东','罗丽萍','梁建华','宋秀兰','谢慧中','潘秀兰','田志杰','段小芳'];
-          arr = [];
-          for (var i=0;i<names.length;i++) {
-            arr.push({ id: 'STAFF' + (1001+i), name: names[i], roleCategory: cats[i % cats.length], level: lvls[i % lvls.length], phone: '138****' + (1000+i) });
-          }
-        }
+        var arr = window.__ATT_V2_STAFF__ || [];
         var key = (this.state.keyword || '').trim();
         var rc = this.state.roleCategory || '';
         var out = [];
         for (var j=0; j<arr.length; j++) {
           var s = arr[j] || {};
+          if (s.status === 'off') continue;
           if (rc && String(s.roleCategory||'').indexOf(rc) < 0) continue;
           if (key) {
             var hay = (s.name||'') + ' ' + (s.id||'') + ' ' + (s.phone||'') + ' ' + (s.workNo||'');
@@ -2543,6 +2711,26 @@
           out.push(s);
         }
         return out;
+      },
+      // 从真实花名册 API 加载人员（无在册人员时缓存为空数组，表格显示空态）
+      loadRemoteStaff: function () {
+        var self = this;
+        var API = window.QAXQJT_API;
+        var apply = function (rows) {
+          window.__ATT_V2_STAFF__ = (rows || [])
+            .filter(function (p) { return p && p.name; })
+            .map(mapPerformerToV2);
+          self.render();
+        };
+        if (window.__PF_ROWS__ && window.__PF_ROWS__.length) { apply(window.__PF_ROWS__); return Promise.resolve(); }
+        if (!API) { apply([]); return Promise.resolve(); }
+        return API.get('/v1/performers', { query: { page: 1, pageSize: 500 }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function () { return null; } })
+          .then(function (res) {
+            var rows = Array.isArray(res) ? res : (res && res.items) || [];
+            window.__PF_ROWS__ = rows;
+            apply(rows);
+          })
+          .catch(function () { apply([]); });
       },
       render: function () {
         var W = getW();
@@ -2636,7 +2824,7 @@
               + '</div></td>'
             + '</tr>';
         }
-        tbody.innerHTML = rowsHtml || '<tr><td colspan="15" style="text-align:center;padding:28px;color:#aaa;">暂无人员</td></tr>';
+        tbody.innerHTML = rowsHtml || '<tr><td colspan="15" style="text-align:center;padding:28px;color:#aaa;">暂无在册人员，请先在「人员花名册」录入真实演职人员</td></tr>';
         if ($('attv2SummaryTag')) {
           $('attv2SummaryTag').innerHTML = date + ' · 共'+summary.total+'人｜装/卸'+summary.zhuangtai+'人｜2场'+summary.fullSession+'｜1场'+summary.halfSession+'｜0场'+summary.zeroSession
             + '｜基础合计：<b style="color:#0e8c4e;">'+fmtCents(summary.totalBase)+'</b>'
@@ -2651,13 +2839,37 @@
         for (var a = Math.max(0, audit.length - 500); a < audit.length; a++) {
           var it = audit[a] || {};
           var objStr = '';
+          // 日期嵌在 before/after 对象内（如 {date,tag}），提取显示
+          var _audDate = it.date || (it.before && it.before.date) || (it.after && it.after.date) || '';
           if (it.staffIds && it.staffIds.length) {
             var names = [];
             for (var ai=0; ai<it.staffIds.length && ai<5; ai++) names.push(staffNameById(it.staffIds[ai]));
-            objStr = (it.date || '') + ' · ' + names.join(',') + (it.staffIds.length > 5 ? ' 等'+it.staffIds.length+'人' : '');
-          } else objStr = (it.date||'') + ' · ' + (it.targetName||it.staffId||'');
-          var chg = (it.before != null ? it.before : '—') + ' → ' + (it.after != null ? it.after : '—');
-          ah += '<tr><td style="white-space:nowrap;color:#555;">' + fmtTS(it.ts) + '</td><td>' + (it.operator||'') + '</td><td style="word-break:break-all;">' + objStr + '</td><td><b>'+(it.action||'')+'</b> '+chg+'</td><td style="color:#666;">' + (it.remark||'') + '</td></tr>';
+            objStr = _audDate + ' · ' + names.join(',') + (it.staffIds.length > 5 ? ' 等'+it.staffIds.length+'人' : '');
+          } else objStr = _audDate + ' · ' + (it.targetName||it.staffId||'');
+          function _fmtAuditVal(v) {
+            if (v == null) return '—';
+            if (typeof v === 'string' || typeof v === 'number') return String(v);
+            if (typeof v === 'object') {
+              if (v.tag) return v.tag;
+              if (v.reward != null) return '奖励¥' + (Number(v.reward)/100).toFixed(2);
+              if (v.level != null) return '事故' + ({1:'一级',2:'二级',3:'三级'}[v.level]||v.level) + ' ¥' + (Number(v.fine||0)/100).toFixed(2) + (v.desc ? '（'+v.desc+'）' : '');
+              if (v.sampleBefore) return '批量改前';
+              if (v.sampleAfter) return '批量改后';
+              try { return JSON.stringify(v); } catch(_) { return String(v); }
+            }
+            return String(v);
+          }
+          var chg = _fmtAuditVal(it.before) + ' → ' + _fmtAuditVal(it.after);
+          // 备注：审计存储字段为 extra（可能含 reason/remark/operator 等）
+          var _audRemark = '';
+          if (it.remark) _audRemark = String(it.remark);
+          else if (it.extra) {
+            if (typeof it.extra === 'string') _audRemark = it.extra;
+            else if (it.extra.reason) _audRemark = it.extra.reason;
+            else if (it.extra.remark) _audRemark = it.extra.remark;
+            else if (it.extra.operator) _audRemark = '操作人:'+it.extra.operator;
+          }
+          ah += '<tr><td style="white-space:nowrap;color:#555;">' + fmtTS(it.ts) + '</td><td>' + (it.operator||'') + '</td><td style="word-break:break-all;">' + objStr + '</td><td><b>'+(it.action||'')+'</b> '+chg+'</td><td style="color:#666;">' + _audRemark + '</td></tr>';
         }
         if (auditBody) { auditBody.innerHTML = ah || '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa;">暂无操作日志</td></tr>'; }
         if ($('attv2AuditCount')) $('attv2AuditCount').textContent = String(audit.length);
@@ -2890,6 +3102,7 @@
         // 🔧 R9 FIX：模拟生成防抖（防快速连点2次100条重复生成→200条脏数据）
         if (window.__OP_LOCKS && window.__OP_LOCKS.attV2_isapiMock) { alert('⏳ 打卡模拟生成中，请稍候…'); return; }
         try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.attV2_isapiMock = true; setTimeout(function(){try{delete window.__OP_LOCKS.attV2_isapiMock;}catch(_){}}, 1200); } catch(_lk){}
+        if (!_safeConfirm('⚠️ 将生成 ' + (n||50) + ' 条【模拟】打卡记录用于设备调试，并非真实考勤。确定继续吗？（正式考勤请用考勤机导入）')) return;
         var staffIds = (this.getFilteredStaff && this.getFilteredStaff().slice(0, 16).map(function(s){return s.id||s.workNo;})) || null;
         var vendor = ($('isapiVendor') || {}).value || 'generic';
         var dayShift = Number(($('isapiDayShift') || {}).value); if (isNaN(dayShift)) dayShift = 4;
@@ -3921,8 +4134,8 @@ try{
 })();</script>
 
 <!-- 🔧 演职人员花名册：编辑/查看弹窗（真实功能，保存后原地刷新列表 + localStorage 持久化） -->
-<div id="staffEditModal" class="modal-mask" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:99999;justify-content:center;align-items:center;padding:20px;">
-  <div style="background:#fff;border-radius:14px;max-width:560px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(15,76,129,0.18);">
+<div id="staffEditModal" class="modal-mask" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:99999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:14px;max-width:560px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(15,76,129,0.18);margin:auto;">
     <div style="padding:20px 25px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">
       <h3 id="staffEditTitle" style="margin:0;font-size:1.15rem;color:#0F4C81;">✏️ 编辑演职人员</h3>
       <button type="button" onclick="closeStaffEditModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#999;padding:0 6px;">×</button>
@@ -3938,7 +4151,7 @@ try{
         <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">队别</label><select id="inp_stf_dept" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option>演员队</option><option>乐队</option><option>舞美队</option><option>服装道具</option><option>行政</option></select></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">行当/职务</label><input id="inp_stf_role" type="text" placeholder="如：须生 / 司鼓" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">行当/职务</label><select id="inp_stf_role" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option value="">— 请选择 —</option><optgroup label="演员行当"><option>花脸</option><option>二花脸</option><option>青衣</option><option>正旦</option><option>小旦</option><option>须生</option><option>小生</option><option>丑</option><option>二架男</option><option>二架女</option><option>彩女</option><option>龙套</option></optgroup><optgroup label="乐队"><option>板胡</option><option>司鼓</option><option>二胡</option><option>文二手</option><option>武二手</option></optgroup><optgroup label="舞美"><option>电工</option><option>服装</option><option>化妆</option><option>道具</option></optgroup><option value="其他">其他</option></select></div>
         <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">入团年份</label><input id="inp_stf_year" type="number" min="1950" max="2100" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
       </div>
       <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">联系电话</label><input id="inp_stf_phone" type="text" placeholder="138xxxxxxx" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
@@ -4283,10 +4496,49 @@ try{
         window.__PF_ROWS__ = rows;
         render(rows);
         bindToggle();
+        var badge = document.getElementById('rosterBadge');
+        if (badge) badge.textContent = rows.length;
         console.info('[staffApi] 已渲染真实演职人员 '+rows.length+' 条');
       });
   }
   window.__STF_LOAD__ = load;
+
+  /* ---- 加载统计卡片真实数据 ---- */
+  function setText(id, val){ var el=document.getElementById(id); if(el) el.textContent = val; }
+  function loadStats(){
+    return API.get('/v1/performers/stats', { showErrorToast:false, timeoutMs:8000, fallbackRead:function(){return null;} })
+      .then(function(res){
+        var d = res || {};
+        var db = d.deptBreakdown || {};
+        var ma = d.monthlyAttendance || {};
+        var yp = d.yearlyPerformances || {};
+        var eb = d.exceptionBreakdown || {};
+        setText('statYear', d.year || new Date().getFullYear());
+        setText('statTotalActive', d.totalActive != null ? d.totalActive : 0);
+        setText('statActor', db.actor || 0);
+        setText('statMusic', db.music || 0);
+        setText('statStage', db.stage || 0);
+        setText('statAttRate', d.monthlyAttendanceRate != null ? d.monthlyAttendanceRate : 0);
+        setText('statPresent', ma.present || 0);
+        setText('statAttTotal', (ma.absent||0)+(ma.late||0)+(ma.leave||0));
+        setText('statPerfTotal', yp.total != null ? yp.total.toLocaleString() : 0);
+        setText('statBenxi', yp.benxi || 0);
+        setText('statZhezi', yp.zhezi || 0);
+        setText('statExcTotal', d.pendingExceptions != null ? d.pendingExceptions : 0);
+        setText('statLate', eb.late || 0);
+        setText('statAbsent', eb.absent || 0);
+        var ab = document.getElementById('attBadge');
+        if (ab) ab.textContent = d.pendingExceptions != null ? d.pendingExceptions : 0;
+        console.info('[staffStats] 统计数据已加载', d);
+      })
+      .catch(function(){
+        // 接口失败时全部归零，不展示虚假数字
+        setText('statTotalActive', 0);
+        setText('statAttRate', 0);
+        setText('statPerfTotal', 0);
+        setText('statExcTotal', 0);
+      });
+  }
 
   /* ---- 编辑弹窗：包装原函数，记录 API 上下文并回填完整手机号 ---- */
   var _origOpen = window.openStaffEditModal;
@@ -4343,12 +4595,10 @@ try{
     if (phone) body.phone = phone;
     if (age !== '') body.birthDate = (new Date().getFullYear()-parseInt(age,10))+'-01-01';
     if (year && /^\d{4}$/.test(year)) body.hireDate = year+'-06-01';
-    var done = function(){ try{ window.closeStaffEditModal && window.closeStaffEditModal(); }catch(_){} toast('✅ 已保存：'+name,'success'); load(); };
+    var done = function(d){ try{ window.closeStaffEditModal && window.closeStaffEditModal(); }catch(_){} var sn=d&&(d.staffNo||(d.data&&d.data.staffNo)); toast('✅ 已保存：'+name+(sn?('（工号 '+sn+'）'):''),'success'); load(); loadStats(); };
     var fail = function(err){ toast('❌ 保存失败：'+((err&&err.message)||'网络/服务异常'),'error'); };
     if (ed && ed.mode==='new'){
-      var max = 0;
-      Object.keys(MAP).forEach(function(k){ var m=String(k).match(/PF(\d+)/i); if(m) max=Math.max(max,parseInt(m[1],10)); });
-      body.staffNo = 'PF'+String(max+1).padStart(3,'0');
+      // 工号由后端统一分配（全表含停用记录取号，避免与已占用/已删除号冲突）
       API.post('/v1/performers', body, { showErrorToast:false }).then(done).catch(fail);
     } else if (ed && ed.id){
       API.patch('/v1/performers/'+ed.id, body, { showErrorToast:false }).then(done).catch(fail);
@@ -4373,12 +4623,12 @@ try{
       var on = isOn(p);
       if(on && !confirm('确定要停用 '+p.name+'（'+(p.staffNo||'')+'）吗？停用后该员工将无法接单/排班。')) return;
       API.patch('/v1/performers/'+p.id, { status: on?'inactive':'active' }, { showErrorToast:false })
-        .then(function(){ toast(on?('✕ 已停用：'+p.name):('✓ 已启用：'+p.name), on?'warning':'success'); load(); })
+        .then(function(){ toast(on?('✕ 已停用：'+p.name):('✓ 已启用：'+p.name), on?'warning':'success'); load(); loadStats(); })
         .catch(function(err){ toast('❌ 操作失败：'+((err&&err.message)||'网络/服务异常'),'error'); });
     }, true);
   }
 
-  function init(){ load().then(bindToggle).catch(function(){}); bindToggle(); }
+  function init(){ load().then(bindToggle).catch(function(){}); bindToggle(); loadStats(); }
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(init,900); });
   else setTimeout(init,900);
   setTimeout(init,2200);
@@ -4661,6 +4911,105 @@ try{
   else setTimeout(init, 1100);
   setTimeout(init, 2500);
   setTimeout(init, 5000);
+})();
+</script>
+
+<!-- 入职审核面板逻辑 -->
+<script>
+(function(){
+  var API = window.QAXQJT_API;
+  var panel, list, countBadge;
+
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function toast(msg, type){
+    try { window.__T && window.__T(msg, type||'info'); return; } catch(_){}
+    try { window.__toastH9 && window.__toastH9(msg, type||'info'); return; } catch(_){}
+    try { window.QinApp && QinApp.Utils && QinApp.Utils.toast(msg, type||'info', 3000); return; } catch(_){}
+    alert(msg);
+  }
+
+  function renderPending(rows){
+    if(!panel) return;
+    if(!rows || !rows.length){
+      panel.style.display = 'none';
+      return;
+    }
+    panel.style.display = 'block';
+    countBadge.textContent = rows.length;
+    var html = '';
+    rows.forEach(function(p){
+      html += '<div style="background:#fff;border:1px solid #e8d5b7;border-radius:8px;padding:12px;margin-bottom:10px;">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">';
+      html += '<div>';
+      html += '<strong style="font-size:15px;color:#8b0000;">' + esc(p.name) + '</strong>';
+      if(p.gender) html += ' <span style="color:#666;font-size:13px;">(' + esc(p.gender) + ')</span>';
+      if(p.primaryRole) html += ' <span style="background:#f0e0c0;padding:1px 8px;border-radius:10px;font-size:12px;color:#8a6d3b;">' + esc(p.primaryRole) + '</span>';
+      html += '</div>';
+      if(p.reviewStatus === 'rejected' && p.reviewFeedback){
+        html += '<span style="background:#ffebee;color:#c62828;padding:2px 8px;border-radius:6px;font-size:12px;">被退回</span>';
+      }
+      html += '</div>';
+      var info = [];
+      if(p.phone) info.push('📱 ' + esc(p.phone));
+      if(p.agreedSalary) info.push('💰 ' + esc(p.agreedSalary));
+      if(p.transportType) info.push('🚌 ' + esc(p.transportType));
+      if(info.length) html += '<div style="font-size:13px;color:#555;margin-top:6px;">' + info.join('　') + '</div>';
+      if(p.remark) html += '<div style="font-size:12px;color:#888;margin-top:4px;">备注：' + esc(p.remark) + '</div>';
+      if(p.reviewFeedback) html += '<div style="font-size:12px;color:#c62828;margin-top:6px;background:#ffebee;padding:6px 8px;border-radius:4px;">退回原因：' + esc(p.reviewFeedback) + '</div>';
+      html += '<div style="margin-top:10px;display:flex;gap:8px;align-items:center;">';
+      html += '<button onclick="approvePending(\'' + p.id + '\')" style="background:#2e7d32;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;">✅ 审核通过</button>';
+      html += '<button onclick="rejectPending(\'' + p.id + '\')" style="background:#c62828;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;">❌ 退回重填</button>';
+      html += '</div>';
+      html += '</div>';
+    });
+    list.innerHTML = html;
+  }
+
+  function loadPending(){
+    if(!API) return;
+    API.get('/v1/performers', { query: { page:1, pageSize:500, status:'pending' }, showErrorToast:false, timeoutMs:8000 })
+      .then(function(res){
+        var rows = Array.isArray(res) ? res : (res && res.items) || [];
+        renderPending(rows);
+      })
+      .catch(function(){ renderPending([]); });
+  }
+
+  window.approvePending = function(id){
+    if(!confirm('确认审核通过？系统将为其自动分配工号并正式入职花名册。')) return;
+    API.patch('/v1/performers/' + id + '/review', { body: { action:'approve' } })
+      .then(function(r){
+        var sn = r && (r.staffNo || (r.data && r.data.staffNo));
+        toast('审核通过，已入职' + (sn ? ('，工号 ' + sn) : ''), 'success');
+        loadPending();
+        // 刷新花名册
+        if(typeof loadStaffRoster === 'function') loadStaffRoster();
+        else if(typeof __STF_LOAD__ === 'function') __STF_LOAD__();
+        else location.reload();
+      })
+      .catch(function(e){ toast('操作失败：' + (e&&e.message||''), 'error'); });
+  };
+
+  window.rejectPending = function(id){
+    var fb = prompt('请输入退回原因（将告知本人重新填写）：', '资料不完整，请补充后重新提交');
+    if(fb === null) return;
+    API.patch('/v1/performers/' + id + '/review', { body: { action:'reject', feedback: fb } })
+      .then(function(){
+        toast('已退回，等待本人重新填写', 'success');
+        loadPending();
+      })
+      .catch(function(e){ toast('操作失败：' + (e&&e.message||''), 'error'); });
+  };
+
+  function init(){
+    panel = document.getElementById('pendingReviewPanel');
+    list = document.getElementById('pendingReviewList');
+    countBadge = document.getElementById('pendingCount');
+    if(panel) loadPending();
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
 </script>
 </body>
