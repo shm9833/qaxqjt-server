@@ -27,7 +27,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>演出演员表配置 - 秦安县秦剧团文化演出管理系统</title>
-<link rel="stylesheet" href="../css/style.css?v=20260803">
+<link rel="stylesheet" href="../css/style.css?v=20260906">
 <style>
 /* ============================================================
    FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -174,8 +174,9 @@ body[data-mode="preview"] .mobile-fab-bar{display:none !important;}
   body.__card_print_mode__ .print-header,
   body.__card_print_mode__ .print-footer,
   body.__card_print_mode__ .cast-opera-card:not(.__card_active__){display:none !important;}
-  body.__card_print_mode__ @page {size:A4 landscape;margin:10mm 2mm 10mm 2mm;}
-  body.__card_print_mode__{background:#fff;}
+  /* @page 是 at-rule，不能用选择器前缀限定；卡式横版改用 CSS Paged Media 命名页：@page card + page:card */
+  @page card {size:A4 landscape;margin:10mm 2mm 10mm 2mm;}
+  body.__card_print_mode__{page:card;background:#fff;}
   body.__card_print_mode__ .cast-page-wrap{padding:0;margin:0;max-width:100%;}
   body.__card_print_mode__ .cast-opera-card.__card_active__{
     border:2.5px solid #0f4c81;border-radius:14px;padding:18px 20px 16px;
@@ -700,6 +701,8 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
       <div class="page-actions">
         <button class="btn-action btn-red" id="btnReset" data-action="cast-reset" type="button">🧹 重置空白</button>
         <button class="btn-action btn-gold" id="btnSave" data-action="cast-save" type="button">💾 保存本地</button>
+        <!-- v20260908j：显式「保存到后端」按钮，强制走 POST/PATCH /v1/cast-sheets，不回退 localStorage -->
+        <button class="btn-action btn-emerald" id="btnSaveBackend" data-action="cast-save-backend" type="button" title="强制推送当前阵容到后端 API /v1/cast-sheets（失败会显示明确报错）">☁️ 保存到后端</button>
         <button class="btn-action btn-green" id="btnLoad" data-action="cast-load" type="button">📂 读取上次</button>
         <button class="btn-action btn-primary mode-edit" id="btnPreview" data-action="cast-preview" type="button">👁 预览模式</button>
         <button class="btn-action btn-primary mode-preview" id="btnEdit" data-action="cast-edit" type="button">✏ 编辑模式</button>
@@ -879,7 +882,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
 
 <!-- 选角Modal -->
 <div class="cp-overlay" id="cpOverlay"></div>
-<div class="cp-modal" id="cpModal">
+<div class="cp-modal generic-modal-root" id="cpModal">
   <div class="cp-head">
     <h3 id="cpTitle">选择本剧目演员阵容</h3>
     <button class="cp-close" id="cpClose" type="button" aria-label="关闭">×</button>
@@ -894,7 +897,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
 
 <!-- 剧库Picker Modal（X1新增） -->
 <div class="op-overlay" id="opOverlay"></div>
-<div class="op-modal" id="opModal">
+<div class="op-modal generic-modal-root" id="opModal">
   <div class="op-head">
     <h3>🎫 秦腔剧目资源库 · <em id="opPickTarget">主场本戏</em>选择</h3>
     <button class="op-close" id="opClose" type="button">×</button>
@@ -930,7 +933,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
 <script src="../js/year-lite.js?v=20260803"></script>
   <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
+<script src="../js/app.js?v=20260908n"></script>
 <!-- ===== 2026-08-03 D 类：xlsx.min.js（SheetJS 0.18.5 full）三路径加载（CDN优先 + 本地 + 备用CDN），零网络不崩 ===== -->
 <script>
 (function(){
@@ -1391,6 +1394,51 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     }catch(e){}
     return all;
   }
+  // v20260908r：剧库异步对接后端 /v1/plays 真实数据（剧目资源管理页维护的数据）。
+  // 本地库（内置经典剧目+localStorage）即时兜底显示，API 返回后合并刷新；
+  // 同名剧目本地库优先（内置库带完整行当 cast 配置）。API 失败静默回退本地库。
+  function _normPlayCategory(g, sub){
+    var s = String(g||'') + ' ' + String(sub||'');
+    if(/折子|清唱|曲艺|折戏/.test(s)) return '传统折子戏';
+    if(/现代|红色/.test(s)) return '红色现代戏';
+    if(/新编|创编/.test(s)) return '新编历史剧';
+    return '传统本戏';
+  }
+  function loadOperaLibraryAsync(){
+    var base = loadOperaLibrary();
+    return new Promise(function(resolve){
+      try{
+        var api = window.QAXQJT_API;
+        if(!api || typeof api.request !== 'function'){ resolve(base); return; }
+        api.request('GET','/v1/plays',{query:{page:1,pageSize:200}}).then(function(resp){
+          try{
+            var arr = Array.isArray(resp) ? resp : (resp && Array.isArray(resp.data) ? resp.data : (resp && Array.isArray(resp.items) ? resp.items : []));
+            if(!Array.isArray(arr) || !arr.length){ resolve(base); return; }
+            var all = base.slice();
+            arr.forEach(function(p){
+              if(!p || !p.title) return;
+              var nm = /《/.test(p.title) ? p.title : ('《'+p.title+'》');
+              var bare = String(p.title).replace(/[《》]/g,'');
+              var exist = all.some(function(x){ return x.name === nm || String(x.name||'').replace(/[《》]/g,'') === bare; });
+              if(exist) return;
+              all.push({
+                id: 'api_' + p.id,
+                name: nm,
+                category: _normPlayCategory(p.genre, p.subtitle),
+                duration: parseInt(p.durationMinutes,10) || 90,
+                synopsis: p.synopsis || '',
+                firstEra: '',
+                copyright: p.author || '公有传统',
+                rating: '⭐常演保留剧目',
+                cast: []  // 后端 castSummary 为文本摘要，无法拆行当；confirmOperaPick 会补 defaultCastMini 空角色行供现场派角
+              });
+            });
+            resolve(all);
+          }catch(e){ resolve(base); }
+        }).catch(function(){ resolve(base); });
+      }catch(e){ resolve(base); }
+    });
+  }
   function guessTypeByName(name){
     if(/娘|母|太|氏|婆|姐|嫂|妻|妃|姑|娥|莲|兰|英|梅|桂|春|玉|香|凤|云|青|娟|燕/.test(name)) return '青衣';
     if(/包公|包|丞|相|尉|太师|严|屠|侯|霸|太岁|王|帝|龙|赵|虎/.test(name) && name.length<=3) return '花脸';
@@ -1577,8 +1625,26 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     $('opSearch').value = '';
     $('opCatFilter').value = '';
     renderOperaPicker();
-    $('opOverlay').classList.add('show');
-    $('opModal').classList.add('show');
+    // v20260908r：清除 SuperPatch 3/6/__closeAnyModal 误加的隐藏死锁（s-modal-hide 等有 !important）
+    var _om=$('opModal'), _ov=$('opOverlay');
+    _om.classList.remove('csp-hide','s-modal-hide','modal-wrap-hide'); _om.style.display='';
+    _ov.classList.remove('csp-hide','s-overlay-hide','modal-overlay-hide'); _ov.style.display='';
+    _ov.classList.add('show');
+    _om.classList.add('show');
+    // v20260908r：异步拉取后端 /v1/plays 真实剧目（剧目资源管理页录入），合并后刷新列表
+    var _openKey = key;
+    loadOperaLibraryAsync().then(function(lib){
+      try{
+        if(pickCtx.targetKey !== _openKey) return; // 期间已切换主场/加演目标
+        pickCtx.library = lib;
+        pickCtx.selectedOperaId = null;
+        if($('opModal').classList.contains('show')){
+          $('opSearch').value = '';
+          $('opCatFilter').value = '';
+          renderOperaPicker();
+        }
+      }catch(_){}
+    }).catch(function(){});
   }
   function closeOperaPicker(){
     $('opOverlay').classList.remove('show');
@@ -1842,6 +1908,20 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     renderOperaBlock('mainOpera','blkMainOpera');
     renderOperaBlock('addOpera','blkAddOpera');
   }
+  // v20260909c：组团「✨一键生成样板 / 📋载入模板」整块替换四大板块行时，必须同步 state。
+  // 后续脚本块的 _fillBlock 只写 DOM、不触发 input 事件，state[key] 仍是旧行，
+  // 导致保存阵容时 stateBlob 不含生成/载入的人员，刷新后全部丢失。
+  // 通过本钩子：写 state[key] → 用统一 renderSimpleBlock 重渲染（DOM/state 一致，保存即可落库）。
+  try{
+    window.__csReplaceBlockRows = function(key, rows){
+      if(!SIMPLE_META[key] || !Array.isArray(rows)) return false;
+      state[key] = rows.map(function(r){
+        return { pos:(r&&r.pos)||'', name:(r&&r.name)||'', note:(r&&r.note)||'', isPublic:(r&&r.isPublic===false)?false:true };
+      });
+      renderSimpleBlock(key);
+      return true;
+    };
+  }catch(_e){ if(typeof console!=='undefined') console.warn('[cast] expose __csReplaceBlockRows fail:', _e); }
 
   /* ---------- X2: 演职人员 datalist 渲染 ---------- */
   function renderPerformersDatalist(){
@@ -1977,8 +2057,12 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     });
     $('cpTitle').textContent = '选择《'+(op.opera||op.name||'未命名剧目')+'》演员阵容（勾选后自动按行当匹配角色）';
     $('cpBody').innerHTML = buildCastPickerBody();
-    $('cpOverlay').classList.add('show');
-    $('cpModal').classList.add('show');
+    // v20260908r：清除 SuperPatch 3/6/__closeAnyModal 误加的隐藏死锁
+    var _cm=$('cpModal'), _co=$('cpOverlay');
+    _cm.classList.remove('csp-hide','s-modal-hide','modal-wrap-hide'); _cm.style.display='';
+    _co.classList.remove('csp-hide','s-overlay-hide','modal-overlay-hide'); _co.style.display='';
+    _co.classList.add('show');
+    _cm.classList.add('show');
     bindCastPickerClicks();
   }
   function bindCastPickerClicks(){
@@ -2126,6 +2210,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
   /* ---------- 简单板块 + 主/加演剧目的 "追加…行" 通用按钮 ---------- */
   function bindAddButtons(){
     document.querySelectorAll('button[data-add]').forEach(function(btn){
+      btn.__superPatchBound=1;
       btn.addEventListener('click',function(e){
         e.preventDefault();
         e.stopPropagation && e.stopPropagation();
@@ -2211,25 +2296,200 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     }catch(e){}
   }
   /* ---------- 保存/读取/重置 ---------- */
-  function saveState(silent){
+  // v20260908j：cast-sheet 阵容存档对接后端 API
+  // API-first：保存到 POST/PATCH /v1/cast-sheets；读取从 GET /v1/cast-sheets
+  // 后端不可用时回退 localStorage（原 LS_KEY=qaxqjt_cast_sheet_v3）
+  function __csGetCurId(){
+    var id='default';
+    try{ id = localStorage.getItem('qaxqjt_cast_current_sheet') || 'default'; }catch(_){}
+    return id;
+  }
+  function buildCastSheetPayload(curId){
+    var h = (state && state.header) ? state.header : {};
+    var sheetNo = curId || __csGetCurId();
+    var playId = 'default';
+    try{
+      if(Array.isArray(state.mainOpera) && state.mainOpera[0] && state.mainOpera[0].opera){
+        playId = String(state.mainOpera[0].opera).replace(/[《》]/g,'').slice(0,80) || 'default';
+      }
+    }catch(_){}
+    var perfDate = h.date || new Date().toISOString().slice(0,10);
+    var status = (state.isPublic === false) ? 'draft' : 'published';
+    // v20260909c：完整 state 以顶层 stateBlob 提交（后端 CastSheetsV1.state_blob 列落库）；crew 不再塞伪行
+    return {
+      sheetNo: sheetNo,
+      scheduleId: 'default',
+      playId: playId,
+      performanceDate: perfDate,
+      status: status,
+      stateBlob: JSON.stringify(state),
+      crew: []
+    };
+  }
+  function parseCastSheetPayload(row){
+    if(!row) return null;
+    try{
+      if(Array.isArray(row.crew)){
+        for(var i=0;i<row.crew.length;i++){
+          var c=row.crew[i];
+          if(c && c.stateBlob){ return JSON.parse(c.stateBlob); }
+        }
+      }
+      if(row.stateBlob){ return JSON.parse(row.stateBlob); }
+      // 兼容直接把 state 整体放进 crew[0] 的情况
+      if(Array.isArray(row.crew) && row.crew[0] && row.crew[0].state){
+        return row.crew[0].state;
+      }
+    }catch(e){ if(typeof console!=='undefined') console.warn('[parseCastSheetPayload] err:', e); }
+    return null;
+  }
+  async function __resolveCastSheetMethodAndUrl(QinFetch, curId){
+    // 先 GET 判断是 POST（新建）还是 PATCH（更新）
+    var info = { method:'POST', url:'/v1/cast-sheets' };
+    try{
+      var resp = await QinFetch.request('GET','/v1/cast-sheets',{ query:{ sheetNo:curId, pageSize:5 } });
+      var rows = (resp && resp.data && Array.isArray(resp.data)) ? resp.data : (Array.isArray(resp) ? resp : []);
+      for(var i=0;i<rows.length;i++){
+        if(rows[i] && rows[i].sheetNo === curId && rows[i].id){
+          info.method = 'PATCH';
+          info.url = '/v1/cast-sheets/' + encodeURIComponent(rows[i].id);
+          break;
+        }
+      }
+    }catch(_){ /* GET 失败则按 POST 新建 */ }
+    return info;
+  }
+  async function saveState(silent){
+    var apiErr = null, apiReady = false;
+    // API-first：尝试 POST/PATCH /v1/cast-sheets
+    try{
+      var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+      if(QinFetch && typeof QinFetch.request === 'function'){
+        apiReady = true;
+        var curId = __csGetCurId();
+        var info = await __resolveCastSheetMethodAndUrl(QinFetch, curId);
+        var body = buildCastSheetPayload(curId);
+        await QinFetch.request(info.method, info.url, { body: body });
+        // API 成功后同步写一份 localStorage 作为本地缓存
+        try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(_){}
+        if(!silent){
+          var okMsg = '✅ 阵容已保存（已对接后端 ' + info.method + ' ' + info.url + '）';
+          if(typeof toast !== 'undefined') toast(okMsg, 'success', 3000);
+          else alert(okMsg);
+        }
+        return true;
+      }
+    }catch(err){
+      apiErr = err;
+      if(typeof console !== 'undefined') console.warn('[saveState] API save failed, fallback to localStorage:', err);
+    }
+    // Fallback：localStorage（原行为）
     try{
       localStorage.setItem(LS_KEY, JSON.stringify(state));
-      if(!silent){
-        if(typeof toast !== 'undefined') toast('💾 已保存到本地（下次打开自动读取）','success',2600);
-        else alert('✅ 已保存成功！');
+      var msg;
+      if(apiReady && apiErr){
+        msg = '⚠️ 后端保存失败，已回退本地：' + ((apiErr && apiErr.message) ? apiErr.message : '网络错误');
+      } else if(!apiReady){
+        msg = '💾 已保存到本地（API 未就绪，下次打开自动读取）';
+      } else {
+        msg = '💾 已保存到本地（下次打开自动读取）';
       }
-    }catch(e){ alert('保存失败：'+e.message);}
+      if(!silent){
+        if(typeof toast !== 'undefined') toast(msg, (apiErr ? 'warning' : 'success'), 3000);
+        else alert(msg);
+      }
+    }catch(e){
+      if(!silent) alert('保存失败：'+e.message);
+      return false;
+    }
+    return true;
+  }
+  // 显式「保存到后端」按钮专用：必须走 API，不再回退 localStorage（如失败给出明确报错）
+  async function saveStateToBackend(){
+    try{
+      var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+      if(!QinFetch || typeof QinFetch.request !== 'function'){
+        if(typeof toast !== 'undefined') toast('⚠️ API 未就绪，无法保存到后端（window.QAXQJT_API 不可用）','warning',3200);
+        else alert('API 未就绪');
+        return false;
+      }
+      if(typeof toast !== 'undefined') toast('⏳ 正在保存到后端 /v1/cast-sheets ...','info',2000);
+      var curId = __csGetCurId();
+      var info = await __resolveCastSheetMethodAndUrl(QinFetch, curId);
+      var body = buildCastSheetPayload(curId);
+      await QinFetch.request(info.method, info.url, { body: body });
+      // 同步本地缓存
+      try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(_){}
+      var okMsg = '✅ 阵容已保存（已对接后端 ' + info.method + ' ' + info.url + '）';
+      if(typeof toast !== 'undefined') toast(okMsg, 'success', 3500);
+      else alert(okMsg);
+      return true;
+    }catch(err){
+      if(typeof console !== 'undefined') console.error('[saveStateToBackend] err:', err);
+      var errMsg = '❌ 后端保存失败：' + ((err && err.message) ? err.message : '网络错误');
+      if(typeof toast !== 'undefined') toast(errMsg, 'error', 3500);
+      else alert(errMsg);
+      return false;
+    }
   }
   function loadState(){
+    // API-first：尝试 GET /v1/cast-sheets 按 sheetNo 拉取
+    var QinFetch = null;
+    try{ QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API); }catch(_){}
+    if(QinFetch && typeof QinFetch.request === 'function'){
+      // 异步加载，加载完成后再渲染；先返回占位
+      (async function(){
+        var apiErr = null;
+        try{
+          var curId = __csGetCurId();
+          var resp = await QinFetch.request('GET','/v1/cast-sheets',{ query:{ sheetNo:curId, pageSize:10 } });
+          var rows = (resp && resp.data && Array.isArray(resp.data)) ? resp.data : (Array.isArray(resp) ? resp : []);
+          var picked = null;
+          for(var i=0;i<rows.length;i++){
+            if(rows[i] && rows[i].sheetNo === curId){ picked = rows[i]; break; }
+          }
+          if(!picked && rows.length>0) picked = rows[0];
+          if(picked){
+            var parsed = parseCastSheetPayload(picked);
+            if(parsed){
+              state = mergeDefault(parsed);
+              renderAll();
+              if(typeof toast !== 'undefined') toast('📂 已读取后端阵容存档（GET /v1/cast-sheets）','success',3000);
+              else alert('✅ 已读取后端阵容存档');
+              return;
+            }
+          }
+          // 后端无对应记录，回退 localStorage
+          __loadStateFromLocal('📭 后端无该存档，已回退本地数据');
+        }catch(err){
+          apiErr = err;
+          if(typeof console !== 'undefined') console.warn('[loadState] API load failed, fallback to localStorage:', err);
+          __loadStateFromLocal('⚠️ 后端读取失败，已回退本地：' + ((err && err.message) ? err.message : '网络错误'));
+        }
+      })();
+      return true;
+    }
+    // API 未就绪，直接走 localStorage
+    return __loadStateFromLocal(null);
+  }
+  function __loadStateFromLocal(fallbackMsg){
     try{
       var raw=localStorage.getItem(LS_KEY);
-      if(!raw){ alert('还没有保存过的数据，将使用默认模板'); return false; }
+      if(!raw){
+        if(fallbackMsg){
+          if(typeof toast !== 'undefined') toast(fallbackMsg + '（无本地存档，使用默认模板）','warning',3000);
+        } else {
+          alert('还没有保存过的数据，将使用默认模板');
+        }
+        return false;
+      }
       state = mergeDefault(JSON.parse(raw));
       renderAll();
-      if(typeof toast !== 'undefined') toast('📂 已读取上次保存的数据','success',2600);
-      else alert('✅ 读取成功！');
+      var msg = fallbackMsg || '📂 已读取上次保存的数据（后端未就绪，使用本地）';
+      if(typeof toast !== 'undefined') toast(msg, fallbackMsg ? 'warning' : 'success', 2600);
+      else alert(msg);
       return true;
-    }catch(e){ alert('读取失败：'+e.message); return false;}
+    }catch(e){ alert('读取失败：'+e.message); return false; }
   }
   function resetState(){
     if(!confirm('⚠ 这将清空所有内容（仅保留空白模板，确认？')) return;
@@ -2239,8 +2499,44 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     blank.mainOpera = []; blank.addOpera = [];
     blank.wuchang = []; blank.wenchang = []; blank.stage = []; blank.program = [];
     state = blank;
+    // 同步清空 localStorage 持久化数据（演员表存档 + 天工资商议组团模板 + 演出场次）
+    try{ localStorage.removeItem('qaxqjt_cast_sheet_v3'); }catch(_){}
+    try{ localStorage.removeItem('qaxqjt_cast_sheets_v1'); }catch(_){}
+    try{ localStorage.removeItem('qaxqjt_cast_current_sheet'); }catch(_){}
+    try{ localStorage.removeItem('qaxqjt_troupe_template_v1'); }catch(_){}
+    try{ localStorage.removeItem('qaxqjt_troupe_sheets_v1'); }catch(_){}
+    try{ localStorage.removeItem('qaxqjt_wage_drafts'); }catch(_){}
     renderAll();
-    if(typeof toast !== 'undefined') toast('🧹 已重置为空白','success',2200);
+    // 同步重置天工资商议区统计与输入
+    try{
+      var tpTotal=$('tp-total'); var tpActor=$('tp-actor'); var tpBand=$('tp-band'); var tpFront=$('tp-front'); var tpCostume=$('tp-costume'); var tpElectric=$('tp-electric');
+      var tpStatus=$('tp-status'); var tpWageDay=$('tp-wage-day'); var tpWageTotal=$('tp-wage-total'); var tpDays=$('tpDays');
+      if(tpTotal&&tpTotal.querySelector('em')) tpTotal.querySelector('em').textContent='0';
+      if(tpActor&&tpActor.querySelector('em')) tpActor.querySelector('em').textContent='0';
+      if(tpBand&&tpBand.querySelector('em')) tpBand.querySelector('em').textContent='0';
+      if(tpFront&&tpFront.querySelector('em')) tpFront.querySelector('em').textContent='0';
+      if(tpCostume&&tpCostume.querySelector('em')) tpCostume.querySelector('em').textContent='0';
+      if(tpElectric&&tpElectric.querySelector('em')) tpElectric.querySelector('em').textContent='0';
+      if(tpStatus&&tpStatus.querySelector('em')){ tpStatus.querySelector('em').textContent='-'; tpStatus.querySelector('em').style.color='#64748b'; }
+      if(tpWageDay&&tpWageDay.querySelector('em')) tpWageDay.querySelector('em').textContent='¥0';
+      if(tpWageTotal&&tpWageTotal.querySelector('em')) tpWageTotal.querySelector('em').textContent='¥0';
+      if(tpDays) tpDays.value=3;
+      // 刷新存档下拉
+      if(typeof refreshSheetSelect==='function') refreshSheetSelect();
+    }catch(_){}
+    if(typeof toast !== 'undefined') toast('🧹 已重置为空白（演员表+组团模板+存档全部清空）','success',3000);
+    // 延时再清一次，防止异步重绘回填
+    setTimeout(function(){
+      try{
+        ['tp-total','tp-actor','tp-band','tp-front','tp-costume','tp-electric'].forEach(function(id){
+          var el=$(id); if(el&&el.querySelector('em')) el.querySelector('em').textContent='0';
+        });
+        var stt=$('tp-status'); if(stt&&stt.querySelector('em')){ stt.querySelector('em').textContent='-'; stt.querySelector('em').style.color='#64748b'; }
+        var wd=$('tp-wage-day'); if(wd&&wd.querySelector('em')) wd.querySelector('em').textContent='¥0';
+        var wt=$('tp-wage-total'); if(wt&&wt.querySelector('em')) wt.querySelector('em').textContent='¥0';
+        var d=$('tpDays'); if(d) d.value=3;
+      }catch(_){}
+    },500);
   }
   function setMode(m){
     document.body.setAttribute('data-mode', m);
@@ -2308,6 +2604,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
   /* ---------- 手机折叠 ---------- */
   function bindFoldBtns(){
     document.querySelectorAll('.mobile-fold-btn').forEach(function(b){
+      b.__superPatchBound=1;
       b.addEventListener('click',function(e){
         e.preventDefault(); e.stopPropagation && e.stopPropagation(); e.stopImmediatePropagation && e.stopImmediatePropagation();
         var id = b.getAttribute && b.getAttribute('data-fold');
@@ -2328,29 +2625,45 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     $('opSearch').addEventListener('input',function(){ renderOperaPicker(); },true);
     $('opSearch').addEventListener('keydown',function(e){ if(e.key==='Enter'){ renderOperaPicker(); } },true);
     $('opCatFilter').addEventListener('change',function(){ renderOperaPicker(); },true);
-    $('opClose').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); closeOperaPicker(); },true);
-    $('opBtnCancel').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); closeOperaPicker(); },true);
+    $('opClose').__superPatchBound=1; $('opClose').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); closeOperaPicker(); },true);
+    $('opBtnCancel').__superPatchBound=1; $('opBtnCancel').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); closeOperaPicker(); },true);
     $('opOverlay').addEventListener('click',function(e){ if(e.target===$('opOverlay')) closeOperaPicker(); },true);
-    $('opBtnConfirm').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); confirmOperaPick(); },true);
+    $('opBtnConfirm').__superPatchBound=1; $('opBtnConfirm').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); confirmOperaPick(); },true);
   }
   function bindCastPickerClicks(){
-    $('cpClose').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); closeCastPicker(); },true);
+    $('cpClose').__superPatchBound=1; $('cpClose').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); closeCastPicker(); },true);
     $('cpOverlay').addEventListener('click',function(e){ if(e.target===$('cpOverlay')) closeCastPicker(); },true);
-    $('cpOk').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); confirmCastSelection(); },true);
-    $('cpClear').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    $('cpOk').__superPatchBound=1; $('cpOk').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); confirmCastSelection(); },true);
+    $('cpClear').__superPatchBound=1; $('cpClear').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
       cpChecked={}; $('cpBody').innerHTML=buildCastPickerBody(); bindCastPickerClicks();
     },true);
-    $('cpCommon').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); applyCommonCast(); },true);
+    $('cpCommon').__superPatchBound=1; $('cpCommon').addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); applyCommonCast(); },true);
   }
   function bindTopButtons(){
-    function on(id, fn){ var el=$(id); if(!el) return; el.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation && e.stopPropagation(); e.stopImmediatePropagation && e.stopImmediatePropagation(); fn(); },true); }
+    // v20260908q 修复：原写法 el.onclick=fn + addEventListener(capture) 里 stopImmediatePropagation——
+    // Chrome 中 capture=true 的监听器在 target 阶段先于 IDL onclick 触发，stopImmediate 直接杀掉业务 fn（按钮全哑）。
+    // 改为在 capture 监听器内直接执行业务 fn；只 stopPropagation（挡冒泡兜底），不调 stopImmediate（保留同元素其他真实监听器）。
+    function on(id, fn){
+      var el=$(id); if(!el) return;
+      el.__superPatchBound=1; el.__deadBtnChecked=1; el.__ts3Done=1;
+      el.addEventListener('click',function(e){
+        e.preventDefault();
+        e.stopPropagation && e.stopPropagation();
+        try{ fn(e); }catch(err){ console.warn('[cast-sheet top btn err]', id, err); }
+      },true);
+    }
     on('btnReset', resetState);
     on('btnSave', function(){ saveState(false); });
+    // v20260908j：显式「保存到后端」按钮（强制 API，不回退），__superPatchBound=1 防 DBF 劫持
+    on('btnSaveBackend', function(){ saveStateToBackend(); });
     on('btnLoad', loadState);
     on('btnPreview', function(){ setMode('preview'); window.scrollTo({top:0,behavior:'smooth'}); });
     on('btnEdit', function(){ setMode('edit'); });
-    // 2026-08-02 改为由 CastPrintBySelectionModuleV20260802 统一接管（整页打印 + 按勾选打印双模式，避免重复触发 window.print）
-    on('btnPrint', function(){ /* noop: 由 PrintBySelectionModule 监听捕获阶段统一处理 */ });
+    // v20260908q：CastPrintBySelectionModuleV20260802 实际不存在，整页打印直接 window.print()（打印样式 @page 已就绪）
+    on('btnPrint', function(){
+      try{ if(typeof toast==='function') toast('🖨 正在调起整页打印（请在打印对话框中选择打印机/另存PDF）…','info',1500); }catch(_){}
+      setTimeout(function(){ try{ window.print(); }catch(e){ try{ toast('⚠️ 打印调用失败，请用 Ctrl+P 手动打印','warning',2500); }catch(_){} } }, 350);
+    });
     on('btnExport', exportCSV);
     on('mFabSave', function(){ saveState(false); });
     on('mFabPreview', function(){ setMode('preview'); window.scrollTo({top:0,behavior:'smooth'}); });
@@ -2385,6 +2698,9 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     bindCastPickerClicks();
     bindTopButtons();
     document.body.setAttribute('data-mode','edit');
+    // v20260909c：启动即 API-first 从后端恢复阵容存档（localStorage 仅作离线缓存；
+    // 修复「保存后重开页面不还原 / 后端无该存档」的问题；后端不可用时自动回退本地）
+    setTimeout(function(){ try{ if(typeof loadState==='function') loadState(); }catch(e){ console.warn('[init] loadState err:', e); } }, 600);
     // 自动保存（每60秒）
     setInterval(function(){ try{ saveState(true); }catch(e){} }, 60000);
     if(typeof toast !== 'undefined') toast('✅ 演员表V3加载完成 · 8大板块 · 剧库联动 · 演职库双对接 · 自动每60秒保存','success',3800);
@@ -2427,8 +2743,8 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     try { window.location.replace('login.html'); } catch(_eLoc) { window.location.href = 'login.html'; }
   }
   function __bindCastLogoutBtns() {
-    var sb = $('logoutBtnSidebar'); if (sb) sb.addEventListener('click', function(e){ e.preventDefault && e.preventDefault(); __doCastSheetLogout(); }, true);
-    var lk = $('logoutLink2'); if (lk) lk.addEventListener('click', function(e){ e.preventDefault && e.preventDefault(); __doCastSheetLogout(); }, true);
+    var sb = $('logoutBtnSidebar'); if (sb) { sb.__superPatchBound=1; sb.addEventListener('click', function(e){ e.preventDefault && e.preventDefault(); __doCastSheetLogout(); }, true); }
+    var lk = $('logoutLink2'); if (lk) { lk.__superPatchBound=1; lk.addEventListener('click', function(e){ e.preventDefault && e.preventDefault(); __doCastSheetLogout(); }, true); }
   }
   try {
     if (document.readyState === 'loading') {
@@ -3076,6 +3392,12 @@ function __pLog(module,event,extra){
     document.addEventListener('click', function(e){
       try{
         var el = e.target;
+        // v20260908r：业务删除按钮（演员表行内 ✕ / ✕删除本剧 / ✕角色行）文本恰为 ✕，
+        // 绝不能当作"关闭弹窗"拦截——否则 document capture 阶段 stopPropagation 会
+        // 阻断 tbody/blk 上的删除委托（删除行全无反应），__closeAnyModal 还会把
+        // opModal/cpModal 打上 s-modal-hide/csp-hide 死锁，导致"从剧库选择/批量选角"再也打不开
+        var _bizDel = el && el.closest && el.closest('.btn-del-row, .btn-op-del, [data-del], [data-opera-del], [data-del-role]');
+        if(_bizDel) return;
         var txt = (el.textContent||'').trim();
         if(!txt&&el.closest){ txt = (el.closest('button,a,[role=button],span,div')||{}).textContent||''; txt=txt.trim(); }
         var isClose = false;
@@ -3257,6 +3579,7 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
+        if (window.QinPagination) return; // 真分页器已接管，跳过假分页注入（orders/finance 同款修复范式）
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -3373,6 +3696,7 @@ function __pLog(module,event,extra){
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       if(btn.__superPatchBound) return true;
@@ -3387,6 +3711,7 @@ function __pLog(module,event,extra){
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
+        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return; // 分页条按钮放行（orders/finance 同款修复）
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
@@ -3466,6 +3791,10 @@ function __pLog(module,event,extra){
     document.body.appendChild(t);
     setTimeout(function(){ t.remove(); },ms||3000);
   }
+  // v20260909c：本 IIFE 内的 toast 暴露到 window，供先行脚本块中的 saveState/loadState
+  // （保存阵容/启动读取后端存档）调用——修复那些块 typeof toast==='undefined' 退回 alert()、
+  // 导致每次打开页面弹原生 alert 框、保存成功无页面提示的问题
+  try{ window.toast = toast; }catch(_){}
   var LS_KEY='qaxqjt_cast_sheet_v3';
   var LS_SHEETS='qaxqjt_cast_sheets_v1';
   var LS_TROUPE='qaxqjt_troupe_template_v1';
@@ -3504,19 +3833,72 @@ function __pLog(module,event,extra){
     if(cur&&cur.data){ try{ localStorage.setItem(LS_KEY,cur.data); }catch(_){} }
     toast('📁 已切换到：'+(cur?cur.name:'默认存档'),'info',2000); setTimeout(function(){ location.reload(); },800);
   }
+  // 七档天工资等级（W1实习 ~ W7主A角），可由工资等级编辑器修改
   var WAGE_GRADES={W1:{name:'实习',daily:80},W2:{name:'替补',daily:120},W3:{name:'C角',daily:180},W4:{name:'B角',daily:280},W5:{name:'A角',daily:400},W6:{name:'主B',daily:600},W7:{name:'主A角',daily:800}};
+  // 从 localStorage 读取用户自定义的工资等级（如有）
+  function loadWageGrades(){
+    try{ var raw=localStorage.getItem('qaxqjt_wage_grades_v1'); if(raw){ var o=JSON.parse(raw); if(o&&o.W1){ WAGE_GRADES=o; } } }catch(_){}
+  }
+  function saveWageGrades(){ try{ localStorage.setItem('qaxqjt_wage_grades_v1',JSON.stringify(WAGE_GRADES)); }catch(_){} }
   function generate36Template(){
     var template=[];
-    var actors=[{name:'王建国',role:'老生',grade:'W5'},{name:'李明华',role:'老生',grade:'W4'},{name:'张文斌',role:'小生',grade:'W5'},{name:'陈志强',role:'小生',grade:'W3'},{name:'刘秀英',role:'青衣',grade:'W6'},{name:'赵雅芳',role:'青衣',grade:'W4'},{name:'孙美玲',role:'花旦',grade:'W5'},{name:'周丽萍',role:'花旦',grade:'W3'},{name:'吴铁柱',role:'花脸',grade:'W6'},{name:'郑大山',role:'花脸',grade:'W4'},{name:'马小丑',role:'丑角',grade:'W4'},{name:'黄文龙',role:'武生',grade:'W5'},{name:'徐凤英',role:'老旦',grade:'W4'},{name:'朱彩云',role:'彩旦',grade:'W3'},{name:'胡建国',role:'红生',grade:'W5'},{name:'林文海',role:'小丑',grade:'W3'},{name:'郭天明',role:'武净',grade:'W4'},{name:'何丽华',role:'武旦',grade:'W4'}];
-    for(var i=0;i<actors.length;i++){ template.push({cat:'actor',name:actors[i].name,role:actors[i].role,grade:actors[i].grade,daily:WAGE_GRADES[actors[i].grade].daily}); }
-    var band=[{name:'钱师傅',role:'板胡',grade:'W6'},{name:'孙师傅',role:'二胡',grade:'W4'},{name:'李师傅',role:'笛子',grade:'W4'},{name:'赵师傅',role:'三弦',grade:'W3'},{name:'周师傅',role:'鼓师',grade:'W6'},{name:'吴师傅',role:'锣',grade:'W3'},{name:'郑师傅',role:'铙钹',grade:'W3'},{name:'王师傅',role:'梆子',grade:'W2'}];
-    for(var i2=0;i2<band.length;i2++){ template.push({cat:'band',name:band[i2].name,role:band[i2].role,grade:band[i2].grade,daily:WAGE_GRADES[band[i2].grade].daily}); }
-    var front=[{name:'张管理',role:'舞台监督',grade:'W5'},{name:'李前台',role:'前台',grade:'W2'},{name:'王字幕',role:'字幕',grade:'W2'},{name:'赵检票',role:'检票',grade:'W1'}];
-    for(var i3=0;i3<front.length;i3++){ template.push({cat:'front',name:front[i3].name,role:front[i3].role,grade:front[i3].grade,daily:WAGE_GRADES[front[i3].grade].daily}); }
-    var costume=[{name:'刘服装',role:'服装师',grade:'W4'},{name:'陈化妆',role:'化妆师',grade:'W3'},{name:'杨盔箱',role:'盔箱',grade:'W3'}];
-    for(var i4=0;i4<costume.length;i4++){ template.push({cat:'costume',name:costume[i4].name,role:costume[i4].role,grade:costume[i4].grade,daily:WAGE_GRADES[costume[i4].grade].daily}); }
-    var electric=[{name:'孙灯光',role:'灯光师',grade:'W4'},{name:'赵音响',role:'音响师',grade:'W4'},{name:'钱电工',role:'配电',grade:'W2'}];
-    for(var i5=0;i5<electric.length;i5++){ template.push({cat:'electric',name:electric[i5].name,role:electric[i5].role,grade:electric[i5].grade,daily:WAGE_GRADES[electric[i5].grade].daily}); }
+    // 演员 18 人：秦腔四生六旦二花净一丑体系，按 W3~W6 档位分布
+    var actorSpec=[
+      {role:'老生',grade:'W5'},{role:'老生',grade:'W4'},
+      {role:'小生',grade:'W5'},{role:'小生',grade:'W3'},
+      {role:'青衣',grade:'W6'},{role:'青衣',grade:'W4'},
+      {role:'花旦',grade:'W5'},{role:'花旦',grade:'W3'},
+      {role:'花脸',grade:'W6'},{role:'花脸',grade:'W4'},
+      {role:'丑行',grade:'W4'},{role:'武生',grade:'W5'},
+      {role:'老旦',grade:'W4'},{role:'彩旦',grade:'W3'},
+      {role:'红生',grade:'W5'},{role:'武净',grade:'W4'},
+      {role:'青衣',grade:'W3'},{role:'丑行',grade:'W3'}
+    ];
+    var aNames = CG_NAMES.actor || [];
+    for(var i=0;i<actorSpec.length;i++){
+      var aName = aNames[i % aNames.length] || ('演员'+(i+1));
+      template.push({cat:'actor',name:aName,role:actorSpec[i].role,grade:actorSpec[i].grade,daily:WAGE_GRADES[actorSpec[i].grade].daily});
+    }
+    // 乐队 8 人：文场4 + 武场4（秦腔传统文武场编制）
+    var bandSpec=[
+      {role:'司鼓',grade:'W6'},{role:'板胡',grade:'W6'},
+      {role:'二胡',grade:'W4'},{role:'三弦',grade:'W4'},
+      {role:'竹笛',grade:'W4'},{role:'唢呐',grade:'W4'},
+      {role:'梆子',grade:'W3'},{role:'大锣',grade:'W3'}
+    ];
+    var bNames = CG_NAMES.band || [];
+    for(var j=0;j<bandSpec.length;j++){
+      var bName = bNames[j % bNames.length] || ('乐师'+(j+1));
+      template.push({cat:'band',name:bName,role:bandSpec[j].role,grade:bandSpec[j].grade,daily:WAGE_GRADES[bandSpec[j].grade].daily});
+    }
+    // 前场 4 人
+    var frontSpec=[
+      {role:'舞台监督',grade:'W5'},{role:'字幕',grade:'W2'},
+      {role:'检票',grade:'W1'},{role:'催场',grade:'W2'}
+    ];
+    var fNames = CG_NAMES.front || [];
+    for(var k=0;k<frontSpec.length;k++){
+      var fName = fNames[k % fNames.length] || ('前场'+(k+1));
+      template.push({cat:'front',name:fName,role:frontSpec[k].role,grade:frontSpec[k].grade,daily:WAGE_GRADES[frontSpec[k].grade].daily});
+    }
+    // 服装化妆 3 人（秦腔特色岗位：盔箱/勾脸/跟包）
+    var costumeSpec=[
+      {role:'服装管理',grade:'W4'},{role:'化妆',grade:'W3'},{role:'盔箱',grade:'W3'}
+    ];
+    var cNames = CG_NAMES.costume || [];
+    for(var m=0;m<costumeSpec.length;m++){
+      var cName = cNames[m % cNames.length] || ('服装'+(m+1));
+      template.push({cat:'costume',name:cName,role:costumeSpec[m].role,grade:costumeSpec[m].grade,daily:WAGE_GRADES[costumeSpec[m].grade].daily});
+    }
+    // 电工 3 人
+    var electricSpec=[
+      {role:'灯光师',grade:'W4'},{role:'音响师',grade:'W4'},{role:'装台',grade:'W2'}
+    ];
+    var eNames = CG_NAMES.electric || [];
+    for(var n=0;n<electricSpec.length;n++){
+      var eName = eNames[n % eNames.length] || ('电工'+(n+1));
+      template.push({cat:'electric',name:eName,role:electricSpec[n].role,grade:electricSpec[n].grade,daily:WAGE_GRADES[electricSpec[n].grade].daily});
+    }
     return template;
   }
   function updateTroupeStats(template){
@@ -3536,9 +3918,9 @@ function __pLog(module,event,extra){
   }
   function syncToCast(){
     var template=getCurrentTemplate(); if(!template||template.length===0){ toast('⚠️ 请先生成或载入组团模板','warning',2000); return; }
-    toast('🧩 正在同步'+template.length+'人到演员表...','info',2000);
     try{ localStorage.setItem(LS_TROUPE,JSON.stringify(template)); }catch(_){}
-    setTimeout(function(){ toast('✅ 已同步'+template.length+'人到演员表，请查看各板块','success',3000); },500);
+    var cnt=fillBlocksFromTemplate(template);
+    toast('🧩 已同步'+template.length+'人到演员表（角色'+cnt.actors+' / 文场'+cnt.wenchang+' / 武场'+cnt.wuchang+' / 舞台保障'+cnt.stage+'）','success',3000);
   }
   function getCurrentTemplate(){ try{ var raw=localStorage.getItem(LS_TROUPE); return raw?JSON.parse(raw):null; }catch(_){ return null; } }
   function _hx(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -3555,42 +3937,233 @@ function __pLog(module,event,extra){
     });
     body.innerHTML = html;
   }
-  function seed36(){
-    var template=generate36Template();
-    try{ localStorage.setItem(LS_TROUPE,JSON.stringify(template)); }catch(_){}
-    updateTroupeStats(template);
-    // 把模板数据填充到各表格
+  function fillBlocksFromTemplate(template){
     var actors=[], wenchang=[], wuchang=[], stage=[];
+    // 文场（管弦乐器）：板胡/二胡/三弦/扬琴/琵琶/竹笛/笛子/唢呐/笙/大提琴/电子琴/键盘/合成器/二股弦/椰胡/高胡/梅管/古筝
+    var WENCHANG_RE = /^(板胡|二胡|三弦|扬琴|琵琶|竹笛|笛子|唢呐|笙|大提琴|电子琴|键盘|合成器|二股弦|椰胡|高胡|梅管|古筝|硬弦)$/;
     template.forEach(function(p){
       var row={pos:p.role, name:p.name, note:(p.grade?WAGE_GRADES[p.grade].name:'')+' / ¥'+(p.daily||0)+'/天'};
       if(p.cat==='actor') actors.push(row);
       else if(p.cat==='band'){
-        if(/板胡|二胡|笛子|三弦|琵琶|扬琴|大提琴/.test(p.role)) wenchang.push(row);
+        if(WENCHANG_RE.test(p.role)) wenchang.push(row);
         else wuchang.push(row);
       }
       else stage.push(row);
     });
-    _fillBlock('bodyCreative', actors, 'creative');
-    _fillBlock('bodyWenchang', wenchang, 'wenchang');
-    _fillBlock('bodyWuchang', wuchang, 'wuchang');
-    _fillBlock('bodyStage', stage, 'stage');
-    toast('✨ 已生成36人标配样板（演员'+actors.length+'+乐队'+(wenchang.length+wuchang.length)+'+舞台'+stage.length+'），已填入各板块表格','success',3500);
+    // v20260909c：优先走主脚本块钩子——同步 state[key] 并用统一渲染器重绘，
+    // 保证「保存阵容」stateBlob 含这些人员（否则只改 DOM，刷新后丢失）；钩子缺失时兜底直写 DOM。
+    var __ok={};
+    try{
+      if(typeof window.__csReplaceBlockRows==='function'){
+        __ok.creative=window.__csReplaceBlockRows('creative', actors);
+        __ok.wenchang=window.__csReplaceBlockRows('wenchang', wenchang);
+        __ok.wuchang=window.__csReplaceBlockRows('wuchang', wuchang);
+        __ok.stage=window.__csReplaceBlockRows('stage', stage);
+      }
+    }catch(e){ if(typeof console!=='undefined') console.warn('[troupe] __csReplaceBlockRows fail:', e); }
+    if(!__ok.creative) _fillBlock('bodyCreative', actors, 'creative');
+    if(!__ok.wenchang) _fillBlock('bodyWenchang', wenchang, 'wenchang');
+    if(!__ok.wuchang) _fillBlock('bodyWuchang', wuchang, 'wuchang');
+    if(!__ok.stage) _fillBlock('bodyStage', stage, 'stage');
+    return {actors:actors.length, wenchang:wenchang.length, wuchang:wuchang.length, stage:stage.length};
+  }
+  function seed36(){
+    var template=generate36Template();
+    try{ localStorage.setItem(LS_TROUPE,JSON.stringify(template)); }catch(_){}
+    updateTroupeStats(template);
+    var cnt=fillBlocksFromTemplate(template);
+    toast('✨ 已生成36人标配样板（演员'+cnt.actors+'+乐队'+(cnt.wenchang+cnt.wuchang)+'+舞台'+cnt.stage+'），已填入各板块表格','success',3500);
+  }
+  // ===== v20260918：一键生成改为「预览→修改→确认」流程 =====
+  var SEED_CAT_NAMES={actor:'演员组',band:'乐队组',front:'前场',costume:'服装化妆',electric:'电工'};
+  var __seedDraft=[]; // 预览草稿（确认前不影响页面数据）
+  function openSeedPreview(){
+    __seedDraft=generate36Template();
+    renderSeedPreview();
+    bindSeedPreview();
+    var modal=$('seedPreviewModal'); if(!modal){ seed36(); return; } // 弹窗缺失时退回旧行为
+    modal.style.display='flex';
+    document.body.classList.add('body-modal-locked');
+  }
+  function closeSeedPreview(){
+    var modal=$('seedPreviewModal'); if(!modal) return;
+    modal.style.display='none';
+    document.body.classList.remove('body-modal-locked');
+  }
+  function renderSeedPreview(){
+    var body=$('seedPrevBody'); if(!body) return;
+    var html='';
+    __seedDraft.forEach(function(p,i){
+      var opts=''; Object.keys(WAGE_GRADES).forEach(function(g){
+        opts+='<option value="'+g+'"'+(g===p.grade?' selected':'')+'>'+g+' '+WAGE_GRADES[g].name+'（¥'+WAGE_GRADES[g].daily+'/天）</option>';
+      });
+      html+='<tr>'
+        +'<td class="seq">'+(i+1)+'</td>'
+        +'<td>'+_hx(SEED_CAT_NAMES[p.cat]||p.cat)+'</td>'
+        +'<td><input type="text" data-si="'+i+'" data-scol="name" value="'+_hx(p.name)+'" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;"></td>'
+        +'<td><input type="text" data-si="'+i+'" data-scol="role" value="'+_hx(p.role)+'" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;"></td>'
+        +'<td><select data-si="'+i+'" data-scol="grade" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;">'+opts+'</select></td>'
+        +'<td style="color:#b91c1c;font-weight:600;">¥'+(p.daily||0)+'</td>'
+        +'<td><button class="btn-del-row" data-sdel="'+i+'" type="button" title="删除该行">✕</button></td>'
+        +'</tr>';
+    });
+    body.innerHTML=html || '<tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8;">模板为空，请取消后重新生成</td></tr>';
+    __updateSeedStats();
+  }
+  function __updateSeedStats(){
+    var s={}; var wage=0;
+    __seedDraft.forEach(function(p){ s[p.cat]=(s[p.cat]||0)+1; wage+=p.daily||0; });
+    var el=$('seedPrevStats'); if(!el) return;
+    el.textContent='共 '+__seedDraft.length+' 人 · 演员'+(s.actor||0)+' / 乐队'+(s.band||0)+' / 前场'+(s.front||0)+' / 服装化妆'+(s.costume||0)+' / 电工'+(s.electric||0)+' · 日薪合计 ¥'+wage.toLocaleString('zh-CN');
+  }
+  function bindSeedPreview(){
+    var body=$('seedPrevBody'); if(!body||body.__seedBound) return; body.__seedBound=1;
+    body.addEventListener('input',function(e){
+      var t=e.target; var i=t.getAttribute&&t.getAttribute('data-si'); if(i==null) return;
+      var p=__seedDraft[parseInt(i,10)]; if(!p) return;
+      p[t.getAttribute('data-scol')]=t.value;
+    },true);
+    body.addEventListener('change',function(e){
+      var t=e.target; var i=t.getAttribute&&t.getAttribute('data-si'); if(i==null) return;
+      var p=__seedDraft[parseInt(i,10)]; if(!p) return;
+      var col=t.getAttribute('data-scol');
+      if(col==='grade'){ p.grade=t.value; p.daily=WAGE_GRADES[t.value]?WAGE_GRADES[t.value].daily:p.daily; renderSeedPreview(); }
+      else { p[col]=t.value; __updateSeedStats(); }
+    },true);
+    body.addEventListener('click',function(e){
+      var b=e.target&&e.target.closest?e.target.closest('[data-sdel]'):null; if(!b) return;
+      var i=parseInt(b.getAttribute('data-sdel'),10); if(isNaN(i)) return;
+      __seedDraft.splice(i,1); renderSeedPreview();
+    },true);
+  }
+  function confirmSeedPreview(){
+    if(!__seedDraft.length){ toast('⚠️ 样板为空，请至少保留 1 人或取消','warning',2200); return; }
+    try{ localStorage.setItem(LS_TROUPE,JSON.stringify(__seedDraft)); }catch(_){}
+    updateTroupeStats(__seedDraft);
+    var cnt=fillBlocksFromTemplate(__seedDraft);
+    closeSeedPreview();
+    toast('✨ 已使用'+__seedDraft.length+'人样板（演员'+cnt.actors+'+乐队'+(cnt.wenchang+cnt.wuchang)+'+舞台'+cnt.stage+'），已填入各板块表格','success',3500);
   }
   // ===== 自定义组团 =====
+  // 秦腔行当角色库：四生六旦二花净一丑 + 文武场 + 舞台保障
+  //   演员行当：生（老生/红生/小生/武生/文武须生）、旦（青衣/正旦/花旦/小旦/二架旦/老旦/彩旦）、净（花脸/武净）、丑（丑行）、武行（校尉/龙套）
+  //   文场：板胡/二胡/三弦/扬琴/琵琶/竹笛/唢呐/笙/大提琴/电子琴
+  //   武场：司鼓/梆子/大锣/铙钹/小锣/堂鼓
   var CG_ROLES={
-    actor:['老生','小生','青衣','花旦','花脸','丑角','武生','老旦','彩旦','红生','小丑','武净','武旦'],
-    band:['板胡','二胡','笛子','三弦','琵琶','扬琴','大提琴','鼓师','锣','铙钹','梆子','大锣'],
-    front:['舞台监督','前台','字幕','检票','引导','催场'],
-    costume:['服装师','化妆师','盔箱','道具师'],
-    electric:['灯光师','音响师','配电','设备']
+    actor:['老生','文武须生','红生','小生','武生','青衣','正旦','花旦','小旦','二架旦','老旦','彩旦','花脸','丑行','龙套','校尉'],
+    band:['司鼓','板胡','二胡','三弦','扬琴','琵琶','竹笛','唢呐','笙','大提琴','电子琴','梆子','大锣','铙钹','小锣','堂鼓'],
+    front:['舞台监督','剧务','催场','字幕','检票'],
+    costume:['服装管理','跟包','盔箱','化妆','勾脸','道具'],
+    electric:['灯光师','灯助','音响师','话筒管理','装台']
   };
-  var CG_NAMES={
-    actor:['王建国','李明华','张文斌','陈志强','刘秀英','赵雅芳','孙美玲','周丽萍','吴铁柱','郑大山','马小丑','黄文龙','徐凤英','朱彩云','胡建国','林文海','郭天明','何丽华','高文秀','罗玉凤'],
-    band:['钱师傅','孙师傅','李师傅','赵师傅','周师傅','吴师傅','郑师傅','王师傅','冯师傅','陈师傅','褚师傅','卫师傅'],
-    front:['张管理','李前台','王字幕','赵检票','刘引导','孙催场'],
-    costume:['刘服装','陈化妆','杨盔箱','黄道具'],
-    electric:['孙灯光','赵音响','钱电工','李设备']
+  // 备用名册（API 不可用时降级使用，取自秦腔经典演职人员数据库）
+  var CG_NAMES_FALLBACK={
+    actor:['陈金声','杜振中','李玉堂','秦守仁','王树森','赵文轩','何文华','柳云青','宋玉郎','高天纵','苏若兰','李秋霞','周婉清','韩玉梅','马巧云','吴静兰','白小蝶','崔玲玲','金喜凤','沈春莺','黑振山','金面虎','铁金刚','赛金刚','曹孟德','贾半仙','侯小利','笑破天','淘淘气','宋太君'],
+    band:['雷振声','板胡周','二胡梁','二胡陈','高胡师','扬琴白','琵琶金','三弦吴','竹笛青','唢呐红','笙乐师','大提刘','梆子王','罗洪亮','钹子手','小锣匠'],
+    front:['总监老王','剧务小李','催场小张','字幕郑','检票老张'],
+    costume:['服装薛','跟包刘','盔箱张','旦妆陈','勾脸周','道具李'],
+    electric:['灯光老孙','灯助小陈','音响大周','麦管小吴','装台赵']
   };
+  // 当前生效名册（默认副本；异步从 /v1/performers 拉取后覆盖）
+  var CG_NAMES = JSON.parse(JSON.stringify(CG_NAMES_FALLBACK));
+  // 秦腔行当 → 五大组团分类映射（API primaryRole 用此映射归类）
+  var CG_ROLE_MAP = {
+    '老生':'actor','文武须生':'actor','安工老生':'actor','衰派老生':'actor','靠把老生':'actor',
+    '红生':'actor','小生':'actor','武小生':'actor','武生':'actor','长靠武生':'actor','短打武生':'actor',
+    '青衣':'actor','正旦':'actor','花旦':'actor','小旦':'actor','二架旦':'actor','玩笑旦':'actor','闺门旦':'actor','闺阁旦':'actor','武旦':'actor','刀马旦':'actor',
+    '老旦':'actor','彩旦':'actor','丑婆':'actor',
+    // v20260909c：补真实花名册行当（角子/男二架/靠须生/马童/杨琴/武乐队二手 等）
+    '角子':'actor','男二架':'actor','二架':'actor','靠须生':'actor','靠须':'actor','马童':'actor','马夫':'actor',
+    '花脸':'actor','大花脸':'actor','二花脸':'actor','架子花':'actor','武净':'actor','武花脸':'actor','铜锤':'actor','铜锤花脸':'actor','白脸抹':'actor',
+    '丑角':'actor','文丑':'actor','武丑':'actor','小丑':'actor','娃娃丑':'actor','方巾丑':'actor','官丑':'actor','丑行':'actor',
+    '龙套':'actor','校尉':'actor','武行':'actor','群众':'actor',
+    // 文场
+    '板胡':'band','二胡':'band','二股弦':'band','高胡':'band','椰胡':'band','扬琴':'band','杨琴':'band','洋琴':'band','琵琶':'band','三弦':'band','硬弦':'band','古筝':'band','竹笛':'band','笛子':'band','梅管':'band','唢呐':'band','海笛':'band','笙':'band','大提琴':'band','低音提琴':'band','电子琴':'band','键盘':'band','合成器':'band',
+    // 武场
+    '司鼓':'band','鼓师':'band','板鼓':'band','梆子':'band','铰子':'band','大锣':'band','马锣':'band','铙钹':'band','京镲':'band','小锣':'band','手锣':'band','堂鼓':'band','战鼓':'band','水镲':'band','狗娃子':'band','武乐队二手':'band','乐队二手':'band','二手':'band','武乐':'band',
+    // 前场
+    '舞台监督':'front','总监':'front','剧务':'front','催场':'front','场记':'front','字幕':'front','检票':'front','引导':'front','前台':'front',
+    // 服装化妆
+    '服装管理':'costume','服装师':'costume','跟包':'costume','盔箱':'costume','化妆':'costume','化妆师':'costume','旦角大头':'costume','勾脸':'costume','道具':'costume','道具师':'costume',
+    // 电工/技术
+    '灯光师':'electric','灯光':'electric','灯助':'electric','音响师':'electric','音响':'electric','混音':'electric','话筒管理':'electric','耳麦管理':'electric','装台':'electric','布景':'electric','配电':'electric','设备':'electric'
+  };
+  // v20260909c：演职人员五大组归类——精确映射 → 复合角色拆分 → employmentType → 关键词兜底；未命中返回 null
+  function __classifyPerformerCat(rawRole, employ){
+    rawRole = String(rawRole||'').trim();
+    employ = String(employ||'').trim();
+    // 1. 整串精确匹配
+    if(CG_ROLE_MAP[rawRole]) return CG_ROLE_MAP[rawRole];
+    // 2. 复合角色（如「丑角，马童」）按分隔符拆分逐段匹配
+    var parts = rawRole.split(/[，,、\/／|；;]/);
+    for(var i=0;i<parts.length;i++){
+      var seg = (parts[i]||'').trim();
+      if(seg && CG_ROLE_MAP[seg]) return CG_ROLE_MAP[seg];
+    }
+    // 3. employmentType 参考（乐队→band，演员队→actor）
+    if(employ){
+      if(employ.indexOf('乐队')>=0) return 'band';
+      if(employ.indexOf('演员')>=0) return 'actor';
+    }
+    // 4. 关键词兜底（顺序：乐队/电工/服装/前场 先于演员，避免「灯光」「监督」等被误吞）
+    var KW = [
+      [/琴|鼓|胡|笛|唢呐|笙|锣|钹|镲|铙|梆子|乐队|武乐|文场|武场|键盘|电子|提琴|三弦|琵琶|古筝|洋琴|扬琴/, 'band'],
+      [/灯|光|音响|麦|话筒|装台|配电|布景|设备/, 'electric'],
+      [/服装|妆|盔|道具|跟包|勾脸|戏箱|箱倌/, 'costume'],
+      [/舞台监督|监督|剧务|催场|字幕|检票|场记|前台|票务|门卫|引导/, 'front'],
+      [/旦|生|丑|花脸|净|二架|角子|马童|马夫|校尉|龙套|武行|主角|配角|主演/, 'actor']
+    ];
+    for(var k=0;k<parts.length;k++){
+      var seg2 = (parts[k]||'').trim();
+      if(!seg2) continue;
+      for(var j=0;j<KW.length;j++){ if(KW[j][0].test(seg2)) return KW[j][1]; }
+    }
+    for(var m=0;m<KW.length;m++){ if(KW[m][0].test(rawRole)) return KW[m][1]; }
+    return null;
+  }
+  // 异步从 /v1/performers 拉取真实演职人员并按 primaryRole 分组覆盖 CG_NAMES
+  function loadPerformersFromAPI(){
+    try{
+      if(!window.QAXQJT_API || !QAXQJT_API.request){ return; }
+      QAXQJT_API.request('GET','/v1/performers',{query:{pageSize:200,page:1}})
+        .then(function(res){
+          var rows = [];
+          if(res && res.data && Array.isArray(res.data)) rows = res.data;
+          else if(res && res.items && Array.isArray(res.items)) rows = res.items;
+          else if(Array.isArray(res)) rows = res;
+          if(rows.length===0) return;
+          var grouped = {actor:[], band:[], front:[], costume:[], electric:[]};
+          var ungrouped = [];
+          rows.forEach(function(p){
+            var nm = (p.name || '').trim();
+            if(!nm) return;
+            var role = (p.primaryRole || p.role || '').trim();
+            var employ = (p.employmentType || p.employType || '').trim();
+            var cat = __classifyPerformerCat(role, employ);
+            if(!cat){
+              ungrouped.push(nm + '(' + (role||'无行当') + ')');
+              cat = 'actor'; // 实在无法识别的暂挂演员组并告警，避免人员丢失
+            }
+            if(grouped[cat].length<60 && grouped[cat].indexOf(nm)===-1){
+              grouped[cat].push(nm);
+            }
+          });
+          var totalUsed=0;
+          Object.keys(grouped).forEach(function(cat){
+            if(grouped[cat].length>0){ CG_NAMES[cat]=grouped[cat]; totalUsed+=grouped[cat].length; }
+          });
+          try{ if($('customGroupModal') && $('customGroupModal').style.display==='flex') updateCustomGroupPreview(); }catch(_){}
+          if(typeof console!=='undefined'){
+            console.info('[cast-sheet] performers loaded from /v1/performers:', rows.length, 'grouped:', grouped);
+            if(ungrouped.length) console.warn('[cast-sheet] 以下人员行当无法识别，已暂挂演员组，请维护 primaryRole：', ungrouped.join('、'));
+          }
+          if(totalUsed>0 && typeof toast!=='undefined'){ toast('👥 已加载 '+totalUsed+' 名演职人员（来自剧团在册人员）','success',2500); }
+        })
+        .catch(function(err){
+          if(typeof console!=='undefined') console.warn('[cast-sheet] /v1/performers fetch failed, using fallback names', err);
+        });
+    }catch(_){ /* 静默降级 */ }
+  }
   function openCustomGroupModal(){
     var modal=$('customGroupModal'); if(!modal) return;
     modal.style.display='flex';
@@ -3618,9 +4191,9 @@ function __pLog(module,event,extra){
       var el=$(id); if(el&&!el.__cgBound){ el.__cgBound=1; el.addEventListener('input',updateCustomGroupPreview); }
     });
     var closeBtn=$('cgCloseBtn'), cancelBtn=$('cgCancelBtn'), genBtn=$('cgGenBtn');
-    if(closeBtn&&!closeBtn.__cgBound){ closeBtn.__cgBound=1; closeBtn.addEventListener('click',closeCustomGroupModal); }
-    if(cancelBtn&&!cancelBtn.__cgBound){ cancelBtn.__cgBound=1; cancelBtn.addEventListener('click',closeCustomGroupModal); }
-    if(genBtn&&!genBtn.__cgBound){ genBtn.__cgBound=1; genBtn.addEventListener('click',generateCustomTemplate); }
+    if(closeBtn&&!closeBtn.__cgBound){ closeBtn.__cgBound=1; closeBtn.__superPatchBound=1; closeBtn.addEventListener('click',closeCustomGroupModal); }
+    if(cancelBtn&&!cancelBtn.__cgBound){ cancelBtn.__cgBound=1; cancelBtn.__superPatchBound=1; cancelBtn.addEventListener('click',closeCustomGroupModal); }
+    if(genBtn&&!genBtn.__cgBound){ genBtn.__cgBound=1; genBtn.__superPatchBound=1; genBtn.addEventListener('click',generateCustomTemplate); }
   }
   function generateCustomTemplate(){
     var a=parseInt($('cgActor').value)||0, b=parseInt($('cgBand').value)||0;
@@ -3649,25 +4222,22 @@ function __pLog(module,event,extra){
     try{ localStorage.setItem(LS_TROUPE,JSON.stringify(template)); }catch(_){}
     updateTroupeStats(template);
     var tpDays=$('tpDays'); if(tpDays){ tpDays.value=days; }
-    var actors=[], wenchang=[], wuchang=[], stage=[];
-    template.forEach(function(p){
-      var row={pos:p.role, name:p.name, note:(p.grade?WAGE_GRADES[p.grade].name:'')+' / ¥'+(p.daily||0)+'/天'};
-      if(p.cat==='actor') actors.push(row);
-      else if(p.cat==='band'){
-        if(/板胡|二胡|笛子|三弦|琵琶|扬琴|大提琴/.test(p.role)) wenchang.push(row);
-        else wuchang.push(row);
-      }
-      else stage.push(row);
-    });
-    _fillBlock('bodyCreative', actors, 'creative');
-    _fillBlock('bodyWenchang', wenchang, 'wenchang');
-    _fillBlock('bodyWuchang', wuchang, 'wuchang');
-    _fillBlock('bodyStage', stage, 'stage');
+    fillBlocksFromTemplate(template);
     closeCustomGroupModal();
     toast('🛠 已生成'+total+'人自定义组团样板（演员'+a+'+乐队'+b+'+前场'+f+'+服装'+c+'+电工'+e+'），已填入各板块表格','success',3500);
   }
-  function loadTemplate(){ var saved=getCurrentTemplate(); if(saved&&saved.length>0){ updateTroupeStats(saved); toast('📋 已载入模板：'+saved.length+'人','success',2000); }else{ toast('⚠️ 无保存的模板，请先点击「一键生成36人标配」','warning',3000); } }
-  function printWageSheet(){
+  function loadTemplate(){
+    var saved=getCurrentTemplate();
+    if(saved&&saved.length>0){
+      updateTroupeStats(saved);
+      var cnt=fillBlocksFromTemplate(saved);
+      toast('📋 已载入模板：'+saved.length+'人（角色'+cnt.actors+' / 文场'+cnt.wenchang+' / 武场'+cnt.wuchang+' / 舞台保障'+cnt.stage+'）','success',2500);
+    }else{
+      toast('⚠️ 无保存的模板，请先点击「一键生成36人标配」','warning',3000);
+    }
+  }
+  function printWageSheet(e){
+    if(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} }
     var template=getCurrentTemplate(); if(!template||template.length===0){ toast('⚠️ 请先生成组团模板','warning',2000); return; }
     var days=parseInt($('tpDays')?$('tpDays').value:3)||3;
     var win=window.open('','_blank');
@@ -3681,6 +4251,466 @@ function __pLog(module,event,extra){
     html+='</table><scr'+'ipt>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */\n(function(){\n  function __markBound(){\n    var els=document.querySelectorAll("button[id], a[id], [data-action][id], .btn[id], .btn-action[id]");\n    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }\n  }\n  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded",__markBound); }\n  else { __markBound(); setTimeout(__markBound,500); }\n})();<\/scr'+'ipt>\n</body></html>';
     win.document.write(html); win.document.close(); setTimeout(function(){ win.print(); },500);
   }
+  /* ====== 天工资商议：6 个功能按钮真实实现（替代演示模式 toast） ====== */
+  // 0. 转财务待发工资：POST /v1/fin/ledger 创建「应付工资」草稿凭证
+  function wage2Finance(){
+    var template=getCurrentTemplate();
+    if(!template||template.length===0){ toast('⚠️ 请先生成或载入组团模板','warning',2000); return; }
+    var days=parseInt($('tpDays')?$('tpDays').value:3)||3;
+    var totalWage=0;
+    var groupBreakdown={actor:0,band:0,front:0,costume:0,electric:0};
+    template.forEach(function(p){
+      var sub=(p.daily||0)*days; totalWage+=sub;
+      groupBreakdown[p.cat]=(groupBreakdown[p.cat]||0)+sub;
+    });
+    if(totalWage<=0){ toast('⚠️ 工资总额为 0，无法生成凭证','warning',2000); return; }
+    // 生成工资明细摘要
+    var detail=Object.keys(groupBreakdown).filter(function(k){return groupBreakdown[k]>0;}).map(function(k){
+      var cn={actor:'演员',band:'乐队',front:'前场',costume:'服装',electric:'电工'}[k]||k;
+      return cn+':¥'+groupBreakdown[k].toLocaleString('zh-CN');
+    }).join('，');
+    // 调用后端 /v1/fin/ledger 创建应付工资凭证
+    if(!window.QAXQJT_API||!QAXQJT_API.request){
+      // API 不可用时降级：仅保存到 localStorage 草稿
+      try{
+        var drafts=JSON.parse(localStorage.getItem('qaxqjt_wage_drafts')||'[]');
+        drafts.push({id:'wd_'+Date.now(),ts:Date.now(),days:days,total:totalWage,detail:detail,count:template.length});
+        localStorage.setItem('qaxqjt_wage_drafts',JSON.stringify(drafts));
+      }catch(_){}
+      toast('📒 已生成待发工资草稿（离线模式）：¥'+totalWage.toLocaleString('zh-CN')+'（'+days+'天×'+template.length+'人）','success',3500);
+      return;
+    }
+    toast('⏳ 正在提交财务凭证...','info',1500);
+    QAXQJT_API.request('POST','/v1/fin/ledger',{
+      body:{
+        voucherCategory:'人员成本',
+        voucherType:'payment',
+        summary:'演出'+days+'天 · 应付工资 · 共'+template.length+'人',
+        debitAmount:totalWage,
+        status:'draft',
+        remark:'天工资商议明细：'+detail,
+        voucherDate:new Date().toISOString().slice(0,10)
+      }
+    }).then(function(res){
+      toast('📒 已创建财务凭证：应付工资 ¥'+totalWage.toLocaleString('zh-CN')+'（'+days+'天×'+template.length+'人）','success',3500);
+    }).catch(function(err){
+      // API 失败降级到 localStorage
+      try{
+        var drafts=JSON.parse(localStorage.getItem('qaxqjt_wage_drafts')||'[]');
+        drafts.push({id:'wd_'+Date.now(),ts:Date.now(),days:days,total:totalWage,detail:detail,count:template.length,error:(err&&err.message)||String(err)});
+        localStorage.setItem('qaxqjt_wage_drafts',JSON.stringify(drafts));
+      }catch(_){}
+      var msg=(err&&err.message)?err.message:'网络错误';
+      toast('⚠️ 提交财务失败（'+msg+'），已存本地草稿。¥'+totalWage.toLocaleString('zh-CN')+'（'+days+'天×'+template.length+'人）','warning',4000);
+    });
+  }
+  // 1. 预算评估 CSV（按人日薪×天数 + 分组小计 + 总计，UTF-8 BOM 兼容 Excel）
+  function exportWageCSV(){
+    var template=getCurrentTemplate();
+    if(!template||template.length===0){ toast('⚠️ 请先生成或载入组团模板','warning',2000); return; }
+    var days=parseInt($('tpDays')?$('tpDays').value:3)||3;
+    function esc(s){ return '"'+String(s==null?'':s).replace(/"/g,'""')+'"'; }
+    var lines=[];
+    lines.push('秦安县秦剧团文化演出有限公司 · 天工资商议单（CSV导出）');
+    lines.push('演出天数,'+days+'天,导出时间,'+new Date().toLocaleString('zh-CN'));
+    lines.push('');
+    lines.push(['序号','姓名','组别','行当/岗位','工资等级','日薪(元)',days+'天合计(元)'].map(esc).join(','));
+    var total=0; var idx=0;
+    var groups={actor:{name:'演员组',rows:[],sub:0},band:{name:'乐队组',rows:[],sub:0},front:{name:'前场',rows:[],sub:0},costume:{name:'服装化妆',rows:[],sub:0},electric:{name:'电工',rows:[],sub:0}};
+    template.forEach(function(p){
+      var sub=(p.daily||0)*days; total+=sub;
+      var g=groups[p.cat]||groups.actor; g.rows.push(p); g.sub+=sub;
+    });
+    Object.keys(groups).forEach(function(cat){
+      var g=groups[cat]; if(g.rows.length===0) return;
+      lines.push(['','【'+g.name+' 小计】','','','','',g.sub].map(esc).join(','));
+      g.rows.forEach(function(p){
+        idx++;
+        lines.push([idx,p.name,g.name,p.role,WAGE_GRADES[p.grade]?WAGE_GRADES[p.grade].name:p.grade,p.daily,(p.daily||0)*days].map(esc).join(','));
+      });
+    });
+    lines.push(['','合计','','','','',total].map(esc).join(','));
+    lines.push('--- 本CSV使用UTF-8 BOM编码，Excel/WPS直接打开可正常显示中文 ---');
+    var csvStr='\uFEFF'+lines.join('\n');
+    var blob=new Blob([csvStr],{type:'text/csv;charset=utf-8;'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    var fname='秦安县秦剧团-天工资商议单-'+new Date().toISOString().slice(0,10)+'-'+days+'天.csv';
+    a.href=url; a.download=fname; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); },1500);
+    toast('📤 已导出工资CSV：'+fname+'（共'+template.length+'人，'+days+'天合计¥'+total.toLocaleString('zh-CN')+'）','success',3500);
+  }
+  // 2. 预算评估 XLSX（SheetJS 双 Sheet：工资明细 + 分组汇总，列宽自适应+冻结首行）
+  function exportWageXLSX(){
+    var template=getCurrentTemplate();
+    if(!template||template.length===0){ toast('⚠️ 请先生成或载入组团模板','warning',2000); return; }
+    if(!window.XLSX||typeof XLSX.write!=='function'){ toast('⚠️ XLSX 库未加载，改用 CSV 导出','warning',2200); exportWageCSV(); return; }
+    var days=parseInt($('tpDays')?$('tpDays').value:3)||3;
+    var detail=[['序号','姓名','组别','行当/岗位','工资等级','日薪(元)',days+'天合计(元)']];
+    var total=0; var gc={actor:0,band:0,front:0,costume:0,electric:0}; var cc={actor:0,band:0,front:0,costume:0,electric:0};
+    template.forEach(function(p,i){
+      var sub=(p.daily||0)*days; total+=sub;
+      var catName={actor:'演员组',band:'乐队组',front:'前场',costume:'服装化妆',electric:'电工'}[p.cat]||p.cat;
+      detail.push([i+1,p.name,catName,p.role,WAGE_GRADES[p.grade]?WAGE_GRADES[p.grade].name:p.grade,p.daily,sub]);
+      gc[p.cat]=(gc[p.cat]||0)+(p.daily||0); cc[p.cat]=(cc[p.cat]||0)+1;
+    });
+    detail.push(['','合计','','','','',total]);
+    var summary=[['组别','人数','日薪合计(元)',days+'天合计(元)']];
+    Object.keys(gc).forEach(function(cat){
+      var catName={actor:'演员组',band:'乐队组',front:'前场',costume:'服装化妆',electric:'电工'}[cat]||cat;
+      summary.push([catName,cc[cat],gc[cat],gc[cat]*days]);
+    });
+    summary.push(['合计',template.length,gc.actor+gc.band+gc.front+gc.costume+gc.electric,total]);
+    var wb=XLSX.utils.book_new();
+    var ws1=XLSX.utils.aoa_to_sheet(detail);
+    var ws2=XLSX.utils.aoa_to_sheet(summary);
+    ws1['!cols']=[{wch:6},{wch:12},{wch:12},{wch:14},{wch:12},{wch:10},{wch:14}];
+    ws2['!cols']=[{wch:14},{wch:8},{wch:14},{wch:14}];
+    ws1['!freeze']={left:0,top:1}; ws2['!freeze']={left:0,top:1};
+    XLSX.utils.book_append_sheet(wb,ws1,'工资明细');
+    XLSX.utils.book_append_sheet(wb,ws2,'分组汇总');
+    var fname='秦安县秦剧团-天工资商议单-'+new Date().toISOString().slice(0,10)+'-'+days+'天.xlsx';
+    XLSX.writeFile(wb,fname);
+    toast('📘 已导出工资XLSX：'+fname+'（共'+template.length+'人，'+days+'天合计¥'+total.toLocaleString('zh-CN')+'）','success',3500);
+  }
+  // 3. 另存为组团模板（v20260909c：API-first UPSERT 到 /v1/troupe-templates，同名覆盖；离线写 localStorage 兜底）
+  function saveAsTroupeTemplate(){
+    var template=getCurrentTemplate();
+    if(!template||template.length===0){ toast('⚠️ 请先生成组团模板','warning',2000); return; }
+    var name=prompt('另存为组团模板，请输入名称（同名模板将被覆盖）：','组团模板_'+new Date().toISOString().slice(0,10));
+    if(!name) return;
+    name=String(name).trim();
+    if(!name) return;
+    var rec={id:'tt_'+Date.now(),name:name,ts:Date.now(),count:template.length,personCount:template.length,template:template};
+    // 先写 localStorage（离线兜底 + 同名覆盖）
+    var sheets=[];
+    try{ var r=localStorage.getItem('qaxqjt_troupe_sheets_v1'); if(r) sheets=JSON.parse(r); }catch(_){}
+    sheets=sheets.filter(function(x){return x.name!==name;});
+    sheets.unshift(rec);
+    try{ localStorage.setItem('qaxqjt_troupe_sheets_v1',JSON.stringify(sheets)); }catch(e){}
+    // API-first：POST /v1/troupe-templates（后端按 name 稳定唯一键 UPSERT）
+    try{
+      var QinFetch=window.QAXQJT_API||(window.parent&&window.parent.QAXQJT_API);
+      if(QinFetch&&typeof QinFetch.request==='function'){
+        toast('⏳ 正在保存组团模板到后端...','info',1500);
+        QinFetch.request('POST','/v1/troupe-templates',{body:{name:name,personCount:template.length,template:template}})
+          .then(function(){
+            toast('💾 已保存组团模板到后端：'+name+'（'+template.length+'人）','success',2800);
+            try{ var m=$('troupeTemplateManagerModal'); if(m&&m.style.display==='flex') refreshTroupeTemplateList(); }catch(_){}
+          })
+          .catch(function(err){
+            if(typeof console!=='undefined') console.warn('[troupe] API save failed, kept local:',err);
+            toast('💾 已保存组团模板到本地（后端不可用）：'+name+'（'+template.length+'人）','warning',3000);
+          });
+        return;
+      }
+    }catch(_){}
+    toast('💾 已保存组团模板：'+name+'（'+template.length+'人）','success',2500);
+  }
+  // 4. 组团模板管理面板（载入/删除/导出已保存模板）
+  function getTroupeSheets(){ try{ var r=localStorage.getItem('qaxqjt_troupe_sheets_v1'); return r?JSON.parse(r):[]; }catch(_){ return []; } }
+  function saveTroupeSheets(a){ try{ localStorage.setItem('qaxqjt_troupe_sheets_v1',JSON.stringify(a)); }catch(_){} }
+  // v20260909c：后端模板行 -> 前端统一结构
+  function __normalizeTpl(s){
+    if(!s) return null;
+    var tpl=Array.isArray(s.template)?s.template:[];
+    var cnt=(s.personCount!=null)?Number(s.personCount):((s.count!=null)?Number(s.count):tpl.length);
+    var ts=s.ts||(s.updatedAt?new Date(s.updatedAt).getTime():(s.createdAt?new Date(s.createdAt).getTime():Date.now()));
+    return { id:s.id||('tt_'+ts), name:s.name||'未命名模板', ts:ts, count:cnt, personCount:cnt, template:tpl };
+  }
+  // API-first 拉取后端模板；失败/空时回退 localStorage；成功时同步本地缓存
+  async function __fetchTroupeSheets(){
+    try{
+      var QinFetch=window.QAXQJT_API||(window.parent&&window.parent.QAXQJT_API);
+      if(QinFetch&&typeof QinFetch.request==='function'){
+        var resp=await QinFetch.request('GET','/v1/troupe-templates',{query:{pageSize:100}});
+        var rows=(resp&&resp.data&&Array.isArray(resp.data))?resp.data:(Array.isArray(resp)?resp:[]);
+        var sheets=rows.map(__normalizeTpl).filter(Boolean);
+        if(sheets.length>0){
+          try{ saveTroupeSheets(sheets); }catch(_){}
+          return sheets;
+        }
+        // 后端返回空：以本地缓存为准（可能后端刚清空/离线）
+        return getTroupeSheets();
+      }
+    }catch(err){ if(typeof console!=='undefined') console.warn('[troupe] API fetch failed, fallback localStorage:',err); }
+    return getTroupeSheets();
+  }
+  function openTroupeTemplateManager(){
+    var modal=$('troupeTemplateManagerModal');
+    if(!modal){ toast('⚠️ 模板管理模态框未初始化','warning',2000); return; }
+    modal.style.display='flex';
+    document.body.classList.add('body-modal-locked');
+    refreshTroupeTemplateList();
+  }
+  function closeTroupeTemplateManager(){
+    var modal=$('troupeTemplateManagerModal'); if(!modal) return;
+    modal.style.display='none';
+    document.body.classList.remove('body-modal-locked');
+  }
+  async function refreshTroupeTemplateList(){
+    var list=$('ttList'); if(!list) return;
+    list.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8;">⏳ 正在加载组团模板...</div>';
+    var sheets=await __fetchTroupeSheets();
+    if(sheets.length===0){
+      list.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8;">📝 暂无保存的组团模板<br><span style="font-size:0.85rem;">点击「💾 另存为组团模板」可保存当前模板</span></div>';
+      return;
+    }
+    var html='';
+    sheets.forEach(function(s){
+      var dt=new Date(s.ts).toLocaleString('zh-CN');
+      html+='<div class="tt-item" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;">'
+        +'<div><div style="font-weight:600;color:#0f4c81;">'+_hx(s.name)+'</div>'
+        +'<div style="font-size:0.8rem;color:#64748b;">'+(s.count||0)+'人 · '+dt+'</div></div>'
+        +'<div style="display:flex;gap:6px;">'
+        +'<button type="button" class="tb-btn tb-btn-blue" data-tt-load="'+s.id+'" style="padding:6px 12px;">📋 载入</button>'
+        +'<button type="button" class="tb-btn tb-btn-emerald" data-tt-export="'+s.id+'" style="padding:6px 12px;">📊 XLSX</button>'
+        +'<button type="button" class="tb-btn tb-btn-rose" data-tt-del="'+s.id+'" style="padding:6px 12px;">🗑 删除</button>'
+        +'</div></div>';
+    });
+    list.innerHTML=html;
+    list.querySelectorAll('[data-tt-load]').forEach(function(b){
+      b.__superPatchBound=1;
+      b.addEventListener('click',function(){
+        var id=b.getAttribute('data-tt-load');
+        var sheets=getTroupeSheets(); var s=sheets.filter(function(x){return x.id===id;})[0];
+        if(!s){ toast('⚠️ 模板不存在','warning',2000); return; }
+        try{ localStorage.setItem(LS_TROUPE,JSON.stringify(s.template)); }catch(_){}
+        updateTroupeStats(s.template); fillBlocksFromTemplate(s.template);
+        closeTroupeTemplateManager();
+        toast('📋 已载入模板：'+s.name+'（'+(s.count||s.template.length)+'人）','success',2500);
+      });
+    });
+    list.querySelectorAll('[data-tt-export]').forEach(function(b){
+      b.__superPatchBound=1;
+      b.addEventListener('click',function(){
+        var id=b.getAttribute('data-tt-export');
+        var sheets=getTroupeSheets(); var s=sheets.filter(function(x){return x.id===id;})[0];
+        if(!s||!s.template){ toast('⚠️ 模板数据为空','warning',2000); return; }
+        var prev=getCurrentTemplate();
+        try{ localStorage.setItem(LS_TROUPE,JSON.stringify(s.template)); }catch(_){}
+        exportWageXLSX();
+        if(prev){ try{ localStorage.setItem(LS_TROUPE,JSON.stringify(prev)); }catch(_){} }
+      });
+    });
+    list.querySelectorAll('[data-tt-del]').forEach(function(b){
+      b.__superPatchBound=1;
+      b.addEventListener('click',function(){
+        var id=b.getAttribute('data-tt-del');
+        var sheets=getTroupeSheets(); var s=sheets.filter(function(x){return x.id===id;})[0];
+        if(!s) return;
+        if(!confirm('确定删除模板「'+s.name+'」？此操作不可撤销！')) return;
+        var doLocal=function(){
+          var after=getTroupeSheets().filter(function(x){return x.id!==id;});
+          saveTroupeSheets(after);
+          refreshTroupeTemplateList();
+          toast('🗑️ 已删除模板：'+s.name,'success',2000);
+        };
+        // v20260909c：API-first 删除后端记录，失败/离线时仅删本地
+        try{
+          var QinFetch=window.QAXQJT_API||(window.parent&&window.parent.QAXQJT_API);
+          if(QinFetch&&typeof QinFetch.request==='function' && /^ttpl_/.test(String(id))){
+            QinFetch.request('DELETE','/v1/troupe-templates/'+encodeURIComponent(id),{})
+              .then(doLocal)
+              .catch(function(err){
+                if(typeof console!=='undefined') console.warn('[troupe] API delete failed, local only:',err);
+                doLocal();
+              });
+            return;
+          }
+        }catch(_){}
+        doLocal();
+      });
+    });
+  }
+  // 5. 工资等级编辑器（W1~W7 名称+日薪）
+  function openWageGradeEditor(){
+    var modal=$('wageGradeEditorModal');
+    if(!modal){ toast('⚠️ 工资等级编辑器未初始化','warning',2000); return; }
+    modal.style.display='flex';
+    document.body.classList.add('body-modal-locked');
+    refreshWageGradeEditor();
+  }
+  function closeWageGradeEditor(){
+    var modal=$('wageGradeEditorModal'); if(!modal) return;
+    modal.style.display='none';
+    document.body.classList.remove('body-modal-locked');
+  }
+  function refreshWageGradeEditor(){
+    var body=$('wgeBody'); if(!body) return;
+    var keys=['W1','W2','W3','W4','W5','W6','W7'];
+    var html='';
+    keys.forEach(function(k){
+      var g=WAGE_GRADES[k]||{name:'',daily:0};
+      html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+        +'<span style="display:inline-block;width:48px;padding:6px 10px;background:#0f4c81;color:#fff;border-radius:6px;font-weight:600;text-align:center;">'+k+'</span>'
+        +'<input type="text" data-wge-key="'+k+'" data-wge-field="name" value="'+_hx(g.name)+'" style="flex:1;padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;" placeholder="等级名称">'
+        +'<input type="number" data-wge-key="'+k+'" data-wge-field="daily" value="'+(g.daily||0)+'" min="0" step="10" style="width:120px;padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;" placeholder="日薪">'
+        +'<span style="color:#64748b;font-size:0.85rem;">元/天</span>'
+        +'</div>';
+    });
+    body.innerHTML=html;
+  }
+  function saveWageGradeEditor(){
+    var keys=['W1','W2','W3','W4','W5','W6','W7'];
+    keys.forEach(function(k){
+      var nameInput=document.querySelector('[data-wge-key="'+k+'"][data-wge-field="name"]');
+      var dailyInput=document.querySelector('[data-wge-key="'+k+'"][data-wge-field="daily"]');
+      if(nameInput&&dailyInput){
+        var nm=nameInput.value.trim(); var dv=parseInt(dailyInput.value)||0;
+        if(nm){ WAGE_GRADES[k]=WAGE_GRADES[k]||{}; WAGE_GRADES[k].name=nm; WAGE_GRADES[k].daily=dv; }
+      }
+    });
+    saveWageGrades();
+    var tpl=getCurrentTemplate();
+    if(tpl&&tpl.length>0){
+      tpl.forEach(function(p){ if(WAGE_GRADES[p.grade]){ p.daily=WAGE_GRADES[p.grade].daily; } });
+      try{ localStorage.setItem(LS_TROUPE,JSON.stringify(tpl)); }catch(_){}
+      updateTroupeStats(tpl); fillBlocksFromTemplate(tpl);
+    }
+    closeWageGradeEditor();
+    toast('✅ 工资等级已更新并应用到当前模板','success',2500);
+  }
+  function resetWageGrades(){
+    if(!confirm('确定重置为默认工资等级？当前自定义将丢失。')) return;
+    WAGE_GRADES.W1={name:'实习',daily:80};
+    WAGE_GRADES.W2={name:'替补',daily:120};
+    WAGE_GRADES.W3={name:'C角',daily:180};
+    WAGE_GRADES.W4={name:'B角',daily:280};
+    WAGE_GRADES.W5={name:'A角',daily:400};
+    WAGE_GRADES.W6={name:'主B',daily:600};
+    WAGE_GRADES.W7={name:'主A角',daily:800};
+    saveWageGrades();
+    refreshWageGradeEditor();
+    toast('🔄 已重置为默认工资等级','info',2000);
+  }
+  // 6. 整表导出 XLSX（演员表 6 大板块：主场本戏/加演折戏/创意节目/文场/武场/舞台保障 + 天工资商议）
+  function exportFullCastXLSX(e){
+    if(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} }
+    if(!window.XLSX||typeof XLSX.write!=='function'){ toast('⚠️ XLSX 库未加载，无法导出 XLSX','warning',2500); return; }
+    var wb=XLSX.utils.book_new();
+    var sheetsAdded=0;
+    var blocks=[
+      {name:'主场本戏',tableId:'mainOperaTable'},
+      {name:'加演折戏',tableId:'addOperaTable'},
+      {name:'创意节目',bodyId:'bodyCreative'},
+      {name:'文场（管弦）',bodyId:'bodyWenchang'},
+      {name:'武场（打击）',bodyId:'bodyWuchang'},
+      {name:'舞台保障',bodyId:'bodyStage'}
+    ];
+    blocks.forEach(function(b){
+      var data=[];
+      // 收集表头
+      var thead=null, tbody=null;
+      if(b.tableId){ var t=$(b.tableId); if(t){ thead=t.querySelector('thead'); tbody=t.querySelector('tbody'); } }
+      else if(b.bodyId){ tbody=$(b.bodyId); }
+      if(!tbody) return;
+      var rows=tbody.querySelectorAll('tr');
+      if(rows.length===0) return;
+      // 表头
+      if(thead){
+        var ths=thead.querySelectorAll('th');
+        var hdr=[]; ths.forEach(function(th){ hdr.push(th.textContent.replace(/\s+/g,' ').trim()); });
+        if(hdr.length>0) data.push(hdr);
+      }
+      // 数据行
+      rows.forEach(function(r){
+        var cells=r.querySelectorAll('td');
+        var row=[];
+        cells.forEach(function(c){
+          var inp=c.querySelector('input,textarea');
+          row.push(inp?(inp.value||''):c.textContent.replace(/\s+/g,' ').trim());
+        });
+        if(row.some(function(v){return v!=='';})) data.push(row);
+      });
+      if(data.length>0){
+        var ws=XLSX.utils.aoa_to_sheet(data);
+        ws['!cols']=data[0].map(function(){ return {wch:14}; });
+        ws['!freeze']={left:0,top:1};
+        XLSX.utils.book_append_sheet(wb,ws,b.name);
+        sheetsAdded++;
+      }
+    });
+    // 工资预算 Sheet
+    var tpl=getCurrentTemplate();
+    if(tpl&&tpl.length>0){
+      var days=parseInt($('tpDays')?$('tpDays').value:3)||3;
+      var wageData=[['序号','姓名','组别','行当/岗位','工资等级','日薪(元)',days+'天合计(元)']];
+      var total=0;
+      tpl.forEach(function(p,i){
+        var sub=(p.daily||0)*days; total+=sub;
+        var catName={actor:'演员组',band:'乐队组',front:'前场',costume:'服装化妆',electric:'电工'}[p.cat]||p.cat;
+        wageData.push([i+1,p.name,catName,p.role,WAGE_GRADES[p.grade]?WAGE_GRADES[p.grade].name:p.grade,p.daily,sub]);
+      });
+      wageData.push(['','合计','','','','',total]);
+      var wsWage=XLSX.utils.aoa_to_sheet(wageData);
+      wsWage['!cols']=[{wch:6},{wch:12},{wch:12},{wch:14},{wch:12},{wch:10},{wch:14}];
+      wsWage['!freeze']={left:0,top:1};
+      XLSX.utils.book_append_sheet(wb,wsWage,'天工资商议');
+      sheetsAdded++;
+    }
+    if(sheetsAdded===0){ toast('⚠️ 当前演员表无数据可导出','warning',2000); return; }
+    var fname='秦安县秦剧团-演出演员表整表-'+new Date().toISOString().slice(0,10)+'.xlsx';
+    XLSX.writeFile(wb,fname);
+    toast('📊 已导出整表XLSX：'+fname+'（共 '+sheetsAdded+' 个 Sheet）','success',3500);
+  }
+  // 7. 勾选板块导出 XLSX（按打印范围复选框 data-ps-cb-sec 仅导出勾选的板块）
+  function exportSelectedXLSX(e){
+    if(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} }
+    if(!window.XLSX||typeof XLSX.write!=='function'){ toast('⚠️ XLSX 库未加载，无法导出','warning',2500); return; }
+    var cbs=document.querySelectorAll('input[type="checkbox"][data-ps-cb-sec]');
+    var checked=[].filter.call(cbs,function(c){return c.checked;});
+    if(checked.length===0){ toast('⚠️ 请先勾选要导出的板块','warning',2000); return; }
+    // 板块映射：data-ps-cb-sec 值 → 表格ID/BodyID + Sheet 名称
+    var SECTION_MAP={
+      mainOpera:{name:'主场本戏',tableId:'mainOperaTable'},
+      addOpera:{name:'加演折戏',tableId:'addOperaTable'},
+      creative:{name:'角色行当',bodyId:'bodyCreative'},
+      wenchang:{name:'文场（管弦）',bodyId:'bodyWenchang'},
+      wuchang:{name:'武场（打击）',bodyId:'bodyWuchang'},
+      stage:{name:'舞台保障',bodyId:'bodyStage'},
+      program:{name:'创意节目',bodyId:'bodyProgram'}
+    };
+    var wb=XLSX.utils.book_new();
+    var sheetsAdded=0;
+    checked.forEach(function(cb){
+      var sec=cb.getAttribute('data-ps-cb-sec');
+      var cfg=SECTION_MAP[sec];
+      if(!cfg) return;
+      var data=[];
+      var thead=null, tbody=null;
+      if(cfg.tableId){ var t=$(cfg.tableId); if(t){ thead=t.querySelector('thead'); tbody=t.querySelector('tbody'); } }
+      else if(cfg.bodyId){ tbody=$(cfg.bodyId); }
+      if(!tbody) return;
+      var rows=tbody.querySelectorAll('tr');
+      if(rows.length===0) return;
+      if(thead){
+        var ths=thead.querySelectorAll('th');
+        var hdr=[]; ths.forEach(function(th){ hdr.push(th.textContent.replace(/\s+/g,' ').trim()); });
+        if(hdr.length>0) data.push(hdr);
+      }
+      rows.forEach(function(r){
+        var cells=r.querySelectorAll('td');
+        var row=[];
+        cells.forEach(function(c){
+          var inp=c.querySelector('input,textarea');
+          row.push(inp?(inp.value||''):c.textContent.replace(/\s+/g,' ').trim());
+        });
+        if(row.some(function(v){return v!=='';})) data.push(row);
+      });
+      if(data.length>0){
+        var ws=XLSX.utils.aoa_to_sheet(data);
+        ws['!cols']=data[0].map(function(){ return {wch:14}; });
+        ws['!freeze']={left:0,top:1};
+        XLSX.utils.book_append_sheet(wb,ws,cfg.name);
+        sheetsAdded++;
+      }
+    });
+    if(sheetsAdded===0){ toast('⚠️ 勾选的板块无数据可导出','warning',2000); return; }
+    var fname='秦安县秦剧团-演员表勾选板块-'+new Date().toISOString().slice(0,10)+'.xlsx';
+    XLSX.writeFile(wb,fname);
+    toast('📊 已导出勾选板块XLSX：'+fname+'（共 '+sheetsAdded+' 个 Sheet）','success',3500);
+  }
   function bindAll(){
     var btnNew=$('csBtnNew'); var btnSaveAs=$('csBtnSaveAs'); var btnDelete=$('csBtnDelete'); var selSheet=$('csSheetSelect');
     if(btnNew&&!btnNew.__csBound){ btnNew.__csBound=1; btnNew.__superPatchBound=1; btnNew.addEventListener('click',newSheet,true); }
@@ -3688,31 +4718,58 @@ function __pLog(module,event,extra){
     if(btnDelete&&!btnDelete.__csBound){ btnDelete.__csBound=1; btnDelete.__superPatchBound=1; btnDelete.addEventListener('click',deleteSheet,true); }
     if(selSheet&&!selSheet.__csBound){ selSheet.__csBound=1; selSheet.addEventListener('change',function(){ switchSheet(this.value); }); }
     var btnSeed=$('tpBtnSeed'); var btnLoad=$('tpBtnLoad'); var btnSync=$('tpBtnSync2Cast'); var btnWagePrint=$('tpBtnWagePrint'); var btnWage2Fin=$('tpBtnWage2Fin'); var btnCustom=$('tpBtnCustom');
-    if(btnSeed&&!btnSeed.__csBound){ btnSeed.__csBound=1; btnSeed.__superPatchBound=1; btnSeed.addEventListener('click',seed36,true); }
+    if(btnSeed&&!btnSeed.__csBound){ btnSeed.__csBound=1; btnSeed.__superPatchBound=1; btnSeed.addEventListener('click',openSeedPreview,true); }
+    // v20260918：样板预览弹窗按钮（确认使用/取消/关闭）
+    bindSeedPreview();
+    var seedOk=$('seedPrevOk'), seedCancel=$('seedPrevCancel'), seedCloseB=$('seedPrevClose');
+    if(seedOk&&!seedOk.__csBound){ seedOk.__csBound=1; seedOk.__superPatchBound=1; seedOk.addEventListener('click',confirmSeedPreview,true); }
+    if(seedCancel&&!seedCancel.__csBound){ seedCancel.__csBound=1; seedCancel.__superPatchBound=1; seedCancel.addEventListener('click',closeSeedPreview,true); }
+    if(seedCloseB&&!seedCloseB.__csBound){ seedCloseB.__csBound=1; seedCloseB.__superPatchBound=1; seedCloseB.addEventListener('click',closeSeedPreview,true); }
     if(btnCustom&&!btnCustom.__csBound){ btnCustom.__csBound=1; btnCustom.__superPatchBound=1; btnCustom.addEventListener('click',openCustomGroupModal,true); }
     if(btnLoad&&!btnLoad.__csBound){ btnLoad.__csBound=1; btnLoad.__superPatchBound=1; btnLoad.addEventListener('click',loadTemplate,true); }
     if(btnSync&&!btnSync.__csBound){ btnSync.__csBound=1; btnSync.__superPatchBound=1; btnSync.addEventListener('click',syncToCast,true); }
     if(btnWagePrint&&!btnWagePrint.__csBound){ btnWagePrint.__csBound=1; btnWagePrint.__superPatchBound=1; btnWagePrint.addEventListener('click',printWageSheet,true); }
-    if(btnWage2Fin&&!btnWage2Fin.__csBound){ btnWage2Fin.__csBound=1; btnWage2Fin.__superPatchBound=1; btnWage2Fin.addEventListener('click',function(){ toast('📒 已生成财务待发工资草稿（演示模式）','info',2500); },true); }
+    if(btnWage2Fin&&!btnWage2Fin.__csBound){ btnWage2Fin.__csBound=1; btnWage2Fin.__superPatchBound=1; btnWage2Fin.addEventListener('click',wage2Finance,true); }
     var daysInput=$('tpDays'); if(daysInput&&!daysInput.__csBound){ daysInput.__csBound=1; daysInput.addEventListener('input',function(){ var tpl=getCurrentTemplate(); if(tpl) updateTroupeStats(tpl); }); }
     // 打印范围选择按钮
     var psSelAll=$('psSelectAll'); var psClrAll=$('psClearAll'); var psOperaOnly=$('psSelectOperaOnly');
-    var psPrint=$('btnPrintSelected')||$('btnPrintSelected2'); var psXlsx=$('btnXlsxSelected');
-    function __getPsCbs(){ return document.querySelectorAll('input[type="checkbox"][data-ps-cb-sec]'); }
     if(psSelAll&&!psSelAll.__csBound){ psSelAll.__csBound=1; psSelAll.__superPatchBound=1; psSelAll.addEventListener('click',function(){ __getPsCbs().forEach(function(c){ c.checked=true; }); toast('☑️ 已全选所有打印板块','success',1500); },true); }
     if(psClrAll&&!psClrAll.__csBound){ psClrAll.__csBound=1; psClrAll.__superPatchBound=1; psClrAll.addEventListener('click',function(){ __getPsCbs().forEach(function(c){ c.checked=false; }); toast('❌ 已清空所有勾选','info',1500); },true); }
     if(psOperaOnly&&!psOperaOnly.__csBound){ psOperaOnly.__csBound=1; psOperaOnly.__superPatchBound=1; psOperaOnly.addEventListener('click',function(){ __getPsCbs().forEach(function(c){ c.checked=(c.getAttribute('data-ps-cb-sec')==='mainOpera'||c.getAttribute('data-ps-cb-sec')==='addOpera'); }); toast('🎭 已仅选场次剧目板块','success',1500); },true); }
-    if(psPrint&&!psPrint.__csBound){ psPrint.__csBound=1; psPrint.__superPatchBound=1; psPrint.addEventListener('click',function(){ var cbs=__getPsCbs(); var checked=[].filter.call(cbs,function(c){return c.checked;}); if(checked.length===0){ toast('⚠️ 请先勾选要打印的板块','warning',2000); return; } toast('🖨 正在打印 '+checked.length+' 个勾选板块...','info',1500); setTimeout(function(){ try{ window.print(); }catch(_e){ toast('⚠️ 打印调用失败，请用 Ctrl+P 手动打印','warning',2500); } },400); },true); }
-    if(psXlsx&&!psXlsx.__csBound){ psXlsx.__csBound=1; psXlsx.__superPatchBound=1; psXlsx.addEventListener('click',function(){ var cbs=__getPsCbs(); var checked=[].filter.call(cbs,function(c){return c.checked;}); if(checked.length===0){ toast('⚠️ 请先勾选要导出的板块','warning',2000); return; } toast('📊 正在导出 '+checked.length+' 个板块的 XLSX（演示模式：真实环境将生成多Sheet Excel）','info',2500); },true); }
-    // 工资表操作按钮
+    // v20260908q：btnPrintSelected（范围控制条）与 btnPrintSelected2（顶部工具栏「🎯按勾选打印」）两个都要绑，原先 || 只绑第一个导致工具栏按钮无反应
+    var psPrintBtns=[$('btnPrintSelected'),$('btnPrintSelected2')].filter(Boolean); var psXlsx=$('btnXlsxSelected');
+    function __getPsCbs(){ return document.querySelectorAll('input[type="checkbox"][data-ps-cb-sec]'); }
+    function __doPrintSelected(e){
+      try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
+      var cbs=__getPsCbs(); var checked=[].filter.call(cbs,function(c){return c.checked;});
+      if(checked.length===0){ toast('⚠️ 请先勾选要打印的板块（各板块标题左侧「打印此板块」复选框）','warning',2600); return; }
+      toast('🖨 正在打印 '+checked.length+' 个勾选板块...','info',1500);
+      setTimeout(function(){ try{ window.print(); }catch(_e){ toast('⚠️ 打印调用失败，请用 Ctrl+P 手动打印','warning',2500); } },400);
+    }
+    psPrintBtns.forEach(function(pb){ if(pb&&!pb.__csBound){ pb.__csBound=1; pb.__superPatchBound=1; pb.__ts3Done=1; pb.addEventListener('click',__doPrintSelected,true); } });
+    if(psXlsx&&!psXlsx.__csBound){ psXlsx.__csBound=1; psXlsx.__superPatchBound=1; psXlsx.addEventListener('click',exportSelectedXLSX,true); }
+    // 工资表操作按钮（真实功能实现）
     var tpWgCsv=$('tpBtnWageCsv'), tpWgXlsx=$('tpBtnWageXlsx'), tpSaveAs=$('tpBtnSaveAs'), tpManage=$('tpBtnManage'), tpWgEdit=$('tpBtnWgEdit'), btnXlsxAll=$('btnXlsxAll');
-    if(tpWgCsv&&!tpWgCsv.__csBound){ tpWgCsv.__csBound=1; tpWgCsv.__superPatchBound=1; tpWgCsv.addEventListener('click',function(){ toast('📊 工资表 CSV 导出中（演示模式）','info',2000); },true); }
-    if(tpWgXlsx&&!tpWgXlsx.__csBound){ tpWgXlsx.__csBound=1; tpWgXlsx.__superPatchBound=1; tpWgXlsx.addEventListener('click',function(){ toast('📊 工资表 XLSX 导出中（演示模式）','info',2000); },true); }
-    if(tpSaveAs&&!tpSaveAs.__csBound){ tpSaveAs.__csBound=1; tpSaveAs.__superPatchBound=1; tpSaveAs.addEventListener('click',function(){ var n=prompt('请输入存档名称：','演出演员表_'+new Date().toISOString().slice(0,10)); if(n){ toast('💾 已另存为：'+n+'（演示模式）','success',2000); } },true); }
-    if(tpManage&&!tpManage.__csBound){ tpManage.__csBound=1; tpManage.__superPatchBound=1; tpManage.addEventListener('click',function(){ toast('📋 存档管理面板（演示模式）','info',2000); },true); }
-    if(tpWgEdit&&!tpWgEdit.__csBound){ tpWgEdit.__csBound=1; tpWgEdit.__superPatchBound=1; tpWgEdit.addEventListener('click',function(){ toast('✏️ 工资表编辑（演示模式：真实环境将弹出工资表编辑器）','info',2000); },true); }
-    if(btnXlsxAll&&!btnXlsxAll.__csBound){ btnXlsxAll.__csBound=1; btnXlsxAll.__superPatchBound=1; btnXlsxAll.addEventListener('click',function(){ toast('📊 全部演出演员表 XLSX 导出中（演示模式）','info',2000); },true); }
+    if(tpWgCsv&&!tpWgCsv.__csBound){ tpWgCsv.__csBound=1; tpWgCsv.__superPatchBound=1; tpWgCsv.addEventListener('click',exportWageCSV,true); }
+    if(tpWgXlsx&&!tpWgXlsx.__csBound){ tpWgXlsx.__csBound=1; tpWgXlsx.__superPatchBound=1; tpWgXlsx.addEventListener('click',exportWageXLSX,true); }
+    if(tpSaveAs&&!tpSaveAs.__csBound){ tpSaveAs.__csBound=1; tpSaveAs.__superPatchBound=1; tpSaveAs.addEventListener('click',saveAsTroupeTemplate,true); }
+    if(tpManage&&!tpManage.__csBound){ tpManage.__csBound=1; tpManage.__superPatchBound=1; tpManage.addEventListener('click',openTroupeTemplateManager,true); }
+    if(tpWgEdit&&!tpWgEdit.__csBound){ tpWgEdit.__csBound=1; tpWgEdit.__superPatchBound=1; tpWgEdit.addEventListener('click',openWageGradeEditor,true); }
+    if(btnXlsxAll&&!btnXlsxAll.__csBound){ btnXlsxAll.__csBound=1; btnXlsxAll.__superPatchBound=1; btnXlsxAll.addEventListener('click',exportFullCastXLSX,true); }
+    // 工资等级编辑器模态框按钮
+    var wgeSave=$('wgeSaveBtn'), wgeReset=$('wgeResetBtn'), wgeCancel=$('wgeCancelBtn'), wgeClose=$('wgeCloseBtn');
+    if(wgeSave&&!wgeSave.__csBound){ wgeSave.__csBound=1; wgeSave.__superPatchBound=1; wgeSave.addEventListener('click',saveWageGradeEditor,true); }
+    if(wgeReset&&!wgeReset.__csBound){ wgeReset.__csBound=1; wgeReset.__superPatchBound=1; wgeReset.addEventListener('click',resetWageGrades,true); }
+    if(wgeCancel&&!wgeCancel.__csBound){ wgeCancel.__csBound=1; wgeCancel.__superPatchBound=1; wgeCancel.addEventListener('click',closeWageGradeEditor,true); }
+    if(wgeClose&&!wgeClose.__csBound){ wgeClose.__csBound=1; wgeClose.__superPatchBound=1; wgeClose.addEventListener('click',closeWageGradeEditor,true); }
+    // 模板管理模态框按钮
+    var ttClose=$('ttCloseBtn'), ttCancel=$('ttCancelBtn');
+    if(ttClose&&!ttClose.__csBound){ ttClose.__csBound=1; ttClose.__superPatchBound=1; ttClose.addEventListener('click',closeTroupeTemplateManager,true); }
+    if(ttCancel&&!ttCancel.__csBound){ ttCancel.__csBound=1; ttCancel.__superPatchBound=1; ttCancel.addEventListener('click',closeTroupeTemplateManager,true); }
     refreshSheetSelect(); var saved=getCurrentTemplate(); if(saved&&saved.length>0){ updateTroupeStats(saved); }
+    // 启动时加载自定义工资等级 + 异步拉取演职人员
+    loadWageGrades();
+    loadPerformersFromAPI();
     console.log('[cast-sheet-fix] buttons bound, template:', saved?saved.length+'人':'none');
   }
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ setTimeout(bindAll,300); }); } else { setTimeout(bindAll,300); }
@@ -3794,14 +4851,99 @@ function __pLog(module,event,extra){
     </div>
   </div>
 </div>
-<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+<!-- ===== 工资等级编辑器模态框 ===== -->
+<div id="wageGradeEditorModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:min(560px,94vw);max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+      <h3 style="margin:0;font-size:1.15rem;font-weight:700;color:#0f4c81;">🎚️ 工资等级编辑器（W1~W7）</h3>
+      <button type="button" id="wgeCloseBtn" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;line-height:1;">✕</button>
+    </div>
+    <div style="padding:16px 24px;">
+      <div style="margin-bottom:14px;padding:10px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:0.85rem;color:#1e40af;">
+        💡 7 档天工资：W1 实习 ~ W7 主A角。修改后保存会即时应用到当前组团模板的日薪，并存储到 localStorage 持久化。
+      </div>
+      <div id="wgeBody"></div>
+    </div>
+    <div style="padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" id="wgeResetBtn" style="padding:8px 16px;border:1.5px solid #cbd5e1;background:#fff;color:#475569;border-radius:8px;cursor:pointer;font-weight:600;">🔄 重置默认</button>
+      <button type="button" id="wgeCancelBtn" style="padding:8px 16px;border:1.5px solid #cbd5e1;background:#fff;color:#475569;border-radius:8px;cursor:pointer;font-weight:600;">取消</button>
+      <button type="button" id="wgeSaveBtn" style="padding:8px 20px;border:none;background:linear-gradient(135deg,#0f4c81,#1d6fb8);color:#fff;border-radius:8px;cursor:pointer;font-weight:700;">💾 保存并应用</button>
+    </div>
+  </div>
+</div>
+<!-- ===== 组团模板管理模态框 ===== -->
+<!-- v20260918：36人标配样板 预览修改弹窗（先核对/编辑人员配置，确认后才应用到板块） -->
+<div id="seedPreviewModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:min(900px,96vw);max-height:92vh;display:flex;flex-direction:column;">
+    <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+      <h3 style="margin:0;font-size:1.15rem;font-weight:700;color:#0f4c81;">✨ 36人标配样板 · 预览与修改</h3>
+      <button type="button" id="seedPrevClose" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;line-height:1;">✕</button>
+    </div>
+    <div style="padding:12px 24px 0;overflow-y:auto;">
+      <div style="margin-bottom:10px;padding:10px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:0.85rem;color:#1e40af;">
+        💡 请先核对人员配置：可直接编辑姓名/角色岗位、切换工资档位（日薪自动带出）、删除不需要的行；确认无误后再点「✅ 使用此样板」填入各板块。
+      </div>
+      <div id="seedPrevStats" style="margin-bottom:10px;font-size:0.9rem;font-weight:600;color:#0f4c81;"></div>
+      <div style="max-height:54vh;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;">
+        <table class="cast-table" style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+          <thead><tr style="background:#f8fafc;position:sticky;top:0;">
+            <th style="width:44px;padding:8px;">#</th>
+            <th style="width:92px;padding:8px;">组别</th>
+            <th style="padding:8px;">姓名</th>
+            <th style="padding:8px;">角色/岗位</th>
+            <th style="width:200px;padding:8px;">工资档位</th>
+            <th style="width:88px;padding:8px;">日薪</th>
+            <th style="width:56px;padding:8px;">操作</th>
+          </tr></thead>
+          <tbody id="seedPrevBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div style="padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" id="seedPrevCancel" style="padding:8px 18px;border:1.5px solid #cbd5e1;background:#fff;color:#475569;border-radius:8px;cursor:pointer;font-weight:600;">取消</button>
+      <button type="button" id="seedPrevOk" style="padding:8px 18px;border:none;background:#0f4c81;color:#fff;border-radius:8px;cursor:pointer;font-weight:700;">✅ 使用此样板</button>
+    </div>
+  </div>
+</div>
+<div id="troupeTemplateManagerModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:min(640px,94vw);max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+      <h3 style="margin:0;font-size:1.15rem;font-weight:700;color:#0f4c81;">📋 组团模板管理</h3>
+      <button type="button" id="ttCloseBtn" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;line-height:1;">✕</button>
+    </div>
+    <div style="padding:16px 24px;">
+      <div style="margin-bottom:14px;padding:10px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:0.85rem;color:#1e40af;">
+        💡 已保存的组团模板（载入会覆盖当前模板；导出 XLSX 会即时下载工资预算单；删除不可撤销）。
+      </div>
+      <div id="ttList"></div>
+    </div>
+    <div style="padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" id="ttCancelBtn" style="padding:8px 18px;border:1.5px solid #cbd5e1;background:#fff;color:#475569;border-radius:8px;cursor:pointer;font-weight:600;">关闭</button>
+    </div>
+  </div>
+</div>
+<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停模板弹窗（剧库 Picker opModal、演员 Picker cpModal、追加行/删除行/选角/存档等全部本地功能；含动态重绘行 MutationObserver 补标） */
 (function(){
+  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
+  var SEL = 'button[id], a[id], [data-action][id], .btn[id], .btn-action[id], button, a.btn, .btn, .btn-action, .tb-btn, .ps-btn, .btn-add-row, .btn-del-row, [role="button"], [data-action], [data-add], [data-del], [data-pick-cast], [data-opera-csv], [data-opera-cardprint], [data-opera-del], [data-del-role], [data-add-role]';
   function __markBound(){
-    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
-    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+    try{
+      var els=document.querySelectorAll(SEL);
+      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
+    }catch(_){}
   }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
-  else { __markBound(); setTimeout(__markBound,500); }
+  function __boot(){
+    __markBound();
+    try{
+      if(window.MutationObserver){
+        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
+        mo.observe(document.documentElement,{childList:true,subtree:true});
+      }
+    }catch(_){}
+    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
+  else { __boot(); }
 })();</script>
 </body>
 </html>

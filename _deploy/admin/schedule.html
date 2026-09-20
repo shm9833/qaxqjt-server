@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <base href="/admin/">
   <meta charset="UTF-8">
   <!-- =========================================================== -->
   <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
@@ -18,9 +19,7 @@
     }
     if(bad){
       ["qaxqjt_admin_session","admin_session","qaxqjt_admin_sess_v2","admin_sess_v2","qaxqjt_admin_remember","qaxqjt_admin_token","qaxqjt_admin_info","qaxqjt_admin_permissions","qaxqjt_auth_permissions_v1"].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
-      var u=location.href, i=u.lastIndexOf("/");
-      var base= (i>=0)? u.substring(0,i+1) : "./";
-      location.replace(base + L);
+      location.replace(L);
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
 
@@ -41,7 +40,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>演出档期排班管理 - 秦安县秦剧团云端预约系统后台管理 | {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260906">
+  <link rel="stylesheet" href="../css/style.css?v=20260919c">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -732,7 +731,7 @@
           <a href="schedule.html" data-role-level="800" class="admin-menu-item active admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
-            <span class="menu-badge">8</span>
+            
           </a>
           <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
@@ -742,7 +741,7 @@
           <a href="orders.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📋</span>
             <span>订单预约管理</span>
-            <span class="menu-badge">5</span>
+            
           </a>
           <a href="operas.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
@@ -760,7 +759,7 @@
           <a href="inventory.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📦</span>
             <span>道具服装库存</span>
-            <span class="menu-badge">!</span>
+            
           </a>
           <a href="finance.html" data-role-level="500" class="admin-menu-item">
             <span class="menu-icon">💰</span>
@@ -1163,7 +1162,7 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260908n"></script>
+<script src="../js/app.js?v=20260920a"></script>
 <script>/* 生产空白态守卫配置 v20260908g：只清静态演示节点，API 渲染的真实排期（sched-live 标记）不误删 */
 window.__ADMIN_BLANK_CFG__ = [
   { sel: '#scheduleListTbody', as: 'tbody', cols: 11, msg: '暂无演出排期，点击「➕ 新增演出排期」创建真实档期' },
@@ -1194,7 +1193,7 @@ window.__ADMIN_BLANK_CFG__ = [
   } }
 ];
 </script>
-<script src="../js/admin-blank.js?v=20260906g"></script>
+<script src="../js/admin-blank.js?v=20260919a"></script>
 
   <script src="../js/pagination.js?v=20260908p"></script>
   <script>
@@ -2161,7 +2160,7 @@ window.__ADMIN_BLANK_CFG__ = [
         <div id="schedCastBox" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
           <!-- 每个行当一张卡：多选checkbox+每行人员备注 -->
         </div>
-        <script src="../js/roster-cast.js?v=20260906g"></script>
+        <script src="../js/roster-cast.js?v=20260919a"></script>
         <script>
         (function(){
           // 行当分组固定；人员从真实花名册(/v1/performers)动态获取（v20260906g 生产空白态）

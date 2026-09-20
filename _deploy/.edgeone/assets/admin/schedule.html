@@ -41,7 +41,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>演出档期排班管理 - 秦安县秦剧团云端预约系统后台管理 | {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260906">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -536,14 +536,7 @@
 .admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
   content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
 }
-/* ====== 空卡片修复20260825：隐藏多余分页栏 + 约束表格高度 ====== */
-.pagination-bar, .pagination-toolbar, [class*="pagination-bar"], [class*="pg-toolbar"] {
-  display: none !important;
-  max-height: 0 !important;
-  overflow: hidden !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
+/* ====== 20260906 修复：真分页条恢复显示（QinPagination 渲染），仅保留表格高度约束 ====== */
 .table-wrapper, .table-wrap, .table-container, .data-table-container {
   max-height: 400px !important;
   overflow-y: auto !important;
@@ -995,24 +988,7 @@
               </div>
             </div>
 
-            <div class="schedule-alert danger">
-              <div class="alert-icon">⚠️</div>
-              <div class="alert-content">
-                <strong>档期冲突预警：</strong>
-                检测到 1 处档期冲突 —— {year}年7月15日，企业开业庆典《三滴血》与千户乡庙会连台排期存在人员重叠风险，建议立即处理。
-              </div>
-              <div class="alert-actions">
-                <button class="btn btn-sm" style="background:#b91c1c;color:#fff;">🚨 查看冲突</button>
-              </div>
-            </div>
-
-            <div class="schedule-alert info">
-              <div class="alert-icon">💡</div>
-              <div class="alert-content">
-                <strong>排期提示：</strong>
-                {year}年7月已排 12 场演出，累计 38 场次。建议合理安排演职人员轮休，避免高强度连台演出造成疲劳。
-              </div>
-            </div>
+            <!-- v20260907k：删除静态冲突预警和排期提示弹框，由真实数据动态生成 -->
 
             <div class="calendar-wrapper" id="monthContainer">
               <div class="calendar-header">
@@ -1040,259 +1016,7 @@
                   </tr>
                 </thead>
                 <tbody data-paginate="list" data-page-size="10">
-                  <tr>
-                    <td>
-                      <div class="calendar-day empty">
-                        <div class="day-number">29</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day empty">
-                        <div class="day-number">30</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">1</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">2</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">3</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">4</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day weekend">
-                        <div class="day-number">5</div>
-                        <span class="day-count-badge">1</span>
-                        <div class="day-events">
-                          <div class="mini-event type-miaohui" title="陇城镇庙会《火焰驹》· 已确认">
-                            🏮 陇城庙会《火焰驹》
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">6</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">7</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">8</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">9</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">10</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">11</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day weekend">
-                        <div class="day-number">12</div>
-                        <span class="day-count-badge">1</span>
-                        <div class="day-events">
-                          <div class="mini-event type-huimin" title="兴国镇惠民巡演 · 待确认">
-                            🎪 兴国镇惠民巡演
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">13</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">14</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day today">
-                        <div class="day-number">15</div>
-                        <span class="day-count-badge" style="background:#dc3545;">2</span>
-                        <div class="day-events">
-                          <div class="mini-event type-shangyan conflict" title="企业开业庆典《三滴血》· 已确认【冲突】">
-                            🎊 开业《三滴血》⚠️
-                          </div>
-                          <div class="mini-event type-miaohui conflict" title="千户乡庙会连台 · 已确认【冲突】">
-                            🏮 千户庙会⚠️
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">16</div>
-                        <div class="day-count-badge">1</div>
-                        <div class="day-events">
-                          <div class="mini-event type-miaohui" title="千户乡庙会连台第2天 · 已确认">
-                            🏮 千户庙会 第2天
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">17</div>
-                        <div class="day-count-badge">1</div>
-                        <div class="day-events">
-                          <div class="mini-event type-miaohui" title="千户乡庙会连台第3天 · 已确认">
-                            🏮 千户庙会 第3天
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">18</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day weekend">
-                        <div class="day-number">19</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">20</div>
-                        <div class="day-count-badge">1</div>
-                        <div class="day-events">
-                          <div class="mini-event type-jieqing" title="节庆专场活动 · 筹备中">
-                            🎉 节庆专场排期
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">21</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">22</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">23</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">24</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">25</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day weekend">
-                        <div class="day-number">26</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">27</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">28</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">29</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">30</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day">
-                        <div class="day-number">31</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day empty">
-                        <div class="day-number">1</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="calendar-day empty weekend">
-                        <div class="day-number">2</div>
-                        <div class="day-events"></div>
-                      </div>
-                    </td>
-                  </tr>
+                  <!-- v20260907k：日历格子由 __renderCalendar() 动态渲染 -->
                 </tbody>
               </table>
               <div class="legend-bar">
@@ -1300,7 +1024,6 @@
                   <span class="legend-dot" style="background:linear-gradient(135deg,#8B0000,#A52A2A);"></span>
                   <span>🏮 庙会演出</span>
                 </div>
-                <div class="legend-item">
                   <span class="legend-dot" style="background:linear-gradient(135deg,#28a745,#20c997);"></span>
                   <span>🎪 惠民巡演</span>
                 </div>
@@ -1338,60 +1061,10 @@
               </div>
               <div style="padding:18px 22px;">
                 <div id="weekDayHeaders" style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:12px;">
-                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周一 7/13</div>
-                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周二 7/14</div>
-                  <div style="text-align:center;padding:8px 6px;background:rgba(220,53,69,0.08);border-radius:8px;font-weight:600;color:#b91c1c;border:1px dashed #fca5a5;">周三 7/15 ⚠️</div>
-                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周四 7/16</div>
-                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周五 7/17</div>
-                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周六 7/18</div>
-                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary);">周日 7/19</div>
+                  <!-- v20260907k：周视图表头和排期项由真实数据动态渲染 -->
                 </div>
-                <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;min-height:320px;">
-                  <div style="padding:10px;border:1px solid var(--border-light);border-radius:10px;background:#fff;">
-                    <div style="font-size:0.72rem;color:var(--text-light);margin-bottom:6px;">上午</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:8px 0 6px;">下午</div>
-                    <div class="mini-event type-huimin" style="font-size:0.7rem;margin-bottom:4px;">🎪 惠民巡演</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:8px 0 6px;">晚上</div>
-                  </div>
-                  <div style="padding:10px;border:1px solid var(--border-light);border-radius:10px;background:#fff;">
-                    <div style="font-size:0.72rem;color:var(--text-light);margin-bottom:6px;">上午</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:8px 0 6px;">下午</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:8px 0 6px;">晚上</div>
-                    <div class="mini-event type-jieqing" style="font-size:0.7rem;">🎉 节庆彩排</div>
-                  </div>
-                  <div style="padding:10px;border:1.5px solid #fca5a5;border-radius:10px;background:rgba(220,53,69,0.03);">
-                    <div style="font-size:0.72rem;color:#b91c1c;font-weight:600;margin-bottom:4px;">🚨 档期冲突</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:4px 0 4px;">下午</div>
-                    <div class="mini-event conflict" style="font-size:0.68rem;margin-bottom:3px;">🎊《三滴血》商演</div>
-                    <div class="mini-event conflict" style="font-size:0.68rem;">🏮 千户庙会连台</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:8px 0 4px;">晚上</div>
-                    <div class="mini-event type-miaohui" style="font-size:0.68rem;">🏮 庙会夜场</div>
-                  </div>
-                  <div style="padding:10px;border:1px solid var(--border-light);border-radius:10px;background:#fff;">
-                    <div style="font-size:0.72rem;color:var(--text-light);margin-bottom:6px;">上午</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:8px 0 6px;">下午</div>
-                    <div class="mini-event type-miaohui" style="font-size:0.7rem;margin-bottom:4px;">🏮 千户庙会</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:8px 0 6px;">晚上</div>
-                    <div class="mini-event type-miaohui" style="font-size:0.7rem;">🏮 庙会连台</div>
-                  </div>
-                  <div style="padding:10px;border:1px solid var(--border-light);border-radius:10px;background:#fff;">
-                    <div style="font-size:0.72rem;color:var(--text-light);margin-bottom:6px;">上午</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:8px 0 6px;">下午</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:8px 0 6px;">晚上</div>
-                  </div>
-                  <div style="padding:10px;border:1px solid var(--border-light);border-radius:10px;background:#fff;">
-                    <div style="font-size:0.72rem;color:var(--text-light);margin-bottom:6px;">上午</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:8px 0 6px;">下午</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:8px 0 6px;">晚上</div>
-                    <div class="mini-event type-shangyan" style="font-size:0.7rem;">🎊 商演彩排</div>
-                  </div>
-                  <div style="padding:10px;border:1px solid var(--border-light);border-radius:10px;background:#fff;">
-                    <div style="font-size:0.72rem;color:var(--text-light);margin-bottom:6px;">上午</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:8px 0 6px;">下午</div>
-                    <div class="mini-event type-jieqing" style="font-size:0.7rem;margin-bottom:4px;">🎉 文化节专场</div>
-                    <div style="font-size:0.72rem;color:var(--text-light);margin:8px 0 6px;">晚上</div>
-                    <div class="mini-event type-jieqing" style="font-size:0.7rem;">🎉 文化节夜场</div>
-                  </div>
+                <div id="weekDayGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;min-height:320px;">
+                  <!-- v20260907k：周视图排期项由真实数据动态渲染 -->
                 </div>
               </div>
               <div class="legend-bar">
@@ -1416,78 +1089,7 @@
               </div>
               <div style="padding:16px 22px;">
                 <div style="display:grid;gap:10px;">
-                  <div style="padding:14px 16px;border-left:4px solid #8B0000;border-radius:8px;background:linear-gradient(90deg,rgba(139,0,0,0.04),#fff);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                      <span style="display:inline-block;padding:4px 10px;background:#8B0000;color:#fff;border-radius:6px;font-size:0.8rem;font-weight:600;">07-05 周六</span>
-                      <span class="badge badge-danger">🏮 庙会</span>
-                      <strong style="font-size:0.95rem;">《火焰驹》陇城镇庙会</strong>
-                      <span style="color:var(--text-light);font-size:0.82rem;">午场+晚场 · 陇城镇文化广场</span>
-                    </div>
-                    <div style="display:flex;gap:6px;align-items:center;">
-                      <span class="badge badge-success">✓ 已确认</span>
-                      <span style="font-size:0.8rem;color:var(--text-light);">派工 18人</span>
-                    </div>
-                  </div>
-                  <div style="padding:14px 16px;border-left:4px solid #28a745;border-radius:8px;background:linear-gradient(90deg,rgba(40,167,69,0.04),#fff);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                      <span style="display:inline-block;padding:4px 10px;background:#28a745;color:#fff;border-radius:6px;font-size:0.8rem;font-weight:600;">07-12 周六</span>
-                      <span class="badge badge-success">🎪 惠民</span>
-                      <strong style="font-size:0.95rem;">惠民巡演专场 · 兴国镇</strong>
-                      <span style="color:var(--text-light);font-size:0.82rem;">1场 · 兴国镇社区活动中心</span>
-                    </div>
-                    <div style="display:flex;gap:6px;align-items:center;">
-                      <span class="badge badge-warning">⏳ 待确认</span>
-                      <span style="font-size:0.8rem;color:var(--text-light);">派工 12人</span>
-                    </div>
-                  </div>
-                  <div id="conflictAnchor0715" style="padding:14px 16px;border-left:4px solid #dc3545;border-radius:8px;background:linear-gradient(90deg,rgba(220,53,69,0.06),#fff);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;animation:pulse-conflict 2s infinite;">
-                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                      <span style="display:inline-block;padding:4px 10px;background:#dc3545;color:#fff;border-radius:6px;font-size:0.8rem;font-weight:600;">07-15 周二 ⚠️</span>
-                      <span class="badge badge-info">🎊 商演</span>
-                      <strong style="font-size:0.95rem;">《三滴血》企业开业庆典</strong>
-                      <span style="color:var(--text-light);font-size:0.82rem;">午场 · 兴国镇建材城广场</span>
-                    </div>
-                    <div style="display:flex;gap:6px;align-items:center;">
-                      <span class="badge badge-danger">🚨 人员冲突</span>
-                      <a class="action-link" style="color:#b91c1c;">立即处理 →</a>
-                    </div>
-                  </div>
-                  <div style="padding:14px 16px;border-left:4px solid #dc3545;border-radius:8px;background:linear-gradient(90deg,rgba(220,53,69,0.06),#fff);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                      <span style="display:inline-block;padding:4px 10px;background:#dc3545;color:#fff;border-radius:6px;font-size:0.8rem;font-weight:600;">07-15 周二 ⚠️</span>
-                      <span class="badge badge-danger">🏮 庙会</span>
-                      <strong style="font-size:0.95rem;">千户乡庙会连台专场</strong>
-                      <span style="color:var(--text-light);font-size:0.82rem;">午场+晚场 · 千户乡文化广场</span>
-                    </div>
-                    <div style="display:flex;gap:6px;align-items:center;">
-                      <span class="badge badge-danger">🚨 人员冲突</span>
-                      <a class="action-link" style="color:#b91c1c;">立即处理 →</a>
-                    </div>
-                  </div>
-                  <div style="padding:14px 16px;border-left:4px solid #8B0000;border-radius:8px;background:linear-gradient(90deg,rgba(139,0,0,0.04),#fff);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                      <span style="display:inline-block;padding:4px 10px;background:#8B0000;color:#fff;border-radius:6px;font-size:0.8rem;font-weight:600;">07-16 周三</span>
-                      <span class="badge badge-danger">🏮 庙会</span>
-                      <strong style="font-size:0.95rem;">千户乡庙会连台（第二日）</strong>
-                      <span style="color:var(--text-light);font-size:0.82rem;">午场+晚场 · 千户乡文化广场</span>
-                    </div>
-                    <div style="display:flex;gap:6px;align-items:center;">
-                      <span class="badge badge-success">✓ 已确认</span>
-                      <span style="font-size:0.8rem;color:var(--text-light);">派工 22人</span>
-                    </div>
-                  </div>
-                  <div style="padding:14px 16px;border-left:4px solid #17a2b8;border-radius:8px;background:linear-gradient(90deg,rgba(23,162,184,0.04),#fff);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                      <span style="display:inline-block;padding:4px 10px;background:#17a2b8;color:#fff;border-radius:6px;font-size:0.8rem;font-weight:600;">07-18 周五</span>
-                      <span class="badge badge-info">🎊 商演</span>
-                      <strong style="font-size:0.95rem;">莲花镇寿宴折子戏专场</strong>
-                      <span style="color:var(--text-light);font-size:0.82rem;">1场 · 莲花镇某村民家中</span>
-                    </div>
-                    <div style="display:flex;gap:6px;align-items:center;">
-                      <span class="badge badge-success">✓ 已确认</span>
-                      <span style="font-size:0.8rem;color:var(--text-light);">派工 14人</span>
-                    </div>
-                  </div>
+                  <!-- v20260907k：列表视图排期项由 __renderListView() 从 localStorage 动态渲染 -->
                 </div>
               </div>
             </div>
@@ -1520,160 +1122,11 @@
                 </tr>
               </thead>
               <tbody id="scheduleListTbody" data-paginate="list" data-page-size="10">
-                <tr>
-                  <td><strong>SCH-{year}0705001</strong></td>
-                  <td>{year}-07-05</td>
-                  <td>星期六</td>
-                  <td>陇城镇庙会管委会</td>
-                  <td>陇城镇文化广场</td>
-                  <td><span class="badge badge-danger">🏮 庙会</span></td>
-                  <td><a class="sched-opera-link" data-opera="火焰驹" data-sid="SCH-{year}0705001">《火焰驹》</a></td>
-                  <td>午场+晚场</td>
-                  <td>王建军</td>
-                  <td><span class="badge badge-success">✓ 已确认</span></td>
-                  <td>
-                    <a class="action-link">👁️ 查看</a>
-                    <a class="action-link">✏️ 编辑</a>
-                    <a class="action-link">🔍 检测</a>
-                    <a class="action-link danger">🗑️ 删除</a>
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>SCH-{year}0712001</strong></td>
-                  <td>{year}-07-12</td>
-                  <td>星期六</td>
-                  <td>兴国镇文化站</td>
-                  <td>兴国镇社区活动中心</td>
-                  <td><span class="badge badge-success">🎪 惠民</span></td>
-                  <td><a class="sched-opera-link" data-opera="惠民巡演" data-sid="SCH-{year}0712001">惠民巡演专场</a></td>
-                  <td>1场</td>
-                  <td>王建军</td>
-                  <td><span class="badge badge-warning">⏳ 待确认</span></td>
-                  <td>
-                    <a class="action-link">👁️ 查看</a>
-                    <a class="action-link">✏️ 编辑</a>
-                    <a class="action-link">🔍 检测</a>
-                    <a class="action-link danger">🗑️ 删除</a>
-                  </td>
-                </tr>
-                <tr style="background: rgba(220, 53, 69, 0.06);">
-                  <td><strong>SCH-{year}0715001</strong></td>
-                  <td>{year}-07-15</td>
-                  <td>星期二</td>
-                  <td>秦安某某商贸公司</td>
-                  <td>兴国镇建材城广场</td>
-                  <td><span class="badge badge-info">🎊 商演</span></td>
-                  <td><a class="sched-opera-link" data-opera="三滴血" data-sid="SCH-{year}0715001">《三滴血》</a></td>
-                  <td>午场</td>
-                  <td>李小明</td>
-                  <td><span class="badge badge-danger">⚠️ 冲突</span></td>
-                  <td>
-                    <a class="action-link">👁️ 查看</a>
-                    <a class="action-link">✏️ 编辑</a>
-                    <a class="action-link" style="color:#b91c1c;font-weight:600;">🚨 处理冲突</a>
-                    <a class="action-link danger">🗑️ 删除</a>
-                  </td>
-                </tr>
-                <tr style="background: rgba(220, 53, 69, 0.06);">
-                  <td><strong>SCH-{year}0715002</strong></td>
-                  <td>{year}-07-15</td>
-                  <td>星期二</td>
-                  <td>千户乡庙会理事会</td>
-                  <td>千户乡文化广场</td>
-                  <td><span class="badge badge-danger">🏮 庙会</span></td>
-                  <td><a class="sched-opera-link" data-opera="庙会连台" data-sid="SCH-{year}0715002">庙会连台专场</a></td>
-                  <td>午场+晚场</td>
-                  <td>王建军</td>
-                  <td><span class="badge badge-danger">⚠️ 冲突</span></td>
-                  <td>
-                    <a class="action-link">👁️ 查看</a>
-                    <a class="action-link">✏️ 编辑</a>
-                    <a class="action-link" style="color:#b91c1c;font-weight:600;">🚨 处理冲突</a>
-                    <a class="action-link danger">🗑️ 删除</a>
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>SCH-{year}0716001</strong></td>
-                  <td>{year}-07-16</td>
-                  <td>星期三</td>
-                  <td>千户乡庙会理事会</td>
-                  <td>千户乡文化广场</td>
-                  <td><span class="badge badge-danger">🏮 庙会</span></td>
-                  <td><a class="sched-opera-link" data-opera="连台第2天" data-sid="SCH-{year}0716001">连台第2天</a></td>
-                  <td>午场+晚场</td>
-                  <td>王建军</td>
-                  <td><span class="badge badge-success">✓ 已确认</span></td>
-                  <td>
-                    <a class="action-link">👁️ 查看</a>
-                    <a class="action-link">✏️ 编辑</a>
-                    <a class="action-link">🔍 检测</a>
-                    <a class="action-link danger">🗑️ 删除</a>
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>SCH-{year}0717001</strong></td>
-                  <td>{year}-07-17</td>
-                  <td>星期四</td>
-                  <td>千户乡庙会理事会</td>
-                  <td>千户乡文化广场</td>
-                  <td><span class="badge badge-danger">🏮 庙会</span></td>
-                  <td><a class="sched-opera-link" data-opera="连台第3天" data-sid="SCH-{year}0717001">连台第3天</a></td>
-                  <td>午场+晚场</td>
-                  <td>王建军</td>
-                  <td><span class="badge badge-success">✓ 已确认</span></td>
-                  <td>
-                    <a class="action-link">👁️ 查看</a>
-                    <a class="action-link">✏️ 编辑</a>
-                    <a class="action-link">🔍 检测</a>
-                    <a class="action-link danger">🗑️ 删除</a>
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>SCH-{year}0720001</strong></td>
-                  <td>{year}-07-20</td>
-                  <td>星期日</td>
-                  <td>县文旅局</td>
-                  <td>县文化艺术中心</td>
-                  <td><span class="badge badge-gold">🎉 节庆</span></td>
-                  <td><a class="sched-opera-link" data-opera="乡村文化节" data-sid="SCH-{year}0720001">乡村文化节专场</a></td>
-                  <td>2场</td>
-                  <td>王建军</td>
-                  <td><span class="badge badge-warning">⏳ 待确认</span></td>
-                  <td>
-                    <a class="action-link">👁️ 查看</a>
-                    <a class="action-link">✏️ 编辑</a>
-                    <a class="action-link">🔍 检测</a>
-                    <a class="action-link danger">🗑️ 删除</a>
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>SCH-{year}0725001</strong></td>
-                  <td>{year}-07-25</td>
-                  <td>星期五</td>
-                  <td>莲花镇寿宴预订</td>
-                  <td>莲花镇某村民家中</td>
-                  <td><span class="badge badge-info">🎊 商演</span></td>
-                  <td><a class="sched-opera-link" data-opera="折子戏" data-sid="SCH-{year}0725001">折子戏专场</a></td>
-                  <td>1场</td>
-                  <td>李小明</td>
-                  <td><span class="badge badge-success">✓ 已确认</span></td>
-                  <td>
-                    <a class="action-link">👁️ 查看</a>
-                    <a class="action-link">✏️ 编辑</a>
-                    <a class="action-link">🔍 检测</a>
-                    <a class="action-link danger">🗑️ 删除</a>
-                  </td>
-                </tr>
-              </tbody>
+          <!-- 生产空白态：演出排期由真实档期录入后生成，暂无演示数据 -->
+        </tbody>
             </table>
           </div>
-          <div class="pagination">
-            <button class="page-btn" disabled>‹ 上一页</button>
-            <button class="page-btn active">1</button>
-            <button class="page-btn">2</button>
-            <button class="page-btn">下一页 ›</button>
-            <span class="page-info">共 15 条排期记录</span>
-          </div>
+          <!-- 20260906 修复：删除静态假分页（上一页/1/2/下一页 死控件），真分页由 QinPagination 依 tbody[data-paginate] 渲染 -->
         </div>
 
         <div class="schedule-card">
@@ -1710,8 +1163,40 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
-  <script src="../js/pagination.js?v=20260803"></script>
+<script src="../js/app.js?v=20260908n"></script>
+<script>/* 生产空白态守卫配置 v20260908g：只清静态演示节点，API 渲染的真实排期（sched-live 标记）不误删 */
+window.__ADMIN_BLANK_CFG__ = [
+  { sel: '#scheduleListTbody', as: 'tbody', cols: 11, msg: '暂无演出排期，点击「➕ 新增演出排期」创建真实档期' },
+  { fn: function (h) {
+      /* v20260908g：只清静态演示节点（无 sched-live 标记）；API/localStorage 渲染的真实排期带 sched-live 标记，永不误删 */
+      /* 1. 清空月视图静态 mini-event（保留 API 渲染的真实排期） */
+      document.querySelectorAll('#monthContainer .mini-event:not(.sched-live)').forEach(function (n) { n.remove(); });
+      /* 2. 隐藏冲突预警 + 排期提示（静态硬编码，无真实数据时不应显示） */
+      var alerts = document.querySelectorAll('.schedule-alert');
+      alerts.forEach(function (al) { al.style.setProperty('display', 'none', 'important'); });
+      /* 3. 清空周视图静态排期项（#weekContainer 内的 day-events 子项） */
+      var weekEventDivs = document.querySelectorAll('#weekContainer .calendar-day, #weekContainer [style*="border-left"]');
+      weekEventDivs.forEach(function (d) {
+        var evts = d.querySelectorAll('.mini-event:not(.sched-live)');
+        evts.forEach(function (e) { e.remove(); });
+      });
+      /* 4. 清空列表视图静态排期项（#listContainer 内的 div 排期卡片，保留 sched-live 真实卡片） */
+      var listContainer = document.getElementById('listContainer');
+      if (listContainer) {
+        var listCards = listContainer.querySelectorAll('[style*="border-left"]:not(.sched-live)');
+        listCards.forEach(function (c) { c.remove(); });
+      }
+      /* 5. 替换 {year} 占位符为当前年份 */
+      var curYear = new Date().getFullYear();
+      document.querySelectorAll('#calendarTitleText, #weekTitleText, #listTitleText').forEach(function (el) {
+        if (el.textContent) el.textContent = el.textContent.replace(/\{year\}/g, String(curYear));
+      });
+  } }
+];
+</script>
+<script src="../js/admin-blank.js?v=20260906g"></script>
+
+  <script src="../js/pagination.js?v=20260908p"></script>
   <script>
     (function() {
       var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
@@ -1834,19 +1319,23 @@
           var prevMonthDays = new Date(year, month-1, 0).getDate();
           var today = new Date();
           var isCurMonth = (year===today.getFullYear() && month===today.getMonth()+1);
-          // 读取排期数据，按日期分组
+          // 读取排期数据，按日期分组（v20260907k：API 优先 + localStorage 降级 + 按当前选中年月筛选）
           var schedByDay = {};
-          try{
-            var schedList = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]');
+          function _pad(n){ return n<10 ? '0'+n : ''+n; }
+          function _applySchedList(schedList) {
+            var curMonthPrefix = year+'-'+_pad(month);
             schedList.forEach(function(s){
               if(s && s.date){
                 var d = String(s.date);
-                if(!schedByDay[d]) schedByDay[d] = [];
-                schedByDay[d].push(s);
+                if(d.indexOf(curMonthPrefix) === 0){
+                  if(!schedByDay[d]) schedByDay[d] = [];
+                  schedByDay[d].push(s);
+                }
               }
             });
-          }catch(_){}
-          function _pad(n){ return n<10 ? '0'+n : ''+n; }
+            _finishCalendarRender();
+          }
+          function _finishCalendarRender() {
           function _hx(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
           function _typeClass(t){
             if(!t) return '';
@@ -1882,10 +1371,11 @@
                 var evts = schedByDay[dateStr] || [];
                 evts.slice(0,3).forEach(function(s){
                   var tc = _typeClass(s.type);
-                  html += '<div class="mini-event '+tc+'" title="'+_hx((s.title||'')+' · '+(s.venue||''))+'">'+_hx(s.title||s.plays||'')+'</div>';
+                  var __t = s.title || s.plays || s.playTitle || '';
+                  html += '<div class="mini-event sched-live '+tc+'" title="'+_hx(__t+' · '+(s.venue||''))+'">'+_hx(__t)+'</div>';
                 });
                 if(evts.length>3){
-                  html += '<div class="mini-event" style="opacity:.7;font-size:.65rem;">+'+(evts.length-3)+'</div>';
+                  html += '<div class="mini-event sched-live" style="opacity:.7;font-size:.65rem;">+'+(evts.length-3)+'</div>';
                 }
               }
               html += '</div>';
@@ -1894,18 +1384,123 @@
             html += '</tr>';
           }
           tbody.innerHTML = html;
+          } // end _finishCalendarRender
+          // v20260907k：API 优先从 /v1/schedules 拉取，失败降级 localStorage
+          (async function(){
+            try {
+              var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+              if (QinFetch && typeof QinFetch.request === 'function') {
+                var resp = await QinFetch.request('GET', '/v1/schedules', { query: { year: year, month: month, pageSize: 100 } });
+                // v20260908f：api-request.js request() 已解包信封直接返回数组（L101 data.data），旧取 resp.data 恒为空导致 API 数据被丢弃
+                var rows = Array.isArray(resp) ? resp : (resp && Array.isArray(resp.data) ? resp.data : []);
+                _applySchedList(rows);
+              } else {
+                var list = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]');
+                _applySchedList(list);
+              }
+            } catch(apiErr) {
+              console.warn('[__renderCalendar] API fail, fallback localStorage:', apiErr);
+              try {
+                var list = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]');
+                _applySchedList(list);
+              } catch(_) {}
+            }
+          })();
         }catch(_e){}
       }
-      // 视图切换显示/隐藏（CSP友好：用CSS class控制，不用直接改style.display — 但由于三容器都在calendar-wrapper外层同级，直接用style.display切换更简单，且未插值）
+      // 视图切换显示/隐藏（CSP友好：用CSS class控制，不用直接改.style.display — 但由于三容器都在calendar-wrapper外层同级，直接用style.display切换更简单，且未插值）
       function __switchView(viewName){
         var m = document.getElementById('monthContainer');
         var w = document.getElementById('weekContainer');
         var l = document.getElementById('listContainer');
         function __show(el){ if(el){ el.style.display='block'; } }
         function __hide(el){ if(el){ el.style.display='none'; } }
-        if(viewName==='week'){ __hide(m); __show(w); __hide(l); __toastS2('📋 已切换至「周视图」排期日历','info'); }
-        else if(viewName==='list'){ __hide(m); __hide(w); __show(l); __toastS2('📑 已切换至「列表视图」全量排期清单','info'); }
+        if(viewName==='week'){ __hide(m); __show(w); __hide(l); __renderWeek(__weekOffset||0); __toastS2('📋 已切换至「周视图」排期日历','info'); }
+        else if(viewName==='list'){ __hide(m); __hide(w); __show(l); __renderListView(); __toastS2('📑 已切换至「列表视图」全量排期清单','info'); }
         else { __show(m); __hide(w); __hide(l); __toastS2('📆 已切换至「月度视图」排期日历','info'); }
+      }
+      // v20260907k：列表视图动态渲染——从 localStorage 读取真实档期数据，替代硬编码静态 div
+      function __renderListView(){
+        try{
+          var listContainer = document.getElementById('listContainer');
+          if(!listContainer) return;
+          var titleEl = document.getElementById('listTitleText');
+          var ySel = document.querySelector('.admin-filter-bar select');
+          var mSel = ySel ? ySel.parentElement.parentElement.querySelectorAll('select')[1] : null;
+          var y = ySel ? (parseInt(ySel.value,10)||new Date().getFullYear()) : new Date().getFullYear();
+          var m = mSel ? (parseInt(mSel.value,10)||1) : 1;
+          if(titleEl) titleEl.textContent = y+'年 '+m+'月 全量排期清单（按日期升序）';
+          // v20260907k：API 优先，localStorage 降级
+          (async function(){
+            var schedList = [];
+            try {
+              var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+              if (QinFetch && typeof QinFetch.request === 'function') {
+                var resp = await QinFetch.request('GET', '/v1/schedules', { query: { year: y, month: m, pageSize: 100 } });
+                // v20260908f：request() 已解包信封返回数组，兼容两种形态
+                schedList = Array.isArray(resp) ? resp : (resp && Array.isArray(resp.data) ? resp.data : []);
+              } else {
+                schedList = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]');
+              }
+            } catch(apiErr) {
+              console.warn('[__renderListView] API fail, fallback localStorage:', apiErr);
+              try { schedList = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]'); } catch(_) {}
+            }
+            var listPad = function(n){ return n<10?'0'+n:''+n; };
+            var listPrefix = y+'-'+listPad(m);
+            schedList = schedList.filter(function(s){ return s && s.date && String(s.date).indexOf(listPrefix)===0; });
+            schedList.sort(function(a,b){ return String(a.date||'').localeCompare(String(b.date||'')); });
+          var gridDiv = listContainer.querySelector('[style*="display:grid"]');
+          if(!gridDiv) return;
+          function _hx(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+          function _typeBadge(t){
+            if(!t) return '<span class="badge badge-secondary">🎭 其他</span>';
+            var tt=String(t);
+            if(tt.indexOf('庙会')>=0) return '<span class="badge badge-danger">🏮 庙会</span>';
+            if(tt.indexOf('惠民')>=0) return '<span class="badge badge-success">🎪 惠民</span>';
+            if(tt.indexOf('节庆')>=0) return '<span class="badge badge-warning">🎉 节庆</span>';
+            if(tt.indexOf('商演')>=0||tt.indexOf('企业')>=0) return '<span class="badge badge-info">🎊 商演</span>';
+            return '<span class="badge badge-secondary">🎭 '+_hx(tt)+'</span>';
+          }
+          function _statusBadge(s){
+            if(!s) return '<span class="badge badge-warning">⏳ 待确认</span>';
+            var ss=String(s);
+            if(ss.indexOf('confirm')>=0||ss.indexOf('确认')>=0) return '<span class="badge badge-success">✓ 已确认</span>';
+            if(ss.indexOf('cancel')>=0||ss.indexOf('取消')>=0) return '<span class="badge badge-danger">✗ 已取消</span>';
+            if(ss.indexOf('conflict')>=0||ss.indexOf('冲突')>=0) return '<span class="badge badge-danger">🚨 冲突</span>';
+            return '<span class="badge badge-warning">⏳ '+_hx(ss)+'</span>';
+          }
+          if(schedList.length===0){
+            gridDiv.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-light);"><div style="font-size:2.5rem;margin-bottom:12px;">📭</div><div style="font-size:1rem;font-weight:600;margin-bottom:6px;">暂无排期数据</div><div style="font-size:0.85rem;">点击上方「➕ 新增演出排期」创建真实档期</div></div>';
+            return;
+          }
+          var html = '';
+          schedList.forEach(function(s){
+            var borderColor = '#6b7280';
+            var tType = String(s.type||'');
+            if(tType.indexOf('庙会')>=0) borderColor='#8B0000';
+            else if(tType.indexOf('惠民')>=0) borderColor='#28a745';
+            else if(tType.indexOf('节庆')>=0) borderColor='#D4AF37';
+            else if(tType.indexOf('商演')>=0||tType.indexOf('企业')>=0) borderColor='#17a2b8';
+            var dStr = String(s.date||'');
+            var dateBadge = dStr ? dStr.replace(/^\d{4}-/,'').replace('-','/') : '--/--';
+            var weekStr = s.week || '';
+            html += '<div class="sched-live" style="padding:14px 16px;border-left:4px solid '+borderColor+';border-radius:8px;background:linear-gradient(90deg,'+borderColor+'0a,#fff);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">';
+            html += '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
+            html += '<span style="display:inline-block;padding:4px 10px;background:'+borderColor+';color:#fff;border-radius:6px;font-size:0.8rem;font-weight:600;">'+_hx(dateBadge)+(weekStr?' '+_hx(weekStr):'')+'</span>';
+            html += _typeBadge(s.type);
+            html += '<strong style="font-size:0.95rem;">'+_hx(s.title||s.plays||s.playTitle||'')+'</strong>';
+            html += '<span style="color:var(--text-light);font-size:0.82rem;">'+_hx(String(s.shows||1)+' 场 · '+(s.venue||''))+'</span>';
+            html += '</div>';
+            html += '<div style="display:flex;gap:6px;align-items:center;">';
+            html += _statusBadge(s.status||s.statusText);
+            html += '<span style="font-size:0.8rem;color:var(--text-light);">派工 '+_hx(String(s.castCount||0))+'人</span>';
+            html += '</div>';
+            html += '</div>';
+          });
+          gridDiv.innerHTML = html;
+          })();  // end async IIFE
+        }catch(_e){ console.warn('[__renderListView] err:', _e); }
       }
       var viewBtns = document.querySelectorAll('.view-toggle button');
       viewBtns.forEach(function(btn) {
@@ -1930,22 +1525,78 @@
           if(titleEl){
             var m = monday.getMonth()+1, d = monday.getDate();
             var sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
-            titleEl.textContent = monday.getFullYear()+'年 '+m+'月 第'+Math.ceil((d+new Date(monday.getFullYear(),monday.getMonth(),1).getDay())/7)+'周 排期一览（'+m+'/'+d+' - '+(sunday.getMonth()+1)+'/'+sunday.getDate()+'）';
+            titleEl.textContent = monday.getFullYear()+'年 '+m+'月 排期一览（'+m+'/'+d+' - '+(sunday.getMonth()+1)+'/'+sunday.getDate()+')';
           }
           var dayNames = ['周一','周二','周三','周四','周五','周六','周日'];
-          var cells = document.querySelectorAll('#weekDayHeaders > div');
-          if(cells && cells.length >= 7){
-            for(var i=0;i<7;i++){
-              var dt = new Date(monday); dt.setDate(monday.getDate()+i);
-              var isToday = (dt.getFullYear()===today.getFullYear() && dt.getMonth()===today.getMonth() && dt.getDate()===today.getDate());
-              if(cells[i]){
-                cells[i].textContent = dayNames[i]+' '+(dt.getMonth()+1)+'/'+dt.getDate()+(isToday?' ⭐':'');
-                cells[i].style.background = isToday ? 'rgba(124,58,237,0.1)' : '';
-                cells[i].style.color = isToday ? '#7c3aed' : '';
-              }
-            }
+          // v20260907k：渲染周视图表头和排期项
+          var weekHeaders = document.getElementById('weekDayHeaders');
+          var weekGrid = document.getElementById('weekDayGrid');
+          if(!weekHeaders || !weekGrid) return;
+          // v20260908k：渲染函数抽离，API / localStorage 数据源共用
+          function _pad(n){ return n<10 ? '0'+n : ''+n; }
+          function _hx(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+          function _typeClass(t){
+            if(!t) return '';
+            var tt = String(t);
+            if(tt.indexOf('庙会')>=0) return 'type-miaohui';
+            if(tt.indexOf('惠民')>=0) return 'type-huimin';
+            if(tt.indexOf('节庆')>=0) return 'type-jieqing';
+            if(tt.indexOf('商演')>=0||tt.indexOf('企业')>=0) return 'type-shangyan';
+            return '';
           }
-        }catch(_e){}
+          function _evtTitle(s){ return s && (s.title || s.plays || s.playTitle || '') || ''; }
+          function _wkDate(dt){ return dt.getFullYear()+'-'+_pad(dt.getMonth()+1)+'-'+_pad(dt.getDate()); }
+          var weekStart = new Date(monday);
+          var weekEnd = new Date(monday); weekEnd.setDate(monday.getDate()+6);
+          function __buildWeekGrid(schedList){
+            schedList = schedList || [];
+            // 生成表头 HTML
+            var headerHtml = '';
+            for(var i=0;i<7;i++){
+              var dt = new Date(weekStart); dt.setDate(weekStart.getDate()+i);
+              var isToday = (dt.getFullYear()===today.getFullYear() && dt.getMonth()===today.getMonth() && dt.getDate()===today.getDate());
+              var bg = isToday ? 'rgba(124,58,237,0.1)' : 'var(--cream-dark)';
+              var color = isToday ? '#7c3aed' : 'var(--primary-dark)';
+              headerHtml += '<div style="text-align:center;padding:8px 6px;background:'+bg+';border-radius:8px;font-weight:600;color:'+color+';">'+dayNames[i]+' '+(dt.getMonth()+1)+'/'+dt.getDate()+(isToday?' ⭐':'')+'</div>';
+            }
+            weekHeaders.innerHTML = headerHtml;
+            // 生成排期项 HTML
+            var gridHtml = '';
+            for(var j=0;j<7;j++){
+              var dt2 = new Date(weekStart); dt2.setDate(weekStart.getDate()+j);
+              var dateStr = _wkDate(dt2);
+              var dayEvts = schedList.filter(function(s){ return s && String(s.date||'') === dateStr; });
+              gridHtml += '<div style="padding:10px;border:1px solid var(--border-light);border-radius:10px;background:#fff;min-height:200px;">';
+              if(dayEvts.length===0){
+                gridHtml += '<div style="color:var(--text-light);font-size:0.72rem;text-align:center;padding:20px 0;">无排期</div>';
+              } else {
+                dayEvts.forEach(function(s){
+                  var tc = _typeClass(s.type);
+                  var time = s.time || '';
+                  gridHtml += '<div class="mini-event sched-live '+tc+'" style="font-size:0.7rem;margin-bottom:4px;cursor:pointer;" title="'+_hx(_evtTitle(s)+' · '+(s.venue||''))+'">'+(time?_hx(time)+' ':'')+_hx(_evtTitle(s))+'</div>';
+                });
+              }
+              gridHtml += '</div>';
+            }
+            weekGrid.innerHTML = gridHtml;
+          }
+          // 双写过渡：先用 localStorage 即时渲染
+          var __localList = [];
+          try { __localList = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]'); } catch(_) {}
+          __buildWeekGrid(__localList);
+          // v20260908k：API 优先——/v1/schedules 按本周 dateFrom/dateTo 拉取，成功后重渲染
+          (async function(){
+            try {
+              var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+              if (QinFetch && typeof QinFetch.request === 'function') {
+                var resp = await QinFetch.request('GET', '/v1/schedules', { query: { dateFrom: _wkDate(weekStart), dateTo: _wkDate(weekEnd), pageSize: 100 } });
+                // v20260908f：request() 已解包信封返回数组，兼容两种形态
+                var rows = Array.isArray(resp) ? resp : (resp && Array.isArray(resp.data) ? resp.data : []);
+                __buildWeekGrid(rows);
+              }
+            } catch(apiErr) { console.warn('[__renderWeek] API fail, keep localStorage render:', apiErr); }
+          })();
+        }catch(_e){ console.warn('[__renderWeek] err:', _e); }
       }
       var wPrev = $('weekNavPrev'), wToday = $('weekNavToday'), wNext = $('weekNavNext');
       if(wPrev&&!wPrev.__s2b){ wPrev.__s2b=1; wPrev.addEventListener('click',function(){ __renderWeek(__weekOffset-1); __toastS2('📋 已切换至上一周','info',1200); }); }
@@ -1953,7 +1604,65 @@
       if(wNext&&!wNext.__s2b){ wNext.__s2b=1; wNext.addEventListener('click',function(){ __renderWeek(__weekOffset+1); __toastS2('📋 已切换至下一周','info',1200); }); }
       // 导出/打印按钮
       var spExp = $('spExportScheduleBtn'), spPrn = $('spPrintScheduleBtn');
-      if(spExp&&!spExp.__s2b){ spExp.__s2b=1; spExp.addEventListener('click',function(){ __toastS2('📊 正在导出排期表 CSV（演示模式：真实环境将导出当月全部演出场次）','info',2500); }); }
+      if(spExp&&!spExp.__s2b){ spExp.__s2b=1; spExp.__superPatchBound=1; spExp.addEventListener('click',async function(){
+        // v20260908k：API 优先导出当月排期 CSV（/v1/schedules），失败降级 localStorage
+        try{
+          var ySel = document.querySelector('.admin-filter-bar select');
+          var mSel = ySel ? ySel.parentElement.parentElement.querySelectorAll('select')[1] : null;
+          var y = ySel ? (parseInt(ySel.value,10)||new Date().getFullYear()) : new Date().getFullYear();
+          var m = mSel ? (parseInt(mSel.value,10)||1) : 1;
+          var pad = function(n){ return n<10?'0'+n:''+n; };
+          var prefix = y+'-'+pad(m);
+          __toastS2('⏳ 正在导出 '+y+'年'+m+'月排期表…','info',1200);
+          var schedList = [];
+          var apiOk = false;
+          try {
+            var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+            if (QinFetch && typeof QinFetch.request === 'function') {
+              var resp = await QinFetch.request('GET', '/v1/schedules', { query: { year: y, month: m, pageSize: 500 } });
+              // v20260908f：request() 已解包信封返回数组，兼容两种形态
+              if (Array.isArray(resp)) { schedList = resp; apiOk = true; }
+              else if (resp && Array.isArray(resp.data)) { schedList = resp.data; apiOk = true; }
+            }
+          } catch(apiErr) { console.warn('[export schedule] API fail, fallback localStorage:', apiErr); }
+          if(!apiOk){
+            try { schedList = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]'); } catch(_) { schedList = []; }
+          }
+          var monthScheds = schedList.filter(function(s){ return s && s.date && String(s.date).indexOf(prefix)===0; });
+          monthScheds.sort(function(a,b){ return String(a.date||'').localeCompare(String(b.date||'')); });
+          if(monthScheds.length===0){ __toastS2('⚠️ '+y+'年'+m+'月暂无排期数据，无法导出','warning',2500); return; }
+          var headers = ['日期','星期','时间','类型','剧目','场次','地点','负责人','派工人数','状态','备注'];
+          var rows = [headers.join(',')];
+          monthScheds.forEach(function(s){
+            var _remark = String(s.remark||'').replace(/^类型[:：][^\r\n]*/m,'').replace(/^[\r\n]+/,'').replace(/"/g,'""');
+            var row = [
+              '"'+String(s.date||'')+'"',
+              '"'+String(s.week||'')+'"',
+              '"'+String(s.time||'')+'"',
+              '"'+String(s.type||'')+'"',
+              '"'+String(s.title||s.plays||s.playTitle||'')+'"',
+              '"'+String(s.shows||1)+'场"',
+              '"'+String(s.venue||'')+'"',
+              '"'+String(s.leader||'')+'"',
+              '"'+String(s.castCount||0)+'人"',
+              '"'+String(s.statusText||s.status||'')+'"',
+              '"'+_remark+'"'
+            ];
+            rows.push(row.join(','));
+          });
+          var csv = '\ufeff' + rows.join('\r\n');
+          var blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url;
+          a.download = '演出排期表_'+y+'年'+pad(m)+'月_'+monthScheds.length+'场.csv';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+          __toastS2('📊 已导出 '+y+'年'+m+'月排期表（'+monthScheds.length+' 条排期，'+(apiOk?'后端数据':'本地缓存')+'）','success',2500);
+        }catch(e){ __toastS2('⚠️ CSV 导出失败：'+(e.message||''),'error',3000); }
+      }); }
       if(spPrn&&!spPrn.__s2b){ spPrn.__s2b=1; spPrn.addEventListener('click',function(){ __toastS2('🖨️ 正在准备打印排期月历...','info',1000); setTimeout(function(){ try{ window.print(); }catch(_e){ __toastS2('⚠️ 打印调用失败，请用 Ctrl+P 手动打印','warning',2500); } },400); }); }
       // 季度卡片点击联动：更新年月筛选下拉 + 切月视图 + toast
       document.querySelectorAll('.history-link-card').forEach(function(card){
@@ -2033,7 +1742,13 @@
         if(navNextY) navNextY.addEventListener('click', function(){
           var ym = __getYM(); __setYM(ym.y+1, ym.m);
         });
-        // 初始化：渲染当前选中的年月
+        // 初始化：年月下拉默认定位「当前月」（v20260908d：静态 selected 停留在发布月 8月，
+        // 导致本月日历渲染成上月），然后渲染当前选中的年月
+        try {
+          var _now0 = new Date();
+          if (ySel2) { for (var _yi = 0; _yi < ySel2.options.length; _yi++) { if (ySel2.options[_yi].value === String(_now0.getFullYear())) { ySel2.selectedIndex = _yi; break; } } }
+          if (mSel2) { for (var _mi = 0; _mi < mSel2.options.length; _mi++) { if (parseInt(mSel2.options[_mi].value, 10) === _now0.getMonth() + 1) { mSel2.selectedIndex = _mi; break; } } }
+        } catch (_e0) {}
         var initYM = __getYM(); __renderCalendar(initYM.y, initYM.m);
       })();
       // 列表视图：紧凑/详情模式切换 + 立即处理冲突
@@ -2059,16 +1774,25 @@
         document.querySelectorAll('#listContainer .action-link').forEach(function(link){
           if((link.textContent||'').indexOf('立即处理')>=0){
             link.style.cursor='pointer';
+            link.__superPatchBound=1;
             link.addEventListener('click', function(e){
               e.preventDefault();
+              e.stopPropagation();
               if(!__acqS2('sch_handle_conflict',500)) return;
-              __toastS2('🚨 正在打开冲突处理面板（正式环境对接人员调度接口）','warning');
+              // v20260907k：不调用 openAdminModal（会弹演示版表单），改为从 localStorage 读取真实冲突排期并显示
               try{
-                if(window.openAdminModal){
-                  openAdminModal(link, { mode:'edit', title:'档期冲突处理', id:'conflict-handle', width:'720px', actionLabel:'确认调整' });
+                var schedList = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]');
+                var conflicts = schedList.filter(function(s){ return s.status && String(s.status).indexOf('conflict')>=0; });
+                if(conflicts.length===0){
+                  __toastS2('✅ 当前无档期冲突，所有排期正常','success');
+                } else {
+                  var msg = conflicts.map(function(s){ return '· '+(s.date||'')+' '+(s.title||s.plays||'')+' @'+(s.venue||''); }).join('\n');
+                  __toastS2('🚨 检测到 '+conflicts.length+' 处档期冲突：\n'+msg+'（真实环境对接人员调度接口）','warning',5000);
                 }
-              }catch(_){}
-            });
+              }catch(_e){
+                __toastS2('🚨 冲突处理面板打开失败：'+(_e.message||''),'error');
+              }
+            }, true);
           }
         });
       })();
@@ -2116,7 +1840,7 @@
       if (todayBtn) {
         todayBtn.addEventListener('click', function() {
           if (window.QinApp && window.QinApp.Utils) {
-            window.QinApp.Utils.toast('已定位到今日：{year}年7月15日', 'success');
+            window.QinApp.Utils.toast('已定位到今日：' + new Date().getFullYear() + '年' + (new Date().getMonth()+1) + '月' + new Date().getDate() + '日', 'success');
           }
         });
       }
@@ -2216,73 +1940,109 @@
             createdAt: ts,
             createdBy: (QinApp && QinApp.Admin && QinApp.Admin.currentUser) ? (QinApp.Admin.currentUser.name || QinApp.Admin.currentUser.username || '') : ''
           };
+          // v20260907k：优先调用后端 /v1/schedules API 持久化（真实环境），失败降级到 localStorage
           var saved = null;
-          if (Storage && Storage.KEYS && Storage.KEYS.SCHEDULES && typeof Storage.create === 'function') {
-            saved = Storage.create(Storage.KEYS.SCHEDULES, entry);
-          } else {
+          function _buildApiPayload() {
+            return {
+              date: schedDate,
+              time: schedTime,
+              title: title,
+              orderId: 'standalone-' + schedId, // 独立排期不挂订单，用占位 ID
+              status: 'draft',
+              type: sType,
+              venue: venue,
+              venueDistrict: venue,
+              venueAddress: venue,
+              leader: leader,
+              createdBy: (QinApp && QinApp.Admin && QinApp.Admin.currentUser) ? (QinApp.Admin.currentUser.name || QinApp.Admin.currentUser.username || '') : '',
+              remark: remark,
+              audienceSize: 0,
+              feeAmount: 0
+            };
+          }
+          function _fallbackLocal() {
+            // 降级：localStorage 持久化（后端 API 不可用时）
             try {
               var list = [];
               try { list = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]'); } catch (_) { list = []; }
-              entry.id = entry.id;
               entry._updatedAt = Date.now();
               list.unshift(entry);
               localStorage.setItem('qaxqjt_schedules_v2', JSON.stringify(list));
-              saved = entry;
-            } catch (bk) { console.warn('schedule write fallback failed:', bk); }
+              return entry;
+            } catch (bk) { console.warn('schedule localStorage fallback failed:', bk); return null; }
           }
-          // 把新数据 UI 插 tbody 首行
-          var tb = document.getElementById('scheduleListTbody');
-          if (tb && saved) {
+          async function _createViaApi() {
             try {
-              // FIX_X3 R20.1 HIGH：统一 Utils.escapeHtml（兜底replace），white-space:nowrap → ws-nowrap CSS 类，font-size/color → sched-cast-sub 类，font-weight → sched-title-bold 类，min-width+display:flex → sched-actions 类
-              function _hx(s){ return (Utils && Utils.escapeHtml) ? Utils.escapeHtml(s==null?'':s) : String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-              var tr = document.createElement('tr');
-              tr.innerHTML = '<td><strong class="sched-tag-bold">' + _hx(saved.id || schedId) + '</strong></td>' +
-                '<td>' + _hx(saved.date || '-') + '</td>' +
-                '<td>' + _hx(saved.week || '-') + '</td>' +
-                '<td>秦安县秦剧团</td>' +
-                '<td>' + _hx(saved.venue || '') + '</td>' +
-                '<td><span class="op-type-badge op-type-edit ws-nowrap">' + _hx(saved.type || '') + '</span></td>' +
-                '<td class="sched-title-bold">' + _hx(saved.plays || title) + '</td>' +
-                '<td>' + _hx(String(saved.shows || 1)) + ' 场</td>' +
-                '<td>' + _hx(saved.leader || '') + ' <span class="sched-cast-sub">（派' + _hx(String(saved.castCount || 0)) + '人）</span></td>' +
-                '<td><span class="status-tag status-pending ws-nowrap">📋 待排演</span></td>' +
-                '<td class="sched-actions-wrap"><div class="sched-actions">' +
-                  '<button class="btn-action btn-action-sm btn-action-gold" title="查看派工">👥 派工</button>' +
-                  '<button class="btn-action btn-action-sm btn-action-outline" title="编辑">✏️ 编辑</button>' +
-                  '<button class="btn-action btn-action-sm btn-action-outline" title="打印派工单">🖨️ 打印</button>' +
-                  '<button class="btn-action btn-action-sm btn-action-danger" title="取消排期">⛔ 取消</button>' +
-                '</div></td>';
-              if (tb.firstChild) tb.insertBefore(tr, tb.firstChild);
-              else tb.appendChild(tr);
-            } catch (uiErr) { console.warn('schedule UI insert fail:', uiErr); }
+              var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+              if (QinFetch && typeof QinFetch.request === 'function') {
+                var resp = await QinFetch.request('POST', '/v1/schedules', { body: _buildApiPayload() });
+                if (resp && resp.data) {
+                  // 后端返回的字段映射到前端结构
+                  saved = Object.assign({}, entry, resp.data);
+                  return saved;
+                }
+              }
+            } catch (apiErr) { console.warn('[schedule] API create failed, fallback to localStorage:', apiErr); }
+            saved = _fallbackLocal();
+            return saved;
           }
-          if (Utils) {
-            Utils.toast('✅ 排期已持久化保存：' + title + ' · 档期ID ' + (saved && saved.id ? saved.id : schedId) + ' · 派工 ' + (saved && saved.castCount ? saved.castCount : 0) + ' 人（刷新页面仍存在）', 'success', 5000);
-          } else {
-            alert('✅ 排期创建成功：' + title + '（已真实写入浏览器本地存储）');
-          }
+          // 同步包装：先尝试 API（异步），失败降级 localStorage
+          (async function(){
+            await _createViaApi();
+            // 把新数据 UI 插 tbody 首行
+            var tb = document.getElementById('scheduleListTbody');
+            if (tb && saved) {
+              try {
+                function _hx(s){ return (Utils && Utils.escapeHtml) ? Utils.escapeHtml(s==null?'':s) : String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+                var tr = document.createElement('tr');
+                tr.innerHTML = '<td><strong class="sched-tag-bold">' + _hx(saved.id || schedId) + '</strong></td>' +
+                  '<td>' + _hx(saved.date || '-') + '</td>' +
+                  '<td>' + _hx(saved.week || '-') + '</td>' +
+                  '<td>秦安县秦剧团</td>' +
+                  '<td>' + _hx(saved.venue || '') + '</td>' +
+                  '<td><span class="op-type-badge op-type-edit ws-nowrap">' + _hx(saved.type || '') + '</span></td>' +
+                  '<td class="sched-title-bold">' + _hx(saved.plays || saved.title || title) + '</td>' +
+                  '<td>' + _hx(String(saved.shows || 1)) + ' 场</td>' +
+                  '<td>' + _hx(saved.leader || '') + ' <span class="sched-cast-sub">（派' + _hx(String(saved.castCount || 0)) + '人）</span></td>' +
+                  '<td><span class="status-tag status-pending ws-nowrap">📋 待排演</span></td>' +
+                  '<td class="sched-actions-wrap"><div class="sched-actions">' +
+                    '<button class="btn-action btn-action-sm btn-action-gold" title="查看派工">👥 派工</button>' +
+                    '<button class="btn-action btn-action-sm btn-action-outline" title="编辑">✏️ 编辑</button>' +
+                    '<button class="btn-action btn-action-sm btn-action-outline" title="打印派工单">🖨️ 打印</button>' +
+                    '<button class="btn-action btn-action-sm btn-action-danger" title="取消排期">⛔ 取消</button>' +
+                  '</div></td>';
+                if (tb.firstChild) tb.insertBefore(tr, tb.firstChild);
+                else tb.appendChild(tr);
+              } catch (uiErr) { console.warn('schedule UI insert fail:', uiErr); }
+            }
+            if (Utils) {
+              Utils.toast('✅ 排期已保存：' + title + ' · 档期ID ' + (saved && saved.id ? saved.id : schedId) + ' · 派工 ' + (saved && saved.castCount ? saved.castCount : 0) + ' 人（已对接后端 /v1/schedules）', 'success', 5000);
+            } else {
+              alert('✅ 排期创建成功：' + title);
+            }
+            // 保存成功后自动切换到列表视图，让用户立即看到新排期
+            try {
+              __switchView('list');
+              document.querySelectorAll('.view-toggle button').forEach(function(b){
+                b.classList.remove('active');
+                if (b.getAttribute('data-view') === 'list') b.classList.add('active');
+              });
+              if (window.__renderListView) __renderListView();
+              try {
+                var ySel = document.querySelector('.admin-filter-bar select');
+                var mSel = ySel ? ySel.parentElement.parentElement.querySelectorAll('select')[1] : null;
+                var y = ySel ? (parseInt(ySel.value,10)||new Date().getFullYear()) : new Date().getFullYear();
+                var m = mSel ? (parseInt(mSel.value,10)||1) : 1;
+                __renderCalendar(y, m);
+              } catch(_) {}
+            } catch(_) {}
+            // 关闭模态框
+            try { closeAddModal(); } catch(_) {}
+          })();
         } catch (outerErr) {
           console.error('[schedule.submit] outer catch:', outerErr);
           try { (window.QinApp && QinApp.Utils) ? QinApp.Utils.toast('⚠️ 排期保存异常：' + (outerErr && outerErr.message ? outerErr.message : ''), 'error') : alert('保存失败'); } catch(_) {}
         }
-        // 保存成功后自动切换到列表视图，让用户立即看到新排期
-        try {
-          __switchView('list');
-          document.querySelectorAll('.view-toggle button').forEach(function(b){
-            b.classList.remove('active');
-            if (b.getAttribute('data-view') === 'list') b.classList.add('active');
-          });
-          // 同步更新月视图日历，切回月视图时新排期可见
-          try {
-            var ySel = document.querySelector('.admin-filter-bar select');
-            var mSel = ySel ? ySel.parentElement.parentElement.querySelectorAll('select')[1] : null;
-            var y = ySel ? (parseInt(ySel.value,10)||new Date().getFullYear()) : new Date().getFullYear();
-            var m = mSel ? (parseInt(mSel.value,10)||1) : 1;
-            __renderCalendar(y, m);
-          } catch(_) {}
-        } catch (_) {}
-        closeAddModal();
       }
       document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeAddModal(); });
       /* ---------- CRITICAL 修复：退出登录按钮（侧边栏 + 头像下拉） + 7 类 legacy key 彻底清理 ---------- */
@@ -2343,7 +2103,7 @@
       // =============================================================================
 
       // 暴露日历渲染/视图切换函数，供后续 script 块（查询/今日/重置按钮）调用
-      try { window.__renderCalendar = __renderCalendar; window.__switchView = __switchView; } catch(_) {}
+      try { window.__renderCalendar = __renderCalendar; window.__switchView = __switchView; window.__renderListView = __renderListView; window.__renderWeek = __renderWeek; } catch(_) {}
 
     })();
   </script>
@@ -2401,53 +2161,47 @@
         <div id="schedCastBox" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
           <!-- 每个行当一张卡：多选checkbox+每行人员备注 -->
         </div>
+        <script src="../js/roster-cast.js?v=20260906g"></script>
         <script>
         (function(){
-          // 行当定义：含人员清单，含龙套
-          var CAST_DATA = [
-            { k:'laosheng', n:'老生', ppl:['张志明（A角）','刘振声（B角）','杨国强（替补）'] },
-            { k:'xusheng',  n:'须生', ppl:['赵志远（A角）','钱立德（B角）','孙伟民（替补）'] },
-            { k:'xiaosheng',n:'小生', ppl:['周建峰','武俊卿','郑海涛'] },
-            { k:'qingyi',   n:'青衣', ppl:['李秀琴（A角）','王玉华（B角）','冯雅丽（替补）'] },
-            { k:'huadan',   n:'花旦', ppl:['赵美玲','陈思思','蒋文婷'] },
-            { k:'laodan',   n:'老旦', ppl:['孙玉华','朱秀兰','秦玉珍'] },
-            { k:'hualian',  n:'花脸', ppl:['王建国（队长）','韩志强','曹大磊'] },
-            { k:'choujue',  n:'丑角', ppl:['侯宝林','董晓斌','尹明华'] },
-            { k:'longtao',  n:'龙套（多人）', ppl:['龙套甲-范文斌','龙套乙-唐国平','龙套丙-罗建军','龙套丁-戴志辉','龙套戊-韩玉杰'] },
-            { k:'band',     n:'乐队·司鼓板胡', ppl:['陈德胜-司鼓','刘海峰-板胡','卫宝忠-二胡','马根明-扬琴'] },
-            { k:'stage',    n:'舞美·灯光音响', ppl:['周小军-灯光','牛志刚-音响','史建国-服装','贺小峰-道具'] }
-          ];
+          // 行当分组固定；人员从真实花名册(/v1/performers)动态获取（v20260906g 生产空白态）
           var box = document.getElementById('schedCastBox');
-          if (!box) return;
-          CAST_DATA.forEach(function(grp){
-            var card = document.createElement('div');
-            // B7：用 CSS class 替代 style.cssText（CSP style-src-attr 严格模式下 style= 属性设置 border-color/box-shadow 会被拒）
-            try { card.classList.add('cast-card-base'); } catch(_cssErr) {
-              // 极端兜底：只有 classList 抛错（比如 DOM 元素异常）时才退化为 style，正常 CSP 场景不会走到
-              try { card.style.cssText = 'border:1.5px solid #cbd5e1;border-radius:12px;background:#fff;padding:12px 14px;transition:all .2s;'; } catch(__) {}
-            }
-            card.onmouseover = function(){ try { card.classList.add('cast-card-hover'); } catch(_) {} };
-            card.onmouseout  = function(){ try { card.classList.remove('cast-card-hover'); } catch(_) {} };
-            var head = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed #cbd5e1;">'
-              + '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0f4c81,#1e6091);color:#fff;font-size:.78rem;font-weight:700;">'+grp.ppl.length+'</span>'
-              + '<strong style="color:#0f4c81;">'+grp.n+'</strong>'
-              + '<span style="margin-left:auto;font-size:.72rem;color:#94a3b8;">可多选，每人独立备注角色</span>'
-              + '</div>';
-            var items = grp.ppl.map(function(p,idx){
-              var safeId = 'sc_'+grp.k+'_'+idx;
-              // R21.3 CSP 合规：移除 onfocus/onblur 内联，改为下方统一 addEventListener 绑定（见 bindSchedCastNotes）
-              return '<div style="display:grid;grid-template-columns:22px 1fr 1.1fr;gap:8px;align-items:center;padding:5px 0;">'
-                + '<input type="checkbox" id="'+safeId+'" name="schedCast['+grp.k+'][]" value="'+p.replace(/（/g,'(').replace(/）/g,')')+'" style="width:18px;height:18px;cursor:pointer;accent-color:#0f4c81;">'
-                + '<label for="'+safeId+'" style="font-size:.86rem;color:#1e293b;cursor:pointer;margin:0;line-height:1.5;">'+p+'</label>'
-                + '<input type="text" class="sched-cast-note" placeholder="饰演/备注（如：艾千/黄桂英/前场）" data-cast-note="'+grp.k+'|'+idx+'" style="padding:4px 8px;font-size:.8rem;border:1px solid #cbd5e1;border-radius:8px;outline:none;">'
+          if (!box || !window.__ROSTER_CAST__) return;
+          var GROUPS = [
+            { k:'ls',    n:'老生' },
+            { k:'xs',    n:'须生' },
+            { k:'xiaos', n:'小生' },
+            { k:'qy',    n:'青衣' },
+            { k:'hd',    n:'花旦' },
+            { k:'ld',    n:'老旦' },
+            { k:'hl',    n:'花脸' },
+            { k:'cj',    n:'丑角' },
+            { k:'lt',    n:'龙套（多人）' },
+            { k:'bd',    n:'乐队·司鼓板胡' },
+            { k:'stage', n:'舞美·灯光音响' }
+          ];
+          function _esc(s){ return window.__ROSTER_CAST__.esc(s); }
+          window.__ROSTER_CAST__.render(box, {
+            groups: GROUPS,
+            head: function(n, cnt){
+              return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed #cbd5e1;">'
+                + '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0f4c81,#1e6091);color:#fff;font-size:.78rem;font-weight:700;">'+cnt+'</span>'
+                + '<strong style="color:#0f4c81;">'+_esc(n)+'</strong>'
+                + '<span style="margin-left:auto;font-size:.72rem;color:#94a3b8;">可多选，每人独立备注角色</span>'
                 + '</div>';
-            }).join('');
-            card.innerHTML = head + items;
-            box.appendChild(card);
-          });
-          // R21.3 CSP 合规：统一事件绑定（替代 onfocus/onblur 内联）
-          function bindSchedCastNotes(){
-            try {
+            },
+            row: function(grp, idx, p){
+              var safeId = 'sc_'+grp.k+'_'+idx;
+              var pClean = String(p.name||'').replace(/（/g,'(').replace(/）/g,')');
+              // R21.3 CSP 合规：移除 onfocus/onblur 内联，渲染完成后统一 addEventListener 绑定（见 done）
+              return '<div style="display:grid;grid-template-columns:22px 1fr 1.1fr;gap:8px;align-items:center;padding:5px 0;">'
+                + '<input type="checkbox" id="'+_esc(safeId)+'" name="schedCast['+_esc(grp.k)+'][]" value="'+_esc(pClean)+'" data-cast-group="'+_esc(grp.k)+'" style="width:18px;height:18px;cursor:pointer;accent-color:#0f4c81;">'
+                + '<label for="'+_esc(safeId)+'" style="font-size:.86rem;color:#1e293b;cursor:pointer;margin:0;line-height:1.5;">'+_esc(p.name)+(p.primaryRole?'（'+_esc(p.primaryRole)+'）':'')+'</label>'
+                + '<input type="text" class="sched-cast-note" placeholder="饰演/备注（如：艾千/黄桂英/前场）" data-cast-note="'+_esc(grp.k)+'|'+idx+'" style="padding:4px 8px;font-size:.8rem;border:1px solid #cbd5e1;border-radius:8px;outline:none;">'
+                + '</div>';
+            },
+            done: function(){
+              // R21.3 CSP 合规：统一事件绑定（替代 onfocus/onblur 内联）
               var all = document.querySelectorAll('#schedCastBox input.sched-cast-note, #schedCastBox input[data-cast-note]');
               for (var si = 0; si < all.length; si++) {
                 (function(inp){
@@ -2460,21 +2214,20 @@
                   }, true);
                 })(all[si]);
               }
-            } catch(_bindErr){}
-          }
-          bindSchedCastNotes();
-          // 全选常用（主要演员行当）+ 清空
-          document.querySelectorAll('[data-sched-cast-all]').forEach(function(b){b.onclick=function(){
-            document.querySelectorAll('#schedCastBox input[type=checkbox][id*="laosheng"],#schedCastBox input[type=checkbox][id*="qingyi"],#schedCastBox input[type=checkbox][id*="hualian"],#schedCastBox input[type=checkbox][id*="longtao"]').forEach(function(cb){cb.checked=true;});
-          };});
-          document.querySelectorAll('[data-sched-cast-clear]').forEach(function(b){b.onclick=function(){
-            document.querySelectorAll('#schedCastBox input[type=checkbox]').forEach(function(cb){cb.checked=false;});
-            // B7：不再用 i.style.borderColor，改 classList（CSP + 与 onfocus/onblur 保持一致状态）
-            document.querySelectorAll('#schedCastBox input[data-cast-note], #schedCastBox input.sched-cast-note').forEach(function(i){
-              try { i.value=''; i.classList.remove('cast-note-focused','cast-note-filled'); } catch(_){}
-            });
-          };});
-        })();
+              // 全选常用（老生/青衣/花脸/龙套/乐队）+ 清空
+              document.querySelectorAll('[data-sched-cast-all]').forEach(function(b){b.onclick=function(){
+                document.querySelectorAll('#schedCastBox input[type=checkbox][data-cast-group="ls"],#schedCastBox input[type=checkbox][data-cast-group="qy"],#schedCastBox input[type=checkbox][data-cast-group="hl"],#schedCastBox input[type=checkbox][data-cast-group="lt"],#schedCastBox input[type=checkbox][data-cast-group="bd"]').forEach(function(cb){cb.checked=true;});
+              };});
+              document.querySelectorAll('[data-sched-cast-clear]').forEach(function(b){b.onclick=function(){
+                document.querySelectorAll('#schedCastBox input[type=checkbox]').forEach(function(cb){cb.checked=false;});
+                // B7：不再用 i.style.borderColor，改 classList（CSP + 与 onfocus/onblur 保持一致状态）
+                document.querySelectorAll('#schedCastBox input[data-cast-note], #schedCastBox input.sched-cast-note').forEach(function(i){
+                  try { i.value=''; i.classList.remove('cast-note-focused','cast-note-filled'); } catch(_){}
+                });
+              };});
+            }
+          });
+                })();
         </script>
       </div>
 
@@ -2800,55 +2553,54 @@
       }
     } catch (_dDomErr) { console.warn('[dispatchModal build err]:', _dDomErr); }
 
-    // 派工弹窗人员卡片渲染
+    // 派工弹窗人员卡片渲染 v20260906g：从真实花名册(/v1/performers)按行当动态分组
+    var __castLoaded = false;
     function __renderDispatchCast(){
       var area = document.getElementById('dispatchCastArea');
-      if (!area || area.children.length > 0) return;
-      var CAST = [
-        {k:'老生',    n:'老生',     p:['张志明（A角）','刘振声（B角）','杨国强（替补）']},
-        {k:'须生',    n:'须生',     p:['赵志远（A角）','钱立德（B角）','孙伟民（替补）']},
-        {k:'小生',    n:'小生',     p:['周建峰','武俊卿','郑海涛']},
-        {k:'青衣',    n:'青衣',     p:['李秀琴（A角）','王玉华（B角）','冯雅丽（替补）']},
-        {k:'花旦',    n:'花旦',     p:['赵美玲','陈思思','蒋文婷']},
-        {k:'老旦',    n:'老旦',     p:['孙玉华','朱秀兰','秦玉珍']},
-        {k:'花脸',    n:'花脸',     p:['王建国（队长）','韩志强','曹大磊']},
-        {k:'丑角',    n:'丑角',     p:['侯宝林','董晓斌','尹明华']},
-        {k:'龙套',    n:'龙套',     p:['龙套甲-范文斌','龙套乙-唐国平','龙套丙-罗建军','龙套丁-戴志辉','龙套戊-韩玉杰']},
-        {k:'乐队',    n:'乐队·司鼓板胡', p:['陈德胜-司鼓','刘海峰-板胡','卫宝忠-二胡','马根明-扬琴']},
-        {k:'舞美',    n:'舞美·灯光音响', p:['周小军-灯光','牛志刚-音响','史建国-服装','贺小峰-道具']}
+      if (!area || __castLoaded || !window.__ROSTER_CAST__) return;
+      __castLoaded = true;
+      var GROUPS = [
+        { k:'ls',    n:'老生' },
+        { k:'xs',    n:'须生' },
+        { k:'xiaos', n:'小生' },
+        { k:'qy',    n:'青衣' },
+        { k:'hd',    n:'花旦' },
+        { k:'ld',    n:'老旦' },
+        { k:'hl',    n:'花脸' },
+        { k:'cj',    n:'丑角' },
+        { k:'lt',    n:'龙套' },
+        { k:'bd',    n:'乐队·司鼓板胡' },
+        { k:'stage', n:'舞美·灯光音响' }
       ];
-      try {
-        CAST.forEach(function(grp, gi){
-          var card = document.createElement('div');
-          try { card.classList.add('cast-card-base'); }catch(_){ card.style.cssText='border:1.5px solid #cbd5e1;border-radius:12px;background:#fff;padding:10px 12px;transition:all .2s;'; }
-          card.onmouseover = function(){try{card.classList.add('cast-card-hover');}catch(_){}};
-          card.onmouseout  = function(){try{card.classList.remove('cast-card-hover');}catch(_){}};
-          var html = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px dashed #cbd5e1;">'
-            + '<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#0f4c81,#1e6091);color:#fff;font-size:.74rem;font-weight:700;">'+grp.p.length+'</span>'
-            + '<strong style="color:#0f4c81;font-size:0.9rem;">'+grp.n+'</strong></div>';
-          grp.p.forEach(function(nm, pi){
-            var sid2 = 'dp_'+gi+'_'+pi;
-            html += '<div style="display:grid;grid-template-columns:22px 1fr 1.1fr;gap:6px;align-items:center;padding:3px 0;">'
-              + '<input type="checkbox" id="'+sid2+'" value="'+nm.replace(/（/g,'(').replace(/）/g,')')+'" style="width:18px;height:18px;cursor:pointer;accent-color:#0f4c81;">'
-              + '<label for="'+sid2+'" style="font-size:.84rem;color:#1e293b;cursor:pointer;margin:0;line-height:1.4;">'+nm+'</label>'
-              + '<input type="text" class="dp-note" placeholder="备注/饰演" data-dp-note="'+grp.k+'|'+pi+'" style="padding:3px 7px;font-size:.78rem;border:1px solid #cbd5e1;border-radius:7px;outline:none;">'
-              + '</div>';
+      window.__ROSTER_CAST__.render(area, {
+        cls: 'cast-card-base',
+        head: function(n, cnt){
+          return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px dashed #cbd5e1;">'
+            + '<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#0f4c81,#1e6091);color:#fff;font-size:.74rem;font-weight:700;">'+cnt+'</span>'
+            + '<strong style="color:#0f4c81;font-size:0.9rem;">'+window.__ROSTER_CAST__.esc(n)+'</strong></div>';
+        },
+        row: function(grp, idx, p){
+          var sid2 = 'dp_'+grp.k+'_'+idx;
+          return '<div style="display:grid;grid-template-columns:22px 1fr 1.1fr;gap:6px;align-items:center;padding:3px 0;">'
+            + '<input type="checkbox" id="'+window.__ROSTER_CAST__.esc(sid2)+'" value="'+window.__ROSTER_CAST__.esc(p.name)+'" data-cast-name="'+window.__ROSTER_CAST__.esc(p.name)+'" data-cast-role="'+window.__ROSTER_CAST__.esc(p.primaryRole||'')+'" data-cast-group="'+window.__ROSTER_CAST__.esc(grp.k)+'" style="width:18px;height:18px;cursor:pointer;accent-color:#0f4c81;">'
+            + '<label for="'+window.__ROSTER_CAST__.esc(sid2)+'" style="font-size:.84rem;color:#1e293b;cursor:pointer;margin:0;line-height:1.4;">'+window.__ROSTER_CAST__.esc(p.name)+(p.primaryRole?'（'+window.__ROSTER_CAST__.esc(p.primaryRole)+'）':'')+'</label>'
+            + '<input type="text" class="dp-note" placeholder="备注/饰演" data-dp-note="'+window.__ROSTER_CAST__.esc(grp.k)+'|'+idx+'" style="padding:3px 7px;font-size:.78rem;border:1px solid #cbd5e1;border-radius:7px;outline:none;">'
+            + '</div>';
+        },
+        done: function(){
+          // CSP合规：note focus/blur classList 切换
+          var notes = area.querySelectorAll('input.dp-note, input[data-dp-note]');
+          notes.forEach(function(inp){
+            inp.addEventListener('focus', function(){try{inp.classList.add('cast-note-focused');}catch(_){}}, true);
+            inp.addEventListener('blur', function(){
+              try{
+                if (!inp.value) inp.classList.remove('cast-note-focused','cast-note-filled');
+                else { inp.classList.add('cast-note-filled'); inp.classList.remove('cast-note-focused'); }
+              }catch(_){}
+            }, true);
           });
-          card.innerHTML = html;
-          area.appendChild(card);
-        });
-        // CSP合规：note focus/blur classList 切换
-        var notes = area.querySelectorAll('input.dp-note, input[data-dp-note]');
-        notes.forEach(function(inp){
-          inp.addEventListener('focus', function(){try{inp.classList.add('cast-note-focused');}catch(_){}}, true);
-          inp.addEventListener('blur', function(){
-            try{
-              if (!inp.value) inp.classList.remove('cast-note-focused','cast-note-filled');
-              else { inp.classList.add('cast-note-filled'); inp.classList.remove('cast-note-focused'); }
-            }catch(_){}
-          }, true);
-        });
-      } catch (_rc) { console.warn('[renderDispatchCast err]:', _rc); }
+        }
+      });
     }
 
     // 派工弹窗 open / close
@@ -3749,6 +3501,7 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
+        if (window.QinPagination) return; // 真分页器已接管，跳过假分页注入（orders/finance 同款修复范式）
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -3872,6 +3625,7 @@ try{
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -3885,6 +3639,7 @@ try{
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
+        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return; // 分页条按钮放行（orders/finance 同款修复）
         // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
@@ -4009,14 +3764,28 @@ try{
   });
 })();
 </script>
-<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停模板弹窗（新增排期 addScheduleModal、行内派工 dispatchModal、视图切换等；含动态重绘行 MutationObserver 补标） */
 (function(){
+  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
+  var SEL = 'button[id], a[id], [data-action][id], .btn[id], .btn-action[id], button, a.btn, .btn-action, .view-toggle button, [title*="派工"], [data-view]';
   function __markBound(){
-    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
-    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+    try{
+      var els=document.querySelectorAll(SEL);
+      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
+    }catch(_){}
   }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
-  else { __markBound(); setTimeout(__markBound,500); }
+  function __boot(){
+    __markBound();
+    try{
+      if(window.MutationObserver){
+        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
+        mo.observe(document.documentElement,{childList:true,subtree:true});
+      }
+    }catch(_){}
+    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
+  else { __boot(); }
 })();</script>
 </body>
 </html>
