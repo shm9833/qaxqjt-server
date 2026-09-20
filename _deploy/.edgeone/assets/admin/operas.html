@@ -41,7 +41,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>剧目资源管理 - 秦安县秦剧团云端预约系统 | {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260906">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -493,14 +493,7 @@
 .admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
   content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
 }
-/* ====== 空卡片修复20260825：隐藏多余分页栏 + 约束表格高度 ====== */
-.pagination-bar, .pagination-toolbar, [class*="pagination-bar"], [class*="pg-toolbar"] {
-  display: none !important;
-  max-height: 0 !important;
-  overflow: hidden !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
+/* ====== 20260906 修复：真分页条恢复显示（QinPagination 渲染），仅保留表格高度约束 ====== */
 .table-wrapper, .table-wrap, .table-container, .data-table-container {
   max-height: 400px !important;
   overflow-y: auto !important;
@@ -700,7 +693,7 @@
           <nav class="admin-breadcrumb">
             <a href="index.html">首页</a>
             <span class="separator">/</span>
-            <a href="#">业务管理</a>
+            <a href="index.html">业务管理</a>
             <span class="separator">/</span>
             <span class="current">剧目资源管理</span>
           </nav>
@@ -753,16 +746,7 @@
                 <div>
                   <label style="display:block;font-weight:700;color:#7f1d1d;margin-bottom:6px;">关联剧目名称</label>
                   <select name="operaName" style="width:100%;padding:10px 14px;border:1.5px solid #dc2626;border-radius:10px;background:#fff;">
-                    <option value="">请选择关联剧目</option>
-                    <option>《火焰驹》- 传统本戏</option>
-                    <option>《窦娥冤》- 传统本戏</option>
-                    <option>《三滴血》- 传统本戏</option>
-                    <option>《周仁回府》- 传统本戏</option>
-                    <option>《断桥》- 经典折子戏</option>
-                    <option>《拾玉镯》- 经典折子戏</option>
-                    <option>《三娘教子》- 经典折子戏</option>
-                    <option>《二进宫》- 经典折子戏</option>
-                    <option>✨ 新增剧目</option>
+                    <option value="">请选择关联剧目</option><option>✨ 新增剧目</option>
                   </select>
                 </div>
                 <div>
@@ -781,7 +765,7 @@
                 </div>
               </div>
               <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
-                <button type="submit" class="btn" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;">✅ 上传剧照</button>
+                <button type="submit" id="operasAttachSubmitBtn" class="btn" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;">✅ 上传剧照</button>
                 <button type="reset" class="btn btn-outline">🔄 清空</button>
                 <small style="color:#b91c1c;">💡 自动生成100×100缩略图预览，检测分辨率与文件大小。</small>
               </div>
@@ -790,13 +774,10 @@
         </div>
 
         <div class="admin-card" style="padding:0;overflow:hidden;">
-          <div class="category-tabs">
-            <div class="category-tab active" data-cat="all">全部剧目 (48)</div>
-            <div class="category-tab" data-cat="traditional">传统本戏 (18)</div>
-            <div class="category-tab" data-cat="excerpt">经典折子戏 (16)</div>
-            <div class="category-tab" data-cat="folk">民俗专场 (8)</div>
-            <div class="category-tab" data-cat="modern">现代戏 (6)</div>
-            <button class="opera-cat-manage">⚙️ 分类管理</button>
+          <!-- v20260909b：分类 tabs 由 API 动态渲染（/v1/play-categories） -->
+          <div class="category-tabs" id="operaCategoryTabs">
+            <div class="category-tab active" data-cat="all">全部剧目</div>
+            <button class="opera-cat-manage" id="catManageOpenBtn" type="button">⚙️ 分类管理</button>
           </div>
 
           <div class="admin-card-body">
@@ -813,424 +794,13 @@
 
             <div id="operaGridView">
               <div class="opera-grid" data-paginate="list" data-page-size="12">
-                <div class="opera-card">
-                  <div class="opera-poster">
-                  <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23fdecea%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23922b21%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23f1948a%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f1948a%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23f1948a%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23f1948a%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23f1948a%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f1948a%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f1948a%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f1948a%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23f1948a%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23f1948a%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23f1948a%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23fdfefe%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23f1948a%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fdfefe%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E7%81%AB%E7%84%B0%E9%A9%B9%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="火焰驹">
-                    <div class="category-label">传统本戏</div>
-                    <div class="hot-badge">🔥 热门</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《火焰驹》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>180分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：张xx、李xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag temple">🏮 庙会</span>
-                      <span class="scene-tag festival">🎉 节庆</span>
-                      <span class="scene-tag commercial">🎊 商演</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">28 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="huoyanju">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
+                  <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-light);">
+                    <div style="font-size:3rem;margin-bottom:12px;">🎭</div>
+                    <div style="font-size:1.1rem;font-weight:600;margin-bottom:8px;">暂无剧目数据</div>
+                    <div style="font-size:0.85rem;">请点击「新增剧目」添加剧目资源</div>
                   </div>
                 </div>
-
-                <div class="opera-card">
-                  <div class="opera-poster">
-                    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23eef7ee%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%231e8449%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23d4ac0d%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23d4ac0d%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23d4ac0d%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23d4ac0d%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23d4ac0d%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23d4ac0d%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23d4ac0d%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23d4ac0d%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23d4ac0d%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23d4ac0d%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23d4ac0d%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23d4ac0d%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffffff%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E7%AA%A6%E5%A8%A5%E5%86%A4%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="窦娥冤">
-                    <div class="category-label">传统本戏</div>
-                    <div class="hot-badge">🔥 热门</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《窦娥冤》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>165分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：王xx、赵xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag temple">🏮 庙会</span>
-                      <span class="scene-tag huimin">🎪 惠民</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">22 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="doueyuan">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="opera-card">
-                  <div class="opera-poster">
-                    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23fdf2f8%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23884ea0%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23f8c471%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f8c471%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23f8c471%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23f8c471%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23f8c471%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23f8c471%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffffff%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E7%99%BD%E8%9B%87%E4%BC%A0%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="白蛇传">
-                    <div class="category-label">传统本戏</div>
-                    <div class="hot-badge">🔥 热门</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《白蛇传》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>170分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：刘xx、陈xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag festival">🎉 节庆</span>
-                      <span class="scene-tag commercial">🎊 商演</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">19 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="baishezhuan">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="opera-card">
-                  <div class="opera-poster">
-                    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23fdf6e3%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23b7950b%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23dc7633%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23dc7633%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23dc7633%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23dc7633%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23dc7633%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23dc7633%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffffff%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E7%A9%86%E6%A1%82%E8%8B%B1%E6%8C%82%E5%B8%85%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="穆桂英挂帅">
-                    <div class="category-label">传统本戏</div>
-                    <div class="hot-badge">🔥 热门</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《穆桂英挂帅》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>155分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：马xx、杨xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag temple">🏮 庙会</span>
-                      <span class="scene-tag festival">🎉 节庆</span>
-                      <span class="scene-tag huimin">🎪 惠民</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">25 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="muguiying">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="opera-card">
-                  <div class="opera-poster">
-                    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23eaf2fb%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%231a4878%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23c9a962%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23c9a962%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23c9a962%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23c9a962%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23c9a962%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23c9a962%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23c9a962%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23c9a962%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23c9a962%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23c9a962%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23c9a962%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23c9a962%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffffff%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E8%B5%B5%E6%B0%8F%E5%AD%A4%E5%84%BF%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="赵氏孤儿">
-                    <div class="category-label">传统本戏</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《赵氏孤儿》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>190分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：孙xx、周xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag temple">🏮 庙会</span>
-                      <span class="scene-tag commercial">🎊 商演</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">14 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="zhaoshiguer">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="opera-card">
-                  <div class="opera-poster">
-                    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23e8f8f5%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23117a65%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23f9e79f%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f9e79f%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23f9e79f%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23f9e79f%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23f9e79f%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f9e79f%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f9e79f%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f9e79f%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23f9e79f%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23f9e79f%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23f9e79f%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23f9e79f%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffffff%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E9%93%A1%E7%BE%8E%E6%A1%88%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="铡美案">
-                    <div class="category-label">经典折子戏</div>
-                    <div class="hot-badge">🔥 热门</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《铡美案》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>45分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：吴xx、郑xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag temple">🏮 庙会</span>
-                      <span class="scene-tag huimin">🎪 惠民</span>
-                      <span class="scene-tag festival">🎉 节庆</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">32 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="zhameian">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="opera-card">
-                  <div class="opera-poster">
-                    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23fdf6e3%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23b7950b%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23dc7633%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23dc7633%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23dc7633%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23dc7633%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23dc7633%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23dc7633%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffffff%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E4%B8%89%E9%A1%BE%E8%8C%85%E5%BA%90%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="三顾茅庐">
-                    <div class="category-label">经典折子戏</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《三顾茅庐》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>50分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：韩xx、冯xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag huimin">🎪 惠民</span>
-                      <span class="scene-tag festival">🎉 节庆</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">16 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="sangumaolu">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="opera-card">
-                  <div class="opera-poster">
-                    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23eaecee%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%232c3e50%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23f39c12%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f39c12%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23f39c12%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23f39c12%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23f39c12%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f39c12%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f39c12%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f39c12%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23f39c12%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23f39c12%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23f39c12%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23fdfefe%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23f39c12%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fdfefe%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E9%9C%B8%E7%8E%8B%E5%88%AB%E5%A7%AC%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="霸王别姬">
-                    <div class="category-label">经典折子戏</div>
-                    <div class="hot-badge">🔥 热门</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《霸王别姬》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>40分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：何xx、董xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag commercial">🎊 商演</span>
-                      <span class="scene-tag festival">🎉 节庆</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">18 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="bawangbieji">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="opera-card">
-                  <div class="opera-poster">
-                    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23fff0ed%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23b03a2e%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23f5b041%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f5b041%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23f5b041%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23f5b041%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23f5b041%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f5b041%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f5b041%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f5b041%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23f5b041%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23f5b041%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23f5b041%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23f5b041%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffffff%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E6%B0%91%E4%BF%97%E5%A9%9A%E5%AB%81%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="民俗婚嫁">
-                    <div class="category-label">民俗专场</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《龙凤呈祥》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>90分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：许xx、蒋xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag festival">🎉 节庆</span>
-                      <span class="scene-tag commercial">🎊 商演</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">11 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="longfengchengxiang">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="opera-card">
-                  <div class="opera-poster">
-                    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23fdf2f8%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23884ea0%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23f8c471%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f8c471%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23f8c471%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23f8c471%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23f8c471%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23f8c471%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffffff%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E6%9D%91%E5%AE%98%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="村官">
-                    <div class="category-label">现代戏</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《村官》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>120分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：沈xx、彭xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag huimin">🎪 惠民</span>
-                      <span class="scene-tag festival">🎉 节庆</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">9 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="cunguan">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="opera-card">
-                  <div class="opera-poster">
-                    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23fdf2f8%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23884ea0%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23f8c471%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f8c471%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23f8c471%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23f8c471%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23f8c471%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23f8c471%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffffff%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E6%96%AD%E6%A1%A5%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="断桥">
-                    <div class="category-label">经典折子戏</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《断桥》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>35分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：吕xx、施xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag temple">🏮 庙会</span>
-                      <span class="scene-tag commercial">🎊 商演</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">13 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="duanqiao">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="opera-card">
-                  <div class="opera-poster">
-                    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23fdecea%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23922b21%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23f1948a%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f1948a%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23f1948a%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23f1948a%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23f1948a%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f1948a%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f1948a%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f1948a%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23f1948a%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23f1948a%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23f1948a%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23fdfefe%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23f1948a%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fdfefe%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E9%97%B9%E5%85%83%E5%AE%B5%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="闹元宵">
-                    <div class="category-label">民俗专场</div>
-                    <div class="hot-badge">🔥 热门</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《闹元宵》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>80分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：曾xx、魏xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag festival">🎉 节庆</span>
-                      <span class="scene-tag temple">🏮 庙会</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">15 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="naoyuanxiao">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="opera-card">
-                  <div class="opera-poster">
-                    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23fdf6e3%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23b7950b%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23dc7633%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23dc7633%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23dc7633%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23dc7633%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23dc7633%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23dc7633%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23dc7633%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffffff%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E4%B9%A1%E6%9D%91%E6%96%B0%E8%B2%8C%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="乡村新貌">
-                    <div class="category-label">现代戏</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《乡村新貌》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>130分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：谢xx、苏xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag huimin">🎪 惠民</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">7 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="xiangcunxinmao">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="opera-card">
-                  <div class="opera-poster">
-                    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%205120%202880%22%20width%3D%225120%22%20height%3D%222880%22%20preserveAspectRatio%3D%22xMidYMid%20slice%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23fdf2f8%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23884ea0%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22hl%22%20cx%3D%2230%25%22%20cy%3D%2225%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23f8c471%22%20stop-opacity%3D%220.38%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f8c471%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23bg%29%22%2F%3E%3Crect%20width%3D%225120%22%20height%3D%222880%22%20fill%3D%22url%28%23hl%29%22%2F%3E%3Cg%20opacity%3D%220.22%22%20fill%3D%22none%22%20stroke%3D%22%23f8c471%22%20stroke-width%3D%222.5%22%3E%3Cpath%20d%3D%22M0%2C2246.4%20Q1024.0%2C1728.0%202048.0%2C2246.4%20T4096.0%2C2246.4%20T5120%2C2015.9999999999998%22%2F%3E%3Cpath%20d%3D%22M0%2C2448.0%20Q1280.0%2C2015.9999999999998%202560.0%2C2448.0%20T5120%2C2246.4%22%2F%3E%3C%2Fg%3E%3Cg%20opacity%3D%220.25%22%20fill%3D%22%23f8c471%22%3E%3Ccircle%20cx%3D%22716.8000000000001%22%20cy%3D%22576.0%22%20r%3D%22100.80000000000001%22%2F%3E%3Ccircle%20cx%3D%224505.6%22%20cy%3D%22806.4000000000001%22%20r%3D%2272.0%22%2F%3E%3Ccircle%20cx%3D%224096.0%22%20cy%3D%222361.6%22%20r%3D%2257.6%22%2F%3E%3C%2Fg%3E%0A%20%20%20%20%3Cg%20transform%3D%22translate%282560.0%2C1296.0%29%22%20fill%3D%22none%22%20stroke%3D%22%23f8c471%22%20stroke-width%3D%2277%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-535.68%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-362.88%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-820.8%22%20y%3D%22-190.08%22%20width%3D%221641.6%22%20height%3D%2299.36%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Crect%20x%3D%22-69.12%22%20y%3D%22-535.68%22%20width%3D%22138.24%22%20height%3D%221123.2%22%20rx%3D%2277%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-743.04%2C51.839999999999996%20Q-328.32%2C-86.4%200%2C51.839999999999996%20Q328.32%2C190.08%20743.04%2C51.839999999999996%20L656.64%2C293.76000000000005%20Q328.32%2C466.56000000000006%200%2C328.32%20Q-328.32%2C466.56000000000006%20-656.64%2C293.76000000000005%20Z%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M-397.44%2C483.84000000000003%20Q0%2C432.0%20397.44%2C483.84000000000003%20L293.76000000000005%2C673.9200000000001%20Q0%2C639.36%20-293.76000000000005%2C673.9200000000001%20Z%22%20fill%3D%22%23f8c471%22%20stroke%3D%22none%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%3Cg%3E%3Crect%20x%3D%22307.2%22%20y%3D%222419.2%22%20width%3D%224505.6%22%20height%3D%22316.8%22%20rx%3D%22129.6%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.14%22%20stroke%3D%22%23f8c471%22%20stroke-opacity%3D%220.75%22%20stroke-width%3D%221.5%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%222635.2000000000003%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffffff%22%20font-size%3D%22244%22%20font-family%3D%22STXingkai%2CKaiTi%2Cserif%22%20font-weight%3D%22700%22%20letter-spacing%3D%222%22%3E%E9%BB%9B%E7%8E%89%E8%91%AC%E8%8A%B1%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="黛玉葬花">
-                    <div class="category-label">经典折子戏</div>
-                  </div>
-                  <div class="opera-body">
-                    <div class="opera-title-row">
-                      <h3 class="opera-title">《黛玉葬花》</h3>
-                    </div>
-                    <div class="opera-meta">
-                      <span><span class="meta-icon">⏱️</span>38分钟</span>
-                      <span><span class="meta-icon">👤</span>主演：潘xx、范xx</span>
-                    </div>
-                    <div class="scene-tags">
-                      <span class="scene-tag commercial">🎊 商演</span>
-                      <span class="scene-tag festival">🎉 节庆</span>
-                    </div>
-                    <div class="opera-stats">
-                      <span class="stat-label">{year}年演出</span>
-                      <span class="stat-num">10 场</span>
-                    </div>
-                    <div class="opera-actions">
-                      <button class="btn btn-secondary btn-sm view-detail" data-opera="daiyuzanghua">👁 查看</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">🔥 热门</button>
-                    </div>
-                  </div>
-                </div>
-
               </div>
-
-            </div>
 
             <div id="operaListView" class="csp-hide">
               <div class="table-wrapper">
@@ -1251,227 +821,8 @@
                       <th>操作</th>
                     </tr>
                   </thead>
-                  <tbody data-paginate="list" data-page-size="10">
-                    <tr>
-                      <td><strong style="color:var(--primary);">OP001</strong></td>
-                      <td><strong>《火焰驹》</strong></td>
-                      <td><span class="badge badge-gold">传统本戏</span></td>
-                      <td>180分钟</td>
-                      <td>庙会/节庆/商演</td>
-                      <td>张xx、李xx</td>
-                      <td>¥8,500</td>
-                      <td style="color:var(--primary);font-weight:600;">¥6,800</td>
-                      <td><strong style="color:var(--gold-dark);">28场</strong></td>
-                      <td><span style="color:#ff4757;">🔥 是</span></td>
-                      <td>2020-03-15</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm view-detail" data-opera="huoyanju">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🔥</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">OP002</strong></td>
-                      <td><strong>《窦娥冤》</strong></td>
-                      <td><span class="badge badge-gold">传统本戏</span></td>
-                      <td>165分钟</td>
-                      <td>庙会/惠民</td>
-                      <td>王xx、赵xx</td>
-                      <td>¥7,800</td>
-                      <td style="color:var(--primary);font-weight:600;">¥6,800</td>
-                      <td><strong style="color:var(--gold-dark);">22场</strong></td>
-                      <td><span style="color:#ff4757;">🔥 是</span></td>
-                      <td>2019-08-20</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm view-detail" data-opera="doueyuan">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🔥</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">OP003</strong></td>
-                      <td><strong>《白蛇传》</strong></td>
-                      <td><span class="badge badge-gold">传统本戏</span></td>
-                      <td>170分钟</td>
-                      <td>节庆/商演</td>
-                      <td>刘xx、陈xx</td>
-                      <td>¥8,200</td>
-                      <td style="color:var(--primary);font-weight:600;">¥6,800</td>
-                      <td><strong style="color:var(--gold-dark);">19场</strong></td>
-                      <td><span style="color:#ff4757;">🔥 是</span></td>
-                      <td>2020-01-10</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm view-detail" data-opera="baishezhuan">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🔥</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">OP004</strong></td>
-                      <td><strong>《穆桂英挂帅》</strong></td>
-                      <td><span class="badge badge-gold">传统本戏</span></td>
-                      <td>155分钟</td>
-                      <td>庙会/节庆/惠民</td>
-                      <td>马xx、杨xx</td>
-                      <td>¥9,000</td>
-                      <td style="color:var(--primary);font-weight:600;">¥6,800</td>
-                      <td><strong style="color:var(--gold-dark);">25场</strong></td>
-                      <td><span style="color:#ff4757;">🔥 是</span></td>
-                      <td>2018-11-05</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm view-detail" data-opera="muguiying">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🔥</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">OP005</strong></td>
-                      <td><strong>《赵氏孤儿》</strong></td>
-                      <td><span class="badge badge-gold">传统本戏</span></td>
-                      <td>190分钟</td>
-                      <td>庙会/商演</td>
-                      <td>孙xx、周xx</td>
-                      <td>¥9,500</td>
-                      <td style="color:var(--primary);font-weight:600;">¥6,800</td>
-                      <td><strong style="color:var(--gold-dark);">14场</strong></td>
-                      <td>否</td>
-                      <td>2021-05-18</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm view-detail" data-opera="zhaoshiguer">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🔥</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">OP006</strong></td>
-                      <td><strong>《铡美案》</strong></td>
-                      <td><span class="badge badge-info">经典折子戏</span></td>
-                      <td>45分钟</td>
-                      <td>庙会/惠民/节庆</td>
-                      <td>吴xx、郑xx</td>
-                      <td>¥3,200</td>
-                      <td style="color:var(--primary);font-weight:600;">¥2,800</td>
-                      <td><strong style="color:var(--gold-dark);">32场</strong></td>
-                      <td><span style="color:#ff4757;">🔥 是</span></td>
-                      <td>2017-06-22</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm view-detail" data-opera="zhameian">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🔥</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">OP007</strong></td>
-                      <td><strong>《三顾茅庐》</strong></td>
-                      <td><span class="badge badge-info">经典折子戏</span></td>
-                      <td>50分钟</td>
-                      <td>惠民/节庆</td>
-                      <td>韩xx、冯xx</td>
-                      <td>¥3,500</td>
-                      <td style="color:var(--primary);font-weight:600;">¥2,800</td>
-                      <td><strong style="color:var(--gold-dark);">16场</strong></td>
-                      <td>否</td>
-                      <td>2020-09-12</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm view-detail" data-opera="sangumaolu">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🔥</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">OP008</strong></td>
-                      <td><strong>《霸王别姬》</strong></td>
-                      <td><span class="badge badge-info">经典折子戏</span></td>
-                      <td>40分钟</td>
-                      <td>商演/节庆</td>
-                      <td>何xx、董xx</td>
-                      <td>¥3,000</td>
-                      <td style="color:var(--primary);font-weight:600;">¥2,800</td>
-                      <td><strong style="color:var(--gold-dark);">18场</strong></td>
-                      <td><span style="color:#ff4757;">🔥 是</span></td>
-                      <td>2019-04-08</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm view-detail" data-opera="bawangbieji">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🔥</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">OP009</strong></td>
-                      <td><strong>《龙凤呈祥》</strong></td>
-                      <td><span class="badge badge-warning">民俗专场</span></td>
-                      <td>90分钟</td>
-                      <td>节庆/商演</td>
-                      <td>许xx、蒋xx</td>
-                      <td>¥5,500</td>
-                      <td style="color:var(--primary);font-weight:600;">¥4,800</td>
-                      <td><strong style="color:var(--gold-dark);">11场</strong></td>
-                      <td>否</td>
-                      <td>2021-02-14</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm view-detail" data-opera="longfengchengxiang">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🔥</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">OP010</strong></td>
-                      <td><strong>《村官》</strong></td>
-                      <td><span class="badge badge-success">现代戏</span></td>
-                      <td>120分钟</td>
-                      <td>惠民/节庆</td>
-                      <td>沈xx、彭xx</td>
-                      <td>¥6,800</td>
-                      <td style="color:var(--primary);font-weight:600;">¥5,800</td>
-                      <td><strong style="color:var(--gold-dark);">9场</strong></td>
-                      <td>否</td>
-                      <td>{year}-02-28</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm view-detail" data-opera="cunguan">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-gold btn-sm">🔥</button>
-                          <button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>
-                          <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>
-                        </div>
-                      </td>
-                    </tr>
+                  <tbody data-paginate="list" data-page-size="10" data-paginate-keep="1">
+                    <tr><td colspan="11" style="text-align:center;padding:40px;color:var(--text-light);">暂无剧目数据，新增剧目后在此列表显示</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1484,6 +835,24 @@
   </div>
 
   <!-- 新增剧目模态框 -->
+  <!-- v20260909b 剧目分类管理弹窗 -->
+  <div class="modal-overlay" id="catManageModal" style="display:none;">
+    <div class="modal-box" style="max-width:680px;">
+      <div class="modal-header">
+        <h3>⚙️ 剧目分类管理</h3>
+        <button class="modal-close" id="catManageCloseBtn" type="button">✕</button>
+      </div>
+      <div class="modal-body" style="padding:20px 24px;max-height:62vh;overflow-y:auto;">
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+          <input id="catNewName" type="text" class="form-control" placeholder="新分类名称，如：神话戏 / 校园专场" style="flex:1;min-width:0;">
+          <button class="btn btn-primary" id="catAddBtn" type="button" style="white-space:nowrap;">➕ 新增分类</button>
+        </div>
+        <div id="catManageList"></div>
+        <div style="font-size:.82rem;color:var(--text-light);margin-top:12px;line-height:1.7;">💡 停用后分类不在剧目表单中可选，已归类剧目保留；分类下有剧目时不可删除（可先重命名迁移或停用）；分类重命名会自动迁移该分类下全部剧目；↑↓ 调整排列顺序。</div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="addOperaModal" style="display:none;">
     <div class="modal-box" style="max-width:680px;">
       <div class="modal-header">
@@ -1540,138 +909,10 @@
         <h3>🎭 剧目详情</h3>
         <button class="modal-close" id="modalCloseBtn">✕</button>
       </div>
-      <div class="modal-body">
-        <div class="detail-section">
-          <div class="detail-section-title">剧目基本信息</div>
-          <div class="detail-basic-grid">
-            <div class="detail-basic-item">
-              <span class="label">剧目名称：</span>
-              <span class="value">《火焰驹》</span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">剧目分类：</span>
-              <span class="value"><span class="badge badge-gold">传统本戏</span></span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">演出时长：</span>
-              <span class="value">180 分钟（3小时）</span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">演出成本：</span>
-              <span class="value">¥8,500 / 场</span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">建议报价：</span>
-              <span class="value" style="color:var(--primary);font-weight:600;">¥6,800 / 场</span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">{year}演出：</span>
-              <span class="value" style="color:var(--gold-dark);font-weight:600;">28 场</span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">累计演出：</span>
-              <span class="value">186 场</span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">是否热门：</span>
-              <span class="value" style="color:#ff4757;">🔥 热门推荐</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="detail-section">
-          <div class="detail-section-title">剧情简介</div>
-          <p style="color:var(--text-dark);line-height:1.9;font-size:0.95rem;text-indent:2em;">
-            《火焰驹》是秦腔传统经典剧目，讲述了北宋时期，李彦贵与黄桂英的爱情故事，以及艾谦仗义救人的侠义事迹。故事情节跌宕起伏，人物形象鲜明生动。全剧通过"卖水"、"传信"、"打路"、"祭桩"等经典折段，展现了人情冷暖、世态炎凉，歌颂了忠贞不渝的爱情和舍己为人的侠义精神。该剧唱腔激昂慷慨，表演细腻传神，是秦腔艺术宝库中的璀璨明珠，深受广大群众喜爱，常演不衰。
-          </p>
-        </div>
-
-        <div class="detail-section">
-          <div class="detail-section-title">演员表（行当配置）</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div class="detail-actor-row">
-              <div>
-                <strong style="color:var(--primary-dark);">张xx</strong>
-                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 李彦贵</span>
-              </div>
-              <span class="detail-actor-role">小生</span>
-            </div>
-            <div class="detail-actor-row">
-              <div>
-                <strong style="color:var(--primary-dark);">李xx</strong>
-                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 黄桂英</span>
-              </div>
-              <span class="detail-actor-role">闺门旦</span>
-            </div>
-            <div class="detail-actor-row">
-              <div>
-                <strong style="color:var(--primary-dark);">王xx</strong>
-                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 艾谦</span>
-              </div>
-              <span class="detail-actor-role">须生</span>
-            </div>
-            <div class="detail-actor-row">
-              <div>
-                <strong style="color:var(--primary-dark);">赵xx</strong>
-                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 黄璋</span>
-              </div>
-              <span class="detail-actor-role">大花脸</span>
-            </div>
-            <div class="detail-actor-row">
-              <div>
-                <strong style="color:var(--primary-dark);">刘xx</strong>
-                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 李母</span>
-              </div>
-              <span class="detail-actor-role">老旦</span>
-            </div>
-            <div class="detail-actor-row">
-              <div>
-                <strong style="color:var(--primary-dark);">陈xx</strong>
-                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 周瑞菊</span>
-              </div>
-              <span class="detail-actor-role">花旦</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="detail-section">
-          <div class="detail-section-title">所需道具服装清单</div>
-          <div class="detail-prop-list">
-            <div class="detail-prop-item"><span>🧥 男蟒袍</span><span class="qty">×3</span></div>
-            <div class="detail-prop-item"><span>👘 女帔</span><span class="qty">×2</span></div>
-            <div class="detail-prop-item"><span>👑 盔头</span><span class="qty">×5</span></div>
-            <div class="detail-prop-item"><span>⚔️ 宝剑</span><span class="qty">×2</span></div>
-            <div class="detail-prop-item"><span>🎋 马鞭</span><span class="qty">×1</span></div>
-            <div class="detail-prop-item"><span>🎀 绣花鞋</span><span class="qty">×4</span></div>
-            <div class="detail-prop-item"><span>📜 书信道具</span><span class="qty">×2</span></div>
-            <div class="detail-prop-item"><span>🎭 脸谱套装</span><span class="qty">×6</span></div>
-          </div>
-        </div>
-
-        <div class="detail-section">
-          <div class="detail-section-title">伴奏乐谱</div>
-          <div style="background:var(--bg-light);border-radius:var(--radius);padding:18px;">
-            <p style="margin-bottom:12px;color:var(--text-light);font-size:0.9rem;">📋 主要曲牌与板式配置：</p>
-            <ul style="list-style:disc;padding-left:24px;color:var(--text-dark);font-size:0.92rem;line-height:2;">
-              <li><strong>开场曲牌：</strong>《跳加官》→《开台套》→《引子》</li>
-              <li><strong>主要板式：</strong>慢板、二六板、带板、尖板、滚板</li>
-              <li><strong>经典唱段：</strong>《花园卖水》（二六转慢板）、《打路》（滚板）、《祭桩》（大段苦音）</li>
-              <li><strong>乐队编制：</strong>板胡1、二胡2、扬琴1、琵琶1、三弦1、司鼓1、铙钹1、锣1、梆子1（共9人）</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="detail-section" style="margin-bottom:0;">
-          <div class="detail-section-title">演出注意事项</div>
-          <div style="background:linear-gradient(135deg, rgba(139,0,0,0.05), rgba(212,175,55,0.08));border-radius:var(--radius);padding:18px;border-left:4px solid var(--primary);">
-            <ul style="list-style:disc;padding-left:24px;color:var(--text-dark);font-size:0.92rem;line-height:2;">
-              <li>《祭桩》一折需特别注意旦角情绪把控，苦音大段演唱前需给演员充足休息时间</li>
-              <li>武打场面（如《打路》）需提前检查舞台安全，预留足够表演空间</li>
-              <li>火焰驹道具需安排专人管理，马匹造型上场前需演员熟悉</li>
-              <li>建议演出前全体演员进行至少1次完整联排，确保衔接流畅</li>
-              <li>服装组需在演出前2小时完成全部角色服装准备工作</li>
-            </ul>
-          </div>
+      <div class="modal-body" id="operaDetailBody">
+        <div style="text-align:center;padding:60px 20px;color:var(--text-light);">
+          <div style="font-size:3rem;margin-bottom:12px;">🎭</div>
+          <div>请在剧目列表中选择真实剧目查看详情</div>
         </div>
       </div>
     </div>
@@ -1680,8 +921,17 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
-  <script src="../js/pagination.js?v=20260803"></script>
+<script src="../js/app.js?v=20260908n"></script>
+<script>/* 生产空白态守卫配置
+   v20260908r：剧目页已全程对接 /v1/plays 真实 API（列表/新增/编辑/删除），
+   admin-blank.js 的 blankSelector 会无条件 innerHTML 覆盖容器（0.4s~25s 八轮 +
+   每次点击后 250/700ms），会把异步加载回来的真实剧目抹掉（.opera-grid 被整个替换、
+   tbody 被填空白行）——故本页不再声明任何空白规则 */
+window.__ADMIN_BLANK_CFG__ = [];
+</script>
+<script src="../js/admin-blank.js?v=20260906g"></script>
+
+  <script src="../js/pagination.js?v=20260908p"></script>
   <script>
     (function() {
       var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
@@ -1801,20 +1051,21 @@
     var gridView = document.getElementById('operaGridView');
     var listView = document.getElementById('operaListView');
     if (viewGridBtn) {
-      viewGridBtn.addEventListener('click', function() {
+      // 20260906 修复：改用 onclick 属性绑定 —— SuperPatch 6/6 对含 onclick 的按钮不再首击劫持（原 addEventListener 首击只弹演示 toast 不切视图）
+      viewGridBtn.onclick = function() {
         viewGridBtn.classList.add('active');
         viewListBtn.classList.remove('active');
         try { if (gridView) gridView.classList.remove('csp-hide'); } catch(_){}
         try { if (listView) listView.classList.add('csp-hide'); } catch(_){}
-      });
+      };
     }
     if (viewListBtn) {
-      viewListBtn.addEventListener('click', function() {
+      viewListBtn.onclick = function() {
         viewListBtn.classList.add('active');
         viewGridBtn.classList.remove('active');
         try { if (gridView) gridView.classList.add('csp-hide'); } catch(_){}
         try { if (listView) listView.classList.remove('csp-hide'); } catch(_){}
-      });
+      };
     }
 
     var modal = document.getElementById('operaDetailModal');
@@ -2576,6 +1827,7 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
+        if (window.QinPagination) return; // 真分页器已接管，跳过假分页注入（orders/finance 同款修复范式）
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -2687,7 +1939,7 @@ function __pLog(module,event,extra){
   // 功能按钮绑定（上传/新建/导出）
   try{
     function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; try{ el.__superPatchBound=1; }catch(_){} el.addEventListener("click", fn, true); } }
-    __bindBtn('openOperasUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（剧照）（演示模式：真实环境将上传到服务器）","info"); }; inp.click(); });
+    __bindBtn('openOperasUploadBtn', function(){ var inp=document.getElementById('operasAttachFiles'); if(inp){ try{ inp.scrollIntoView({behavior:'smooth',block:'center'}); }catch(_){} setTimeout(function(){ try{ inp.focus(); inp.click(); }catch(_){} }, 350); } });
 
     // 新增剧目：打开模态框
     function __openAddOperaModal(){
@@ -2710,7 +1962,7 @@ function __pLog(module,event,extra){
     __bindBtn('addOperaCloseBtn', __closeAddOperaModal);
     __bindBtn('addOperaCancelBtn', __closeAddOperaModal);
 
-    // 提交新增剧目
+    // 提交新增/编辑剧目（v20260907k 对接 POST /v1/plays；v20260908r 编辑走 PATCH /v1/plays/:id）
     __bindBtn('addOperaSubmitBtn', function(){
       var name = (document.getElementById('addOperaName').value||'').trim();
       if(!name){ __T('⚠️ 请输入剧目名称','error'); return; }
@@ -2718,112 +1970,54 @@ function __pLog(module,event,extra){
       var duration = parseInt(document.getElementById('addOperaDuration').value,10) || 120;
       var scene = (document.getElementById('addOperaScene').value||'').trim() || '庙会/商演/惠民';
       var cast = (document.getElementById('addOperaCast').value||'').trim() || '待定';
-      var cost = parseInt(document.getElementById('addOperaCost').value,10) || 0;
-      var price = parseInt(document.getElementById('addOperaPrice').value,10) || 0;
 
-      // 生成剧目ID
-      var tbody = document.querySelector('#operaListView tbody[data-paginate]');
-      var existIds = tbody ? Array.from(tbody.querySelectorAll('tr td:first-child strong')).map(function(s){return s.textContent.trim();}) : [];
-      var maxNum = 0;
-      existIds.forEach(function(id){ var m=id.match(/OP(\d+)/); if(m){ maxNum=Math.max(maxNum,parseInt(m[1],10)); } });
-      var newId = 'OP' + String(maxNum+1).padStart(3,'0');
-
-      // 分类徽章颜色
-      var badgeClass = 'badge-gold';
-      if(category.indexOf('现代')>=0) badgeClass='badge-success';
-      else if(category.indexOf('折子')>=0) badgeClass='badge-info';
-      else if(category.indexOf('创编')>=0) badgeClass='badge-warning';
-
-      // 格式化金额
-      var fmtCost = '¥' + cost.toLocaleString('zh-CN');
-      var fmtPrice = '¥' + price.toLocaleString('zh-CN');
-      var today = new Date().toISOString().slice(0,10);
-
-      // 创建新行
-      var tr = document.createElement('tr');
-      tr.innerHTML = '<td><strong style="color:var(--primary);">' + newId + '</strong></td>' +
-        '<td><strong>《' + name + '》</strong></td>' +
-        '<td><span class="badge ' + badgeClass + '">' + category + '</span></td>' +
-        '<td>' + duration + '分钟</td>' +
-        '<td>' + scene + '</td>' +
-        '<td>' + cast + '</td>' +
-        '<td>' + fmtCost + '</td>' +
-        '<td style="color:var(--primary);font-weight:600;">' + fmtPrice + '</td>' +
-        '<td><strong style="color:var(--gold-dark);">0场</strong></td>' +
-        '<td>否</td>' +
-        '<td>' + today + '</td>' +
-        '<td><div class="admin-table-actions">' +
-          '<button class="btn btn-secondary btn-sm">👁</button>' +
-          '<button class="btn btn-primary btn-sm">✏️</button>' +
-          '<button class="btn btn-gold btn-sm">🔥</button>' +
-          '<button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;">👥</button>' +
-          '<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">🗑️</button>' +
-        '</div></td>';
-
-      if(tbody && tbody.firstChild) tbody.insertBefore(tr, tbody.firstChild);
-      else if(tbody) tbody.appendChild(tr);
-
-      // 同时更新卡片视图
-      try{
-        var grid = document.querySelector('#operaGridView .opera-grid');
-        if(grid){
-          // 根据分类选择海报主色
-          var posterColor1 = '#fdecea', posterColor2 = '#922b21';
-          if(category.indexOf('现代')>=0){ posterColor1='#eef7ee'; posterColor2='#1e8449'; }
-          else if(category.indexOf('折子')>=0){ posterColor1='#eef2f7'; posterColor2='#2874a6'; }
-          else if(category.indexOf('创编')>=0){ posterColor1='#fef9e7'; posterColor2='#b7950b'; }
-          var nameEnc = encodeURIComponent(name);
-          var svgSrc = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 288"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="'+posterColor1+'"/><stop offset="100%" stop-color="'+posterColor2+'"/></linearGradient></defs><rect width="512" height="288" fill="url(#bg)"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#fff" font-size="48" font-family="STXingkai,KaiTi,serif" font-weight="700">'+name+'</text></svg>'
-          );
-          var card = document.createElement('div');
-          card.className = 'opera-card';
-          card.innerHTML = '<div class="opera-poster">' +
-            '<img src="' + svgSrc + '" alt="' + name + '">' +
-            '<div class="category-label">' + category + '</div>' +
-            '</div>' +
-            '<div class="opera-body">' +
-              '<div class="opera-title-row"><h3 class="opera-title">《' + name + '》</h3></div>' +
-              '<div class="opera-meta">' +
-                '<span><span class="meta-icon">⏱️</span>' + duration + '分钟</span>' +
-                '<span><span class="meta-icon">👤</span>主演：' + cast + '</span>' +
-              '</div>' +
-              '<div class="scene-tags"><span class="scene-tag">' + scene + '</span></div>' +
-              '<div class="opera-stats">' +
-                '<span class="stat-label">今年演出</span>' +
-                '<span class="stat-num">0 场</span>' +
-              '</div>' +
-              '<div class="opera-actions">' +
-                '<button class="btn btn-secondary btn-sm">👁 查看</button>' +
-                '<button class="btn btn-primary btn-sm">✏️ 编辑</button>' +
-                '<button class="btn btn-gold btn-sm">🔥 热门</button>' +
-              '</div>' +
-            '</div>';
-          if(grid.firstChild) grid.insertBefore(card, grid.firstChild);
-          else grid.appendChild(card);
-        }
-      }catch(cardErr){ console.warn('opera grid insert fail:', cardErr); }
-
-      // 保存到 localStorage
-      try{
-        var key = 'qaxqjt_operas_v1';
-        var list = [];
-        try{ list = JSON.parse(localStorage.getItem(key)||'[]'); }catch(_){}
-        list.unshift({id:newId, name:name, category:category, duration:duration, scene:scene, cast:cast, cost:cost, price:price, createdAt:today});
-        localStorage.setItem(key, JSON.stringify(list));
-      }catch(_){}
-
-      __T('✅ 剧目《' + name + '》已创建（ID: ' + newId + '）','success');
-      __closeAddOperaModal();
-
-      // 清空表单
-      document.getElementById('addOperaName').value='';
-      document.getElementById('addOperaDuration').value='120';
-      document.getElementById('addOperaScene').value='';
-      document.getElementById('addOperaCast').value='';
-      document.getElementById('addOperaCost').value='6000';
-      document.getElementById('addOperaPrice').value='5000';
+      // v20260907k：调用后端 API 持久化
+      var apiPayload = {
+        title: name,
+        subtitle: category,
+        genre: category,
+        durationMinutes: duration,
+        author: '传统',
+        synopsis: scene,
+        castSummary: cast,
+        difficultyLevel: 'B',
+        status: 'active'
+      };
+      var editingId = window.__operasEditingId || null;
+      __T(editingId ? '⏳ 正在保存修改到后端...' : '⏳ 正在保存剧目到后端...','info', 2000);
+      var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+      if (!QinFetch || typeof QinFetch.request !== 'function') {
+        __T('⚠️ API 未就绪，无法保存剧目','error'); return;
+      }
+      var reqPromise = editingId
+        ? QinFetch.request('PATCH', '/v1/plays/' + encodeURIComponent(editingId), { body: apiPayload })
+        : QinFetch.request('POST', '/v1/plays', { body: apiPayload });
+      reqPromise.then(function(resp){
+        var saved = (resp && resp.data !== undefined) ? resp.data : (resp || {});
+        var savedId = saved.id || editingId || '';
+        __T(editingId
+          ? ('✅ 剧目《' + name + '》修改已保存')
+          : ('✅ 剧目《' + name + '》已保存到后端（ID: ' + savedId + '）'),'success', 3500);
+        // 重置编辑态 + 关闭弹窗 + 清空表单
+        try{ window.__operasEditingId = null; }catch(_){}
+        var sb = document.getElementById('addOperaSubmitBtn');
+        if(sb) sb.textContent = '✓ 创建剧目';
+        try{ if(window.__operasHideModal) window.__operasHideModal('addOperaModal'); else __closeAddOperaModal(); }catch(_){ try{ __closeAddOperaModal(); }catch(_2){} }
+        try{ document.body.classList.remove('body-modal-locked'); }catch(_){}
+        document.getElementById('addOperaName').value='';
+        document.getElementById('addOperaDuration').value='120';
+        document.getElementById('addOperaScene').value='';
+        document.getElementById('addOperaCast').value='';
+        document.getElementById('addOperaCost').value='6000';
+        document.getElementById('addOperaPrice').value='5000';
+        // v20260908r：统一从后端重载真实列表（卡片+表格双视图同步）
+        try{ if(typeof window.__operasReload === 'function') window.__operasReload(); }catch(_){}
+      }).catch(function(err){
+        console.warn('[savePlay] API fail:', err);
+        __T('⚠️ 保存失败：' + (err && err.message ? err.message : '网络错误'),'error', 4000);
+      });
     });
+
 
     __bindBtn('spBatchHotBtn', function(){ __T('🔥 批量设置热门（演示模式）','info'); });
     __bindBtn('spExportOperasBtn', function(){ __T('📊 正在导出剧目列表（演示模式）','info'); });
@@ -2838,6 +2032,7 @@ try{
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -2851,6 +2046,7 @@ try{
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
+        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return; // 分页条按钮放行（orders/finance 同款修复）
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
@@ -3075,15 +2271,743 @@ try{
   });
 })();
 </script>
-<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停模板弹窗（含 .view-detail 剧目详情弹窗、无 id 按钮、动态重绘行 MutationObserver 补标）；并修补「新增剧目」弹窗打开用内联 display:flex!important 而 SuperPatch 3/6 通用关闭只切 class 导致 ✕/取消关不掉弹窗的问题（__closeAnyModal 包装版同时清除内联 display） */
 (function(){
+  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
+  var SEL = 'button[id], a[id], [data-action][id], .btn[id], .btn-action[id], button, a.btn, .btn-action, .view-detail';
   function __markBound(){
-    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
-    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+    try{
+      var els=document.querySelectorAll(SEL);
+      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
+    }catch(_){}
   }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
-  else { __markBound(); setTimeout(__markBound,500); }
+  function __wrapClose(){
+    try{
+      if(!window.__closeAnyModal || window.__closeAnyModal.__v2jWrapped) return;
+      var _c = window.__closeAnyModal;
+      var _w = function(){
+        try{ _c(); }catch(_){}
+        try{
+          var nodes = document.querySelectorAll('.modal-overlay, [class*="modal-wrap"], .generic-modal-root, [role="dialog"]');
+          for(var i=0;i<nodes.length;i++){ var n=nodes[i]; if(n.style && n.style.display && n.style.display!=='none'){ n.style.setProperty('display','none','important'); } }
+        }catch(_){}
+      };
+      _w.__v2jWrapped = 1;
+      window.__closeAnyModal = _w;
+    }catch(_){}
+  }
+  function __boot(){
+    __markBound();
+    __wrapClose();
+    try{
+      if(window.MutationObserver){
+        var mo=new MutationObserver(function(){ try{ __markBound(); __wrapClose(); }catch(_){} });
+        mo.observe(document.documentElement,{childList:true,subtree:true});
+      }
+    }catch(_){}
+    setTimeout(__markBound,400); setTimeout(function(){ __markBound(); __wrapClose(); },1200); setTimeout(__markBound,3000);
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
+  else { __boot(); }
 })();</script>
+
+<!-- ====== 剧目资源管理：接 /v1/plays API 真实数据 (v20260907n / v20260908r 全链路CRUD) ====== -->
+<script>
+(function(){
+  'use strict';
+  var allPlays = [];
+  var allCats = [];        // v20260909b 剧目分类
+  var currentCat = 'all';  // v20260909b 当前分类过滤
+  function _esc(s){ if(s==null) return ''; return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function _fmtDate(d){ if(!d) return '—'; try{ return new Date(d).toISOString().slice(0,10); }catch(_){ return '—'; } }
+  function _toast(msg, type){
+    try{ if(typeof window.__toastH9 === 'function'){ window.__toastH9(msg, type||'info'); return; } }catch(_){}
+    try{ if(typeof window.__T === 'function'){ window.__T(msg); return; } }catch(_){}
+    console.log('[operas toast]', msg);
+  }
+  function _badge(genre){
+    if(!genre) return 'badge-gold';
+    if(genre.indexOf('现代')>=0) return 'badge-success';
+    if(genre.indexOf('折子')>=0) return 'badge-info';
+    if(genre.indexOf('创编')>=0) return 'badge-warning';
+    if(genre.indexOf('神话')>=0) return 'badge-info';
+    return 'badge-gold';
+  }
+  function _poster(title, genre){
+    var c1='#fdecea', c2='#922b21';
+    if(genre){ if(genre.indexOf('现代')>=0){c1='#eef7ee';c2='#1e8449';} else if(genre.indexOf('折子')>=0){c1='#eef2f7';c2='#2874a6';} else if(genre.indexOf('神话')>=0){c1='#fef9e7';c2='#b7950b';} }
+    return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 288"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="'+c1+'"/><stop offset="100%" stop-color="'+c2+'"/></linearGradient></defs><rect width="512" height="288" fill="url(#bg)"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#fff" font-size="48" font-family="STXingkai,KaiTi,serif" font-weight="700">'+_esc(title)+'</text></svg>'
+    );
+  }
+
+  /* ---------- v20260909b 图片/图库辅助 ---------- */
+  function _mediaUrl(u){
+    if(!u) return '';
+    if(/^(https?:|data:|blob:)/.test(u)) return u;
+    var base = '';
+    try{ base = (window.QAXQJT_API_CONFIG && window.QAXQJT_API_CONFIG.BASE) || ''; }catch(_){}
+    return base + u;
+  }
+  /* 剧目首图：真海报优先，否则 SVG 占位 */
+  function _posterOf(p){ return _mediaUrl(p.posterUrl) || _poster(p.title, p.genre); }
+  /* 图库列表（images 数组，posterUrl 兜底补一张海报位） */
+  function _imgs(p){
+    var arr = Array.isArray(p.images) ? p.images.slice() : [];
+    if(p.posterUrl && !arr.some(function(i){ return i && i.url === p.posterUrl; })){
+      arr.unshift({ type: 'poster', url: p.posterUrl, name: '主海报' });
+    }
+    return arr;
+  }
+  var IMG_TYPE_LABEL = { poster: '🖼️ 海报', makeup: '💄 定妆照', stage: '📸 舞台剧照', cover: '🎬 折子戏封面' };
+  function _imgTypeLabel(t){ return IMG_TYPE_LABEL[t] || '🎭 剧照'; }
+  /* QAXQJT_API.request 已解包信封（直接返回 data），此函数兼容两种形态 */
+  function _unwrap(resp){ return (resp && resp.data !== undefined) ? resp.data : resp; }
+
+  // v20260908r：容器自愈——admin-blank 空白守卫曾把 #operaGridView 整个 innerHTML 覆盖
+  // （.opera-grid 被删）、HeightGuard 曾移除 tbody 的 data-paginate。渲染前确保容器存在
+  function _ensureContainers(){
+    var gv = document.getElementById('operaGridView');
+    var grid = gv ? gv.querySelector('.opera-grid') : null;
+    if(gv && !grid){
+      grid = document.createElement('div');
+      grid.className = 'opera-grid';
+      grid.setAttribute('data-paginate','list');
+      grid.setAttribute('data-page-size','12');
+      grid.setAttribute('data-paginate-keep','1');
+      gv.innerHTML = '';
+      gv.appendChild(grid);
+    }
+    var lv = document.getElementById('operaListView');
+    var tbody = lv ? lv.querySelector('tbody') : null;
+    if(lv && !tbody){
+      var table = lv.querySelector('table');
+      if(table){
+        tbody = document.createElement('tbody');
+        table.appendChild(tbody);
+      }
+    }
+    if(tbody){
+      if(!tbody.getAttribute('data-paginate')) tbody.setAttribute('data-paginate','list');
+      if(!tbody.getAttribute('data-page-size')) tbody.setAttribute('data-page-size','10');
+      tbody.setAttribute('data-paginate-keep','1');
+    }
+    return { grid: grid, tbody: tbody };
+  }
+
+  function _renderGrid(grid, plays){
+    grid.innerHTML = '';
+    plays.forEach(function(p){
+      var card = document.createElement('div');
+      card.className = 'opera-card';
+      card.setAttribute('data-id', p.id);
+      card.style.cursor = 'pointer';
+      var synopsis = p.synopsis ? '<div style="font-size:0.82rem;color:var(--text-light);margin-top:8px;line-height:1.5;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">'+_esc(p.synopsis)+'</div>' : '';
+      var hotBadge = p.isHot ? '<span style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#f59e0b,#dc2626);color:#fff;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);z-index:2;">🔥 热门</span>' : '';
+      card.innerHTML =
+        '<div class="opera-poster" style="position:relative;"><img src="'+_posterOf(p)+'" alt="'+_esc(p.title)+'" style="object-fit:cover;">'+hotBadge+'<div class="category-label">'+_esc(p.genre||'传统')+'</div></div>'+
+        '<div class="opera-body">'+
+        '<div class="opera-title-row"><h3 class="opera-title">《'+_esc(p.title)+'》</h3></div>'+
+        (p.subtitle?'<div style="font-size:0.85rem;color:var(--text-light);margin-bottom:6px;">'+_esc(p.subtitle)+'</div>':'')+
+        '<div class="opera-meta"><span><span class="meta-icon">⏱️</span>'+(p.durationMinutes||0)+'分钟</span><span><span class="meta-icon">👤</span>'+_esc(p.castSummary||'待定')+'</span></div>'+
+        synopsis+
+        '<div class="opera-stats"><span><strong>难度</strong> '+(p.difficultyLevel||'—')+'</span><span><strong>作者</strong> '+_esc(p.author||'传统')+'</span></div>'+
+        '<div style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(148,163,184,.35);font-size:0.82rem;color:var(--primary);">👁 点击卡片查看详情 · ✏️ 列表行可编辑/删除</div>'+
+        '</div>';
+      grid.appendChild(card);
+    });
+  }
+
+  function _renderList(tbody, plays){
+    tbody.innerHTML = '';
+    plays.forEach(function(p){
+      var tr = document.createElement('tr');
+      tr.setAttribute('data-id', p.id);
+      tr.innerHTML =
+        '<td><strong style="color:var(--primary);">'+_esc(p.playCode||p.id)+'</strong></td>'+
+        '<td><strong>《'+_esc(p.title)+'》</strong></td>'+
+        '<td><span class="badge '+_badge(p.genre)+'">'+_esc(p.genre||'传统')+'</span></td>'+
+        '<td>'+(p.durationMinutes||0)+'分钟</td>'+
+        '<td>'+_esc(p.subtitle||p.synopsis||'—')+'</td>'+
+        '<td>'+_esc(p.castSummary||'待定')+'</td>'+
+        '<td>—</td>'+
+        '<td style="color:var(--primary);font-weight:600;">—</td>'+
+        '<td><strong style="color:var(--gold-dark);">'+(p._count && p._count.playCasts ? p._count.playCasts+'角色' : '0场')+'</strong></td>'+
+        '<td>'+(p.isHot ? '<span style="color:#dc2626;font-weight:700;white-space:nowrap;">🔥 热门</span>' : '<span style="color:var(--text-light);">—</span>')+'</td>'+
+        '<td>'+_fmtDate(p.createdAt)+'</td>'+
+        '<td><div class="admin-table-actions">'+
+        '<button class="btn btn-secondary btn-sm view-detail" data-act="view" data-id="'+_esc(p.id)+'" title="查看详情">👁</button>'+
+        '<button class="btn btn-primary btn-sm" data-act="edit" data-id="'+_esc(p.id)+'" title="编辑剧目">✏️</button>'+
+        '<button class="btn btn-gold btn-sm" data-act="hot" data-id="'+_esc(p.id)+'" title="'+(p.isHot?'取消热门':'标记为热门')+'" style="'+(p.isHot?'background:linear-gradient(135deg,#f59e0b,#dc2626);color:#fff;border:none;':'background:rgba(245,158,11,.12);color:#b45309;')+'">🔥</button>'+
+        '<button class="btn btn-outline-dark btn-sm" style="color:var(--primary);border-color:var(--primary);padding:6px 10px;" data-act="cast" data-id="'+_esc(p.id)+'" title="演员表配置">👥</button>'+
+        '<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" data-act="del" data-id="'+_esc(p.id)+'" title="删除剧目">🗑️</button>'+
+        '</div></td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  function _findPlay(id){
+    for(var i=0;i<allPlays.length;i++){ if(String(allPlays[i].id)===String(id)) return allPlays[i]; }
+    return null;
+  }
+
+  /* ---------- 弹窗显隐统一处理（v20260909：清全部隐藏类+内联强制，对抗
+     __closeAnyModal 包装版给所有 overlay 加的 s-overlay-hide/modal-wrap-hide（visibility:hidden;opacity:0）
+     和旧脚本点遮罩关闭只切 class 不重置内联 display 的问题） ---------- */
+  function _showModal(id){
+    var m = document.getElementById(id);
+    if(!m) return m;
+    try{
+      m.classList.remove('modal-overlay-hide','s-overlay-hide','csp-hide','s-modal-hide','modal-wrap-hide','modal-wrap-hide');
+      m.classList.add('active');
+    }catch(_){}
+    m.style.setProperty('display','flex','important');
+    m.style.setProperty('visibility','visible','important');
+    m.style.setProperty('opacity','1','important');
+    return m;
+  }
+  function _hideModal(id){
+    var m = document.getElementById(id);
+    if(!m) return;
+    try{
+      m.classList.remove('active','show','modal-overlay-show','modal-show');
+      m.classList.add('modal-overlay-hide');
+    }catch(_){}
+    m.style.setProperty('display','none','important');
+    m.style.setProperty('visibility','hidden','important');
+    m.style.setProperty('opacity','0','important');
+  }
+
+  /* ---------- v20260909b 详情图库 ---------- */
+  function _galleryHtml(p){
+    var imgs = _imgs(p);
+    if(!imgs.length) return '';
+    var cells = imgs.map(function(im){
+      return '<figure style="margin:0;position:relative;width:150px;">'+
+        '<img src="'+_mediaUrl(im.url)+'" alt="'+_esc(im.name||'')+'" loading="lazy" style="width:150px;height:104px;object-fit:cover;border-radius:8px;border:1px solid var(--border-light,#e5e7eb);display:block;background:#f3f4f6;">'+
+        '<figcaption style="font-size:.72rem;color:var(--text-light);margin-top:3px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(_imgTypeLabel(im.type))+'</figcaption>'+
+        '<button type="button" data-imgact="del" data-id="'+_esc(p.id)+'" data-url="'+_esc(im.url)+'" title="删除此图" style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;border:none;background:#dc2626;color:#fff;font-size:.75rem;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3);line-height:1;">✕</button>'+
+        '</figure>';
+    }).join('');
+    return '<div style="margin-top:18px;padding-top:14px;border-top:1px dashed rgba(148,163,184,.4);">'+
+      '<div style="font-weight:700;color:var(--primary);margin-bottom:10px;">🎭 剧目图库（'+imgs.length+' 张，点 ✕ 删除）</div>'+
+      '<div style="display:flex;gap:14px;flex-wrap:wrap;">'+cells+'</div></div>';
+  }
+
+  /* ---------- 详情弹窗 ---------- */
+  function _showDetail(p){
+    var body = document.getElementById('operaDetailBody');
+    if(!body || !p) return;
+    body.innerHTML =
+      '<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;">'+
+        '<img src="'+_posterOf(p)+'" alt="" style="width:220px;max-width:40%;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.15);object-fit:cover;">'+
+        '<div style="flex:1;min-width:240px;">'+
+          '<h3 style="margin:0 0 8px;font-size:1.25rem;color:var(--primary);">《'+_esc(p.title)+'》</h3>'+
+          '<div style="margin-bottom:10px;"><span class="badge '+_badge(p.genre)+'">'+_esc(p.genre||'传统')+'</span> '+
+            '<span class="badge badge-gold">难度 '+(p.difficultyLevel||'—')+'</span></div>'+
+          '<table style="width:100%;border-collapse:collapse;font-size:.92rem;">'+
+            '<tr><td style="padding:6px 10px;color:var(--text-light);white-space:nowrap;">⏱ 演出时长</td><td style="padding:6px 10px;">'+(p.durationMinutes||0)+' 分钟</td></tr>'+
+            '<tr><td style="padding:6px 10px;color:var(--text-light);">👤 阵容摘要</td><td style="padding:6px 10px;">'+_esc(p.castSummary||'待定')+'</td></tr>'+
+            '<tr><td style="padding:6px 10px;color:var(--text-light);">✍ 作者/来源</td><td style="padding:6px 10px;">'+_esc(p.author||'传统')+'</td></tr>'+
+            '<tr><td style="padding:6px 10px;color:var(--text-light);">🎭 适配场景</td><td style="padding:6px 10px;">'+_esc(p.synopsis||'—')+'</td></tr>'+
+            '<tr><td style="padding:6px 10px;color:var(--text-light);">🆔 剧目ID</td><td style="padding:6px 10px;font-family:monospace;">'+_esc(p.playCode||p.id)+'</td></tr>'+
+            '<tr><td style="padding:6px 10px;color:var(--text-light);">📅 创建时间</td><td style="padding:6px 10px;">'+_fmtDate(p.createdAt)+'</td></tr>'+
+          '</table>'+
+          '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">'+
+            '<button class="btn btn-primary btn-sm" data-act="edit" data-id="'+_esc(p.id)+'">✏️ 编辑此剧目</button>'+
+            (p.isHot ? '<button class="btn btn-sm" data-act="hot" data-id="'+_esc(p.id)+'" style="background:linear-gradient(135deg,#f59e0b,#dc2626);color:#fff;padding:6px 14px;">🔥 取消热门</button>'
+                    : '<button class="btn btn-sm" data-act="hot" data-id="'+_esc(p.id)+'" style="background:rgba(245,158,11,.12);color:#b45309;padding:6px 14px;">🔥 标记热门</button>')+
+            '<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 14px;" data-act="del" data-id="'+_esc(p.id)+'">🗑️ 删除</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      _galleryHtml(p);
+    _showModal('operaDetailModal');
+    try{ document.body.classList.add('body-modal-locked'); }catch(_){}
+    _markBtns();
+  }
+
+  /* ---------- 编辑（复用新增弹窗） ---------- */
+  function _resetEditing(){
+    window.__operasEditingId = null;
+    var btn = document.getElementById('addOperaSubmitBtn');
+    if(btn) btn.textContent = '✓ 创建剧目';
+  }
+  function _openEdit(p){
+    if(!p) return;
+    window.__operasEditingId = p.id;
+    var setVal = function(id, v){ var el = document.getElementById(id); if(el) el.value = (v==null?'':v); };
+    setVal('addOperaName', (p.title||'').replace(/[《》]/g,''));
+    var cat = document.getElementById('addOperaCategory');
+    if(cat){
+      var want = p.genre || p.subtitle || '传统本戏';
+      var found = false;
+      for(var i=0;i<cat.options.length;i++){ if(cat.options[i].value === want || cat.options[i].textContent === want){ cat.value = want; found = true; break; } }
+      if(!found){ try{ var op = document.createElement('option'); op.value = want; op.textContent = want; cat.appendChild(op); cat.value = want; }catch(_){} }
+    }
+    setVal('addOperaDuration', p.durationMinutes || 120);
+    setVal('addOperaScene', p.synopsis || '');
+    setVal('addOperaCast', p.castSummary || '');
+    var btn = document.getElementById('addOperaSubmitBtn');
+    if(btn) btn.textContent = '💾 保存修改';
+    _showModal('addOperaModal');
+    var nameInput = document.getElementById('addOperaName');
+    if(nameInput){ setTimeout(function(){ try{ nameInput.focus(); }catch(_){} }, 100); }
+    _toast('✏️ 正在编辑《'+p.title+'》，修改后点「保存修改」','info');
+  }
+
+  /* ---------- 删除 ---------- */
+  function _doDelete(p){
+    if(!p) return;
+    if(!window.confirm('确认删除剧目《'+(p.title||'未命名')+'》？\n删除后演出阵容页的剧库选择中将不再显示该剧目。')) return;
+    var api = window.QAXQJT_API;
+    if(!api || !api.request){ _toast('⚠️ API 未就绪，无法删除','error'); return; }
+    _toast('🗑️ 正在删除《'+p.title+'》…','info');
+    api.request('DELETE', '/v1/plays/'+encodeURIComponent(p.id), {}).then(function(){
+      _toast('✅ 已删除《'+p.title+'》','success');
+      _hideModal('operaDetailModal');
+      try{ document.body.classList.remove('body-modal-locked'); }catch(_){}
+      _loadPlays();
+    }).catch(function(err){
+      _toast('⚠️ 删除失败：'+(err && err.message ? err.message : '网络错误'),'error');
+    });
+  }
+
+  /* ---------- v20260909b 热门标记切换 ---------- */
+  function _toggleHot(p){
+    var api = window.QAXQJT_API;
+    if(!api || !api.request){ _toast('⚠️ API 未就绪','error'); return; }
+    var next = !p.isHot;
+    api.request('PATCH','/v1/plays/'+encodeURIComponent(p.id),{ body: { isHot: next } }).then(function(resp){
+      var d = _unwrap(resp) || {};
+      p.isHot = !!d.isHot;
+      if(Array.isArray(d.images)) p.images = d.images;
+      _toast(next ? ('🔥 《'+p.title+'》已设为热门，将在列表置顶') : ('《'+p.title+'》已取消热门'), 'success');
+      // 详情弹窗若开着则刷新内容
+      var dm = document.getElementById('operaDetailModal');
+      if(dm && dm.style.display === 'flex') _showDetail(p);
+      _renderViews();
+    }).catch(function(err){
+      _toast('⚠️ 操作失败：'+(err && err.message ? err.message : '网络错误'),'error');
+    });
+  }
+
+  /* ---------- v20260909b 删除图库单图（PATCH 全量 images） ---------- */
+  function _delImage(p, url){
+    var api = window.QAXQJT_API;
+    if(!api || !api.request){ _toast('⚠️ API 未就绪','error'); return; }
+    if(!window.confirm('确认删除这张图片？')) return;
+    var cur = Array.isArray(p.images) ? p.images : [];
+    var next = cur.filter(function(im){ return im.url !== url; });
+    var payload = { images: JSON.stringify(next) };
+    if(p.posterUrl === url){
+      var nextPoster = next.filter(function(im){ return im.type === 'poster'; })[0];
+      payload.posterUrl = nextPoster ? nextPoster.url : '';
+    }
+    api.request('PATCH','/v1/plays/'+encodeURIComponent(p.id),{ body: payload }).then(function(resp){
+      var d = _unwrap(resp) || p;
+      p.images = Array.isArray(d.images) ? d.images : next;
+      p.posterUrl = d.posterUrl || '';
+      _toast('🗑️ 图片已删除','success');
+      _showDetail(p);
+      _renderViews();
+    }).catch(function(err){
+      _toast('⚠️ 删除失败：'+(err && err.message ? err.message : '网络错误'),'error');
+    });
+  }
+
+  /* ---------- v20260909b 分类 tabs 渲染 ---------- */
+  function _renderTabs(){
+    var bar = document.getElementById('operaCategoryTabs');
+    if(!bar) return;
+    var countOf = function(name){
+      var n = 0;
+      for(var i=0;i<allPlays.length;i++){ if(allPlays[i].genre === name) n++; }
+      return n;
+    };
+    var html = '<div class="category-tab'+(currentCat==='all'?' active':'')+'" data-cat="all">全部剧目 ('+allPlays.length+')</div>';
+    allCats.forEach(function(cat){
+      if(cat.status !== 'active') return;
+      html += '<div class="category-tab'+(currentCat===cat.name?' active':'')+'" data-cat="'+_esc(cat.name)+'">'+_esc(cat.name)+' ('+countOf(cat.name)+')</div>';
+    });
+    html += '<button class="opera-cat-manage" id="catManageOpenBtn" type="button">⚙️ 分类管理</button>';
+    bar.innerHTML = html;
+  }
+
+  function _fillCategorySelect(){
+    var sel = document.getElementById('addOperaCategory');
+    if(!sel) return;
+    var keep = sel.value;
+    var html = '';
+    allCats.forEach(function(cat){
+      if(cat.status !== 'active') return;
+      html += '<option value="'+_esc(cat.name)+'">'+_esc(cat.name)+'</option>';
+    });
+    if(!html) html = '<option value="传统本戏">传统本戏</option>';
+    sel.innerHTML = html;
+    if(keep){
+      for(var i=0;i<sel.options.length;i++){
+        if(sel.options[i].value === keep || sel.options[i].textContent === keep){ sel.value = sel.options[i].value; return; }
+      }
+    }
+  }
+
+  /* ---------- v20260909b 分类管理弹窗列表 ---------- */
+  function _renderCatManage(){
+    var box = document.getElementById('catManageList');
+    if(!box) return;
+    if(!allCats.length){ box.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:24px;">暂无分类，请在上方新增</div>'; return; }
+    box.innerHTML = allCats.map(function(cat, idx){
+      var disabled = cat.status !== 'active';
+      return '<div style="display:flex;gap:8px;align-items:center;padding:9px 2px;border-bottom:1px dashed #e5e7eb;flex-wrap:wrap;">'+
+        '<input type="text" value="'+_esc(cat.name)+'" data-catid="'+_esc(cat.id)+'" data-catfield="name" class="form-control" style="flex:1;min-width:150px;padding:6px 10px;">'+
+        '<span class="badge '+(disabled?'badge-secondary':'badge-success')+'" style="font-size:.72rem;white-space:nowrap;">'+(disabled?'已停用':'启用中')+'</span>'+
+        '<span style="font-size:.78rem;color:var(--text-light);white-space:nowrap;">'+(cat.playCount||0)+' 个剧目</span>'+
+        '<button type="button" class="btn btn-sm btn-primary" data-catact="save" data-catid="'+_esc(cat.id)+'" title="保存名称">💾</button>'+
+        '<button type="button" class="btn btn-sm btn-secondary" data-catact="up" data-catid="'+_esc(cat.id)+'" title="上移"'+(idx===0?' disabled':'')+'>↑</button>'+
+        '<button type="button" class="btn btn-sm btn-secondary" data-catact="down" data-catid="'+_esc(cat.id)+'" title="下移"'+(idx===allCats.length-1?' disabled':'')+'>↓</button>'+
+        '<button type="button" class="btn btn-sm" data-catact="toggle" data-catid="'+_esc(cat.id)+'" style="'+(disabled?'':'background:rgba(245,158,11,.12);color:#b45309;')+'">'+(disabled?'▶️ 启用':'⏸ 停用')+'</button>'+
+        '<button type="button" class="btn btn-sm" data-catact="del" data-catid="'+_esc(cat.id)+'" style="background:rgba(220,53,69,.1);color:#dc3545;">🗑️</button>'+
+        '</div>';
+    }).join('');
+  }
+
+  function _loadCats(then){
+    var api = window.QAXQJT_API;
+    if(!api || !api.request) return;
+    api.request('GET','/v1/play-categories',{}).then(function(resp){
+      allCats = _unwrap(resp) || [];
+      _renderTabs();
+      _renderCatManage();
+      _fillCategorySelect();
+      if(typeof then === 'function') then();
+    }).catch(function(err){
+      console.warn('[operas] load categories fail:', err && err.message);
+    });
+  }
+
+  function _catAction(act, id, btn){
+    var api = window.QAXQJT_API;
+    if(!api || !api.request){ _toast('⚠️ API 未就绪','error'); return; }
+    if(act === 'add'){
+      var inp = document.getElementById('catNewName');
+      var name0 = (inp && inp.value || '').trim();
+      if(!name0){ _toast('⚠️ 请输入分类名称','error'); return; }
+      api.request('POST','/v1/play-categories',{ body: { name: name0 } }).then(function(){
+        _toast('✅ 已新增分类「'+name0+'」','success');
+        if(inp) inp.value = '';
+        _loadCats();
+      }).catch(function(err){ _toast('⚠️ '+((err && err.message)||'新增失败'),'error'); });
+      return;
+    }
+    var cat = null;
+    for(var i=0;i<allCats.length;i++){ if(String(allCats[i].id)===String(id)){ cat = allCats[i]; break; } }
+    if(!cat){ _toast('⚠️ 分类不存在','error'); return; }
+    if(act === 'save'){
+      var row = btn ? btn.closest('div') : null;
+      var nameInput = row ? row.querySelector('input[data-catfield="name"]') : null;
+      var newName = (nameInput && nameInput.value || '').trim();
+      if(!newName){ _toast('⚠️ 分类名称不能为空','error'); return; }
+      if(newName === cat.name){ _toast('ℹ️ 名称未变化','info'); return; }
+      api.request('PATCH','/v1/play-categories/'+encodeURIComponent(id),{ body: { name: newName } }).then(function(){
+        _toast('✅ 已重命名为「'+newName+'」，该分类下剧目已同步迁移','success');
+        _loadCats(function(){ _loadPlays(); });
+      }).catch(function(err){ _toast('⚠️ '+((err && err.message)||'保存失败'),'error'); });
+    } else if(act === 'toggle'){
+      var nextStatus = cat.status === 'active' ? 'disabled' : 'active';
+      api.request('PATCH','/v1/play-categories/'+encodeURIComponent(id),{ body: { status: nextStatus } }).then(function(){
+        _toast(nextStatus==='active' ? '✅ 分类已启用' : '⏸ 分类已停用','success');
+        if(nextStatus !== 'active' && currentCat === cat.name) currentCat = 'all';
+        _loadCats(function(){ _renderViews(); });
+      }).catch(function(err){ _toast('⚠️ '+((err && err.message)||'操作失败'),'error'); });
+    } else if(act === 'del'){
+      if(!window.confirm('确认删除分类「'+cat.name+'」？\n（分类下仍有剧目时后端会拒绝删除）')) return;
+      api.request('DELETE','/v1/play-categories/'+encodeURIComponent(id),{}).then(function(){
+        _toast('🗑️ 已删除分类「'+cat.name+'」','success');
+        if(currentCat === cat.name) currentCat = 'all';
+        _loadCats(function(){ _renderViews(); });
+      }).catch(function(err){ _toast('⚠️ '+((err && err.message)||'删除失败'),'error'); });
+    } else if(act === 'up' || act === 'down'){
+      var idx = allCats.indexOf(cat);
+      var swapIdx = act === 'up' ? idx - 1 : idx + 1;
+      if(swapIdx < 0 || swapIdx >= allCats.length) return;
+      var a = allCats[idx], b = allCats[swapIdx];
+      Promise.all([
+        api.request('PATCH','/v1/play-categories/'+encodeURIComponent(a.id),{ body: { sortOrder: b.sortOrder } }),
+        api.request('PATCH','/v1/play-categories/'+encodeURIComponent(b.id),{ body: { sortOrder: a.sortOrder } })
+      ]).then(function(){
+        _toast('✅ 排序已调整','success');
+        _loadCats();
+      }).catch(function(err){ _toast('⚠️ 排序失败：'+((err && err.message)||'网络错误'),'error'); });
+    }
+  }
+
+  /* ---------- v20260909b 上传表单：关联剧目下拉填充 + 真实 multipart 上传 ---------- */
+  function _fillUploadSelect(){
+    var sel = document.querySelector('#operasAttachForm select[name="operaName"]');
+    if(!sel) return;
+    var prev = sel.value;
+    var html = '<option value="">请选择关联剧目</option>';
+    allPlays.forEach(function(p){
+      html += '<option value="'+_esc(p.id)+'">《'+_esc(p.title)+'》'+(p.isHot?' 🔥':'')+'</option>';
+    });
+    sel.innerHTML = html;
+    if(prev) sel.value = prev;
+  }
+
+  function _wireUpload(){
+    var form = document.getElementById('operasAttachForm');
+    if(!form || form.__wired) return;
+    form.__wired = 1;
+    var doUpload = function(e){
+      if(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} }
+      var api = window.QAXQJT_API;
+      if(!api || !api.request){ _toast('⚠️ API 未就绪','error'); return; }
+      var playSel = form.querySelector('select[name="operaName"]');
+      var typeSel = form.querySelector('select[name="operaImgType"]');
+      var fileInput = document.getElementById('operasAttachFiles');
+      var pid = playSel && playSel.value;
+      var p = pid ? _findPlay(pid) : null;
+      if(!p){ _toast('⚠️ 请先选择关联剧目','error'); return; }
+      var files = fileInput && fileInput.files;
+      if(!files || !files.length){ _toast('⚠️ 请选择至少一张图片','error'); return; }
+      var typeMap = { poster_main: 'poster', poster_vertical: 'poster', makeup: 'makeup', stage: 'stage', excerpt: 'cover' };
+      var imgType = typeMap[typeSel.value] || 'stage';
+      var total = files.length;
+      _toast('⏳ 正在上传 '+total+' 张图片到服务器…','info');
+      var okUrls = [];
+      var uploadOne = function(idx){
+        if(idx >= total){
+          if(!okUrls.length){ _toast('⚠️ 没有图片上传成功','error'); return; }
+          var cur = Array.isArray(p.images) ? p.images.slice() : [];
+          okUrls.forEach(function(u){ cur.push({ type: imgType, url: u.url, name: u.name, at: Date.now() }); });
+          var payload = { images: JSON.stringify(cur) };
+          if(imgType === 'poster') payload.posterUrl = okUrls[okUrls.length-1].url; // 最新海报作为首图
+          api.request('PATCH','/v1/plays/'+encodeURIComponent(p.id),{ body: payload }).then(function(){
+            _toast('✅ 《'+p.title+'》已保存 '+okUrls.length+' 张'+(imgType==='poster'?'海报（已设为首图）':'图片'),'success');
+            try{ form.reset(); }catch(_){}
+            _loadPlays();
+          }).catch(function(err){ _toast('⚠️ 保存图库失败：'+((err && err.message)||'网络错误'),'error'); });
+          return;
+        }
+        var f = files[idx];
+        var fd = new FormData();
+        fd.append('file', f, f.name);
+        api.request('POST','/v1/upload',{ body: fd }).then(function(resp){
+          var d = _unwrap(resp);
+          if(d && d.url) okUrls.push({ url: d.url, name: f.name });
+          _toast('⏳ 上传中 '+(idx+1)+'/'+total,'info');
+          uploadOne(idx+1);
+        }).catch(function(err){
+          console.warn('[operas upload] fail:', f.name, err && err.message);
+          _toast('⚠️ 《'+f.name+'》上传失败：'+((err && err.message)||''),'error');
+          uploadOne(idx+1);
+        });
+      };
+      uploadOne(0);
+    };
+    form.addEventListener('submit', doUpload, true);
+    // v20260909b-fix：防刷新补丁会把 type=submit 按钮改成 type=button 且不再派发 submit 事件，
+    // 必须直接绑定按钮 click（capture，先于死按钮兜底）
+    var btn = document.getElementById('operasAttachSubmitBtn') || form.querySelector('button:not([type="reset"])');
+    if(btn) btn.addEventListener('click', doUpload, true);
+  }
+
+  /* ---------- 视图重渲染（带分类过滤） ---------- */
+  /* 排序与后端一致：热门(isHot)优先，其次创建时间倒序——保证前端切换热门后立即置顶 */
+  function _sortPlays(arr){
+    return arr.slice().sort(function(a, b){
+      var ha = a.isHot ? 1 : 0, hb = b.isHot ? 1 : 0;
+      if(hb !== ha) return hb - ha;
+      var ta = a.createdAt || 0, tb = b.createdAt || 0;
+      if(ta < tb) return 1;
+      if(ta > tb) return -1;
+      return 0;
+    });
+  }
+  function _filteredPlays(){
+    var list = currentCat === 'all' ? allPlays : allPlays.filter(function(p){ return p.genre === currentCat; });
+    return _sortPlays(list);
+  }
+  function _renderViews(){
+    var c = _ensureContainers();
+    var list = _filteredPlays();
+    if(!allPlays.length){
+      if(c.grid) c.grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-light);"><div style="font-size:3rem;margin-bottom:12px;">🎭</div><div style="font-size:1.1rem;font-weight:600;margin-bottom:8px;">暂无剧目数据</div><div style="font-size:0.85rem;">请点击「➕ 新增剧目」添加剧目资源</div></div>';
+      if(c.tbody) c.tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--text-light);">暂无剧目数据，新增剧目后在此列表显示</td></tr>';
+    } else if(!list.length){
+      if(c.grid) c.grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--text-light);">该分类下暂无剧目</div>';
+      if(c.tbody) c.tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--text-light);">该分类下暂无剧目</td></tr>';
+    } else {
+      if(c.grid) _renderGrid(c.grid, list);
+      if(c.tbody) _renderList(c.tbody, list);
+    }
+    setTimeout(function(){ _triggerPaginate(); _markBtns(); }, 150);
+  }
+
+  /* ---------- 事件委托（capture 阶段，先于 SuperPatch 6/6 兜底） ---------- */
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    if(!t || !t.closest) return;
+    // 新增按钮：重置编辑态（__openAddOperaModal 随后打开弹窗，这里兜底全量恢复显隐状态）
+    if(t.closest('#spNewOperaBtn')){
+      _resetEditing();
+      _showModal('addOperaModal');
+      return;
+    }
+    // 取消/关闭新增弹窗：重置编辑态 + 全量隐藏（防点遮罩关闭只切 class 留内联 display:flex）
+    if(t.closest('#addOperaCloseBtn, #addOperaCancelBtn')){
+      _resetEditing();
+      _hideModal('addOperaModal');
+      try{ document.body.classList.remove('body-modal-locked'); }catch(_){}
+      return;
+    }
+    // 详情弹窗 ✕
+    if(t.closest('#modalCloseBtn')){
+      _hideModal('operaDetailModal');
+      try{ document.body.classList.remove('body-modal-locked'); }catch(_){}
+      return;
+    }
+    // v20260909b 分类管理：打开 / 关闭(✕或遮罩) / 新增 / 行内操作
+    if(t.closest('#catManageOpenBtn')){
+      e.preventDefault();
+      _renderCatManage();
+      _showModal('catManageModal');
+      try{ document.body.classList.add('body-modal-locked'); }catch(_){}
+      return;
+    }
+    if(t.closest('#catManageCloseBtn')){
+      _hideModal('catManageModal');
+      try{ document.body.classList.remove('body-modal-locked'); }catch(_){}
+      return;
+    }
+    if(t.id === 'catManageModal' && t.style.display === 'flex'){
+      _hideModal('catManageModal');
+      try{ document.body.classList.remove('body-modal-locked'); }catch(_){}
+      return;
+    }
+    if(t.closest('#catAddBtn')){
+      e.preventDefault();
+      _catAction('add', null);
+      return;
+    }
+    var catBtn = t.closest('[data-catact]');
+    if(catBtn && t.closest('#catManageModal')){
+      e.preventDefault();
+      _catAction(catBtn.getAttribute('data-catact'), catBtn.getAttribute('data-catid'), catBtn);
+      return;
+    }
+    // v20260909b 分类 tab 切换
+    var tabEl = t.closest('#operaCategoryTabs .category-tab');
+    if(tabEl){
+      e.preventDefault();
+      currentCat = tabEl.getAttribute('data-cat') || 'all';
+      _renderTabs();
+      _renderViews();
+      return;
+    }
+    // v20260909b 详情图库删图
+    var imgDel = t.closest('[data-imgact="del"]');
+    if(imgDel){
+      e.preventDefault();
+      e.stopPropagation();
+      var dp = _findPlay(imgDel.getAttribute('data-id'));
+      if(dp) _delImage(dp, imgDel.getAttribute('data-url'));
+      return;
+    }
+    // 点击遮罩层自身（空白区域）关闭对应弹窗
+    if(t.id === 'addOperaModal' && t.style.display === 'flex'){
+      _hideModal('addOperaModal'); _resetEditing();
+      try{ document.body.classList.remove('body-modal-locked'); }catch(_){}
+      return;
+    }
+    if(t.id === 'operaDetailModal' && t.style.display === 'flex'){
+      _hideModal('operaDetailModal');
+      try{ document.body.classList.remove('body-modal-locked'); }catch(_){}
+      return;
+    }
+    var actEl = t.closest('[data-act]');
+    var cardEl = t.closest('.opera-card[data-id]');
+    if(!actEl && !cardEl) return;
+    // 仅处理剧目视图区域内的动作
+    var inOperaArea = t.closest('#operaListView, #operaGridView, #operaDetailModal');
+    if(!inOperaArea) return;
+    var p = null;
+    var act = null;
+    if(actEl){
+      act = actEl.getAttribute('data-act');
+      p = _findPlay(actEl.getAttribute('data-id'));
+    } else if(cardEl){
+      act = 'view';
+      p = _findPlay(cardEl.getAttribute('data-id'));
+    }
+    if(!p) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if(act === 'view'){ _showDetail(p); }
+    else if(act === 'edit'){
+      // 详情弹窗里点编辑：先关详情
+      var dm = document.getElementById('operaDetailModal');
+      if(dm && dm.style.display === 'flex'){ _hideModal('operaDetailModal'); }
+      _openEdit(p);
+    }
+    else if(act === 'del'){ _doDelete(p); }
+    else if(act === 'cast'){ _toast('👥 《'+p.title+'》演员表请在「演出阵容/派工 cast-sheet」页按剧目配置角色A/B/C角','info'); }
+    else if(act === 'hot'){ _toggleHot(p); }
+  }, true);
+
+  function _triggerPaginate(){
+    try{
+      if(window.QinPagination){
+        if(typeof window.QinPagination.scanAll==='function') window.QinPagination.scanAll();
+        else if(typeof window.QinPagination.rescan==='function') window.QinPagination.rescan();
+        else if(typeof window.QinPagination.scan==='function') window.QinPagination.scan();
+      }
+    }catch(_){}
+    try{
+      var ev = new Event('qin:rescan');
+      document.dispatchEvent(ev);
+    }catch(_){}
+  }
+
+  function _markBtns(){
+    try{
+      var btns = document.querySelectorAll('#operaListView button, #operaGridView button, #operaDetailModal button');
+      for(var i=0;i<btns.length;i++){ if(!btns[i].__superPatchBound) btns[i].__superPatchBound=1; }
+    }catch(_){}
+  }
+
+  function _loadPlays(){
+    var api = window.QAXQJT_API || window.API;
+    if(!api || !api.get){ setTimeout(_loadPlays, 500); return; }
+
+    api.get('/v1/plays?page=1&pageSize=200').then(function(resp){
+      // v20260908h：api.get 可能返回信封 {data:[...],total} 或已解包数组，先解包再判断
+      var plays = Array.isArray(resp) ? resp : (resp && Array.isArray(resp.data) ? resp.data : (resp && Array.isArray(resp.items) ? resp.items : []));
+      allPlays = plays || [];
+      _fillUploadSelect();
+      _renderViews();
+      _renderTabs();
+      if(!allCats.length) _loadCats();
+      console.log('[operas] Loaded '+allPlays.length+' plays from API');
+    }).catch(function(err){
+      console.error('[operas] Failed to load plays:', err && err.message);
+    });
+  }
+
+  // 供新增/编辑提交成功后调用重载
+  window.__operasReload = _loadPlays;
+  window.__operasShowModal = _showModal;
+  window.__operasHideModal = _hideModal;
+
+  function _boot0909b(){
+    _wireUpload();
+    setTimeout(_loadPlays, 300);
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', _boot0909b); }
+  else { _boot0909b(); }
+})();
+</script>
 </body>
 
 </html>

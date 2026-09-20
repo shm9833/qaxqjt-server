@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <base href="/admin/">
 <meta charset="UTF-8">
   <!-- =========================================================== -->
   <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
@@ -18,16 +19,14 @@
     }
     if(bad){
       ["qaxqjt_admin_session","admin_session","qaxqjt_admin_sess_v2","admin_sess_v2","qaxqjt_admin_remember","qaxqjt_admin_token","qaxqjt_admin_info","qaxqjt_admin_permissions","qaxqjt_auth_permissions_v1"].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
-      var u=location.href, i=u.lastIndexOf("/");
-      var base= (i>=0)? u.substring(0,i+1) : "./";
-      location.replace(base + L);
+      location.replace(L);
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
 
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>演出演员表配置 - 秦安县秦剧团文化演出管理系统</title>
-<link rel="stylesheet" href="../css/style.css?v=20260906">
+<link rel="stylesheet" href="../css/style.css?v=20260919c">
 <style>
 /* ============================================================
    FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -571,7 +570,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         </a>
         <a href="schedule.html" data-role-level="800" class="admin-menu-item">
           <span class="menu-icon">📅</span><span>演出档期排班</span>
-          <span class="menu-badge">8</span>
+          
         </a>
         <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item active">
           <span class="menu-icon">🎭</span><span>演出演员表</span>
@@ -579,7 +578,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         </a>
         <a href="orders.html" data-role-level="800" class="admin-menu-item">
           <span class="menu-icon">📋</span><span>订单预约管理</span>
-          <span class="menu-badge">5</span>
+          
         </a>
         <a href="operas.html" data-role-level="800" class="admin-menu-item">
           <span class="menu-icon">🎭</span><span>剧目资源管理</span>
@@ -593,7 +592,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         </a>
         <a href="inventory.html" data-role-level="800" class="admin-menu-item">
           <span class="menu-icon">📦</span><span>道具服装库存</span>
-          <span class="menu-badge">!</span>
+          
         </a>
         <a href="finance.html" data-role-level="500" class="admin-menu-item">
           <span class="menu-icon">💰</span><span>财务收支台账</span>
@@ -693,7 +692,6 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
           <button class="tb-btn tb-btn-amber"  id="tpBtnSaveAs"    data-action="troupe-save-as"   type="button">💾 另存为组团模板</button>
           <button class="tb-btn tb-btn-rose"   id="tpBtnManage"    data-action="troupe-manage"    type="button">⚙️ 组团模板管理</button>
           <button class="tb-btn tb-btn-purple" id="tpBtnWgEdit"    data-action="troupe-wg-edit"    type="button" title="编辑7档天工资等级（W1实习～W7主A角），影响所有样板/模板默认档位">🎚️ 工资等级</button>
-          <button class="tb-btn tb-btn-gray"   id="tpBtnSeed"      data-action="troupe-seed-36"   type="button">✨ 一键生成36人标配样板</button>
           <button class="tb-btn tb-btn-indigo" id="tpBtnCustom"    data-action="troupe-custom"     type="button" title="自定义各组人数，生成专属组团样板">🛠 自定义组团</button>
         </div>
       </div>
@@ -933,7 +931,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
 <script src="../js/year-lite.js?v=20260803"></script>
   <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260908n"></script>
+<script src="../js/app.js?v=20260920a"></script>
 <!-- ===== 2026-08-03 D 类：xlsx.min.js（SheetJS 0.18.5 full）三路径加载（CDN优先 + 本地 + 备用CDN），零网络不崩 ===== -->
 <script>
 (function(){
@@ -3974,6 +3972,76 @@ function __pLog(module,event,extra){
     var cnt=fillBlocksFromTemplate(template);
     toast('✨ 已生成36人标配样板（演员'+cnt.actors+'+乐队'+(cnt.wenchang+cnt.wuchang)+'+舞台'+cnt.stage+'），已填入各板块表格','success',3500);
   }
+  // ===== v20260918：一键生成改为「预览→修改→确认」流程 =====
+  var SEED_CAT_NAMES={actor:'演员组',band:'乐队组',front:'前场',costume:'服装化妆',electric:'电工'};
+  var __seedDraft=[]; // 预览草稿（确认前不影响页面数据）
+  function openSeedPreview(){
+    __seedDraft=generate36Template();
+    renderSeedPreview();
+    bindSeedPreview();
+    var modal=$('seedPreviewModal'); if(!modal){ seed36(); return; } // 弹窗缺失时退回旧行为
+    modal.style.display='flex';
+    document.body.classList.add('body-modal-locked');
+  }
+  function closeSeedPreview(){
+    var modal=$('seedPreviewModal'); if(!modal) return;
+    modal.style.display='none';
+    document.body.classList.remove('body-modal-locked');
+  }
+  function renderSeedPreview(){
+    var body=$('seedPrevBody'); if(!body) return;
+    var html='';
+    __seedDraft.forEach(function(p,i){
+      var opts=''; Object.keys(WAGE_GRADES).forEach(function(g){
+        opts+='<option value="'+g+'"'+(g===p.grade?' selected':'')+'>'+g+' '+WAGE_GRADES[g].name+'（¥'+WAGE_GRADES[g].daily+'/天）</option>';
+      });
+      html+='<tr>'
+        +'<td class="seq">'+(i+1)+'</td>'
+        +'<td>'+_hx(SEED_CAT_NAMES[p.cat]||p.cat)+'</td>'
+        +'<td><input type="text" data-si="'+i+'" data-scol="name" value="'+_hx(p.name)+'" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;"></td>'
+        +'<td><input type="text" data-si="'+i+'" data-scol="role" value="'+_hx(p.role)+'" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;"></td>'
+        +'<td><select data-si="'+i+'" data-scol="grade" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;">'+opts+'</select></td>'
+        +'<td style="color:#b91c1c;font-weight:600;">¥'+(p.daily||0)+'</td>'
+        +'<td><button class="btn-del-row" data-sdel="'+i+'" type="button" title="删除该行">✕</button></td>'
+        +'</tr>';
+    });
+    body.innerHTML=html || '<tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8;">模板为空，请取消后重新生成</td></tr>';
+    __updateSeedStats();
+  }
+  function __updateSeedStats(){
+    var s={}; var wage=0;
+    __seedDraft.forEach(function(p){ s[p.cat]=(s[p.cat]||0)+1; wage+=p.daily||0; });
+    var el=$('seedPrevStats'); if(!el) return;
+    el.textContent='共 '+__seedDraft.length+' 人 · 演员'+(s.actor||0)+' / 乐队'+(s.band||0)+' / 前场'+(s.front||0)+' / 服装化妆'+(s.costume||0)+' / 电工'+(s.electric||0)+' · 日薪合计 ¥'+wage.toLocaleString('zh-CN');
+  }
+  function bindSeedPreview(){
+    var body=$('seedPrevBody'); if(!body||body.__seedBound) return; body.__seedBound=1;
+    body.addEventListener('input',function(e){
+      var t=e.target; var i=t.getAttribute&&t.getAttribute('data-si'); if(i==null) return;
+      var p=__seedDraft[parseInt(i,10)]; if(!p) return;
+      p[t.getAttribute('data-scol')]=t.value;
+    },true);
+    body.addEventListener('change',function(e){
+      var t=e.target; var i=t.getAttribute&&t.getAttribute('data-si'); if(i==null) return;
+      var p=__seedDraft[parseInt(i,10)]; if(!p) return;
+      var col=t.getAttribute('data-scol');
+      if(col==='grade'){ p.grade=t.value; p.daily=WAGE_GRADES[t.value]?WAGE_GRADES[t.value].daily:p.daily; renderSeedPreview(); }
+      else { p[col]=t.value; __updateSeedStats(); }
+    },true);
+    body.addEventListener('click',function(e){
+      var b=e.target&&e.target.closest?e.target.closest('[data-sdel]'):null; if(!b) return;
+      var i=parseInt(b.getAttribute('data-sdel'),10); if(isNaN(i)) return;
+      __seedDraft.splice(i,1); renderSeedPreview();
+    },true);
+  }
+  function confirmSeedPreview(){
+    if(!__seedDraft.length){ toast('⚠️ 样板为空，请至少保留 1 人或取消','warning',2200); return; }
+    try{ localStorage.setItem(LS_TROUPE,JSON.stringify(__seedDraft)); }catch(_){}
+    updateTroupeStats(__seedDraft);
+    var cnt=fillBlocksFromTemplate(__seedDraft);
+    closeSeedPreview();
+    toast('✨ 已使用'+__seedDraft.length+'人样板（演员'+cnt.actors+'+乐队'+(cnt.wenchang+cnt.wuchang)+'+舞台'+cnt.stage+'），已填入各板块表格','success',3500);
+  }
   // ===== 自定义组团 =====
   // 秦腔行当角色库：四生六旦二花净一丑 + 文武场 + 舞台保障
   //   演员行当：生（老生/红生/小生/武生/文武须生）、旦（青衣/正旦/花旦/小旦/二架旦/老旦/彩旦）、净（花脸/武净）、丑（丑行）、武行（校尉/龙套）
@@ -4128,7 +4196,7 @@ function __pLog(module,event,extra){
   function generateCustomTemplate(){
     var a=parseInt($('cgActor').value)||0, b=parseInt($('cgBand').value)||0;
     var f=parseInt($('cgFront').value)||0, c=parseInt($('cgCostume').value)||0, e=parseInt($('cgElectric').value)||0;
-    var days=parseInt($('cgDays').value)||3;
+    var days=parseInt($('cgDays').value)||1;
     var total=a+b+f+c+e;
     if(total<=0){ toast('⚠️ 请至少填写一个组的人数','warning',2000); return; }
     var template=[];
@@ -4648,7 +4716,13 @@ function __pLog(module,event,extra){
     if(btnDelete&&!btnDelete.__csBound){ btnDelete.__csBound=1; btnDelete.__superPatchBound=1; btnDelete.addEventListener('click',deleteSheet,true); }
     if(selSheet&&!selSheet.__csBound){ selSheet.__csBound=1; selSheet.addEventListener('change',function(){ switchSheet(this.value); }); }
     var btnSeed=$('tpBtnSeed'); var btnLoad=$('tpBtnLoad'); var btnSync=$('tpBtnSync2Cast'); var btnWagePrint=$('tpBtnWagePrint'); var btnWage2Fin=$('tpBtnWage2Fin'); var btnCustom=$('tpBtnCustom');
-    if(btnSeed&&!btnSeed.__csBound){ btnSeed.__csBound=1; btnSeed.__superPatchBound=1; btnSeed.addEventListener('click',seed36,true); }
+    if(btnSeed&&!btnSeed.__csBound){ btnSeed.__csBound=1; btnSeed.__superPatchBound=1; btnSeed.addEventListener('click',openSeedPreview,true); }
+    // v20260918：样板预览弹窗按钮（确认使用/取消/关闭）
+    bindSeedPreview();
+    var seedOk=$('seedPrevOk'), seedCancel=$('seedPrevCancel'), seedCloseB=$('seedPrevClose');
+    if(seedOk&&!seedOk.__csBound){ seedOk.__csBound=1; seedOk.__superPatchBound=1; seedOk.addEventListener('click',confirmSeedPreview,true); }
+    if(seedCancel&&!seedCancel.__csBound){ seedCancel.__csBound=1; seedCancel.__superPatchBound=1; seedCancel.addEventListener('click',closeSeedPreview,true); }
+    if(seedCloseB&&!seedCloseB.__csBound){ seedCloseB.__csBound=1; seedCloseB.__superPatchBound=1; seedCloseB.addEventListener('click',closeSeedPreview,true); }
     if(btnCustom&&!btnCustom.__csBound){ btnCustom.__csBound=1; btnCustom.__superPatchBound=1; btnCustom.addEventListener('click',openCustomGroupModal,true); }
     if(btnLoad&&!btnLoad.__csBound){ btnLoad.__csBound=1; btnLoad.__superPatchBound=1; btnLoad.addEventListener('click',loadTemplate,true); }
     if(btnSync&&!btnSync.__csBound){ btnSync.__csBound=1; btnSync.__superPatchBound=1; btnSync.addEventListener('click',syncToCast,true); }
@@ -4726,7 +4800,7 @@ function __pLog(module,event,extra){
 })();
 </script>
 <!-- ===== 自定义组团模态框 ===== -->
-<div id="customGroupModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;">
+<div id="customGroupModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;transform:none;animation:none;">
   <div class="modal-overlay-root" style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:min(640px,94vw);max-height:92vh;overflow-y:auto;">
     <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
       <h3 style="margin:0;font-size:1.15rem;font-weight:700;color:#0f4c81;">🛠 自定义组团配置</h3>
@@ -4734,37 +4808,37 @@ function __pLog(module,event,extra){
     </div>
     <div style="padding:20px 24px;">
       <div style="margin-bottom:16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;font-size:0.85rem;color:#1e40af;">
-        💡 民营剧团标配建议 <b>≥30人</b>（演员约占50%、乐队约22%、前场+服装+电工约28%）。填写各组人数后自动生成样板。
+        💡 数据自定义：按实际剧团规模填写各组人数后自动生成样板。建议参考真实在册人员配置，避免使用演示默认值。
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <label style="display:flex;flex-direction:column;gap:6px;">
           <span style="font-weight:600;color:#334155;font-size:0.9rem;">🎭 演员组人数</span>
-          <input type="number" id="cgActor" min="0" max="60" value="18" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+          <input type="number" id="cgActor" min="0" max="60" value="" placeholder="0" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
         </label>
         <label style="display:flex;flex-direction:column;gap:6px;">
           <span style="font-weight:600;color:#334155;font-size:0.9rem;">🎵 乐队组人数</span>
-          <input type="number" id="cgBand" min="0" max="40" value="8" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+          <input type="number" id="cgBand" min="0" max="40" value="" placeholder="0" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
         </label>
         <label style="display:flex;flex-direction:column;gap:6px;">
           <span style="font-weight:600;color:#334155;font-size:0.9rem;">🎟 前场人数</span>
-          <input type="number" id="cgFront" min="0" max="20" value="4" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+          <input type="number" id="cgFront" min="0" max="20" value="" placeholder="0" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
         </label>
         <label style="display:flex;flex-direction:column;gap:6px;">
           <span style="font-weight:600;color:#334155;font-size:0.9rem;">👘 服装化妆人数</span>
-          <input type="number" id="cgCostume" min="0" max="20" value="3" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+          <input type="number" id="cgCostume" min="0" max="20" value="" placeholder="0" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
         </label>
         <label style="display:flex;flex-direction:column;gap:6px;">
           <span style="font-weight:600;color:#334155;font-size:0.9rem;">💡 电工人数</span>
-          <input type="number" id="cgElectric" min="0" max="20" value="3" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+          <input type="number" id="cgElectric" min="0" max="20" value="" placeholder="0" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
         </label>
         <label style="display:flex;flex-direction:column;gap:6px;">
           <span style="font-weight:600;color:#334155;font-size:0.9rem;">📅 演出天数</span>
-          <input type="number" id="cgDays" min="1" max="60" value="3" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+          <input type="number" id="cgDays" min="1" max="60" value="" placeholder="1" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
         </label>
       </div>
       <div style="margin-top:16px;padding:12px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
         <div style="display:flex;justify-content:space-between;font-size:0.88rem;color:#475569;">
-          <span>合计人数：<b id="cgTotal" style="color:#0f4c81;">36</b> 人</span>
+          <span>合计人数：<b id="cgTotal" style="color:#0f4c81;">0</b> 人</span>
           <span>日工资预算：<b id="cgWage" style="color:#dc2626;">¥0</b></span>
         </div>
       </div>
@@ -4776,7 +4850,7 @@ function __pLog(module,event,extra){
   </div>
 </div>
 <!-- ===== 工资等级编辑器模态框 ===== -->
-<div id="wageGradeEditorModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;">
+<div id="wageGradeEditorModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;transform:none;animation:none;">
   <div style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:min(560px,94vw);max-height:92vh;overflow-y:auto;">
     <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
       <h3 style="margin:0;font-size:1.15rem;font-weight:700;color:#0f4c81;">🎚️ 工资等级编辑器（W1~W7）</h3>
@@ -4796,7 +4870,40 @@ function __pLog(module,event,extra){
   </div>
 </div>
 <!-- ===== 组团模板管理模态框 ===== -->
-<div id="troupeTemplateManagerModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;">
+<!-- v20260918：36人标配样板 预览修改弹窗（先核对/编辑人员配置，确认后才应用到板块） -->
+<div id="seedPreviewModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;transform:none;animation:none;">
+  <div style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:min(900px,96vw);max-height:92vh;display:flex;flex-direction:column;">
+    <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+      <h3 style="margin:0;font-size:1.15rem;font-weight:700;color:#0f4c81;">✨ 36人标配样板 · 预览与修改</h3>
+      <button type="button" id="seedPrevClose" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;line-height:1;">✕</button>
+    </div>
+    <div style="padding:12px 24px 0;overflow-y:auto;">
+      <div style="margin-bottom:10px;padding:10px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:0.85rem;color:#1e40af;">
+        💡 请先核对人员配置：可直接编辑姓名/角色岗位、切换工资档位（日薪自动带出）、删除不需要的行；确认无误后再点「✅ 使用此样板」填入各板块。
+      </div>
+      <div id="seedPrevStats" style="margin-bottom:10px;font-size:0.9rem;font-weight:600;color:#0f4c81;"></div>
+      <div style="max-height:54vh;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;">
+        <table class="cast-table" style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+          <thead><tr style="background:#f8fafc;position:sticky;top:0;">
+            <th style="width:44px;padding:8px;">#</th>
+            <th style="width:92px;padding:8px;">组别</th>
+            <th style="padding:8px;">姓名</th>
+            <th style="padding:8px;">角色/岗位</th>
+            <th style="width:200px;padding:8px;">工资档位</th>
+            <th style="width:88px;padding:8px;">日薪</th>
+            <th style="width:56px;padding:8px;">操作</th>
+          </tr></thead>
+          <tbody id="seedPrevBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div style="padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" id="seedPrevCancel" style="padding:8px 18px;border:1.5px solid #cbd5e1;background:#fff;color:#475569;border-radius:8px;cursor:pointer;font-weight:600;">取消</button>
+      <button type="button" id="seedPrevOk" style="padding:8px 18px;border:none;background:#0f4c81;color:#fff;border-radius:8px;cursor:pointer;font-weight:700;">✅ 使用此样板</button>
+    </div>
+  </div>
+</div>
+<div id="troupeTemplateManagerModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;transform:none;animation:none;">
   <div style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:min(640px,94vw);max-height:92vh;overflow-y:auto;">
     <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
       <h3 style="margin:0;font-size:1.15rem;font-weight:700;color:#0f4c81;">📋 组团模板管理</h3>

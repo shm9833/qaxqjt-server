@@ -4812,6 +4812,8 @@
   };
 
   var WageEngine = {
+    // 工资规则在系统设置表(settings)中的固定 key
+    REMOTE_RULES_KEY: 'wage_rules_json',
     // ---------- 规则存取 ----------
     getDefaultRules: function () {
       try {
@@ -4820,13 +4822,64 @@
       } catch (e) { console.warn('[WageEngine] 读取自定义规则失败，回退默认规则', e.message); }
       return JSON.parse(JSON.stringify(DEFAULT_WAGE_RULES));
     },
+    // 从后端设置表拉取工资规则；服务端版本较新时覆盖本地缓存。返回 Promise<{updated, rules}>
+    syncRulesFromServer: function () {
+      var self = this;
+      var _win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this);
+      var API = _win.QAXQJT_API;
+      if (!(API && typeof API.get === 'function')) return Promise.resolve({ updated: false, rules: self.getDefaultRules(), offline: true });
+      return API.get('/v1/system/settings/key/' + self.REMOTE_RULES_KEY, { showErrorToast: false, timeoutMs: 8000 })
+        .then(function (row) {
+          if (!row || !row.value) return { updated: false, rules: self.getDefaultRules() };
+          var remote;
+          try { remote = JSON.parse(row.value); } catch (e) { return { updated: false, rules: self.getDefaultRules() }; }
+          if (!remote || !remote.baseDailyWage) return { updated: false, rules: self.getDefaultRules() };
+          var local = null;
+          try { local = Storage._get(Storage.KEYS.WAGE_RULES); } catch (_) {}
+          var remoteTs = Number(remote.updatedAt) || 0;
+          var localTs = local && Number(local.updatedAt) ? Number(local.updatedAt) : 0;
+          if (!local || remoteTs > localTs) {
+            Storage._set(Storage.KEYS.WAGE_RULES, remote);
+            console.info('[WageEngine] 已从服务器同步工资规则', new Date(remoteTs).toLocaleString());
+            return { updated: true, rules: remote };
+          }
+          return { updated: false, rules: local };
+        })
+        .catch(function () {
+          // 404（尚未保存过）或网络异常时静默回退本地/默认规则
+          return { updated: false, rules: self.getDefaultRules(), offline: true };
+        });
+    },
+    // 异步同步到后端设置表（不阻塞本地即时生效）
+    _saveRulesRemote: function (rules) {
+      var self = this;
+      var _win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this);
+      var API = _win.QAXQJT_API;
+      if (!(API && typeof API.post === 'function')) return Promise.resolve({ offline: true });
+      return API.post('/v1/system/settings/batch', {
+        items: [{
+          key: self.REMOTE_RULES_KEY,
+          value: JSON.stringify(rules),
+          group: 'wage',
+          description: '默认日工资规则（行当×职级矩阵、演出补助、扣款、考勤窗口）'
+        }]
+      }, { showErrorToast: false, timeoutMs: 10000 }).then(function () { return { synced: true }; });
+    },
     saveRules: function (rules) {
       try {
         if (!rules || !rules.baseDailyWage) throw new Error('规则缺少baseDailyWage字段');
         rules.updatedAt = Date.now();
         rules.version = 'custom_' + (rules.updatedAt);
+        // ① 本地即时落库（同步）——所有后续工资计算立刻使用新规则
         Storage._set(Storage.KEYS.WAGE_RULES, rules);
-        Utils.toast('✅ 日工资规则已保存并生效', 'success');
+        Utils.toast('✅ 日工资规则已保存并即时生效', 'success');
+        // ② 后台异步同步到服务器，跨设备/清缓存后仍可恢复
+        this._saveRulesRemote(rules).then(function (r) {
+          if (r && r.synced) console.info('[WageEngine] 工资规则已同步至服务器');
+          else console.warn('[WageEngine] 服务器同步跳过（离线/未登录），规则仅保存在本机');
+        }).catch(function (e) {
+          console.warn('[WageEngine] 工资规则同步服务器失败（本地已生效）：', e && e.message);
+        });
         return true;
       } catch (e) {
         Utils.toast('❌ 规则保存失败：' + (e.message || e), 'error');
@@ -4835,8 +4888,15 @@
     },
     resetRules: function () {
       try {
-        Storage._set(Storage.KEYS.WAGE_RULES, JSON.parse(JSON.stringify(DEFAULT_WAGE_RULES)));
+        var def = JSON.parse(JSON.stringify(DEFAULT_WAGE_RULES));
+        def.updatedAt = Date.now();
+        def.version = 'default_' + def.updatedAt;
+        Storage._set(Storage.KEYS.WAGE_RULES, def);
         Utils.toast('🔄 已恢复默认日工资规则表', 'success');
+        var self = this;
+        this._saveRulesRemote(def).then(function (r) {
+          if (r && r.synced) console.info('[WageEngine] 默认规则已同步至服务器');
+        }).catch(function () {});
         return true;
       } catch (e) {
         Utils.toast('❌ 恢复失败：' + (e.message || e), 'error');
@@ -5373,7 +5433,7 @@
         var before = map[key] || '常规';
         if (tag === '常规') delete map[key]; else map[key] = tag;
         Storage._set(Storage.KEYS.ATTENDANCE_MANUAL_TAGS, map);
-        self._audit('attendance.manualTag.set', [staffId], { date: date, tag: before }, { date: date, tag: tag }, opts && opts.reason ? { reason: opts.reason } : null);
+        self._audit('attendance.manualTag.set', [staffId], { date: date, tag: before }, { date: date, tag: tag }, opts && (opts.reason || opts.remark) ? { reason: opts.reason || opts.remark, operator: opts.operator } : null);
         Utils.toast('✅ ' + (staffId || '所选人员') + ' · ' + date + ' → 【' + tag + '】 已保存', 'success');
         return true;
       } catch (e) { Utils.toast('❌ 标记保存失败：' + (e.message || e), 'error'); return false; }
@@ -9062,20 +9122,21 @@
         var CSS = [
           /* 1) 封横向溢出联动纵向假高（最常见「20屏假滚动」元凶） */
           'html, body { max-width: 100vw !important; overflow-x: hidden !important; }',
-          /* 2) ★ admin-layout 本身硬设最高 6 屏 + 内部滚动（解连环撑爆最核心一条） */
-          '.admin-layout { max-height: calc(100vh * 6) !important; overflow-y: auto !important; overflow-x: hidden !important; height: auto !important; min-height: 0 !important; position: relative; }',
+          /* 2) ★ admin-layout 本身硬设最高 6 屏 + overflow:visible 不创建滚动上下文（让 body 成为滚动容器，侧栏 sticky 才能生效；横向溢出由 html,body 的 overflow-x:hidden 兜底） */
+          '.admin-layout { max-height: calc(100vh * 6) !important; overflow: visible !important; height: auto !important; min-height: 0 !important; position: relative; }',
           /* 3) ★ wrapper 三层（admin-main / admin-content / main / content-wrapper / page-container）→ 继承上限、解 height:100% */
           '.admin-content, main, .admin-main, .content-wrapper, .page-container, section.admin-content { height: auto !important; min-height: 0 !important; max-height: calc(100vh * 6 - 120px) !important; overflow-y: visible !important; overflow-x: hidden !important; }',
           /* 4) pagination-bar 全类名封顶 180px（finance 只修了自己，这里覆盖所有页） */
           '[class*="pagination-bar"], [class*="pg-toolbar"], [class*="pagination-toolbar"], [class*="sp-pg-toolbar"] { max-height: 180px !important; min-height: unset !important; overflow: hidden !important; }',
           /* 5) 空 tbody / 空 table 不占空间（避免 0 行也有 200~400px 假高度） */
           'table tbody:empty, table tbody[data-paginate]:empty { display: none !important; height: 0 !important; min-height: 0 !important; }',
-          /* 6) ★ body 三重兜底：最高 6 屏、截断溢出、内部滚动 */
-          'body { --max-allow-height: calc(100vh * 6); max-height: var(--max-allow-height) !important; height: auto !important; min-height: 0 !important; overflow-y: auto !important; overflow-x: hidden !important; position: relative; }',
+          /* 6) ★ body 三重兜底：最高 6 屏、截断溢出；overflow-y:visible 让视口成为滚动容器，侧栏 sticky 才能生效 */
+          'body { --max-allow-height: calc(100vh * 6); max-height: var(--max-allow-height) !important; height: auto !important; min-height: 0 !important; overflow: visible !important; position: relative; }',
           /* 7) 防止 wrapper flex:1 把父容器越撑越大（reports/staff 常见） */
           '.flex-1, [class*="flex:1"], [style*="flex:1 1"] { min-height: 0 !important; max-height: calc(100vh * 6) !important; overflow: hidden; }',
           /* 8) 侧边栏/顶栏不参与撑高：固定/非拉伸布局（防止 dashboard 顶栏 + 侧栏 + 主区 + 底栏连环叠） */
-          '.admin-sidebar, aside[class*="sidebar"], nav[class*="sidebar"], .admin-header, header[class*="admin-header"], [class*="admin-nav"] { max-height: 100vh !important; overflow: hidden; height: auto !important; }',
+          '.admin-sidebar, aside[class*="sidebar"], nav[class*="sidebar"] { max-height: 100vh !important; overflow-y: auto !important; overflow-x: hidden !important; height: auto !important; }',
+          '.admin-header, header[class*="admin-header"], [class*="admin-nav"] { max-height: 100vh !important; overflow: hidden; height: auto !important; }',
           /* 9) ★ BUG FIX: 最新系统动态/通知列表区域限高，防止无限延长触发 HeightGuard 误判 */
           '.system-notice-list, .notice-list, .activity-list, .recent-activity { max-height: 400px !important; overflow-y: auto !important; }',
           /* 10) ★ BUG FIX: 表格容器不被 HeightGuard 兜底截断 — table/tbody 永远不设 maxHeight */

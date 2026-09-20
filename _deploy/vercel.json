@@ -17,11 +17,11 @@
     },
     {
       "source": "/admin",
-      "destination": "/admin/login.html"
+      "destination": "/admin/login"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/:path*",
+      "destination": "/"
     }
   ],
 

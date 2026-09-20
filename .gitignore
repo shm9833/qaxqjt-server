@@ -57,3 +57,5 @@ ELK部署工具包.zip
 .edgeone/*
 .tef_dist/*
   
+.vercel
+.env*

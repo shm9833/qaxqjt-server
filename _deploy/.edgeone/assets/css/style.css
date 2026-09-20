@@ -5580,13 +5580,21 @@ form > table,
 .admin-list > table,
 .admin-card > table,
 section > table,
-form > table {
+form > table,
+.table-wrap > table,
+.table-container > table {
   min-width: 760px;
   border-collapse: separate;
   border-spacing: 0;
   width: 100%;
   margin: 0;
   background: #fff;
+  /* FIX(2026-09-06) 后台所有列表文字掺插重叠：各页 <style> 里的
+     table{table-layout:fixed} 把多列均分到 ~66px，nowrap 单元格内容
+     （标签/徽章/金额/按钮）溢出越界到相邻列。列表表恢复自动布局：
+     列宽按内容自适应，超出容器宽度时由 .table-wrapper 横向滚动。
+     !important 用于压过各页内联 <style> 的 fixed（特异性 0,0,1）。 */
+  table-layout: auto !important;
 }
 .table-wrapper > table td,
 .data-table-container > table td,

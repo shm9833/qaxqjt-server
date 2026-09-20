@@ -45,3 +45,4 @@ coverage/
 *.backup
 
 .vercel
+.env*

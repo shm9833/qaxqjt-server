@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <base href="/admin/">
   <meta charset="UTF-8" />
   <!-- =========================================================== -->
   <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
@@ -18,9 +19,7 @@
     }
     if(bad){
       ["qaxqjt_admin_session","admin_session","qaxqjt_admin_sess_v2","admin_sess_v2","qaxqjt_admin_remember","qaxqjt_admin_token","qaxqjt_admin_info","qaxqjt_admin_permissions","qaxqjt_auth_permissions_v1"].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
-      var u=location.href, i=u.lastIndexOf("/");
-      var base= (i>=0)? u.substring(0,i+1) : "./";
-      location.replace(base + L);
+      location.replace(L);
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
 
@@ -41,7 +40,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>道具服装设备库存管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260906">
+  <link rel="stylesheet" href="../css/style.css?v=20260919c">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -565,7 +564,7 @@
           <a href="schedule.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
-            <span class="menu-badge">8</span>
+            
           </a>
           <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
@@ -575,7 +574,7 @@
           <a href="orders.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📋</span>
             <span>订单预约管理</span>
-            <span class="menu-badge">5</span>
+            
           </a>
           <a href="operas.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
@@ -593,7 +592,7 @@
           <a href="inventory.html" data-role-level="800" class="admin-menu-item active admin-menu-item">
             <span class="menu-icon">📦</span>
             <span>道具服装库存</span>
-            <span class="menu-badge">!</span>
+            
           </a>
           <a href="finance.html" data-role-level="500" class="admin-menu-item">
             <span class="menu-icon">💰</span>
@@ -1663,7 +1662,7 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260908n"></script>
+<script src="../js/app.js?v=20260920a"></script>
   <script src="../js/pagination.js?v=20260908p"></script>
   <script>
     (function() {

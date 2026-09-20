@@ -4977,7 +4977,7 @@ try{
 
   window.approvePending = function(id){
     if(!confirm('确认审核通过？系统将为其自动分配工号并正式入职花名册。')) return;
-    API.patch('/v1/performers/' + id + '/review', { body: { action:'approve' } })
+    API.patch('/v1/performers/' + id + '/review', { action:'approve' })
       .then(function(r){
         var sn = r && (r.staffNo || (r.data && r.data.staffNo));
         toast('审核通过，已入职' + (sn ? ('，工号 ' + sn) : ''), 'success');
@@ -4993,7 +4993,7 @@ try{
   window.rejectPending = function(id){
     var fb = prompt('请输入退回原因（将告知本人重新填写）：', '资料不完整，请补充后重新提交');
     if(fb === null) return;
-    API.patch('/v1/performers/' + id + '/review', { body: { action:'reject', feedback: fb } })
+    API.patch('/v1/performers/' + id + '/review', { action:'reject', feedback: fb })
       .then(function(){
         toast('已退回，等待本人重新填写', 'success');
         loadPending();
