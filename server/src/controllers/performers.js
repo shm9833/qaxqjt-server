@@ -42,6 +42,14 @@ const list = async ctx => {
   return success(ctx, rows, { ...pageMeta(page, pageSize, total), total });
 };
 
+// 协议天工资：空串/非法值 -> null；合法数值保留两位小数
+const toDailyRate = v => {
+  if (v === undefined || v === null || v === '') return null;
+  const n = Number(v);
+  if (!isFinite(n) || n < 0) return null;
+  return Math.round(n * 100) / 100;
+};
+
 const buildData = b => {
   const data = {
     staffNo: b.staffNo || null,
@@ -59,6 +67,7 @@ const buildData = b => {
     remark: b.remark || null,
     avatarUrl: b.avatarUrl || null,
     agreedSalary: b.agreedSalary || null,
+    dailyRate: toDailyRate(b.dailyRate),
     transportType: b.transportType || null,
     regulationsConfirmed: b.regulationsConfirmed === true,
     reviewStatus: b.reviewStatus || 'approved',
@@ -141,10 +150,13 @@ const update = async ctx => {
     'socialSecurityNo',
     'status',
     'remark',
-    'avatarUrl'
+    'avatarUrl',
+    'agreedSalary',
+    'transportType'
   ].forEach(k => {
     if (b[k] !== undefined) patch[k] = b[k];
   });
+  if (b.dailyRate !== undefined) patch.dailyRate = toDailyRate(b.dailyRate);
   DATE_FIELDS.forEach(k => {
     if (b[k] !== undefined) patch[k] = b[k] ? new Date(b[k]) : null;
   });
@@ -176,6 +188,7 @@ const selfRegister = async ctx => {
   if (!b.name || String(b.name).trim().length < 2) {
     throw new BusinessError('VALIDATION_ERROR', '请填写姓名');
   }
+  const dailyRate = toDailyRate(b.dailyRate);
   const data = {
     id: idByCtx('performer', 12, nanoid),
     staffNo: null, // 审核通过后由管理员分配工号
@@ -183,7 +196,9 @@ const selfRegister = async ctx => {
     gender: b.gender || null,
     phone: b.phone || null,
     primaryRole: b.primaryRole || null,
-    agreedSalary: b.agreedSalary || null,
+    dailyRate: dailyRate,
+    // 协议天工资同步写文本备注，便于旧页面/导出直接展示
+    agreedSalary: dailyRate != null ? ('协议天工资 ' + dailyRate + ' 元/天') : (b.agreedSalary || null),
     transportType: b.transportType || null,
     remark: b.remark || null,
     status: 'pending',

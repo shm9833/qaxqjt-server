@@ -230,6 +230,7 @@ model PerformersDbV1 {
   reviewStatus         String    @default("approved") @map("review_status") // pending/approved/rejected
   reviewFeedback       String?   @map("review_feedback") // 审核不通过时的退回建议
   agreedSalary         String?   @map("agreed_salary") // 协议工资（备注字段）
+  dailyRate            Decimal?  @map("daily_rate") // 协议天工资（元/天），审核后作为工资核算项目基准
   transportType        String?   @map("transport_type") // 单趟/双趟路费
   regulationsConfirmed Boolean   @default(false) @map("regulations_confirmed") // 是否已阅读员工管理条例
   createdAt            DateTime  @default(now()) @map("created_at")

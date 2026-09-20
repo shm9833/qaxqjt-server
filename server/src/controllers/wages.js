@@ -204,8 +204,17 @@ const detail = async ctx => {
 
 const create = async ctx => {
   const b = ctx.request.body;
-  if (!b.performerName) throw new BusinessError('VALIDATION_ERROR', 'performerName 必填');
   if (!b.batchId) throw new BusinessError('VALIDATION_ERROR', 'batchId 必填');
+  // 允许仅传 performerId：先查演员回填姓名/工号/职级/协议天工资，再校验姓名
+  var perf = null;
+  if (b.performerId) {
+    perf = await prisma.performersDbV1.findUnique({
+      where: { id: b.performerId },
+      select: { dailyRate: true, rankGrade: true, staffNo: true, name: true }
+    });
+  }
+  const performerName = b.performerName || (perf ? perf.name : '') || '';
+  if (!performerName) throw new BusinessError('VALIDATION_ERROR', 'performerName 必填');
   // 编码 4 项细分扣款到 otherDeduction + otherDeductionNote
   var breakdown = {
     leave: Number(b.leaveDeduction) || 0,
@@ -216,13 +225,22 @@ const create = async ctx => {
   var otherDeduction = breakdown.leave + breakdown.absent + breakdown.late + breakdown.early;
   var otherDeductionNote = JSON.stringify(breakdown);
 
-  // 无底薪计算：baseWage = baseDailyStandard × attendanceDays（未显式传 baseWage 时自动算）
+  // 无底薪计算（未显式传 baseWage 时自动算），取价优先级：
+  // 1) 本人协议天工资 performers.dailyRate × 出勤天数（扫码入职协议薪酬，逐人约定）
+  // 2) 职级工资标准 WageRulesV1.baseDailyStandard × 出勤天数
   var baseWage = 0;
+  var attDaysNum = b.attDays ? Number(b.attDays) : (b.attendanceDays ? Number(b.attendanceDays) : 0);
+  var perfDailyRate = perf && perf.dailyRate != null ? Number(perf.dailyRate) : null;
+  var perfRank = b.rankGrade || (perf && perf.rankGrade) || null;
   if (b.baseWage !== undefined) {
     baseWage = Number(b.baseWage);
-  } else if (b.rankGrade && b.attDays) {
-    var rule = await prisma.wageRulesV1.findUnique({ where: { rankGrade: b.rankGrade } });
-    if (rule) baseWage = Number(rule.baseDailyStandard) * Number(b.attDays);
+  } else if (attDaysNum) {
+    if (perfDailyRate != null && perfDailyRate > 0) {
+      baseWage = Math.round(perfDailyRate * attDaysNum * 100) / 100;
+    } else if (perfRank) {
+      var rule = await prisma.wageRulesV1.findUnique({ where: { rankGrade: perfRank } });
+      if (rule) baseWage = Number(rule.baseDailyStandard) * attDaysNum;
+    }
   }
   if (b.baseSalary !== undefined) baseWage = Number(b.baseSalary);
 
@@ -230,9 +248,9 @@ const create = async ctx => {
     id: b.id || idByCtx('wage', 12, nanoid),
     batchId: b.batchId,
     performerId: b.performerId || null,
-    performerName: b.performerName,
-    staffNo: b.staffNo || null,
-    rankGrade: b.rankGrade || null,
+    performerName: performerName,
+    staffNo: b.staffNo || (perf ? perf.staffNo : null),
+    rankGrade: perfRank || null,
     attendanceDays: b.attDays ? Number(b.attDays) : (b.attendanceDays ? Number(b.attendanceDays) : null),
     baseWage: baseWage,
     chiefRoleTotal: Number(b.chiefRoleTotal) || 0,
