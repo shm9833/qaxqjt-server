@@ -1164,8 +1164,10 @@
   </footer>
 
   <script src="js/year-lite.js?v=20260803"></script>
-  <script src="js/app.js?v=20260906g"></script>
-  <script src="js/pagination.js?v=20260908p"></script>
+  <script src="js/api-config.js?v=20260803"></script>
+  <script src="js/api-request.js?v=20260803"></script>
+  <script src="js/app.js?v=20260803"></script>
+  <script src="js/pagination.js?v=20260803"></script>
   <script>
     (function () {
       'use strict';
@@ -1418,6 +1420,109 @@
       }
     }, true);
     console.info('[FrontCommonPatch 已加载：CSS圆角+×兜底+死按钮+重置+ESC关弹窗+同意协议二次校验]');
+  })();
+  </script>
+
+  <!-- 📰 动态拉取已发布文章（接 /v1/contents/public，2026-09-21 新增） -->
+  <script>
+  (function(){
+    'use strict';
+    function _escape(s){ if (s === null || s === undefined) return ''; return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+    function _formatDate(d){
+      if (!d) return '';
+      try {
+        var dt = new Date(d);
+        if (isNaN(dt.getTime())) return '';
+        var y = dt.getFullYear();
+        var m = String(dt.getMonth() + 1).padStart(2, '0');
+        var day = String(dt.getDate()).padStart(2, '0');
+        return { y: y, m: m, d: day, day: String(dt.getDate()), month: m + '月', year: y };
+      } catch(_) { return ''; }
+    }
+    function _mapCategory(cat){
+      var c = (cat || '').toString();
+      // 把后端 type（剧团动态/演出公告/...）映射为 news.html 的 data-category（huimin/activity/notice/annual/policy）
+      if (c.indexOf('惠民') >= 0) return 'huimin';
+      if (c.indexOf('演出') >= 0 || c.indexOf('活动') >= 0) return 'activity';
+      if (c.indexOf('公告') >= 0 || c.indexOf('通知') >= 0) return 'notice';
+      if (c.indexOf('年度') >= 0 || c.indexOf('总结') >= 0) return 'annual';
+      if (c.indexOf('政策') >= 0 || c.indexOf('资讯') >= 0) return 'policy';
+      return 'huimin';
+    }
+    function _catLabel(cat){
+      var c = (cat || '').toString();
+      if (c.indexOf('惠民') >= 0) return '惠民演出资讯';
+      if (c.indexOf('演出') >= 0) return '演出公告';
+      if (c.indexOf('活动') >= 0) return '剧团活动';
+      if (c.indexOf('年度') >= 0) return '年度总结';
+      if (c.indexOf('公告') >= 0 || c.indexOf('通知') >= 0) return '公告通知';
+      if (c.indexOf('政策') >= 0) return '政策资讯';
+      if (c.indexOf('获奖') >= 0) return '获奖荣誉';
+      if (c.indexOf('文化') >= 0) return '文化资讯';
+      return c || '剧团动态';
+    }
+    function _buildCard(r, idx){
+      // 优先从 tagsJson 解码中文分类（{"category":"剧团动态"}），回退到 type
+      var rawCat = r.type || 'news';
+      try {
+        if (r.tagsJson) {
+          var tj = typeof r.tagsJson === 'string' ? JSON.parse(r.tagsJson) : r.tagsJson;
+          if (tj && tj.category) rawCat = tj.category;
+        }
+      } catch(_) {}
+      var cat = _mapCategory(rawCat);
+      var label = _catLabel(rawCat);
+      var dt = _formatDate(r.publishDate || r.createdAt);
+      var dateDay = dt ? dt.day : '—';
+      var dateMonth = dt ? dt.month : '';
+      var dateYear = dt ? dt.year : '';
+      var cover = r.coverImage ? '<img src="' + _escape(r.coverImage) + '" alt="' + _escape(r.title) + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'📰\';" />' : '📰';
+      var summary = _escape(r.summary || (r.contentBody || '').slice(0, 120));
+      var cardId = 'news-api-card-' + idx;
+      var html = '<article id="' + cardId + '" class="news-item-card" data-category="' + cat + '">' +
+        '<div class="news-date-box">' +
+          '<span class="date-day">' + dateDay + '</span>' +
+          '<span class="date-month">' + dateMonth + '</span>' +
+          '<span class="date-year">' + dateYear + '</span>' +
+        '</div>' +
+        '<div class="news-content-box">' +
+          '<div class="news-meta"><span class="news-cat-tag cat-' + cat + '">' + _escape(label) + '</span></div>' +
+          '<h3 class="news-title">' + _escape(r.title || '') + '</h3>' +
+          '<p class="news-summary">' + summary + '</p>' +
+          '<div class="news-footer">' +
+            '<div class="news-stats"><span>👤 ' + _escape(r.authorName || '秦剧团') + '</span></div>' +
+          '</div>' +
+        '</div>' +
+      '</article>';
+      return html;
+    }
+
+    async function _loadApiNews(){
+      try {
+        if (!window.QAXQJT_API) { console.warn('[news-dynamic] QAXQJT_API 未加载，保留静态卡片'); return; }
+        var resp = await QAXQJT_API.get('/v1/contents/public', { query: { type: 'news', page: 1, pageSize: 12 } });
+        var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
+        if (!rows.length) { console.info('[news-dynamic] 后端无已发布文章，保留静态卡片'); return; }
+        var container = document.querySelector('.news-list[data-paginate="list"]');
+        if (!container) { console.warn('[news-dynamic] .news-list 容器未找到'); return; }
+        var html = rows.map(function(r, i){ return _buildCard(r, i); }).join('');
+        // 用 API 卡片替换静态卡片（保留 data-paginate 属性以便 pagination.js 重新分页）
+        container.innerHTML = html;
+        // 重新初始化前端分类筛选 + 分页
+        try { if (window.QinPagination && typeof QinPagination.init === 'function') QinPagination.init(); } catch(_){}
+        // 重新绑定分类 tab 筛选（基于新的卡片）
+        if (typeof window.__rebindNewsFilter === 'function') { try { window.__rebindNewsFilter(); } catch(_){} }
+        console.info('[news-dynamic] 已渲染 ' + rows.length + ' 篇 API 文章');
+      } catch(e) {
+        console.warn('[news-dynamic] 拉取失败，保留静态卡片：', e && e.message ? e.message : e);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', _loadApiNews);
+    } else {
+      _loadApiNews();
+    }
   })();
   </script>
 </body>

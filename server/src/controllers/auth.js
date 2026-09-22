@@ -72,6 +72,7 @@ const login = async ctx => {
     where: { id: acc.id },
     data: { lastLoginAt: new Date(), lastLoginIp: ip, failedLoginCount: 0, lockedUntil: null, ts: BigInt(now()) }
   });
+  await prisma.adminSession.deleteMany({ where: { accountId: acc.id, expiresAt: { lt: new Date() } } });
   await prisma.adminSession.create({
     data: {
       id: idByCtx('session', 16, nanoid),
@@ -121,14 +122,25 @@ const refresh = async ctx => {
   }
   const acc = await prisma.accountsV2.findUnique({ where: { id: p.sub } });
   if (!acc || acc.status !== 'active') throw new BusinessError('UNAUTHORIZED', '账号已停用');
+  // 服务端会话白名单：登出/改密/封禁后 admin_sessions 行已删除，旧 refresh token 立即失效
+  const session = await prisma.adminSession.findUnique({ where: { tokenHash: refreshToken.slice(-16) } });
+  if (!session || session.accountId !== acc.id || session.expiresAt < new Date()) {
+    throw new BusinessError('UNAUTHORIZED', '登录会话已失效，请重新登录');
+  }
   const payload = { sub: acc.id, username: acc.username, role: acc.role, realName: acc.realName };
   return success(ctx, { accessToken: signAccess(payload), expiresInMin: 30, tokenType: 'Bearer' });
 };
 
 // ========== 注销 ==========
 const logout = async ctx => {
-  if (ctx.state?.user?.sub) {
-    await audit({ ctx, module: 'auth', action: 'LOGOUT', targetId: ctx.state.user.sub });
+  const callerId = ctx.state?.user?.sub || null;
+  // 前端回传 refreshToken 时精确删除本人该条会话（不能带 refreshToken 也返回成功，仅本地丢弃令牌）
+  const rt = ctx.request.body?.refreshToken;
+  if (callerId && typeof rt === 'string' && rt.length) {
+    await prisma.adminSession.deleteMany({ where: { tokenHash: rt.slice(-16), accountId: callerId } });
+  }
+  if (callerId) {
+    await audit({ ctx, module: 'auth', action: 'LOGOUT', targetId: callerId });
   }
   ctx.cookies.set('x_a_t', null);
   return success(ctx, { ok: true });
@@ -247,21 +259,42 @@ const qrcodeConfirm = async ctx => {
     throw new BusinessError('FORBIDDEN', '该二维码已被使用');
   }
 
-  // 校验账号密码（复用登录逻辑，但不触发 IP 限流和账号锁定）
+  // 与账密登录同一套安全策略：IP 限流 + 账号锁定 + 失败计数
+  // （扫码通道不能成为锁定后的撞库旁路）
+  const ip = ctx.ip;
+  const recent = await prisma.loginAttempt.findMany({
+    where: { ipAddress: ip, successFlag: false, attemptedAt: { gte: new Date(Date.now() - 5 * 60 * 1000) } },
+    take: 20
+  });
+  if (recent.length >= 10) {
+    await _recordAttempt({ username, ip, success: false, reason: 'QR_IP_RATE_LIMIT' });
+    throw new BusinessError('RATE_LIMITED', '该 IP 尝试过于频繁，请 5 分钟后再试');
+  }
+
   const acc = await prisma.accountsV2.findUnique({
     where: { username },
     include: { userRoles: { include: { role: true } } }
   });
   if (!acc || acc.status !== 'active') {
+    await _recordAttempt({ username, ip, success: false, reason: 'QR_USER_NOT_FOUND' });
     throw new BusinessError('UNAUTHORIZED', '用户名或密码错误');
   }
-  // 扫码登录不受账号锁定限制（作为锁定后的备用登录方式）
+  if (acc.lockedUntil && new Date(acc.lockedUntil) > new Date()) {
+    throw new BusinessError('FORBIDDEN', `账号已锁定，解锁时间：${acc.lockedUntil.toISOString()}`);
+  }
   const pwdOk = await verifyPassword(password, acc.passwordHash);
   if (!pwdOk) {
-    throw new BusinessError('UNAUTHORIZED', '用户名或密码错误');
+    const fails = (acc.failedLoginCount || 0) + 1;
+    const patch = { failedLoginCount: fails, lastLoginIp: ip };
+    if (fails >= 5) {
+      patch.lockedUntil = new Date(Date.now() + 30 * 60 * 1000);
+    }
+    await prisma.accountsV2.update({ where: { id: acc.id }, data: patch });
+    await _recordAttempt({ username, ip, success: false, reason: 'QR_BAD_PASSWORD' });
+    await audit({ ctx, module: 'auth', action: 'QR_LOGIN_FAIL_PASSWORD', targetId: acc.id, detail: { fails } });
+    throw new BusinessError('UNAUTHORIZED', `用户名或密码错误（剩余 ${5 - fails} 次）`);
   }
 
-  const ip = ctx.ip;
   const ua = (ctx.get('user-agent') || '').slice(0, 480);
   const payload = {
     sub: acc.id,
@@ -277,6 +310,7 @@ const qrcodeConfirm = async ctx => {
     where: { id: acc.id },
     data: { lastLoginAt: new Date(), lastLoginIp: ip, failedLoginCount: 0, lockedUntil: null, ts: BigInt(now()) }
   });
+  await prisma.adminSession.deleteMany({ where: { accountId: acc.id, expiresAt: { lt: new Date() } } });
   await prisma.adminSession.create({
     data: {
       id: idByCtx('session', 16, nanoid),
@@ -288,6 +322,7 @@ const qrcodeConfirm = async ctx => {
       ts: BigInt(now())
     }
   });
+  await _recordAttempt({ username, ip, success: true });
   await audit({ ctx, module: 'auth', action: 'LOGIN_QRCODE', targetId: acc.id });
 
   entry.status = 'confirmed';

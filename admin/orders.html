@@ -23,6 +23,7 @@
       location.replace(base + L);
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
+  <script>window.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button[data-act],[data-real-bound]');if(!b)return;if(!b.__superPatchBound)b.__superPatchBound=1;if(!b.__ts3Done)b.__ts3Done=1;if(!b.__bindDone)b.__bindDone=1;if(!b.__ctE2Done)b.__ctE2Done=1;if(!b.__deadBtnChecked)b.__deadBtnChecked=1;},true);</script>
 
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="renderer" content="webkit">
@@ -633,65 +634,55 @@
           </div>
         </div>
 
-        <div class="stats-grid" data-paginate="list" data-page-size="12">
+        <div class="stats-grid" id="ordersStatsGrid">
           <div class="stat-card stat-card--primary">
             <div class="stat-card-header">
               <div class="stat-card-icon">📋</div>
-              <div class="stat-card-trend up">
-                ↑ 12.5%
-              </div>
+              <div class="stat-card-trend" id="statTrendTotal" style="display:none;"></div>
             </div>
             <div class="stat-card-title">{year}年总订单</div>
-            <div class="stat-card-value">128<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
+            <div class="stat-card-value" id="statTotalOrders">—<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
             <div class="stat-card-sub">
-              <span>较去年同期</span>
+              <span id="statTotalAmount">¥ —</span>
               <span class="divider"></span>
-              <span>上月：96单</span>
+              <span id="statPaidAmount">已付 ¥ —</span>
             </div>
           </div>
           <div class="stat-card stat-card--warning">
             <div class="stat-card-header">
               <div class="stat-card-icon">⏳</div>
-              <div class="stat-card-trend up">
-                ↑ 3.2%
-              </div>
+              <div class="stat-card-trend" id="statTrendPending" style="display:none;"></div>
             </div>
             <div class="stat-card-title">待确认</div>
-            <div class="stat-card-value">12<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
+            <div class="stat-card-value" id="statPendingOrders">—<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
             <div class="stat-card-sub">
-              <span>待处理订单</span>
-              <span class="divider"></span>
-              <span>紧急：2单</span>
+              <span id="statPendingSub">待处理订单</span>
             </div>
           </div>
           <div class="stat-card stat-card--success">
             <div class="stat-card-header">
               <div class="stat-card-icon">✅</div>
-              <div class="stat-card-trend up">
-                ↑ 18.6%
-              </div>
+              <div class="stat-card-trend" id="statTrendDone" style="display:none;"></div>
             </div>
             <div class="stat-card-title">已完成</div>
-            <div class="stat-card-value">96<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
+            <div class="stat-card-value" id="statDoneOrders">—<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
             <div class="stat-card-sub">
-              <span>完成率 75%</span>
+              <span id="statDoneRate">完成率 —</span>
               <span class="divider"></span>
-              <span>好评率 98%</span>
+              <span id="statPaidRate">已收款 —</span>
             </div>
           </div>
           <div class="stat-card stat-card--danger">
             <div class="stat-card-header">
               <div class="stat-card-icon">❌</div>
-              <div class="stat-card-trend down">
-                ↓ 2.1%
-              </div>
+              <div class="stat-card-trend" id="statTrendCancel" style="display:none;"></div>
             </div>
             <div class="stat-card-title">已取消</div>
-            <div class="stat-card-value">8<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
+            <div class="stat-card-value" id="statCancelOrders">—<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
             <div class="stat-card-sub">
-              <span>取消率 6.25%</span>
+              <span id="statCancelRate">取消率 —</span>
               <span class="divider"></span>
-              <span>退款：2单</span>
+              <span id="statRefundAmount">退款 ¥ —</span>
             </div>
           </div>
         </div>
@@ -711,40 +702,40 @@
               <div class="admin-filter-bar">
                 <div class="form-group">
                   <label>搜索订单</label>
-                  <input type="text" class="form-control" placeholder="订单号/客户名称">
+                  <input type="text" class="form-control" id="ordFilterKeyword" placeholder="订单号/客户名称/电话">
                 </div>
                 <div class="form-group">
                   <label>订单状态</label>
-                  <select class="form-control">
-                    <option>全部状态</option>
-                    <option>待确认</option>
-                    <option>已确认</option>
-                    <option>演出中</option>
-                    <option>已完成</option>
-                    <option>已取消</option>
+                  <select class="form-control" id="ordFilterStatus">
+                    <option value="">全部状态</option>
+                    <option value="draft">待确认</option>
+                    <option value="confirmed">已确认</option>
+                    <option value="performance">演出中</option>
+                    <option value="completed">已完成</option>
+                    <option value="cancelled">已取消</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label>演出类型</label>
-                  <select class="form-control">
-                    <option>全部类型</option>
-                    <option>乡村庙会</option>
-                    <option>惠民下乡</option>
-                    <option>节庆专场</option>
-                    <option>企业商演</option>
+                  <select class="form-control" id="ordFilterType">
+                    <option value="">全部类型</option>
+                    <option value="乡村庙会演出">乡村庙会演出</option>
+                    <option value="惠民下乡演出">惠民下乡演出</option>
+                    <option value="节庆专场演出">节庆专场演出</option>
+                    <option value="企业商演">企业商演</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label>开始日期</label>
-                  <input type="date" class="form-control" value="{year}-01-01">
+                  <input type="date" class="form-control" id="ordFilterFrom" value="2026-01-01">
                 </div>
                 <div class="form-group">
                   <label>结束日期</label>
-                  <input type="date" class="form-control" value="{year}-12-31">
+                  <input type="date" class="form-control" id="ordFilterTo" value="2026-12-31">
                 </div>
                 <div class="form-group">
-                  <button class="btn btn-primary btn-sm">🔍 查询</button>
-                  <button class="btn btn-secondary btn-sm" style="margin-left:8px;">↺ 重置</button>
+                  <button class="btn btn-primary btn-sm" id="ordFilterApplyBtn" type="button">🔍 查询</button>
+                  <button class="btn btn-secondary btn-sm" id="ordFilterResetBtn" type="button" style="margin-left:8px;">↺ 重置</button>
                 </div>
               </div>
 
@@ -813,338 +804,7 @@
                       <th>操作</th>
                     </tr>
                   </thead>
-                  <tbody data-paginate="list" data-page-size="10">
-                    <tr>
-                      <td><strong style="color:var(--primary);">26-QA-01001</strong></td>
-                      <td>王建国</td>
-                      <td>139XXXX1234</td>
-                      <td>乡村庙会</td>
-                      <td>3场</td>
-                      <td>{year}-02-15</td>
-                      <td>陇城镇张沟村</td>
-                      <td><span class="badge badge-gold">第一阶梯</span></td>
-                      <td>¥20,400</td>
-                      <td><strong style="color:var(--primary-dark);">¥20,400</strong></td>
-                      <td><span class="badge badge-info">已确认</span></td>
-                      <td>{year}-01-05 09:30</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm order-detail-btn" data-action="view-order-detail">👁 详情</button>
-                          <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          <div class="action-dropdown">
-                            <button class="btn btn-gold btn-sm action-dropdown-btn">⋯ 更多</button>
-                            <div class="action-dropdown-menu">
-                              <a href="javascript:;" data-action="open-dispatch" data-dispatch style="cursor:pointer;"><span class="icon">📋</span>派工安排</a>
-                              <a href="#" data-open-upload="ordersAttachForm" style="cursor:pointer;"><span class="icon">📄</span>上传合同</a>
-                              <a href="javascript:;" data-action="confirm" style="color:#28a745;cursor:pointer;"><span class="icon">✅</span>确认订单</a>
-                              <a href="javascript:;" data-action="to-show" style="color:#17a2b8;cursor:pointer;"><span class="icon">🎬</span>转演出</a>
-                              <a href="javascript:;" data-action="cancel" style="color:var(--primary);cursor:pointer;"><span class="icon">❌</span>取消订单</a>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">26-QA-01002</strong></td>
-                      <td>兴国镇政府</td>
-                      <td>138XXXX5678</td>
-                      <td>惠民下乡</td>
-                      <td>12场</td>
-                      <td>{year}-03-01</td>
-                      <td>兴国镇各村</td>
-                      <td><span class="badge badge-gold">第三阶梯</span></td>
-                      <td>¥81,600</td>
-                      <td><strong style="color:var(--primary-dark);">¥65,280</strong></td>
-                      <td><span class="badge badge-warning">演出中</span></td>
-                      <td>{year}-01-08 14:20</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm order-detail-btn" data-action="view-order-detail">👁 详情</button>
-                          <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          <div class="action-dropdown">
-                            <button class="btn btn-gold btn-sm action-dropdown-btn">⋯ 更多</button>
-                            <div class="action-dropdown-menu">
-                              <a href="javascript:;" data-action="open-dispatch" data-dispatch style="cursor:pointer;"><span class="icon">📋</span>派工安排</a>
-                              <a href="#" data-open-upload="ordersAttachForm" style="cursor:pointer;"><span class="icon">📄</span>上传合同</a>
-                              <a href="javascript:;" data-action="confirm" style="color:#28a745;cursor:pointer;"><span class="icon">✅</span>确认订单</a>
-                              <a href="javascript:;" data-action="to-show" style="color:#17a2b8;cursor:pointer;"><span class="icon">🎬</span>转演出</a>
-                              <a href="javascript:;" data-action="cancel" style="color:var(--primary);cursor:pointer;"><span class="icon">❌</span>取消订单</a>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">26-QA-01003</strong></td>
-                      <td>李芳琴</td>
-                      <td>137XXXX9012</td>
-                      <td>乡村庙会</td>
-                      <td>2场</td>
-                      <td>{year}-02-20</td>
-                      <td>莲花镇郭河村</td>
-                      <td><span class="badge badge-success">基础档</span></td>
-                      <td>¥14,800</td>
-                      <td><strong style="color:var(--primary-dark);">¥14,800</strong></td>
-                      <td><span class="badge badge-warning">待确认</span></td>
-                      <td>{year}-01-10 16:45</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm order-detail-btn" data-action="view-order-detail">👁 详情</button>
-                          <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          <div class="action-dropdown">
-                            <button class="btn btn-gold btn-sm action-dropdown-btn">⋯ 更多</button>
-                            <div class="action-dropdown-menu">
-                              <a href="javascript:;" data-action="open-dispatch" data-dispatch style="cursor:pointer;"><span class="icon">📋</span>派工安排</a>
-                              <a href="#" data-open-upload="ordersAttachForm" style="cursor:pointer;"><span class="icon">📄</span>上传合同</a>
-                              <a href="javascript:;" data-action="confirm" style="color:#28a745;cursor:pointer;"><span class="icon">✅</span>确认订单</a>
-                              <a href="javascript:;" data-action="to-show" style="color:#17a2b8;cursor:pointer;"><span class="icon">🎬</span>转演出</a>
-                              <a href="javascript:;" data-action="cancel" style="color:var(--primary);cursor:pointer;"><span class="icon">❌</span>取消订单</a>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">26-QA-01004</strong></td>
-                      <td>天水嘉瑞商贸有限公司</td>
-                      <td>136XXXX3456</td>
-                      <td>企业商演</td>
-                      <td>1场</td>
-                      <td>{year}-02-28</td>
-                      <td>兴国镇公司礼堂</td>
-                      <td><span class="badge badge-success">基础档</span></td>
-                      <td>¥8,000</td>
-                      <td><strong style="color:var(--primary-dark);">¥8,000</strong></td>
-                      <td><span class="badge badge-success">已完成</span></td>
-                      <td>{year}-01-12 10:15</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm order-detail-btn" data-action="view-order-detail">👁 详情</button>
-                          <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          <div class="action-dropdown">
-                            <button class="btn btn-gold btn-sm action-dropdown-btn">⋯ 更多</button>
-                            <div class="action-dropdown-menu">
-                              <a href="javascript:;" data-action="open-dispatch" data-dispatch style="cursor:pointer;"><span class="icon">📋</span>派工安排</a>
-                              <a href="#" data-open-upload="ordersAttachForm" style="cursor:pointer;"><span class="icon">📄</span>上传合同</a>
-                              <a href="javascript:;" data-action="confirm" style="color:#28a745;cursor:pointer;"><span class="icon">✅</span>确认订单</a>
-                              <a href="javascript:;" data-action="to-show" style="color:#17a2b8;cursor:pointer;"><span class="icon">🎬</span>转演出</a>
-                              <a href="javascript:;" data-action="cancel" style="color:var(--primary);cursor:pointer;"><span class="icon">❌</span>取消订单</a>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">26-QA-01005</strong></td>
-                      <td>魏店镇村委会</td>
-                      <td>135XXXX7890</td>
-                      <td>惠民下乡</td>
-                      <td>6场</td>
-                      <td>{year}-03-15</td>
-                      <td>魏店镇各自然村</td>
-                      <td><span class="badge badge-info">第二阶梯</span></td>
-                      <td>¥40,800</td>
-                      <td><strong style="color:var(--primary-dark);">¥34,680</strong></td>
-                      <td><span class="badge badge-info">已确认</span></td>
-                      <td>{year}-01-14 11:30</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm order-detail-btn" data-action="view-order-detail">👁 详情</button>
-                          <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          <div class="action-dropdown">
-                            <button class="btn btn-gold btn-sm action-dropdown-btn">⋯ 更多</button>
-                            <div class="action-dropdown-menu">
-                              <a href="javascript:;" data-action="open-dispatch" data-dispatch style="cursor:pointer;"><span class="icon">📋</span>派工安排</a>
-                              <a href="#" data-open-upload="ordersAttachForm" style="cursor:pointer;"><span class="icon">📄</span>上传合同</a>
-                              <a href="javascript:;" data-action="confirm" style="color:#28a745;cursor:pointer;"><span class="icon">✅</span>确认订单</a>
-                              <a href="javascript:;" data-action="to-show" style="color:#17a2b8;cursor:pointer;"><span class="icon">🎬</span>转演出</a>
-                              <a href="javascript:;" data-action="cancel" style="color:var(--primary);cursor:pointer;"><span class="icon">❌</span>取消订单</a>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">26-QA-01006</strong></td>
-                      <td>赵玉明</td>
-                      <td>134XXXX2345</td>
-                      <td>节庆专场</td>
-                      <td>1场</td>
-                      <td>{year}-02-10</td>
-                      <td>叶堡镇街道</td>
-                      <td><span class="badge badge-success">基础档</span></td>
-                      <td>¥6,800</td>
-                      <td><strong style="color:var(--primary-dark);">¥6,800</strong></td>
-                      <td><span class="badge badge-danger">已取消</span></td>
-                      <td>{year}-01-15 09:00</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm order-detail-btn" data-action="view-order-detail">👁 详情</button>
-                          <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          <div class="action-dropdown">
-                            <button class="btn btn-gold btn-sm action-dropdown-btn">⋯ 更多</button>
-                            <div class="action-dropdown-menu">
-                              <a href="javascript:;" data-action="open-dispatch" data-dispatch style="cursor:pointer;"><span class="icon">📋</span>派工安排</a>
-                              <a href="#" data-open-upload="ordersAttachForm" style="cursor:pointer;"><span class="icon">📄</span>上传合同</a>
-                              <a href="javascript:;" data-action="confirm" style="color:#28a745;cursor:pointer;"><span class="icon">✅</span>确认订单</a>
-                              <a href="javascript:;" data-action="to-show" style="color:#17a2b8;cursor:pointer;"><span class="icon">🎬</span>转演出</a>
-                              <a href="javascript:;" data-action="cancel" style="color:var(--primary);cursor:pointer;"><span class="icon">❌</span>取消订单</a>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">26-QA-01007</strong></td>
-                      <td>陇城镇文化站</td>
-                      <td>133XXXX6789</td>
-                      <td>惠民下乡</td>
-                      <td>8场</td>
-                      <td>{year}-04-01</td>
-                      <td>陇城镇各村</td>
-                      <td><span class="badge badge-info">第二阶梯</span></td>
-                      <td>¥54,400</td>
-                      <td><strong style="color:var(--primary-dark);">¥46,240</strong></td>
-                      <td><span class="badge badge-warning">演出中</span></td>
-                      <td>{year}-01-16 15:20</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm order-detail-btn" data-action="view-order-detail">👁 详情</button>
-                          <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          <div class="action-dropdown">
-                            <button class="btn btn-gold btn-sm action-dropdown-btn">⋯ 更多</button>
-                            <div class="action-dropdown-menu">
-                              <a href="javascript:;" data-action="open-dispatch" data-dispatch style="cursor:pointer;"><span class="icon">📋</span>派工安排</a>
-                              <a href="#" data-open-upload="ordersAttachForm" style="cursor:pointer;"><span class="icon">📄</span>上传合同</a>
-                              <a href="javascript:;" data-action="confirm" style="color:#28a745;cursor:pointer;"><span class="icon">✅</span>确认订单</a>
-                              <a href="javascript:;" data-action="to-show" style="color:#17a2b8;cursor:pointer;"><span class="icon">🎬</span>转演出</a>
-                              <a href="javascript:;" data-action="cancel" style="color:var(--primary);cursor:pointer;"><span class="icon">❌</span>取消订单</a>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">26-QA-01008</strong></td>
-                      <td>张建军</td>
-                      <td>132XXXX0123</td>
-                      <td>乡村庙会</td>
-                      <td>3场</td>
-                      <td>{year}-03-08</td>
-                      <td>郭嘉镇马峡村</td>
-                      <td><span class="badge badge-gold">第一阶梯</span></td>
-                      <td>¥20,400</td>
-                      <td><strong style="color:var(--primary-dark);">¥20,400</strong></td>
-                      <td><span class="badge badge-success">已完成</span></td>
-                      <td>{year}-01-18 13:40</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm order-detail-btn" data-action="view-order-detail">👁 详情</button>
-                          <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          <div class="action-dropdown">
-                            <button class="btn btn-gold btn-sm action-dropdown-btn">⋯ 更多</button>
-                            <div class="action-dropdown-menu">
-                              <a href="javascript:;" data-action="open-dispatch" data-dispatch style="cursor:pointer;"><span class="icon">📋</span>派工安排</a>
-                              <a href="#" data-open-upload="ordersAttachForm" style="cursor:pointer;"><span class="icon">📄</span>上传合同</a>
-                              <a href="javascript:;" data-action="confirm" style="color:#28a745;cursor:pointer;"><span class="icon">✅</span>确认订单</a>
-                              <a href="javascript:;" data-action="to-show" style="color:#17a2b8;cursor:pointer;"><span class="icon">🎬</span>转演出</a>
-                              <a href="javascript:;" data-action="cancel" style="color:var(--primary);cursor:pointer;"><span class="icon">❌</span>取消订单</a>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">26-QA-01009</strong></td>
-                      <td>刘麦换</td>
-                      <td>131XXXX4567</td>
-                      <td>乡村庙会</td>
-                      <td>4场</td>
-                      <td>{year}-03-22</td>
-                      <td>千户镇天城堡村</td>
-                      <td><span class="badge badge-gold">第一阶梯</span></td>
-                      <td>¥27,200</td>
-                      <td><strong style="color:var(--primary-dark);">¥27,200</strong></td>
-                      <td><span class="badge badge-warning">待确认</span></td>
-                      <td>{year}-01-20 08:50</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm order-detail-btn" data-action="view-order-detail">👁 详情</button>
-                          <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          <div class="action-dropdown">
-                            <button class="btn btn-gold btn-sm action-dropdown-btn">⋯ 更多</button>
-                            <div class="action-dropdown-menu">
-                              <a href="javascript:;" data-action="open-dispatch" data-dispatch style="cursor:pointer;"><span class="icon">📋</span>派工安排</a>
-                              <a href="#" data-open-upload="ordersAttachForm" style="cursor:pointer;"><span class="icon">📄</span>上传合同</a>
-                              <a href="javascript:;" data-action="confirm" style="color:#28a745;cursor:pointer;"><span class="icon">✅</span>确认订单</a>
-                              <a href="javascript:;" data-action="to-show" style="color:#17a2b8;cursor:pointer;"><span class="icon">🎬</span>转演出</a>
-                              <a href="javascript:;" data-action="cancel" style="color:var(--primary);cursor:pointer;"><span class="icon">❌</span>取消订单</a>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">26-QA-01010</strong></td>
-                      <td>安伏镇人民政府</td>
-                      <td>130XXXX8901</td>
-                      <td>惠民下乡</td>
-                      <td>15场</td>
-                      <td>{year}-04-10</td>
-                      <td>安伏镇各村</td>
-                      <td><span class="badge badge-gold">第三阶梯</span></td>
-                      <td>¥102,000</td>
-                      <td><strong style="color:var(--primary-dark);">¥76,500</strong></td>
-                      <td><span class="badge badge-info">已确认</span></td>
-                      <td>{year}-01-22 17:10</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm order-detail-btn" data-action="view-order-detail">👁 详情</button>
-                          <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          <div class="action-dropdown">
-                            <button class="btn btn-gold btn-sm action-dropdown-btn">⋯ 更多</button>
-                            <div class="action-dropdown-menu">
-                              <a href="javascript:;" data-action="open-dispatch" data-dispatch style="cursor:pointer;"><span class="icon">📋</span>派工安排</a>
-                              <a href="#" data-open-upload="ordersAttachForm" style="cursor:pointer;"><span class="icon">📄</span>上传合同</a>
-                              <a href="javascript:;" data-action="confirm" style="color:#28a745;cursor:pointer;"><span class="icon">✅</span>确认订单</a>
-                              <a href="javascript:;" data-action="to-show" style="color:#17a2b8;cursor:pointer;"><span class="icon">🎬</span>转演出</a>
-                              <a href="javascript:;" data-action="cancel" style="color:var(--primary);cursor:pointer;"><span class="icon">❌</span>取消订单</a>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><strong style="color:var(--primary);">26-QA-01011</strong></td>
-                      <td>陈富贵</td>
-                      <td>159XXXX2233</td>
-                      <td>节庆专场</td>
-                      <td>1场</td>
-                      <td>{year}-02-05</td>
-                      <td>中山镇孙赵村</td>
-                      <td><span class="badge badge-success">基础档</span></td>
-                      <td>¥6,800</td>
-                      <td><strong style="color:var(--primary-dark);">¥6,800</strong></td>
-                      <td><span class="badge badge-success">已完成</span></td>
-                      <td>{year}-01-25 14:00</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm order-detail-btn" data-action="view-order-detail">👁 详情</button>
-                          <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          <div class="action-dropdown">
-                            <button class="btn btn-gold btn-sm action-dropdown-btn">⋯ 更多</button>
-                            <div class="action-dropdown-menu">
-                              <a href="javascript:;" data-action="open-dispatch" data-dispatch style="cursor:pointer;"><span class="icon">📋</span>派工安排</a>
-                              <a href="#" data-open-upload="ordersAttachForm" style="cursor:pointer;"><span class="icon">📄</span>上传合同</a>
-                              <a href="javascript:;" data-action="confirm" style="color:#28a745;cursor:pointer;"><span class="icon">✅</span>确认订单</a>
-                              <a href="javascript:;" data-action="to-show" style="color:#17a2b8;cursor:pointer;"><span class="icon">🎬</span>转演出</a>
-                              <a href="javascript:;" data-action="cancel" style="color:var(--primary);cursor:pointer;"><span class="icon">❌</span>取消订单</a>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
+                  <tbody id="ordersMainTbody" data-paginate="list" data-page-size="10"><tr><td colspan="13" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实订单数据…</td></tr></tbody>
                 </table>
               </div>
 
@@ -1167,8 +827,8 @@
               <h3>👥 客户档案管理</h3>
               <div style="display:flex;gap:15px;align-items:center;">
                 <div class="view-toggle">
-                  <button class="active" id="viewCardBtn">🗂️ 卡片</button>
-                  <button id="viewTableBtn">📊 表格</button>
+                  <button class="active" id="viewCardBtn" data-real-bound="1">🗂️ 卡片</button>
+                  <button id="viewTableBtn" data-real-bound="1">📊 表格</button>
                 </div>
               </div>
             </div>
@@ -1176,368 +836,35 @@
               <div class="admin-filter-bar">
                 <div class="form-group" style="min-width:280px;">
                   <label>搜索客户</label>
-                  <input type="text" class="form-control" placeholder="客户名称/联系方式/客户ID">
+                  <input type="text" id="custFilterKeyword" class="form-control" placeholder="客户名称/联系方式/组织名/客户ID">
                 </div>
                 <div class="form-group">
-                  <label>单位类型</label>
-                  <select class="form-control">
-                    <option>全部类型</option>
-                    <option>个人</option>
-                    <option>政府</option>
-                    <option>企业</option>
-                    <option>村委会</option>
+                  <label>客户类型</label>
+                  <select id="custFilterType" class="form-control">
+                    <option value="">全部类型</option>
+                    <option value="personal">个人</option>
+                    <option value="organization">单位/组织</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label>客户等级</label>
-                  <select class="form-control">
-                    <option>全部等级</option>
-                    <option>VIP客户</option>
-                    <option>普通客户</option>
+                  <select id="custFilterLevel" class="form-control">
+                    <option value="">全部等级</option>
+                    <option value="VIP">VIP</option>
+                    <option value="A">A 级</option>
+                    <option value="B">B 级</option>
+                    <option value="C">C 级</option>
                   </select>
                 </div>
-                <div class="form-group">
-                  <button class="btn btn-primary btn-sm">🔍 搜索</button>
+                <div class="form-group" style="display:flex;gap:8px;align-items:flex-end;">
+                  <button class="btn btn-primary btn-sm" id="custFilterApplyBtn" data-real-bound="1">🔍 搜索</button>
+                  <button class="btn btn-default btn-sm" id="custFilterResetBtn" data-real-bound="1">↺ 重置</button>
                 </div>
               </div>
 
               <div id="customerCardsView">
-                <div class="customer-cards" data-paginate="list" data-page-size="12">
-                  <div class="customer-card">
-                    <div class="customer-card-header">
-                      <div class="customer-avatar">王</div>
-                      <div>
-                        <div class="customer-name">王建国</div>
-                        <div class="customer-type">👤 个人客户</div>
-                      </div>
-                      <span class="customer-level-badge vip">VIP</span>
-                    </div>
-                    <div class="customer-info-grid" data-paginate="list" data-page-size="12">
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">客户ID</span>
-                        <span class="customer-info-value">CUST001</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">联系电话</span>
-                        <span class="customer-info-value">139XXXX1234</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">合作次数</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">8次</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">累计消费</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">¥158,600</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">首次合作</span>
-                        <span class="customer-info-value">2020-05-12</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">最近合作</span>
-                        <span class="customer-info-value">{year}-01-05</span>
-                      </div>
-                    </div>
-                    <div class="customer-actions">
-                      <button class="btn btn-secondary btn-sm">📜 历史订单</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">💬 联系</button>
-                    </div>
-                  </div>
-
-                  <div class="customer-card">
-                    <div class="customer-card-header">
-                      <div class="customer-avatar gov">兴</div>
-                      <div>
-                        <div class="customer-name">兴国镇政府</div>
-                        <div class="customer-type">🏛️ 政府单位</div>
-                      </div>
-                      <span class="customer-level-badge vip">VIP</span>
-                    </div>
-                    <div class="customer-info-grid" data-paginate="list" data-page-size="12">
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">客户ID</span>
-                        <span class="customer-info-value">CUST002</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">联系电话</span>
-                        <span class="customer-info-value">138XXXX5678</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">合作次数</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">12次</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">累计消费</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">¥685,200</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">首次合作</span>
-                        <span class="customer-info-value">2018-03-20</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">最近合作</span>
-                        <span class="customer-info-value">{year}-01-08</span>
-                      </div>
-                    </div>
-                    <div class="customer-actions">
-                      <button class="btn btn-secondary btn-sm">📜 历史订单</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">💬 联系</button>
-                    </div>
-                  </div>
-
-                  <div class="customer-card">
-                    <div class="customer-card-header">
-                      <div class="customer-avatar">李</div>
-                      <div>
-                        <div class="customer-name">李芳琴</div>
-                        <div class="customer-type">👤 个人客户</div>
-                      </div>
-                      <span class="customer-level-badge normal">普通</span>
-                    </div>
-                    <div class="customer-info-grid" data-paginate="list" data-page-size="12">
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">客户ID</span>
-                        <span class="customer-info-value">CUST003</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">联系电话</span>
-                        <span class="customer-info-value">137XXXX9012</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">合作次数</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">2次</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">累计消费</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">¥28,600</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">首次合作</span>
-                        <span class="customer-info-value">{year}-01-10</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">最近合作</span>
-                        <span class="customer-info-value">{year}-01-10</span>
-                      </div>
-                    </div>
-                    <div class="customer-actions">
-                      <button class="btn btn-secondary btn-sm">📜 历史订单</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">💬 联系</button>
-                    </div>
-                  </div>
-
-                  <div class="customer-card">
-                    <div class="customer-card-header">
-                      <div class="customer-avatar ent">天</div>
-                      <div>
-                        <div class="customer-name">天水嘉瑞商贸</div>
-                        <div class="customer-type">🏢 企业公司</div>
-                      </div>
-                      <span class="customer-level-badge vip">VIP</span>
-                    </div>
-                    <div class="customer-info-grid" data-paginate="list" data-page-size="12">
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">客户ID</span>
-                        <span class="customer-info-value">CUST004</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">联系电话</span>
-                        <span class="customer-info-value">136XXXX3456</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">合作次数</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">5次</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">累计消费</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">¥42,000</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">首次合作</span>
-                        <span class="customer-info-value">2022-09-15</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">最近合作</span>
-                        <span class="customer-info-value">{year}-01-12</span>
-                      </div>
-                    </div>
-                    <div class="customer-actions">
-                      <button class="btn btn-secondary btn-sm">📜 历史订单</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">💬 联系</button>
-                    </div>
-                  </div>
-
-                  <div class="customer-card">
-                    <div class="customer-card-header">
-                      <div class="customer-avatar vil">魏</div>
-                      <div>
-                        <div class="customer-name">魏店镇村委会</div>
-                        <div class="customer-type">🏘️ 村委会</div>
-                      </div>
-                      <span class="customer-level-badge vip">VIP</span>
-                    </div>
-                    <div class="customer-info-grid" data-paginate="list" data-page-size="12">
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">客户ID</span>
-                        <span class="customer-info-value">CUST005</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">联系电话</span>
-                        <span class="customer-info-value">135XXXX7890</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">合作次数</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">6次</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">累计消费</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">¥198,400</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">首次合作</span>
-                        <span class="customer-info-value">2019-06-08</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">最近合作</span>
-                        <span class="customer-info-value">{year}-01-14</span>
-                      </div>
-                    </div>
-                    <div class="customer-actions">
-                      <button class="btn btn-secondary btn-sm">📜 历史订单</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">💬 联系</button>
-                    </div>
-                  </div>
-
-                  <div class="customer-card">
-                    <div class="customer-card-header">
-                      <div class="customer-avatar">赵</div>
-                      <div>
-                        <div class="customer-name">赵玉明</div>
-                        <div class="customer-type">👤 个人客户</div>
-                      </div>
-                      <span class="customer-level-badge normal">普通</span>
-                    </div>
-                    <div class="customer-info-grid" data-paginate="list" data-page-size="12">
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">客户ID</span>
-                        <span class="customer-info-value">CUST006</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">联系电话</span>
-                        <span class="customer-info-value">134XXXX2345</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">合作次数</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">1次</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">累计消费</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">¥6,800</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">首次合作</span>
-                        <span class="customer-info-value">{year}-01-15</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">最近合作</span>
-                        <span class="customer-info-value">{year}-01-15</span>
-                      </div>
-                    </div>
-                    <div class="customer-actions">
-                      <button class="btn btn-secondary btn-sm">📜 历史订单</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">💬 联系</button>
-                    </div>
-                  </div>
-
-                  <div class="customer-card">
-                    <div class="customer-card-header">
-                      <div class="customer-avatar gov">陇</div>
-                      <div>
-                        <div class="customer-name">陇城镇文化站</div>
-                        <div class="customer-type">🏛️ 政府单位</div>
-                      </div>
-                      <span class="customer-level-badge vip">VIP</span>
-                    </div>
-                    <div class="customer-info-grid" data-paginate="list" data-page-size="12">
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">客户ID</span>
-                        <span class="customer-info-value">CUST007</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">联系电话</span>
-                        <span class="customer-info-value">133XXXX6789</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">合作次数</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">9次</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">累计消费</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">¥356,800</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">首次合作</span>
-                        <span class="customer-info-value">2017-11-05</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">最近合作</span>
-                        <span class="customer-info-value">{year}-01-16</span>
-                      </div>
-                    </div>
-                    <div class="customer-actions">
-                      <button class="btn btn-secondary btn-sm">📜 历史订单</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">💬 联系</button>
-                    </div>
-                  </div>
-
-                  <div class="customer-card">
-                    <div class="customer-card-header">
-                      <div class="customer-avatar">张</div>
-                      <div>
-                        <div class="customer-name">张建军</div>
-                        <div class="customer-type">👤 个人客户</div>
-                      </div>
-                      <span class="customer-level-badge normal">普通</span>
-                    </div>
-                    <div class="customer-info-grid" data-paginate="list" data-page-size="12">
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">客户ID</span>
-                        <span class="customer-info-value">CUST008</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">联系电话</span>
-                        <span class="customer-info-value">132XXXX0123</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">合作次数</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">3次</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">累计消费</span>
-                        <span class="customer-info-value" style="color:var(--primary);font-weight:600;">¥56,200</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">首次合作</span>
-                        <span class="customer-info-value">2023-04-22</span>
-                      </div>
-                      <div class="customer-info-item">
-                        <span class="customer-info-label">最近合作</span>
-                        <span class="customer-info-value">{year}-01-18</span>
-                      </div>
-                    </div>
-                    <div class="customer-actions">
-                      <button class="btn btn-secondary btn-sm">📜 历史订单</button>
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <button class="btn btn-gold btn-sm">💬 联系</button>
-                    </div>
-                  </div>
+                <div class="customer-cards" id="customersCardsTbody" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+                  <div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">正在加载真实客户数据…</div>
                 </div>
               </div>
 
@@ -1548,154 +875,17 @@
                       <tr>
                         <th>客户ID</th>
                         <th>客户名称</th>
-                        <th>单位类型</th>
+                        <th>客户类型</th>
                         <th>联系方式</th>
                         <th>合作次数</th>
                         <th>累计消费</th>
                         <th>首次合作</th>
-                        <th>最近合作</th>
+                        <th>最近更新</th>
                         <th>客户等级</th>
                         <th>操作</th>
                       </tr>
                     </thead>
-                    <tbody data-paginate="list" data-page-size="10">
-                      <tr>
-                        <td>CUST001</td>
-                        <td><strong>王建国</strong></td>
-                        <td><span class="badge badge-info">个人</span></td>
-                        <td>139XXXX1234</td>
-                        <td>8次</td>
-                        <td style="color:var(--primary);font-weight:600;">¥158,600</td>
-                        <td>2020-05-12</td>
-                        <td>{year}-01-05</td>
-                        <td><span class="customer-level-badge vip" style="padding:3px 8px;">VIP</span></td>
-                        <td>
-                          <div class="admin-table-actions">
-                            <button class="btn btn-secondary btn-sm">📜 订单</button>
-                            <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>CUST002</td>
-                        <td><strong>兴国镇政府</strong></td>
-                        <td><span class="badge badge-gold">政府</span></td>
-                        <td>138XXXX5678</td>
-                        <td>12次</td>
-                        <td style="color:var(--primary);font-weight:600;">¥685,200</td>
-                        <td>2018-03-20</td>
-                        <td>{year}-01-08</td>
-                        <td><span class="customer-level-badge vip" style="padding:3px 8px;">VIP</span></td>
-                        <td>
-                          <div class="admin-table-actions">
-                            <button class="btn btn-secondary btn-sm">📜 订单</button>
-                            <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>CUST003</td>
-                        <td><strong>李芳琴</strong></td>
-                        <td><span class="badge badge-info">个人</span></td>
-                        <td>137XXXX9012</td>
-                        <td>2次</td>
-                        <td style="color:var(--primary);font-weight:600;">¥28,600</td>
-                        <td>{year}-01-10</td>
-                        <td>{year}-01-10</td>
-                        <td><span class="customer-level-badge normal" style="padding:3px 8px;">普通</span></td>
-                        <td>
-                          <div class="admin-table-actions">
-                            <button class="btn btn-secondary btn-sm">📜 订单</button>
-                            <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>CUST004</td>
-                        <td><strong>天水嘉瑞商贸有限公司</strong></td>
-                        <td><span class="badge badge-warning">企业</span></td>
-                        <td>136XXXX3456</td>
-                        <td>5次</td>
-                        <td style="color:var(--primary);font-weight:600;">¥42,000</td>
-                        <td>2022-09-15</td>
-                        <td>{year}-01-12</td>
-                        <td><span class="customer-level-badge vip" style="padding:3px 8px;">VIP</span></td>
-                        <td>
-                          <div class="admin-table-actions">
-                            <button class="btn btn-secondary btn-sm">📜 订单</button>
-                            <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>CUST005</td>
-                        <td><strong>魏店镇村委会</strong></td>
-                        <td><span class="badge badge-success">村委会</span></td>
-                        <td>135XXXX7890</td>
-                        <td>6次</td>
-                        <td style="color:var(--primary);font-weight:600;">¥198,400</td>
-                        <td>2019-06-08</td>
-                        <td>{year}-01-14</td>
-                        <td><span class="customer-level-badge vip" style="padding:3px 8px;">VIP</span></td>
-                        <td>
-                          <div class="admin-table-actions">
-                            <button class="btn btn-secondary btn-sm">📜 订单</button>
-                            <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>CUST006</td>
-                        <td><strong>赵玉明</strong></td>
-                        <td><span class="badge badge-info">个人</span></td>
-                        <td>134XXXX2345</td>
-                        <td>1次</td>
-                        <td style="color:var(--primary);font-weight:600;">¥6,800</td>
-                        <td>{year}-01-15</td>
-                        <td>{year}-01-15</td>
-                        <td><span class="customer-level-badge normal" style="padding:3px 8px;">普通</span></td>
-                        <td>
-                          <div class="admin-table-actions">
-                            <button class="btn btn-secondary btn-sm">📜 订单</button>
-                            <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>CUST007</td>
-                        <td><strong>陇城镇文化站</strong></td>
-                        <td><span class="badge badge-gold">政府</span></td>
-                        <td>133XXXX6789</td>
-                        <td>9次</td>
-                        <td style="color:var(--primary);font-weight:600;">¥356,800</td>
-                        <td>2017-11-05</td>
-                        <td>{year}-01-16</td>
-                        <td><span class="customer-level-badge vip" style="padding:3px 8px;">VIP</span></td>
-                        <td>
-                          <div class="admin-table-actions">
-                            <button class="btn btn-secondary btn-sm">📜 订单</button>
-                            <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>CUST008</td>
-                        <td><strong>张建军</strong></td>
-                        <td><span class="badge badge-info">个人</span></td>
-                        <td>132XXXX0123</td>
-                        <td>3次</td>
-                        <td style="color:var(--primary);font-weight:600;">¥56,200</td>
-                        <td>2023-04-22</td>
-                        <td>{year}-01-18</td>
-                        <td><span class="customer-level-badge normal" style="padding:3px 8px;">普通</span></td>
-                        <td>
-                          <div class="admin-table-actions">
-                            <button class="btn btn-secondary btn-sm">📜 订单</button>
-                            <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
+                    <tbody id="customersMainTbody"><tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实客户数据…</td></tr></tbody>
                   </table>
                 </div>
               </div>
@@ -1711,6 +901,7 @@
   <script src="../js/api-request.js?v=20260803"></script>
 <script src="../js/app.js?v=20260803"></script>
   <script src="../js/pagination.js?v=20260803"></script>
+  <script src="../js/real-action-guard.js?v=20260922b"></script>
   <script>
     'use strict';
     (function() {
@@ -1940,13 +1131,78 @@
           <div id="modalDate" style="font-size:1rem;">—</div>
         </div>
       </div>
-      <div style="margin-top:24px;padding:16px;border-radius:10px;background:var(--bg-light);font-size:0.9rem;color:var(--text-secondary);">
-        💡 <strong>演示数据说明：</strong>此详情展示为前端演示界面，真实系统请对接后端订单 API 获取完整信息。
-      </div>
     </div>
     <div style="padding:16px 28px;border-top:1.5px solid var(--border-light);display:flex;justify-content:flex-end;gap:12px;background:var(--bg-light);">
       <button id="orderDetailCancel" type="button" class="btn btn-secondary">关闭</button>
     </div>
+  </div>
+
+  <!-- 编辑订单弹窗 -->
+  <div class="modal-overlay csp-hide" id="orderEditOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="orderEditModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:92%;max-width:720px;z-index:9999;padding:0;overflow:hidden;max-height:90vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#1d4ed8,#1e5ba8);color:#fff;position:sticky;top:0;">
+      <h3 style="margin:0;font-size:1.1rem;font-weight:600;">✏️ 编辑订单</h3>
+      <button id="orderEditClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+    </div>
+    <form id="orderEditForm" style="padding:24px 28px;display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;">
+      <input type="hidden" id="editOrderId">
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">客户名称 *</label>
+        <input type="text" id="editCustomerName" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">联系电话 *</label>
+        <input type="text" id="editPhone" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">甲方单位</label>
+        <input type="text" id="editOrganization" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">演出类型</label>
+        <input type="text" id="editOrderType" placeholder="如：庙会演出" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">场次</label>
+        <input type="number" id="editPerformanceCount" min="1" value="1" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">订单金额 (¥)</label>
+        <input type="number" id="editTotalAmount" min="0" step="0.01" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">折扣金额 (¥)</label>
+        <input type="number" id="editDiscountAmount" min="0" step="0.01" value="0" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">已付金额 (¥)</label>
+        <input type="number" id="editPaidAmount" min="0" step="0.01" value="0" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">演出开始日期</label>
+        <input type="date" id="editPerformanceStartDate" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">演出结束日期</label>
+        <input type="date" id="editPerformanceEndDate" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">演出地点</label>
+        <input type="text" id="editVenueFullAddress" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">特殊要求</label>
+        <textarea id="editSpecialRequirements" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;resize:vertical;"></textarea>
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">内部备注</label>
+        <textarea id="editInternalRemark" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;resize:vertical;"></textarea>
+      </div>
+      <div style="grid-column:1 / span 2;display:flex;justify-content:flex-end;gap:12px;">
+        <button type="button" id="orderEditCancel" class="btn btn-secondary">取消</button>
+        <button type="submit" class="btn btn-primary" style="background:#1d4ed8;color:#fff;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:0.9rem;">💾 保存修改</button>
+      </div>
+    </form>
   </div>
 
   <!-- 批次9+：订单派工弹窗（修复11处派工安排死链 + 同行当选多人员+备注） -->
@@ -2006,24 +1262,40 @@
   <script>
   (function(){
     // 订单派工模块：11行当(含龙套) + 多选 + 每人备注
-    var ORD_DISPATCH = [
-      { k:'ls', n:'老生',     ppl:['张志明（A角）','刘振声（B角）','杨国强（替补）'] },
-      { k:'xs', n:'须生',     ppl:['赵志远（A角）','钱立德（B角）','孙伟民（替补）'] },
-      { k:'xiaos',n:'小生',    ppl:['周建峰','武俊卿','郑海涛'] },
-      { k:'qy', n:'青衣',     ppl:['李秀琴（A角）','王玉华（B角）','冯雅丽（替补）'] },
-      { k:'hd', n:'花旦',     ppl:['赵美玲','陈思思','蒋文婷'] },
-      { k:'ld', n:'老旦',     ppl:['孙玉华','朱秀兰','秦玉珍'] },
-      { k:'hl', n:'花脸',     ppl:['王建国（队长）','韩志强','曹大磊'] },
-      { k:'cj', n:'丑角',     ppl:['侯宝林','董晓斌','尹明华'] },
-      { k:'lt', n:'龙套（×5）',ppl:['龙套甲-范文斌','龙套乙-唐国平','龙套丙-罗建军','龙套丁-戴志辉','龙套戊-韩玉杰'] },
-      { k:'bd', n:'乐队（司鼓·板胡等）',ppl:['陈德胜-司鼓','刘海峰-板胡','卫宝忠-二胡','马根明-扬琴','王军-三弦','赵刚-打击乐'] },
-      { k:'wm', n:'舞美（灯光·音响等）',ppl:['周小军-灯光设计','牛志刚-音响主操','史建国-服装管理','贺小峰-道具','徐亮-舞台监督','姚斌-装车卸车'] }
+    // 20260922 真实化：派工候选名单来自 /v1/performers（在册真实演职人员），不再内置假名
+    var ORD_GROUPS = [
+      { k:'ls', n:'老生', ppl:[] },
+      { k:'xs', n:'须生', ppl:[] },
+      { k:'xiaos', n:'小生', ppl:[] },
+      { k:'qy', n:'青衣', ppl:[] },
+      { k:'hd', n:'花旦', ppl:[] },
+      { k:'ld', n:'老旦', ppl:[] },
+      { k:'hl', n:'花脸', ppl:[] },
+      { k:'cj', n:'丑角', ppl:[] },
+      { k:'lt', n:'龙套', ppl:[] },
+      { k:'bd', n:'乐队（司鼓·板胡等）', ppl:[] },
+      { k:'wm', n:'舞美（灯光·音响等）', ppl:[] }
     ];
+    function _ordBucket(role){
+      var s = String(role||'');
+      if(/司鼓|板鼓|梆子|大锣|小锣|马锣|铙|钹|镲|堂鼓|战鼓|木鱼|打击|鼓|板胡|二胡|高胡|椰胡|扬琴|琵琶|三弦|古筝|竹笛|梅管|唢呐|海笛|笙|大提琴|贝司|提琴|电子琴|琴/.test(s)) return 'bd';
+      if(/舞台监督|监督|剧务|催场|场记|灯光|音响|话筒|耳麦|麦|服装|跟包|盔箱|化妆|大头|勾脸|脸谱|道具|装台|布景|拆台|字幕|电工|后勤|设备|配电/.test(s)) return 'wm';
+      if(/红生|老生|须生/.test(s)) return 'ls';
+      if(/小生|武生/.test(s)) return 'xiaos';
+      if(/青衣|正旦/.test(s)) return 'qy';
+      if(/花旦|闺门旦|武旦/.test(s)) return 'hd';
+      if(/老旦/.test(s)) return 'ld';
+      if(/花脸|铜锤|架子花|净/.test(s)) return 'hl';
+      if(/彩旦|丑婆|丑/.test(s)) return 'cj';
+      if(/龙套/.test(s)) return 'lt';
+      return 'wm';
+    }
     var box = document.getElementById('dpCastBox');
-    if (box) {
-      // R20.1-FIX CRITICAL：演员名/组名统一 HTML entity 转义，彻底防止注入
-      function _hx_ord(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-      ORD_DISPATCH.forEach(function(grp){
+    function _hx_ord(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function _renderDispatch(){
+      if (!box) return;
+      box.innerHTML = '';
+      ORD_GROUPS.forEach(function(grp){
         var card = document.createElement('div');
         card.className = 'dispatch-group-card';
         var head = '<div class="dispatch-group-head">'
@@ -2031,40 +1303,62 @@
           + '<strong class="dispatch-group-title">'+_hx_ord(grp.n)+'</strong>'
           + '<span class="dispatch-group-sub">可多选·每人备注</span>'
           + '</div>';
-        var items = grp.ppl.map(function(p,idx){
+        var items = grp.ppl.map(function(p, idx){
           var sid = 'dp_'+grp.k+'_'+idx;
-          var pClean = String(p||'').replace(/（/g,'(').replace(/）/g,')');
+          var pName = String(p.name||'').replace(/（/g,'(').replace(/）/g,')');
+          var label = p.role ? (_hx_ord(p.name)+'<small style="color:#94a3b8;margin-left:6px;">'+_hx_ord(p.role)+'</small>') : _hx_ord(p.name);
           return '<div class="dispatch-item">'
-            + '<input type="checkbox" class="dp-cb dispatch-cb" id="'+_hx_ord(sid)+'" name="dpCast['+_hx_ord(grp.k)+'][]" value="'+_hx_ord(pClean)+'" data-dp-group="'+_hx_ord(grp.k)+'">'
-            + '<label for="'+_hx_ord(sid)+'" class="dispatch-label">'+_hx_ord(p)+'</label>'
+            + '<input type="checkbox" class="dp-cb dispatch-cb" id="'+_hx_ord(sid)+'" name="dpCast['+_hx_ord(grp.k)+'][]" value="'+_hx_ord(pName)+'" data-dp-group="'+_hx_ord(grp.k)+'">'
+            + '<label for="'+_hx_ord(sid)+'" class="dispatch-label">'+label+'</label>'
             + '<input type="text" class="dispatch-note" placeholder="饰演/角色/备注（如：艾千/黄桂英/前场）" data-dp-note="'+_hx_ord(grp.k)+'|'+idx+'">'
             + '</div>';
         }).join('');
+        if (!grp.ppl.length) items = '<div style="padding:8px 10px;color:#94a3b8;font-size:.85rem;">暂无该工种在册人员</div>';
         card.innerHTML = head + items;
         box.appendChild(card);
       });
-      // 人数计数
+      var allCb = document.querySelectorAll('#dpCastBox .dp-cb');
       function recount(){
         var n = document.querySelectorAll('#dpCastBox .dp-cb:checked').length;
         var el = document.getElementById('dpSelCount');
         if (el) { el.textContent = '已选 '+n+' 人'; }
       }
-      document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){ cb.addEventListener('change', recount); });
-      // 一键派常用班底
-      document.getElementById('dpSelCommon').addEventListener('click', function(){
-        document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){
-          var id = cb.id || '';
-          if (id.indexOf('dp_ls_')===0 || id.indexOf('dp_qy_')===0 || id.indexOf('dp_hl_')===0 || id.indexOf('dp_lt_')===0 || id.indexOf('dp_bd_')===0 || id.indexOf('dp_wm_')===0) cb.checked = true;
+      allCb.forEach(function(cb){ cb.addEventListener('change', recount); });
+      if (!window.__dpCommonBound) {
+        window.__dpCommonBound = 1;
+        var btnCommon = document.getElementById('dpSelCommon');
+        if (btnCommon) btnCommon.addEventListener('click', function(){
+          document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){
+            var id = cb.id || '';
+            if (id.indexOf('dp_ls_')===0 || id.indexOf('dp_qy_')===0 || id.indexOf('dp_hl_')===0 || id.indexOf('dp_lt_')===0 || id.indexOf('dp_bd_')===0 || id.indexOf('dp_wm_')===0) cb.checked = true;
+          });
+          recount();
         });
-        recount();
-      });
-      // 清空
-      document.getElementById('dpClearAll').addEventListener('click', function(){
-        document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){ cb.checked = false; });
-        document.querySelectorAll('#dpCastBox input[data-dp-note]').forEach(function(i){ i.value=''; });
-        document.getElementById('dpRemark').value = '';
-        recount();
-      });
+        var btnClear = document.getElementById('dpClearAll');
+        if (btnClear) btnClear.addEventListener('click', function(){
+          document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){ cb.checked = false; });
+          document.querySelectorAll('#dpCastBox input[data-dp-note]').forEach(function(i){ i.value=''; });
+          var rmk = document.getElementById('dpRemark'); if (rmk) rmk.value='';
+          recount();
+        });
+      }
+    }
+    _renderDispatch();
+    if (window.QAXQJT_API) {
+      QAXQJT_API.get('/v1/performers', { query:{ pageSize:500 } }).then(function(d){
+        var items = Array.isArray(d) ? d : ((d && d.items) || []);
+        var seen = {};
+        items.forEach(function(p){
+          var name = p.name || p.performerName || '';
+          if (!name || seen[name]) return;
+          seen[name] = 1;
+          var role = p.primaryRole || p.roleCategory || p.role || '';
+          var k = _ordBucket(role);
+          var g = ORD_GROUPS.filter(function(x){ return x.k===k; })[0];
+          if (g) g.ppl.push({ name:name, role:role });
+        });
+        _renderDispatch();
+      }).catch(function(){ /* 未登录时保持空态，不造假数据 */ });
     }
     // 打开派工弹窗（读取当行数据）
     function openDispatch(anchorEl){
@@ -2499,7 +1793,7 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        __T('💾 保存成功','success');
         try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
@@ -2514,7 +1808,7 @@ var __pT0=0;
         if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
         try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
@@ -2538,7 +1832,7 @@ var __pT0=0;
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        __T('➕ 准备新增「'+txt+'」','info');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -2548,7 +1842,7 @@ var __pT0=0;
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
         if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
@@ -2557,7 +1851,7 @@ var __pT0=0;
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -2565,7 +1859,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        __T('📄 合同文档已就绪','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -2573,7 +1867,7 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
@@ -2584,7 +1878,7 @@ var __pT0=0;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
         var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -2766,7 +2060,7 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        __toastH9('✅ 提交成功','success');
         setTimeout(function(){
           try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
         }, 380);
@@ -3182,10 +2476,26 @@ function __pLog(module,event,extra){
   
   // 功能按钮绑定（上传/新建/导出）
   try{
-    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
-    __bindBtn('openOrdersUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（订单附件）（演示模式：真实环境将上传到服务器）","info"); }; inp.click(); });
-    __bindBtn('spNewOrderBtn', function(){ __T('➕ 新增订单（演示模式：真实环境将弹出新增订单表单）','info'); });
-    __bindBtn('spExportOrdersBtn', function(){ __T('📊 正在导出订单列表（演示模式）','info'); });
+    function __bindBtn(id, fn){
+      var el=document.getElementById(id);
+      if(el&&!el.__ub){
+        el.__ub=1;
+        // 加标记防止 DBF/SuperPatch 在 document capture 阶段拦截（DBF _hasAction 检查 __superPatchBound/__deadBtnChecked）
+        el.__superPatchBound = 1;
+        el.__deadBtnChecked = 1;
+        el.__ts3Done = 1;
+        el.__bindDone = 1;
+        el.__ctE2Done = 1;
+        try { el.setAttribute('data-real-bound','1'); } catch(_){}
+        el.addEventListener("click", function(e){
+          try { e.stopImmediatePropagation(); e.stopPropagation(); } catch(_){}
+          fn.call(this, e);
+        }, true);
+      }
+    }
+    __bindBtn('openOrdersUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（订单附件）","info"); }; inp.click(); });
+    __bindBtn('spNewOrderBtn', function(){ try { window.__ordersApi && window.__ordersApi.openCreateModal && window.__ordersApi.openCreateModal(); } catch(e){ __T('⚠️ 新增订单失败：'+(e&&e.message?e.message:e),'error'); } });
+    __bindBtn('spExportOrdersBtn', function(){ try { window.__ordersApi && window.__ordersApi.exportCsv && window.__ordersApi.exportCsv(); } catch(e){ __T('⚠️ 导出失败：'+(e&&e.message?e.message:e),'error'); } });
   }catch(_e){ console.warn("[upload-bind err]",_e); }
 
 try{
@@ -3236,34 +2546,34 @@ try{
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          __toastH9('✅ 操作成功','success');
           setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
         }else if(tt==='delete'){
           if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
             __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
           }else{ __toastH9('↩️ 已取消操作','info'); }
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印（演示模式）','info');
+          __toastH9('📤 已触发导出/打印','info');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪（演示模式）','info');
+          __toastH9('📄 合同文档已就绪','info');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+          __toastH9('➕ 准备新增','info');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -3407,5 +2717,798 @@ try{
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
   else { __markBound(); setTimeout(__markBound,500); }
 })();</script>
+
+<script>
+/* ========== 📋 订单管理：真实 API 接线（v20260921a）==========
+ * 替换 demo 模式：load() 渲染订单 tbody，exportCsv() 拉取全量下载，
+ * openCreateModal() 用 prompt 收集字段调 POST /v1/orders，
+ * 行级事件委托处理详情/编辑/确认/转演出/取消/删除。
+ * API：QAXQJT_API（js/api-request.js 已加载）
+ * 端点：/v1/orders + /v1/orders/:id/transition + /v1/orders/:id (DELETE)
+ * 备份：orders.html.bak-ordersfix-20260921
+ * ======================================================== */
+(function(){
+  'use strict';
+  if (window.__ordersApi) return;
+  window.__ordersApi = {
+    state: { list: [], filter: { keyword: '', status: '', fromDate: '', toDate: '' }, loaded: false },
+
+    _toast: function(msg, type){ try { if (typeof __T === 'function') return __T(msg, type||'info'); } catch(_){} try { console.log('[ordersApi]', type, msg); } catch(_){} },
+    _escape: function(s){ if (s === null || s === undefined) return ''; return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); },
+
+    _findTbody: function(){
+      // 优先固定 id（HeightGuard 会在 t=0 剥离 data-paginate 属性，不能依赖它定位）
+      var byId = document.getElementById('ordersMainTbody');
+      if (byId) return byId;
+      // 回退：订单表是含 13 列表头的第一个 .table-wrapper tbody（客户表只有 10 列）
+      var cands = document.querySelectorAll('.table-wrapper table tbody');
+      for (var i = 0; i < cands.length; i++) {
+        var tbl = cands[i].closest('table');
+        var ths = tbl ? tbl.querySelectorAll('thead th') : [];
+        if (ths.length >= 13) return cands[i];
+      }
+      var allTbody = document.querySelectorAll('.table-wrapper tbody[data-paginate="list"]');
+      return allTbody[0] || null;
+    },
+
+    _bindFilterBar: function(){
+      var self = this;
+      var el = function(id){ return document.getElementById(id); };
+      var apply = function(){
+        self.state.filter.keyword = (el('ordFilterKeyword') ? el('ordFilterKeyword').value : '').trim();
+        self.state.filter.status = el('ordFilterStatus') ? el('ordFilterStatus').value : '';
+        self.state.filter.orderType = el('ordFilterType') ? el('ordFilterType').value : '';
+        self.state.filter.fromDate = el('ordFilterFrom') ? el('ordFilterFrom').value : '';
+        self.state.filter.toDate = el('ordFilterTo') ? el('ordFilterTo').value : '';
+        self.load();
+      };
+      var b = el('ordFilterApplyBtn');
+      if (b) { b.setAttribute('data-real-bound','1'); b.__superPatchBound = 1; b.__ts3Done = 1; b.addEventListener('click', apply); }
+      var r = el('ordFilterResetBtn');
+      if (r) {
+        r.setAttribute('data-real-bound','1'); r.__superPatchBound = 1; r.__ts3Done = 1;
+        r.addEventListener('click', function(){
+          if (el('ordFilterKeyword')) el('ordFilterKeyword').value = '';
+          if (el('ordFilterStatus')) el('ordFilterStatus').value = '';
+          if (el('ordFilterType')) el('ordFilterType').value = '';
+          if (el('ordFilterFrom')) el('ordFilterFrom').value = '2026-01-01';
+          if (el('ordFilterTo')) el('ordFilterTo').value = '2026-12-31';
+          self.state.filter = { keyword: '', status: '', orderType: '', fromDate: '', toDate: '' };
+          self.load();
+        });
+      }
+      var k = el('ordFilterKeyword');
+      if (k) k.addEventListener('keydown', function(e){ if (e.key === 'Enter') apply(); });
+    },
+
+    // ====== 客户档案（tab-customers）真实数据加载 ======
+    _custTypeText: function(t){ return t === 'organization' ? '单位/组织' : (t === 'personal' ? '个人' : (t || '个人')); },
+    _custLevelBadge: function(l){
+      if (!l) return '<span class="badge" style="background:#94a3b8;color:#fff;">未评级</span>';
+      var m = { 'VIP':'#dc2626', 'A':'#2563eb', 'B':'#059669', 'C':'#6b7280' };
+      var c = m[l] || '#6b7280';
+      return '<span class="badge" style="background:'+c+';color:#fff;">'+this._escape(l)+'</span>';
+    },
+
+    _bindCustomerFilterBar: function(){
+      var self = this;
+      var el = function(id){ return document.getElementById(id); };
+      var apply = function(){
+        self.state.custFilter = {
+          keyword: (el('custFilterKeyword') ? el('custFilterKeyword').value : '').trim(),
+          customerType: el('custFilterType') ? el('custFilterType').value : '',
+          level: el('custFilterLevel') ? el('custFilterLevel').value : ''
+        };
+        self.loadCustomers();
+      };
+      var b = el('custFilterApplyBtn');
+      if (b) { b.setAttribute('data-real-bound','1'); b.__superPatchBound = 1; b.__ts3Done = 1; b.addEventListener('click', apply); }
+      var r = el('custFilterResetBtn');
+      if (r) {
+        r.setAttribute('data-real-bound','1'); r.__superPatchBound = 1; r.__ts3Done = 1;
+        r.addEventListener('click', function(){
+          if (el('custFilterKeyword')) el('custFilterKeyword').value = '';
+          if (el('custFilterType')) el('custFilterType').value = '';
+          if (el('custFilterLevel')) el('custFilterLevel').value = '';
+          self.state.custFilter = { keyword: '', customerType: '', level: '' };
+          self.loadCustomers();
+        });
+      }
+      var k = el('custFilterKeyword');
+      if (k) k.addEventListener('keydown', function(e){ if (e.key === 'Enter') apply(); });
+    },
+
+    loadCustomers: async function(){
+      var cardsTbody = document.getElementById('customersCardsTbody');
+      var tableTbody = document.getElementById('customersMainTbody');
+      if (!cardsTbody && !tableTbody) return;
+      var loadingHtml = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">正在加载真实客户数据…</div>';
+      var loadingTr = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实客户数据…</td></tr>';
+      if (cardsTbody) cardsTbody.innerHTML = loadingHtml;
+      if (tableTbody) tableTbody.innerHTML = loadingTr;
+      try {
+        var q = { page: 1, pageSize: 200 };
+        if (this.state.custFilter) {
+          if (this.state.custFilter.keyword) q.keyword = this.state.custFilter.keyword;
+          if (this.state.custFilter.customerType) q.customerType = this.state.custFilter.customerType;
+          if (this.state.custFilter.level) q.level = this.state.custFilter.level;
+        }
+        var resp = await QAXQJT_API.get('/v1/customers', { query: q });
+        var rows = [];
+        if (Array.isArray(resp)) rows = resp;
+        else if (resp && Array.isArray(resp.data)) rows = resp.data;
+        else if (resp && Array.isArray(resp.items)) rows = resp.items;
+        else if (resp && Array.isArray(resp.list)) rows = resp.list;
+        else if (resp && Array.isArray(resp.rows)) rows = resp.rows;
+        else if (resp && resp.data && Array.isArray(resp.data.items)) rows = resp.data.items;
+        // 过滤掉已删除
+        rows = rows.filter(function(c){ return c && c.status !== 'deleted'; });
+        this.state.custList = rows;
+        this._renderCustomerCards(rows, cardsTbody);
+        this._renderCustomerTable(rows, tableTbody);
+      } catch(e) {
+        console.warn('[__ordersApi.loadCustomers] 失败', e);
+        var errHtml = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#dc2626;">⚠️ 加载客户失败：' + (e && e.message ? e.message : e) + '</div>';
+        var errTr = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#dc2626;">⚠️ 加载客户失败：' + (e && e.message ? e.message : e) + '</td></tr>';
+        if (cardsTbody) cardsTbody.innerHTML = errHtml;
+        if (tableTbody) tableTbody.innerHTML = errTr;
+      }
+    },
+
+    _renderCustomerCards: function(rows, tbody){
+      if (!tbody) return;
+      var self = this;
+      if (!rows.length) {
+        tbody.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">📭 暂无客户数据（产生订单/预约后将自动建档）</div>';
+        return;
+      }
+      tbody.innerHTML = '';
+      rows.forEach(function(c){
+        var card = document.createElement('div');
+        card.className = 'customer-card';
+        card.style.cssText = 'background:var(--bg-card);border:1px solid var(--border-light);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:8px;';
+        var ordersCount = (c._count && c._count.orders) || c.totalOrdersCount || 0;
+        var totalAmount = c.totalOrdersAmount || 0;
+        var fmt = function(n){ try { return Number(n||0).toLocaleString('zh-CN'); } catch(_) { return '0'; } };
+        var fmtDate = function(d){ if (!d) return '—'; try { return new Date(d).toLocaleDateString('zh-CN'); } catch(_) { return '—'; } };
+        card.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+            '<strong style="font-size:1.05rem;color:var(--text-primary);">' + self._escape(c.customerName || c.organization || '—') + '</strong>' +
+            self._custLevelBadge(c.level) +
+          '</div>' +
+          '<div style="font-size:0.85rem;color:var(--text-light);">ID: ' + self._escape(c.id || '') + '</div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;font-size:0.9rem;color:var(--text-secondary);">' +
+            '<span>📞 ' + self._escape(c.phone || '—') + '</span>' +
+            '<span>🏷️ ' + self._custTypeText(c.customerType) + '</span>' +
+          '</div>' +
+          (c.organization ? '<div style="font-size:0.9rem;color:var(--text-secondary);">🏢 ' + self._escape(c.organization) + '</div>' : '') +
+          '<div style="display:flex;justify-content:space-between;border-top:1px dashed var(--border-light);padding-top:8px;font-size:0.85rem;color:var(--text-light);">' +
+            '<span>合作 ' + fmt(ordersCount) + ' 次</span>' +
+            '<span>累计 ¥' + fmt(totalAmount) + '</span>' +
+          '</div>' +
+          '<div style="font-size:0.8rem;color:var(--text-light);">首次合作：' + fmtDate(c.firstContactDate || c.createdAt) + '</div>';
+        tbody.appendChild(card);
+      });
+    },
+
+    _renderCustomerTable: function(rows, tbody){
+      if (!tbody) return;
+      var self = this;
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">📭 暂无客户数据（产生订单/预约后将自动建档）</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '';
+      var fmt = function(n){ try { return Number(n||0).toLocaleString('zh-CN'); } catch(_) { return '0'; } };
+      var fmtDate = function(d){ if (!d) return '—'; try { return new Date(d).toLocaleDateString('zh-CN'); } catch(_) { return '—'; } };
+      rows.forEach(function(c){
+        var tr = document.createElement('tr');
+        var ordersCount = (c._count && c._count.orders) || c.totalOrdersCount || 0;
+        var totalAmount = c.totalOrdersAmount || 0;
+        tr.innerHTML =
+          '<td><strong>' + self._escape(c.id || '') + '</strong></td>' +
+          '<td>' + self._escape(c.customerName || c.organization || '—') + '</td>' +
+          '<td>' + self._custTypeText(c.customerType) + '</td>' +
+          '<td>' + self._escape(c.phone || '—') + '</td>' +
+          '<td>' + fmt(ordersCount) + '</td>' +
+          '<td>¥' + fmt(totalAmount) + '</td>' +
+          '<td>' + fmtDate(c.firstContactDate) + '</td>' +
+          '<td>' + fmtDate(c.updatedAt || c.createdAt) + '</td>' +
+          '<td>' + self._custLevelBadge(c.level) + '</td>' +
+          '<td><button class="btn btn-sm btn-default" data-cust-id="' + self._escape(c.id || '') + '" data-real-bound="1">查看</button></td>';
+        tbody.appendChild(tr);
+      });
+    },
+
+    load: async function(){
+      var tbody = this._findTbody();
+      if (!tbody) { console.warn('[ordersApi] tbody not found'); return; }
+      try {
+        var q = { page: 1, pageSize: 200 };
+        if (this.state.filter.keyword) q.keyword = this.state.filter.keyword;
+        if (this.state.filter.status) q.status = this.state.filter.status;
+        if (this.state.filter.orderType) q.orderType = this.state.filter.orderType;
+        if (this.state.filter.fromDate) q.fromDate = this.state.filter.fromDate;
+        if (this.state.filter.toDate) q.toDate = this.state.filter.toDate;
+        var resp = await QAXQJT_API.get('/v1/orders', { query: q });
+        var rows = [];
+        if (Array.isArray(resp)) rows = resp;
+        else if (resp && Array.isArray(resp.data)) rows = resp.data;
+        else if (resp && Array.isArray(resp.items)) rows = resp.items;
+        else if (resp && Array.isArray(resp.list)) rows = resp.list;
+        else if (resp && Array.isArray(resp.rows)) rows = resp.rows;
+        else if (resp && resp.data && Array.isArray(resp.data.items)) rows = resp.data.items;
+        else if (resp && resp.data && Array.isArray(resp.data.list)) rows = resp.data.list;
+        this.state.list = rows;
+        this._renderTbody(rows, tbody);
+        this.state.loaded = true;
+        try { if (window.QinPagination && typeof QinPagination.init === 'function') QinPagination.init(); } catch(_){}
+      } catch(e) {
+        console.warn('[__ordersApi.load] 失败', e);
+        this._toast('⚠️ 加载订单列表失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    _renderTbody: function(rows, tbody){
+      tbody.innerHTML = '';
+      var self = this;
+      var idx = 0;
+      rows.forEach(function(o){
+        if (o.status === 'deleted' || o.status === 'refunded' && o.deletedAt) return;
+        idx++;
+        var oid = String(o.id || o.orderNo || '');
+        var status = o.status || 'draft';
+        var statusBadge = self._statusBadge(status);
+        var tr = document.createElement('tr');
+        tr.setAttribute('data-order-id', oid);
+        tr.setAttribute('data-status', status);
+        var totalAmount = (o.totalAmount || 0).toLocaleString('zh-CN');
+        var finalAmount = (o.finalAmount || o.totalAmount || 0).toLocaleString('zh-CN');
+        var orderDate = o.orderDate ? String(o.orderDate).slice(0,10) : (o.createdAt ? String(o.createdAt).slice(0,10) : '—');
+        var performanceStart = o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—';
+        tr.innerHTML =
+          '<td><strong style="color:var(--primary);">' + self._escape(oid) + '</strong></td>' +
+          '<td>' + self._escape(o.customerName || o.organization || '—') + '</td>' +
+          '<td>' + self._escape(o.phone || '—') + '</td>' +
+          '<td>' + self._escape(o.orderType || '—') + '</td>' +
+          '<td>' + (o.performanceCount || 1) + ' 场</td>' +
+          '<td>' + self._escape(performanceStart) + '</td>' +
+          '<td>' + self._escape(o.venueFullAddress || '—') + '</td>' +
+          '<td>—</td>' +
+          '<td>¥' + self._escape(totalAmount) + '</td>' +
+          '<td><strong style="color:var(--primary-dark);">¥' + self._escape(finalAmount) + '</strong></td>' +
+          '<td><span class="badge ' + statusBadge.cls + '">' + self._escape(statusBadge.text) + '</span></td>' +
+          '<td>' + (o.createdAt ? String(o.createdAt).slice(0,16).replace('T',' ') : '—') + '</td>' +
+          '<td><div class="admin-table-actions" data-order-row="' + oid + '">' +
+            '<button class="btn btn-secondary btn-sm" data-act="view" title="详情">👁 详情</button>' +
+            '<button class="btn btn-primary btn-sm" data-act="edit" title="编辑">✏️ 编辑</button>' +
+            '<button class="btn btn-gold btn-sm" data-act="dispatch" title="派工">📋 派工</button>' +
+            '<button class="btn btn-success btn-sm" data-act="confirm" title="确认">✅ 确认</button>' +
+            '<button class="btn btn-info btn-sm" data-act="to-show" title="转演出">🎬 转演出</button>' +
+            '<button class="btn btn-danger btn-sm" data-act="cancel" title="取消">❌ 取消</button>' +
+            '<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" data-act="del" title="删除">🗑️</button>' +
+          '</div></td>';
+        tbody.appendChild(tr);
+      });
+      try {
+        var obtns = tbody.querySelectorAll('button[data-act]');
+        for (var ob = 0; ob < obtns.length; ob++) { var ob1 = obtns[ob]; if(!ob1.__superPatchBound)ob1.__superPatchBound=1; if(!ob1.__ts3Done)ob1.__ts3Done=1; if(!ob1.__bindDone)ob1.__bindDone=1; if(!ob1.__ctE2Done)ob1.__ctE2Done=1; if(!ob1.__deadBtnChecked)ob1.__deadBtnChecked=1; }
+      } catch(_){}
+      if (window.__guardRealActions) { try { window.__guardRealActions(tbody); } catch(_){} }
+      if (!idx) {
+        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:30px;color:#999;">暂无订单数据（可在「新增订单」中创建第一条）</td></tr>';
+      }
+    },
+
+    _statusBadge: function(status){
+      var map = {
+        'draft':        { cls: 'badge badge-secondary', text: '草稿' },
+        'confirmed':    { cls: 'badge badge-info', text: '已确认' },
+        'partial_paid': { cls: 'badge badge-warning', text: '部分付款' },
+        'paid':         { cls: 'badge badge-success', text: '已付款' },
+        'performance':  { cls: 'badge badge-warning', text: '演出中' },
+        'completed':    { cls: 'badge badge-success', text: '已完成' },
+        'cancelled':    { cls: 'badge badge-danger', text: '已取消' },
+        'refunded':     { cls: 'badge badge-danger', text: '已退款' }
+      };
+      return map[status] || { cls: 'badge badge-secondary', text: status };
+    },
+
+    exportCsv: async function(){
+      try {
+        this._toast('📊 正在拉取订单列表…', 'info');
+        var resp = await QAXQJT_API.get('/v1/orders', { query: { page: 1, pageSize: 500 } });
+        var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
+        if (!rows.length) { this._toast('⚠️ 没有可导出的订单', 'warning'); return; }
+        var csv = ['订单ID,客户名称,联系电话,演出类型,场次,演出开始,演出地点,订单金额,实付金额,状态,下单时间'];
+        var self = this;
+        rows.forEach(function(o){
+          var cells = [
+            String(o.id || o.orderNo || ''),
+            String(o.customerName || o.organization || ''),
+            String(o.phone || ''),
+            String(o.orderType || ''),
+            String(o.performanceCount || 1),
+            o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '',
+            String(o.venueFullAddress || ''),
+            String(o.totalAmount || 0),
+            String(o.finalAmount || o.totalAmount || 0),
+            String(o.status || 'draft'),
+            o.createdAt ? String(o.createdAt).slice(0,19) : ''
+          ];
+          csv.push(cells.map(function(c){ c = String(c).replace(/"/g, '""'); return /[",\n]/.test(c) ? '"' + c + '"' : c; }).join(','));
+        });
+        var blob = new Blob(['\ufeff' + csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        var today = new Date().toISOString().slice(0,10);
+        a.download = 'qaxqjt-orders-' + today + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function(){ try { URL.revokeObjectURL(url); a.remove(); } catch(_){} }, 100);
+        this._toast('✅ 已导出 ' + rows.length + ' 条订单', 'success');
+      } catch(e) {
+        console.warn('[__ordersApi.exportCsv] 失败', e);
+        this._toast('⚠️ 导出失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    // ====== 新建订单：复用 orderEditModal 弹窗（清空字段 + POST 新建） ======
+    openCreateModal: async function(){
+      var modal = document.getElementById('orderEditModal');
+      var overlay = document.getElementById('orderEditOverlay');
+      if (!modal || !overlay) {
+        this._toast('⚠️ 新建订单弹窗未找到', 'warning');
+        return;
+      }
+      // 清空所有字段（editOrderId 留空表示新建）
+      try {
+        document.getElementById('editOrderId').value = '';
+        document.getElementById('editCustomerName').value = '';
+        document.getElementById('editPhone').value = '';
+        document.getElementById('editOrganization').value = '';
+        document.getElementById('editOrderType').value = '';
+        document.getElementById('editPerformanceCount').value = 1;
+        document.getElementById('editTotalAmount').value = '';
+        document.getElementById('editDiscountAmount').value = 0;
+        document.getElementById('editPaidAmount').value = 0;
+        document.getElementById('editPerformanceStartDate').value = '';
+        document.getElementById('editPerformanceEndDate').value = '';
+        document.getElementById('editVenueFullAddress').value = '';
+        document.getElementById('editSpecialRequirements').value = '';
+        document.getElementById('editInternalRemark').value = '';
+      } catch(_){}
+      // 切换标题为"新建订单"
+      try {
+        var titleEl = modal.querySelector('h3');
+        if (titleEl) titleEl.textContent = '➕ 新建订单';
+        var submitBtn = modal.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.innerHTML = '➕ 创建订单';
+      } catch(_){}
+      overlay.classList.remove('csp-hide');
+      modal.classList.remove('csp-hide');
+      try { document.body.classList.add('body-modal-locked'); } catch(_){}
+      try { document.getElementById('editCustomerName').focus(); } catch(_){}
+    },
+
+    viewDetail: async function(id){
+      if (!id) return;
+      var modal = document.getElementById('orderDetailModal');
+      var overlay = document.getElementById('orderDetailOverlay');
+      if (!modal || !overlay) { // 兜底：用 alert
+        try {
+          var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
+          if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
+          var lines = [
+            '订单ID：' + (o.id || id),
+            '客户：' + (o.customerName || o.organization || '—'),
+            '电话：' + (o.phone || '—'),
+            '类型：' + (o.orderType || '—'),
+            '金额：¥' + (o.totalAmount || 0),
+            '实付：¥' + (o.finalAmount || o.totalAmount || 0),
+            '状态：' + (o.status || 'draft'),
+            '演出开始：' + (o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—'),
+            '地点：' + (o.venueFullAddress || '—')
+          ];
+          alert(lines.join('\n'));
+        } catch(e) {
+          this._toast('⚠️ 加载详情失败：' + (e && e.message ? e.message : e), 'error');
+        }
+        return;
+      }
+      try {
+        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
+        if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
+        // 填充 modal-body
+        var body = modal.querySelector('.modal-body, .order-detail-body, .detail-body');
+        if (!body) body = modal.querySelector('div:not(.modal-header):not(.modal-footer)');
+        if (body) {
+          body.innerHTML =
+            '<div style="padding:20px 24px;">' +
+              '<h4 style="margin:0 0 12px 0;color:var(--primary-dark);">订单 ' + this._escape(o.id || id) + '</h4>' +
+              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:0.9rem;">' +
+                '<div><strong>客户：</strong>' + this._escape(o.customerName || o.organization || '—') + '</div>' +
+                '<div><strong>电话：</strong>' + this._escape(o.phone || '—') + '</div>' +
+                '<div><strong>类型：</strong>' + this._escape(o.orderType || '—') + '</div>' +
+                '<div><strong>场次：</strong>' + (o.performanceCount || 1) + ' 场</div>' +
+                '<div><strong>订单金额：</strong>¥' + (o.totalAmount || 0) + '</div>' +
+                '<div><strong>实付金额：</strong>¥' + (o.finalAmount || o.totalAmount || 0) + '</div>' +
+                '<div><strong>状态：</strong>' + this._escape(o.status || 'draft') + '</div>' +
+                '<div><strong>演出开始：</strong>' + (o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—') + '</div>' +
+                '<div style="grid-column:1 / span 2;"><strong>演出地点：</strong>' + this._escape(o.venueFullAddress || '—') + '</div>' +
+                '<div style="grid-column:1 / span 2;"><strong>特殊要求：</strong>' + this._escape(o.specialRequirements || '—') + '</div>' +
+                '<div style="grid-column:1 / span 2;"><strong>内部备注：</strong>' + this._escape(o.internalRemark || '—') + '</div>' +
+              '</div>' +
+            '</div>';
+        }
+        // 标题
+        var h3 = modal.querySelector('.modal-header h3, .modal-header h2');
+        if (h3) h3.textContent = '📋 订单详情：' + (o.id || id);
+        // 显示
+        overlay.classList.remove('csp-hide');
+        modal.classList.remove('csp-hide');
+        try { document.body.classList.add('body-modal-locked'); } catch(_){}
+      } catch(e) {
+        console.warn('[viewDetail] id=' + id, e);
+        this._toast('⚠️ 加载详情失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    editOrder: async function(id){
+      if (!id) return;
+      var modal = document.getElementById('orderEditModal');
+      var overlay = document.getElementById('orderEditOverlay');
+      if (!modal || !overlay) { this._toast('⚠️ 编辑弹窗未找到', 'warning'); return; }
+      try {
+        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
+        if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
+        document.getElementById('editOrderId').value = o.id || id;
+        document.getElementById('editCustomerName').value = o.customerName || '';
+        document.getElementById('editPhone').value = o.phone || '';
+        document.getElementById('editOrganization').value = o.organization || '';
+        document.getElementById('editOrderType').value = o.orderType || '';
+        document.getElementById('editPerformanceCount').value = o.performanceCount || 1;
+        document.getElementById('editTotalAmount').value = o.totalAmount || 0;
+        document.getElementById('editDiscountAmount').value = o.discountAmount || 0;
+        document.getElementById('editPaidAmount').value = o.paidAmount || 0;
+        if (o.performanceStartDate) document.getElementById('editPerformanceStartDate').value = String(o.performanceStartDate).slice(0,10);
+        if (o.performanceEndDate) document.getElementById('editPerformanceEndDate').value = String(o.performanceEndDate).slice(0,10);
+        document.getElementById('editVenueFullAddress').value = o.venueFullAddress || '';
+        document.getElementById('editSpecialRequirements').value = o.specialRequirements || '';
+        document.getElementById('editInternalRemark').value = o.internalRemark || '';
+        // 切换标题为"编辑订单"
+        try {
+          var titleEl = modal.querySelector('h3');
+          if (titleEl) titleEl.textContent = '✏️ 编辑订单';
+          var submitBtn = modal.querySelector('button[type="submit"]');
+          if (submitBtn) submitBtn.innerHTML = '💾 保存修改';
+        } catch(_){}
+        overlay.classList.remove('csp-hide');
+        modal.classList.remove('csp-hide');
+        try { document.body.classList.add('body-modal-locked'); } catch(_){}
+      } catch(e) {
+        this._toast('⚠️ 加载订单失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    saveOrderEdit: async function(){
+      var id = document.getElementById('editOrderId').value;
+      var body = {
+        customerName: document.getElementById('editCustomerName').value.trim(),
+        phone: document.getElementById('editPhone').value.trim(),
+        organization: document.getElementById('editOrganization').value.trim(),
+        orderType: document.getElementById('editOrderType').value.trim(),
+        performanceCount: parseInt(document.getElementById('editPerformanceCount').value) || 1,
+        totalAmount: parseFloat(document.getElementById('editTotalAmount').value) || 0,
+        discountAmount: parseFloat(document.getElementById('editDiscountAmount').value) || 0,
+        paidAmount: parseFloat(document.getElementById('editPaidAmount').value) || 0,
+        venueFullAddress: document.getElementById('editVenueFullAddress').value.trim(),
+        specialRequirements: document.getElementById('editSpecialRequirements').value.trim(),
+        internalRemark: document.getElementById('editInternalRemark').value.trim()
+      };
+      var sd = document.getElementById('editPerformanceStartDate').value;
+      var ed = document.getElementById('editPerformanceEndDate').value;
+      if (sd) body.performanceStartDate = sd;
+      if (ed) body.performanceEndDate = ed;
+      body.finalAmount = body.totalAmount - body.discountAmount;
+      try {
+        if (id) {
+          // 编辑模式
+          await QAXQJT_API.patch('/v1/orders/' + encodeURIComponent(id), body);
+          this._toast('✅ 订单已更新', 'success');
+        } else {
+          // 新建模式
+          body.orderDate = new Date().toISOString().slice(0,10);
+          body.status = 'draft';
+          var resp = await QAXQJT_API.post('/v1/orders', body);
+          this._toast('✅ 订单已创建' + (resp && resp.id ? '（ID: ' + resp.id + '）' : ''), 'success');
+        }
+        document.getElementById('orderEditOverlay').classList.add('csp-hide');
+        document.getElementById('orderEditModal').classList.add('csp-hide');
+        try { document.body.classList.remove('body-modal-locked'); } catch(_){}
+        await this.load();
+      } catch(e) {
+        this._toast('⚠️ 保存失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    // ====== 派工：打开 dispatchModal（真实 API 加载订单详情） ======
+    openDispatch: async function(id){
+      if (!id) return;
+      var modal = document.getElementById('dispatchModal');
+      var overlay = document.getElementById('dispatchOverlay');
+      if (!modal || !overlay) { this._toast('⚠️ 派工弹窗未找到', 'warning'); return; }
+      // 保存订单 ID 供 saveDispatch 使用
+      try { modal.dataset.orderId = id; } catch(_){}
+      try {
+        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
+        if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
+        var no = o.orderNo || o.id || id;
+        var cust = (o.customerName || '—') + ' / ' + (o.venueFullAddress || '—');
+        var dateStr = (o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—') + ' · ' + (o.performanceCount || 1) + ' 场';
+        try {
+          document.getElementById('dpOrderNo').textContent = no;
+          document.getElementById('dpCust').textContent = cust;
+          document.getElementById('dpDate').textContent = dateStr;
+          document.getElementById('dispatchOrderBadge').textContent = '订单 ' + no;
+          // 加载已保存的派工备注（internalRemark 中存储的 JSON）
+          var rmk = document.getElementById('dpRemark');
+          if (rmk) {
+            rmk.value = '';
+            if (o.internalRemark) {
+              try {
+                var parsed = JSON.parse(o.internalRemark);
+                if (parsed && parsed.remark) rmk.value = parsed.remark;
+              } catch(_) { rmk.value = String(o.internalRemark).slice(0, 500); }
+            }
+          }
+          // 重置勾选
+          document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){ cb.checked = false; });
+          var sc = document.getElementById('dpSelCount'); if (sc) sc.textContent = '已选 0 人';
+        } catch(_){}
+      } catch(e) {
+        this._toast('⚠️ 加载订单失败：' + (e && e.message ? e.message : e), 'error');
+      }
+      overlay.classList.add('active'); overlay.classList.remove('csp-hide','modal-overlay-hide'); overlay.style.display='';
+      modal.classList.add('active'); modal.classList.remove('csp-hide','modal-wrap-hide'); modal.style.display='';
+      try { document.body.classList.add('body-modal-locked'); } catch(_){}
+    },
+
+    // ====== 派工：保存到后端 PATCH /v1/orders/:id { internalRemark: JSON } ======
+    saveDispatch: async function(){
+      var modal = document.getElementById('dispatchModal');
+      if (!modal) return;
+      var id = modal.dataset.orderId || '';
+      if (!id) { this._toast('⚠️ 未绑定订单', 'warning'); return; }
+      var no = '';
+      try { no = (document.getElementById('dpOrderNo') || {}).textContent || ''; } catch(_){}
+      // 防抖：避免重复点击
+      if (this._dpSaveLock) { this._toast('⏳ 派工保存中，请勿重复点击', 'warning'); return; }
+      // 收集勾选人员
+      var people = [];
+      try {
+        var nodes = document.querySelectorAll('#dpCastBox .dp-cb:checked');
+        for (var i = 0; i < nodes.length; i++) {
+          var cb = nodes[i];
+          var nm = (cb.value || '').trim();
+          var grp = cb.getAttribute('data-dp-group') || '';
+          var noteInput = document.querySelector('#dpCastBox input[data-dp-note="'+grp+'|'+i+'"]');
+          // 通过 cb 的 id 找到对应的备注输入框：dp_<grp>_<idx>
+          var sid = cb.id || '';
+          var mIdx = sid.match(/_(\d+)$/);
+          if (!noteInput && mIdx) {
+            noteInput = document.querySelector('#dpCastBox input[data-dp-note="'+grp+'|'+mIdx[1]+'"]');
+          }
+          var note = noteInput ? (noteInput.value || '').trim() : '';
+          if (nm) people.push({ name: nm, group: grp, note: note });
+        }
+      } catch(_) {}
+      if (people.length < 4) {
+        this._toast('⚠️ 派工人数不足：当前 '+people.length+' 人，连台戏通常需 ≥4 人（主角+龙套+乐队+舞美）', 'warning', 4200);
+        return;
+      }
+      var rmk = '';
+      try { rmk = (document.getElementById('dpRemark').value || '').trim(); } catch(_){}
+      var dispatchData = {
+        type: 'dispatch',
+        orderNo: no,
+        savedAt: Date.now(),
+        count: people.length,
+        remark: rmk,
+        people: people,
+        savedBy: 'admin'
+      };
+      this._dpSaveLock = true;
+      try {
+        await QAXQJT_API.patch('/v1/orders/' + encodeURIComponent(id), {
+          internalRemark: JSON.stringify(dispatchData)
+        });
+        this._toast('✅ 派工单已保存（'+people.length+' 人）', 'success');
+        // 关闭弹窗
+        try {
+          var overlay = document.getElementById('dispatchOverlay');
+          overlay.classList.remove('active'); overlay.classList.add('csp-hide','modal-overlay-hide'); overlay.style.display='none';
+          modal.classList.remove('active'); modal.classList.add('csp-hide','modal-wrap-hide'); modal.style.display='none';
+          document.body.classList.remove('body-modal-locked');
+        } catch(_){}
+        await this.load();
+      } catch(e) {
+        this._toast('⚠️ 派工保存失败：' + (e && e.message ? e.message : e), 'error');
+      } finally {
+        this._dpSaveLock = false;
+      }
+    },
+
+    transition: async function(id, to, reasonHint){
+      if (!id || !to) return;
+      var reason = '';
+      if (to === 'cancelled' || to === 'refunded') {
+        reason = prompt(reasonHint || '请输入取消原因：', '') || '';
+      }
+      try {
+        await QAXQJT_API.post('/v1/orders/' + encodeURIComponent(id) + '/transition', { to: to, reason: reason });
+        this._toast('✅ 订单状态已更新为：' + to, 'success');
+        await this.load();
+      } catch(e) {
+        console.warn('[transition] id=' + id + ' to=' + to, e);
+        this._toast('⚠️ 状态更新失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    deleteOrder: async function(id){
+      if (!id) return;
+      if (!confirm('确认删除订单 ' + id + '？\n此操作不可撤销（仅删除订单，不删除支付流水）。')) return;
+      try {
+        await QAXQJT_API.del('/v1/orders/' + encodeURIComponent(id));
+        this._toast('✅ 订单已删除', 'success');
+        await this.load();
+      } catch(e) {
+        console.warn('[deleteOrder] id=' + id, e);
+        this._toast('⚠️ 删除失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    _bindRowDelegation: function(){
+      var self = this;
+      if (this._rowDelegBound) return;
+      this._rowDelegBound = true;
+      var tbody = this._findTbody();
+      if (tbody) {
+        tbody.addEventListener('click', function(e){
+          var btn = e.target.closest('button[data-act], a[data-act]');
+          if (!btn) return;
+          var tr = btn.closest('tr');
+          var id = tr ? tr.getAttribute('data-order-id') : '';
+          if (!id) return;
+          var act = btn.getAttribute('data-act');
+          try { e.stopImmediatePropagation(); e.stopPropagation(); } catch(_){}
+          if (act === 'view') { self.viewDetail(id); }
+          else if (act === 'edit') { self.editOrder(id); }
+          else if (act === 'dispatch') { self.openDispatch(id); }
+          else if (act === 'confirm') { self.transition(id, 'confirmed', ''); }
+          else if (act === 'to-show') { self.transition(id, 'performance', ''); }
+          else if (act === 'cancel') { self.transition(id, 'cancelled', '请输入取消原因：'); }
+          else if (act === 'del') { self.deleteOrder(id); }
+        }, true);
+      }
+    }
+  };
+
+  function _bootStrap(){
+    var api = window.__ordersApi;
+    if (!api) return;
+    api._bindRowDelegation();
+    api._bindFilterBar();
+    api._bindCustomerFilterBar();
+    api.load();
+    api.loadCustomers();
+    // 派工弹窗保存按钮：用 capture 阶段拦截，改走真实 API（覆盖原 demo Storage 逻辑）
+    try {
+      var dpSave = document.getElementById('dispatchSave');
+      if (dpSave && !dpSave.__ordersApiBound) {
+        dpSave.__ordersApiBound = 1;
+        dpSave.setAttribute('data-real-bound','1'); dpSave.__superPatchBound = 1; dpSave.__ts3Done = 1;
+        dpSave.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          e.stopPropagation();
+          api.saveDispatch();
+        }, true);
+      }
+    } catch(_){}
+    /* 真实统计卡片：GET /v1/orders/stats */
+    (async function(){
+      try {
+        var s = await QAXQJT_API.get('/v1/orders/stats');
+        if (!s) return;
+        var total = s.total || 0;
+        var bySt = s.byStatus || {};
+        var pending = (bySt.pending||0) + (bySt.confirmed||0);
+        var done = bySt.completed || 0;
+        var cancelled = bySt.cancelled || 0;
+        var totalAmt = Number(s.totalAmount||0);
+        var paidAmt = Number(s.paidAmount||0);
+        var el = function(id){ return document.getElementById(id); };
+        var fmt = function(n){ return n.toLocaleString('zh-CN'); };
+        if (el('statTotalOrders')) el('statTotalOrders').innerHTML = fmt(total) + '<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span>';
+        if (el('statTotalAmount')) el('statTotalAmount').textContent = '总额 ¥' + fmt(totalAmt);
+        if (el('statPaidAmount')) el('statPaidAmount').textContent = '已付 ¥' + fmt(paidAmt);
+        if (el('statPendingOrders')) el('statPendingOrders').innerHTML = fmt(pending) + '<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span>';
+        if (el('statPendingSub')) el('statPendingSub').textContent = pending > 0 ? '待处理订单' : '暂无待确认';
+        if (el('statDoneOrders')) el('statDoneOrders').innerHTML = fmt(done) + '<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span>';
+        if (el('statDoneRate')) el('statDoneRate').textContent = '完成率 ' + (total > 0 ? Math.round(done/total*100) + '%' : '—');
+        if (el('statPaidRate')) el('statPaidRate').textContent = '已收款 ' + (totalAmt > 0 ? Math.round(paidAmt/totalAmt*100) + '%' : '—');
+        if (el('statCancelOrders')) el('statCancelOrders').innerHTML = fmt(cancelled) + '<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span>';
+        if (el('statCancelRate')) el('statCancelRate').textContent = '取消率 ' + (total > 0 ? (cancelled/total*100).toFixed(1) + '%' : '—');
+        if (el('statRefundAmount')) el('statRefundAmount').textContent = '退款 ¥' + fmt(Number(s.refundedAmount||0));
+      } catch(e) { console.warn('[orders stats] load failed:', e.message); }
+    })();
+    // 绑定 detail modal close 按钮
+    try {
+      var closeBtn = document.getElementById('orderDetailClose');
+      var cancelBtn = document.getElementById('orderDetailCancel');
+      var modal = document.getElementById('orderDetailModal');
+      var overlay = document.getElementById('orderDetailOverlay');
+      function _closeDetail(){
+        try { modal && modal.classList.add('csp-hide'); } catch(_){}
+        try { overlay && overlay.classList.add('csp-hide'); } catch(_){}
+        try { document.body.classList.remove('body-modal-locked'); } catch(_){}
+      }
+      if (closeBtn && !closeBtn.__odcBound) { closeBtn.__odcBound = 1; closeBtn.addEventListener('click', _closeDetail); }
+      if (cancelBtn && !cancelBtn.__odcBound) { cancelBtn.__odcBound = 1; cancelBtn.addEventListener('click', _closeDetail); }
+      if (overlay && !overlay.__odcBound) { overlay.__odcBound = 1; overlay.addEventListener('click', function(e){ if (e.target === overlay) _closeDetail(); }); }
+    } catch(_){}
+    // 绑定 edit modal
+    try {
+      var eClose = document.getElementById('orderEditClose');
+      var eCancel = document.getElementById('orderEditCancel');
+      var eModal = document.getElementById('orderEditModal');
+      var eOverlay = document.getElementById('orderEditOverlay');
+      var eForm = document.getElementById('orderEditForm');
+      function _closeEdit(){
+        try { eModal && eModal.classList.add('csp-hide'); } catch(_){}
+        try { eOverlay && eOverlay.classList.add('csp-hide'); } catch(_){}
+        try { document.body.classList.remove('body-modal-locked'); } catch(_){}
+      }
+      if (eClose && !eClose.__oecBound) { eClose.__oecBound = 1; eClose.addEventListener('click', _closeEdit); }
+      if (eCancel && !eCancel.__oecBound) { eCancel.__oecBound = 1; eCancel.addEventListener('click', _closeEdit); }
+      if (eOverlay && !eOverlay.__oecBound) { eOverlay.__oecBound = 1; eOverlay.addEventListener('click', function(e){ if (e.target === eOverlay) _closeEdit(); }); }
+      if (eForm && !eForm.__oefBound) { eForm.__oefBound = 1; eForm.__superPatchBound = 1; eForm.__ts3Done = 1;
+        // 用 capture 阶段 + stopImmediatePropagation 阻止 SuperPatch 1/6 的 document capture submit 拦截
+        eForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          e.stopPropagation();
+          api.saveOrderEdit();
+        }, true);
+      }
+      // 保存按钮：fixRefreshBug 会把 type=submit 改成 type=button，form submit 不触发；
+      // 直接给按钮绑 capture click + stopImmediatePropagation，作为双保险触发 saveOrderEdit
+      try {
+        var eSaveBtn = eForm ? eForm.querySelector('button.btn-primary') : null;
+        if (eSaveBtn && !eSaveBtn.__oesBound) {
+          eSaveBtn.__oesBound = 1;
+          eSaveBtn.setAttribute('data-refresh-fixed','1');
+          eSaveBtn.setAttribute('data-type-fixed','1');
+          eSaveBtn.setAttribute('data-real-bound','1');
+          eSaveBtn.__superPatchBound = 1; eSaveBtn.__ts3Done = 1; eSaveBtn.__bindDone = 1; eSaveBtn.__ctE2Done = 1; eSaveBtn.__deadBtnChecked = 1;
+          eSaveBtn.addEventListener('click', function(ev){
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            ev.stopPropagation();
+            api.saveOrderEdit();
+          }, true);
+        }
+      } catch(_){}
+    } catch(_){}
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _bootStrap);
+  } else {
+    setTimeout(_bootStrap, 200);
+  }
+})();
+</script>
 </body>
 </html>

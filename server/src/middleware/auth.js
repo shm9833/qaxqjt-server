@@ -58,8 +58,13 @@ const requireAuth = opts => async (ctx, next) => {
 };
 
 /**
- * requireRole('super_admin') 或 requireRole(['ops','finance_admin'])
- * role level 数字越小权限越低，高等级 level 自动放行低等级接口（如 super_admin.level 999 > ops 800）
+ * 角色等级（仅保留作参考/导出兼容，鉴权不再使用数值继承）
+ *
+ * 安全说明：早期实现用 level 数值"高等级自动放行低等级接口"，但各业务族
+ * （运营/导演/财务制单/复核/出纳/只读）并非同一条权限链——例如
+ * finance_view(只读) 数值高于 finance_admin，会导致只读账号能删除财务凭证、
+ * 复核人能当制单人，破坏 maker/checker 分离。故 requireRole 改为与路由
+ * 显式名单精确匹配（super_admin 已在各路由名单中显式列出）。
  */
 const ROLE_LEVEL = {
   super_admin: 999,
@@ -77,9 +82,8 @@ const requireRole = roles => async (ctx, next) => {
   const user = ctx.state.user;
   if (!user) throw new BusinessError('UNAUTHORIZED', '请先登录');
   const allowed = Array.isArray(roles) ? roles : [roles];
-  const userLvl = ROLE_LEVEL[user.role] || 0;
-  const ok = allowed.some(r => user.role === r || (ROLE_LEVEL[r] !== undefined && userLvl >= ROLE_LEVEL[r]));
-  if (!ok) {
+  // 精确名单匹配，禁止跨业务族的等级继承
+  if (!allowed.includes(user.role)) {
     throw new BusinessError('FORBIDDEN', `需要角色 ${allowed.join('/')}，当前 ${user.role}`);
   }
   return next();
@@ -87,12 +91,20 @@ const requireRole = roles => async (ctx, next) => {
 
 /**
  * CORS 动态白名单（与 .env CORS_ORIGINS 保持单一来源）
+ * 安全规则：
+ *  - 仅当 Origin 命中显式白名单时才回显该 Origin（配合 credentials=true）
+ *  - 白名单为空：开发环境放行便于本地联调；生产环境一律拒绝，防止漏配变成"全放行"
+ *  - 生产环境 credentials=true 时不接受 '*' 通配（带凭证的通配响应会被浏览器拦截且等价于全放行）
  */
 const corsOrigin = ctx => {
   const origin = ctx.get('origin');
-  if (!origin) return '*';
-  if (CORS_ORIGINS_ARRAY.length === 0) return origin; // 开发时放行
-  if (CORS_ORIGINS_ARRAY.includes(origin) || CORS_ORIGINS_ARRAY.includes('*')) return origin;
+  if (!origin) return '*'; // 无 Origin（同源/非浏览器）不构成跨域
+  const allowCreds = env.CORS_CREDENTIALS !== false;
+  if (CORS_ORIGINS_ARRAY.length === 0) {
+    return env.NODE_ENV === 'production' ? '' : origin;
+  }
+  if (CORS_ORIGINS_ARRAY.includes(origin)) return origin;
+  if (CORS_ORIGINS_ARRAY.includes('*') && !(env.NODE_ENV === 'production' && allowCreds)) return origin;
   return ''; // 不匹配则拒绝
 };
 

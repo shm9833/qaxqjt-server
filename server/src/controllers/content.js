@@ -24,6 +24,26 @@ const list = async ctx => {
   return success(ctx, rows, { ...pageMeta(page, pageSize, total), total });
 };
 
+// 公开列表（无鉴权）：仅返回 publishStatus=published，强制按 sortWeight+publishDate 倒序
+const publicList = async ctx => {
+  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const where = { publishStatus: 'published' };
+  const kw = (ctx.query.keyword || '').trim();
+  if (kw) where.OR = [{ title: { contains: kw } }, { subtitle: { contains: kw } }];
+  if (ctx.query.type) where.type = ctx.query.type;
+  const [rows, total] = await Promise.all([
+    prisma.contentV2.findMany({
+      where, skip, take,
+      orderBy: [
+        { sortWeight: 'desc' },
+        { publishDate: 'desc' }
+      ]
+    }),
+    prisma.contentV2.count({ where })
+  ]);
+  return success(ctx, rows, { ...pageMeta(page, pageSize, total), total });
+};
+
 const create = async ctx => {
   const b = ctx.request.body;
   if (!b.title) throw new BusinessError('VALIDATION_ERROR', 'title 必填');
@@ -83,4 +103,4 @@ const remove = async ctx => {
   return success(ctx, { id });
 };
 
-module.exports = { list, create, detail, update, remove };
+module.exports = { list, publicList, create, detail, update, remove };

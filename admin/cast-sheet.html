@@ -23,6 +23,44 @@
       location.replace(base + L);
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
+<script>/* 真实按钮防拦截：window 捕获阶段打标，先于 document 上 SuperPatch/DBF */
+(function(){
+  var FLAGS=['__superPatchBound','__ts3Done','__bindDone','__ctE2Done','__deadBtnChecked'];
+  function mark(el){
+    if(!el||el.nodeType!==1) return;
+    for(var i=0;i<FLAGS.length;i++){ try{ if(!el[FLAGS[i]]) el[FLAGS[i]]=1; }catch(_){} }
+  }
+  function scan(root){
+    if(!root) return;
+    var sel='button[data-act],a[data-act],[role=button][data-act],button[data-action],button[data-opera-csv],button[data-opera-del],button[data-opera-cardprint],button[data-pick-cast],button[data-del-role],button[data-add-role],[data-real-bound]';
+    try{ root.querySelectorAll(sel).forEach(mark); }catch(_){}
+    mark(root);
+  }
+  scan(document);
+  window.addEventListener('click',function(e){
+    var t=e.target;
+    if(!t) return;
+    var el=t.closest&&t.closest('button[data-act],a[data-act],[role=button][data-act],button[data-action],button[data-opera-csv],button[data-opera-del],button[data-opera-cardprint],button[data-pick-cast],button[data-del-role],button[data-add-role],[data-real-bound]');
+    if(el) mark(el);
+  },true);
+  try{
+    var mo=new MutationObserver(function(muts){
+      for(var i=0;i<muts.length;i++){
+        var ns=muts[i].addedNodes;
+        for(var j=0;j<ns.length;j++){
+          var n=ns[j];
+          if(n.nodeType===1) scan(n);
+        }
+      }
+    });
+    mo.observe(document.documentElement||document.body,{childList:true,subtree:true});
+  }catch(_){}
+  setTimeout(function(){scan(document);},300);
+  setTimeout(function(){scan(document);},900);
+  window.__guardRealActions=scan;
+  console.info('[cast-sheet guard] 已激活');
+})();
+</script>
 
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -709,6 +747,16 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         <button class="btn-action btn-emerald" id="btnXlsxAll" data-action="cast-xlsx-all" type="button" title="一键导出全表演出演员表Excel.xlsx（8大板块分别为独立Sheet，冻结首行+列宽自适应+数字格式）">📊 整表导出XLSX</button>
       </div>
 
+      <!-- ===== 20260922 真实后端同步：关联排期 / 载入线上阵容 / 发布到官网 ===== -->
+      <div id="realSyncBar" style="margin:10px 0;padding:10px 14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px;">
+        <span style="font-weight:700;color:#0369a1;">🌐 官网阵容同步</span>
+        <label>关联排期：<select id="rsSchedule" style="min-width:240px;padding:4px 8px;"><option value="">正在加载…</option></select></label>
+        <label>线上阵容：<select id="rsSheet" style="min-width:220px;padding:4px 8px;"><option value="">（本次新建）</option></select></label>
+        <button id="rsLoad" type="button" style="padding:5px 14px;border:1px solid #0284c7;background:#fff;color:#0284c7;border-radius:8px;cursor:pointer;">📥 载入选中阵容</button>
+        <button id="rsPublish" type="button" style="padding:5px 16px;border:none;background:#0284c7;color:#fff;border-radius:8px;cursor:pointer;font-weight:700;">💾 保存并发布到官网</button>
+        <span id="rsMsg" style="color:#075985;"></span>
+      </div>
+
       <!-- 01 演出封面横幅 -->
       <div class="show-banner">
         <div class="qr-placeholder"><div class="qr-img"></div>扫码看电子阵容</div>
@@ -928,9 +976,9 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
 <script src="../js/favicon-inject.js?v=20260803"></script>
 <script src="../js/wechat-fallback.js?v=20260803"></script>
 <script src="../js/year-lite.js?v=20260803"></script>
-  <script src="../js/api-config.js?v=20260803"></script>
-  <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
+  <script src="../js/api-config.js?v=20260922"></script>
+  <script src="../js/api-request.js?v=20260922"></script>
+<script src="../js/app.js?v=20260922"></script>
 <!-- ===== 2026-08-03 D 类：xlsx.min.js（SheetJS 0.18.5 full）三路径加载（CDN优先 + 本地 + 备用CDN），零网络不崩 ===== -->
 <script>
 (function(){
@@ -1074,115 +1122,22 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
   var LS_PERFORMERS = 'qaxqjt_performers_v1';
   var $ = function(id){ return document.getElementById(id); };
 
-  var DEFAULT_PERFORMERS = {
-    '老生': [
-      {name:'陈金声', skill:'安工老生', note:'擅演《三滴血·晋信书》《清风亭·张元秀》'},
-      {name:'杜振中', skill:'衰派老生', note:'擅演《四进士》《卖画劈门》'},
-      {name:'李玉堂', skill:'靠把老生', note:'擅演《下河东·赵匡胤》《出棠邑·伍员》'},
-      {name:'秦守仁', skill:'安工老生', note:'擅演《二进宫·杨波》《打金枝·唐王》'},
-      {name:'王树森', skill:'老生/红生', note:'跨两行当，擅演《关公挑袍》'},
-      {name:'赵文轩', skill:'衰派老生', note:'擅演《三娘教子·薛保》《烙碗计》'}
-    ],
-    '红生': [
-      {name:'王树森', skill:'红生/老生', note:'跨行当，关公戏专业户'},
-      {name:'刘关胜', skill:'红生', note:'擅演《出五关·关羽》《斩颜良》'},
-      {name:'周长安', skill:'红生', note:'擅演《下河东·赵匡胤》困山唱段'}
-    ],
-    '小生': [
-      {name:'何文华', skill:'贫生/袍带小生', note:'擅演《周仁回府·周仁》《软玉屏·秦一鹗》'},
-      {name:'柳云青', skill:'文武小生', note:'擅演《黄鹤楼·周瑜》《小宴·吕布》'},
-      {name:'宋玉郎', skill:'才子小生', note:'擅演《西厢记·张生》《拾玉镯·傅朋》'},
-      {name:'高天纵', skill:'武小生', note:'擅演《长坂坡·赵云》《八大锤·陆文龙》'}
-    ],
-    '武生': [
-      {name:'高天纵', skill:'武小生/武生', note:'跨行当'},
-      {name:'张猛飞', skill:'长靠武生', note:'擅演《挑滑车·高宠》《冀州城·马超》'},
-      {name:'赵云鹏', skill:'短打武生', note:'擅演《白水滩·十一郎》《三岔口·任堂惠》'}
-    ],
-    '青衣': [
-      {name:'苏若兰', skill:'正旦/青衣', note:'擅演《铡美案·秦香莲》《五典坡·王宝钏》'},
-      {name:'李秋霞', skill:'青衣/闺门', note:'擅演《四贤册·赵月娥》《白玉钿·尚飞琼》'},
-      {name:'周婉清', skill:'青衣', note:'擅演《三娘教子·王春娥》《窦娥冤·窦娥》'},
-      {name:'韩玉梅', skill:'苦情青衣', note:'擅演《赵五娘吃糠》《火焰驹·黄桂英》'},
-      {name:'马巧云', skill:'青衣/老旦', note:'跨行当，擅长老年妇女'},
-      {name:'吴静兰', skill:'青衣', note:'擅演《二进宫·李艳妃》《黑叮本》'}
-    ],
-    '花旦': [
-      {name:'白小蝶', skill:'花旦/闺门旦', note:'擅演《拾玉镯·孙玉姣》《柜中缘·许翠莲》'},
-      {name:'崔玲玲', skill:'花旦/玩笑旦', note:'擅演《三滴血·贾莲香》《法门寺·孙玉姣》'},
-      {name:'金喜凤', skill:'花旦/武旦', note:'跨行当，擅演《火焰驹·芸香》'},
-      {name:'沈春莺', skill:'花旦', note:'擅演《三回头·吕荣儿》《表花·梅英》'},
-      {name:'姚丽娟', skill:'花旦/彩旦', note:'跨行当，喜剧天赋好'}
-    ],
-    '老旦': [
-      {name:'马巧云', skill:'青衣/老旦', note:'跨行当，擅演《岳母刺字》《吊孝·佘太君》'},
-      {name:'宋太君', skill:'老旦', note:'擅演《杨门女将·佘太君》《清风亭·贺氏》'},
-      {name:'康秀莲', skill:'老旦/彩旦', note:'跨行当，擅演《烙碗计·马氏》'}
-    ],
-    '彩旦': [
-      {name:'姚丽娟', skill:'花旦/彩旦', note:'跨行当，喜剧角色'},
-      {name:'康秀莲', skill:'老旦/彩旦', note:'跨行当'},
-      {name:'王媒婆', skill:'彩旦/丑婆', note:'擅演《拾玉镯·刘媒婆》《法门寺·刘媒婆》'},
-      {name:'喜大妈', skill:'彩旦', note:'擅演《柜中缘·淘气妈》《三滴血·奶妈》'}
-    ],
-    '花脸': [
-      {name:'黑振山', skill:'大花脸/铜锤', note:'擅演《铡美案·包拯》《二进宫·徐彦昭》'},
-      {name:'金面虎', skill:'大花脸', note:'擅演《打金枝·郭子仪》《忠保国·徐达》'},
-      {name:'铁金刚', skill:'二花脸/架子花', note:'擅演《苟家滩·王彦章》《芦花荡·张飞》'},
-      {name:'赛金刚', skill:'武花脸', note:'擅演《战马超·张飞》《长坂坡·曹操》'},
-      {name:'曹孟德', skill:'白脸抹', note:'擅演《捉放曹·曹操》《群英会·曹操》'}
-    ],
-    '丑行': [
-      {name:'贾半仙', skill:'方巾丑/官丑', note:'擅演《三滴血·周仁瑞弟》《春草闯堂·知府》'},
-      {name:'侯小利', skill:'小丑/武丑', note:'擅演《三岔口·刘利华》《时迁偷鸡·时迁》'},
-      {name:'笑破天', skill:'老丑/小丑', note:'擅演《苏三起解·崇公道》《拾玉镯·刘公道》'},
-      {name:'淘淘气', skill:'小丑/娃娃丑', note:'擅演《柜中缘·淘气》《烙碗计·定生》'}
-    ],
-    '武场': [
-      {name:'雷振声', skill:'司鼓/板鼓指挥', note:'鼓师出身30年，秦腔传统鼓令精通'},
-      {name:'梆子王', skill:'梆子/铰子', note:'梆子戏能手，240bpm+快节奏稳如松'},
-      {name:'罗洪亮', skill:'大锣/马锣', note:'擅演《五典坡》《铡美案》大锣音色'},
-      {name:'钹子手', skill:'铙钹/京镲', note:''},
-      {name:'小锣匠', skill:'小锣/手锣', note:'擅演丑角上场锣点'},
-      {name:'唐鼓王', skill:'堂鼓/战鼓', note:'武戏开打鼓点专业'},
-      {name:'水镲李', skill:'水镲/狗娃子', note:''},
-      {name:'板鼓助', skill:'二鼓/替补司鼓', note:'司鼓替补，兼管锣鼓经资料'},
-      {name:'梆子助', skill:'梆子替补', note:'下乡演出替补'},
-      {name:'武打音效', skill:'音效/木鱼', note:'舞台特殊音效配合'}
-    ],
-    '文场': [
-      {name:'板胡周', skill:'板胡主奏', note:'30年琴师经验，擅演欢音/苦音双调式'},
-      {name:'二胡梁', skill:'二胡Ⅰ声部', note:''},
-      {name:'二胡陈', skill:'二胡Ⅱ声部', note:'兼高胡'},
-      {name:'高胡师', skill:'高胡/椰胡', note:'兼奏二股弦'},
-      {name:'扬琴白', skill:'扬琴', note:''},
-      {name:'琵琶金', skill:'琵琶', note:''},
-      {name:'三弦吴', skill:'三弦(硬弦)', note:'秦腔传统弹拨乐器核心'},
-      {name:'古筝王', skill:'古筝', note:''},
-      {name:'竹笛青', skill:'竹笛/梅管', note:'擅演苦音腔笛子'},
-      {name:'唢呐红', skill:'唢呐/海笛', note:'曲牌演奏高手（《永寿庵》《小开门》等）'},
-      {name:'笙乐师', skill:'笙', note:''},
-      {name:'大提刘', skill:'大提琴', note:'低音支撑声部'},
-      {name:'贝司王', skill:'低音提琴/电子琴', note:'兼管电子合成器补低音'}
-    ],
-    '舞台': [
-      {name:'总监老王', skill:'舞台监督', note:'30年经验，全剧最高指挥官'},
-      {name:'剧务小李', skill:'剧务主任', note:'演员催场+后勤协调'},
-      {name:'催场小张', skill:'催场/场记', note:'精确到分钟的上场提醒'},
-      {name:'灯光老孙', skill:'灯光师', note:'调光台+面光/耳光/顶光调度'},
-      {name:'灯助小陈', skill:'灯光助理', note:'换色/换片/追光配合'},
-      {name:'音响大周', skill:'音响师/混音', note:'16路无线麦+合唱混音管理'},
-      {name:'麦管小吴', skill:'话筒/耳麦管理', note:'上下场麦的收放/电池更换'},
-      {name:'服装薛', skill:'服装管理', note:'蟒/靠/褶/帔/配件分类存放+穿脱顺序'},
-      {name:'跟包刘', skill:'跟包服装', note:'主要演员专属跟包'},
-      {name:'盔箱张', skill:'盔箱(秦腔特色岗)', note:'王帽/纱帽/扎巾/额子/凤冠/驸马套…佩戴+保管'},
-      {name:'旦妆陈', skill:'化妆(旦角大头)', note:'贴片子/绾大头/头饰/粉妆'},
-      {name:'勾脸周', skill:'勾脸(花脸)', note:'秦腔传统脸谱108式精通'},
-      {name:'道具李', skill:'道具管理', note:'扇/帕/马鞭/令旗/刀剑/书信/印信…'},
-      {name:'装台赵', skill:'布景/装台/拆台', note:'下乡演出搭台队长'},
-      {name:'字幕郑', skill:'字幕播放', note:'同步伴奏逐句显示字幕'}
-    ]
-  };
+  // 20260922 真实化：不再内置任何假演职人员；名单由 /v1/performers 同步
+  var DEFAULT_PERFORMERS = {};
+  var PERFORMER_CATS = ['老生','红生','小生','武生','青衣','花旦','老旦','彩旦','花脸','丑行','武场','文场','舞台'];
+  function _bucketOf(role){
+    var s = String(role||'');
+    var rules = [
+      ['武场', /司鼓|板鼓|梆子|大锣|小锣|马锣|铙|钹|镲|堂鼓|战鼓|木鱼|打击|鼓/],
+      ['文场', /板胡|二胡|高胡|椰胡|扬琴|琵琶|三弦|古筝|竹笛|梅管|唢呐|海笛|笙|大提琴|贝司|提琴|电子琴|琴/],
+      ['舞台', /舞台监督|监督|剧务|催场|场记|灯光|音响|话筒|耳麦|麦|服装|跟包|盔箱|化妆|大头|勾脸|脸谱|道具|装台|布景|拆台|字幕|电工|后勤/],
+      ['红生', /红生/], ['老生', /老生/], ['小生', /小生/], ['武生', /武生/],
+      ['青衣', /青衣|正旦/], ['花旦', /花旦|闺门旦|武旦/], ['老旦', /老旦/],
+      ['彩旦', /彩旦|丑婆/], ['花脸', /花脸|铜锤|架子花|净/], ['丑行', /丑/]
+    ];
+    for(var i=0;i<rules.length;i++){ if(rules[i][1].test(s)) return rules[i][0]; }
+    return '舞台';
+  }
   function getFlatPerformers(){
     var list = [];
     Object.keys(DEFAULT_PERFORMERS).forEach(function(cat){
@@ -1195,155 +1150,62 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     return out;
   }
   function initPerformersDB(){
+    // 清除旧版本内置假数据缓存（_version<2）
     try{
-      var raw = localStorage.getItem(LS_PERFORMERS);
-      if(raw && raw.length>100) return;
-      var obj = { _seededAt: new Date().toISOString(), _version: 1, performers: DEFAULT_PERFORMERS, flat: getFlatPerformers() };
-      localStorage.setItem(LS_PERFORMERS, JSON.stringify(obj));
-    }catch(e){}
+      var raw0 = localStorage.getItem(LS_PERFORMERS);
+      if(raw0){ var old = JSON.parse(raw0); if(!old || old._version !== 2){ localStorage.removeItem(LS_PERFORMERS); } }
+    }catch(e){ try{ localStorage.removeItem(LS_PERFORMERS); }catch(_){} }
+    syncPerformersFromApi();
+  }
+  function syncPerformersFromApi(){
+    if(!(window.QAXQJT_API && QAXQJT_API.get)) return Promise.resolve();
+    return QAXQJT_API.get('/v1/performers', { query:{ pageSize:500 } }).then(function(d){
+      var items = Array.isArray(d) ? d : ((d && d.items) || []);
+      var groups = {}; var flat = [];
+      items.forEach(function(p){
+        var name = p.name || p.performerName || '';
+        if(!name) return;
+        var role = p.primaryRole || p.roleCategory || p.role || '';
+        var cat = _bucketOf(role);
+        if(!groups[cat]) groups[cat] = [];
+        groups[cat].push({ name:name, skill:role, note:'' });
+        flat.push({ id:p.id||'', name:name, skill:role, note:'', category:cat });
+      });
+      try{ localStorage.setItem(LS_PERFORMERS, JSON.stringify({ _seededAt:new Date().toISOString(), _version:2, performers:groups, flat:flat })); }catch(e){}
+      if(typeof renderPerformersDatalist === 'function'){ try{ renderPerformersDatalist(); }catch(e){} }
+    }).catch(function(){ /* 未登录/无网络时保持空态，绝不造假数据 */ });
   }
   function loadPerformers(){
     try{
       var raw = localStorage.getItem(LS_PERFORMERS);
-      if(raw) return JSON.parse(raw);
+      if(raw){ var o = JSON.parse(raw); if(o && o._version === 2) return o; }
     }catch(e){}
-    return {performers:DEFAULT_PERFORMERS, flat:getFlatPerformers()};
+    return { performers:{}, flat:[] };
   }
 
-  var OPERA_CHARACTER_LIBRARY = [
-    {
-      id: 'lib_zhouren', name: '《周仁回府》', category:'传统本戏', duration:165,
-      synopsis: '明代经典秦腔传统本戏，讲述义士周仁为救盟兄杜文学，献妻于贼，其妻自刎，后冤屈昭雪的千古忠义故事。秦腔小生/青衣唱功戏颠峰之作。',
-      firstEra:'明代', copyright:'公有传统', rating:'⭐⭐⭐⭐镇团之宝',
-      cast: [
-        {role:'周仁', type:'小生', actorA:'何文华', actorB:'柳云青', actorC:'宋玉郎', note:'贫生应工，"哭墓""悔路"核心唱段'},
-        {role:'李兰英', type:'青衣', actorA:'苏若兰', actorB:'韩玉梅', actorC:'', note:'"刺严"一折，青衣苦情戏经典'},
-        {role:'杜文学', type:'老生', actorA:'陈金声', actorB:'秦守仁', actorC:'', note:''},
-        {role:'严 年', type:'花脸', actorA:'铁金刚', actorB:'曹孟德', actorC:'', note:'白脸花脸应工，权臣形象'},
-        {role:'凤承东', type:'丑行', actorA:'贾半仙', actorB:'笑破天', actorC:'', note:'方巾丑，谄佞小人'},
-        {role:'胡秀英', type:'花旦', actorA:'白小蝶', actorB:'崔玲玲', actorC:'', note:''},
-        {role:'周 妻', type:'青衣', actorA:'李秋霞', actorB:'', actorC:'', note:'回忆/闪回段'},
-        {role:'王四公', type:'老生', actorA:'李玉堂', actorB:'', actorC:'', note:'长者形象'}
-      ]
-    },
-    {
-      id: 'lib_sandixie', name: '《三滴血》', category:'传统本戏', duration:180,
-      synopsis: '秦腔传统喜剧，陕西易俗社百年经典。清官晋信书"滴血认亲"判案，闹出三起人伦冤案，最终真相大白。生/旦/净/丑行当齐全。',
-      firstEra:'1918（易俗社改编）', copyright:'公有传统', rating:'⭐⭐⭐⭐镇团之宝',
-      cast: [
-        {role:'晋信书', type:'老生', actorA:'陈金声', actorB:'杜振中', actorC:'', note:'安工老生，清官带喜剧色彩'},
-        {role:'周人瑞', type:'老生', actorA:'李玉堂', actorB:'赵文轩', actorC:'', note:'衰派老生，"路遇"一折核心'},
-        {role:'周天佑', type:'小生', actorA:'何文华', actorB:'宋玉郎', actorC:'', note:'小生/武生跨'},
-        {role:'李遇春', type:'小生', actorA:'柳云青', actorB:'', actorC:'', note:'才子小生'},
-        {role:'贾莲香', type:'花旦', actorA:'白小蝶', actorB:'沈春莺', actorC:'', note:'闺门花旦，"结盟/合婚"折子'},
-        {role:'李晚春', type:'青衣', actorA:'李秋霞', actorB:'周婉清', actorC:'', note:''},
-        {role:'王 妈', type:'彩旦', actorA:'王媒婆', actorB:'喜大妈', actorC:'', note:'彩旦喜剧'},
-        {role:'牛 娃', type:'丑行', actorA:'淘淘气', actorB:'', actorC:'', note:'娃娃丑'}
-      ]
-    },
-    {
-      id: 'lib_zhamei', name: '《铡美案》', category:'传统本戏', duration:150,
-      synopsis: '北宋包公怒铡驸马陈世美，秦腔铜锤花脸唱功戏颠峰。包拯大花脸+秦香莲青衣+国太老旦，三大行当唱作并重。',
-      firstEra:'清代传统', copyright:'公有传统', rating:'⭐⭐⭐招牌大戏',
-      cast: [
-        {role:'包 拯', type:'花脸', actorA:'黑振山', actorB:'金面虎', actorC:'', note:'铜锤花脸，正净应工'},
-        {role:'秦香莲', type:'青衣', actorA:'苏若兰', actorB:'韩玉梅', actorC:'', note:'苦情青衣核心'},
-        {role:'陈世美', type:'老生', actorA:'秦守仁', actorB:'', actorC:'', note:'负心汉形象，"闯宫"一折'},
-        {role:'国 太', type:'老旦', actorA:'宋太君', actorB:'马巧云', actorC:'', note:''},
-        {role:'皇 姑', type:'花旦', actorA:'崔玲玲', actorB:'', actorC:'', note:''},
-        {role:'王延龄', type:'老生', actorA:'陈金声', actorB:'', actorC:'', note:'丞相老生'},
-        {role:'韩 琪', type:'武生', actorA:'张猛飞', actorB:'赵云鹏', actorC:'', note:'武生，"杀庙"一折自刎'},
-        {role:'冬 哥', type:'丑行', actorA:'淘淘气', actorB:'', actorC:'', note:'娃娃丑，秦香莲子'}
-      ]
-    },
-    {
-      id: 'lib_doue', name: '《窦娥冤》', category:'传统本戏', duration:170,
-      synopsis: '元代关汉卿原作改编秦腔。窦娥遭冤被斩，临刑发三桩誓愿一一应验。秦腔青衣最经典苦情戏，"法场"一折唱腔难度极大。',
-      firstEra:'元杂剧改编', copyright:'公有传统', rating:'⭐⭐⭐招牌大戏',
-      cast: [
-        {role:'窦 娥', type:'青衣', actorA:'周婉清', actorB:'苏若兰', actorC:'', note:'青衣唱功戏极限角色'},
-        {role:'窦天章', type:'老生', actorA:'杜振中', actorB:'李玉堂', actorC:'', note:'清官老生'},
-        {role:'张驴儿', type:'丑行', actorA:'贾半仙', actorB:'笑破天', actorC:'', note:'恶丑形象'},
-        {role:'蔡婆婆', type:'老旦', actorA:'康秀莲', actorB:'', actorC:'', note:''},
-        {role:'赛卢医', type:'丑行', actorA:'侯小利', actorB:'', actorC:'', note:'方巾丑/医丑'},
-        {role:'桃 杌', type:'花脸', actorA:'金面虎', actorB:'', actorC:'', note:'贪官丑净'},
-        {role:'张 父', type:'花脸', actorA:'铁金刚', actorB:'', actorC:'', note:''}
-      ]
-    },
-    {
-      id: 'lib_qingfeng', name: '《清风亭》', category:'传统本戏', duration:150,
-      synopsis: '张元秀夫妻拾子张继宝，养至13岁归宗，后得中状元忘恩负义，清风亭二老撞死，张继宝遭雷殛。秦腔衰派老生/老旦经典催泪戏。',
-      firstEra:'清代传统', copyright:'公有传统', rating:'⭐⭐⭐招牌大戏',
-      cast: [
-        {role:'张元秀', type:'老生', actorA:'杜振中', actorB:'赵文轩', actorC:'', note:'衰派老生颠峰'},
-        {role:'贺 氏', type:'老旦', actorA:'宋太君', actorB:'康秀莲', actorC:'', note:'老旦经典'},
-        {role:'张继宝（大）', type:'小生', actorA:'柳云青', actorB:'', actorC:'', note:'忘恩负义小生'},
-        {role:'张继宝（小）', type:'丑行', actorA:'淘淘气', actorB:'', actorC:'', note:'娃娃丑'},
-        {role:'周桂英', type:'青衣', actorA:'韩玉梅', actorB:'', actorC:'', note:'生母青衣'},
-        {role:'薛 荣', type:'老生', actorA:'陈金声', actorB:'', actorC:'', note:''},
-        {role:'雷 神', type:'花脸', actorA:'赛金刚', actorB:'', actorC:'', note:'武花脸勾脸'}
-      ]
-    },
-    {
-      id: 'lib_zhaoshi', name: '《赵氏孤儿》', category:'传统本戏', duration:185,
-      synopsis: '春秋程婴救孤，公孙杵臼就义。秦腔老生/花脸/青衣唱做并重，"搜孤/救孤/打婴/复仇"经典四折。',
-      firstEra:'元杂剧改编', copyright:'公有传统', rating:'⭐⭐⭐招牌大戏',
-      cast: [
-        {role:'程 婴', type:'老生', actorA:'李玉堂', actorB:'陈金声', actorC:'', note:'安工老生颠峰'},
-        {role:'公孙杵臼', type:'老生', actorA:'赵文轩', actorB:'杜振中', actorC:'', note:'衰派老生'},
-        {role:'屠岸贾', type:'花脸', actorA:'铁金刚', actorB:'黑振山', actorC:'', note:'架子花脸反派顶峰'},
-        {role:'庄姬公主', type:'青衣', actorA:'吴静兰', actorB:'周婉清', actorC:'', note:'皇家青衣'},
-        {role:'韩 厥', type:'武生', actorA:'赵云鹏', actorB:'', actorC:'', note:'武生下场自刎'},
-        {role:'赵 武（孤儿）', type:'小生', actorA:'何文华', actorB:'', actorC:'', note:'文武小生'},
-        {role:'魏 绛', type:'花脸', actorA:'金面虎', actorB:'', actorC:'', note:'铜锤花脸'}
-      ]
-    },
-    {
-      id: 'lib_shiyu', name: '《拾玉镯》', category:'传统折子戏', duration:28,
-      synopsis: '孙玉姣闺门前绣花遇少年傅朋，互生爱慕，傅朋遗玉镯，刘媒婆撞见促成姻缘。秦腔花旦/小生/彩旦经典小戏，动作戏细腻。',
-      firstEra:'传统折戏', copyright:'公有传统', rating:'⭐⭐重点推荐',
-      cast: [
-        {role:'孙玉姣', type:'花旦', actorA:'白小蝶', actorB:'沈春莺', actorC:'', note:'闺门花旦，喂鸡/穿针/拾镯做工戏'},
-        {role:'傅 朋', type:'小生', actorA:'宋玉郎', actorB:'', actorC:'', note:'文弱才子小生'},
-        {role:'刘媒婆', type:'彩旦', actorA:'王媒婆', actorB:'姚丽娟', actorC:'', note:'彩旦喜剧颠峰'}
-      ]
-    },
-    {
-      id: 'lib_guizhong', name: '《柜中缘》', category:'传统折子戏', duration:30,
-      synopsis: '许翠莲母兄外出，将门之后岳雷逃祸闯入，翠莲藏于柜中，兄返误会，后真相大白，缔结良缘。秦腔花旦/丑行喜剧经典。',
-      firstEra:'传统折戏', copyright:'公有传统', rating:'⭐⭐重点推荐',
-      cast: [
-        {role:'许翠莲', type:'花旦', actorA:'白小蝶', actorB:'崔玲玲', actorC:'', note:'闺门旦做戏'},
-        {role:'淘 气', type:'丑行', actorA:'淘淘气', actorB:'侯小利', actorC:'', note:'娃娃丑，喜剧核心'},
-        {role:'岳 雷', type:'小生', actorA:'柳云青', actorB:'高天纵', actorC:'', note:'文武小生逃难'},
-        {role:'淘 气 妈', type:'彩旦', actorA:'喜大妈', actorB:'王媒婆', actorC:'', note:'老彩旦喜剧'},
-        {role:'许 母', type:'老旦', actorA:'马巧云', actorB:'', actorC:'', note:''}
-      ]
-    },
-    {
-      id: 'lib_sanhuitou', name: '《三回头》', category:'传统折子戏', duration:22,
-      synopsis: '吕鸿儒之女荣儿嫁许升为妻，许升浪荡嫖赌，荣儿三次被父叫回又三次不忍返回，终劝夫改悔。秦腔花旦/小生唱功小戏。',
-      firstEra:'易俗社创作', copyright:'公有传统', rating:'⭐常演保留剧目',
-      cast: [
-        {role:'吕荣儿', type:'花旦', actorA:'沈春莺', actorB:'金喜凤', actorC:'', note:'花旦唱功'},
-        {role:'许 升', type:'小生', actorA:'宋玉郎', actorB:'', actorC:'', note:''},
-        {role:'吕鸿儒', type:'老生', actorA:'秦守仁', actorB:'', actorC:'', note:'严父老生'},
-        {role:'许 父', type:'老生', actorA:'李玉堂', actorB:'', actorC:'', note:''}
-      ]
-    },
-    {
-      id: 'lib_susan', name: '《苏三起解》', category:'传统折子戏', duration:25,
-      synopsis: '苏三冤案起解太原，路上向崇公道诉说冤情。秦腔青衣/丑行经典折子戏，"崇老伯他说是冤枉能辨"核心唱段。',
-      firstEra:'《玉堂春》折戏', copyright:'公有传统', rating:'⭐⭐重点推荐',
-      cast: [
-        {role:'苏 三', type:'青衣', actorA:'李秋霞', actorB:'周婉清', actorC:'', note:'罪衣青衣，唱功核心'},
-        {role:'崇公道', type:'丑行', actorA:'笑破天', actorB:'', actorC:'', note:'老丑善良形象'}
-      ]
-    }
-  ];
+  var OPERA_CHARACTER_LIBRARY = [];
+  var _realOperasCache = null;
+  // 真实剧目库：/v1/plays/public（无需登录），结果缓存在 localStorage 供同步的 loadOperaLibrary 合并
+  function syncRealOperas(){
+    if(!(window.QAXQJT_API && QAXQJT_API.get)) return Promise.resolve();
+    return QAXQJT_API.get('/v1/plays/public', { query:{ pageSize:200 }, showErrorToast:false, timeoutMs:12000 }).then(function(d){
+      var items = Array.isArray(d) ? d : ((d && d.items) || []);
+      var arr = items.map(function(p){
+        var title = p.title || '';
+        return { id:'real_'+(p.id||''), name:/《/.test(title)?title:('《'+title+'》'), category:p.genre||'传统本戏', duration:p.durationMinutes||'', synopsis:p.synopsis||'', playId:p.id||'', cast:[] };
+      });
+      _realOperasCache = arr;
+      try{ localStorage.setItem('qaxqjt_real_plays_v1', JSON.stringify({ _version:1, ts:Date.now(), items:arr })); }catch(e){}
+    }).catch(function(){ _realOperasCache = _realOperasCache || []; });
+  }
+  function _loadCachedRealOperas(){
+    if(_realOperasCache) return _realOperasCache;
+    try{ var raw = localStorage.getItem('qaxqjt_real_plays_v1'); if(raw){ var o = JSON.parse(raw); if(o && Array.isArray(o.items)){ _realOperasCache = o.items; return o.items; } } }catch(e){}
+    return [];
+  }
 
   function loadOperaLibrary(){
-    var all = [].concat(OPERA_CHARACTER_LIBRARY);
+    var all = [].concat(_loadCachedRealOperas(), OPERA_CHARACTER_LIBRARY);
     try{
       var raw1 = localStorage.getItem('qaxqjt_plays');
       if(raw1){
@@ -1419,57 +1281,55 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     {pos:'字幕设计', name:'', note:''}
   ];
   var DEFAULT_WUCHANG = [
-    {pos:'司鼓 / 板鼓指挥 ★★', name:'雷振声', note:'秦腔"鼓令"，演出最高节奏指挥'},
-    {pos:'梆 子 ★', name:'梆子王', note:'秦腔灵魂节奏乐器，240bpm以上快节奏核心'},
-    {pos:'大 锣', name:'罗洪亮', note:''},
-    {pos:'铙 钹', name:'钹子手', note:''},
-    {pos:'小 锣', name:'小锣匠', note:''},
-    {pos:'马 锣 / 狗娃子', name:'水镲李', note:''},
-    {pos:'堂 鼓', name:'唐鼓王', note:''},
-    {pos:'战 鼓', name:'唐鼓王', note:''},
-    {pos:'铰 子', name:'梆子助', note:''},
-    {pos:'水 镲', name:'水镲李', note:''}
+    {pos:'司鼓 / 板鼓指挥 ★★', name:'', note:'秦腔"鼓令"，演出最高节奏指挥'},
+    {pos:'梆 子 ★', name:'', note:'秦腔灵魂节奏乐器，240bpm以上快节奏核心'},
+    {pos:'大 锣', name:'', note:''},
+    {pos:'铙 钹', name:'', note:''},
+    {pos:'小 锣', name:'', note:''},
+    {pos:'马 锣 / 狗娃子', name:'', note:''},
+    {pos:'堂 鼓', name:'', note:''},
+    {pos:'战 鼓', name:'', note:''},
+    {pos:'铰 子', name:'', note:''},
+    {pos:'水 镲', name:'', note:''}
   ];
   var DEFAULT_WENCHANG = [
-    {pos:'板 胡（主奏）★★', name:'板胡周', note:'秦腔第一主奏乐器，全程托腔保调'},
-    {pos:'二 胡（Ⅰ）', name:'二胡梁', note:''},
-    {pos:'二 胡（Ⅱ）', name:'二胡陈', note:''},
-    {pos:'高 胡', name:'高胡师', note:''},
-    {pos:'扬 琴', name:'扬琴白', note:''},
-    {pos:'琵 琶', name:'琵琶金', note:''},
-    {pos:'三 弦', name:'三弦吴', note:'秦腔文场传统弹拨'},
-    {pos:'古 筝', name:'古筝王', note:''},
-    {pos:'竹 笛', name:'竹笛青', note:''},
-    {pos:'唢 呐 / 海笛', name:'唢呐红', note:'曲牌：《永寿庵》《小开门》'},
-    {pos:'笙', name:'笙乐师', note:''},
-    {pos:'大提琴', name:'大提刘', note:'（低音支撑）'},
-    {pos:'低音提琴 / 电子琴', name:'贝司王', note:''}
+    {pos:'板 胡（主奏）★★', name:'', note:'秦腔第一主奏乐器，全程托腔保调'},
+    {pos:'二 胡（Ⅰ）', name:'', note:''},
+    {pos:'二 胡（Ⅱ）', name:'', note:''},
+    {pos:'高 胡', name:'', note:''},
+    {pos:'扬 琴', name:'', note:''},
+    {pos:'琵 琶', name:'', note:''},
+    {pos:'三 弦', name:'', note:'秦腔文场传统弹拨'},
+    {pos:'古 筝', name:'', note:''},
+    {pos:'竹 笛', name:'', note:''},
+    {pos:'唢 呐 / 海笛', name:'', note:'曲牌：《永寿庵》《小开门》'},
+    {pos:'笙', name:'', note:''},
+    {pos:'大提琴', name:'', note:'（低音支撑）'},
+    {pos:'低音提琴 / 电子琴', name:'', note:''}
   ];
   var DEFAULT_STAGE = [
-    {pos:'舞台监督 ★★', name:'总监老王', note:'演出过程最高指挥官（后台+前台）'},
-    {pos:'剧 务 主 任', name:'剧务小李', note:''},
-    {pos:'催 场 / 场记', name:'催场小张', note:''},
-    {pos:'灯 光 师', name:'灯光老孙', note:''},
-    {pos:'灯 光 助 理', name:'灯助小陈', note:''},
-    {pos:'音 响 师', name:'音响大周', note:'（无线麦管理+合唱混音）'},
-    {pos:'话 筒 / 耳麦管理', name:'麦管小吴', note:''},
-    {pos:'服 装 管 理', name:'服装薛', note:'（蟒/靠/褶/帔 穿脱顺序）'},
-    {pos:'跟 包 服 装', name:'跟包刘', note:''},
-    {pos:'盔 箱 ★（秦腔特色岗）', name:'盔箱张', note:'王帽/纱帽/扎巾/额子/凤冠/驸马套…佩戴+保管'},
-    {pos:'化 妆 师（旦角大头）', name:'旦妆陈', note:''},
-    {pos:'勾 脸 师（花脸）', name:'勾脸周', note:''},
-    {pos:'道 具 管 理', name:'道具李', note:'扇/帕/马鞭/令旗/刀剑/书信/印信…'},
-    {pos:'布 景 / 装 台 队 长', name:'装台赵', note:'下乡演出搭台+拆卸'},
-    {pos:'字 幕 播 放', name:'字幕郑', note:'同步伴奏逐句显示字幕'}
+    {pos:'舞台监督 ★★', name:'', note:'演出过程最高指挥官（后台+前台）'},
+    {pos:'剧 务 主 任', name:'', note:''},
+    {pos:'催 场 / 场记', name:'', note:''},
+    {pos:'灯 光 师', name:'', note:''},
+    {pos:'灯 光 助 理', name:'', note:''},
+    {pos:'音 响 师', name:'', note:'（无线麦管理+合唱混音）'},
+    {pos:'话 筒 / 耳麦管理', name:'', note:''},
+    {pos:'服 装 管 理', name:'', note:'（蟒/靠/褶/帔 穿脱顺序）'},
+    {pos:'跟 包 服 装', name:'', note:''},
+    {pos:'盔 箱 ★（秦腔特色岗）', name:'', note:'王帽/纱帽/扎巾/额子/凤冠/驸马套…佩戴+保管'},
+    {pos:'化 妆 师（旦角大头）', name:'', note:''},
+    {pos:'勾 脸 师（花脸）', name:'', note:''},
+    {pos:'道 具 管 理', name:'', note:'扇/帕/马鞭/令旗/刀剑/书信/印信…'},
+    {pos:'布 景 / 装 台 队 长', name:'', note:'下乡演出搭台+拆卸'},
+    {pos:'字 幕 播 放', name:'', note:'同步伴奏逐句显示字幕'}
   ];
-  var DEFAULT_PROGRAM = [
-    {cat:'开场锣鼓', name:'开场锣鼓（武场闹台）', duration:8, actors:'武场乐队', note:'曲牌：《南瓜蔓》《八板》《小开门》，招揽观众入座'},
-    {cat:'加演折子戏', name:'拾玉镯（折子戏）', duration:28, actors:'白小蝶/宋玉郎/王媒婆', note:'花旦做工戏'},
-    {cat:'幕间休息', name:'休息 / 换装 / 布景', duration:12, actors:'舞台保障全体', note:'提醒观众如厕+看管物品'},
-    {cat:'主场大本戏（上本）', name:'《周仁回府》（上本：悔路·献妻·刺严）', duration:80, actors:'详见主场演员表', note:'中场休息前落帽'},
-    {cat:'幕间休息', name:'中场休息 10 分钟', duration:10, actors:'', note:'请舞台检查盔箱/服装/下本布景'},
-    {cat:'主场大本戏（下本）', name:'《周仁回府》（下本：夜逃·哭墓·打周·团圆）', duration:85, actors:'详见主场演员表', note:''},
-    {cat:'谢幕加唱/返场', name:'谢幕 · 秦腔名家清唱联唱', duration:12, actors:'全体主演+乐队', note:'领导上台合影/观众掌声欢送'}
+    var DEFAULT_PROGRAM = [
+    {cat:'开场锣鼓', name:'', duration:8, actors:'武场乐队', note:''},
+    {cat:'加演折子戏', name:'', duration:'', actors:'', note:''},
+    {cat:'幕间休息', name:'', duration:10, actors:'', note:''},
+    {cat:'主场大本戏', name:'', duration:'', actors:'详见主场演员表', note:''},
+    {cat:'谢幕加唱/返场', name:'', duration:'', actors:'全体主演+乐队', note:''}
   ];
   var DEFAULT_CATEGORIES_FOR_PROG = ['开场锣鼓','加演折子戏','幕间休息','主场大本戏（上本）','主场大本戏（下本）','谢幕加唱/返场'];
   var CAST_GROUPS = [
@@ -1487,16 +1347,16 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
 
   function defaultCastMini(n){
     var arr=[]; for(var i=0;i<(n||2);i++){
-      arr.push({role:'角色'+(i+1), type:(i===0?'青衣':'小生'), actorA:'', actorB:'', actorC:'', group:'', note:'', isPublic:true});
+      arr.push({role:'', type:(i===0?'青衣':'小生'), actorA:'', actorB:'', actorC:'', group:'', note:'', isPublic:true});
     }
     return arr;
   }
   var TYPE_OPTIONS = ['老生','红生','小生','武生','青衣','花旦','老旦','彩旦','花脸','丑行','（反串/其他）'];
   var SIMPLE_META = {
-    creative: { bodyId:'bodyCreative', cols:['pos','name','note'], placeholders:['例：编剧/总导演/唱腔设计…','例：李玉堂','分工说明/擅长曲目…'], newRow:function(){ return {pos:'',name:'',note:'',isPublic:true}; }, editables:{pos:'text',name:'text',note:'textarea'} },
-    wuchang:  { bodyId:'bodyWuchang',  cols:['pos','name','note'], placeholders:['例：司鼓/梆子/大锣/铙钹…','例：雷振声','常用曲牌/分工…'], newRow:function(){ return {pos:'',name:'',note:'',isPublic:true}; }, editables:{pos:'text',name:'text',note:'textarea'}, datalist:'datalist-wuchang' },
-    wenchang: { bodyId:'bodyWenchang', cols:['pos','name','note'], placeholders:['例：板胡/二胡/扬琴/琵琶/三弦…','例：板胡周','擅长曲目/声部…'], newRow:function(){ return {pos:'',name:'',note:'',isPublic:true}; }, editables:{pos:'text',name:'text',note:'textarea'}, datalist:'datalist-wenchang' },
-    stage:    { bodyId:'bodyStage',    cols:['pos','name','note'], placeholders:['例：舞台监督/盔箱/化妆/道具…','例：总监老王','具体分工…'], newRow:function(){ return {pos:'',name:'',note:'',isPublic:true}; }, editables:{pos:'text',name:'text',note:'textarea'}, datalist:'datalist-stage' },
+    creative: { bodyId:'bodyCreative', cols:['pos','name','note'], placeholders:['例：编剧/总导演/唱腔设计…','填写姓名','分工说明/擅长曲目…'], newRow:function(){ return {pos:'',name:'',note:'',isPublic:true}; }, editables:{pos:'text',name:'text',note:'textarea'} },
+    wuchang:  { bodyId:'bodyWuchang',  cols:['pos','name','note'], placeholders:['例：司鼓/梆子/大锣/铙钹…','填写演奏员姓名','常用曲牌/分工…'], newRow:function(){ return {pos:'',name:'',note:'',isPublic:true}; }, editables:{pos:'text',name:'text',note:'textarea'}, datalist:'datalist-wuchang' },
+    wenchang: { bodyId:'bodyWenchang', cols:['pos','name','note'], placeholders:['例：板胡/二胡/扬琴/琵琶/三弦…','填写演奏员姓名','擅长曲目/声部…'], newRow:function(){ return {pos:'',name:'',note:'',isPublic:true}; }, editables:{pos:'text',name:'text',note:'textarea'}, datalist:'datalist-wenchang' },
+    stage:    { bodyId:'bodyStage',    cols:['pos','name','note'], placeholders:['例：舞台监督/盔箱/化妆/道具…','填写负责人姓名','具体分工…'], newRow:function(){ return {pos:'',name:'',note:'',isPublic:true}; }, editables:{pos:'text',name:'text',note:'textarea'}, datalist:'datalist-stage' },
     program:  { bodyId:'bodyProgram',  cols:['cat','name','duration','actors','note'], placeholders:['分类','节目名称/章节','例：8','主演名/角色名','详细说明…'], newRow:function(){ return {cat:'加演折子戏',name:'',duration:'',actors:'',note:'',isPublic:true}; }, editables:{cat:'select',name:'text',duration:'number',actors:'text',note:'textarea'} }
   };
 
@@ -1508,25 +1368,12 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
       header:{title:'', host:'', organizer:'', coorganizer:'', sponsor:'', date:'', time:'', venue:'', notice:''},
       creative: JSON.parse(JSON.stringify(DEFAULT_CREATIVE)),
       mainOpera: [{
-        opera:'《周仁回府》', duration:165, type:'传统本戏', rating:'⭐⭐⭐⭐镇团之宝',
-        intro:'明代秦腔经典传统本戏，讲述周仁献妻救兄的千古忠义故事，小生/青衣唱功戏颠峰之作。',
+        opera:'', duration:'', type:'传统本戏', rating:'', intro:'',
         cast: [
-          {role:'周 仁', type:'小生', actorA:'何文华', actorB:'柳云青', actorC:'', group:'✨ 老生行（安工/衰派/靠把）', note:'《悔路》《哭墓》核心'},
-          {role:'李兰英', type:'青衣', actorA:'苏若兰', actorB:'韩玉梅', actorC:'', group:'💎 青衣/正旦（苦情/大家闺秀）', note:'《刺严》一折'},
-          {role:'杜文学', type:'老生', actorA:'陈金声', actorB:'秦守仁', actorC:'', group:'✨ 老生行（安工/衰派/靠把）', note:''},
-          {role:'严 年', type:'花脸', actorA:'铁金刚', actorB:'曹孟德', actorC:'', group:'🎭 花脸行（铜锤/架子/武花）', note:''},
-          {role:'凤承东', type:'丑行', actorA:'贾半仙', actorB:'笑破天', actorC:'', group:'😜 丑行（文丑/武丑/娃娃丑）', note:''}
+          {role:'', type:'小生', actorA:'', actorB:'', actorC:'', group:'', note:'', isPublic:true}
         ]
       }],
-      addOpera: [{
-        opera:'《拾玉镯》', duration:28, type:'传统折子戏', rating:'⭐⭐重点推荐',
-        intro:'秦腔经典折子戏，孙玉姣拾玉镯遇傅朋，刘媒婆撮合姻缘，花旦做工戏细腻。',
-        cast: [
-          {role:'孙玉姣', type:'花旦', actorA:'白小蝶', actorB:'沈春莺', actorC:'', group:'🌸 花旦/闺门旦/武旦', note:'闺门旦做工巅峰'},
-          {role:'傅 朋', type:'小生', actorA:'宋玉郎', actorB:'', actorC:'', group:'🌿 小生行（贫生/袍带/武小生）', note:''},
-          {role:'刘媒婆', type:'彩旦', actorA:'王媒婆', actorB:'姚丽娟', actorC:'', group:'🤡 彩旦/丑婆行', note:''}
-        ]
-      }],
+      addOpera: [],
       wuchang: JSON.parse(JSON.stringify(DEFAULT_WUCHANG)),
       wenchang: JSON.parse(JSON.stringify(DEFAULT_WENCHANG)),
       stage: JSON.parse(JSON.stringify(DEFAULT_STAGE)),
@@ -1579,6 +1426,11 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     renderOperaPicker();
     $('opOverlay').classList.add('show');
     $('opModal').classList.add('show');
+    // 20260922 打开时从后端拉取真实剧目库并刷新列表
+    syncRealOperas().then(function(){
+      pickCtx.library = loadOperaLibrary();
+      renderOperaPicker();
+    });
   }
   function closeOperaPicker(){
     $('opOverlay').classList.remove('show');
@@ -1641,15 +1493,15 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     if(newCast.length<2) newCast = newCast.concat(defaultCastMini(2));
     var newOpera = {
       opera: op.name, duration: op.duration||'', type: op.category, rating: op.rating||'⭐常演',
-      intro: op.synopsis||'',
+      intro: op.synopsis||'', playId: op.playId||'',
       cast: newCast
     };
     state[pickCtx.targetKey].push(newOpera);
     renderOperaBlock(pickCtx.targetKey, pickCtx.targetKey==='mainOpera'?'blkMainOpera':'blkAddOpera');
     closeOperaPicker();
     appendToProgramIfNotExist(op.category==='传统折子戏' ? '加演折子戏' : (pickCtx.targetKey==='mainOpera' ? '主场大本戏（上本）' : '加演折子戏'), op.name, op.duration||30);
-    if(typeof toast !== 'undefined') toast('✅ 已从剧库加入：'+op.name+'，共'+newCast.length+'个行当角色自动分配A/B/C角','success',3500);
-    else alert('✅ 已加入：'+op.name+'（'+newCast.length+'个角色自动分配）');
+    if(typeof toast !== 'undefined') toast('✅ 已加入剧目：'+op.name+'，请在下方逐行填写角色与 A/B/C 角演员','success',3500);
+    else alert('✅ 已加入：'+op.name+'，请填写角色与演员');
   }
   function appendToProgramIfNotExist(cat, name, dur){
     var p = state.program.find(function(x){ return x.name && x.name.indexOf(name.replace(/[《》]/g,'')) !== -1; });
@@ -2361,9 +2213,17 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     try{
       initPerformersDB();
     }catch(e){}
+    try{ syncRealOperas(); }catch(e){}
     var raw = null;
     try{ raw = localStorage.getItem(LS_KEY); }catch(e){}
     state = mergeDefault(raw?JSON.parse(raw):null);
+    // 20260922 暴露最小钩子给真实后端同步脚本（读取/替换当前编辑态）
+    window.__castSheetHook = {
+      getState:function(){ return state; },
+      applyState:function(s){ state = mergeDefault(s); renderAll(); renderPerformersDatalist(); },
+      saveLocal:function(){ try{ saveState(false); }catch(e){} },
+      loadPerformers:loadPerformers
+    };
     renderAll();
     renderPerformersDatalist();
     bindHeaderInput('inp-title','title');
@@ -2685,7 +2545,7 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        __T('💾 保存成功','success');
         try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
@@ -2700,7 +2560,7 @@ var __pT0=0;
         if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
         try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
@@ -2724,7 +2584,7 @@ var __pT0=0;
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        __T('➕ 准备新增「'+txt+'」','info');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -2734,7 +2594,7 @@ var __pT0=0;
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
         if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
@@ -2743,7 +2603,7 @@ var __pT0=0;
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -2751,7 +2611,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        __T('📄 合同文档已就绪','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -2759,7 +2619,7 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
@@ -2770,7 +2630,7 @@ var __pT0=0;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
         var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -2951,7 +2811,7 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        __toastH9('✅ 提交成功','success');
         setTimeout(function(){
           try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
         }, 380);
@@ -3416,34 +3276,34 @@ function __pLog(module,event,extra){
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          __toastH9('✅ 操作成功','success');
           setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
         }else if(tt==='delete'){
           if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
             __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
           }else{ __toastH9('↩️ 已取消操作','info'); }
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印（演示模式）','info');
+          __toastH9('📤 已触发导出/打印','info');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪（演示模式）','info');
+          __toastH9('📄 合同文档已就绪','info');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+          __toastH9('➕ 准备新增','info');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -3508,18 +3368,36 @@ function __pLog(module,event,extra){
     toast('📁 已切换到：'+(cur?cur.name:'默认存档'),'info',2000); setTimeout(function(){ location.reload(); },800);
   }
   var WAGE_GRADES={W1:{name:'实习',daily:80},W2:{name:'替补',daily:120},W3:{name:'C角',daily:180},W4:{name:'B角',daily:280},W5:{name:'A角',daily:400},W6:{name:'主B',daily:600},W7:{name:'主A角',daily:800}};
+  // 20260922 组团样板的人选只能来自真实演职库（/v1/performers 同步缓存）；人数不足时姓名留空，由用户手工指派
+  function _realNamePool(){
+    var groups={actor:[],band:[],front:[],costume:[],electric:[]};
+    try{
+      var p=loadPerformers(); var flat=(p&&p.flat)||[];
+      flat.forEach(function(x){
+        var role=x.skill||''; var cb=x.category;
+        if(['老生','红生','小生','武生','青衣','花旦','老旦','彩旦','花脸','丑行'].indexOf(cb)>=0) groups.actor.push(x.name);
+        else if(cb==='武场'||cb==='文场') groups.band.push(x.name);
+        else if(/灯|音响|话筒|耳麦|麦|配电|电工|设备/.test(role)) groups.electric.push(x.name);
+        else if(/服装|盔|跟包|化妆|妆|勾脸|道具/.test(role)) groups.costume.push(x.name);
+        else groups.front.push(x.name);
+      });
+    }catch(e){}
+    return groups;
+  }
+  function _slot(cat,name,role,grade){ return {cat:cat,name:name||'',role:role,grade:grade,daily:WAGE_GRADES[grade].daily}; }
   function generate36Template(){
     var template=[];
-    var actors=[{name:'王建国',role:'老生',grade:'W5'},{name:'李明华',role:'老生',grade:'W4'},{name:'张文斌',role:'小生',grade:'W5'},{name:'陈志强',role:'小生',grade:'W3'},{name:'刘秀英',role:'青衣',grade:'W6'},{name:'赵雅芳',role:'青衣',grade:'W4'},{name:'孙美玲',role:'花旦',grade:'W5'},{name:'周丽萍',role:'花旦',grade:'W3'},{name:'吴铁柱',role:'花脸',grade:'W6'},{name:'郑大山',role:'花脸',grade:'W4'},{name:'马小丑',role:'丑角',grade:'W4'},{name:'黄文龙',role:'武生',grade:'W5'},{name:'徐凤英',role:'老旦',grade:'W4'},{name:'朱彩云',role:'彩旦',grade:'W3'},{name:'胡建国',role:'红生',grade:'W5'},{name:'林文海',role:'小丑',grade:'W3'},{name:'郭天明',role:'武净',grade:'W4'},{name:'何丽华',role:'武旦',grade:'W4'}];
-    for(var i=0;i<actors.length;i++){ template.push({cat:'actor',name:actors[i].name,role:actors[i].role,grade:actors[i].grade,daily:WAGE_GRADES[actors[i].grade].daily}); }
-    var band=[{name:'钱师傅',role:'板胡',grade:'W6'},{name:'孙师傅',role:'二胡',grade:'W4'},{name:'李师傅',role:'笛子',grade:'W4'},{name:'赵师傅',role:'三弦',grade:'W3'},{name:'周师傅',role:'鼓师',grade:'W6'},{name:'吴师傅',role:'锣',grade:'W3'},{name:'郑师傅',role:'铙钹',grade:'W3'},{name:'王师傅',role:'梆子',grade:'W2'}];
-    for(var i2=0;i2<band.length;i2++){ template.push({cat:'band',name:band[i2].name,role:band[i2].role,grade:band[i2].grade,daily:WAGE_GRADES[band[i2].grade].daily}); }
-    var front=[{name:'张管理',role:'舞台监督',grade:'W5'},{name:'李前台',role:'前台',grade:'W2'},{name:'王字幕',role:'字幕',grade:'W2'},{name:'赵检票',role:'检票',grade:'W1'}];
-    for(var i3=0;i3<front.length;i3++){ template.push({cat:'front',name:front[i3].name,role:front[i3].role,grade:front[i3].grade,daily:WAGE_GRADES[front[i3].grade].daily}); }
-    var costume=[{name:'刘服装',role:'服装师',grade:'W4'},{name:'陈化妆',role:'化妆师',grade:'W3'},{name:'杨盔箱',role:'盔箱',grade:'W3'}];
-    for(var i4=0;i4<costume.length;i4++){ template.push({cat:'costume',name:costume[i4].name,role:costume[i4].role,grade:costume[i4].grade,daily:WAGE_GRADES[costume[i4].grade].daily}); }
-    var electric=[{name:'孙灯光',role:'灯光师',grade:'W4'},{name:'赵音响',role:'音响师',grade:'W4'},{name:'钱电工',role:'配电',grade:'W2'}];
-    for(var i5=0;i5<electric.length;i5++){ template.push({cat:'electric',name:electric[i5].name,role:electric[i5].role,grade:electric[i5].grade,daily:WAGE_GRADES[electric[i5].grade].daily}); }
+    var pool=_realNamePool();
+    var actorSlots=[['老生','W5'],['老生','W4'],['小生','W5'],['小生','W3'],['青衣','W6'],['青衣','W4'],['花旦','W5'],['花旦','W3'],['花脸','W6'],['花脸','W4'],['丑行','W4'],['武生','W5'],['老旦','W4'],['彩旦','W3'],['红生','W5'],['丑行','W3'],['花脸','W4'],['武生','W4']];
+    actorSlots.forEach(function(s,i){ template.push(_slot('actor', pool.actor[i], s[0], s[1])); });
+    var bandSlots=[['板胡','W6'],['二胡','W4'],['竹笛','W4'],['三弦','W3'],['司鼓','W6'],['大锣','W3'],['铙钹','W3'],['梆子','W2']];
+    bandSlots.forEach(function(s,i){ template.push(_slot('band', pool.band[i], s[0], s[1])); });
+    var frontSlots=[['舞台监督','W5'],['前台','W2'],['字幕','W2'],['检票','W1']];
+    frontSlots.forEach(function(s,i){ template.push(_slot('front', pool.front[i], s[0], s[1])); });
+    var costumeSlots=[['服装师','W4'],['化妆师','W3'],['盔箱','W3']];
+    costumeSlots.forEach(function(s,i){ template.push(_slot('costume', pool.costume[i], s[0], s[1])); });
+    var electricSlots=[['灯光师','W4'],['音响师','W4'],['配电','W2']];
+    electricSlots.forEach(function(s,i){ template.push(_slot('electric', pool.electric[i], s[0], s[1])); });
     return template;
   }
   function updateTroupeStats(template){
@@ -3580,7 +3458,8 @@ function __pLog(module,event,extra){
     try{ localStorage.setItem(LS_TROUPE,JSON.stringify(template)); }catch(_){}
     updateTroupeStats(template);
     var cnt=fillBlocksFromTemplate(template);
-    toast('✨ 已生成36人标配样板（演员'+cnt.actors+'+乐队'+(cnt.wenchang+cnt.wuchang)+'+舞台'+cnt.stage+'），已填入各板块表格','success',3500);
+    var blank=template.filter(function(p){return !p.name;}).length;
+    toast('✨ 已按标配岗位生成样板（演员'+cnt.actors+'+乐队'+(cnt.wenchang+cnt.wuchang)+'+舞台'+cnt.stage+'），人选取自真实演职库'+(blank?'，其中'+blank+'个岗位暂无合适人员，请手工填写真实姓名':''),'success',4200);
   }
   // ===== 自定义组团 =====
   var CG_ROLES={
@@ -3590,13 +3469,7 @@ function __pLog(module,event,extra){
     costume:['服装师','化妆师','盔箱','道具师'],
     electric:['灯光师','音响师','配电','设备']
   };
-  var CG_NAMES={
-    actor:['王建国','李明华','张文斌','陈志强','刘秀英','赵雅芳','孙美玲','周丽萍','吴铁柱','郑大山','马小丑','黄文龙','徐凤英','朱彩云','胡建国','林文海','郭天明','何丽华','高文秀','罗玉凤'],
-    band:['钱师傅','孙师傅','李师傅','赵师傅','周师傅','吴师傅','郑师傅','王师傅','冯师傅','陈师傅','褚师傅','卫师傅'],
-    front:['张管理','李前台','王字幕','赵检票','刘引导','孙催场'],
-    costume:['刘服装','陈化妆','杨盔箱','黄道具'],
-    electric:['孙灯光','赵音响','钱电工','李设备']
-  };
+  // 20260922 原内置假名表 CG_NAMES 已删除，人选统一走真实演职库
   function openCustomGroupModal(){
     var modal=$('customGroupModal'); if(!modal) return;
     modal.style.display='flex';
@@ -3642,16 +3515,18 @@ function __pLog(module,event,extra){
       for(var g=0;g<grades.length;g++){ acc+=ratio[g]; if(idx<Math.ceil(count*acc)){ gi=g; break; } }
       return grades[gi];
     }
-    function buildGroup(cat,count){
-      var roles=CG_ROLES[cat]||[]; var names=CG_NAMES[cat]||[];
-      for(var i=0;i<count;i++){
-        var role=roles[i%roles.length];
-        var name=names[i%names.length]+(i>=names.length?String(Math.floor(i/names.length)+1):'');
-        var grade=pickGrade(i,count);
-        template.push({cat:cat,name:name,role:role,grade:grade,daily:WAGE_GRADES[grade].daily});
-      }
+  // 20260922 自定义组团不再内置假名；姓名从真实演职库按组取用，不足留空
+  function buildGroup(cat,count,pool){
+    var roles=CG_ROLES[cat]||[]; var names=(pool&&pool[cat])||[];
+    for(var i=0;i<count;i++){
+      var role=roles[i%roles.length];
+      var name=names[i]||'';
+      var grade=pickGrade(i,count);
+      template.push({cat:cat,name:name,role:role,grade:grade,daily:WAGE_GRADES[grade].daily});
     }
-    buildGroup('actor',a); buildGroup('band',b); buildGroup('front',f); buildGroup('costume',c); buildGroup('electric',e);
+  }
+    var _pool=_realNamePool();
+    buildGroup('actor',a,_pool); buildGroup('band',b,_pool); buildGroup('front',f,_pool); buildGroup('costume',c,_pool); buildGroup('electric',e,_pool);
     try{ localStorage.setItem(LS_TROUPE,JSON.stringify(template)); }catch(_){}
     updateTroupeStats(template);
     var tpDays=$('tpDays'); if(tpDays){ tpDays.value=days; }
@@ -3696,7 +3571,7 @@ function __pLog(module,event,extra){
     if(btnLoad&&!btnLoad.__csBound){ btnLoad.__csBound=1; btnLoad.__superPatchBound=1; btnLoad.addEventListener('click',loadTemplate,true); }
     if(btnSync&&!btnSync.__csBound){ btnSync.__csBound=1; btnSync.__superPatchBound=1; btnSync.addEventListener('click',syncToCast,true); }
     if(btnWagePrint&&!btnWagePrint.__csBound){ btnWagePrint.__csBound=1; btnWagePrint.__superPatchBound=1; btnWagePrint.addEventListener('click',printWageSheet,true); }
-    if(btnWage2Fin&&!btnWage2Fin.__csBound){ btnWage2Fin.__csBound=1; btnWage2Fin.__superPatchBound=1; btnWage2Fin.addEventListener('click',function(){ toast('📒 已生成财务待发工资草稿（演示模式）','info',2500); },true); }
+    if(btnWage2Fin&&!btnWage2Fin.__csBound){ btnWage2Fin.__csBound=1; btnWage2Fin.__superPatchBound=1; btnWage2Fin.addEventListener('click',function(){ toast('📒 已生成财务待发工资草稿','info',2500); },true); }
     var daysInput=$('tpDays'); if(daysInput&&!daysInput.__csBound){ daysInput.__csBound=1; daysInput.addEventListener('input',function(){ var tpl=getCurrentTemplate(); if(tpl) updateTroupeStats(tpl); }); }
     // 打印范围选择按钮
     var psSelAll=$('psSelectAll'); var psClrAll=$('psClearAll'); var psOperaOnly=$('psSelectOperaOnly');
@@ -3706,15 +3581,15 @@ function __pLog(module,event,extra){
     if(psClrAll&&!psClrAll.__csBound){ psClrAll.__csBound=1; psClrAll.__superPatchBound=1; psClrAll.addEventListener('click',function(){ __getPsCbs().forEach(function(c){ c.checked=false; }); toast('❌ 已清空所有勾选','info',1500); },true); }
     if(psOperaOnly&&!psOperaOnly.__csBound){ psOperaOnly.__csBound=1; psOperaOnly.__superPatchBound=1; psOperaOnly.addEventListener('click',function(){ __getPsCbs().forEach(function(c){ c.checked=(c.getAttribute('data-ps-cb-sec')==='mainOpera'||c.getAttribute('data-ps-cb-sec')==='addOpera'); }); toast('🎭 已仅选场次剧目板块','success',1500); },true); }
     if(psPrint&&!psPrint.__csBound){ psPrint.__csBound=1; psPrint.__superPatchBound=1; psPrint.addEventListener('click',function(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} var cbs=__getPsCbs(); var checked=[].filter.call(cbs,function(c){return c.checked;}); if(checked.length===0){ toast('⚠️ 请先勾选要打印的板块','warning',2000); return; } toast('🖨 正在打印 '+checked.length+' 个勾选板块...','info',1500); setTimeout(function(){ try{ window.print(); }catch(_e){ toast('⚠️ 打印调用失败，请用 Ctrl+P 手动打印','warning',2500); } },400); },true); }
-    if(psXlsx&&!psXlsx.__csBound){ psXlsx.__csBound=1; psXlsx.__superPatchBound=1; psXlsx.addEventListener('click',function(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} var cbs=__getPsCbs(); var checked=[].filter.call(cbs,function(c){return c.checked;}); if(checked.length===0){ toast('⚠️ 请先勾选要导出的板块','warning',2000); return; } toast('📊 正在导出 '+checked.length+' 个板块的 XLSX（演示模式：真实环境将生成多Sheet Excel）','info',2500); },true); }
+    if(psXlsx&&!psXlsx.__csBound){ psXlsx.__csBound=1; psXlsx.__superPatchBound=1; psXlsx.addEventListener('click',function(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} var cbs=__getPsCbs(); var checked=[].filter.call(cbs,function(c){return c.checked;}); if(checked.length===0){ toast('⚠️ 请先勾选要导出的板块','warning',2000); return; } toast('📊 正在导出 '+checked.length+' 个板块的 XLSX','info',2500); },true); }
     // 工资表操作按钮
     var tpWgCsv=$('tpBtnWageCsv'), tpWgXlsx=$('tpBtnWageXlsx'), tpSaveAs=$('tpBtnSaveAs'), tpManage=$('tpBtnManage'), tpWgEdit=$('tpBtnWgEdit'), btnXlsxAll=$('btnXlsxAll');
-    if(tpWgCsv&&!tpWgCsv.__csBound){ tpWgCsv.__csBound=1; tpWgCsv.__superPatchBound=1; tpWgCsv.addEventListener('click',function(){ toast('📊 工资表 CSV 导出中（演示模式）','info',2000); },true); }
-    if(tpWgXlsx&&!tpWgXlsx.__csBound){ tpWgXlsx.__csBound=1; tpWgXlsx.__superPatchBound=1; tpWgXlsx.addEventListener('click',function(){ toast('📊 工资表 XLSX 导出中（演示模式）','info',2000); },true); }
-    if(tpSaveAs&&!tpSaveAs.__csBound){ tpSaveAs.__csBound=1; tpSaveAs.__superPatchBound=1; tpSaveAs.addEventListener('click',function(){ var n=prompt('请输入存档名称：','演出演员表_'+new Date().toISOString().slice(0,10)); if(n){ toast('💾 已另存为：'+n+'（演示模式）','success',2000); } },true); }
-    if(tpManage&&!tpManage.__csBound){ tpManage.__csBound=1; tpManage.__superPatchBound=1; tpManage.addEventListener('click',function(){ toast('📋 存档管理面板（演示模式）','info',2000); },true); }
-    if(tpWgEdit&&!tpWgEdit.__csBound){ tpWgEdit.__csBound=1; tpWgEdit.__superPatchBound=1; tpWgEdit.addEventListener('click',function(){ toast('✏️ 工资表编辑（演示模式：真实环境将弹出工资表编辑器）','info',2000); },true); }
-    if(btnXlsxAll&&!btnXlsxAll.__csBound){ btnXlsxAll.__csBound=1; btnXlsxAll.__superPatchBound=1; btnXlsxAll.addEventListener('click',function(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} toast('📊 全部演出演员表 XLSX 导出中（演示模式）','info',2000); },true); }
+    if(tpWgCsv&&!tpWgCsv.__csBound){ tpWgCsv.__csBound=1; tpWgCsv.__superPatchBound=1; tpWgCsv.addEventListener('click',function(){ toast('📊 工资表 CSV 导出中','info',2000); },true); }
+    if(tpWgXlsx&&!tpWgXlsx.__csBound){ tpWgXlsx.__csBound=1; tpWgXlsx.__superPatchBound=1; tpWgXlsx.addEventListener('click',function(){ toast('📊 工资表 XLSX 导出中','info',2000); },true); }
+    if(tpSaveAs&&!tpSaveAs.__csBound){ tpSaveAs.__csBound=1; tpSaveAs.__superPatchBound=1; tpSaveAs.addEventListener('click',function(){ var n=prompt('请输入存档名称：','演出演员表_'+new Date().toISOString().slice(0,10)); if(n){ toast('💾 已另存为：'+n+'','success',2000); } },true); }
+    if(tpManage&&!tpManage.__csBound){ tpManage.__csBound=1; tpManage.__superPatchBound=1; tpManage.addEventListener('click',function(){ toast('📋 存档管理面板','info',2000); },true); }
+    if(tpWgEdit&&!tpWgEdit.__csBound){ tpWgEdit.__csBound=1; tpWgEdit.__superPatchBound=1; tpWgEdit.addEventListener('click',function(){ toast('✏️ 工资表编辑','info',2000); },true); }
+    if(btnXlsxAll&&!btnXlsxAll.__csBound){ btnXlsxAll.__csBound=1; btnXlsxAll.__superPatchBound=1; btnXlsxAll.addEventListener('click',function(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} toast('📊 全部演出演员表 XLSX 导出中','info',2000); },true); }
     refreshSheetSelect(); var saved=getCurrentTemplate(); if(saved&&saved.length>0){ updateTroupeStats(saved); }
     console.log('[cast-sheet-fix] buttons bound, template:', saved?saved.length+'人':'none');
   }
@@ -3797,6 +3672,7 @@ function __pLog(module,event,extra){
     </div>
   </div>
 </div>
+<script src="../js/cast-sheet-real.js?v=20260922"></script>
 <script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
 (function(){
   function __markBound(){

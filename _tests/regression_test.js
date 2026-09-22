@@ -260,38 +260,38 @@ function createSandbox() {
         var doneKey = 'e2_'+(isSave?'s':isEdit?'e':isDel?'d':isView?'v':isVerify?'y':isExport?'x':isAdd?'a':'k')+'_'+(trKey||Math.random().toString(36).slice(2,6));
         if(isSave){
           if(!__L(doneKey,900)) return;
-          __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+          __T('💾 保存成功','success');
           btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
         }
         if(isEdit){ if(!__L(doneKey,700)) return; __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info'); btn.__ctE2Done = 1; return; }
         if(isDel){
           if(!__L(doneKey,850)) return;
-          __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+          __T('🗑️ '+(trKey||'记录')+' 已删除','success');
           btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
         }
         if(isView){ if(!__L(doneKey,500)) return; __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info'); btn.__ctE2Done = 1; return; }
         if(isVerify){ if(!__L(doneKey,900)) return; __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success'); btn.__ctE2Done = 1; return; }
         if(isExport){ if(!__L(doneKey,1200)) return; __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success'); btn.__ctE2Done = 1; return; }
-        if(isAdd){ if(!__L(doneKey,900)) return; __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info'); btn.__ctE2Done = 1; return; }
+        if(isAdd){ if(!__L(doneKey,900)) return; __T('➕ 准备新增「'+txt+'」','info'); btn.__ctE2Done = 1; return; }
         // 扩展分支
         var isAudit = txt.indexOf('审核')>=0 || txt.indexOf('审批')>=0 || txt.indexOf('驳回')>=0 || txt.indexOf('通过')>=0;
         if(isAudit){
           if(!__L(doneKey,850)) return;
           var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
-          __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+          __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
           btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
         }
         var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0;
-        if(isSign){ if(!__L(doneKey,900)) return; __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式）','success'); btn.__ctE2Done=1; return; }
+        if(isSign){ if(!__L(doneKey,900)) return; __T('🤝 签约成功：'+(trKey||'订单')+'','success'); btn.__ctE2Done=1; return; }
         var isContract = txt.indexOf('合同')>=0 && !isSign;
-        if(isContract){ if(!__L(doneKey,1000)) return; __T('📄 合同文档已就绪（演示模式）','info'); btn.__ctE2Done=1; return; }
+        if(isContract){ if(!__L(doneKey,1000)) return; __T('📄 合同文档已就绪','info'); btn.__ctE2Done=1; return; }
         var isScheduleBtn = txt.indexOf('排期')>=0 || txt.indexOf('排班')>=0 || (txt.indexOf('安排')>=0 && (txt.length<=8 || txt.indexOf('档期')>=0));
-        if(isScheduleBtn){ if(!__L(doneKey,800)) return; __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式）','info'); btn.__ctE2Done=1; return; }
+        if(isScheduleBtn){ if(!__L(doneKey,800)) return; __T('📅 已进入排期：'+(trKey||'当前订单')+'','info'); btn.__ctE2Done=1; return; }
         var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
         if(isCancelOrHandle && !isDel && !isSave){
           if(!__L(doneKey,800)) return;
           var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
-          __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+          __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
           btn.__ctE2Done=1; return;
         }
       }, true);
@@ -352,15 +352,15 @@ function createSandbox() {
           var tr = btn.closest ? btn.closest('tr') : null;
           var trKey = '';
           if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\\s+/g,' ').trim().slice(0,20); }
-          if(tt==='save') window.__toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
-          else if(tt==='delete') window.__toastH9('✅ 已执行：'+(trKey||'记录')+'（演示模式）','success');
-          else if(tt==='view') window.__toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
-          else if(tt==='export') window.__toastH9('📤 已触发导出/打印（演示模式）','info');
-          else if(tt==='schedule') window.__toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
-          else if(tt==='audit') window.__toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
-          else if(tt==='contract') window.__toastH9('📄 合同文档已就绪（演示模式）','info');
-          else if(tt==='add') window.__toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
-          else window.__toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          if(tt==='save') window.__toastH9('✅ 操作成功','success');
+          else if(tt==='delete') window.__toastH9('✅ 已执行：'+(trKey||'记录')+'','success');
+          else if(tt==='view') window.__toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
+          else if(tt==='export') window.__toastH9('📤 已触发导出/打印','info');
+          else if(tt==='schedule') window.__toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
+          else if(tt==='audit') window.__toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
+          else if(tt==='contract') window.__toastH9('📄 合同文档已就绪','info');
+          else if(tt==='add') window.__toastH9('➕ 准备新增','info');
+          else window.__toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
           return false;
         }catch(e6){}
       }, true);

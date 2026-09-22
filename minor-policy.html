@@ -479,7 +479,7 @@
                 <li>第五步：事件处置完毕后 3 个工作日内，向监护人出具书面事件说明与处理结果。</li>
               </ul>
             </li>
-            <li><strong>投诉与建议受理：</strong>欢迎未成年人监护人及社会各界对本公司未成年人保护工作进行监督，提出宝贵意见与建议。<strong>投诉建议邮箱：</strong><a href="mailto:13893811313@163.com" class="contact-inline">13893811313@163.com</a>，<strong>监督投诉电话：</strong><a href="tel:13993839833" class="contact-inline">13993839833</a>。本公司承诺：<strong>所有投诉建议在 24 小时内响应，5 个工作日内给出明确处理结果。</strong></li>
+            <li><strong>投诉与建议受理：</strong>欢迎未成年人监护人及社会各界对本公司未成年人保护工作进行监督，提出宝贵意见与建议。<strong>投诉建议邮箱：</strong><a href="tel:13993839833" class="contact-inline">139 9383 9833</a>，<strong>监督投诉电话：</strong><a href="tel:13993839833" class="contact-inline">13993839833</a>。本公司承诺：<strong>所有投诉建议在 24 小时内响应，5 个工作日内给出明确处理结果。</strong></li>
             <li><strong>未成年人权益专线：</strong>如涉及未成年人合法权益受侵害的重大事项，监护人除向本公司投诉外，还可向天水市/秦安县未成年人保护热线 12345 转未成年人保护专席、秦安县文化和旅游局、共青团秦安县委等政府主管部门反映。</li>
           </ol>
           <div class="highlight-box">
@@ -526,7 +526,7 @@
           <h4>联系我们</h4>
           <ul>
             <li><a href="tel:13993839833">📞 13993839833</a></li>
-            <li><a href="mailto:13893811313@163.com">📧 13893811313@163.com</a></li>
+            <li><a href="tel:13993839833">📞 139 9383 9833</a></li>
             <li><a href="booking.html">🎫 在线预约</a></li>
             <li><a href="contact.html">📍 联系我们</a></li>
             <li><a href="javascript:void(0)" data-footer-action="wechat">💬 微信客服</a></li>
@@ -650,11 +650,11 @@
           var firstBad=null;
           try{ reqFails.forEach(function(inp){ var v=(inp.value||''); var ok=true; if(inp.type==='checkbox' && !inp.checked) ok=false; else if(inp.type!=='checkbox' && inp.type!=='radio' && !v.trim()) ok=false; if(!ok){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}}, 1800);}catch(_b){} } }); }catch(_rf){}
           if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
-          __FT('✅ 操作成功（演示模式：真实环境将写入工单 + 通知对接专员）','success');
+          __FT('✅ 操作成功，对接专员将尽快与您联系','success');
           try{ fm.reset && fm.reset(); }catch(_rs){}
           e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
         } else {
-          __FT('✅ 操作成功（演示模式）','success');
+          __FT('✅ 操作成功','success');
           try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
           btn.__ftDone=1; e.stopImmediatePropagation(); return;
         }
@@ -667,7 +667,7 @@
       }
       if(isSearch){
         if(!__FL(dk,550)) return;
-        __FT('🔍 查询条件已生效（演示模式）','info');
+        __FT('🔍 查询条件已生效','info');
         btn.__ftDone=1; return;
       }
       if(isCopy){

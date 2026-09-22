@@ -84,7 +84,8 @@ const create = async ctx => {
       offsetAccount: b.offsetAccount || null,
       cashFlowType: b.cashFlowType || null,
       cashFlowAmount: b.cashFlowAmount != null ? Number(b.cashFlowAmount) : null,
-      status: b.status || 'draft',
+      // 安全：制单入口只允许落草稿，已复核状态必须由另一人经 PATCH 复核流转（M-15）
+      status: 'draft',
       makerAccountId: ctx.state.user?.sub || null,
       madeAt: new Date(),
       doubleCheckRequired: b.doubleCheckRequired != null ? !!b.doubleCheckRequired : credit + debit >= 10000,
@@ -116,15 +117,37 @@ const update = async ctx => {
   if (!old) throw new BusinessError('NOT_FOUND', '凭证不存在');
   if (old.isReconciled) throw new BusinessError('CONFLICT', '已对账凭证不允许修改');
 
+  // 复核人仅可执行"提交复核"（status=checked）这一个动作，不得借 PATCH 改任何业务字段
+  if (ctx.state.user?.role === 'finance_checker') {
+    const extra = Object.keys(b).filter(k => k !== 'status');
+    if (b.status !== 'checked' || extra.length > 0) {
+      throw new BusinessError('FORBIDDEN', '复核账号仅可提交复核，不能修改凭证内容');
+    }
+  }
+
   const patch = {};
-  ['voucherType', 'voucherCategory', 'summary', 'orderId', 'offsetAccount', 'cashFlowType', 'status', 'remark'].forEach(k => {
+  ['voucherType', 'voucherCategory', 'summary', 'orderId', 'offsetAccount', 'cashFlowType', 'remark'].forEach(k => {
     if (b[k] !== undefined) patch[k] = b[k];
   });
   ['debitAmount', 'creditAmount', 'balanceAmount', 'cashFlowAmount'].forEach(k => {
     if (b[k] != null) patch[k] = Number(b[k]);
   });
   if (b.voucherDate) patch.voucherDate = new Date(b.voucherDate);
-  if (b.status === 'checked') {
+  // 状态机：仅允许 draft→checked 单向流转；其他状态值/回退一律拒绝
+  const LEDGER_STATUS_FLOW = ['draft', 'checked'];
+  if (b.status !== undefined) {
+    if (!LEDGER_STATUS_FLOW.includes(b.status)) {
+      throw new BusinessError('VALIDATION_ERROR', 'status 仅允许 draft / checked');
+    }
+    if (b.status === 'checked' && old.status !== 'draft') {
+      throw new BusinessError('CONFLICT', '仅草稿状态凭证可提交复核');
+    }
+    if (b.status === 'draft' && old.status === 'checked') {
+      throw new BusinessError('CONFLICT', '已复核凭证不可撤回为草稿');
+    }
+    patch.status = b.status;
+  }
+  if (patch.status === 'checked') {
     patch.checkerAccountId = ctx.state.user?.sub || null;
     patch.checkedAt = new Date();
     if (String(patch.checkerAccountId) === String(old.makerAccountId)) {
@@ -143,6 +166,7 @@ const remove = async ctx => {
   const old = await prisma.finLedgerV1.findUnique({ where: { id } });
   if (!old) throw new BusinessError('NOT_FOUND', '凭证不存在');
   if (old.isReconciled) throw new BusinessError('CONFLICT', '已对账凭证不允许删除');
+  if (old.status !== 'draft') throw new BusinessError('CONFLICT', '仅草稿状态凭证可删除，已复核凭证须走作废流程');
   await prisma.finLedgerV1.delete({ where: { id } });
   await audit({ ctx, module: 'finance', action: 'LEDGER_DELETE', targetId: id, detail: { no: old.voucherNo } });
   return noContent(ctx);

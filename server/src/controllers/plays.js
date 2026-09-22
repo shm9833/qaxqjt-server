@@ -78,6 +78,9 @@ const update = async ctx => {
   ['playCode', 'title', 'subtitle', 'genre', 'author', 'posterUrl', 'synopsis', 'castSummary', 'difficultyLevel', 'status'].forEach(k => {
     if (b[k] !== undefined) patch[k] = b[k];
   });
+  // is_hot：API 字段名 snake_case，Prisma 客户端字段名 isHot（schema.prisma model Play.isHot @map("is_hot")）
+  // 不放入 allowlist 数组（数组直传给 prisma.play.update 会因字段名不匹配报 500）
+  if (b.is_hot !== undefined) patch.isHot = !!b.is_hot;
   if (b.durationMinutes != null) patch.durationMinutes = Number(b.durationMinutes);
   patch.updatedAt = new Date();
   patch.ts = BigInt(nowMs());

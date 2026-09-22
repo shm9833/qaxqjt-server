@@ -173,11 +173,13 @@ const create = async ctx => {
   const row = await prisma.scheduleV2.create({ data });
 
   try {
-    await audit(ctx, {
-      action: 'schedule.create',
-      targetId: id,
+    await audit({
+      ctx,
+      module: 'schedule',
+      action: 'SCHEDULE_CREATE',
+      targetId: row.id,
       targetType: 'schedule',
-      detail: '创建排期：' + scheduleNo + ' ' + (b.title || '')
+      detail: { scheduleNo: scheduleNo, title: b.title || b.plays || b.playTitle || '' }
     });
   } catch (_) {}
 
@@ -226,11 +228,13 @@ const update = async ctx => {
   const row = await prisma.scheduleV2.update({ where: { id }, data });
 
   try {
-    await audit(ctx, {
-      action: 'schedule.update',
+    await audit({
+      ctx,
+      module: 'schedule',
+      action: 'SCHEDULE_UPDATE',
       targetId: id,
       targetType: 'schedule',
-      detail: '更新排期：' + (row.scheduleNo || id)
+      detail: { scheduleNo: row.scheduleNo || id, fields: Object.keys(data).filter(k => k !== 'ts') }
     });
   } catch (_) {}
 
@@ -244,11 +248,13 @@ const remove = async ctx => {
   if (!exists) throw new BusinessError('NOT_FOUND', '排期不存在');
   await prisma.scheduleV2.delete({ where: { id } });
   try {
-    await audit(ctx, {
-      action: 'schedule.delete',
+    await audit({
+      ctx,
+      module: 'schedule',
+      action: 'SCHEDULE_DELETE',
       targetId: id,
       targetType: 'schedule',
-      detail: '删除排期：' + (exists.scheduleNo || id)
+      detail: { scheduleNo: exists.scheduleNo || id }
     });
   } catch (_) {}
   return noContent(ctx);

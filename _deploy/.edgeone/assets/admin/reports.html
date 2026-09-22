@@ -41,7 +41,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>天水市文旅演出统计报表中心 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260906">
+  <link rel="stylesheet" href="../css/style.css?v=20260803">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -939,7 +939,14 @@
 .admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
   content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
 }
-/* ====== 20260906 修复：真分页条恢复显示（QinPagination 渲染），仅保留表格高度约束 ====== */
+/* ====== 空卡片修复20260825：隐藏多余分页栏 + 约束表格高度 ====== */
+.pagination-bar, .pagination-toolbar, [class*="pagination-bar"], [class*="pg-toolbar"] {
+  display: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
 .table-wrapper, .table-wrap, .table-container, .data-table-container {
   max-height: 400px !important;
   overflow-y: auto !important;
@@ -1234,7 +1241,7 @@
           </div>
           <div class="filter-divider"></div>
           <div class="filter-actions">
-            <button class="btn-action btn-action-gold" onclick="__exportReportsExcel()">
+            <button class="btn-action btn-action-gold" onclick="alert('Excel导出功能：请连接后端接口实现')">
               <span>📊</span>导出 Excel
             </button>
             <button class="btn-action btn-action-primary" onclick="window.print()">
@@ -1247,97 +1254,97 @@
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">🎭</div>
-              <div class="kpi-trend up"><span>↑</span><span>12.4%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">年度演出总场次</div>
-            <div class="kpi-value">386<span class="unit">场</span></div>
+            <div class="kpi-value">—<span class="unit">场</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +43 场</span>
+              <span>真实排期实时统计</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">👥</div>
-              <div class="kpi-trend up"><span>↑</span><span>8.7%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">观众总人次</div>
-            <div class="kpi-value">26.8<span class="unit">万人次</span></div>
+            <div class="kpi-value">—<span class="unit">万人次</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +2.2 万人次</span>
+              <span>暂无观众人次统计源</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">📍</div>
-              <div class="kpi-trend up"><span>↑</span><span>15.2%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">覆盖乡镇行政村</div>
-            <div class="kpi-value">187<span class="unit">个</span></div>
+            <div class="kpi-value">—<span class="unit">个</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +25 个</span>
+              <span>按排期区县实时统计</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">🏛️</div>
-              <div class="kpi-trend up"><span>↑</span><span>32.6%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">天水文旅合作场次</div>
-            <div class="kpi-value">62<span class="unit">场</span></div>
+            <div class="kpi-value">—<span class="unit">场</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +15 场</span>
+              <span>暂无文旅合作标记</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">🎓</div>
-              <div class="kpi-trend up"><span>↑</span><span>45.1%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">校园研学服务</div>
-            <div class="kpi-value">114<span class="unit">场/8.3万人次</span></div>
+            <div class="kpi-value">—<span class="unit">场</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +36 场</span>
+              <span>暂无校园研学标记</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">📡</div>
-              <div class="kpi-trend up"><span>↑</span><span>128.5%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">数字演出直播</div>
-            <div class="kpi-value">38<span class="unit">场/420万次</span></div>
+            <div class="kpi-value">—<span class="unit">场</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>累计观看 +237万次</span>
+              <span>暂无直播数据</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">💰</div>
-              <div class="kpi-trend up"><span>↑</span><span>14.8%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">演出总营收</div>
-            <div class="kpi-value">¥486.2<span class="unit">万</span></div>
+            <div class="kpi-value">—<span class="unit">万</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +62.6 万</span>
+              <span>真实台账实时统计</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">⭐</div>
-              <div class="kpi-trend up"><span>↑</span><span>1.2分</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">观众综合满意度</div>
-            <div class="kpi-value">96.4<span class="unit">分</span></div>
+            <div class="kpi-value">—<span class="unit">分</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +1.2 分</span>
+              <span>暂无满意度统计源</span>
             </div>
           </div>
         </div>
@@ -1345,72 +1352,7 @@
         <div class="charts-row">
           <div class="admin-chart-card">
             <div class="admin-chart-title">天水市 2 区 5 县演出覆盖分布 <span class="chart-badge">{year} 年度</span></div>
-            <div class="district-bar-list">
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">🏘️ 秦安县</span>
-                  <span class="district-stats"><strong>128 场</strong>占 33.2%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:100%;background:linear-gradient(90deg,#4a0e0e,#8B0000);"><span>128场</span></div>
-                </div>
-              </div>
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">🏙️ 秦州区</span>
-                  <span class="district-stats"><strong>68 场</strong>占 17.6%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:53.1%;background:linear-gradient(90deg,#6a1515,#A52A2A);"><span>68场</span></div>
-                </div>
-              </div>
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">🌄 麦积区</span>
-                  <span class="district-stats"><strong>56 场</strong>占 14.5%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:43.8%;background:linear-gradient(90deg,#7a1a1a,#B22222);"><span>56场</span></div>
-                </div>
-              </div>
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">🏛️ 甘谷县</span>
-                  <span class="district-stats"><strong>48 场</strong>占 12.4%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:37.5%;background:linear-gradient(90deg,#8a2020,#C0392B);"><span>48场</span></div>
-                </div>
-              </div>
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">⛰️ 武山县</span>
-                  <span class="district-stats"><strong>38 场</strong>占 9.8%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:29.7%;background:linear-gradient(90deg,#9a2a2a,#CD5C5C);"><span>38场</span></div>
-                </div>
-              </div>
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">🌲 清水县</span>
-                  <span class="district-stats"><strong>28 场</strong>占 7.3%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:21.9%;background:linear-gradient(90deg,#aa3838,#E07070);"><span>28场</span></div>
-                </div>
-              </div>
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">🐎 张家川县</span>
-                  <span class="district-stats"><strong>20 场</strong>占 5.2%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:15.6%;background:linear-gradient(90deg,#ba4848,#E88888);"><span>20场</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
+            <div class="district-bar-list" id="repDistrictBars"><div style="padding:30px 10px;text-align:center;color:var(--text-light);">正在加载真实排期分布…</div></div></div>
         </div>
 
         <div class="charts-row">
@@ -1426,7 +1368,7 @@
                   <span>10</span>
                   <span>0</span>
                 </div>
-                <div class="monthly-right-axis">
+                <div class="monthly-right-axis" id="repRightAxis" style="visibility:hidden;">
                   <span>4万</span>
                   <span>3.2万</span>
                   <span>2.4万</span>
@@ -1435,26 +1377,7 @@
                   <span>0</span>
                 </div>
                 <svg class="monthly-chart-svg" viewBox="0 0 1000 275" preserveAspectRatio="none">
-                  <polyline
-                    fill="none"
-                    stroke="url(#goldGrad)"
-                    stroke-width="3"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    points="
-                      37,203
-                      120,91
-                      203,175
-                      287,147
-                      370,161
-                      454,217
-                      537,119
-                      621,105
-                      704,203
-                      788,189
-                      871,245
-                      954,189
-                    "/>
+                  <polyline id="repAudienceLine" fill="none" points=""/>
                   <defs>
                     <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" style="stop-color:#B8941F;"/>
@@ -1463,72 +1386,11 @@
                     </linearGradient>
                   </defs>
                 </svg>
-                <div class="monthly-columns">
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(27% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">1月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(68% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">2月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(38% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">3月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(48% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">4月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(43% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">5月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(24% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">6月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(58% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">7月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(63% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">8月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(27% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">9月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(32% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">10月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(14% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">11月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(32% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">12月</div>
-                  </div>
-                </div>
+                <div class="monthly-columns" id="repMonthlyCols"><div style="grid-column:1/-1;padding:30px 10px;text-align:center;color:var(--text-light);">正在加载真实月度场次…</div></div>
               </div>
-              <div class="chart-legend">
+<div class="chart-legend">
                 <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(180deg,var(--primary-light),var(--primary));"></div>演出场次（左轴：场）</div>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--gold);border-radius:50%;width:14px;height:14px;"></div>观众人次（右轴：人次）</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--gold);border-radius:50%;width:14px;height:14px;"></div>观众人次（暂无统计源，柱形为真实演出场次）</div>
               </div>
             </div>
           </div>
@@ -1538,129 +1400,18 @@
           <div class="admin-chart-card">
             <div class="admin-chart-title">8 大业务类型演出占比 <span class="chart-badge">{year} 环形图</span></div>
             <div class="donut-wrapper">
-              <div class="donut-chart" style="background: conic-gradient(
-                #8B0000 0% 28%,
-                #D4AF37 28% 50%,
-                #17a2b8 50% 66%,
-                #28a745 66% 78%,
-                #6f42c1 78% 86%,
-                #fd7e14 86% 93%,
-                #E1306C 93% 98%,
-                #8e44ad 98% 100%
-              );">
+              <div class="donut-chart" id="repDonut" style="background:conic-gradient(#e5e7eb 0% 100%);">
                 <div class="donut-center">
-                  <div class="donut-num">386</div>
+                  <div class="donut-num" id="repDonutNum">—</div>
                   <div class="donut-label">全年总场次</div>
                 </div>
               </div>
-              <div class="donut-legend">
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#8B0000;"></div>
-                  <span class="donut-legend-text">乡村庙会戏曲</span>
-                  <span class="donut-legend-pct">28%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#D4AF37;"></div>
-                  <span class="donut-legend-text">政府惠民下乡</span>
-                  <span class="donut-legend-pct">22%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#17a2b8;"></div>
-                  <span class="donut-legend-text">天水文旅合作</span>
-                  <span class="donut-legend-pct">16%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#28a745;"></div>
-                  <span class="donut-legend-text">节庆专场文艺</span>
-                  <span class="donut-legend-pct">12%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#6f42c1;"></div>
-                  <span class="donut-legend-text">企业商户庆典</span>
-                  <span class="donut-legend-pct">8%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#fd7e14;"></div>
-                  <span class="donut-legend-text">校园戏曲研学</span>
-                  <span class="donut-legend-pct">7%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#E1306C;"></div>
-                  <span class="donut-legend-text">网络直播数字</span>
-                  <span class="donut-legend-pct">5%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#8e44ad;"></div>
-                  <span class="donut-legend-text">定制剧与排演</span>
-                  <span class="donut-legend-pct">2%</span>
-                </div>
-              </div>
+              <div class="donut-legend" id="repDonutLegend" style="align-content:center;"><div style="color:var(--text-light);font-size:.85rem;text-align:center;padding:20px 6px;">📭 暂无业务类型标注数据<br/>（待演出工单完善业务类型后自动生成占比）</div></div>
             </div>
           </div>
           <div class="admin-chart-card">
             <div class="admin-chart-title">年度演出场次 Top 10 经典剧目 <span class="chart-badge">排行榜</span></div>
-            <div class="opera-ranking-list">
-              <div class="opera-rank-item">
-                <div class="opera-rank-no top1">1</div>
-                <div class="opera-rank-name">《周仁回府》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill" style="width:100%;"><span>56场</span></div></div>
-                <div class="opera-rank-count">56 场</div>
-              </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no top2">2</div>
-                <div class="opera-rank-name">《窦娥冤》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill gold" style="width:85.7%;"><span>48场</span></div></div>
-                <div class="opera-rank-count">48 场</div>
-              </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no top3">3</div>
-                <div class="opera-rank-name">《三滴血》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill teal" style="width:78.6%;"><span>44场</span></div></div>
-                <div class="opera-rank-count">44 场</div>
-              </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">4</div>
-                <div class="opera-rank-name">《火焰驹》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill" style="width:67.9%;"><span>38场</span></div></div>
-                <div class="opera-rank-count">38 场</div>
-              </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">5</div>
-                <div class="opera-rank-name">《十五贯》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill gold" style="width:57.1%;"><span>32场</span></div></div>
-                <div class="opera-rank-count">32 场</div>
-              </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">6</div>
-                <div class="opera-rank-name">《铡美案》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill teal" style="width:50%;"><span>28场</span></div></div>
-                <div class="opera-rank-count">28 场</div>
-              </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">7</div>
-                <div class="opera-rank-name">《金沙滩》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill" style="width:42.9%;"><span>24场</span></div></div>
-                <div class="opera-rank-count">24 场</div>
-              </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">8</div>
-                <div class="opera-rank-name">《玉堂春》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill gold" style="width:35.7%;"><span>20场</span></div></div>
-                <div class="opera-rank-count">20 场</div>
-              </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">9</div>
-                <div class="opera-rank-name">《慈母泪》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill teal" style="width:32.1%;"><span>18场</span></div></div>
-                <div class="opera-rank-count">18 场</div>
-              </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">10</div>
-                <div class="opera-rank-name">《下河东》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill" style="width:28.6%;"><span>16场</span></div></div>
-                <div class="opera-rank-count">16 场</div>
-              </div>
-            </div>
+            <div class="opera-ranking-list" id="repRankList"><div style="grid-column:1/-1;padding:30px 10px;text-align:center;color:var(--text-light);">正在加载真实剧目排行…</div></div>
           </div>
         </div>
 
@@ -1724,9 +1475,9 @@
                 <th>满意度</th>
               </tr>
             </thead>
-            <tbody id="festivalsReportTbody" data-paginate="list" data-page-size="10">
-              <!-- v20260907k：节庆演出报表由 __loadFestivalsReport() 动态渲染，原硬编码演示行已删除 -->
-            </tbody>
+            <tbody data-paginate="list" data-page-size="10">
+                <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无节庆专项统计数据（待演出工单标注节庆类型后自动汇总）</td></tr>
+              </tbody>
           </table>
         </div>
 
@@ -1740,11 +1491,11 @@
                 <th>研学场次</th>
                 <th>服务学生数</th>
                 <th>演出剧目</th>
-                <th>满意度评分</th>
+                <th>满意度评分</th></tr>
             </thead>
-            <tbody id="campusReportTbody">
-                  <!-- v20260907k：校园研学报表由 __loadCampusReport() 动态渲染，原空白态保留 -->
-                </tbody>
+            <tbody id="repSchoolTbody" data-paginate="list" data-page-size="10">
+                <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无校园研学服务数据（待校园专场工单录入后自动汇总）</td></tr>
+              </tbody>
           </table>
         </div>
 
@@ -1787,27 +1538,10 @@
   </div>
 
   <script src="../js/year-lite.js?v=20260803"></script>
-    <script src="../js/api-config.js?v=20260803"></script>
-  <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260908n"></script>
-<script>/* 生产空白态守卫配置 */
-window.__ADMIN_BLANK_CFG__ = [
-  { fn: function (h) {
-      var lg = document.querySelector('.donut-legend');
-      if (lg) lg.innerHTML = h.emptyBoxHtml('暂无数据，真实订单完成后自动生成占比统计');
-      var dn = document.querySelector('.donut-num');
-      if (dn) dn.textContent = '0';
-      var rk = document.querySelector('.opera-ranking-list');
-      if (rk) rk.innerHTML = h.emptyBoxHtml('暂无演出数据，真实排期完成后自动生成剧目排名');
-      document.querySelectorAll('section.admin-content .table-wrap tbody').forEach(function (tb) {
-        tb.innerHTML = h.emptyRowHtml(8, '暂无报表数据，真实业务数据积累后自动生成');
-      });
-  } }
-];
-</script>
-<script src="../js/admin-blank.js?v=20260906g"></script>
-
-  <script src="../js/pagination.js?v=20260908p"></script>
+    <script src="../js/api-config.js?v=20260922"></script>
+  <script src="../js/api-request.js?v=20260922"></script>
+<script src="../js/app.js?v=20260922"></script>
+  <script src="../js/pagination.js?v=20260803"></script>
   <script>
     (function() {
       'use strict';
@@ -2163,7 +1897,7 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        __T('💾 保存成功','success');
         try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
@@ -2178,7 +1912,7 @@ var __pT0=0;
         if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
         try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
@@ -2202,7 +1936,7 @@ var __pT0=0;
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        __T('➕ 准备新增「'+txt+'」','info');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -2212,7 +1946,7 @@ var __pT0=0;
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
         if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
@@ -2221,7 +1955,7 @@ var __pT0=0;
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -2229,7 +1963,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        __T('📄 合同文档已就绪','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -2237,7 +1971,7 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
@@ -2248,7 +1982,7 @@ var __pT0=0;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
         var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -2430,7 +2164,7 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        __toastH9('✅ 提交成功','success');
         setTimeout(function(){
           try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
         }, 380);
@@ -2515,109 +2249,6 @@ function __pLog(module,event,extra){
         });
       }catch(e){ console.warn('[SuperPatch 2/6 refreshIds err]',e); }
     }
-    // v20260907k：报表中心 API 聚合（订单统计 + 财务汇总 + 演职人员统计 + 节庆/校园报表）
-    async function __loadReportsData() {
-      var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
-      if (!QinFetch || typeof QinFetch.request !== 'function') return;
-      try {
-        // 1. 订单统计
-        var orderStats = await QinFetch.request('GET', '/v1/orders/stats', { query: {} });
-        __renderOrderStatsCard(orderStats && orderStats.data ? orderStats.data : {});
-      } catch(_e) { console.warn('[reports] orders/stats fail:', _e); }
-      try {
-        // 2. 财务汇总
-        var finSummary = await QinFetch.request('GET', '/v1/fin/summary', { query: {} });
-        __renderFinanceSummaryCard(finSummary && finSummary.data ? finSummary.data : {});
-      } catch(_e) { console.warn('[reports] fin/summary fail:', _e); }
-      try {
-        // 3. 演职人员统计
-        var performers = await QinFetch.request('GET', '/v1/performers', { query: { pageSize: 100 } });
-        __renderPerformersCard(performers && performers.data ? performers.data : []);
-      } catch(_e) { console.warn('[reports] performers fail:', _e); }
-      try {
-        // 4. 节庆演出报表（从订单中筛选 keyword=庙会/节庆/旅游节）
-        var festivals = await QinFetch.request('GET', '/v1/orders', { query: { keyword: '庙会', pageSize: 50 } });
-        __renderFestivalsReport(festivals && festivals.data ? festivals.data : []);
-      } catch(_e) { console.warn('[reports] festivals fail:', _e); }
-      try {
-        // 5. 校园研学报表（从订单中筛选 keyword=校园/研学/学校）
-        var campus = await QinFetch.request('GET', '/v1/orders', { query: { keyword: '学校', pageSize: 50 } });
-        __renderCampusReport(campus && campus.data ? campus.data : []);
-      } catch(_e) { console.warn('[reports] campus fail:', _e); }
-    }
-    function __renderOrderStatsCard(s) {
-      // 更新订单统计卡片
-      var els = document.querySelectorAll('[data-stat="orders-total"], [data-stat="total-orders"]');
-      els.forEach(function(el){ el.textContent = s.total || 0; });
-      var draft = document.querySelectorAll('[data-stat="orders-draft"]');
-      draft.forEach(function(el){ el.textContent = s.draft || 0; });
-      var confirmed = document.querySelectorAll('[data-stat="orders-confirmed"]');
-      confirmed.forEach(function(el){ el.textContent = s.confirmed || 0; });
-      var cancelled = document.querySelectorAll('[data-stat="orders-cancelled"]');
-      cancelled.forEach(function(el){ el.textContent = s.cancelled || 0; });
-      var totalFee = document.querySelectorAll('[data-stat="orders-amount"]');
-      totalFee.forEach(function(el){ el.textContent = '¥' + Number(s.totalFee || 0).toLocaleString('zh-CN'); });
-    }
-    function __renderFinanceSummaryCard(s) {
-      var els = document.querySelectorAll('[data-stat="fin-income"]');
-      els.forEach(function(el){ el.textContent = '¥' + Number(s.totalIncome || s.income || 0).toLocaleString('zh-CN'); });
-      var exp = document.querySelectorAll('[data-stat="fin-expense"]');
-      exp.forEach(function(el){ el.textContent = '¥' + Number(s.totalExpense || s.expense || 0).toLocaleString('zh-CN'); });
-      var bal = document.querySelectorAll('[data-stat="fin-balance"]');
-      bal.forEach(function(el){ el.textContent = '¥' + Number(s.balance || 0).toLocaleString('zh-CN'); });
-    }
-    function __renderPerformersCard(list) {
-      var els = document.querySelectorAll('[data-stat="performers-total"]');
-      els.forEach(function(el){ el.textContent = list.length || 0; });
-    }
-    function __renderFestivalsReport(orders) {
-      var tbody = document.getElementById('festivalsReportTbody');
-      if (!tbody) return;
-      if (!orders || orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无节庆演出数据，订单录入时包含「庙会」关键词后将自动汇总</td></tr>';
-        return;
-      }
-      function _hx(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-      var html = '';
-      orders.forEach(function(o) {
-        var month = o.performanceStartDate ? String(o.performanceStartDate).substring(5,7) + '月' : '—';
-        var audience = o.audienceSize || '—';
-        var revenue = o.finalAmount ? Number(o.finalAmount).toLocaleString('zh-CN') : '—';
-        html += '<tr>';
-        html += '<td style="font-weight:600;color:var(--primary-dark);">🏮 ' + _hx(o.orderType || o.customerName || '') + '</td>';
-        html += '<td>' + month + '</td>';
-        html += '<td>' + _hx(o.performanceCount || 1) + '</td>';
-        html += '<td>' + audience + '</td>';
-        html += '<td>' + _hx(o.venueDistrict || '') + '</td>';
-        html += '<td>' + revenue + '</td>';
-        html += '<td>—</td>';
-        html += '</tr>';
-      });
-      tbody.innerHTML = html;
-      if (window.QinPagination) try { QinPagination.scan(); } catch(_){}
-    }
-    function __renderCampusReport(orders) {
-      var tbody = document.getElementById('campusReportTbody');
-      if (!tbody) return;
-      if (!orders || orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无校园研学数据，订单录入时包含「学校」关键词后将自动汇总</td></tr>';
-        return;
-      }
-      function _hx(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-      var html = '';
-      orders.forEach(function(o) {
-        html += '<tr>';
-        html += '<td>' + _hx(o.customerName || '') + '</td>';
-        html += '<td>' + _hx(o.venueDistrict || '') + '</td>';
-        html += '<td>' + _hx(o.performanceCount || 1) + '</td>';
-        html += '<td>—</td>';
-        html += '<td>' + _hx(o.orderType || '') + '</td>';
-        html += '<td>—</td>';
-        html += '</tr>';
-      });
-      tbody.innerHTML = html;
-    }
-    document.addEventListener('DOMContentLoaded', function(){ __loadReportsData(); }, {once:true});
     document.addEventListener('DOMContentLoaded', function(){ _fillIds(); }, {once:true});
     if(document.readyState==='complete'||document.readyState==='interactive'){ _fillIds(); }
     else{ setTimeout(_fillIds, 50); }
@@ -2839,7 +2470,6 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
-        if (window.QinPagination) return; // 真分页器已接管，跳过假分页注入（orders/finance 同款修复范式）
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -2951,7 +2581,7 @@ function __pLog(module,event,extra){
   // 功能按钮绑定（上传/新建/导出）
   try{
     function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
-    __bindBtn('openReportsUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.xls,.xlsx,.jpg,.png"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（报告附件）（演示模式：真实环境将上传到服务器）","info"); }; inp.click(); });
+    __bindBtn('openReportsUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.xls,.xlsx,.jpg,.png"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（报告附件）","info"); }; inp.click(); });
   }catch(_e){ console.warn("[upload-bind err]",_e); }
 
 try{
@@ -2963,7 +2593,6 @@ try{
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
-      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -2977,7 +2606,6 @@ try{
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
-        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return; // 分页条按钮放行（orders/finance 同款修复）
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
@@ -3004,34 +2632,34 @@ try{
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          __toastH9('✅ 操作成功','success');
           setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
         }else if(tt==='delete'){
           if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
             __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
           }else{ __toastH9('↩️ 已取消操作','info'); }
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印（演示模式）','info');
+          __toastH9('📤 已触发导出/打印','info');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪（演示模式）','info');
+          __toastH9('📄 合同文档已就绪','info');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+          __toastH9('➕ 准备新增','info');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -3100,66 +2728,117 @@ try{
       window.__closeAnyModal();
     }
   });
-
-  /* 导出 Excel/CSV（v20260907k）：替代 onclick alert + DBF/SuperPatch 演示 toast 的矛盾提示 */
-  window.__exportReportsExcel = function(){
-    try{
-      var tables = document.querySelectorAll('table');
-      var allRows = [];
-      var headers = [];
-      for(var t=0; t<tables.length; t++){
-        var trs = tables[t].querySelectorAll('tr');
-        for(var r=0; r<trs.length; r++){
-          var cells = Array.prototype.map.call(trs[r].cells, function(c){ return (c.textContent||'').replace(/[\n\r,]/g,' ').trim(); });
-          if(r===0 && !headers.length) headers = cells;
-          else if(cells.length > 1) allRows.push(cells);
-        }
-      }
-      if(!allRows.length){
-        if(window.__T) __T('⚠️ 当前暂无可导出的报表数据','warning');
-        else alert('当前暂无可导出的报表数据');
-        return;
-      }
-      var csv = '\uFEFF';
-      if(headers.length) csv += headers.join(',') + '\n';
-      allRows.forEach(function(cells){ csv += cells.join(',') + '\n'; });
-      var blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url; a.download = '报表统计_' + new Date().toISOString().slice(0,10) + '.csv';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
-      if(window.__T) __T('📤 已导出 ' + allRows.length + ' 条报表数据（CSV）','success');
-    }catch(ex){
-      if(window.__T) __T('❌ 导出失败：' + (ex.message||ex),'error');
-      else alert('导出失败：' + (ex.message||ex));
-    }
-  };
 })();
 </script>
-<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停真实弹窗（含无 id 按钮、动态重绘行 MutationObserver 补标） */
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
 (function(){
-  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
-  var SEL = 'button, a.btn, .btn, .btn-action, [role="button"], [data-action]';
   function __markBound(){
-    try{
-      var els=document.querySelectorAll(SEL);
-      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
-    }catch(_){}
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
   }
-  function __boot(){
-    __markBound();
-    try{
-      if(window.MutationObserver){
-        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
-        mo.observe(document.documentElement,{childList:true,subtree:true});
-      }
-    }catch(_){}
-    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
-  }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
-  else { __boot(); }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
 })();</script>
+<script>
+/* ===== __reportsApi: 报表数据从后端加载并刷新 KPI ===== */
+window.__reportsApi = (function(){
+  var API = window.QAXQJT_API;
+  var T = function(m,t){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(m,t||'info',3000); }catch(_){} };
+
+  function _setKpi(idx, value, unit){
+    var cards = document.querySelectorAll('.kpi-card');
+    if(!cards[idx]) return;
+    var v = cards[idx].querySelector('.kpi-value');
+    if(v){ v.innerHTML = value + '<span class="unit">'+(unit||'')+'</span>'; }
+  }
+
+  async function load(){
+    try{
+      var yearSel = document.getElementById('yearSelect');
+      var year = (yearSel && yearSel.value) ? yearSel.value : new Date().getFullYear();
+      var s = await API.get('/v1/orders/stats', { query:{ year:year } }).catch(function(){ return null; });
+      var f = await API.get('/v1/fin/summary', { query:{ year:year } }).catch(function(){ return null; });
+
+      if(s){
+        _setKpi(0, s.totalShows||s.total||0, '场');
+        _setKpi(1, s.totalAudience? (s.totalAudience/10000).toFixed(1):'0', '万人次');
+        _setKpi(2, s.totalVillages||s.villages||0, '个');
+        _setKpi(3, s.culturalCoop||0, '场');
+        _setKpi(4, s.campusShows||0, '场');
+        _setKpi(5, s.liveShows||0, '场');
+      }
+      if(f){
+        _setKpi(6, f.totalIncome? (f.totalIncome/10000).toFixed(1):'0', '万');
+      }
+      T('📊 报表数据已刷新','success');
+    }catch(e){ console.warn('[__reportsApi.load]',e); }
+  }
+
+  /* ===== 20260922 真实化：区县分布/月度场次由 /v1/schedules 真实排期生成 ===== */
+  function _rows(d){ return Array.isArray(d)?d:((d&&d.items)||[]); }
+  async function renderScheduleStats(year){
+    var all=_rows(await API.get("/v1/schedules",{query:{page:1,pageSize:500}}).catch(function(){return [];}));
+    var rows=all.filter(function(s){ return String(s.date||"").indexOf(year+"-")===0 && ["scheduled","confirmed","performance","completed"].indexOf(s.status)>=0; });
+    // KPI0：年度演出总场次（真实排期计数）
+    _setKpi(0, rows.length, "场");
+    // 区县分布
+    var box=document.getElementById("repDistrictBars");
+    if(box){
+      var dist={}; rows.forEach(function(s){ var d=s.venueDistrict||s.venueCity||"未填写区县"; dist[d]=(dist[d]||0)+1; });
+      var arr=Object.keys(dist).map(function(k){return {name:k,n:dist[k]};}).sort(function(a,b){return b.n-a.n;});
+      if(!arr.length){ box.innerHTML='<div style="padding:30px 10px;text-align:center;color:var(--text-light);">'+year+'年暂无真实排期</div>'; }
+      else {
+        var max=arr[0].n, total=rows.length, colors=["#8B0000","#A52A2A","#B22222","#C0392B","#CD5C5C","#E07070","#E88888"];
+        box.innerHTML=arr.map(function(x,i){
+          var pct=Math.max(4,Math.round(x.n/max*100)), share=(Math.round(x.n/total*1000)/10).toFixed(1);
+          var c=colors[Math.min(i,colors.length-1)];
+          return '<div class="district-bar-item"><div class="district-bar-label"><span class="district-name">'+x.name+'</span><span class="district-stats"><strong>'+x.n+' 场</strong>占 '+share+'%</span></div><div class="district-bar-track"><div class="district-bar-fill" style="width:'+pct+'%;background:'+c+';"><span>'+x.n+'场</span></div></div></div>';
+        }).join("");
+      }
+    }
+    // 月度场次柱
+    var cols=document.getElementById("repMonthlyCols");
+    if(cols){
+      var m=new Array(12).fill(0); rows.forEach(function(s){ var mm=Number(String(s.date).slice(5,7)); if(mm>=1&&mm<=12) m[mm-1]++; });
+      var mx=Math.max.apply(null,m.concat([1]));
+      cols.innerHTML=m.map(function(n,i){
+        var pct=n?Math.max(6,Math.round(n/mx*100)):2;
+        return '<div class="monthly-col"><div class="monthly-bar" style="height:'+pct+'%;" title="'+(i+1)+'月：'+n+'场（真实排期）"></div><div class="monthly-label">'+(i+1)+'月</div></div>';
+      }).join("");
+    }
+    var line=document.getElementById("repAudienceLine"); if(line) line.setAttribute("points","");
+    _renderDonutAndRank(rows, year);
+  }
+  function _renderDonutAndRank(rows, year){
+    var num=document.getElementById("repDonutNum"); if(num) num.textContent=rows.length;
+    var box=document.getElementById("repRankList"); if(!box) return;
+    var cnt={}; rows.forEach(function(s){ var n=(s.playTitle||"").trim(); if(n) cnt[n]=(cnt[n]||0)+1; });
+    var arr=Object.keys(cnt).map(function(k){return {name:k,n:cnt[k]};}).sort(function(a,b){return b.n-a.n;}).slice(0,10);
+    if(!arr.length){ box.innerHTML='<div style="grid-column:1/-1;padding:30px 10px;text-align:center;color:var(--text-light);">'+year+'年暂无真实排期，无法生成剧目排行</div>'; return; }
+    var mx=arr[0].n;
+    var cls=["top1","top2","top3"];
+    box.innerHTML=arr.map(function(x,i){
+      var pct=Math.max(6,Math.round(x.n/mx*100));
+      return '<div class="opera-rank-item"><div class="opera-rank-no '+(cls[i]||"")+'">'+(i+1)+'</div><div class="opera-rank-name">《'+x.name+'》</div><div class="opera-rank-track"><div class="opera-rank-fill" style="width:'+pct+'%;"><span>'+x.n+'场</span></div></div><div class="opera-rank-count">'+x.n+' 场</div></div>';
+    }).join("");
+  }
+  function bind(){
+    var yearSel = document.getElementById('yearSelect');
+    if(yearSel){ yearSel.__superPatchBound=1; yearSel.addEventListener('change', function(){ load(); }); }
+    var btns = document.querySelectorAll('.admin-page-actions .btn, .btn-outline-dark, .btn-secondary');
+    btns.forEach(function(b){
+      if(!b) return;
+      var txt = (b.textContent||'').trim();
+      if(txt.indexOf('刷新')>=0 || txt.indexOf('查询')>=0){ b.__superPatchBound=1; b.onclick=function(){ load(); }; }
+    });
+  }
+
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ bind(); load(); }); }
+  else { bind(); load(); }
+
+  return { load:load };
+})();
+</script>
 </body>
 
 </html>

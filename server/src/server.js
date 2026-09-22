@@ -6,6 +6,11 @@
  *   容器：node -r dotenv/config src/server.js
  *   PM2：  pm2-runtime start ecosystem.config.js
  */
+// 必须在 require('./app') 之前：以 .env 为唯一权威，覆盖 PM2 守护进程缓存/系统环境变量里的旧值
+// （背景：pm2 restart 不带 --update-env 时沿用旧进程环境，dotenv 默认又不覆盖 process.env，
+//   曾导致 .env 中轮换的 JWT 密钥/CORS 白名单不生效）
+require('dotenv').config({ override: true });
+
 const app = require('./app');
 const { env, nowMs } = require('./config');
 const logger = require('./utils/logger');
