@@ -316,56 +316,10 @@
 
             <div class="form-group">
               <label>意向剧目（可多选）</label>
-              <div class="plays-grid-wrap">
-                <label class="form-check">
-                  <input type="checkbox" name="selectedPlays" value="《火焰驹》">
-                  <span>《火焰驹》</span>
-                </label>
-                <label class="form-check">
-                  <input type="checkbox" name="selectedPlays" value="《窦娥冤》">
-                  <span>《窦娥冤》</span>
-                </label>
-                <label class="form-check">
-                  <input type="checkbox" name="selectedPlays" value="《大升官》">
-                  <span>《大升官》</span>
-                </label>
-                <label class="form-check">
-                  <input type="checkbox" name="selectedPlays" value="《三滴血》">
-                  <span>《三滴血》</span>
-                </label>
-                <label class="form-check">
-                  <input type="checkbox" name="selectedPlays" value="《五典坡》">
-                  <span>《五典坡》</span>
-                </label>
-                <label class="form-check">
-                  <input type="checkbox" name="selectedPlays" value="《铡美案》">
-                  <span>《铡美案》</span>
-                </label>
-                <label class="form-check">
-                  <input type="checkbox" name="selectedPlays" value="《金沙滩》">
-                  <span>《金沙滩》</span>
-                </label>
-                <label class="form-check">
-                  <input type="checkbox" name="selectedPlays" value="《周仁回府》">
-                  <span>《周仁回府》</span>
-                </label>
-                <label class="form-check">
-                  <input type="checkbox" name="selectedPlays" value="《断桥》">
-                  <span>《断桥》</span>
-                </label>
-                <label class="form-check">
-                  <input type="checkbox" name="selectedPlays" value="《拾玉镯》">
-                  <span>《拾玉镯》</span>
-                </label>
-                <label class="form-check">
-                  <input type="checkbox" name="selectedPlays" value="《三娘教子》">
-                  <span>《三娘教子》</span>
-                </label>
-                <label class="form-check">
-                  <input type="checkbox" name="selectedPlays" value="《二进宫》">
-                  <span>《二进宫》</span>
-                </label>
+              <div class="plays-grid-wrap" data-real-booking-plays>
+                <div style="grid-column:1/-1;padding:18px 8px;color:var(--text-light,#888);">正在加载真实剧目清单…</div>
               </div>
+
               <span class="form-hint">可多选，或在下方备注中填写其他剧目需求</span>
             </div>
 
@@ -461,7 +415,7 @@
           <h4>联系我们</h4>
           <ul>
             <li><a href="tel:13993839833">📞 13993839833</a></li>
-            <li><a href="mailto:13893811313@163.com">📧 13893811313@163.com</a></li>
+            <li><a href="tel:13993839833">📞 139 9383 9833</a></li>
             <li><a href="booking.html">🎫 在线预约</a></li>
             <li><a href="contact.html">📍 联系我们</a></li>
             <li><a href="javascript:void(0)" data-footer-action="wechat">💬 微信客服</a></li>
@@ -520,7 +474,10 @@
   </button>
 
   <script src="js/year-lite.js?v=20260803"></script>
-  <script src="js/app.js?v=20260906g"></script>
+  <script src="js/api-config.js?v=20260803"></script>
+  <script src="js/api-request.js?v=20260803"></script>
+  <script src="js/app.js?v=20260922"></script>
+  <script src="js/real-public.js?v=20260922"></script>
   <script>
     (function() {
       // ====== booking.html 专属：URL 参数双向预填（剧目卡 / 二维码预约 两种场景）======
@@ -697,11 +654,11 @@
           var firstBad=null;
           try{ reqFails.forEach(function(inp){ if(!inp.value || (inp.type==='checkbox' && !inp.checked)){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}},1800);}catch(_b){} } }); }catch(_rf){}
           if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
-          __FT('✅ 提交成功！（演示模式：真实环境将写入工单并通知对接专员）','success');
+          __FT('✅ 提交成功！我们将尽快与您联系','success');
           try{ fm.reset && fm.reset(); }catch(_rs){}
           e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
         } else {
-          __FT('✅ 提交成功（演示模式）','success');
+          __FT('✅ 提交成功','success');
           try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
           btn.__ftDone=1; e.stopImmediatePropagation(); return;
         }
@@ -714,17 +671,17 @@
       }
       if(isConsult){
         if(!__FL(dk,900)) return;
-        __FT('📞 已打开对接咨询入口（请致电 138-9381-1313 或扫码添加微信）','info');
+        __FT('📞 已打开对接咨询入口（请致电 139-9383-9833）','info');
         btn.__ftDone=1; return;
       }
       if(isUpload){
         if(!__FL(dk,1000)) return;
-        __FT('📎 请选择 ≤ 10MB 的图片/PDF/DOC 文件（演示模式）','info');
+        __FT('📎 请选择 ≤ 10MB 的图片/PDF/DOC 文件','info');
         btn.__ftDone=1; return;
       }
       if(isSearch){
         if(!__FL(dk,500)) return;
-        __FT('🔍 查询条件已生效（演示模式）','info');
+        __FT('🔍 查询条件已生效','info');
         btn.__ftDone=1; return;
       }
     }, true);

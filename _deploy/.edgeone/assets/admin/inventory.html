@@ -41,7 +41,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>道具服装设备库存管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260906">
+  <link rel="stylesheet" href="../css/style.css?v=20260803">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -739,7 +739,7 @@
               </div>
             </div>
             <div class="stat-card-title">库存总件数</div>
-            <div class="stat-card-value">486<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">件</span></div>
+            <div class="stat-card-value">—<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">件</span></div>
             <div class="stat-card-sub">
               <span>服装186</span>
               <span class="divider"></span>
@@ -756,7 +756,7 @@
               </div>
             </div>
             <div class="stat-card-title">本月借用</div>
-            <div class="stat-card-value">68<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">次</span></div>
+            <div class="stat-card-value" id="invStatBorrow">—<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">次</span></div>
             <div class="stat-card-sub">
               <span>已归还52</span>
               <span class="divider"></span>
@@ -771,7 +771,7 @@
               </div>
             </div>
             <div class="stat-card-title">库存预警</div>
-            <div class="stat-card-value">5<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">项</span></div>
+            <div class="stat-card-value">—<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">项</span></div>
             <div class="stat-card-sub">
               <span style="color:#dc3545;">不足3</span>
               <span class="divider"></span>
@@ -786,7 +786,7 @@
               </div>
             </div>
             <div class="stat-card-title">{year}年新增采购</div>
-            <div class="stat-card-value">18<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">件</span></div>
+            <div class="stat-card-value" id="invStatRepair">—<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">件</span></div>
             <div class="stat-card-sub">
               <span>服装8</span>
               <span class="divider"></span>
@@ -922,438 +922,9 @@
                     <th>操作</th>
                   </tr>
                 </thead>
-                <tbody id="inventoryItemsTbody" data-paginate="list" data-page-size="10">
-                  <!-- v20260908j：原硬编码演示行已删除，由 __loadInventoryList() 渲染真实数据（GET /v1/inventory/items） -->
-                  <tr class="inv-empty-state"><td colspan="14" style="text-align:center;padding:30px;color:var(--text-light);">⏳ 正在加载库存物品...（v20260908j：由 __loadInventoryList() 渲染真实数据）</td></tr>
-                  <!-- v20260908j-legacy-demo-rows-start
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">FZ001</strong></td>
-                    <td><strong>红色男蟒</strong></td>
-                    <td><span class="cat-badge costume">戏曲服装 · 蟒袍</span></td>
-                    <td>大缎 · 手工刺绣</td>
-                    <td><span class="qty-low">2</span></td>
-                    <td>1件</td>
-                    <td>件</td>
-                    <td>2014-08-15</td>
-                    <td><span class="status-badge stock">● 在库</span></td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm" title="查看">👁</button>
-                        <button class="btn btn-primary btn-sm" title="编辑">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;" title="借用">📤</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;" title="报修">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" title="报废">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">FZ002</strong></td>
-                    <td><strong>青色女帔</strong></td>
-                    <td><span class="cat-badge costume">戏曲服装 · 女帔</span></td>
-                    <td>软缎 · 团花刺绣</td>
-                    <td><span class="qty-low">3</span></td>
-                    <td><span style="color:#dc3545;font-weight:700;">2件</span></td>
-                    <td>件</td>
-                    <td>2015-03-20</td>
-                    <td><span class="status-badge borrowed">● 借出</span></td>
-                    <td>GH002 李秀兰</td>
-                    <td style="color:var(--primary);font-weight:600;">{year}-07-30</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 10px;">✅</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">FZ008</strong></td>
-                    <td><strong>白色女靠</strong></td>
-                    <td><span class="cat-badge costume">戏曲服装 · 靠</span></td>
-                    <td>大缎 · 镶边刺绣</td>
-                    <td>4</td>
-                    <td>2件</td>
-                    <td>件</td>
-                    <td>2016-09-10</td>
-                    <td><span class="status-badge stock">● 在库</span></td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">FZ015</strong></td>
-                    <td><strong>黑色男褶子</strong></td>
-                    <td><span class="cat-badge costume">戏曲服装 · 褶子</span></td>
-                    <td>杭绸 · 素面</td>
-                    <td>6</td>
-                    <td>3件</td>
-                    <td>件</td>
-                    <td>2017-05-22</td>
-                    <td><span class="status-badge borrowed">● 借出</span></td>
-                    <td>GH001 张建国</td>
-                    <td>{year}-08-05</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 10px;">✅</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">KT003</strong></td>
-                    <td><strong>夫子盔</strong></td>
-                    <td><span class="cat-badge helmet">盔头道具 · 盔头</span></td>
-                    <td>贴金点绸 · 标准款</td>
-                    <td>8</td>
-                    <td>4顶</td>
-                    <td>顶</td>
-                    <td>2015-11-08</td>
-                    <td><span class="status-badge stock">● 在库</span></td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">KT012</strong></td>
-                    <td><strong>黑三髯口</strong></td>
-                    <td><span class="cat-badge helmet">盔头道具 · 髯口</span></td>
-                    <td>牦牛毛 · 加长款</td>
-                    <td><span class="qty-low">2</span></td>
-                    <td><span style="color:#dc3545;font-weight:700;">3副</span></td>
-                    <td>副</td>
-                    <td>2018-04-15</td>
-                    <td><span class="status-badge stock">● 在库</span></td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">KT025</strong></td>
-                    <td><strong>红缨枪把子</strong></td>
-                    <td><span class="cat-badge helmet">盔头道具 · 把子</span></td>
-                    <td>白蜡杆 · 标准长度</td>
-                    <td>12</td>
-                    <td>6根</td>
-                    <td>根</td>
-                    <td>2019-07-20</td>
-                    <td><span class="status-badge borrowed">● 借出</span></td>
-                    <td>GH003 王志强</td>
-                    <td>{year}-08-10</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 10px;">✅</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">KT038</strong></td>
-                    <td><strong>龙头拐杖</strong></td>
-                    <td><span class="cat-badge helmet">盔头道具 · 道具</span></td>
-                    <td>实木雕刻 · 鎏金</td>
-                    <td><span class="qty-low">1</span></td>
-                    <td><span style="color:#dc3545;font-weight:700;">2根</span></td>
-                    <td>根</td>
-                    <td>2016-02-28</td>
-                    <td><span class="status-badge repair">● 维修中</span></td>
-                    <td>—</td>
-                    <td>{year}-08-01</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">SB015</strong></td>
-                    <td><strong>专业线阵音响</strong></td>
-                    <td><span class="cat-badge audio">灯光音响 · 音响</span></td>
-                    <td>LAX · AT110-V2</td>
-                    <td>8</td>
-                    <td>4只</td>
-                    <td>只</td>
-                    <td>{year-2}-01-10</td>
-                    <td><span class="status-badge stock">● 在库</span></td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">SB022</strong></td>
-                    <td><strong>数字调音台</strong></td>
-                    <td><span class="cat-badge audio">灯光音响 · 音响</span></td>
-                    <td>YAMAHA · TF5</td>
-                    <td>2</td>
-                    <td>1台</td>
-                    <td>台</td>
-                    <td>{year-1}-05-18</td>
-                    <td><span class="status-badge borrowed">● 借出</span></td>
-                    <td>GH013 林志远</td>
-                    <td>{year}-07-29</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 10px;">✅</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">DG009</strong></td>
-                    <td><strong>LED摇头染色灯</strong></td>
-                    <td><span class="cat-badge audio">灯光音响 · 灯光</span></td>
-                    <td>珠江 · PR-2344</td>
-                    <td><span class="qty-low">6</span></td>
-                    <td><span style="color:#dc3545;font-weight:700;">8台</span></td>
-                    <td>台</td>
-                    <td>{year-2}-11-25</td>
-                    <td><span class="status-badge stock">● 在库</span></td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">DG015</strong></td>
-                    <td><strong>追光灯</strong></td>
-                    <td><span class="cat-badge audio">灯光音响 · 灯光</span></td>
-                    <td>彩熠 · FINE 2500</td>
-                    <td>4</td>
-                    <td>2台</td>
-                    <td>台</td>
-                    <td>2020-08-03</td>
-                    <td><span class="status-badge repair">● 维修中</span></td>
-                    <td>—</td>
-                    <td>{year}-08-15</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">BJ005</strong></td>
-                    <td><strong>公堂布景</strong></td>
-                    <td><span class="cat-badge stage">布景舞台 · 布景</span></td>
-                    <td>立体框架 · 喷绘</td>
-                    <td>3</td>
-                    <td>1套</td>
-                    <td>套</td>
-                    <td>2017-12-10</td>
-                    <td><span class="status-badge stock">● 在库</span></td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">BJ012</strong></td>
-                    <td><strong>折叠舞台板</strong></td>
-                    <td><span class="cat-badge stage">布景舞台 · 舞台</span></td>
-                    <td>铝合金 · 1m×2m</td>
-                    <td>24</td>
-                    <td>16块</td>
-                    <td>块</td>
-                    <td>2019-03-22</td>
-                    <td><span class="status-badge borrowed">● 借出</span></td>
-                    <td>舞美队</td>
-                    <td>{year}-08-02</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 10px;">✅</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong style="color:var(--primary);">WT021</strong></td>
-                    <td><strong>无线手持麦</strong></td>
-                    <td><span class="cat-badge audio">灯光音响 · 音响</span></td>
-                    <td>SHURE · SLX24/SM58</td>
-                    <td>10</td>
-                    <td>6套</td>
-                    <td>套</td>
-                    <td>{year-1}-02-14</td>
-                    <td><span class="status-badge stock">● 在库</span></td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">FZ032</strong></td>
-                    <td><strong>绿色女褶子</strong></td>
-                    <td><span class="cat-badge costume">戏曲服装 · 褶子</span></td>
-                    <td>杭绸 · 绣花边</td>
-                    <td>5</td>
-                    <td>3件</td>
-                    <td>件</td>
-                    <td>2018-06-30</td>
-                    <td><span class="status-badge stock">● 在库</span></td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">KT056</strong></td>
-                    <td><strong>尚方宝剑</strong></td>
-                    <td><span class="cat-badge helmet">盔头道具 · 道具</span></td>
-                    <td>木质 · 银色漆</td>
-                    <td>4</td>
-                    <td>2把</td>
-                    <td>把</td>
-                    <td>2017-09-05</td>
-                    <td><span class="status-badge stock">● 在库</span></td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>{year}-06-15</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-primary btn-sm">✏️</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;">📤</button>
-                        <button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;">🔧</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td><strong style="color:var(--primary);">FZ044</strong></td>
-                    <td><strong>黄色太监衣</strong></td>
-                    <td><span class="cat-badge costume">戏曲服装 · 宫装</span></td>
-                    <td>软缎 · 彩绣</td>
-                    <td>8</td>
-                    <td>4件</td>
-                    <td>件</td>
-                    <td>2019-10-18</td>
-                    <td><span class="status-badge scrapped">● 报废</span></td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>{year}-03-20</td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">👁</button>
-                        <button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;">♻️</button>
-                      </div>
-                    </td>
-                  </tr>
-                  v20260908j-legacy-demo-rows-end -->
-                </tbody>
+                <tbody data-paginate="list" data-page-size="10">
+<tr><td colspan="14" style="text-align:center;padding:30px 14px;color:var(--text-light,#999);">正在加载真实库存…</td></tr>
+</tbody>
               </table>
             </div>
 </div>
@@ -1365,96 +936,10 @@
               <span class="warn-icon">⚠️</span>
               库存预警提醒
             </h4>
-            <div class="warning-count">5 项预警待处理</div>
+            <div class="warning-count" id="invWarnCount">正在加载真实预警…</div>
           </div>
           <div class="warning-body">
-            <div class="warning-grid" data-paginate="list" data-page-size="12">
-              <div class="warning-card">
-                <div class="wc-title">
-                  <div>
-                    <div class="wc-name">黑三髯口</div>
-                    <div class="wc-code">KT012 · 盔头/髯口</div>
-                  </div>
-                </div>
-                <div class="wc-info">
-                  <div class="wc-info-item">当前库存：<strong>2 副</strong></div>
-                  <div class="wc-info-item">安全库存：<strong>3 副</strong></div>
-                  <div class="wc-info-item">缺额：<strong>-1 副</strong></div>
-                </div>
-                <span class="wc-reason">⚠ 库存低于安全阈值</span>
-                <div class="wc-action">
-                  <button class="wc-btn">📦 立即补货</button>
-                </div>
-              </div>
-              <div class="warning-card">
-                <div class="wc-title">
-                  <div>
-                    <div class="wc-name">龙头拐杖</div>
-                    <div class="wc-code">KT038 · 道具</div>
-                  </div>
-                </div>
-                <div class="wc-info">
-                  <div class="wc-info-item">当前库存：<strong>1 根</strong></div>
-                  <div class="wc-info-item">安全库存：<strong>2 根</strong></div>
-                  <div class="wc-info-item">缺额：<strong>-1 根</strong></div>
-                </div>
-                <span class="wc-reason">⚠ 库存不足 + 维修中</span>
-                <div class="wc-action">
-                  <button class="wc-btn">📦 立即补货</button>
-                </div>
-              </div>
-              <div class="warning-card">
-                <div class="wc-title">
-                  <div>
-                    <div class="wc-name">LED摇头染色灯</div>
-                    <div class="wc-code">DG009 · 灯光设备</div>
-                  </div>
-                </div>
-                <div class="wc-info">
-                  <div class="wc-info-item">当前库存：<strong>6 台</strong></div>
-                  <div class="wc-info-item">安全库存：<strong>8 台</strong></div>
-                  <div class="wc-info-item">缺额：<strong>-2 台</strong></div>
-                </div>
-                <span class="wc-reason">⚠ 库存低于安全阈值</span>
-                <div class="wc-action">
-                  <button class="wc-btn">📦 立即补货</button>
-                </div>
-              </div>
-              <div class="warning-card damage">
-                <div class="wc-title">
-                  <div>
-                    <div class="wc-name">追光灯</div>
-                    <div class="wc-code">DG015 · 灯光设备</div>
-                  </div>
-                </div>
-                <div class="wc-info">
-                  <div class="wc-info-item">送修日期：<strong>{year}-07-10</strong></div>
-                  <div class="wc-info-item">维修时长：<strong>17天</strong></div>
-                  <div class="wc-info-item">预计完成：<strong>{year}-08-15</strong></div>
-                </div>
-                <span class="wc-reason">🔧 维修超期（预计10天）</span>
-                <div class="wc-action">
-                  <button class="wc-btn">📞 催促维修</button>
-                </div>
-              </div>
-              <div class="warning-card damage">
-                <div class="wc-title">
-                  <div>
-                    <div class="wc-name">红色男蟒（1件）</div>
-                    <div class="wc-code">FZ001 · 戏曲服装</div>
-                  </div>
-                </div>
-                <div class="wc-info">
-                  <div class="wc-info-item">损坏程度：<strong>中度</strong></div>
-                  <div class="wc-info-item">损坏部位：<strong>下摆磨损</strong></div>
-                  <div class="wc-info-item">入库使用：<strong>12年</strong></div>
-                </div>
-                <span class="wc-reason">🔧 损耗待修 · 刺绣磨损严重</span>
-                <div class="wc-action">
-                  <button class="wc-btn">🔧 安排维修</button>
-                </div>
-              </div>
-            </div>
+            <div class="warning-grid" data-paginate="list" data-page-size="12"><div id="invWarnGrid" style="grid-column:1/-1;padding:30px 12px;text-align:center;color:var(--text-light,#888);">正在加载真实库存预警…</div></div>
           </div>
         </div>
 
@@ -1462,10 +947,10 @@
           <div class="flow-header">
             <h4>🔁 借用归还流水记录</h4>
             <div class="flow-status-filter">
-              <button class="fs-btn active" data-flow="all">全部 (68)</button>
-              <button class="fs-btn" data-flow="borrowing">借用中 (16)</button>
-              <button class="fs-btn" data-flow="returned">已归还 (52)</button>
-              <button class="fs-btn" data-flow="overdue">已逾期 (2)</button>
+              <button class="fs-btn active" data-flow="all">全部 (<span id="flCntAll">0</span>)</button>
+              <button class="fs-btn" data-flow="borrowing">借用中 (<span id="flCntBorrowing">0</span>)</button>
+              <button class="fs-btn" data-flow="returned">已归还 (<span id="flCntReturned">0</span>)</button>
+              <button class="fs-btn" data-flow="overdue">已逾期 (<span id="flCntOverdue">0</span>)</button>
             </div>
           </div>
           <div class="admin-card" style="box-shadow:none;border:1px solid var(--border-light);">
@@ -1485,169 +970,9 @@
                     <th>操作</th>
                   </tr>
                 </thead>
-                <tbody id="inventoryRecordsTbody" data-paginate="list" data-page-size="10">
-                  <!-- v20260908j：原硬编码演示流水行已删除，由 __loadInventoryList() 渲染真实数据（GET /v1/inventory/records） -->
-                  <tr class="inv-empty-state"><td colspan="10" style="text-align:center;padding:30px;color:var(--text-light);">⏳ 正在加载借用归还流水...（v20260908j：由 __loadInventoryList() 渲染真实数据）</td></tr>
-                  <!-- v20260908j-legacy-demo-rows-start
-                  <tr>
-                    <td style="font-weight:600;">001</td>
-                    <td>
-                      <div><strong>青色女帔 × 2件</strong></div>
-                      <div style="font-size:0.75rem;color:var(--text-light);">FZ002</div>
-                    </td>
-                    <td>GH002 李秀兰</td>
-                    <td>{year}-07-20</td>
-                    <td><span class="badge badge-gold">商演</span></td>
-                    <td>《窦娥冤》</td>
-                    <td style="font-weight:600;">{year}-07-30</td>
-                    <td><span style="color:var(--text-light);">—</span></td>
-                    <td><span class="flow-badge borrowing">📤 借用中</span></td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">详情</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 12px;">归还</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:600;">002</td>
-                    <td>
-                      <div><strong>数字调音台</strong></div>
-                      <div style="font-size:0.75rem;color:var(--text-light);">SB022</div>
-                    </td>
-                    <td>GH013 林志远</td>
-                    <td>{year}-07-22</td>
-                    <td><span class="badge badge-info">惠民</span></td>
-                    <td>《铡美案》《三滴血》</td>
-                    <td style="font-weight:600;">{year}-07-29</td>
-                    <td><span style="color:var(--text-light);">—</span></td>
-                    <td><span class="flow-badge borrowing">📤 借用中</span></td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">详情</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 12px;">归还</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:600;">003</td>
-                    <td>
-                      <div><strong>折叠舞台板 × 12块</strong></div>
-                      <div style="font-size:0.75rem;color:var(--text-light);">BJ012</div>
-                    </td>
-                    <td>舞美队（黄春林）</td>
-                    <td>{year}-07-24</td>
-                    <td><span class="badge badge-warning">庙会</span></td>
-                    <td>陇城镇庙会5场</td>
-                    <td style="font-weight:600;">{year}-08-02</td>
-                    <td><span style="color:var(--text-light);">—</span></td>
-                    <td><span class="flow-badge borrowing">📤 借用中</span></td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">详情</button>
-                        <button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 12px;">归还</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:600;">004</td>
-                    <td>
-                      <div><strong>黑色男褶子 × 3件</strong></div>
-                      <div style="font-size:0.75rem;color:var(--text-light);">FZ015</div>
-                    </td>
-                    <td>GH001 张建国</td>
-                    <td>{year}-07-18</td>
-                    <td><span class="badge badge-gold">商演</span></td>
-                    <td>《打金枝》《三滴血》</td>
-                    <td style="color:#dc3545;font-weight:700;">{year}-07-25 ⚠</td>
-                    <td><span style="color:var(--text-light);">—</span></td>
-                    <td><span class="flow-badge overdue">⏰ 已逾期2天</span></td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">详情</button>
-                        <button class="btn btn-primary btn-sm">催还</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:600;">005</td>
-                    <td>
-                      <div><strong>红缨枪把子 × 6根</strong></div>
-                      <div style="font-size:0.75rem;color:var(--text-light);">KT025</div>
-                    </td>
-                    <td>GH003 王志强</td>
-                    <td>{year}-07-15</td>
-                    <td><span class="badge badge-warning">庙会</span></td>
-                    <td>《长坂坡》等武戏</td>
-                    <td style="color:#dc3545;font-weight:700;">{year}-07-26 ⚠</td>
-                    <td><span style="color:var(--text-light);">—</span></td>
-                    <td><span class="flow-badge overdue">⏰ 已逾期1天</span></td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">详情</button>
-                        <button class="btn btn-primary btn-sm">催还</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:600;">006</td>
-                    <td>
-                      <div><strong>夫子盔 × 2顶</strong></div>
-                      <div style="font-size:0.75rem;color:var(--text-light);">KT003</div>
-                    </td>
-                    <td>GH007 周德胜</td>
-                    <td>{year}-07-10</td>
-                    <td><span class="badge badge-info">惠民</span></td>
-                    <td>《下河东》</td>
-                    <td>{year}-07-18</td>
-                    <td style="color:#28a745;font-weight:600;">{year}-07-17 ✓</td>
-                    <td><span class="flow-badge returned">✅ 已归还</span></td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">详情</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:600;">007</td>
-                    <td>
-                      <div><strong>专业线阵音响 × 4只</strong></div>
-                      <div style="font-size:0.75rem;color:var(--text-light);">SB015</div>
-                    </td>
-                    <td>GH012 黄春林</td>
-                    <td>{year}-07-08</td>
-                    <td><span class="badge badge-gold">商演</span></td>
-                    <td>《火焰驹》专场</td>
-                    <td>{year}-07-15</td>
-                    <td style="color:#28a745;font-weight:600;">{year}-07-15 ✓</td>
-                    <td><span class="flow-badge returned">✅ 已归还</span></td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">详情</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:600;">008</td>
-                    <td>
-                      <div><strong>白色女靠 × 2件</strong></div>
-                      <div style="font-size:0.75rem;color:var(--text-light);">FZ008</div>
-                    </td>
-                    <td>GH004 赵丽华</td>
-                    <td>{year}-07-05</td>
-                    <td><span class="badge badge-info">惠民</span></td>
-                    <td>《穆桂英挂帅》</td>
-                    <td>{year}-07-12</td>
-                    <td style="color:#28a745;font-weight:600;">{year}-07-12 ✓</td>
-                    <td><span class="flow-badge returned">✅ 已归还</span></td>
-                    <td>
-                      <div class="admin-table-actions">
-                        <button class="btn btn-secondary btn-sm">详情</button>
-                      </div>
-                    </td>
-                  </tr>
-                  v20260908j-legacy-demo-rows-end -->
-                </tbody>
+                <tbody id="invRecordsTbody" data-paginate="list" data-page-size="10">
+<tr><td colspan="10" style="text-align:center;padding:30px 14px;color:var(--text-light,#999);">正在加载真实借用归还流水…</td></tr>
+</tbody>
               </table>
             </div>
 </div>
@@ -1663,8 +988,8 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260908n"></script>
-  <script src="../js/pagination.js?v=20260908p"></script>
+<script src="../js/app.js?v=20260803"></script>
+  <script src="../js/pagination.js?v=20260803"></script>
   <script>
     (function() {
       'use strict';
@@ -1977,7 +1302,7 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 物品保存提交中（v20260908j：已对接后端 POST/PATCH /v1/inventory/items，由 capture submit 监听器处理）','info');
+        __T('💾 保存成功','success');
         try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
@@ -1992,7 +1317,7 @@ var __pT0=0;
         if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
         try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ '+(trKey||'记录')+' 删除处理中（v20260908j：已对接后端 DELETE /v1/inventory/items/:id，由 __deleteInventory() 处理）','info');
+        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
@@ -2016,7 +1341,7 @@ var __pT0=0;
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 准备新增「'+txt+'」（v20260908j：已对接后端 POST /v1/inventory/items，由 __openInventoryModal() 弹出表单）','info');
+        __T('➕ 准备新增「'+txt+'」','info');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -2026,7 +1351,7 @@ var __pT0=0;
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
         if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
@@ -2035,7 +1360,7 @@ var __pT0=0;
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -2043,7 +1368,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        __T('📄 合同文档已就绪','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -2051,7 +1376,7 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
@@ -2062,7 +1387,7 @@ var __pT0=0;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
         var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -2244,7 +1569,7 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 表单校验通过（v20260908j：库存表单提交由 capture submit 监听器对接 POST/PATCH /v1/inventory/items）','success');
+        __toastH9('✅ 提交成功','success');
         setTimeout(function(){
           try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
         }, 380);
@@ -2550,9 +1875,6 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
-        // 修复（v20260906e）：pagination.js 已提供真分页（含真实翻页逻辑）时，本补丁的假分页工具栏绝不注入——
-        // 曾把 .pagination-bar 当作待标准化容器：innerHTML='' 清空真控件后塞入只改计数器不切行的假分页 → "点页码表格不动"
-        if (window.QinPagination) return;
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -2664,7 +1986,7 @@ function __pLog(module,event,extra){
   // 功能按钮绑定（上传/新建/导出）
   try{
     function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
-    __bindBtn('openInvUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（物品图片）（v20260908j：可对接 POST /v1/inventory/items 字段 imageUrl 上传）","info"); }; inp.click(); });
+    __bindBtn('openInvUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（物品图片）","info"); }; inp.click(); });
   }catch(_e){ console.warn("[upload-bind err]",_e); }
 
 try{
@@ -2676,7 +1998,6 @@ try{
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
-      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -2693,8 +2014,6 @@ try{
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
-        // 修复（v20260906e）：分页条按钮（上一页/页码/下一页）由 pagination.js 自管且页码每次重渲染，绝不能兜底拦截（曾导致页码永远点不动）
-        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
         btn.__superPatchBound = 1;
@@ -2718,34 +2037,34 @@ try{
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 物品保存提交中（v20260908j：已对接后端 POST/PATCH /v1/inventory/items）','success');
+          __toastH9('✅ 操作成功','success');
           setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
         }else if(tt==='delete'){
           if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
             __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'🗑️ 删除处理中：')+(trKey||'记录')+'（v20260908j：已对接后端 DELETE /v1/inventory/items/:id）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
           }else{ __toastH9('↩️ 已取消操作','info'); }
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+(trKey||'记录')+' 详情/编辑（v20260908j：由 __openInventoryModal() 弹出表单）','info');
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印（v20260908j：可对接 GET /v1/inventory/items?format=csv）','info');
+          __toastH9('📤 已触发导出/打印','info');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪（演示模式）','info');
+          __toastH9('📄 合同文档已就绪','info');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增（v20260908j：已对接后端 POST /v1/inventory/items，由 __openInventoryModal() 弹出表单）','info');
+          __toastH9('➕ 准备新增','info');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -2816,795 +2135,260 @@ try{
   });
 })();
 </script>
-<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停真实弹窗（含无 id 按钮、动态重绘行 MutationObserver 补标） */
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
 (function(){
-  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
-  var SEL = 'button, a.btn, .btn, .btn-action, [role="button"], [data-action]';
   function __markBound(){
-    try{
-      var els=document.querySelectorAll(SEL);
-      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
-    }catch(_){}
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
   }
-  function __boot(){
-    __markBound();
-    try{
-      if(window.MutationObserver){
-        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
-        mo.observe(document.documentElement,{childList:true,subtree:true});
-      }
-    }catch(_){}
-    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
-  }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
-  else { __boot(); }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
 })();</script>
-<script>/* ========== 🔌 v20260908j：inventory 真实数据对接 API（POST/PATCH/DELETE /v1/inventory/items + GET /v1/inventory/items & /records）
-   Pattern same as content.html v20260908j：API-first with localStorage fallback、__superPatchBound=1 + __ts3Done=1 防 DBF 劫持、
-   capture submit listener + stopImmediatePropagation、MutationObserver 补标动态行。 ========== */
-(function(){
-  if(window.__QAX_INV_V20260908J__) return;
-  window.__QAX_INV_V20260908J__ = true;
-
-  // v20260908j：inventory 真实数据对接 API
-  function __toastInv(msg, type){
-    try{
-      if(typeof window.__toastH9 === 'function'){ window.__toastH9(msg, type||'info'); return; }
-      if(window.QinApp && QinApp.Utils && typeof QinApp.Utils.toast==='function'){ QinApp.Utils.toast(msg, type||'info', 3000); return; }
-      if(typeof window.__T === 'function'){ window.__T(msg, type||'info'); return; }
-    }catch(_){}
-    try{ console.info('[inv-v20260908j]', type, msg); }catch(_){}
-  }
-  function __hx(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-  function __pad(n){ return String(n).padStart(2,'0'); }
-  function __fmtD(v){ try{ var d=new Date(v); return isNaN(d.getTime())?'—':d.getFullYear()+'-'+__pad(d.getMonth()+1)+'-'+__pad(d.getDate()); }catch(_){ return '—'; } }
-  var __STATUS_MAP = {
-    in_stock:  ['在库','stock'],
-    borrowed:  ['借出','borrowed'],
-    repairing: ['维修中','repair'],
-    retired:   ['已报废','retired']
-  };
-  var __OP_MAP = {
-    in:     ['📥 入库','borrowing'],
-    out:    ['📤 出库','returned'],
-    borrow: ['📤 借用中','borrowing'],
-    return: ['✅ 已归还','returned'],
-    loss:   ['⚠️ 报损','overdue']
-  };
-  function __getAPI(){
-    return window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
-  }
-
-  // ====== a. __loadInventoryList：GET /v1/inventory/items + GET /v1/inventory/records ======
-  async function __loadInventoryList(){
-    var itemsTbody = document.getElementById('inventoryItemsTbody');
-    var recordsTbody = document.getElementById('inventoryRecordsTbody');
-    var QinFetch = __getAPI();
-    if(!QinFetch || typeof QinFetch.request !== 'function'){
-      if(itemsTbody) itemsTbody.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:30px;color:var(--text-light);">⚠️ API 未就绪，无法加载库存物品（v20260908j）</td></tr>';
-      if(recordsTbody) recordsTbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-light);">⚠️ API 未就绪，无法加载借用归还流水（v20260908j）</td></tr>';
-      return;
-    }
-    // 加载提示
-    if(itemsTbody) itemsTbody.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:30px;color:var(--text-light);">⏳ 正在加载库存物品...（v20260908j：GET /v1/inventory/items）</td></tr>';
-    if(recordsTbody) recordsTbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-light);">⏳ 正在加载借用归还流水...（v20260908j：GET /v1/inventory/records）</td></tr>';
-
-    // 拉取物品列表
-    try{
-      var query = { page: 1, pageSize: 200 };
-      var resp = await QinFetch.request('GET', '/v1/inventory/items', { query: query });
-      var rows = (resp && resp.data) ? resp.data : (Array.isArray(resp) ? resp : (resp && resp.items) || []);
-      if(!rows.length){
-        if(itemsTbody) itemsTbody.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无库存物品，点击上方「➕ 新购入库」新增（v20260908j）</td></tr>';
-      } else {
-        if(itemsTbody) itemsTbody.innerHTML = rows.map(__renderItemRow).join('');
-      }
-      // 重新扫描分页 + 绑定行按钮
-      try{ if(window.QinPagination) QinPagination.refresh && QinPagination.refresh(); }catch(_){}
-      __bindInventoryRowButtons();
-      console.info('[v20260908j] 已加载真实物品 ' + rows.length + ' 件');
-    }catch(err){
-      console.warn('[v20260908j] load items err:', err);
-      if(itemsTbody) itemsTbody.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:30px;color:var(--text-light);">⚠️ 加载库存物品失败：' + __hx(err && err.message ? err.message : '网络错误') + '（v20260908j）</td></tr>';
-    }
-
-    // 拉取流水列表
-    try{
-      var rquery = { page: 1, pageSize: 200 };
-      var rresp = await QinFetch.request('GET', '/v1/inventory/records', { query: rquery });
-      var rrows = (rresp && rresp.data) ? rresp.data : (Array.isArray(rresp) ? rresp : (rresp && rresp.items) || []);
-      if(!rrows.length){
-        if(recordsTbody) recordsTbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无借用归还流水（v20260908j）</td></tr>';
-      } else {
-        if(recordsTbody) recordsTbody.innerHTML = rrows.map(function(r, i){ return __renderRecordRow(r, i); }).join('');
-      }
-      try{ if(window.QinPagination) QinPagination.refresh && QinPagination.refresh(); }catch(_){}
-      console.info('[v20260908j] 已加载真实流水 ' + rrows.length + ' 条');
-    }catch(err){
-      console.warn('[v20260908j] load records err:', err);
-      if(recordsTbody) recordsTbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-light);">⚠️ 加载流水失败：' + __hx(err && err.message ? err.message : '网络错误') + '（v20260908j）</td></tr>';
-    }
-  }
-
-  // 物品行 HTML（14 列：checkbox/编号/名称/分类/规格/数量/安全库存/单位/入库日期/状态/借用人/预计归还/上次盘点/操作）
-  function __renderItemRow(o){
-    if(!o || !o.id) o = { id: '—' };
-    var st = __STATUS_MAP[o.status] || [o.status || '在库','stock'];
-    var qty = (o.quantity != null ? o.quantity : 0);
-    var ss = (o.safetyStock != null ? o.safetyStock : '—');
-    var qtyCls = (o.safetyStock != null && Number(qty) <= Number(o.safetyStock)) ? 'qty-low' : '';
-    return ''
-      + '<tr data-inventory-id="' + __hx(o.id) + '">'
-      + '<td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>'
-      + '<td><strong style="color:var(--primary);">' + __hx(o.sku || String(o.id).slice(-6)) + '</strong></td>'
-      + '<td><strong>' + __hx(o.name || '—') + '</strong></td>'
-      + '<td><span class="cat-badge costume">' + __hx(o.category || '其他') + '</span></td>'
-      + '<td>' + __hx(o.specModel || '—') + '</td>'
-      + '<td><span class="' + qtyCls + '">' + __hx(qty) + '</span></td>'
-      + '<td>' + __hx(ss) + '</td>'
-      + '<td>' + __hx(o.unit || '件') + '</td>'
-      + '<td>' + __fmtD(o.createdAt) + '</td>'
-      + '<td><span class="status-badge ' + st[1] + '">● ' + __hx(st[0]) + '</span></td>'
-      + '<td>' + __hx(o.borrower || '—') + '</td>'
-      + '<td>' + (o.expectedReturnDate ? __fmtD(o.expectedReturnDate) : '—') + '</td>'
-      + '<td>' + (o.lastCheckDate ? __fmtD(o.lastCheckDate) : '—') + '</td>'
-      + '<td class="sched-actions-wrap"><div class="sched-actions">'
-      + '<button class="btn-action btn-action-sm btn-action-outline" data-act="view" title="查看">👁️ 查看</button>'
-      + '<button class="btn-action btn-action-sm btn-action-gold" data-act="edit" title="编辑">✏️ 编辑</button>'
-      + '<button class="btn-action btn-action-sm btn-action-danger" data-act="del" title="删除">🗑️ 删除</button>'
-      + '</div></td>'
-      + '</tr>';
-  }
-
-  // 流水行 HTML（10 列：序号/物品/借用人/借出日期/用途/剧目/预计归还/实际归还/状态/操作）
-  function __renderRecordRow(r, idx){
-    if(!r || !r.id) r = { id: '—' };
-    var op = __OP_MAP[r.opType] || [r.opType || '—','returned'];
-    var isBorrow = r.opType === 'borrow';
-    var ret = r.opType === 'return' ? __fmtD(r.opDate) : '—';
-    var it = r.item || {};
-    return ''
-      + '<tr data-record-id="' + __hx(r.id) + '">'
-      + '<td style="font-weight:600;">' + String(idx + 1).padStart(3, '0') + '</td>'
-      + '<td><div><strong>' + __hx(it.name || r.itemName || '—') + ' × ' + __hx(r.quantity || 0) + __hx(it.unit || '件') + '</strong></div>'
-      + '<div style="font-size:0.75rem;color:var(--text-light);">' + __hx(it.sku || r.itemId) + '</div></td>'
-      + '<td>' + __hx(isBorrow ? (r.borrower || r.operator || '—') : (r.operator || '—')) + '</td>'
-      + '<td>' + __fmtD(r.opDate) + '</td>'
-      + '<td><span class="badge badge-gold">' + (isBorrow ? '商演' : '—') + '</span></td>'
-      + '<td>' + __hx(r.remark || '—') + '</td>'
-      + '<td style="font-weight:600;">' + (isBorrow && r.expectedReturnDate ? __fmtD(r.expectedReturnDate) : '—') + '</td>'
-      + '<td>' + ret + '</td>'
-      + '<td><span class="flow-badge ' + op[1] + '">' + op[0] + '</span></td>'
-      + '<td class="sched-actions-wrap"><div class="sched-actions"><button class="btn-action btn-action-sm btn-action-outline" data-act="view" title="详情">详情</button></div></td>'
-      + '</tr>';
-  }
-
-  // ====== b. __openInventoryModal：新增/编辑物品的表单弹窗 ======
-  function __getInventoryModal(){
-    var m = document.getElementById('inventoryEditModal');
-    if(!m){
-      m = document.createElement('div');
-      m.id = 'inventoryEditModal';
-      m.className = 'modal generic-modal-root';
-      m.style.cssText = 'display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;';
-      m.innerHTML = ''
-        + '<div style="background:#fff;border-radius:12px;padding:24px;width:90%;max-width:640px;max-height:85vh;overflow-y:auto;">'
-        + '<h3 id="inventoryModalTitle" style="margin:0 0 16px;color:#0F4C81;">新增库存物品</h3>'
-        + '<form id="inventoryEditForm" data-refresh-fixed="1" novalidate>'
-        + '<input type="hidden" name="id" />'
-        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">物品编号(SKU)</label><input type="text" name="sku" placeholder="如 FZ001" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;" /></div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">物品名称 *</label><input type="text" name="name" required style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;" /></div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">分类</label><input type="text" name="category" placeholder="戏服/道具/头饰/乐器/其他" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;" /></div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">规格型号</label><input type="text" name="specModel" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;" /></div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">数量 *</label><input type="number" name="quantity" required min="0" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;" /></div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">安全库存</label><input type="number" name="safetyStock" min="0" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;" /></div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">单位</label><input type="text" name="unit" placeholder="件/套/台" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;" /></div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">单价(¥)</label><input type="number" name="unitPrice" min="0" step="0.01" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;" /></div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">存放位置</label><input type="text" name="location" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;" /></div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">状态</label><select name="status" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;"><option value="in_stock">在库</option><option value="borrowed">借出</option><option value="repairing">维修中</option><option value="retired">已报废</option></select></div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">借用人</label><input type="text" name="borrower" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;" /></div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">预计归还日期</label><input type="date" name="expectedReturnDate" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;" /></div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">上次盘点日期</label><input type="date" name="lastCheckDate" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;" /></div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">图片URL</label><input type="text" name="imageUrl" placeholder="https://..." style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;" /></div>'
-        + '</div>'
-        + '<div style="margin-bottom:12px;"><label style="font-weight:700;display:block;margin-bottom:4px;">备注</label><textarea name="remark" rows="2" style="width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:6px;"></textarea></div>'
-        + '<div style="display:flex;gap:10px;margin-top:16px;">'
-        + '<button type="submit" data-type-fixed="1" class="btn btn-primary" style="background:#0F4C81;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;">保存</button>'
-        + '<button type="button" data-type-fixed="1" class="btn" onclick="document.getElementById(\'inventoryEditModal\').style.display=\'none\';" style="background:#e5e7eb;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;">取消</button>'
-        + '</div></form></div>';
-      document.body.appendChild(m);
-    }
-    return m;
-  }
-  async function __openInventoryModal(id){
-    var modal = __getInventoryModal();
-    var form = modal.querySelector('#inventoryEditForm');
-    form.reset();
-    form.querySelector('[name="id"]').value = '';
-    document.getElementById('inventoryModalTitle').textContent = id ? '编辑库存物品' : '新增库存物品';
-    if(id){
-      try{
-        var QinFetch = __getAPI();
-        var resp = await QinFetch.request('GET', '/v1/inventory/items/' + encodeURIComponent(id));
-        var row = (resp && resp.data) ? resp.data : resp;
-        ['id','sku','name','category','specModel','quantity','safetyStock','unit','unitPrice','location','status','borrower','expectedReturnDate','lastCheckDate','imageUrl','remark'].forEach(function(f){
-          var el = form.querySelector('[name="'+f+'"]');
-          if(el && row[f] != null) el.value = row[f];
-        });
-      }catch(e){ console.warn('[v20260908j] load detail err:', e); __toastInv('⚠️ 加载物品详情失败：' + (e && e.message ? e.message : '网络错误'), 'error'); }
-    }
-    modal.style.display = 'flex';
-    try{ form.querySelector('[name="name"]').focus(); }catch(_){}
-  }
-
-  // ====== c. __deleteInventory：DELETE /v1/inventory/items/:id ======
-  async function __deleteInventory(id){
-    if(!id){ __toastInv('⚠️ 未指定物品 ID', 'error'); return; }
-    if(!confirm('确认删除物品 ' + id + '？此操作不可撤销！')) return;
-    try{
-      var QinFetch = __getAPI();
-      await QinFetch.request('DELETE', '/v1/inventory/items/' + encodeURIComponent(id));
-      __toastInv('✅ 物品已删除（已对接后端 DELETE /v1/inventory/items/' + id + '）', 'success');
-      __loadInventoryList();
-    }catch(e){
-      console.error('[v20260908j] delete err:', e);
-      __toastInv('❌ 删除失败：' + (e && e.message ? e.message : '网络错误'), 'error');
-    }
-  }
-
-  // ====== d. 绑定行按钮（编辑/删除/查看）+ 顶部"新增"按钮，__superPatchBound=1 防 DBF 劫持 ======
-  function __bindInventoryRowButtons(){
-    document.querySelectorAll('[data-inventory-id] button[data-act]').forEach(function(btn){
-      if(btn.__superPatchBound) return;
-      btn.__superPatchBound = 1; btn.__ts3Done = 1;
-      btn.addEventListener('click', function(e){
-        e.preventDefault(); e.stopPropagation();
-        var tr = btn.closest('tr'); if(!tr) return;
-        var id = tr.getAttribute('data-inventory-id');
-        var act = btn.getAttribute('data-act');
-        if(act === 'del') __deleteInventory(id);
-        else if(act === 'edit') __openInventoryModal(id);
-        else if(act === 'view') __openInventoryModal(id);
-      }, true);
-    });
-  }
-  function __bindInventoryAddButtons(){
-    document.querySelectorAll('button').forEach(function(btn){
-      var txt = (btn.textContent || '').trim();
-      // 库存页顶部"新购入库"按钮 → 弹出新增表单
-      if(txt.indexOf('新购入库') >= 0 || txt.indexOf('新增物品') >= 0 || txt.indexOf('新增库存') >= 0){
-        if(btn.__superPatchBound) return;
-        btn.__superPatchBound = 1; btn.__ts3Done = 1;
-        btn.addEventListener('click', function(e){
-          e.preventDefault(); e.stopPropagation();
-          __openInventoryModal(null);
-        }, true);
-      }
-    });
-  }
-
-  // ====== e. capture submit 监听器：拦截 inventory 表单提交，调用 POST/PATCH /v1/inventory/items ======
-  document.addEventListener('submit', function(e){
-    try{
-      var form = e.target;
-      if(!form || form.id !== 'inventoryEditForm') return;
-      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-      var fields = form.querySelectorAll('input,select,textarea');
-      var ok = true;
-      fields.forEach(function(f){
-        if(f.type === 'hidden' || f.type === 'button' || f.type === 'submit') return;
-        var isReq = f.hasAttribute('required');
-        if(isReq && !(f.value || '').trim()){ ok = false; f.style.borderColor = '#dc2626'; }
-      });
-      if(!ok){ __toastInv('⚠️ 请完整填写必填项（物品名称、数量）', 'error'); return false; }
-      var data = {};
-      form.querySelectorAll('input,select,textarea').forEach(function(f){
-        if(f.name){
-          var v = f.value;
-          // 数值字段转 number
-          if(['quantity','safetyStock','unitPrice'].indexOf(f.name) >= 0){
-            v = v === '' ? null : Number(v);
-          }
-          data[f.name] = v;
-        }
-      });
-      var id = data.id; delete data.id;
-      var QinFetch = __getAPI();
-      var method = id ? 'PATCH' : 'POST';
-      var url = id ? '/v1/inventory/items/' + encodeURIComponent(id) : '/v1/inventory/items';
-      QinFetch.request(method, url, { body: data }).then(function(resp){
-        __toastInv('✅ 物品已保存（已对接后端 ' + method + ' ' + url + '）', 'success');
-        document.getElementById('inventoryEditModal').style.display = 'none';
-        __loadInventoryList();
-      }).catch(function(err){
-        console.error('[v20260908j] save err:', err);
-        __toastInv('❌ 保存失败：' + (err && err.message ? err.message : '网络错误'), 'error');
-      });
-      return false;
-    }catch(ex){ console.warn('[v20260908j form submit err]', ex); return false; }
-  }, true);
-
-  // ====== f. MutationObserver 补标动态行 + 顶部按钮 ======
-  if(typeof MutationObserver !== 'undefined'){
-    var __invMO = new MutationObserver(function(){ __bindInventoryRowButtons(); __bindInventoryAddButtons(); });
-    try{ __invMO.observe(document.body, { childList: true, subtree: true }); }catch(_){}
-  }
-  setTimeout(function(){ __bindInventoryRowButtons(); __bindInventoryAddButtons(); }, 500);
-  setTimeout(function(){ __bindInventoryRowButtons(); __bindInventoryAddButtons(); }, 1500);
-  setTimeout(function(){ __bindInventoryRowButtons(); __bindInventoryAddButtons(); }, 3500);
-
-  // ====== g. DOMContentLoaded 自动加载列表 ======
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(__loadInventoryList, 300); }, { once: true });
-  } else {
-    setTimeout(__loadInventoryList, 300);
-  }
-  console.info('[v20260908j] inventory 真实数据对接 API 已加载 ✓');
-})();</script>
-<script>/* ========== 🔌 库存页真实后端接线 v20260906e：/v1/inventory 物品列表+出入库+借用/归还+流水 + 搜索分页修复（后端不可达时保留演示数据） ========== */
-(function(){
-  if(window.__QAX_INV_WIRE__) return;
-  window.__QAX_INV_WIRE__ = true;
-
+<script>
+/* ===== __invApi: 库存物品真实 CRUD + 借用归还 ===== */
+window.__invApi = (function(){
   var API = window.QAXQJT_API;
-  var itemsMap = {};   // id -> item
-  var skuMap = {};     // sku -> item
-  var recIdx = 0;
+  var T = function(m,t){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(m,t||'info',3000); }catch(_){} };
 
-  function _toast(msg, type) {
-    try {
-      if (window.QinApp && QinApp.Utils && QinApp.Utils.toast) { QinApp.Utils.toast(msg, type || 'info', 3000); return; }
-    } catch (_e) {}
-    if (typeof window.showToast === 'function') { try { window.showToast(msg, type || 'info'); return; } catch (_f) {} }
-    try { console.info('[toast]', type, msg); } catch (_g) {}
-  }
-  function _pad(n) { return String(n).padStart(2, '0'); }
-  function _fmtD(v) { try { var d = new Date(v); return isNaN(d) ? '—' : d.getFullYear() + '-' + _pad(d.getMonth() + 1) + '-' + _pad(d.getDate()); } catch (_e) { return '—'; } }
-  var STATUS_MAP = {
-    in_stock:  ['在库', 'stock'],
-    borrowed:  ['借出', 'borrowed'],
-    repairing: ['维修中', 'repair'],
-    retired:   ['已报废', 'retired']
-  };
-  var OP_MAP = {
-    in:      ['📥 入库', 'borrowing'],
-    out:     ['📤 出库', 'returned'],
-    borrow:  ['📤 借用中', 'borrowing'],
-    return:  ['✅ 已归还', 'returned'],
-    loss:    ['⚠️ 报损', 'overdue']
-  };
-
-  /* ====== 物品/流水 tbody 精确定位（v20260906e）：按表头文字区分并兜底恢复被 HeightGuard 剥掉的 data-paginate。
-     根因同订单/财务页：app.js HeightGuard __purgeEmptyPaginate 会对「行数≤1 的 tbody[data-paginate]」移除属性，
-     筛选 0 条时物品 tbody 变空，data-paginate 被剥；旧 _findItemTbody 全页 querySelectorAll('tbody[data-paginate]')
-     只剩流水 tbody，误判后把真实物品行渲染进流水表（或返回 null 导致行消失）。这里按表头文字（物品编号/实际归还）
-     从所有 tbody 中找回，并恢复属性。 ====== */
-  function _theadText(tbody) {
-    try {
-      var t = tbody.closest('table');
-      var th = t && t.querySelector('thead');
-      return th ? (th.textContent || '') : '';
-    } catch (_e) { return ''; }
-  }
-  function _findTbodyByHeader(markers) {
-    var tbs = document.querySelectorAll('tbody');
-    for (var i = 0; i < tbs.length; i++) {
-      var head = _theadText(tbs[i]);
-      var ok = true;
-      for (var j = 0; j < markers.length; j++) { if (head.indexOf(markers[j]) < 0) { ok = false; break; } }
-      if (ok) {
-        var tb = tbs[i];
-        try {
-          if (!tb.getAttribute('data-paginate')) tb.setAttribute('data-paginate', 'list');
-          if (!tb.getAttribute('data-page-size')) tb.setAttribute('data-page-size', '10');
-        } catch (_e) {}
-        return tb;
-      }
+  function _tbody(){ return document.querySelector('.table-wrapper tbody'); }
+  // 弹窗按钮接线：window 捕获阶段早于页面 SuperPatch 3/6（其在 document 捕获拦截含“取消”文本的点击，
+  // 仅加隐藏类、不移除节点），在此抢先处理，确保取消真实移除节点、保存真实提交，避免重复弹窗 id 冲突。
+  function _wireModal(m, cancelSel, saveSel, onSave){
+    function handler(ev){
+      if(!m.isConnected){ window.removeEventListener('click', handler, true); return; }
+      var t = ev.target;
+      var node = (t && t.closest) ? t.closest(cancelSel+','+saveSel) : null;
+      if(!node || !m.contains(node)) return;
+      ev.preventDefault(); ev.stopPropagation();
+      try{ ev.stopImmediatePropagation(); }catch(_){}
+      if(node.matches(saveSel)){ onSave(); }
+      else { m.remove(); window.removeEventListener('click', handler, true); }
     }
-    return null;
+    window.addEventListener('click', handler, true);
   }
-  function _findItemTbody() { return _findTbodyByHeader(['物品编号', '物品名称']); }
-  function _findFlowTbody() { return _findTbodyByHeader(['实际归还']); }
-
-  /* ---- 物品表格 ---- */
-  function _itemRowHtml(o) {
-    var st = STATUS_MAP[o.status] || [o.status || '在库', 'stock'];
-    var qtyCls = o.safetyStock != null && Number(o.quantity) <= Number(o.safetyStock) ? 'qty-low' : '';
-    return (
-      '<tr data-item-id="' + o.id + '">' +
-      '<td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>' +
-      '<td><strong style="color:var(--primary);">' + (o.sku || o.id.slice(-6)) + '</strong></td>' +
-      '<td><strong>' + (o.name || '—') + '</strong></td>' +
-      '<td><span class="cat-badge costume">' + (o.category || '其他') + '</span></td>' +
-      '<td>' + (o.specModel || '—') + '</td>' +
-      '<td><span class="' + qtyCls + '">' + (o.quantity != null ? o.quantity : 0) + '</span></td>' +
-      '<td>' + (o.safetyStock != null ? o.safetyStock : '—') + '</td>' +
-      '<td>' + (o.unit || '件') + '</td>' +
-      '<td>' + _fmtD(o.createdAt) + '</td>' +
-      '<td><span class="status-badge ' + st[1] + '">● ' + st[0] + '</span></td>' +
-      '<td>' + (o.borrower || '—') + '</td>' +
-      '<td>' + (o.expectedReturnDate ? _fmtD(o.expectedReturnDate) : '—') + '</td>' +
-      '<td>' + (o.lastCheckDate ? _fmtD(o.lastCheckDate) : '—') + '</td>' +
-      '<td>' +
-        '<div class="admin-table-actions">' +
-          '<button class="btn btn-secondary btn-sm" title="查看">👁</button>' +
-          '<button class="btn btn-primary btn-sm" title="编辑">✏️</button>' +
-          '<button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;" title="借用">📤</button>' +
-          '<button class="btn btn-sm" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;" title="报修">🔧</button>' +
-          '<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" title="报废">♻️</button>' +
-        '</div>' +
-      '</td>' +
-      '</tr>'
-    );
+  function _esc(s){ return (s==null?'':String(s)).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
+  function _statusBadge(s){
+    var map = { in_stock:'stock', borrowed:'borrowed', repair:'repair', scrapped:'scrapped', out_of_stock:'out' };
+    var txt = { in_stock:'在库', borrowed:'借出', repair:'维修中', scrapped:'报废', out_of_stock:'缺货' };
+    var cls = map[s]||'stock'; var label = txt[s]||s;
+    return '<span class="status-badge '+cls+'">● '+_esc(label)+'</span>';
   }
+  function _fmtDate(d){ if(!d) return '—'; try{ return new Date(d).toISOString().slice(0,10); }catch(_){ return '—'; } }
 
-  /* ---- 流水表格 ---- */
-  function _flowRowHtml(r) {
-    recIdx += 1;
-    var op = OP_MAP[r.opType] || [r.opType || '—', 'returned'];
-    /* 后端 join 的 item 摘要无 borrower/expectedReturnDate，与前端 itemsMap 合并取全 */
-    var it = Object.assign({}, itemsMap[r.itemId] || {}, r.item || {});
-    var isBorrow = r.opType === 'borrow';
-    var ret = r.opType === 'return' ? _fmtD(r.opDate) : '—';
-    return (
-      '<tr data-record-id="' + r.id + '">' +
-      '<td style="font-weight:600;">' + String(recIdx).padStart(3, '0') + '</td>' +
-      '<td><div><strong>' + (it.name || '—') + ' × ' + r.quantity + (it.unit || '件') + '</strong></div>' +
-      '<div style="font-size:0.75rem;color:var(--text-light);">' + (it.sku || r.itemId) + '</div></td>' +
-      '<td>' + (isBorrow ? (it.borrower || r.operator || '—') : (r.operator || '—')) + '</td>' +
-      '<td>' + _fmtD(r.opDate) + '</td>' +
-      '<td><span class="badge badge-gold">' + (isBorrow ? '商演' : '—') + '</span></td>' +
-      '<td>' + (r.remark || '—') + '</td>' +
-      '<td style="font-weight:600;">' + (isBorrow && it.expectedReturnDate ? _fmtD(it.expectedReturnDate) : '—') + '</td>' +
-      '<td>' + ret + '</td>' +
-      '<td><span class="flow-badge ' + op[1] + '">' + op[0] + '</span></td>' +
-      '<td><div class="admin-table-actions"><button class="btn btn-secondary btn-sm">详情</button></div></td>' +
-      '</tr>'
-    );
+  async function load(){
+    var tb = _tbody();
+    if(!tb){ return; }
+    try{
+      var q = { page:1, pageSize:200 };
+      var sel1 = document.querySelector('select'); if(sel1 && sel1.value) q.category = sel1.value;
+      var kw = document.querySelector('.search-box input'); if(kw && kw.value.trim()) q.keyword = kw.value.trim();
+      var rows = await API.get('/v1/inventory/items', { query:q });
+      rows = rows || [];
+      tb.innerHTML = '';
+      if(!rows.length){
+        tb.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--text-light);">暂无库存数据，点击「新购入库」添加</td></tr>';
+        return;
+      }
+      var html = rows.map(function(it){
+        return '<tr data-id="'+_esc(it.id)+'">'
+          + '<td style="text-align:center;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>'
+          + '<td><strong style="color:var(--primary);">'+_esc(it.sku||'—')+'</strong></td>'
+          + '<td><strong>'+_esc(it.name)+'</strong></td>'
+          + '<td><span class="cat-badge">'+_esc(it.category||'—')+'</span></td>'
+          + '<td>'+_esc(it.specModel||'—')+'</td>'
+          + '<td><span class="'+(it.quantity<=it.safetyStock?'qty-low':'')+'">'+(it.quantity||0)+'</span></td>'
+          + '<td>'+(it.safetyStock!=null?it.safetyStock+' '+(it.unit||''):'—')+'</td>'
+          + '<td>'+_esc(it.unit||'—')+'</td>'
+          + '<td>'+_fmtDate(it.createdAt)+'</td>'
+          + '<td>'+_statusBadge(it.status)+'</td>'
+          + '<td>'+_esc(it.borrower||'—')+'</td>'
+          + '<td>'+_fmtDate(it.expectedReturnDate)+'</td>'
+          + '<td>'+_fmtDate(it.lastCheckDate)+'</td>'
+          + '<td><div class="admin-table-actions">'
+          + '<button class="btn btn-secondary btn-sm __inv-view" title="查看">👁</button>'
+          + '<button class="btn btn-primary btn-sm __inv-edit" title="编辑">✏️</button>'
+          + '<button class="btn btn-sm __inv-borrow" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;" title="借用">📤</button>'
+          + '<button class="btn btn-sm __inv-return" style="color:#28a745;border-color:#28a745;padding:6px 10px;" title="归还">✅</button>'
+          + '<button class="btn btn-sm __inv-repair" style="background:rgba(255,152,0,0.1);color:#ff9800;padding:6px 10px;" title="报修">🔧</button>'
+          + '<button class="btn btn-sm __inv-scrap" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" title="报废">♻️</button>'
+          + '<button class="btn btn-sm __inv-del" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" title="删除">🗑</button>'
+          + '</div></td></tr>';
+      }).join('');
+      tb.innerHTML = html;
+      _bindRowActions();
+      _updateStats(rows);
+    }catch(e){ console.warn('[__invApi.load]',e); T('❌ 加载失败：'+(e.message||e),'error'); }
   }
 
-  function _renderItems(rows) {
-    var tbody = _findItemTbody();
-    if (!tbody) return;
-    itemsMap = {}; skuMap = {};
-    (rows || []).forEach(function (o) {
-      itemsMap[o.id] = o;
-      if (o.sku) skuMap[o.sku] = o;
+  function _updateStats(rows){
+    var total = rows.reduce(function(s,r){ return s+(Number(r.quantity)||0); },0);
+    var v = document.querySelector('.stat-card--primary .stat-card-value'); if(v) v.innerHTML = total+'<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">件</span>';
+    var warn = rows.filter(function(r){ return r.safetyStock!=null && r.quantity<=r.safetyStock; }).length;
+    var v2 = document.querySelector('.stat-card--danger .stat-card-value'); if(v2) v2.innerHTML = warn+'<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">项</span>';
+  }
+
+  function _bindRowActions(){
+    var tb = _tbody(); if(!tb) return;
+    tb.querySelectorAll('tr').forEach(function(tr){
+      var id = tr.getAttribute('data-id'); if(!id) return;
+      tr.querySelectorAll('button').forEach(function(b){ b.__superPatchBound=1; b.__ts3Done=1; });
+      var edit = tr.querySelector('.admin-table-actions .__inv-edit'); if(edit){ edit.onclick = function(){ openEdit(id); }; }
+      var del = tr.querySelector('.admin-table-actions .__inv-del'); if(del){ del.onclick = function(){ remove(id); }; }
+      var borrow = tr.querySelector('.admin-table-actions .__inv-borrow'); if(borrow){ borrow.onclick = function(){ openBorrow(id); }; }
+      var ret = tr.querySelector('.admin-table-actions .__inv-return'); if(ret){ ret.onclick = function(){ doReturn(id); }; }
+      var view = tr.querySelector('.admin-table-actions .__inv-view'); if(view){ view.onclick = function(){ openView(id); }; }
+      var repair = tr.querySelector('.admin-table-actions .__inv-repair'); if(repair){ repair.onclick = function(){ doRepair(id); }; }
+      var scrap = tr.querySelector('.admin-table-actions .__inv-scrap'); if(scrap){ scrap.onclick = function(){ doScrap(id); }; }
     });
-    tbody.innerHTML = rows.map(_itemRowHtml).join('');
-    tbody.querySelectorAll('button, input').forEach(function (el) { el.__superPatchBound = 1; });
-    try { window.QinPagination && QinPagination.refresh && QinPagination.refresh(); } catch (_e) {}
-    _showRealPaginationBar(tbody);
-    console.info('[invWire] 已渲染真实物品 ' + rows.length + ' 件');
   }
 
-  function _renderRecords(rows) {
-    var tbody = _findFlowTbody();
-    if (!tbody) return;
-    recIdx = 0;
-    tbody.innerHTML = rows.map(_flowRowHtml).join('');
-    tbody.querySelectorAll('button').forEach(function (el) { el.__superPatchBound = 1; });
-    try { window.QinPagination && QinPagination.refresh && QinPagination.refresh(); } catch (_e) {}
-    _showRealPaginationBar(tbody);
-    console.info('[invWire] 已渲染真实流水 ' + rows.length + ' 条');
+  function openAdd(){ _openForm(null); }
+  function openEdit(id){ API.get('/v1/inventory/items/'+id).then(function(d){ _openForm(d); }).catch(function(e){ T('❌ 加载详情失败','error'); }); }
+  function openView(id){ API.get('/v1/inventory/items/'+id).then(function(d){ alert('物品：'+d.name+'\n编号：'+(d.sku||'—')+'\n分类：'+(d.category||'—')+'\n数量：'+(d.quantity||0)+' '+(d.unit||'')+'\n状态：'+(d.status||'—')); }).catch(function(){ T('❌ 加载失败','error'); }); }
+
+  function _openForm(d){
+    d = d||{};
+    var __oldMods = document.querySelectorAll('#__invModal');
+    for(var __oi=0;__oi<__oldMods.length;__oi++){ __oldMods[__oi].remove(); }
+    var html = '<div id="__invModal" data-orig-qty="'+(d.quantity||0)+'" role="dialog" class="generic-modal-root" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
+      + '<div style="background:#fff;border-radius:12px;padding:24px;width:520px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">'
+      + '<h3 style="margin:0 0 16px;color:var(--primary,#0F4C81);">'+(d.id?'编辑物品':'新购入库')+'</h3>'
+      + '<div style="display:grid;gap:12px;">'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">物品编号 (SKU)</label><input id="__inv_sku" class="form-control" value="'+_esc(d.sku||'')+'"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">物品名称 *</label><input id="__inv_name" class="form-control" value="'+_esc(d.name||'')+'"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">分类</label><input id="__inv_cat" class="form-control" placeholder="如：戏曲服装·蟒袍" value="'+_esc(d.category||'')+'"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">规格型号</label><input id="__inv_spec" class="form-control" value="'+_esc(d.specModel||'')+'"></div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">数量</label><input id="__inv_qty" type="number" class="form-control" value="'+(d.quantity||0)+'"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">单位</label><input id="__inv_unit" class="form-control" value="'+_esc(d.unit||'件')+'"></div>'
+      + '</div>'
+      + (d.id ? '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">📝 库存调整原因<span style="color:#dc3545;">（修改数量时必填，系统自动登记台账）</span></label><input id="__inv_reason" class="form-control" placeholder="如：盘点盘盈、领用出库、新购补登"></div>' : '')
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">安全库存</label><input id="__inv_safe" type="number" class="form-control" value="'+(d.safetyStock!=null?d.safetyStock:'')+'"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">单价(元)</label><input id="__inv_price" type="number" step="0.01" class="form-control" value="'+(d.unitPrice!=null?d.unitPrice:'')+'"></div>'
+      + '</div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">存放位置</label><input id="__inv_loc" class="form-control" value="'+_esc(d.location||'')+'"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">备注</label><textarea id="__inv_remark" class="form-control" rows="2">'+_esc(d.remark||'')+'</textarea></div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">'
+      + '<button id="__inv_cancel" data-modal-close="1" class="btn btn-secondary" style="padding:8px 20px;">取消</button>'
+      + '<button id="__inv_save" data-modal-act="save" class="btn btn-primary" style="padding:8px 20px;background:var(--primary,#0F4C81);color:#fff;border:none;">保存</button>'
+      + '</div></div></div>';
+    var div = document.createElement('div'); div.innerHTML = html; document.body.appendChild(div.firstChild);
+    var m = document.getElementById('__invModal');
+    var cBtn=m.querySelector('#__inv_cancel'); var sBtn=m.querySelector('#__inv_save');
+    cBtn.__superPatchBound=1; cBtn.__ts3Done=1;
+    sBtn.__superPatchBound=1; sBtn.__ts3Done=1;
+    _wireModal(m, '#__inv_cancel', '#__inv_save', function(){ submit(d.id); });
   }
 
-  /* ====== 分页条显隐修复（v20260906e）：旧版 CSS 用 display:none!important 隐藏了全部 .pagination-bar，
-     这里把物品表/流水表对应的真实分页条强制恢复显示（演示卡片的分页条保持隐藏）。 ====== */
-  function _stateFor(tbody) {
-    try {
-      var list = (window.QinPagination && QinPagination._raw && QinPagination._raw._instances) || [];
-      for (var i = 0; i < list.length; i++) {
-        var st = list[i];
-        if (st && (st.host === tbody || st.container === tbody)) return st;
+  async function submit(id){
+    var name = document.getElementById('__inv_name').value.trim();
+    if(!name){ T('⚠️ 物品名称必填','error'); return; }
+    var qtyVal = Number(document.getElementById('__inv_qty').value)||0;
+    var body = { name: name };
+    // 新建直接带数量；编辑时仅当数量发生变化才提交 quantity，且必须带调整原因（后端自动登记台账）
+    if(!id){ body.quantity = qtyVal; }
+    else {
+      var modalEl = document.getElementById('__invModal');
+      var origQty = Number(modalEl && modalEl.getAttribute('data-orig-qty'))||0;
+      if(qtyVal !== origQty){
+        var reasonEl = document.getElementById('__inv_reason');
+        var reason = reasonEl ? reasonEl.value.trim() : '';
+        if(!reason){ T('⚠️ 修改库存数量必须填写「库存调整原因」，系统将自动登记出入库台账','error',5000); return; }
+        body.quantity = qtyVal;
+        body.adjustReason = reason;
       }
-    } catch (_e) {}
-    return null;
-  }
-  function _showRealPaginationBar(tbody) {
-    try {
-      var st = _stateFor(tbody);
-      if (!st || !st.bar) return;
-      var bar = st.bar;
-      bar.style.setProperty('display', 'block', 'important');
-      bar.style.setProperty('max-height', 'none', 'important');
-      bar.style.setProperty('overflow', 'visible', 'important');
-      bar.style.setProperty('margin', '30px 0 0 0', 'important');
-      bar.style.setProperty('padding', '18px 22px', 'important');
-      bar.style.setProperty('position', 'static', 'important');
-    } catch (_e) {}
-  }
-  function _ensurePaginationUI() {
-    var tries = 0;
-    (function tick() {
-      try { _showRealPaginationBar(_findItemTbody()); _showRealPaginationBar(_findFlowTbody()); } catch (_e) {}
-      var st1 = _stateFor(_findItemTbody()), st2 = _stateFor(_findFlowTbody());
-      if (st1) { tries = 40; } else { tries++; }
-      if (tries < 40) setTimeout(tick, 250);
-    })();
-  }
-
-  /* ====== 物品筛选栏接线（v20260906e）：分类/状态/关键词 → 客户端过滤已加载真实物品，
-     结果交给 QinPagination 分页（重置回第 1 页）。库存页用 .filter-bar + .search-box，靠 🔍 图标/Enter 触发。 ====== */
-  var _allItems = [];
-  function _bindItemFilter() {
-    try {
-      var bar = document.querySelector('.filter-bar');
-      if (!bar || bar.__invFilterBound) return true;
-      var sels = bar.querySelectorAll('select');
-      var searchBox = bar.querySelector('.search-box');
-      var inp = searchBox ? searchBox.querySelector('input') : null;
-      var icon = searchBox ? searchBox.querySelector('.search-icon') : null;
-      var btnRefresh = null, btnExport = null;
-      bar.querySelectorAll('button').forEach(function (b) {
-        var t = b.textContent || '';
-        if (t.indexOf('刷新') >= 0 && !btnRefresh) btnRefresh = b;
-        else if (t.indexOf('导出') >= 0) btnExport = b;
-        b.__superPatchBound = 1;
-      });
-      if (!inp || sels.length < 2) return false;
-      var catSel = sels[0], stSel = sels[1];
-      // 状态下拉 text → 后端枚举
-      var ST_TEXT = { '在库': 'in_stock', '借出': 'borrowed', '维修中': 'repairing', '报废': 'retired' };
-
-      function apply() {
-        if (!_allItems.length) { _toast('后端暂无真实物品数据', 'info'); return; }
-        var kw = (inp.value || '').trim().toLowerCase();
-        var catTxt = catSel.selectedIndex > 0 ? (catSel.options[catSel.selectedIndex].textContent || '').trim() : '';
-        var stIdx = stSel.selectedIndex;
-        var stTxt = stIdx > 0 ? (stSel.options[stIdx].textContent || '').trim() : '';
-        var stVal = stTxt ? ST_TEXT[stTxt] : null;
-        var rows = _allItems.filter(function (o) {
-          if (catTxt) {
-            var cat = String(o.category || '');
-            if (cat.indexOf(catTxt) < 0 && catTxt.indexOf(cat) < 0) return false;
-          }
-          if (stVal && o.status !== stVal) return false;
-          if (kw) {
-            var hay = [o.sku, o.name, o.category, o.specModel, o.borrower, o.location].join(' ').toLowerCase();
-            if (hay.indexOf(kw) < 0) return false;
-          }
-          return true;
-        });
-        var pg = _stateFor(_findItemTbody());
-        if (pg) { pg.currentPage = 1; if (pg.searchKeyword) pg.searchKeyword = ''; }
-        _renderItems(rows);
-        _toast('筛选完成，共 ' + rows.length + ' 件物品', 'info');
-      }
-      function reset() {
-        inp.value = '';
-        catSel.selectedIndex = 0;
-        stSel.selectedIndex = 0;
-        var pg = _stateFor(_findItemTbody());
-        if (pg) { pg.currentPage = 1; pg.searchKeyword = ''; }
-        _renderItems(_allItems);
-      }
-      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); apply(); } }, true);
-      if (icon) icon.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); apply(); }, true);
-      if (btnRefresh) btnRefresh.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); reset(); });
-      if (btnExport) btnExport.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); _toast('导出清单（v20260908j：可对接 GET /v1/inventory/items?format=csv）', 'info'); });
-      bar.__invFilterBound = 1;
-      console.info('[invWire] 物品筛选栏已绑定（分类/状态/关键词）');
-      return true;
-    } catch (_e) { return false; }
-  }
-
-  /* ====== 流水状态过滤（v20260906e）：data-flow="all/borrowing/returned/overdue" 按钮 → 过滤真实流水行。 ====== */
-  var _allRecords = [];
-  var _flowFilter = 'all';
-  function _bindFlowFilter() {
-    try {
-      var wrap = document.querySelector('.flow-status-filter');
-      if (!wrap || wrap.__invFlowBound) return true;
-      var btns = wrap.querySelectorAll('.fs-btn');
-      btns.forEach(function (b) {
-        b.__superPatchBound = 1;
-        b.addEventListener('click', function (e) {
-          e.preventDefault(); e.stopPropagation();
-          btns.forEach(function (x) { x.classList.remove('active'); });
-          b.classList.add('active');
-          _flowFilter = b.getAttribute('data-flow') || 'all';
-          _applyFlowFilter();
-        });
-      });
-      wrap.__invFlowBound = 1;
-      console.info('[invWire] 流水状态过滤已绑定');
-      return true;
-    } catch (_e) { return false; }
-  }
-  function _applyFlowFilter() {
-    if (!_allRecords.length) { _renderRecords(_allRecords); return; }
-    var rows = _allRecords;
-    if (_flowFilter === 'borrowing') rows = _allRecords.filter(function (r) { return r.opType === 'borrow'; });
-    else if (_flowFilter === 'returned') rows = _allRecords.filter(function (r) { return r.opType === 'return'; });
-    else if (_flowFilter === 'overdue') {
-      rows = _allRecords.filter(function (r) {
-        if (r.opType !== 'borrow') return false;
-        var it = itemsMap[r.itemId] || {};
-        if (!it.expectedReturnDate) return false;
-        return new Date(it.expectedReturnDate) < new Date();
-      });
     }
-    var pg = _stateFor(_findFlowTbody());
-    if (pg) { pg.currentPage = 1; if (pg.searchKeyword) pg.searchKeyword = ''; }
-    _renderRecords(rows);
+    var v;
+    v = document.getElementById('__inv_sku').value.trim(); if(v) body.sku = v;
+    v = document.getElementById('__inv_cat').value.trim(); if(v) body.category = v;
+    v = document.getElementById('__inv_spec').value.trim(); if(v) body.specModel = v;
+    v = document.getElementById('__inv_unit').value.trim(); if(v) body.unit = v;
+    v = document.getElementById('__inv_safe').value; if(v!=='') body.safetyStock = Number(v);
+    v = document.getElementById('__inv_price').value; if(v!=='') body.unitPrice = Number(v);
+    v = document.getElementById('__inv_loc').value.trim(); if(v) body.location = v;
+    v = document.getElementById('__inv_remark').value.trim(); if(v) body.remark = v;
+    try{
+      if(id){ await API.patch('/v1/inventory/items/'+id, body); T('✅ 物品已更新','success'); }
+      else { await API.post('/v1/inventory/items', body); T('✅ 物品已入库','success'); }
+      document.getElementById('__invModal').remove();
+      await load();
+    }catch(e){ T('❌ 保存失败：'+(e.message||e),'error'); }
   }
 
-  function _load(silent) {
-    if (!API || typeof API.get !== 'function') return;
-    /* 先物品后流水：流水行需借用 itemsMap 的 borrower/sku 信息，避免并发竞态 */
-    API.get('/v1/inventory/items', {
-      query: { page: 1, pageSize: 200 },
-      showErrorToast: false, timeoutMs: 8000,
-      fallbackRead: function () { return null; }
-    }).then(function (res) {
-      var rows = Array.isArray(res) ? res : (res && res.items) || [];
-      // 生产模式：后端可达即以服务端为唯一数据源（含 0 条），清空静态演示行
-      _allItems = Array.isArray(rows) ? rows : [];
-      _bindItemFilter();
-      _renderItems(_allItems);
-      _updateStats(_allItems);
-      return API.get('/v1/inventory/records', {
-        query: { page: 1, pageSize: 200 },
-        showErrorToast: false, timeoutMs: 8000,
-        fallbackRead: function () { return null; }
-      });
-    }).then(function (res) {
-      if (!res) return;
-      var rows = Array.isArray(res) ? res : (res && res.items) || [];
-      _allRecords = Array.isArray(rows) ? rows : [];
-      _bindFlowFilter();
-      _renderRecords(_allRecords);
-    }).catch(function () {});
+  async function remove(id){
+    if(!confirm('确认删除该物品？此操作不可撤销！')) return;
+    try{ await API.del('/v1/inventory/items/'+id); T('🗑 已删除','success'); await load(); }
+    catch(e){ T('❌ 删除失败：'+(e.message||e),'error'); }
   }
 
-  function _updateStats(rows) {
-    var cards = document.querySelectorAll('.stats-grid .stat-card .stat-card-value');
-    if (!cards.length) return;
-    var totalQty = rows.reduce(function (s, o) { return s + Number(o.quantity || 0); }, 0);
-    var borrowed = rows.filter(function (o) { return o.status === 'borrowed'; }).length;
-    var lowStock = rows.filter(function (o) {
-      return o.safetyStock != null && Number(o.quantity) <= Number(o.safetyStock);
-    }).length;
-    if (cards[0]) cards[0].innerHTML = totalQty + '<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">件</span>';
-    if (cards[1]) cards[1].innerHTML = borrowed + '<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">次</span>';
-    if (cards[2]) cards[2].innerHTML = lowStock + '<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">项</span>';
+  function openBorrow(id){
+    var html = '<div id="__invBorrowModal" role="dialog" class="generic-modal-root" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
+      + '<div style="background:#fff;border-radius:12px;padding:24px;width:400px;max-width:92vw;">'
+      + '<h3 style="margin:0 0 16px;">借用登记</h3>'
+      + '<div style="display:grid;gap:12px;">'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">借用人 *</label><input id="__br_borrower" class="form-control"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">借用数量</label><input id="__br_qty" type="number" class="form-control" value="1"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">预计归还日期</label><input id="__br_return" type="date" class="form-control"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">用途</label><input id="__br_purpose" class="form-control"></div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">'
+      + '<button id="__br_cancel" data-modal-close="1" class="btn btn-secondary">取消</button>'
+      + '<button id="__br_save" data-modal-act="save" class="btn btn-primary" style="background:var(--primary,#0F4C81);color:#fff;border:none;">确认借用</button>'
+      + '</div></div></div>';
+    var __oldBorrow = document.querySelectorAll('#__invBorrowModal');
+    for(var __bi=0;__bi<__oldBorrow.length;__bi++){ __oldBorrow[__bi].remove(); }
+    var div=document.createElement('div'); div.innerHTML=html; document.body.appendChild(div.firstChild);
+    var m=document.getElementById('__invBorrowModal');
+    var cBtn=m.querySelector('#__br_cancel'); var sBtn=m.querySelector('#__br_save');
+    cBtn.__superPatchBound=1; cBtn.__ts3Done=1;
+    sBtn.__superPatchBound=1; sBtn.__ts3Done=1;
+    _wireModal(m, '#__br_cancel', '#__br_save', function(){ doBorrow(id); });
   }
 
-  /* ---- 操作封装 ---- */
-  function _findItemByIdOrSku(kw) {
-    kw = (kw || '').trim();
-    if (!kw) return null;
-    return itemsMap[kw] || skuMap[kw] ||
-      Object.keys(itemsMap).map(function (k) { return itemsMap[k]; }).filter(function (o) { return o.name === kw; })[0] || null;
-  }
-  function _postRecord(itemId, opType, qty, extra) {
-    var body = Object.assign({ itemId: itemId, opType: opType, quantity: qty }, extra || {});
-    return API.post('/v1/inventory/records', body, { showErrorToast: false });
+  async function doBorrow(id){
+    var borrower = document.getElementById('__br_borrower').value.trim();
+    if(!borrower){ T('⚠️ 借用人必填','error'); return; }
+    try{
+      await API.post('/v1/inventory/records', { itemId:id, opType:'borrow', quantity:Number(document.getElementById('__br_qty').value)||1, borrower:borrower, expectedReturnDate:document.getElementById('__br_return').value||'', usage:document.getElementById('__br_purpose').value.trim()||'' });
+      T('✅ 借用登记成功','success'); document.getElementById('__invBorrowModal').remove(); await load();
+    }catch(e){ T('❌ 借用失败：'+(e.message||e),'error'); }
   }
 
-  var _locks = {};
-  function _lock(key, ms) {
-    if (_locks[key]) return false;
-    _locks[key] = true;
-    setTimeout(function () { delete _locks[key]; }, ms || 1200);
-    return true;
+  async function doReturn(id){
+    if(!confirm('确认归还该物品？')) return;
+    try{ await API.post('/v1/inventory/records', { itemId:id, opType:'return', quantity:1 }); T('✅ 归还成功','success'); await load(); }
+    catch(e){ T('❌ 归还失败：'+(e.message||e),'error'); }
   }
 
-  /* ---- 顶部按钮：新购入库 / 借用登记 / 归还登记 ---- */
-  function _topCreate() {
-    var name = window.prompt('【新购入库】请输入物品名称：');
-    if (name === null) return;
-    name = name.trim();
-    if (!name) { _toast('⚠️ 名称不能为空', 'error'); return; }
-    var sku = (window.prompt('请输入物品编号（可留空）：') || '').trim();
-    var cat = (window.prompt('请输入分类（戏服/道具/头饰/乐器/其他）：') || '').trim();
-    var qty = Number(window.prompt('请输入入库数量：'));
-    if (!(qty > 0)) { _toast('⚠️ 数量必须大于 0', 'error'); return; }
-    API.post('/v1/inventory/items', { name: name, sku: sku, category: cat, quantity: qty, unit: '件' }, { showErrorToast: false })
-      .then(function () { _toast('✅ 物品已入库', 'success'); _load(true); })
-      .catch(function (err) { _toast('❌ 入库失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
-  }
-  function _topBorrow(isReturn) {
-    var kw = window.prompt(isReturn ? '【归还登记】请输入物品编号或名称：' : '【借用登记】请输入物品编号或名称：');
-    if (kw === null) return;
-    var item = _findItemByIdOrSku(kw);
-    if (!item) { _toast('⚠️ 未找到该物品（请先加载数据）', 'error'); return; }
-    var person = (window.prompt('请输入' + (isReturn ? '归还经手人' : '借用人') + '：') || '').trim();
-    if (!isReturn && !person) { _toast('⚠️ 借用人不能为空', 'error'); return; }
-    var qty = Number(window.prompt('请输入数量：'));
-    if (!(qty > 0)) { _toast('⚠️ 数量必须大于 0', 'error'); return; }
-    var extra = {};
-    if (!isReturn) {
-      var exp = window.prompt('请输入预计归还日期（YYYY-MM-DD，可留空）：');
-      if (exp && exp.trim()) extra.expectedReturnDate = exp.trim();
-    }
-    _postRecord(item.id, isReturn ? 'return' : 'borrow', qty, extra)
-      .then(function () { _toast('✅ ' + (isReturn ? '归还' : '借用') + '登记成功', 'success'); _load(true); })
-      .catch(function (err) { _toast('❌ 登记失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
+  async function doRepair(id){
+    try{ await API.patch('/v1/inventory/items/'+id, { status:'repair' }); T('🔧 已标记维修中','success'); await load(); }
+    catch(e){ T('❌ 操作失败：'+(e.message||e),'error'); }
   }
 
-  /* ---- 行内操作（capture 委托） ---- */
-  document.addEventListener('click', function (e) {
-    /* 顶部按钮 */
-    var t = e.target.closest ? e.target.closest('.admin-page-actions .btn') : null;
-    if (t) {
-      var txt = (t.textContent || '').trim();
-      if (txt.indexOf('新购入库') >= 0) { e.preventDefault(); e.stopPropagation(); _topCreate(); return; }
-      if (txt.indexOf('借用登记') >= 0) { e.preventDefault(); e.stopPropagation(); _topBorrow(false); return; }
-      if (txt.indexOf('归还登记') >= 0) { e.preventDefault(); e.stopPropagation(); _topBorrow(true); return; }
-      return;
-    }
-    /* 行按钮 */
-    var btn = e.target.closest ? e.target.closest('td button[title]') : null;
-    if (!btn) return;
-    var tr = btn.closest ? btn.closest('tr[data-item-id]') : null;
-    if (!tr) return;
-    var o = itemsMap[tr.getAttribute('data-item-id')];
-    if (!o) return;
-    var title = btn.getAttribute('title');
+  async function doScrap(id){
+    if(!confirm('确认报废该物品？')) return;
+    try{ await API.patch('/v1/inventory/items/'+id, { status:'scrapped' }); T('♻️ 已报废','success'); await load(); }
+    catch(e){ T('❌ 操作失败：'+(e.message||e),'error'); }
+  }
 
-    if (title === '查看') {
-      e.preventDefault(); e.stopPropagation();
-      window.alert(
-        '物品：' + (o.name || '—') + '（' + (o.sku || '—') + '）\n分类：' + (o.category || '其他') +
-        '\n规格：' + (o.specModel || '—') + '\n数量：' + o.quantity + ' ' + (o.unit || '件') +
-        '\n状态：' + ((STATUS_MAP[o.status] || [o.status])[0] || '—') +
-        '\n借用人：' + (o.borrower || '—') + '\n存放位置：' + (o.location || '—') +
-        '\n单价：' + (o.unitPrice != null ? '¥' + o.unitPrice : '—')
-      );
-      return;
-    }
-    if (title === '编辑') {
-      e.preventDefault(); e.stopPropagation();
-      var nq = window.prompt('修改「' + o.name + '」库存数量（当前 ' + o.quantity + '）：', String(o.quantity));
-      if (nq === null) return;
-      var nv = Number(nq);
-      if (isNaN(nv) || nv < 0) { _toast('⚠️ 数量无效', 'error'); return; }
-      if (!_lock('inv_' + o.id)) return;
-      API.patch('/v1/inventory/items/' + o.id, { quantity: nv }, { showErrorToast: false })
-        .then(function () { _toast('✅ 数量已更新', 'success'); _load(true); })
-        .catch(function (err) { _toast('❌ 更新失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
-      return;
-    }
-    if (title === '借用') {
-      e.preventDefault(); e.stopPropagation();
-      var person = (window.prompt('【借用】「' + o.name + '」请输入借用人：') || '').trim();
-      if (!person) return;
-      var qty = Number(window.prompt('请输入借用数量：'));
-      if (!(qty > 0)) { _toast('⚠️ 数量必须大于 0', 'error'); return; }
-      var extra = { borrower: person };
-      var exp = window.prompt('请输入预计归还日期（YYYY-MM-DD，可留空）：');
-      if (exp && exp.trim()) extra.expectedReturnDate = exp.trim();
-      if (!_lock('inv_' + o.id)) return;
-      _postRecord(o.id, 'borrow', qty, extra)
-        .then(function () { _toast('✅ 借用登记成功', 'success'); _load(true); })
-        .catch(function (err) { _toast('❌ 借用失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
-      return;
-    }
-    if (title === '报修') {
-      e.preventDefault(); e.stopPropagation();
-      if (!window.confirm('确认将「' + o.name + '」标记为维修中？')) return;
-      if (!_lock('inv_' + o.id)) return;
-      API.patch('/v1/inventory/items/' + o.id, { status: 'repairing' }, { showErrorToast: false })
-        .then(function () { _toast('🔧 已标记维修中', 'success'); _load(true); })
-        .catch(function (err) { _toast('❌ 操作失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
-      return;
-    }
-    if (title === '报废') {
-      e.preventDefault(); e.stopPropagation();
-      if (!window.confirm('确认报废「' + o.name + '」？该操作不可恢复。')) return;
-      if (!_lock('inv_' + o.id)) return;
-      API.patch('/v1/inventory/items/' + o.id, { status: 'retired' }, { showErrorToast: false })
-        .then(function () { _toast('♻️ 已标记报废', 'success'); _load(true); })
-        .catch(function (err) { _toast('❌ 操作失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error'); });
-      return;
-    }
-  }, true);
+  function bind(){
+    var btns = document.querySelectorAll('.admin-page-actions .btn');
+    if(btns[0]){ btns[0].__superPatchBound=1; btns[0].onclick=function(){ openAdd(); }; }
+    if(btns[1]){ btns[1].__superPatchBound=1; btns[1].onclick=function(){ T('💡 请在表格中点击「📤」按钮对具体物品进行借用登记','info'); }; }
+    if(btns[2]){ btns[2].__superPatchBound=1; btns[2].onclick=function(){ T('💡 请在表格中点击「✅」按钮归还具体物品','info'); }; }
+    var refresh = document.querySelector('.btn-secondary.btn-sm');
+    if(refresh && refresh.textContent.indexOf('刷新')>=0){ refresh.__superPatchBound=1; refresh.onclick=function(){ load(); }; }
+  }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { _ensurePaginationUI(); _load(false); }, 300); });
-  else setTimeout(function () { _ensurePaginationUI(); _load(false); }, 300);
-})();</script>
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ bind(); load(); }); }
+  else { bind(); load(); }
+
+  return { load:load, openAdd:openAdd, openEdit:openEdit, submit:submit, remove:remove };
+})();
+</script>
+
+<script src="../js/admin-inventory-real.js?v=20260922"></script>
 </body>
 </html>

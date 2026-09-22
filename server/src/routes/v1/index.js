@@ -48,7 +48,11 @@ v1.post(
   validate({ body: Joi.object({ refreshToken: Joi.string().required() }) }),
   authCtrl.refresh
 );
-v1.post('/auth/logout', authCtrl.logout);
+v1.post(
+  '/auth/logout',
+  validate({ body: Joi.object({ refreshToken: Joi.string().max(2048).optional() }) }),
+  authCtrl.logout
+);
 v1.get('/auth/me', authCtrl.me);
 
 // ========== 扫码登录 ==========
@@ -65,6 +69,28 @@ v1.post(
   }),
   authCtrl.qrcodeConfirm
 );
+
+// ========== 前台公开只读接口（无鉴权，必须在各自的 /:id 路由之前注册）==========
+const publicCtrl = require('../../controllers/public');
+v1.get(
+  '/plays/public',
+  validate({ query: Joi.object({ genre: Joi.string().allow('').optional(), keyword: Joi.string().allow('').optional(), pageSize: Joi.number().integer().min(1).max(200).optional() }) }),
+  publicCtrl.plays
+);
+v1.get('/play-categories/public', publicCtrl.playCategories);
+v1.get(
+  '/performers/public',
+  validate({ query: Joi.object({ primaryRole: Joi.string().allow('').optional(), rankGrade: Joi.string().allow('').optional(), pageSize: Joi.number().integer().min(1).max(300).optional() }) }),
+  publicCtrl.performers
+);
+v1.get('/schedules/public', publicCtrl.schedules);
+v1.get('/stats/public', publicCtrl.stats);
+v1.get(
+  '/cast-sheets/public',
+  validate({ query: Joi.object({ play: Joi.string().allow('').optional(), pageSize: Joi.number().integer().min(1).max(50).optional() }) }),
+  publicCtrl.castSheets
+);
+v1.get('/cast-sheets/public/:id', publicCtrl.castSheetDetail);
 
 // ========== accounts（IAM）==========
 v1.get(
@@ -548,11 +574,11 @@ v1.post(
       orderType: Joi.string().max(32).optional(),
       appointmentId: Joi.string().max(64).allow('').optional(),
       orderDate: Joi.string().optional(),
-      totalAmount: Joi.number().precision(2).optional(),
-      discountAmount: Joi.number().precision(2).optional(),
-      finalAmount: Joi.number().precision(2).optional(),
-      depositAmount: Joi.number().precision(2).optional(),
-      paidAmount: Joi.number().precision(2).optional(),
+      totalAmount: Joi.number().precision(2).min(0).max(100000000).optional(),
+      discountAmount: Joi.number().precision(2).min(0).max(100000000).optional(),
+      finalAmount: Joi.number().precision(2).min(0).max(100000000).optional(),
+      depositAmount: Joi.number().precision(2).min(0).max(100000000).optional(),
+      paidAmount: Joi.number().precision(2).min(0).max(100000000).optional(),
       invoiceTitle: Joi.string().allow('').optional(),
       taxNo: Joi.string().allow('').optional(),
       contractNo: Joi.string().allow('').optional(),
@@ -571,8 +597,8 @@ v1.post(
             playId: Joi.string().allow('').optional(),
             itemName: Joi.string().max(100).optional(),
             quantity: Joi.number().integer().min(1).optional(),
-            unitPrice: Joi.number().precision(2).optional(),
-            subtotal: Joi.number().precision(2).optional(),
+            unitPrice: Joi.number().precision(2).min(0).max(100000000).optional(),
+            subtotal: Joi.number().precision(2).min(0).max(100000000).optional(),
             performanceDate: Joi.string().optional(),
             remark: Joi.string().allow('').optional()
           })
@@ -593,11 +619,11 @@ v1.patch(
       organization: Joi.string().allow('').optional(),
       orderType: Joi.string().max(32).optional(),
       orderDate: Joi.string().optional(),
-      totalAmount: Joi.number().precision(2).optional(),
-      discountAmount: Joi.number().precision(2).optional(),
-      finalAmount: Joi.number().precision(2).optional(),
-      depositAmount: Joi.number().precision(2).optional(),
-      paidAmount: Joi.number().precision(2).optional(),
+      totalAmount: Joi.number().precision(2).min(0).max(100000000).optional(),
+      discountAmount: Joi.number().precision(2).min(0).max(100000000).optional(),
+      finalAmount: Joi.number().precision(2).min(0).max(100000000).optional(),
+      depositAmount: Joi.number().precision(2).min(0).max(100000000).optional(),
+      paidAmount: Joi.number().precision(2).min(0).max(100000000).optional(),
       invoiceTitle: Joi.string().allow('').optional(),
       taxNo: Joi.string().allow('').optional(),
       contractNo: Joi.string().allow('').optional(),
@@ -620,8 +646,8 @@ v1.patch(
             playId: Joi.string().allow('').optional(),
             itemName: Joi.string().max(100).optional(),
             quantity: Joi.number().integer().min(1).optional(),
-            unitPrice: Joi.number().precision(2).optional(),
-            subtotal: Joi.number().precision(2).optional(),
+            unitPrice: Joi.number().precision(2).min(0).max(100000000).optional(),
+            subtotal: Joi.number().precision(2).min(0).max(100000000).optional(),
             performanceDate: Joi.string().optional(),
             remark: Joi.string().allow('').optional()
           })
@@ -717,7 +743,8 @@ v1.patch(
       remark: Joi.string().allow('').optional()
     }).min(1)
   }),
-  requireRole(FIN_WRITE_ROLES),
+  // finance_checker 仅为提交复核而放行；控制器内限制其只能 PATCH status=checked
+  requireRole(['super_admin', 'finance_admin', 'finance_maker', 'finance_checker']),
   financeCtrl.update
 );
 v1.delete('/fin/ledger/:id', requireRole(['super_admin', 'finance_admin']), financeCtrl.remove);
@@ -782,6 +809,7 @@ v1.patch(
       expectedReturnDate: Joi.string().allow('').optional(),
       lastCheckDate: Joi.string().allow('').optional(),
       imageUrl: Joi.string().allow('').optional(),
+      adjustReason: Joi.string().max(200).allow('').optional(),
       remark: Joi.string().allow('').optional()
     }).min(1)
   }),
@@ -898,6 +926,13 @@ v1.delete('/play-categories/:id', requireRole(['super_admin']), playCatCtrl.remo
 
 /* ====== 内容管理 content 路由注册（v1）====== */
 const contentCtrl = require('../../controllers/content');
+
+// 公开路由（无鉴权）：仅供前台 news.html 等公开页拉取已发布内容，强制 publishStatus=published
+v1.get(
+  '/contents/public',
+  validate({ paginate: true, query: Joi.object({ keyword: Joi.string().optional(), type: Joi.string().optional() }) }),
+  contentCtrl.publicList
+);
 v1.get(
   '/contents',
   validate({ paginate: true, query: Joi.object({ keyword: Joi.string().optional(), type: Joi.string().optional(), publishStatus: Joi.string().optional() }) }),

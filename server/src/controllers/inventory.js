@@ -19,6 +19,22 @@ const { audit } = require('../services/audit-service');
 
 const OP_TYPES = ['in', 'out', 'borrow', 'return', 'loss'];
 
+/**
+ * 库存写互斥：SQLite 同一时刻只允许一个写事务。高并发下多个交互式事务同时
+ * BEGIN 并争抢写锁会在 rollback-journal 模式下互相阻塞直至 Prisma 5s 事务超时
+ * （P1008/P2028）。单 Node 进程内用 Promise 链把库存写事务串行化，
+ * 每笔仅两条语句、毫秒级完成，请求侧无感知；原子条件扣减仍保留为数据层最终防线。
+ */
+let writeChain = Promise.resolve();
+function withInventoryWrite(fn) {
+  const run = writeChain.then(fn, fn);
+  writeChain = run.then(
+    () => {},
+    () => {}
+  );
+  return run;
+}
+
 const listItems = async ctx => {
   const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
   const where = {};
@@ -91,17 +107,87 @@ const updateItem = async ctx => {
   ['sku', 'name', 'category', 'specModel', 'unit', 'location', 'status', 'borrower', 'imageUrl', 'remark'].forEach(k => {
     if (b[k] !== undefined) patch[k] = b[k];
   });
-  ['quantity', 'safetyStock', 'unitPrice'].forEach(k => {
+  // quantity 不允许无痕直改：仅 safetyStock/unitPrice 可直接更新；
+  // 库存数量差异必须走下方"调整台账"流程（adjustReason + in/out 记录）
+  ['safetyStock', 'unitPrice'].forEach(k => {
     if (b[k] != null) patch[k] = Number(b[k]);
   });
   ['expectedReturnDate', 'lastCheckDate'].forEach(k => {
     if (b[k]) patch[k] = new Date(b[k]);
   });
-  patch.updatedBy = ctx.state.user?.sub || 'system';
-  patch.updatedAt = new Date();
-  patch.ts = BigInt(nowMs());
-  const row = await prisma.inventoryItem.update({ where: { id }, data: patch });
-  await audit({ ctx, module: 'inventory', action: 'INV_ITEM_UPDATE', targetId: id, detail: Object.keys(patch) });
+
+  let adjustRecord = null;
+  if (b.quantity != null) {
+    const targetQty = Number(b.quantity);
+    if (!(Number.isInteger(targetQty) && targetQty >= 0)) {
+      throw new BusinessError('VALIDATION_ERROR', 'quantity 必须为非负整数');
+    }
+    const delta = targetQty - Number(old.quantity);
+    if (delta !== 0) {
+      const reason = (b.adjustReason == null ? '' : String(b.adjustReason)).trim();
+      if (!reason) {
+        throw new BusinessError(
+          'VALIDATION_ERROR',
+          '修改库存数量必须填写调整原因(adjustReason)，系统将自动登记出入库台账'
+        );
+      }
+      if (reason.length > 200) throw new BusinessError('VALIDATION_ERROR', '调整原因最长 200 字');
+      const opType = delta > 0 ? 'in' : 'out';
+      const qty = Math.abs(delta);
+      const now = new Date();
+      const operator = ctx.state.user?.realName || ctx.state.user?.sub || 'system';
+      // 与 createRecord 同一把写互斥 + 条件原子扣减，杜绝绕过台账/并发穿负
+      const recId = await withInventoryWrite(() => prisma.$transaction(async tx => {
+        const itemData = { updatedBy: ctx.state.user?.sub || 'system', updatedAt: now, ts: BigInt(nowMs()) };
+        if (delta > 0) {
+          const u = await tx.inventoryItem.updateMany({
+            where: { id },
+            data: { quantity: { increment: qty }, ...itemData, ...patch }
+          });
+          if (u.count === 0) throw new BusinessError('NOT_FOUND', '物品不存在');
+        } else {
+          const u = await tx.inventoryItem.updateMany({
+            where: { id, quantity: { gte: qty } },
+            data: { quantity: { decrement: qty }, ...itemData, ...patch }
+          });
+          if (u.count === 0) {
+            const cur = await tx.inventoryItem.findUnique({ where: { id }, select: { quantity: true } });
+            throw new BusinessError('CONFLICT', `库存不足：当前 ${cur ? cur.quantity : 0}，本次调整出库 ${qty}`);
+          }
+        }
+        const rec = await tx.inventoryRecord.create({
+          data: {
+            id: idByCtx('invRecord', 12, nanoid),
+            itemId: id,
+            opType,
+            opDate: now,
+            quantity: qty,
+            operator,
+            remark: '库存调整：' + reason,
+            ts: BigInt(nowMs())
+          }
+        });
+        return rec.id;
+      }));
+      adjustRecord = { id: recId, opType, quantity: qty, from: Number(old.quantity), to: targetQty, reason };
+    }
+  }
+
+  if (!adjustRecord) {
+    patch.updatedBy = ctx.state.user?.sub || 'system';
+    patch.updatedAt = new Date();
+    patch.ts = BigInt(nowMs());
+    await prisma.inventoryItem.update({ where: { id }, data: patch });
+  }
+
+  await audit({
+    ctx,
+    module: 'inventory',
+    action: 'INV_ITEM_UPDATE',
+    targetId: id,
+    detail: adjustRecord ? { adjusted: adjustRecord, fields: Object.keys(patch) } : Object.keys(patch)
+  });
+  const row = await prisma.inventoryItem.findUnique({ where: { id } });
   return success(ctx, row);
 };
 
@@ -150,7 +236,13 @@ const listRecords = async ctx => {
  * 记一笔出入库/借用（事务联动）
  * body: { itemId, opType, quantity, opDate, relatedScheduleId, operator, remark,
  *         borrower, expectedReturnDate, playTitle, usage }
+ *
+ * 并发安全：扣减类（out/borrow/loss）在事务内执行条件原子更新
+ * UPDATE ... SET quantity = quantity - qty WHERE id = ? AND quantity >= qty，
+ * 影响行数为 0 即库存不足（或被并发事务抢先扣减），抛错回滚——杜绝"先查后改"TOCTOU 超发。
  */
+const OP_LABEL = { in: '入库', out: '出库', borrow: '借出', return: '归还', loss: '报损' };
+
 const createRecord = async ctx => {
   const b = ctx.request.body;
   if (!b.itemId || !b.opType || b.quantity == null) {
@@ -162,40 +254,64 @@ const createRecord = async ctx => {
   const qty = Number(b.quantity);
   if (!(qty > 0)) throw new BusinessError('VALIDATION_ERROR', 'quantity 必须大于 0');
 
+  // 仅做存在性与名称等快照读取；库存是否足够一律以事务内条件更新为准
   const item = await prisma.inventoryItem.findUnique({ where: { id: b.itemId } });
   if (!item) throw new BusinessError('NOT_FOUND', '物品不存在');
 
-  // 数量影响：in/return 加，out/borrow/loss 减
-  const delta = b.opType === 'in' || b.opType === 'return' ? qty : -qty;
-  if (item.quantity + delta < 0) {
-    throw new BusinessError('CONFLICT', `库存不足：当前 ${item.quantity}，本次${b.opType} ${qty}`);
-  }
+  const isIncrease = b.opType === 'in' || b.opType === 'return';
+  const now = new Date();
 
-  const itemPatch = {
-    quantity: item.quantity + delta,
-    updatedBy: ctx.state.user?.sub || 'system',
-    updatedAt: new Date(),
-    ts: BigInt(nowMs())
-  };
-  // 借用/归还联动借用状态
-  if (b.opType === 'borrow') {
-    itemPatch.status = 'borrowed';
-    itemPatch.borrower = b.borrower || item.borrower || null;
-    itemPatch.expectedReturnDate = b.expectedReturnDate ? new Date(b.expectedReturnDate) : item.expectedReturnDate;
-  }
-  if (b.opType === 'return') {
-    itemPatch.status = 'in_stock';
-    itemPatch.borrower = null;
-    itemPatch.expectedReturnDate = null;
-  }
+  const record = await withInventoryWrite(() => prisma.$transaction(async tx => {
+    const itemData = {
+      updatedBy: ctx.state.user?.sub || 'system',
+      updatedAt: now,
+      ts: BigInt(nowMs())
+    };
+    // 借用/归还联动借用状态
+    if (b.opType === 'borrow') {
+      itemData.status = 'borrowed';
+      itemData.borrower = b.borrower || item.borrower || null;
+      itemData.expectedReturnDate = b.expectedReturnDate
+        ? new Date(b.expectedReturnDate)
+        : item.expectedReturnDate;
+    }
+    if (b.opType === 'return') {
+      itemData.status = 'in_stock';
+      itemData.borrower = null;
+      itemData.expectedReturnDate = null;
+    }
 
-  const record = await prisma.$transaction(async tx => {
-    const rec = await tx.inventoryRecord.create({
+    let updated;
+    if (isIncrease) {
+      updated = await tx.inventoryItem.updateMany({
+        where: { id: b.itemId },
+        data: { quantity: { increment: qty }, ...itemData }
+      });
+      if (updated.count === 0) throw new BusinessError('NOT_FOUND', '物品不存在');
+    } else {
+      // 原子条件扣减：库存充足才会命中，SQLite 写事务串行化保证并发下只有一笔能扣到最后一件
+      updated = await tx.inventoryItem.updateMany({
+        where: { id: b.itemId, quantity: { gte: qty } },
+        data: { quantity: { decrement: qty }, ...itemData }
+      });
+      if (updated.count === 0) {
+        const cur = await tx.inventoryItem.findUnique({
+          where: { id: b.itemId },
+          select: { quantity: true }
+        });
+        throw new BusinessError(
+          'CONFLICT',
+          `库存不足：当前 ${cur ? cur.quantity : 0}，本次${OP_LABEL[b.opType] || b.opType} ${qty}`
+        );
+      }
+    }
+
+    return tx.inventoryRecord.create({
       data: {
         id: idByCtx('invRecord', 12, nanoid),
         itemId: b.itemId,
         opType: b.opType,
-        opDate: b.opDate ? new Date(b.opDate) : new Date(),
+        opDate: b.opDate ? new Date(b.opDate) : now,
         quantity: qty,
         relatedScheduleId: b.relatedScheduleId || null,
         operator: b.operator || ctx.state.user?.realName || ctx.state.user?.sub || 'system',
@@ -203,9 +319,7 @@ const createRecord = async ctx => {
         ts: BigInt(nowMs())
       }
     });
-    await tx.inventoryItem.update({ where: { id: b.itemId }, data: itemPatch });
-    return rec;
-  });
+  }));
 
   await audit({
     ctx,

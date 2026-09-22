@@ -277,14 +277,22 @@ const create = async ctx => {
     ts: BigInt(nowMs())
   };
   const row = await prisma.wageItemsV1.create({ data });
-  try { await audit(ctx, 'wages:create', row.id, { performerName: row.performerName, netPay: row.netPay.toString() }); } catch (_) {}
+  try { await audit({ ctx, module: 'wage', action: 'WAGE_CREATE', targetId: row.id, detail: { batchId: row.batchId || null, performerName: row.performerName, netPay: Number(row.netPay) } }); } catch (_) {}
   return created(ctx, toApi(row));
 };
 
 const update = async ctx => {
   const b = ctx.request.body;
-  const exists = await prisma.wageItemsV1.findUnique({ where: { id: ctx.params.id } });
+  const exists = await prisma.wageItemsV1.findUnique({
+    where: { id: ctx.params.id },
+    include: { batch: true }
+  });
   if (!exists) throw new BusinessError('NOT_FOUND', '工资条不存在');
+  // 过账保护：confirmed/posted 批次的明细金额与字段冻结，与 DELETE 同口径
+  if (exists.batch && exists.batch.status && exists.batch.status !== 'draft') {
+    const act = exists.batch.status === 'posted' ? '已过账发放' : '已确认';
+    throw new BusinessError('UNPROCESSABLE', `工资批次${act}，工资明细不可修改（如需调整请先撤回批次）`);
+  }
   const data = {};
   ['performerName', 'staffNo', 'rankGrade', 'performerId', 'remark'].forEach(k => {
     if (b[k] !== undefined) data[k] = b[k];
@@ -331,13 +339,30 @@ const update = async ctx => {
   }
   data.ts = BigInt(nowMs());
   const row = await prisma.wageItemsV1.update({ where: { id: ctx.params.id }, data });
-  try { await audit(ctx, 'wages:update', row.id, data); } catch (_) {}
+  try {
+    const _safeDetail = Object.keys(data).filter(k => k !== 'ts').reduce((o, k) => {
+      const v = data[k];
+      o[k] = (typeof v === 'bigint') ? Number(v) : v;
+      return o;
+    }, {});
+    await audit({ ctx, module: 'wage', action: 'WAGE_UPDATE', targetId: row.id, detail: _safeDetail });
+  } catch (_) {}
   return success(ctx, toApi(row));
 };
 
 const remove = async ctx => {
+  // 过账保护：仅 draft 批次允许删除明细；confirmed/posted 已锁定（posted 已入发放台账）
+  const exists = await prisma.wageItemsV1.findUnique({
+    where: { id: ctx.params.id },
+    include: { batch: true }
+  });
+  if (!exists) throw new BusinessError('NOT_FOUND', '工资条不存在');
+  if (exists.batch && exists.batch.status && exists.batch.status !== 'draft') {
+    const act = exists.batch.status === 'posted' ? '已过账发放' : '已确认';
+    throw new BusinessError('UNPROCESSABLE', `工资批次${act}，工资明细不可删除（如需调整请先撤回批次）`);
+  }
   const row = await prisma.wageItemsV1.delete({ where: { id: ctx.params.id } });
-  try { await audit(ctx, 'wages:delete', ctx.params.id, { performerName: row.performerName }); } catch (_) {}
+  try { await audit({ ctx, module: 'wage', action: 'WAGE_DELETE', targetId: ctx.params.id, detail: { batchId: exists.batchId || null, performerName: row.performerName } }); } catch (_) {}
   return noContent(ctx);
 };
 
@@ -374,15 +399,21 @@ function _round2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
 function _calcWageItem(perf, att, rule) {
   const workDays = att ? att.workDays : 0;
   const nightly = att ? att.nightShows : 0;
-  const dailyRate = perf.dailyRate != null && Number(perf.dailyRate) > 0 ? Number(perf.dailyRate) : (rule ? Number(rule.baseDailyStandard) || 0 : 0);
+  // 取价优先级：本人协议天工资 > 职级工资标准；hasPersonalRate 同时用于备注口径，勿合并变量
+  const hasPersonalRate = perf.dailyRate != null && Number(perf.dailyRate) > 0;
+  const dailyRate = hasPersonalRate
+    ? Number(perf.dailyRate)
+    : (rule ? Number(rule.baseDailyStandard) || 0 : 0);
 
   const baseWage = _round2(dailyRate * workDays);
   const nightShowBonus = rule ? _round2(Number(rule.nightShowBonus) || 0) * nightly : 0;
-  // 全勤奖：当月无缺勤/请假才发
-  const isFull = att && att.absent === 0 && att.leave === 0;
+  // 全勤奖口径（与前端 app.js WageEngine.checkFullAttendance 对齐）：
+  // 当月无缺勤、无请假类，且迟到 < 3 次才发；迟到累计满 3 次取消全勤奖
+  const lateCount = att ? (att.late || 0) : 0;
+  const isFull = workDays > 0 && att && att.absent === 0 && att.leave === 0 && lateCount < 3;
   const fullAttendanceBonus = isFull ? (rule ? Number(rule.fullAttendanceBonus) || 0 : 0) : 0;
-  const transportAllowance = rule ? Number(rule.transportAllowance) || 0 : 0;
-  const mealAllowance = rule ? Number(rule.mealAllowance) || 0 : 0;
+  const transportAllowance = rule ? _round2((Number(rule.transportAllowance) || 0) * workDays) : 0; // 元/天单价 × 实际工天，零工天为0，半天(half 0.5)按半天折算
+  const mealAllowance = rule ? _round2((Number(rule.mealAllowance) || 0) * workDays) : 0; // 同上，按出勤天折算
 
   const grossPay = _round2(baseWage + nightShowBonus + fullAttendanceBonus + transportAllowance + mealAllowance);
   const totalDeduction = 0; // 社保/公积金/个税/扣款默认 0，可在明细里手工补
@@ -404,7 +435,7 @@ function _calcWageItem(perf, att, rule) {
     totalDeduction,
     netPay,
     otherDeductionNote: JSON.stringify({ leave: 0, absent: 0, late: att ? att.late : 0, early: 0 }),
-    remark: dailyRate > 0
+    remark: hasPersonalRate
       ? `无底薪：协议天工资 ¥${dailyRate}/天 × ${workDays}天`
       : `无底薪：职级日薪 ¥${dailyRate}/天 × ${workDays}天`
   };
@@ -463,6 +494,32 @@ const generate = async ctx => {
     });
   }
 
+  // 无有效核算明细时不建空批次（出勤为 0 且无协议天工资的人员已在上方跳过）
+  if (!items.length) {
+    throw new BusinessError(
+      'UNPROCESSABLE',
+      `${month} 无可核算人员：全员当月出勤为 0 且未设置协议天工资；请先录入考勤或在花名册维护天工资`
+    );
+  }
+
+  // 幂等重建（v20260921）：同月 draft 草稿批次先删后建，重复点击/改完参数重算都不会产生重复批次；
+  // confirmed/posted 批次已锁定，拒绝重算，防止已确认/已发放工资被意外覆盖
+  const existingBatches = await prisma.wageBatchesV1.findMany({ where: { wageMonth: month } });
+  const lockedBatch = existingBatches.find(x => x.status === 'confirmed' || x.status === 'posted');
+  if (lockedBatch) {
+    throw new BusinessError(
+      'CONFLICT',
+      `${month} 工资批次 ${lockedBatch.batchNo} 已${lockedBatch.status === 'posted' ? '过账发放' : '确认'}，不可重新核算；如需调整请先撤回该批次`
+    );
+  }
+  const staleDraftBatches = existingBatches.filter(x => x.status === 'draft');
+  const staleDraftIds = staleDraftBatches.map(x => x.id);
+  if (staleDraftIds.length) {
+    await prisma.wageItemsV1.deleteMany({ where: { batchId: { in: staleDraftIds } } });
+    await prisma.wageBatchesV1.deleteMany({ where: { id: { in: staleDraftIds } } });
+  }
+  const replaced = staleDraftBatches.map(x => ({ id: x.id, batchNo: x.batchNo }));
+
   // 正式生成：建批次 + 批量写入明细
   const batchNo = b.batchNo || ('WB-' + month.replace('-', '') + '-' + Date.now().toString(36).toUpperCase());
   const batch = await prisma.wageBatchesV1.create({
@@ -509,10 +566,11 @@ const generate = async ctx => {
     createdItems.push(toApi(row, batch));
   }
 
-  try { await audit(ctx, 'wages:generate', batch.id, { batchNo, month, count: createdItems.length }); } catch (_) {}
+  try { await audit({ ctx, module: 'wage', action: 'WAGE_GENERATE', targetId: batch.id, detail: { batchNo, wageMonth: month, count: createdItems.length } }); } catch (_) {}
   return created(ctx, {
     batch: _batchToApi(batch),
     items: createdItems,
+    replaced,
     summary: {
       totalPerformers: createdItems.length,
       totalBaseWage: _round2(totalBase),
@@ -558,7 +616,7 @@ const batchCreate = async ctx => {
     ts: BigInt(nowMs())
   };
   const row = await prisma.wageBatchesV1.create({ data });
-  try { await audit(ctx, 'wages:batchCreate', row.id, { batchNo: row.batchNo, wageMonth: row.wageMonth }); } catch (_) {}
+  try { await audit({ ctx, module: 'wage', action: 'WAGE_BATCH_CREATE', targetId: row.id, detail: { batchNo: row.batchNo, wageMonth: row.wageMonth } }); } catch (_) {}
   return created(ctx, _batchToApi(row));
 };
 
@@ -575,7 +633,7 @@ const batchConfirm = async ctx => {
       ts: BigInt(nowMs())
     }
   });
-  try { await audit(ctx, 'wages:batchConfirm', row.id, { batchNo: row.batchNo }); } catch (_) {}
+  try { await audit({ ctx, module: 'wage', action: 'WAGE_BATCH_CONFIRM', targetId: row.id, detail: { batchNo: row.batchNo } }); } catch (_) {}
   return success(ctx, _batchToApi(row));
 };
 
@@ -592,7 +650,7 @@ const batchPost = async ctx => {
       ts: BigInt(nowMs())
     }
   });
-  try { await audit(ctx, 'wages:batchPost', row.id, { batchNo: row.batchNo }); } catch (_) {}
+  try { await audit({ ctx, module: 'wage', action: 'WAGE_BATCH_POST', targetId: row.id, detail: { batchNo: row.batchNo } }); } catch (_) {}
   return success(ctx, _batchToApi(row));
 };
 

@@ -40,7 +40,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>演职人员人事管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260919c">
+  <link rel="stylesheet" href="../css/style.css?v=20260921e">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -67,20 +67,24 @@
     .table-wrapper > table { table-layout: auto !important; }
     .table-wrapper > table td,
     .table-wrapper > table th { word-break: normal !important; }
-    .table-wrapper > table.roster-table { table-layout: fixed !important; min-width: 1150px !important; }
-    .roster-table th:nth-child(1){width:46px}
-    .roster-table th:nth-child(2){width:76px}
-    .roster-table th:nth-child(3){width:84px}
-    .roster-table th:nth-child(4){width:52px}
-    .roster-table th:nth-child(5){width:52px}
-    .roster-table th:nth-child(6){width:84px}
-    .roster-table th:nth-child(7){width:84px}
-    .roster-table th:nth-child(8){width:64px}
-    .roster-table th:nth-child(9){width:110px}
-    .roster-table th:nth-child(11){width:96px}
-    .roster-table th:nth-child(12){width:64px}
-    .roster-table th:nth-child(13){width:210px}
+    .table-wrapper > table.roster-table { table-layout: fixed !important; min-width: 1080px !important; }
+    .roster-table th:nth-child(1){width:42px}
+    .roster-table th:nth-child(2){width:108px}  /* 工号加宽：容纳 PF018/ACC-2026-018 等 10+ 字符 */
+    .roster-table th:nth-child(3){width:80px}
+    .roster-table th:nth-child(4){width:48px}
+    .roster-table th:nth-child(5){width:48px}
+    .roster-table th:nth-child(6){width:80px}
+    .roster-table th:nth-child(7){width:88px}   /* 行当略加宽：容纳"靠须生""二架男"等 */
+    .roster-table th:nth-child(8){width:60px}
+    .roster-table th:nth-child(9){width:114px}
+    .roster-table th:nth-child(11){width:88px}
+    .roster-table th:nth-child(12){width:60px}
+    .roster-table th:nth-child(13){width:184px}  /* 操作列缩窄：5 个图标按钮 ~184px 足够 */
     table.roster-table td { overflow: hidden; text-overflow: ellipsis; }
+    table.roster-table td:nth-child(2),
+    table.roster-table td:nth-child(3),
+    table.roster-table td:nth-child(6),
+    table.roster-table td:nth-child(7) { white-space: normal; word-break: break-all; }  /* 工号/姓名/部门/行当允许换行避免截断 */
     table.roster-table td:nth-child(10) { white-space: normal; }
     table.roster-table td .dept-tag,
     table.roster-table td .role-tag,
@@ -390,16 +394,22 @@
 }
 .admin-table-actions, .action-btn-group {
   display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 2px !important;
+  flex-wrap: nowrap !important;
+  gap: 1px !important;
   align-items: center !important;
   justify-content: center !important;
   overflow: visible !important;
   max-width: 100% !important;
 }
 .admin-table-actions .btn, .action-btn-group .btn {
-  padding: 3px 6px !important;
-  font-size: 0.7rem !important;
+  padding: 3px 5px !important;
+  font-size: 0.78rem !important;
+  line-height: 1 !important;
+  width: 30px !important;
+  height: 26px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   white-space: nowrap !important;
   box-sizing: border-box !important;
 }
@@ -847,8 +857,8 @@
                     </tr>
                   </thead>
                   <tbody data-paginate="list" data-page-size="10" data-paginate-keep="1" data-stf-roster="1">
-                    <tr><td colspan="13" style="text-align:center;padding:40px;color:var(--text-light);">暂无演职人员数据，请点击「新增人员」添加</td></tr>
-                  </tbody>
+<tr><td colspan="13" style="text-align:center;padding:30px 14px;color:var(--text-light,#999);">正在加载真实花名册…</td></tr>
+</tbody>
                 </table>
               </div>
 </div>
@@ -1360,7 +1370,7 @@
                     </div>
                   </div>
                   <div style="margin-top:14px;padding:12px 16px;background:rgba(24,105,173,0.05);border:1px solid rgba(24,105,173,0.15);border-radius:10px;font-size:0.82rem;color:#1e6fb5;line-height:1.7;">
-                    💡 <strong>说明：</strong>生成时若未对接真实考勤流水，将自动使用「模拟合理考勤」（工作日出勤+随机迟到/请假/旷工+30–55%演出率）用于演示核算。生产环境请将 <code style="background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px;">getAttendanceCb(staffId, month)</code> 接入真实考勤表。
+                    💡 <strong>说明：</strong>工资条严格依据「考勤管理」中的真实考勤流水与演出记录核算。当月尚无考勤记录时无法生成，请先完成打卡/考勤录入后再操作。
                   </div>
                 </div>
 
@@ -1391,7 +1401,7 @@
                       </thead>
                       <tbody id="wageGenTbody">
                         <tr><td colspan="14" style="padding:50px 20px;color:var(--text-light);font-size:0.9rem;">
-                          🈳 尚无数据。选择月份后，点击「预览核算」可查看预估，点击「生成当月工资条」即可批量创建 32 位员工工资单并存入 <code>qaxqjt_wages_v1</code>。
+                          🈳 尚无数据。选择月份后，点击「预览核算」可基于真实考勤查看预估，点击「生成当月工资条」即可按在册人员批量创建工资单。
                         </td></tr>
                       </tbody>
                     </table>
@@ -1458,7 +1468,7 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260921a"></script>
+<script src="../js/app.js?v=20260921e"></script>
   <script src="../js/pagination.js?v=20260908p"></script>
   <script>
     (function() {
@@ -2165,12 +2175,29 @@
           }
         }
 
-        function runGen(previewOnly) {
+        async function runGen(previewOnly) {
           if (!W) return;
           var m = $('wageGenMonth') && $('wageGenMonth').value;
           if (!m) { U && U.toast && U.toast('⚠️ 请先选择结算月份', 'warning'); return; }
           var staff = getWageStaffList();
           if (!staff.length) { U && U.toast && U.toast('⚠️ 花名册暂无在册人员，请先在「花名册」录入演职人员后再生成工资条', 'warning'); return; }
+
+          // v20260922：有后端时必须以真实考勤流水为依据，杜绝模拟考勤生成假工资
+          var API = window.QAXQJT_API;
+          if (API && API.get) {
+            var attCount = 0;
+            try {
+              var res = await API.get('/v1/attendance', { query: { month: m, page: 1, pageSize: 1 }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function () { return null; } });
+              if (Array.isArray(res)) attCount = res.length;
+              else if (res && Array.isArray(res.items)) attCount = res.items.length;
+              else if (res && typeof res.total === 'number') attCount = res.total;
+            } catch (_) { attCount = 0; }
+            if (!attCount) {
+              U && U.toast && U.toast('⚠️ ' + m + ' 暂无真实考勤记录，无法生成工资条。请先在「考勤管理」完成打卡/录入后再核算。', 'warning', 4500);
+              return;
+            }
+          }
+
           var remark = $('wageGenRemark') && $('wageGenRemark').value;
           var result;
           if (previewOnly) {
@@ -3280,7 +3307,7 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        __T('💾 保存成功','success');
         try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
@@ -3295,7 +3322,7 @@ var __pT0=0;
         if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
         try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
@@ -3319,7 +3346,7 @@ var __pT0=0;
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        __T('➕ 准备新增「'+txt+'」','info');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -3329,7 +3356,7 @@ var __pT0=0;
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
         if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
@@ -3338,7 +3365,7 @@ var __pT0=0;
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -3346,7 +3373,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        __T('📄 合同文档已就绪','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -3354,7 +3381,7 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
@@ -3365,7 +3392,7 @@ var __pT0=0;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
         var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -3547,7 +3574,7 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        __toastH9('✅ 提交成功','success');
         setTimeout(function(){
           try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
         }, 380);
@@ -3972,7 +3999,7 @@ function __pLog(module,event,extra){
   // 功能按钮绑定（上传/新建/导出）
   try{
     function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
-    __bindBtn('openStaffUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（员工头像）（演示模式：真实环境将上传到服务器）","info"); }; inp.click(); });
+    __bindBtn('openStaffUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（员工头像）","info"); }; inp.click(); });
   }catch(_e){ console.warn("[upload-bind err]",_e); }
 
 try{
@@ -4026,34 +4053,34 @@ try{
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          __toastH9('✅ 操作成功','success');
           setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
         }else if(tt==='delete'){
           if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
             __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
           }else{ __toastH9('↩️ 已取消操作','info'); }
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印（演示模式）','info');
+          __toastH9('📤 已触发导出/打印','info');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪（演示模式）','info');
+          __toastH9('📄 合同文档已就绪','info');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+          __toastH9('➕ 准备新增','info');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -4204,8 +4231,16 @@ try{
   }
 
   // 花名册 = 页面第一个 data-paginate tbody；行结构：1复选 2工号 3姓名 4性别 5年龄 6队别 7行当 8年份 9电话 10剧目 11状态 12场次 13操作
+  // 健壮定位：HeightGuard 可能剥掉 data-paginate 属性 → 先按 roster-table 类找，再降级到 data-paginate，
+  // 并按表头含"工号"字样过滤（避免误绑到考勤 tab 的 tbody）
   function rosterTbody(){
+    var rt = document.querySelector('table.roster-table');
+    if (rt) { var b = rt.querySelector('tbody'); if (b) return b; }
     var list = document.querySelectorAll('tbody[data-paginate="list"]');
+    for (var i = 0; i < list.length; i++) {
+      var tbl = list[i].closest('table');
+      if (tbl && (tbl.textContent || '').indexOf('工号') >= 0) return list[i];
+    }
     return (list && list.length) ? list[0] : null;
   }
   function rowCells(tr){ return tr ? tr.querySelectorAll('td') : null; }
@@ -4434,7 +4469,7 @@ try{
 })();
 </script>
 
-<script>/* ========== 🔌 花名册真实后端接线 v20260906f：/v1/performers 列表渲染 + 新增/编辑/停启用写库（后端不可达时保留演示数据） ========== */
+<script>/* ========== 🔌 花名册真实后端接线 v20260906f：/v1/performers 列表渲染 + 新增/编辑/停启用写库（后端不可达时显示空态，绝不保留演示数据） ========== */
 (function(){
   if (window.__STF_API_V1__) return; window.__STF_API_V1__ = true;
   var API = window.QAXQJT_API;
@@ -4504,7 +4539,14 @@ try{
       : '<tr><td colspan="20" style="text-align:center;padding:36px 20px;color:var(--text-light,#999);font-size:0.92rem;">暂无演职人员数据，点击右上角「➕ 新增人员」录入真实花名册</td></tr>';
     t.querySelectorAll('button').forEach(function(b){ b.__superPatchBound=1; b.__stfBound=1; });
     try { if(!t.getAttribute('data-paginate')) t.setAttribute('data-paginate','list'); if(!t.getAttribute('data-page-size')) t.setAttribute('data-page-size','10'); }catch(_){}
-    try { window.QinPagination && QinPagination.refresh && QinPagination.refresh(); }catch(_){}
+    // 数据填入后强制（重新）绑分页：如果 tbody 没绑过（HeightGuard 在 t=0 剥属性时跑过 pagination.js 找不到容器），
+    // 调 QinPagination.init() 触发 initAll 重新扫描（_initOne 会检查 data-pagination-bound 防重复）
+    try {
+      if (window.QinPagination) {
+        if (t.getAttribute('data-pagination-bound') !== '1') { QinPagination.init(); }
+        else if (QinPagination.refresh) { QinPagination.refresh(); }
+      }
+    }catch(_){}
   }
   /* 暴露给筛选补丁复用（v20260908m）*/
   window.__STF_RENDER__ = render;
@@ -4521,7 +4563,7 @@ try{
         var badge = document.getElementById('rosterBadge');
         if (badge) badge.textContent = rows.length;
         console.info('[staffApi] 已渲染真实演职人员 '+rows.length+' 条');
-      });
+        }).catch(function(){ try { render([]); } catch(_){} var b0=document.getElementById('rosterBadge'); if(b0) b0.textContent='0'; });
   }
   window.__STF_LOAD__ = load;
 

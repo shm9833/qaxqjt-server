@@ -82,7 +82,7 @@ const create = async ctx => {
     ts: nowMs()
   };
   const row = await prisma.setting.create({ data });
-  try { await audit(ctx, 'setting:create', row.id, { key: row.key }); } catch (_) {}
+  try { await audit({ ctx, module: 'setting', action: 'SETTING_CREATE', targetId: row.id, detail: { key: row.key, group: row.group } }); } catch (_) {}
   return created(ctx, toApi(row));
 };
 
@@ -97,13 +97,13 @@ const update = async ctx => {
   if (b.isPublic !== undefined) data.isPublic = b.isPublic;
   data.updatedBy = ctx.state.user ? ctx.state.user.username : null;
   const row = await prisma.setting.update({ where: { id: ctx.params.id }, data });
-  try { await audit(ctx, 'setting:update', row.id, { key: row.key, changes: data }); } catch (_) {}
+  try { await audit({ ctx, module: 'setting', action: 'SETTING_UPDATE', targetId: row.id, detail: { key: row.key, fields: Object.keys(data).filter(k => k !== 'ts' && k !== 'updatedBy') } }); } catch (_) {}
   return success(ctx, toApi(row));
 };
 
 const remove = async ctx => {
   const row = await prisma.setting.delete({ where: { id: ctx.params.id } });
-  try { await audit(ctx, 'setting:delete', ctx.params.id, { key: row.key }); } catch (_) {}
+  try { await audit({ ctx, module: 'setting', action: 'SETTING_DELETE', targetId: ctx.params.id, detail: { key: row.key } }); } catch (_) {}
   return noContent(ctx);
 };
 
@@ -136,7 +136,7 @@ const batchUpdate = async ctx => {
     });
     results.push(toApi(row));
   }
-  try { await audit(ctx, 'setting:batchUpdate', 'batch', { count: results.length }); } catch (_) {}
+  try { await audit({ ctx, module: 'setting', action: 'SETTING_BATCH_UPDATE', targetId: 'batch', detail: { count: results.length, keys: results.map(r => r.key) } }); } catch (_) {}
   return success(ctx, results);
 };
 

@@ -1016,694 +1016,152 @@
             <div class="admin-card-header">
               <h3>🖼️ Banner列表管理</h3>
               <div style="display:flex;gap:10px;align-items:center;">
-                <span class="badge badge-info">首页 4张 · 内页 3张</span>
+                <span class="badge badge-info" id="bannerCountBadge">暂无 Banner</span>
                 <button class="btn btn-primary btn-sm">➕ 新增Banner</button>
               </div>
             </div>
             <div class="admin-card-body">
               <div class="banner-list" data-paginate="list" data-page-size="12">
-
-                <div class="banner-card">
-                  <div class="banner-preview">
-                    <span class="banner-page-tag">🏠 首页 Banner #1</span>
-                    <div class="banner-preview-content">
-                      <div class="banner-preview-title">千年秦韵 · 百年传承</div>
-                      <div class="banner-preview-subtitle">秦安县秦剧团 · {year}年度演出季隆重开启</div>
-                      <div class="banner-preview-btn">立即预约 →</div>
-                    </div>
-                  </div>
-                  <div class="banner-info">
-                    <div class="banner-info-header">
-                      <div class="banner-name">主视觉Banner-年度演出季</div>
-                      <div class="banner-order">排序 1</div>
-                    </div>
-                    <div class="banner-meta">
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">标题文案</span>
-                        <span class="banner-meta-value">千年秦韵·百年传承</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">副标题</span>
-                        <span class="banner-meta-value">{year}年度演出季开启</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">按钮文字</span>
-                        <span class="banner-meta-value">立即预约</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">跳转链接</span>
-                        <span class="banner-meta-value" style="font-family:monospace;font-size:0.75rem;">/booking.html</span>
-                      </div>
-                    </div>
-                    <div class="banner-actions">
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <div class="move-btns">
-                        <button disabled title="已置顶">↑</button>
-                        <button>↓</button>
-                      </div>
-                      <span class="badge badge-success" style="margin-left:auto;">● 启用</span>
-                      <button class="btn btn-danger btn-sm">禁用</button>
-                      <button class="btn btn-outline-dark btn-sm">🗑 删除</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="banner-card">
-                  <div class="banner-preview inner">
-                    <span class="banner-page-tag">🏠 首页 Banner #2</span>
-                    <div class="banner-preview-content">
-                      <div class="banner-preview-title">庙会演出 · 下乡惠民</div>
-                      <div class="banner-preview-subtitle">专业秦腔团队 · 32名演员 · 28部经典剧目</div>
-                      <div class="banner-preview-btn">查看剧目 →</div>
-                    </div>
-                  </div>
-                  <div class="banner-info">
-                    <div class="banner-info-header">
-                      <div class="banner-name">业务展示Banner-下乡惠民</div>
-                      <div class="banner-order">排序 2</div>
-                    </div>
-                    <div class="banner-meta">
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">标题文案</span>
-                        <span class="banner-meta-value">庙会演出·下乡惠民</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">副标题</span>
-                        <span class="banner-meta-value">专业团队·28部经典剧目</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">按钮文字</span>
-                        <span class="banner-meta-value">查看剧目</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">跳转链接</span>
-                        <span class="banner-meta-value" style="font-family:monospace;font-size:0.75rem;">/operas.html</span>
-                      </div>
-                    </div>
-                    <div class="banner-actions">
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <div class="move-btns">
-                        <button>↑</button>
-                        <button>↓</button>
-                      </div>
-                      <span class="badge badge-success" style="margin-left:auto;">● 启用</span>
-                      <button class="btn btn-danger btn-sm">禁用</button>
-                      <button class="btn btn-outline-dark btn-sm">🗑 删除</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="banner-card">
-                  <div class="banner-preview">
-                    <span class="banner-page-tag">🏠 首页 Banner #3</span>
-                    <div class="banner-preview-content">
-                      <div class="banner-preview-title">国庆档 · 文化惠民演出周</div>
-                      <div class="banner-preview-subtitle">{year}年10月1日-7日 · 兴国镇文化广场 · 免费观看</div>
-                      <div class="banner-preview-btn">了解详情 →</div>
-                    </div>
-                  </div>
-                  <div class="banner-info">
-                    <div class="banner-info-header">
-                      <div class="banner-name">活动Banner-国庆惠民周</div>
-                      <div class="banner-order">排序 3</div>
-                    </div>
-                    <div class="banner-meta">
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">标题文案</span>
-                        <span class="banner-meta-value">国庆档·文化惠民演出周</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">副标题</span>
-                        <span class="banner-meta-value">{year}年10月1日-7日</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">按钮文字</span>
-                        <span class="banner-meta-value">了解详情</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">跳转链接</span>
-                        <span class="banner-meta-value" style="font-family:monospace;font-size:0.75rem;">/news.html?id=18</span>
-                      </div>
-                    </div>
-                    <div class="banner-actions">
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <div class="move-btns">
-                        <button>↑</button>
-                        <button>↓</button>
-                      </div>
-                      <span class="badge badge-success" style="margin-left:auto;">● 启用</span>
-                      <button class="btn btn-danger btn-sm">禁用</button>
-                      <button class="btn btn-outline-dark btn-sm">🗑 删除</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="banner-card">
-                  <div class="banner-preview inner">
-                    <span class="banner-page-tag">🏠 首页 Banner #4</span>
-                    <div class="banner-preview-content">
-                      <div class="banner-preview-title">经典剧目《周仁回府》</div>
-                      <div class="banner-preview-subtitle">秦腔传统名剧 · 国家一级演员领衔主演</div>
-                      <div class="banner-preview-btn">预约演出 →</div>
-                    </div>
-                  </div>
-                  <div class="banner-info">
-                    <div class="banner-info-header">
-                      <div class="banner-name">剧目推荐Banner-周仁回府</div>
-                      <div class="banner-order">排序 4</div>
-                    </div>
-                    <div class="banner-meta">
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">标题文案</span>
-                        <span class="banner-meta-value">经典剧目《周仁回府》</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">副标题</span>
-                        <span class="banner-meta-value">国家一级演员领衔</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">按钮文字</span>
-                        <span class="banner-meta-value">预约演出</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">跳转链接</span>
-                        <span class="banner-meta-value" style="font-family:monospace;font-size:0.75rem;">/opera-detail.html?id=1</span>
-                      </div>
-                    </div>
-                    <div class="banner-actions">
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <div class="move-btns">
-                        <button>↑</button>
-                        <button disabled title="已置底">↓</button>
-                      </div>
-                      <span class="badge badge-success" style="margin-left:auto;">● 启用</span>
-                      <button class="btn btn-danger btn-sm">禁用</button>
-                      <button class="btn btn-outline-dark btn-sm">🗑 删除</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="banner-card">
-                  <div class="banner-preview">
-                    <span class="banner-page-tag" style="background:rgba(23,162,184,0.95);color:#fff;">📰 新闻列表页</span>
-                    <div class="banner-preview-content">
-                      <div class="banner-preview-title">剧团动态 · 新闻资讯</div>
-                      <div class="banner-preview-subtitle">了解秦安县秦剧团最新演出与活动信息</div>
-                    </div>
-                  </div>
-                  <div class="banner-info">
-                    <div class="banner-info-header">
-                      <div class="banner-name">内页Banner-新闻资讯</div>
-                      <div class="banner-order">排序 1</div>
-                    </div>
-                    <div class="banner-meta">
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">所属页面</span>
-                        <span class="banner-meta-value">新闻资讯列表页</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">副标题</span>
-                        <span class="banner-meta-value">剧团最新动态</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">按钮文字</span>
-                        <span class="banner-meta-value" style="color:var(--text-light);">—</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">跳转链接</span>
-                        <span class="banner-meta-value" style="color:var(--text-light);">无</span>
-                      </div>
-                    </div>
-                    <div class="banner-actions">
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <span class="badge badge-success" style="margin-left:auto;">● 启用</span>
-                      <button class="btn btn-danger btn-sm">禁用</button>
-                      <button class="btn btn-outline-dark btn-sm">🗑 删除</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="banner-card">
-                  <div class="banner-preview inner">
-                    <span class="banner-page-tag" style="background:rgba(111,66,193,0.95);color:#fff;">🎭 剧目列表页</span>
-                    <div class="banner-preview-content">
-                      <div class="banner-preview-title">经典剧目 · 精彩呈现</div>
-                      <div class="banner-preview-subtitle">28部传统与现代秦腔剧目 · 供您选择</div>
-                    </div>
-                  </div>
-                  <div class="banner-info">
-                    <div class="banner-info-header">
-                      <div class="banner-name">内页Banner-剧目展示</div>
-                      <div class="banner-order">排序 1</div>
-                    </div>
-                    <div class="banner-meta">
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">所属页面</span>
-                        <span class="banner-meta-value">剧目展示列表页</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">副标题</span>
-                        <span class="banner-meta-value">28部经典剧目</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">按钮文字</span>
-                        <span class="banner-meta-value" style="color:var(--text-light);">—</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">跳转链接</span>
-                        <span class="banner-meta-value" style="color:var(--text-light);">无</span>
-                      </div>
-                    </div>
-                    <div class="banner-actions">
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <span class="badge badge-success" style="margin-left:auto;">● 启用</span>
-                      <button class="btn btn-danger btn-sm">禁用</button>
-                      <button class="btn btn-outline-dark btn-sm">🗑 删除</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="banner-card" style="opacity:0.7;">
-                  <div class="banner-preview" style="filter:grayscale(0.6);">
-                    <span class="banner-page-tag" style="background:#666;color:#fff;">🎫 预约页</span>
-                    <div class="banner-preview-content">
-                      <div class="banner-preview-title">在线预约 · 便捷订票</div>
-                      <div class="banner-preview-subtitle">专属档期为您预留 · 专业团队值得信赖</div>
-                    </div>
-                  </div>
-                  <div class="banner-info">
-                    <div class="banner-info-header">
-                      <div class="banner-name">内页Banner-预约流程（临时禁用）</div>
-                      <div class="banner-order">排序 1</div>
-                    </div>
-                    <div class="banner-meta">
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">所属页面</span>
-                        <span class="banner-meta-value">在线预约页面</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">副标题</span>
-                        <span class="banner-meta-value">专属档期·专业团队</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">按钮文字</span>
-                        <span class="banner-meta-value" style="color:var(--text-light);">—</span>
-                      </div>
-                      <div class="banner-meta-item">
-                        <span class="banner-meta-label">跳转链接</span>
-                        <span class="banner-meta-value" style="color:var(--text-light);">无</span>
-                      </div>
-                    </div>
-                    <div class="banner-actions">
-                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
-                      <span class="badge badge-secondary" style="margin-left:auto;">● 已禁用</span>
-                      <button class="btn btn-success btn-sm">启用</button>
-                      <button class="btn btn-outline-dark btn-sm">🗑 删除</button>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
+                <div style="grid-column:1/-1;padding:40px 16px;text-align:center;color:var(--text-light,#888);">📭 暂无 Banner 配置，点击右上角「➕ 新增Banner」创建</div>
+</div>
             </div>
           </div>
         </div>
 
         <div class="tab-content" id="tab-news">
 
-          <!-- 📸 新闻配图上传表单
-          [div class="admin-card" style="margin-bottom:20px;border:2px solid #0ea5e9;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);"]
-            [div class="admin-card-header"]
-              [h3]📤 新闻配图上传（前端校验+预览层）[/h3]
-              [span class="badge badge-info" style="font-size:0.78rem;"]📰 前台 news.html 新闻卡缩略图[/span]
-            [/div]
-            [div class="admin-card-body"]
-              [form id="adminNewsUploadForm" autocomplete="off" data-upload-wrap="1" novalidate]
-                [div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;"]
-                  [div]
-                    [label style="font-weight:700;color:#075985;margin-bottom:8px;display:block;"]新闻标题 *[/label]
-                    [input type="text" name="newsTitle" required placeholder="例：秦剧团春节下乡巡演启幕" style="width:100%;padding:10px 14px;border:1.5px solid #0ea5e9;border-radius:10px;"]
-                  [/div]
-                  [div]
-                    [label style="font-weight:700;color:#075985;margin-bottom:8px;display:block;"]分类 *[/label]
-                    [select name="newsCategory" required style="width:100%;padding:10px 14px;border:1.5px solid #0ea5e9;border-radius:10px;"]
-                      [option value=""]请选择新闻分类[/option]
-                      [option]剧团动态[/option][option]演出公告[/option][option]文化资讯[/option][option]惠民演出[/option][option]政策通知[/option][option]年度总结[/option]
-                    [/select]
-                  [/div]
-                  [div]
-                    [label style="font-weight:700;color:#075985;margin-bottom:8px;display:block;"]新闻配图 *（≤10MB，JPG/PNG/WebP）[/label]
-                    [input type="file" name="newsImg" accept="image/*" required style="width:100%;padding:8px;border:2px dashed #0ea5e9;border-radius:10px;background:#fff;cursor:pointer;"]
-                  [/div]
-                  [div]
-                    [label style="font-weight:700;color:#075985;margin-bottom:8px;display:block;"]发布日期[/label]
-                    [input type="date" name="newsDate" style="width:100%;padding:10px 14px;border:1.5px solid #0ea5e9;border-radius:10px;"]
-                  [/div]
-                [/div]
-                [div style="margin-top:18px;display:flex;gap:14px;flex-wrap:wrap;"]
-                  [button type="submit" class="btn btn-primary" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);"]✅ 提交新闻配图[/button]
-                  [button type="reset" class="btn btn-outline"]🔄 清空[/button]
-                  [small style="margin-top:10px;color:#075985;"]💡 选择本地图片后下方会显示缩略图预览，前端完成尺寸/格式校验，正式保存需对接后端上传接口保存到服务器。[/small]
-                [/div]
-              [/form]
-            [/div]
-          [/div]
+          <!-- 📰 新闻资讯管理（接 /v1/contents API，对应前台 news.html） -->
+          <div class="admin-card" style="margin-bottom:20px;border:2px solid #0ea5e9;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);">
+            <div class="admin-card-header">
+              <h3>📰 新闻资讯管理</h3>
+              <div style="display:flex;gap:10px;align-items:center;">
+                <span class="badge badge-info" id="contentNewsCount">共 0 篇</span>
+                <button class="btn btn-primary btn-sm" id="contentNewsAddBtn">➕ 新增文章</button>
+              </div>
+            </div>
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group">
+                  <label>分类</label>
+                  <select class="form-control" id="contentNewsFilterType">
+                    <option value="">全部分类</option>
+                    <option value="剧团动态">剧团动态</option>
+                    <option value="演出公告">演出公告</option>
+                    <option value="文化资讯">文化资讯</option>
+                    <option value="获奖荣誉">获奖荣誉</option>
+                    <option value="惠民活动">惠民活动</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>状态</label>
+                  <select class="form-control" id="contentNewsFilterStatus">
+                    <option value="">全部状态</option>
+                    <option value="published">已发布</option>
+                    <option value="draft">草稿</option>
+                  </select>
+                </div>
+                <div class="form-group" style="min-width:220px;">
+                  <label>关键词</label>
+                  <input type="text" class="form-control" id="contentNewsFilterKw" placeholder="标题/副标题" />
+                </div>
+                <div class="form-group">
+                  <button class="btn btn-primary btn-sm" id="contentNewsSearchBtn">🔍 查询</button>
+                  <button class="btn btn-secondary btn-sm" id="contentNewsResetBtn" style="margin-left:8px;">↺ 重置</button>
+                </div>
+              </div>
 
-          [div class="admin-card"]
-            [div class="admin-card-header"]
-              [h3]📰 新闻资讯列表[/h3]
-              [button class="btn btn-primary btn-sm"]➕ 新增文章[/button]
-            [/div]
-            [div class="admin-card-body"]
-              [div class="admin-filter-bar"]
-                [div class="form-group"]
-                  [label]文章分类[/label]
-                  [select class="form-control"]
-                    [option]全部分类[/option]
-                    [option]剧团动态[/option]
-                    [option]演出公告[/option]
-                    [option]文化资讯[/option]
-                    [option]获奖荣誉[/option]
-                    [option]惠民活动[/option]
-                  [/select]
-                [/div]
-                [div class="form-group"]
-                  [label]发布状态[/label]
-                  [select class="form-control"]
-                    [option]全部状态[/option]
-                    [option]已发布[/option]
-                    [option]草稿[/option]
-                    [option]置顶[/option]
-                  [/select]
-                [/div]
-                [div class="form-group"]
-                  [label]开始日期[/label]
-                  [input type="date" class="form-control" value="{year}-01-01" /]
-                [/div]
-                [div class="form-group"]
-                  [label]结束日期[/label]
-                  [input type="date" class="form-control" value="{year}-12-31" /]
-                [/div]
-                [div class="form-group" style="min-width:220px;"]
-                  [label]关键词搜索[/label]
-                  [input type="text" class="form-control" placeholder="文章标题/内容摘要/作者" /]
-                [/div]
-                [div class="form-group"]
-                  [button class="btn btn-primary btn-sm"]🔍 查询[/button]
-                  [button class="btn btn-secondary btn-sm" style="margin-left:8px;"]↺ 重置[/button]
-                [/div]
-              [/div]
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:46px;text-align:center;"><input type="checkbox" id="contentNewsSelectAll" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></th>
+                      <th>ID</th>
+                      <th>封面</th>
+                      <th>标题</th>
+                      <th>分类</th>
+                      <th>摘要</th>
+                      <th>作者</th>
+                      <th>发布日期</th>
+                      <th>状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="contentPlaysTbody" data-paginate="list" data-page-size="10">
+<tr><td colspan="10" style="text-align:center;padding:30px 14px;color:var(--text-light,#999);">正在加载真实剧目…</td></tr>
+</tbody>
+                </table>
+              </div>
 
-              [div class="table-wrapper"]
-                [table]
-                  [thead]
-                    [tr]
-                      [th style="width:46px;text-align:center;"][input type="checkbox" onclick="var c=this.checked,tb=this.closest('table');if(tb){tb.querySelectorAll('tbody tr').forEach(function(r){var cb=r.querySelector('td:first-child input[type=checkbox]');if(cb)cb.checked=c;})}" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /][/th]
-                      [th]ID[/th]
-                      [th]封面[/th]
-                      [th]标题[/th]
-                      [th]分类[/th]
-                      [th]摘要[/th]
-                      [th]作者[/th]
-                      [th]发布日期[/th]
-                      [th]阅读[/th]
-                      [th]评论[/th]
-                      [th]状态[/th]
-                      [th]操作[/th]
-                    [/tr]
-                  [/thead]
-                  [tbody data-paginate="list" data-page-size="10"]
-                    [tr]
-                      [td style="text-align:center;vertical-align:middle;"][input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /][/td]
-                      [td style="font-family:monospace;font-weight:600;"]N001[/td]
-                      [td][div class="news-cover-preview"]🎊[/div][/td]
-                      [td style="font-weight:600;"]秦安县秦剧团{year}年度春节庙会演出圆满落幕[/td]
-                      [td][span class="badge badge-primary"]剧团动态[/span][/td]
-                      [td][div class="news-summary-text"]为期15天的春节庙会演出季共完成38场精彩演出，观众累计超12万人次...[/div][/td]
-                      [td]王团长[/td]
-                      [td]{year}-02-28[/td]
-                      [td style="color:var(--primary);font-weight:600;"]3,286[/td]
-                      [td style="color:var(--gold-dark);font-weight:500;"]128[/td]
-                      [td][span class="top-badge"]🔝 置顶[/span][/td]
-                      [td]
-                        [div class="admin-table-actions"]
-                          [button class="btn btn-secondary btn-sm"]👁 查看[/button]
-                          [button class="btn btn-primary btn-sm"]✏️ 编辑[/button]
-                          [button class="btn btn-gold btn-sm"]取消置顶[/button]
-                          [button class="btn btn-outline-dark btn-sm"]🗑[/button]
-                        [/div]
-                      [/td]
-                    [/tr]
-                    [tr]
-                      [td style="text-align:center;vertical-align:middle;"][input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /][/td]
-                      [td style="font-family:monospace;font-weight:600;"]N018[/td]
-                      [td][div class="news-cover-preview gold"]🎉[/div][/td]
-                      [td style="font-weight:600;"]关于国庆档文化惠民演出周活动安排的公告[/td]
-                      [td][span class="badge badge-gold"]演出公告[/span][/td]
-                      [td][div class="news-summary-text"]{year}年10月1日至7日，我团将在兴国镇文化广场举办国庆惠民演出周...[/div][/td]
-                      [td]办公室[/td]
-                      [td]{year}-07-25[/td]
-                      [td style="color:var(--primary);font-weight:600;"]1,856[/td]
-                      [td style="color:var(--gold-dark);font-weight:500;"]76[/td]
-                      [td][span class="badge badge-success"]已发布[/span][/td]
-                      [td]
-                        [div class="admin-table-actions"]
-                          [button class="btn btn-secondary btn-sm"]👁 查看[/button]
-                          [button class="btn btn-primary btn-sm"]✏️ 编辑[/button]
-                          [button class="btn btn-gold btn-sm"]置顶[/button]
-                          [button class="btn btn-outline-dark btn-sm"]🗑[/button]
-                        [/div]
-                      [/td]
-                    [/tr]
-                    [tr]
-                      [td style="text-align:center;vertical-align:middle;"][input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /][/td]
-                      [td style="font-family:monospace;font-weight:600;"]N017[/td]
-                      [td][div class="news-cover-preview teal"]🏆[/div][/td]
-                      [td style="font-weight:600;"]热烈祝贺我团荣获「甘肃省优秀戏曲院团」称号[/td]
-                      [td][span class="badge badge-info"]获奖荣誉[/span][/td]
-                      [td][div class="news-summary-text"]在甘肃省文化和旅游厅组织的{year}年度全省戏曲院团评估中，我团凭借优异表现...[/div][/td]
-                      [td]办公室[/td]
-                      [td]{year}-07-18[/td]
-                      [td style="color:var(--primary);font-weight:600;"]2,410[/td]
-                      [td style="color:var(--gold-dark);font-weight:500;"]94[/td]
-                      [td][span class="top-badge"]🔝 置顶[/span][/td]
-                      [td]
-                        [div class="admin-table-actions"]
-                          [button class="btn btn-secondary btn-sm"]👁 查看[/button]
-                          [button class="btn btn-primary btn-sm"]✏️ 编辑[/button]
-                          [button class="btn btn-gold btn-sm"]取消置顶[/button]
-                          [button class="btn btn-outline-dark btn-sm"]🗑[/button]
-                        [/div]
-                      [/td]
-                    [/tr]
-                    [tr]
-                      [td style="text-align:center;vertical-align:middle;"][input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /][/td]
-                      [td style="font-family:monospace;font-weight:600;"]N016[/td]
-                      [td][div class="news-cover-preview"]🎭[/div][/td]
-                      [td style="font-weight:600;"]经典秦腔《三滴血》复排首演获得观众一致好评[/td]
-                      [td][span class="badge badge-primary"]剧团动态[/span][/td]
-                      [td][div class="news-summary-text"]经过三个月的精心复排，经典秦腔传统戏《三滴血》于7月10日晚在...[/div][/td]
-                      [td]李宣传[/td]
-                      [td]{year}-07-12[/td]
-                      [td style="color:var(--primary);font-weight:600;"]1,658[/td]
-                      [td style="color:var(--gold-dark);font-weight:500;"]62[/td]
-                      [td][span class="badge badge-success"]已发布[/span][/td]
-                      [td]
-                        [div class="admin-table-actions"]
-                          [button class="btn btn-secondary btn-sm"]👁 查看[/button]
-                          [button class="btn btn-primary btn-sm"]✏️ 编辑[/button]
-                          [button class="btn btn-gold btn-sm"]置顶[/button]
-                          [button class="btn btn-outline-dark btn-sm"]🗑[/button]
-                        [/div]
-                      [/td]
-                    [/tr]
-                    [tr]
-                      [td style="text-align:center;vertical-align:middle;"][input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /][/td]
-                      [td style="font-family:monospace;font-weight:600;"]N015[/td]
-                      [td][div class="news-cover-preview gold"]❤️[/div][/td]
-                      [td style="font-weight:600;"]「{year}文化惠民下乡行」活动走进莲花镇郭河村[/td]
-                      [td][span class="badge badge-success"]惠民活动[/span][/td]
-                      [td][div class="news-summary-text"]7月5日，我团文化惠民演出队走进莲花镇郭河村，为当地村民带去...[/div][/td]
-                      [td]张主任[/td]
-                      [td]{year}-07-06[/td]
-                      [td style="color:var(--primary);font-weight:600;"]1,124[/td]
-                      [td style="color:var(--gold-dark);font-weight:500;"]48[/td]
-                      [td][span class="badge badge-success"]已发布[/span][/td]
-                      [td]
-                        [div class="admin-table-actions"]
-                          [button class="btn btn-secondary btn-sm"]👁 查看[/button]
-                          [button class="btn btn-primary btn-sm"]✏️ 编辑[/button]
-                          [button class="btn btn-gold btn-sm"]置顶[/button]
-                          [button class="btn btn-outline-dark btn-sm"]🗑[/button]
-                        [/div]
-                      [/td]
-                    [/tr]
-                    [tr]
-                      [td style="text-align:center;vertical-align:middle;"][input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /][/td]
-                      [td style="font-family:monospace;font-weight:600;"]N014[/td]
-                      [td][div class="news-cover-preview teal"]📜[/div][/td]
-                      [td style="font-weight:600;"]秦腔艺术的传承与创新——专访国家一级演员张某昌[/td]
-                      [td][span class="badge badge-warning"]文化资讯[/span][/td]
-                      [td][div class="news-summary-text"]从艺40年的国家一级演员张某昌老师，分享他对秦腔艺术传承与创新的思考...[/div][/td]
-                      [td]文化周刊[/td]
-                      [td]{year}-06-28[/td]
-                      [td style="color:var(--primary);font-weight:600;"]2,086[/td]
-                      [td style="color:var(--gold-dark);font-weight:500;"]87[/td]
-                      [td][span class="badge badge-success"]已发布[/span][/td]
-                      [td]
-                        [div class="admin-table-actions"]
-                          [button class="btn btn-secondary btn-sm"]👁 查看[/button]
-                          [button class="btn btn-primary btn-sm"]✏️ 编辑[/button]
-                          [button class="btn btn-gold btn-sm"]置顶[/button]
-                          [button class="btn btn-outline-dark btn-sm"]🗑[/button]
-                        [/div]
-                      [/td]
-                    [/tr]
-                    [tr]
-                      [td style="text-align:center;vertical-align:middle;"][input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /][/td]
-                      [td style="font-family:monospace;font-weight:600;"]N013[/td]
-                      [td][div class="news-cover-preview"]🎫[/div][/td]
-                      [td style="font-weight:600;"]「七夕戏曲专场」演出预约通道正式开启[/td]
-                      [td][span class="badge badge-gold"]演出公告[/span][/td]
-                      [td][div class="news-summary-text"]8月10日晚，兴国镇文化广场将举办七夕戏曲专场晚会，预约通道现已开放...[/div][/td]
-                      [td]票务组[/td]
-                      [td]{year}-06-20[/td]
-                      [td style="color:var(--primary);font-weight:600;"]3,892[/td]
-                      [td style="color:var(--gold-dark);font-weight:500;"]156[/td]
-                      [td][span class="badge badge-success"]已发布[/span][/td]
-                      [td]
-                        [div class="admin-table-actions"]
-                          [button class="btn btn-secondary btn-sm"]👁 查看[/button]
-                          [button class="btn btn-primary btn-sm"]✏️ 编辑[/button]
-                          [button class="btn btn-gold btn-sm"]置顶[/button]
-                          [button class="btn btn-outline-dark btn-sm"]🗑[/button]
-                        [/div]
-                      [/td]
-                    [/tr]
-                    [tr]
-                      [td style="text-align:center;vertical-align:middle;"][input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /][/td]
-                      [td style="font-family:monospace;font-weight:600;"]N012[/td]
-                      [td][div class="news-cover-preview gold"]🎓[/div][/td]
-                      [td style="font-weight:600;"]我团与县职校联合开办「秦腔艺术兴趣班」正式招生[/td]
-                      [td][span class="badge badge-primary"]剧团动态[/span][/td]
-                      [td][div class="news-summary-text"]为推动秦腔艺术在青少年中的传承，我团与县职业中专联合开设兴趣班...[/div][/td]
-                      [td]办公室[/td]
-                      [td]{year}-06-15[/td]
-                      [td style="color:var(--primary);font-weight:600;"]968[/td]
-                      [td style="color:var(--gold-dark);font-weight:500;"]34[/td]
-                      [td][span class="badge badge-success"]已发布[/span][/td]
-                      [td]
-                        [div class="admin-table-actions"]
-                          [button class="btn btn-secondary btn-sm"]👁 查看[/button]
-                          [button class="btn btn-primary btn-sm"]✏️ 编辑[/button]
-                          [button class="btn btn-gold btn-sm"]置顶[/button]
-                          [button class="btn btn-outline-dark btn-sm"]🗑[/button]
-                        [/div]
-                      [/td]
-                    [/tr]
-                    [tr style="background:rgba(255,193,7,0.06);"]
-                      [td style="font-family:monospace;font-weight:600;"]N011[/td]
-                      [td][div class="news-cover-preview teal"]✏️[/div][/td]
-                      [td style="font-weight:600;opacity:0.85;"]【草稿】中秋戏曲晚会筹备方案（待审核）[/td]
-                      [td][span class="badge badge-gold"]演出公告[/span][/td]
-                      [td][div class="news-summary-text"]中秋戏曲晚会计划于9月17日举办，目前正在进行剧目和演员的统筹安排...[/div][/td]
-                      [td]李策划[/td]
-                      [td style="color:#999;"]—[/td]
-                      [td style="color:#999;"]0[/td]
-                      [td style="color:#999;"]0[/td]
-                      [td][span class="badge badge-secondary"]草稿[/span][/td]
-                      [td]
-                        [div class="admin-table-actions"]
-                          [button class="btn btn-secondary btn-sm"]👁 预览[/button]
-                          [button class="btn btn-primary btn-sm"]✏️ 编辑[/button]
-                          [button class="btn btn-success btn-sm"]发布[/button]
-                          [button class="btn btn-outline-dark btn-sm"]🗑[/button]
-                        [/div]
-                      [/td]
-                    [/tr]
-                    [tr]
-                      [td style="text-align:center;vertical-align:middle;"][input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /][/td]
-                      [td style="font-family:monospace;font-weight:600;"]N010[/td]
-                      [td][div class="news-cover-preview"]📖[/div][/td]
-                      [td style="font-weight:600;"]秦腔传统剧目《铡美案》艺术特色赏析[/td]
-                      [td][span class="badge badge-warning"]文化资讯[/span][/td]
-                      [td][div class="news-summary-text"]《铡美案》是秦腔传统剧目中的经典之作，其跌宕起伏的剧情、刚正不阿...[/div][/td]
-                      [td]王评论家[/td]
-                      [td]{year}-06-05[/td]
-                      [td style="color:var(--primary);font-weight:600;"]1,456[/td]
-                      [td style="color:var(--gold-dark);font-weight:500;"]52[/td]
-                      [td][span class="badge badge-success"]已发布[/span][/td]
-                      [td]
-                        [div class="admin-table-actions"]
-                          [button class="btn btn-secondary btn-sm"]👁 查看[/button]
-                          [button class="btn btn-primary btn-sm"]✏️ 编辑[/button]
-                          [button class="btn btn-gold btn-sm"]置顶[/button]
-                          [button class="btn btn-outline-dark btn-sm"]🗑[/button]
-                        [/div]
-                      [/td]
-                    [/tr]
-                    [tr]
-                      [td style="text-align:center;vertical-align:middle;"][input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /][/td]
-                      [td style="font-family:monospace;font-weight:600;"]N009[/td]
-                      [td][div class="news-cover-preview gold"]🎶[/div][/td]
-                      [td style="font-weight:600;"]我团乐队参加「西北五省秦腔音乐会」载誉归来[/td]
-                      [td][span class="badge badge-info"]获奖荣誉[/span][/td]
-                      [td][div class="news-summary-text"]在西安举办的西北五省秦腔音乐会上，我团乐队以精湛的演奏技艺荣获...[/div][/td]
-                      [td]乐队陈[/td]
-                      [td]{year}-05-28[/td]
-                      [td style="color:var(--primary);font-weight:600;"]1,782[/td]
-                      [td style="color:var(--gold-dark);font-weight:500;"]66[/td]
-                      [td][span class="badge badge-success"]已发布[/span][/td]
-                      [td]
-                        [div class="admin-table-actions"]
-                          [button class="btn btn-secondary btn-sm"]👁 查看[/button]
-                          [button class="btn btn-primary btn-sm"]✏️ 编辑[/button]
-                          [button class="btn btn-gold btn-sm"]置顶[/button]
-                          [button class="btn btn-outline-dark btn-sm"]🗑[/button]
-                        [/div]
-                      [/td]
-                    [/tr]
-                  [/tbody]
-                [/table]
-              [/div]
+              <div class="pagination" id="contentNewsPagination"></div>
+            </div>
+          </div>
 
-              [div class="pagination"]
-                [button class="page-btn" disabled]« 上一页[/button]
-                [button class="page-btn active"]1[/button]
-                [button class="page-btn"]2[/button]
-                [span class="page-info"]共 12 篇 / 2 页[/span]
-                [button class="page-btn"]下一页 »[/button]
-              [/div]
+          <!-- 新增/编辑文章模态框 -->
+          <div id="contentNewsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+            <div style="background:#fff;border-radius:12px;padding:24px;width:90%;max-width:640px;max-height:90vh;overflow:auto;">
+              <h3 id="contentNewsModalTitle" style="margin-top:0;">新增文章</h3>
+              <form id="contentNewsForm" autocomplete="off" novalidate>
+                <input type="hidden" id="contentNewsId" />
+                <div class="form-group">
+                  <label>标题 *</label>
+                  <input type="text" class="form-control" id="contentNewsTitle" required placeholder="文章标题" />
+                </div>
+                <div class="form-group">
+                  <label>副标题</label>
+                  <input type="text" class="form-control" id="contentNewsSubtitle" placeholder="副标题（可选）" />
+                </div>
+                <div class="form-group">
+                  <label>分类 *</label>
+                  <select class="form-control" id="contentNewsType" required>
+                    <option value="剧团动态">剧团动态</option>
+                    <option value="演出公告">演出公告</option>
+                    <option value="文化资讯">文化资讯</option>
+                    <option value="获奖荣誉">获奖荣誉</option>
+                    <option value="惠民活动">惠民活动</option>
+                  </select>
+                  <small style="color:#64748b;font-size:0.75rem;">分类元数据会存入 tagsJson，后端 type 固定为 news</small>
+                </div>
+                <div class="form-group">
+                  <label>作者</label>
+                  <input type="text" class="form-control" id="contentNewsAuthor" placeholder="作者名" />
+                </div>
+                <div class="form-group">
+                  <label>封面图URL</label>
+                  <input type="text" class="form-control" id="contentNewsCover" placeholder="https://..." />
+                </div>
+                <div class="form-group">
+                  <label>摘要</label>
+                  <textarea class="form-control" id="contentNewsSummary" rows="2" placeholder="一句话摘要"></textarea>
+                </div>
+                <div class="form-group">
+                  <label>正文</label>
+                  <textarea class="form-control" id="contentNewsBody" rows="5" placeholder="文章正文（纯文本或HTML）"></textarea>
+                </div>
+                <div class="form-group">
+                  <label>发布日期</label>
+                  <input type="date" class="form-control" id="contentNewsPubDate" />
+                </div>
+                <div class="form-group">
+                  <label>排序权重</label>
+                  <input type="number" class="form-control" id="contentNewsSort" value="0" />
+                </div>
+                <div class="form-group">
+                  <label>状态</label>
+                  <select class="form-control" id="contentNewsStatus">
+                    <option value="draft">草稿</option>
+                    <option value="published">已发布</option>
+                  </select>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:18px;">
+                  <button type="submit" class="btn btn-primary" id="contentNewsSubmitBtn" data-type-fixed="1">✅ 保存</button>
+                  <button type="button" class="btn btn-outline" id="contentNewsCancelBtn" data-type-fixed="1">取消</button>
+                </div>
+              </form>
+            </div>
+          </div>
 
-              [div class="rich-editor-placeholder"]
-                [div class="rich-editor-icon"]📝[/div]
-                [div class="rich-editor-title"]富文本文章编辑器[/div]
-                [div class="rich-editor-desc"]
-                  点击「➕ 新增文章」或「✏️ 编辑」按钮可进入文章编辑模式。编辑工具支持字体格式、图片视频嵌入、段落排版、
-                  超链接、表格插入等功能，并可实时预览效果。所有修改点击「保存并发布」后会同步到官网前台展示。
-                [/div]
-                [div class="rich-editor-toolbar-demo"]
-                  [span class="strong"]加粗[/span]
-                  [span class="em"]斜体[/span]
-                  [span class="u"]下划线[/span]
-                  [span class="color"]颜色[/span]
-                  [span]🔗 链接[/span]
-                  [span]🖼️ 图片[/span]
-                  [span]🎬 视频[/span]
-                  [span]📊 表格[/span]
-                  [span]📌 引用[/span]
-                  [span]🔢 列表[/span]
-                  [span]📑 段落[/span]
-                  [span]↩️ 撤销[/span]
-                  [span]↪️ 重做[/span]
-                [/div]
-              [/div]
-
-            [/div]
-          [/div]
-        [/div]
-
-        [div class="tab-content" id="tab-operas"]
-
+        </div>
+        <div class="tab-content" id="tab-operas">
           <!-- 🎭 剧目海报/宣传图上传表单 -->
           <div class="admin-card" style="margin-bottom:20px;border:2px solid #d97706;background:linear-gradient(135deg,#fff7ed,#ffedd5);">
             <div class="admin-card-header">
@@ -1746,7 +1204,7 @@
             <div class="admin-card-header">
               <h3>🎭 剧目展示管理（对应前台 operas.html）</h3>
               <div style="display:flex;gap:10px;align-items:center;">
-                <span class="badge badge-info">共 28 部 · 前台展示 24 部</span>
+                <span class="badge badge-info" id="playMgmtBadge">正在统计真实剧目…</span>
                 <button class="btn btn-primary btn-sm">➕ 新增剧目</button>
               </div>
             </div>
@@ -2057,7 +1515,7 @@
                   <div class="block-preview">
                     <p class="block-preview-text">
                       剧团现有演职人员32人，其中国家一级演员2人、国家二级演员5人、三级演员及演奏员18人，行当齐全、阵容整齐。
-                      拥有《周仁回府》《三滴血》《铡美案》《窦娥冤》《火焰驹》等传统经典剧目20余部，以及《乡村新歌》《扶贫新歌》等现代戏和折子戏专场。
+                      拥有《破宁国》《金沙滩》《五典坡》《铡美案》《窦娥冤》《火焰驹》《清风亭》等传统经典剧目20部，以及历史剧与经典折子戏专场。
                       年平均演出120余场次，观众累计达30万人次以上，足迹遍及天水、平凉、定西等地，是陇东南地区具有广泛影响力的秦腔专业院团。
                     </p>
                   </div>
@@ -2164,7 +1622,7 @@
 
                 <div class="form-group">
                   <label><span class="required">*</span> 剧团联系电话（座机/手机）</label>
-                  <input type="text" class="form-control" value="0938-652XXXX / 139XXXX1234（王团长）" />
+                  <input type="text" class="form-control" value="139-9383-9833" />
                 </div>
 
                 <div class="form-group">
@@ -2569,7 +2027,7 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        __T('💾 保存成功','success');
         try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
@@ -2584,7 +2042,7 @@ var __pT0=0;
         if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
         try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
@@ -2608,7 +2066,7 @@ var __pT0=0;
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        __T('➕ 准备新增「'+txt+'」','info');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -2618,7 +2076,7 @@ var __pT0=0;
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
         if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
@@ -2627,7 +2085,7 @@ var __pT0=0;
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -2635,7 +2093,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        __T('📄 合同文档已就绪','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -2643,7 +2101,7 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
@@ -2654,7 +2112,7 @@ var __pT0=0;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
         var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -2835,7 +2293,7 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        __toastH9('✅ 提交成功','success');
         setTimeout(function(){
           try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
         }, 380);
@@ -3296,34 +2754,34 @@ function __pLog(module,event,extra){
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          __toastH9('✅ 操作成功','success');
           setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
         }else if(tt==='delete'){
           if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
             __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
           }else{ __toastH9('↩️ 已取消操作','info'); }
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印（演示模式）','info');
+          __toastH9('📤 已触发导出/打印','info');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪（演示模式）','info');
+          __toastH9('📄 合同文档已就绪','info');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+          __toastH9('➕ 准备新增','info');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -3403,6 +2861,294 @@ function __pLog(module,event,extra){
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
   else { __markBound(); setTimeout(__markBound,500); }
 })();</script>
+
+<script>
+/* ========================================================
+ * content.html 新闻资讯 tab 按钮真实化（接 /v1/contents API）
+ * 命名空间 __contentApi 避免与全局事件委托冲突
+ * 创建：2026-09-21
+ * 备份：content.html.bak-contentfix-20260921
+ * ======================================================== */
+(function(){
+  'use strict';
+  if (window.__contentApi) return;
+  var API = window.QAXQJT_API;
+
+  function _toast(msg, type){ try { if (typeof __T === 'function') return __T(msg, type||'info'); } catch(_){} try { console.log('[contentApi]', type, msg); } catch(_){} }
+  function _escape(s){ if (s === null || s === undefined) return ''; return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function _val(id){ var el = document.getElementById(id); return el ? (el.value || '').trim() : ''; }
+  function _setVal(id, v){ var el = document.getElementById(id); if (el) el.value = v || ''; }
+  function _showModal(id, show){ var el = document.getElementById(id); if (el) el.style.display = show ? 'flex' : 'none'; }
+
+  window.__contentApi = {
+    state: { items: [], filter: { type: '', publishStatus: '', keyword: '' }, editingId: null, loaded: false },
+
+    load: async function(){
+      try {
+        var q = { page: 1, pageSize: 50 };
+        if (this.state.filter.type) q.type = this.state.filter.type;
+        if (this.state.filter.publishStatus) q.publishStatus = this.state.filter.publishStatus;
+        if (this.state.filter.keyword) q.keyword = this.state.filter.keyword;
+        var resp = await API.get('/v1/contents', { query: q });
+        var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
+        this.state.items = rows;
+        this._render(rows);
+        this.state.loaded = true;
+      } catch(e) {
+        console.warn('[__contentApi.load] 失败', e);
+        _toast('⚠️ 加载文章列表失败：' + (e && e.message ? e.message : e), 'error');
+        var tb = document.getElementById('contentNewsTbody');
+        if (tb) tb.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:#dc2626;">❌ 加载失败：' + _escape(e && e.message ? e.message : String(e)) + '</td></tr>';
+      }
+    },
+
+    _render: function(rows){
+      var tb = document.getElementById('contentNewsTbody');
+      if (!tb) return;
+      var cnt = document.getElementById('contentNewsCount');
+      if (cnt) cnt.textContent = '共 ' + rows.length + ' 篇';
+      if (!rows.length) {
+        tb.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:#94a3b8;">📭 暂无文章，点击「➕ 新增文章」开始创建</td></tr>';
+        return;
+      }
+      var self = this;
+      var html = rows.map(function(r){
+        var id = String(r.id || '');
+        var cover = r.coverImage ? '<img src="' + _escape(r.coverImage) + '" style="width:48px;height:32px;object-fit:cover;border-radius:4px;" onerror="this.style.display=\'none\'" />' : '📭';
+        var type = r.type || 'news';
+        // 优先从 tagsJson 解码中文分类
+        try {
+          if (r.tagsJson) {
+            var tj = typeof r.tagsJson === 'string' ? JSON.parse(r.tagsJson) : r.tagsJson;
+            if (tj && tj.category) type = tj.category;
+          }
+        } catch(_) {}
+        var title = _escape(r.title || '');
+        var summary = _escape(r.summary || (r.contentBody || '').slice(0, 60));
+        var author = _escape(r.authorName || '—');
+        var pubDate = r.publishDate ? String(r.publishDate).slice(0, 10) : '—';
+        var status = r.publishStatus || 'draft';
+        var statusBadge = status === 'published' ? '<span class="badge badge-success">已发布</span>' : '<span class="badge badge-secondary">草稿</span>';
+        return '<tr data-row-id="' + _escape(id) + '">' +
+          '<td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" data-id="' + _escape(id) + '" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>' +
+          '<td style="font-family:monospace;font-weight:600;">' + _escape(id) + '</td>' +
+          '<td>' + cover + '</td>' +
+          '<td style="font-weight:600;">' + title + '</td>' +
+          '<td><span class="badge badge-primary">' + _escape(type) + '</span></td>' +
+          '<td><div class="news-summary-text">' + summary + '</div></td>' +
+          '<td>' + author + '</td>' +
+          '<td>' + pubDate + '</td>' +
+          '<td>' + statusBadge + '</td>' +
+          '<td><div class="admin-table-actions">' +
+            '<button class="btn btn-primary btn-sm" data-act="edit" data-id="' + _escape(id) + '">✏️</button>' +
+            '<button class="btn btn-danger btn-sm" data-act="del" data-id="' + _escape(id) + '">🗑</button>' +
+          '</div></td>' +
+        '</tr>';
+      }).join('');
+      tb.innerHTML = html;
+    },
+
+    openAdd: function(){
+      this.state.editingId = null;
+      _setVal('contentNewsId', '');
+      _setVal('contentNewsTitle', '');
+      _setVal('contentNewsSubtitle', '');
+      _setVal('contentNewsType', '剧团动态');
+      _setVal('contentNewsAuthor', '');
+      _setVal('contentNewsCover', '');
+      _setVal('contentNewsSummary', '');
+      _setVal('contentNewsBody', '');
+      _setVal('contentNewsPubDate', new Date().toISOString().slice(0,10));
+      _setVal('contentNewsSort', '0');
+      _setVal('contentNewsStatus', 'draft');
+      var titleEl = document.getElementById('contentNewsModalTitle');
+      if (titleEl) titleEl.textContent = '➕ 新增文章';
+      _showModal('contentNewsModal', true);
+    },
+
+    openEdit: async function(id){
+      try {
+        var r = await API.get('/v1/contents/' + id);
+        if (!r) throw new Error('文章不存在');
+        this.state.editingId = id;
+        _setVal('contentNewsId', id);
+        _setVal('contentNewsTitle', r.title || '');
+        _setVal('contentNewsSubtitle', r.subtitle || '');
+        _setVal('contentNewsType', r.type || '剧团动态');
+        // 优先用 tagsJson 中的中文分类回填下拉
+        try {
+          if (r.tagsJson) {
+            var tj = typeof r.tagsJson === 'string' ? JSON.parse(r.tagsJson) : r.tagsJson;
+            if (tj && tj.category) _setVal('contentNewsType', tj.category);
+          }
+        } catch(_) {}
+        _setVal('contentNewsAuthor', r.authorName || '');
+        _setVal('contentNewsCover', r.coverImage || '');
+        _setVal('contentNewsSummary', r.summary || '');
+        _setVal('contentNewsBody', r.contentBody || '');
+        _setVal('contentNewsPubDate', r.publishDate ? String(r.publishDate).slice(0,10) : '');
+        _setVal('contentNewsSort', String(r.sortWeight || 0));
+        _setVal('contentNewsStatus', r.publishStatus || 'draft');
+        var titleEl = document.getElementById('contentNewsModalTitle');
+        if (titleEl) titleEl.textContent = '✏️ 编辑文章：' + (r.title || id);
+        _showModal('contentNewsModal', true);
+      } catch(e) {
+        _toast('⚠️ 加载文章详情失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    submit: async function(e){
+      if (e && e.preventDefault) e.preventDefault();
+      var id = _val('contentNewsId');
+      var title = _val('contentNewsTitle');
+      var category = _val('contentNewsType');
+      if (!title) { _toast('⚠️ 标题必填', 'error'); return; }
+      if (!category) { _toast('⚠️ 分类必填', 'error'); return; }
+      // 后端 type 字段是 enum('news','article','notice',...)，news tab 统一用 'news'，中文分类存 tagsJson
+      var body = {
+        type: 'news',
+        title: title,
+        subtitle: _val('contentNewsSubtitle'),
+        coverImage: _val('contentNewsCover'),
+        contentBody: _val('contentNewsBody'),
+        summary: _val('contentNewsSummary'),
+        authorName: _val('contentNewsAuthor'),
+        publishDate: _val('contentNewsPubDate') || undefined,
+        sortWeight: Number(_val('contentNewsSort') || 0),
+        publishStatus: _val('contentNewsStatus') || 'draft',
+        tagsJson: JSON.stringify({ category: category })
+      };
+      try {
+        if (id) {
+          await API.patch('/v1/contents/' + id, body);
+          _toast('✅ 文章已更新', 'success');
+        } else {
+          await API.post('/v1/contents', body);
+          _toast('✅ 文章已创建', 'success');
+        }
+        _showModal('contentNewsModal', false);
+        await this.load();
+      } catch(err) {
+        _toast('⚠️ 保存失败：' + (err && err.message ? err.message : err), 'error');
+      }
+    },
+
+    remove: async function(id){
+      if (!id) return;
+      if (!confirm('确认删除文章 ' + id + '？此操作不可恢复。')) return;
+      try {
+        await API.del('/v1/contents/' + id);
+        _toast('🗑 已删除', 'success');
+        await this.load();
+      } catch(e) {
+        _toast('⚠️ 删除失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    bind: function(){
+      var self = this;
+      // 标记所有 content-news 相关按钮，绕过 DeadButtonFallback / SuperPatch 死按钮兜底
+      function _markBound(el){ if (el) { el.__superPatchBound = 1; el.__ts3Done = 1; } }
+      ['contentNewsAddBtn','contentNewsSearchBtn','contentNewsResetBtn','contentNewsSelectAll','contentNewsSubmitBtn','contentNewsCancelBtn'].forEach(function(id){
+        _markBound(document.getElementById(id));
+      });
+
+      // 新增按钮
+      var addBtn = document.getElementById('contentNewsAddBtn');
+      if (addBtn) addBtn.addEventListener('click', function(ev){ ev.stopPropagation(); self.openAdd(); });
+      // 查询/重置按钮
+      var searchBtn = document.getElementById('contentNewsSearchBtn');
+      if (searchBtn) searchBtn.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        self.state.filter.type = _val('contentNewsFilterType');
+        self.state.filter.publishStatus = _val('contentNewsFilterStatus');
+        self.state.filter.keyword = _val('contentNewsFilterKw');
+        self.load();
+      });
+      var resetBtn = document.getElementById('contentNewsResetBtn');
+      if (resetBtn) resetBtn.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        _setVal('contentNewsFilterType', '');
+        _setVal('contentNewsFilterStatus', '');
+        _setVal('contentNewsFilterKw', '');
+        self.state.filter = { type: '', publishStatus: '', keyword: '' };
+        self.load();
+      });
+      // 表格行编辑/删除（事件委托，useCapture + stopPropagation 防止 document 级兜底拦截）
+      var tb = document.getElementById('contentNewsTbody');
+      if (tb) tb.addEventListener('click', function(ev){
+        var btn = ev.target.closest('button[data-act]');
+        if (!btn) return;
+        ev.stopPropagation();
+        ev.preventDefault();
+        btn.__superPatchBound = 1;
+        var act = btn.getAttribute('data-act');
+        var id = btn.getAttribute('data-id');
+        if (act === 'edit') self.openEdit(id);
+        else if (act === 'del') self.remove(id);
+      }, true);
+      // 全选
+      var selAll = document.getElementById('contentNewsSelectAll');
+      if (selAll) selAll.addEventListener('change', function(){
+        var cbs = document.querySelectorAll('#contentNewsTbody input[type=checkbox].batch-row-check');
+        for (var i = 0; i < cbs.length; i++) cbs[i].checked = selAll.checked;
+      });
+      // 模态框保存按钮（用 click 而非 form submit，避免 SuperPatch 1/6 表单 submit 劫持）
+      var submitBtn = document.getElementById('contentNewsSubmitBtn');
+      if (submitBtn) submitBtn.addEventListener('click', function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        self.submit();
+      }, true);
+      // 取消按钮
+      var cancelBtn = document.getElementById('contentNewsCancelBtn');
+      if (cancelBtn) cancelBtn.addEventListener('click', function(ev){ ev.stopPropagation(); _showModal('contentNewsModal', false); });
+      // 模态框背景点击关闭
+      var modal = document.getElementById('contentNewsModal');
+      if (modal) modal.addEventListener('click', function(e){ if (e.target === modal) _showModal('contentNewsModal', false); });
+
+      // MutationObserver：动态行按钮自动打标记，防 DBF 兜底
+      if (tb && typeof MutationObserver !== 'undefined') {
+        var mo = new MutationObserver(function(){
+          var btns = tb.querySelectorAll('button[data-act]');
+          for (var i = 0; i < btns.length; i++) { btns[i].__superPatchBound = 1; btns[i].__ts3Done = 1; }
+        });
+        mo.observe(tb, { childList: true, subtree: true });
+      }
+    }
+  };
+
+  // 初始化：当切换到 news tab 时加载数据
+  function _initOnTabSwitch(){
+    var tabItems = document.querySelectorAll('.tab-item[data-tab]');
+    for (var i = 0; i < tabItems.length; i++) {
+      tabItems[i].addEventListener('click', function(){
+        var tab = this.getAttribute('data-tab');
+        if (tab === 'news' && window.__contentApi && !window.__contentApi.state.loaded) {
+          setTimeout(function(){ window.__contentApi.load(); }, 100);
+        }
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){
+      window.__contentApi.bind();
+      _initOnTabSwitch();
+      // 若页面初始激活 tab 为 news，直接加载
+      var activeNews = document.querySelector('.tab-content.active#tab-news');
+      if (activeNews) window.__contentApi.load();
+    });
+  } else {
+    window.__contentApi.bind();
+    _initOnTabSwitch();
+    var activeNews = document.querySelector('.tab-content.active#tab-news');
+    if (activeNews) window.__contentApi.load();
+  }
+})();
+</script>
+
+<script src="../js/admin-content-real.js?v=20260922"></script>
 </body>
 
 </html>

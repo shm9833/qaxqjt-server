@@ -353,7 +353,7 @@
           </ol>
           <div class="highlight-box">
             <p><strong>📮 投诉联系方式：</strong></p>
-            <p>投诉邮箱：<a href="mailto:13893811313@163.com" class="contact-inline">13893811313@163.com</a>（邮件主题请注明"版权侵权投诉-权利人名称"）</p>
+            <p>投诉邮箱：<a href="tel:13993839833" class="contact-inline">139 9383 9833</a>（邮件主题请注明"版权侵权投诉-权利人名称"）</p>
             <p>投诉电话：<a href="tel:13993839833" class="contact-inline">13993839833</a>（工作时间：周一至周日 9:00-18:00）</p>
             <p>通讯地址：甘肃省天水市秦安县陇城镇张沟村 · 秦安县秦剧团文化演出有限公司 法务部（收）</p>
           </div>
@@ -419,7 +419,7 @@
           <h4>联系我们</h4>
           <ul>
             <li><a href="tel:13993839833">📞 13993839833</a></li>
-            <li><a href="mailto:13893811313@163.com">📧 13893811313@163.com</a></li>
+            <li><a href="tel:13993839833">📞 139 9383 9833</a></li>
             <li><a href="booking.html">🎫 在线预约</a></li>
             <li><a href="contact.html">📍 联系我们</a></li>
             <li><a href="javascript:void(0)" data-footer-action="wechat">💬 微信客服</a></li>
@@ -543,11 +543,11 @@
           var firstBad=null;
           try{ reqFails.forEach(function(inp){ var v=(inp.value||''); var ok=true; if(inp.type==='checkbox' && !inp.checked) ok=false; else if(inp.type!=='checkbox' && inp.type!=='radio' && !v.trim()) ok=false; if(!ok){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}}, 1800);}catch(_b){} } }); }catch(_rf){}
           if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
-          __FT('✅ 操作成功（演示模式：真实环境将写入工单 + 通知对接专员）','success');
+          __FT('✅ 操作成功，对接专员将尽快与您联系','success');
           try{ fm.reset && fm.reset(); }catch(_rs){}
           e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
         } else {
-          __FT('✅ 操作成功（演示模式）','success');
+          __FT('✅ 操作成功','success');
           try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
           btn.__ftDone=1; e.stopImmediatePropagation(); return;
         }
@@ -560,7 +560,7 @@
       }
       if(isSearch){
         if(!__FL(dk,550)) return;
-        __FT('🔍 查询条件已生效（演示模式）','info');
+        __FT('🔍 查询条件已生效','info');
         btn.__ftDone=1; return;
       }
       if(isCopy){

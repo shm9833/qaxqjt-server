@@ -110,7 +110,7 @@ const create = async ctx => {
     ts: nowMs()
   };
   const row = await prisma.attendanceV1.create({ data });
-  try { await audit(ctx, 'attendance:create', row.id, { staffId: row.staffId, staffName: row.staffName }); } catch (_) {}
+  try { await audit({ ctx, module: 'attendance', action: 'ATTENDANCE_CREATE', targetId: row.id, detail: { staffId: row.staffId, staffName: row.staffName, attendanceDate: row.attendanceDate, attendanceType: row.attendanceType } }); } catch (_) {}
   return created(ctx, toApi(row));
 };
 
@@ -127,13 +127,13 @@ const update = async ctx => {
   if (b.remark !== undefined) data.remark = b.remark;
   if (b.approveStatus) data.approveStatus = b.approveStatus;
   const row = await prisma.attendanceV1.update({ where: { id: ctx.params.id }, data });
-  try { await audit(ctx, 'attendance:update', row.id, data); } catch (_) {}
+  try { await audit({ ctx, module: 'attendance', action: 'ATTENDANCE_UPDATE', targetId: row.id, detail: { fields: Object.keys(data) } }); } catch (_) {}
   return success(ctx, toApi(row));
 };
 
 const remove = async ctx => {
   const row = await prisma.attendanceV1.delete({ where: { id: ctx.params.id } });
-  try { await audit(ctx, 'attendance:delete', ctx.params.id, { staffId: row.staffId }); } catch (_) {}
+  try { await audit({ ctx, module: 'attendance', action: 'ATTENDANCE_DELETE', targetId: ctx.params.id, detail: { staffId: row.staffId, staffName: row.staffName } }); } catch (_) {}
   return noContent(ctx);
 };
 
@@ -173,7 +173,7 @@ const leaveCreate = async ctx => {
     ts: nowMs()
   };
   const row = await prisma.leaveApplication.create({ data });
-  try { await audit(ctx, 'leave:create', row.id, { staffId: row.staffId }); } catch (_) {}
+  try { await audit({ ctx, module: 'attendance', action: 'LEAVE_CREATE', targetId: row.id, detail: { staffId: row.staffId, leaveType: row.leaveType, totalDays: Number(row.totalDays) || null } }); } catch (_) {}
   return created(ctx, _leaveToApi(row));
 };
 
@@ -185,13 +185,13 @@ const leaveApprove = async ctx => {
     where: { id: ctx.params.id },
     data: {
       approveStatus: b.status || 'approved',
-      approverId: ctx.state.user ? ctx.state.user.id : null,
+      approverId: ctx.state.user ? (ctx.state.user.sub || null) : null,
       approverName: ctx.state.user ? ctx.state.user.username : null,
       approvedAt: new Date(),
       rejectReason: b.rejectReason || null
     }
   });
-  try { await audit(ctx, 'leave:approve', row.id, { status: row.approveStatus }); } catch (_) {}
+  try { await audit({ ctx, module: 'attendance', action: 'LEAVE_APPROVE', targetId: row.id, detail: { staffId: row.staffId, status: row.approveStatus } }); } catch (_) {}
   return success(ctx, _leaveToApi(row));
 };
 

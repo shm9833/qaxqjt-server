@@ -36,6 +36,112 @@ const _checkFlow = (from, to) => {
   }
 };
 
+// ---- 金额服务端校验（不信赖前端/Joi 之外的任何调用方）----
+const MONEY_FIELDS = ['totalAmount', 'discountAmount', 'finalAmount', 'depositAmount', 'paidAmount'];
+const MAX_AMOUNT = 100000000; // 单字段 1 亿上限
+const round2 = n => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+
+/**
+ * 归一化并勾稽订单金额。
+ * @param {object} raw  入参中的金额原始值（可能为 undefined）
+ * @param {object|null} base 已存在订单的当前金额（update 时传入，create 传 null）
+ * @returns {{values:object, moneyTouched:boolean, itemsTotal:number|null}}
+ */
+const _normalizeAmounts = (raw, base) => {
+  const values = {};
+  let moneyTouched = false;
+  for (const k of MONEY_FIELDS) {
+    if (raw[k] != null) {
+      moneyTouched = true;
+      const n = Number(raw[k]);
+      if (!Number.isFinite(n)) throw new BusinessError('VALIDATION_ERROR', `${k} 必须是数字`);
+      if (n < 0) throw new BusinessError('VALIDATION_ERROR', `${k} 不能为负数`);
+      if (n > MAX_AMOUNT) throw new BusinessError('VALIDATION_ERROR', `${k} 超出允许上限`);
+      values[k] = round2(n);
+    } else if (base) {
+      values[k] = round2(Number(base[k] || 0));
+    }
+  }
+
+  // 明细：单价/小计非负，小计缺省=数量×单价
+  let itemsTotal = null;
+  if (Array.isArray(raw.items)) {
+    moneyTouched = true;
+    itemsTotal = 0;
+    for (const it of raw.items) {
+      const qty = Number(it.quantity) || 1;
+      const unit = it.unitPrice != null ? Number(it.unitPrice) : 0;
+      const sub = it.subtotal != null ? Number(it.subtotal) : qty * unit;
+      if (!Number.isFinite(unit) || unit < 0) throw new BusinessError('VALIDATION_ERROR', '明细单价不能为负数');
+      if (!Number.isFinite(sub) || sub < 0) throw new BusinessError('VALIDATION_ERROR', '明细小计不能为负数');
+      if (sub > MAX_AMOUNT) throw new BusinessError('VALIDATION_ERROR', '明细小计超出允许上限');
+      itemsTotal += round2(sub);
+    }
+    itemsTotal = round2(itemsTotal);
+  }
+
+  if (!moneyTouched) return { values, moneyTouched, itemsTotal };
+
+  // create 时未提供总额但有明细：以明细汇总为总额
+  if (!base && values.totalAmount == null && itemsTotal != null) values.totalAmount = itemsTotal;
+
+  const total = values.totalAmount != null ? values.totalAmount : round2(base ? Number(base.totalAmount || 0) : 0);
+  const discount = values.discountAmount != null ? values.discountAmount : round2(base ? Number(base.discountAmount || 0) : 0);
+  const curFinalBase = base ? Number(base.finalAmount || 0) : null;
+  let final = values.finalAmount != null ? values.finalAmount : curFinalBase;
+
+  if (discount > total + 0.001) {
+    throw new BusinessError('VALIDATION_ERROR', `优惠金额(${discount})不能大于订单总额(${total})`);
+  }
+  // 未显式给应付金额：默认 总额-优惠
+  if (final == null) final = round2(Math.max(0, total - discount));
+  values.finalAmount = round2(final);
+  if (values.finalAmount < 0) throw new BusinessError('VALIDATION_ERROR', '应付金额不能为负数');
+  if (values.finalAmount > total + 0.001) {
+    throw new BusinessError('VALIDATION_ERROR', `应付金额(${values.finalAmount})不能大于订单总额(${total})`);
+  }
+  if (values.finalAmount + discount - total > 0.01) {
+    throw new BusinessError(
+      'VALIDATION_ERROR',
+      `优惠金额(${discount})+应付金额(${values.finalAmount})不能大于订单总额(${total})`
+    );
+  }
+
+  const deposit = values.depositAmount != null ? values.depositAmount : round2(base ? Number(base.depositAmount || 0) : 0);
+  const paid = values.paidAmount != null ? values.paidAmount : round2(base ? Number(base.paidAmount || 0) : 0);
+  values.depositAmount = deposit;
+  values.paidAmount = paid;
+  if (deposit - values.finalAmount > 0.001) {
+    throw new BusinessError('VALIDATION_ERROR', `定金(${deposit})不能大于应付金额(${values.finalAmount})`);
+  }
+  if (paid - values.finalAmount > 0.001) {
+    throw new BusinessError('VALIDATION_ERROR', `已付金额(${paid})不能大于应付金额(${values.finalAmount})，多收款项请走退款/预收流程`);
+  }
+  return { values, moneyTouched, itemsTotal };
+};
+
+/** 明细落库映射（单价/小计已在 _normalizeAmounts 校验，此处做缺省补算） */
+const _mapOrderItems = (items, orderId) =>
+  items.map(it => {
+    const qty = Number(it.quantity) || 1;
+    const unit = it.unitPrice != null ? round2(Number(it.unitPrice)) : 0;
+    const sub = it.subtotal != null ? round2(Number(it.subtotal)) : round2(qty * unit);
+    return {
+      id: idByCtx('orderItem', 12, nanoid),
+      orderId,
+      itemType: it.itemType || 'performance',
+      playId: it.playId || null,
+      itemName: it.itemName || '演出服务',
+      quantity: qty,
+      unitPrice: unit,
+      subtotal: sub,
+      performanceDate: it.performanceDate ? new Date(it.performanceDate) : null,
+      remark: it.remark || null,
+      ts: BigInt(nowMs())
+    };
+  });
+
+
 const _genOrderNo = () => {
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
@@ -165,6 +271,14 @@ const create = async ctx => {
     throw new BusinessError('VALIDATION_ERROR', 'customerName/phone 必填');
   }
 
+  // 金额服务端归一化 + 勾稽校验（非负/折扣/应付/已付上限），先于任何写操作
+  const { values: amt } = _normalizeAmounts(b, null);
+  const totalAmount = amt.totalAmount != null ? amt.totalAmount : 0;
+  const discountAmount = amt.discountAmount != null ? amt.discountAmount : 0;
+  const finalAmount = amt.finalAmount != null ? amt.finalAmount : totalAmount;
+  const depositAmount = amt.depositAmount != null ? amt.depositAmount : 0;
+  const paidAmount = amt.paidAmount != null ? amt.paidAmount : 0;
+
   // 客户：phone 复用老客户 or 新建
   let customer = await prisma.customersV1.findFirst({ where: { phone: b.phone } });
   if (!customer) {
@@ -196,11 +310,11 @@ const create = async ctx => {
       phone: b.phone,
       appointmentId: b.appointmentId || null,
       orderDate: b.orderDate ? new Date(b.orderDate) : new Date(),
-      totalAmount: b.totalAmount != null ? Number(b.totalAmount) : 0,
-      discountAmount: b.discountAmount != null ? Number(b.discountAmount) : 0,
-      finalAmount: b.finalAmount != null ? Number(b.finalAmount) : Number(b.totalAmount || 0),
-      depositAmount: b.depositAmount != null ? Number(b.depositAmount) : 0,
-      paidAmount: b.paidAmount != null ? Number(b.paidAmount) : 0,
+      totalAmount,
+      discountAmount,
+      finalAmount,
+      depositAmount,
+      paidAmount,
       invoiceTitle: b.invoiceTitle || null,
       taxNo: b.taxNo || null,
       contractNo: b.contractNo || null,
@@ -219,21 +333,7 @@ const create = async ctx => {
 
   // 明细项（items: [{itemType, itemName, quantity, unitPrice, performanceDate}]）
   if (Array.isArray(b.items) && b.items.length) {
-    await prisma.orderItem.createMany({
-      data: b.items.map(it => ({
-        id: idByCtx('orderItem', 12, nanoid),
-        orderId: row.id,
-        itemType: it.itemType || 'performance',
-        playId: it.playId || null,
-        itemName: it.itemName || '演出服务',
-        quantity: Number(it.quantity) || 1,
-        unitPrice: Number(it.unitPrice) || 0,
-        subtotal: Number(it.subtotal) || Number(it.quantity || 1) * Number(it.unitPrice || 0),
-        performanceDate: it.performanceDate ? new Date(it.performanceDate) : null,
-        remark: it.remark || null,
-        ts: BigInt(nowMs())
-      }))
-    });
+    await prisma.orderItem.createMany({ data: _mapOrderItems(b.items, row.id) });
   }
 
   // 订单→档期自动关联（含演出日期的订单自动生成排期）
@@ -276,6 +376,9 @@ const update = async ctx => {
   if (!old) throw new BusinessError('NOT_FOUND', '订单不存在');
   if (b.status && b.status !== old.status) _checkFlow(old.status, b.status);
 
+  // 金额服务端归一化 + 与存量值合并勾稽（任何金额字段或明细变更都触发）
+  const { values: amt, moneyTouched } = _normalizeAmounts(b, old);
+
   const patch = {};
   [
     'orderType',
@@ -294,9 +397,12 @@ const update = async ctx => {
   ].forEach(k => {
     if (b[k] !== undefined) patch[k] = b[k];
   });
-  ['totalAmount', 'discountAmount', 'finalAmount', 'depositAmount', 'paidAmount', 'performanceCount'].forEach(k => {
-    if (b[k] != null) patch[k] = Number(b[k]);
-  });
+  if (moneyTouched) {
+    MONEY_FIELDS.forEach(k => {
+      if (amt[k] != null) patch[k] = amt[k];
+    });
+  }
+  if (b.performanceCount != null) patch.performanceCount = Number(b.performanceCount);
   ['orderDate', 'performanceStartDate', 'performanceEndDate'].forEach(k => {
     if (b[k]) patch[k] = new Date(b[k]);
   });
@@ -319,21 +425,7 @@ const update = async ctx => {
   if (Array.isArray(b.items)) {
     await prisma.orderItem.deleteMany({ where: { orderId: id } });
     if (b.items.length) {
-      await prisma.orderItem.createMany({
-        data: b.items.map(it => ({
-          id: idByCtx('orderItem', 12, nanoid),
-          orderId: id,
-          itemType: it.itemType || 'performance',
-          playId: it.playId || null,
-          itemName: it.itemName || '演出服务',
-          quantity: Number(it.quantity) || 1,
-          unitPrice: Number(it.unitPrice) || 0,
-          subtotal: Number(it.subtotal) || Number(it.quantity || 1) * Number(it.unitPrice || 0),
-          performanceDate: it.performanceDate ? new Date(it.performanceDate) : null,
-          remark: it.remark || null,
-          ts: BigInt(nowMs())
-        }))
-      });
+      await prisma.orderItem.createMany({ data: _mapOrderItems(b.items, id) });
     }
   }
 

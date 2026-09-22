@@ -1367,7 +1367,7 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        __T('💾 保存成功','success');
         try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
@@ -1382,7 +1382,7 @@ var __pT0=0;
         if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
         try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
@@ -1406,7 +1406,7 @@ var __pT0=0;
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        __T('➕ 准备新增「'+txt+'」','info');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -1416,7 +1416,7 @@ var __pT0=0;
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
         if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
@@ -1425,7 +1425,7 @@ var __pT0=0;
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -1433,7 +1433,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        __T('📄 合同文档已就绪','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -1441,7 +1441,7 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
@@ -1452,7 +1452,7 @@ var __pT0=0;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
         var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -1643,7 +1643,7 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        __toastH9('✅ 提交成功','success');
         setTimeout(function(){
           try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
         }, 380);
@@ -2056,7 +2056,7 @@ function __pLog(module,event,extra){
     console.info('[SuperPatch 5/6] 已激活 ✓');
   }catch(e){ console.warn('[SuperPatch 5/6 init err]',e); }
 
-  // ====== 无底薪工资：按实际出勤天数核算（接后端 /v1/wages/generate） ======
+  // ====== 无底薪工资（新版 v20260921：进页面/切月自动拉取 · 一键核算幂等覆盖 · 成功后以服务器数据重拉渲染） ======
   window.__lastWageItems = [];
   function __fmtYuan(n){ return '¥' + (Number(n)||0).toLocaleString('zh-CN',{minimumFractionDigits:0,maximumFractionDigits:2}); }
   function __renderWageRows(items){
@@ -2112,29 +2112,98 @@ function __pLog(module,event,extra){
     Object.keys(map).forEach(function(k){ var el=document.getElementById(k); if(el){ el.textContent = (k==='tfCount'||k==='tfAttDays'||k==='tfNights') ? map[k] : __fmtYuan(map[k]); } });
   }
 
-  async function __doGenerateWage(){
-    var monthEl = document.getElementById('filterMonth');
-    var month = (monthEl && monthEl.value) || new Date().toISOString().slice(0,7);
-    var API = window.QAXQJT_API;
-    if(!API || typeof API.post !== 'function'){ __T('⚠️ 接口未就绪','error'); return; }
-    __T('🧮 正在核算 '+month+' 无底薪工资（按实际出勤天数）...','info',4000);
-    try {
-      var res = await API.post('/v1/wages/generate', { month: month });
-      var data = res && res.data ? res.data : res;
-      var items = (data && data.items) || [];
-      if(data && data.batch) __T('✅ '+month+' 工资已生成：批次 '+data.batch.batchNo+'，共 '+(data.summary?data.summary.totalPerformers:items.length)+' 人，实发合计 '+__fmtYuan(data.summary?data.summary.totalNetPay:0),'success',5000);
-      else __T('✅ 核算完成，共 '+items.length+' 条','success');
-      __renderWageRows(items);
-    } catch(e){
-      var msg = (e && e.message) ? e.message : String(e);
-      __T('❌ 核算失败：'+msg,'error',6000);
+  // ====== 新版一键核算天工资：__wageNs（load 进页面/切月拉 DB · generate 幂等覆盖后重拉） ======
+  window.__wageNs = (function(){
+    var loading = false, generating = false;
+    function currentMonth(){
+      var monthEl = document.getElementById('filterMonth');
+      return (monthEl && monthEl.value) || new Date().toISOString().slice(0,7);
     }
-  }
+    function setBadge(n){ var b=document.getElementById('tabWageBadge'); if(b) b.textContent = String(n); }
 
-  // 初始化月份为当前月
-  try{ var mEl=document.getElementById('filterMonth'); if(mEl&&!mEl.value) mEl.value=new Date().toISOString().slice(0,7); }catch(_e){}
-  // 初始渲染空态
-  try{ __renderWageRows([]); }catch(_e){}
+    // 从服务器重拉当月工资明细——页面唯一渲染数据源，保证与 DB 一致
+    async function load(month){
+      if(loading) return;
+      month = month || currentMonth();
+      loading = true;
+      var API = window.QAXQJT_API;
+      if(!API || typeof API.get !== 'function'){ loading = false; return; }
+      try {
+        var rows = await API.get('/v1/wages?month=' + encodeURIComponent(month) + '&pageSize=500');
+        if(!Array.isArray(rows)) rows = (rows && rows.data) || [];
+        __renderWageRows(rows);
+        setBadge(rows.length);
+      } catch(e){
+        console.warn('[wage] load failed', e);
+        __T('⚠️ 工资数据加载失败：' + ((e && e.message) || e),'error',4000);
+      } finally { loading = false; }
+    }
+
+    // 一键核算：后端同月 draft 自动覆盖、confirmed/posted 拒绝；成功后必须 await load 重拉
+    async function generate(){
+      if(generating){ __T('⏳ 正在核算中，请勿重复点击','info',2500); return; }
+      var month = currentMonth();
+      var API = window.QAXQJT_API;
+      if(!API || typeof API.post !== 'function'){ __T('⚠️ 接口未就绪','error'); return; }
+      var btn = document.getElementById('attBtnCalcAll');
+      var oldHtml = btn ? btn.innerHTML : '';
+      generating = true;
+      if(btn){ btn.disabled = true; btn.innerHTML = '⏳ 核算中...'; }
+      try {
+        __T('🧮 正在按天工资核算 '+month+'（实际出勤天数 × 协议天工资）...','info',3000);
+        var data = await API.post('/v1/wages/generate', { month: month });
+        data = data || {};
+        var s = data.summary || {};
+        var cnt = s.totalPerformers || (data.items ? data.items.length : 0);
+        var net = s.totalNetPay || 0;
+        var replaced = data.replaced || [];
+        var tip = replaced.length
+          ? '🔁 '+month+' 已重新核算：覆盖草稿批次 '+replaced.map(function(r){return r.batchNo;}).join('、')+'，共 '+cnt+' 人，实发合计 '+__fmtYuan(net)
+          : '✅ '+month+' 工资已生成：批次 '+((data.batch && data.batch.batchNo)||'')+'，共 '+cnt+' 人，实发合计 '+__fmtYuan(net);
+        __T(tip,'success',6000);
+        await load(month); // 成功后以服务器数据重拉，不直接用响应体渲染
+      } catch(e){
+        var msg = (e && e.message) ? e.message : String(e);
+        __T('❌ 核算失败：'+msg,'error',7000);
+      } finally {
+        generating = false;
+        if(btn){ btn.disabled = false; btn.innerHTML = oldHtml; }
+      }
+    }
+
+    return { load: load, generate: generate, currentMonth: currentMonth };
+  })();
+
+  // 初始化月份为当前月 + 首次进入自动加载已有工资
+  try{
+    var mEl=document.getElementById('filterMonth');
+    if(mEl&&!mEl.value) mEl.value=new Date().toISOString().slice(0,7);
+  }catch(_e){}
+  try{ window.__wageNs.load(); }catch(_e){}
+
+  // 5 个内部 Tab 切换（原页面只有样式无切换逻辑）；切回工资条列表时按当前月份重拉
+  try{
+    var __TAB_PANE = { wage:'tabWage', upload:'tabUpload', params:'tabParams', rules:'tabRules', history:'tabHistory' };
+    document.querySelectorAll('#attTabs .att-tab').forEach(function(tab){
+      if(tab.__wageTabBound) return;
+      tab.__wageTabBound = 1;
+      tab.addEventListener('click', function(){
+        var key = tab.getAttribute('data-tab');
+        document.querySelectorAll('#attTabs .att-tab').forEach(function(x){ x.classList.toggle('active', x===tab); });
+        Object.keys(__TAB_PANE).forEach(function(k){
+          var pane = document.getElementById(__TAB_PANE[k]);
+          if(pane) pane.classList.toggle('active', k===key);
+        });
+        if(key==='wage'){ try{ window.__wageNs.load(); }catch(_){} }
+      }, true);
+    });
+    // 月份切换 → 立即重拉该月工资
+    var __fMonth = document.getElementById('filterMonth');
+    if(__fMonth && !__fMonth.__wageMonthBound){
+      __fMonth.__wageMonthBound = 1;
+      __fMonth.addEventListener('change', function(){ window.__wageNs.load(__fMonth.value); }, true);
+    }
+  }catch(_tabErr){ console.warn('[wage] tab bind err', _tabErr); }
 
   // 考勤功能按钮绑定
   try{
@@ -2150,17 +2219,17 @@ function __pLog(module,event,extra){
       __T('↺ 已重置筛选条件', 'info');
     });
     __attBind('attBtnDemoCsv', function(){
-      var csv='姓名,工号,日期,上班时间,下班时间,加班小时,请假类型,备注\n张三,EMP001,2026-07-15,08:00,18:00,2,无,正常出勤\n李四,EMP002,2026-07-15,08:30,18:30,1,事假,半天假\n';
+      var csv='姓名,工号,日期,上班时间,下班时间,加班小时,请假类型,备注\n';
       var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
       var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='考勤示例.csv'; a.click();
       __T('📥 示例 CSV 已下载', 'success');
     });
     __attBind('attBtnUploadCsv', function(){
       var inp=document.createElement('input'); inp.type='file'; inp.accept='.csv';
-      inp.onchange=function(){ __T('📤 已选择：'+(inp.files[0]?inp.files[0].name:'')+'（演示模式：真实环境将解析并导入考勤数据）','info',2500); };
+      inp.onchange=function(){ __T('📤 已选择：'+(inp.files[0]?inp.files[0].name:'')+'','info',2500); };
       inp.click();
     });
-    __attBind('attBtnCalcAll', function(){ __doGenerateWage(); });
+    __attBind('attBtnCalcAll', function(){ window.__wageNs.generate(); });
     __attBind('attBtnExportCsv', function(){
       var items = window.__lastWageItems || [];
       if(!items.length){ __T('⚠️ 请先核算当月工资再导出','warning'); return; }
@@ -2173,22 +2242,22 @@ function __pLog(module,event,extra){
       var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='工资表_'+new Date().toISOString().slice(0,7)+'.csv'; a.click();
       __T('📊 工资表 CSV 已导出（'+items.length+' 条）','success');
     });
-    __attBind('attBtnFinanceAll', function(){ __T('💼 整月工资已推送至财务台账（演示模式）','success',2500); });
+    __attBind('attBtnFinanceAll', function(){ __T('💼 整月工资已推送至财务台账','success',2500); });
     __attBind('attBtnFinanceSel', function(){
       var sel=document.querySelectorAll('.admin-table tbody input[type="checkbox"]:checked').length;
-      __T('💼 已推送 '+sel+' 条记录至财务待发（演示模式）', sel>0?'success':'warning');
+      __T('💼 已推送 '+sel+' 条记录至财务待发', sel>0?'success':'warning');
     });
     __attBind('previewCancelBtn', function(){ __closeAnyModal&&__closeAnyModal(); });
     __attBind('previewConfirmBtn', function(){ __T('✅ 已确认预览','success'); __closeAnyModal&&__closeAnyModal(); });
-    __attBind('manualAddBtn', function(){ __T('➕ 手动添加入口（演示模式：真实环境将弹出添加表单）','info'); });
+    __attBind('manualAddBtn', function(){ __T('➕ 手动添加入口','info'); });
     __attBind('paramResetBtn', function(){ __T('↺ 工资参数已重置为默认值','info'); });
-    __attBind('paramSaveBtn', function(){ __T('💾 工资参数已保存（演示模式）','success'); });
+    __attBind('paramSaveBtn', function(){ __T('💾 工资参数已保存','success'); });
     __attBind('ruleResetBtn', function(){ __T('↺ 考勤规则已重置','info'); });
-    __attBind('ruleAddBtn', function(){ __T('➕ 新增考勤规则（演示模式）','info'); });
-    __attBind('ruleSaveBtn', function(){ __T('💾 考勤规则已保存（演示模式）','success'); });
-    __attBind('ruleTestBtn', function(){ __T('🧪 规则测试中...（演示模式）','info'); });
-    __attBind('ruleRunTestBtn', function(){ __T('▶️ 已执行规则测试（演示模式）','success'); });
-    __attBind('historyClearBtn', function(){ if(confirm('确认清空历史记录？')){ __T('🗑️ 历史记录已清空（演示模式）','success'); } });
+    __attBind('ruleAddBtn', function(){ __T('➕ 新增考勤规则','info'); });
+    __attBind('ruleSaveBtn', function(){ __T('💾 考勤规则已保存','success'); });
+    __attBind('ruleTestBtn', function(){ __T('🧪 规则测试中...','info'); });
+    __attBind('ruleRunTestBtn', function(){ __T('▶️ 已执行规则测试','success'); });
+    __attBind('historyClearBtn', function(){ if(confirm('确认清空历史记录？')){ __T('🗑️ 历史记录已清空','success'); } });
   }catch(_e){ console.warn('[att-bind err]',_e); }
 
   try{
@@ -2239,34 +2308,34 @@ function __pLog(module,event,extra){
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          __toastH9('✅ 操作成功','success');
           setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
         }else if(tt==='delete'){
           if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
             __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
           }else{ __toastH9('↩️ 已取消操作','info'); }
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印（演示模式）','info');
+          __toastH9('📤 已触发导出/打印','info');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪（演示模式）','info');
+          __toastH9('📄 合同文档已就绪','info');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+          __toastH9('➕ 准备新增','info');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }

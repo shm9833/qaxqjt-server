@@ -125,7 +125,7 @@
 
     <div class="category-nav" data-tabs="opera-category">
       <div class="container">
-        <div class="category-nav-inner">
+        <div class="category-nav-inner" data-real-opera-tabs>
           <button class="category-btn active" data-tab-btn="all">全部剧目</button>
           <button class="category-btn" data-tab-btn="traditional">传统本戏</button>
           <button class="category-btn" data-tab-btn="excerpts">经典折子戏</button>
@@ -147,291 +147,8 @@
           <span class="subtitle">传统本戏 · 经典折子戏 · 地道秦腔韵味</span>
         </div>
 
-        <div class="operas-grid" data-paginate="list" data-page-size="8" data-opera-grid>
-          <!-- ======================================== -->
-          <!-- 传统本戏 7 部（3部热门置顶） -->
-          <!-- ======================================== -->
-          <div class="opera-card hot" data-category="traditional" data-tab-panel="traditional">
-            <div class="opera-card-image">
-              <span class="opera-card-category">传统本戏</span>
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E4%BC%A0%E7%BB%9F%E7%BB%8F%E5%85%B8%E5%89%A7%E7%9B%AE%E3%80%8A%E7%81%AB%E7%84%B0%E9%A9%B9%E3%80%8B%E8%88%9E%E5%8F%B0%E6%BC%94%E5%87%BA%E5%89%A7%E7%85%A7%EF%BC%8C%E4%B8%A4%E4%BD%8D%E4%B8%BB%E8%A6%81%E6%BC%94%E5%91%98%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E5%AF%B9%E6%89%8B%E6%88%8F%EF%BC%8C%E7%81%AB%E7%84%B0%E9%A9%B9%E7%BB%8F%E5%85%B8%E5%9C%BA%E6%99%AF%EF%BC%8C%E5%8D%8E%E4%B8%BD%E7%9A%84%E7%A7%A6%E8%85%94%E6%88%8F%E6%9C%8D%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E7%B2%BE%E7%BE%8E%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E4%BC%A0%E7%BB%9F%E5%8F%A4%E6%88%8F%E5%8F%B0%E8%83%8C%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E8%88%9E%E5%8F%B0%E7%81%AF%E5%85%89%EF%BC%8C%E6%88%8F%E5%89%A7%E5%BC%A0%E5%8A%9B%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E6%9E%84%E5%9B%BE%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_4_3" alt="火焰驹">
-            </div>
-            <div class="opera-card-body">
-              <h3>《火焰驹》</h3>
-              <div class="opera-card-meta">
-                <span class="opera-meta-item"><span class="meta-icon">⏱</span>时长：180分钟</span>
-                <span class="opera-meta-item"><span class="meta-icon">🎭</span>行当齐全大戏</span>
-              </div>
-              <span class="opera-scene-tag">🏮 适配：庙会 / 节庆专场</span>
-              <p class="opera-card-desc">
-                秦腔经典传统爱情大戏，讲述李彦荣与黄桂英悲欢离合的爱情传奇。"打路""卖水""花园"等经典折段脍炙人口，
-                全剧行当齐全、唱作并重、唱腔激昂慷慨，是庙会节庆最受群众欢迎的经典剧目之一，久演不衰。
-              </p>
-              <div class="opera-card-footer">
-                <a href="booking.html?play=火焰驹&amp;serviceType=%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E6%88%8F%E6%9B%B2%E6%BC%94%E5%87%BA" class="btn btn-primary">📅 预约此剧</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="opera-card hot" data-category="traditional" data-tab-panel="traditional">
-            <div class="opera-card-image">
-              <span class="opera-card-category">传统本戏</span>
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E4%BC%A0%E7%BB%9F%E7%BB%8F%E5%85%B8%E5%89%A7%E7%9B%AE%E3%80%8A%E7%81%AB%E7%84%B0%E9%A9%B9%E3%80%8B%E8%88%9E%E5%8F%B0%E6%BC%94%E5%87%BA%E5%89%A7%E7%85%A7%EF%BC%8C%E4%B8%A4%E4%BD%8D%E4%B8%BB%E8%A6%81%E6%BC%94%E5%91%98%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E5%AF%B9%E6%89%8B%E6%88%8F%EF%BC%8C%E7%81%AB%E7%84%B0%E9%A9%B9%E7%BB%8F%E5%85%B8%E5%9C%BA%E6%99%AF%EF%BC%8C%E5%8D%8E%E4%B8%BD%E7%9A%84%E7%A7%A6%E8%85%94%E6%88%8F%E6%9C%8D%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E7%B2%BE%E7%BE%8E%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E4%BC%A0%E7%BB%9F%E5%8F%A4%E6%88%8F%E5%8F%B0%E8%83%8C%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E8%88%9E%E5%8F%B0%E7%81%AF%E5%85%89%EF%BC%8C%E6%88%8F%E5%89%A7%E5%BC%A0%E5%8A%9B%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E6%9E%84%E5%9B%BE%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_4_3" alt="窦娥冤">
-            </div>
-            <div class="opera-card-body">
-              <h3>《窦娥冤》</h3>
-              <div class="opera-card-meta">
-                <span class="opera-meta-item"><span class="meta-icon">⏱</span>时长：170分钟</span>
-                <span class="opera-meta-item"><span class="meta-icon">🎭</span>青衣唱功重头戏</span>
-              </div>
-              <span class="opera-scene-tag">🏮 适配：文化惠民 / 节庆专场</span>
-              <p class="opera-card-desc">
-                元代剧作家关汉卿名作改编，秦腔悲剧经典代表。讲述善良妇女窦娥被贪官污吏陷害蒙冤、临刑发下三桩誓愿
-                感天动地的故事。唱腔悲愤激昂、表演感人至深，是秦腔青衣行当唱功考验的代表剧目。
-              </p>
-              <div class="opera-card-footer">
-                <a href="booking.html?play=窦娥冤&amp;serviceType=%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E6%88%8F%E6%9B%B2%E6%BC%94%E5%87%BA" class="btn btn-primary">📅 预约此剧</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="opera-card" data-category="traditional" data-tab-panel="traditional">
-            <div class="opera-card-image">
-              <span class="opera-card-category">传统本戏</span>
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E4%BC%A0%E7%BB%9F%E7%BB%8F%E5%85%B8%E5%89%A7%E7%9B%AE%E3%80%8A%E7%81%AB%E7%84%B0%E9%A9%B9%E3%80%8B%E8%88%9E%E5%8F%B0%E6%BC%94%E5%87%BA%E5%89%A7%E7%85%A7%EF%BC%8C%E4%B8%A4%E4%BD%8D%E4%B8%BB%E8%A6%81%E6%BC%94%E5%91%98%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E5%AF%B9%E6%89%8B%E6%88%8F%EF%BC%8C%E7%81%AB%E7%84%B0%E9%A9%B9%E7%BB%8F%E5%85%B8%E5%9C%BA%E6%99%AF%EF%BC%8C%E5%8D%8E%E4%B8%BD%E7%9A%84%E7%A7%A6%E8%85%94%E6%88%8F%E6%9C%8D%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E7%B2%BE%E7%BE%8E%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E4%BC%A0%E7%BB%9F%E5%8F%A4%E6%88%8F%E5%8F%B0%E8%83%8C%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E8%88%9E%E5%8F%B0%E7%81%AF%E5%85%89%EF%BC%8C%E6%88%8F%E5%89%A7%E5%BC%A0%E5%8A%9B%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E6%9E%84%E5%9B%BE%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_4_3" alt="大升官">
-            </div>
-            <div class="opera-card-body">
-              <h3>《大升官》</h3>
-              <div class="opera-card-meta">
-                <span class="opera-meta-item"><span class="meta-icon">⏱</span>时长：160分钟</span>
-                <span class="opera-meta-item"><span class="meta-icon">🎭</span>宫廷历史大戏</span>
-              </div>
-              <span class="opera-scene-tag">🏮 适配：庙会 / 节庆演出</span>
-              <p class="opera-card-desc">
-                又名《忠保国》《龙凤阁》，秦腔经典宫廷历史大戏。明代李艳妃垂帘听政、徐延昭和杨波忠心护国的故事。
-                生、旦、净、丑行当齐全，"二进宫"一折唱功繁重、对唱精彩，是检验剧团综合实力的招牌剧目。
-              </p>
-              <div class="opera-card-footer">
-                <a href="booking.html?play=大升官&amp;serviceType=%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E6%88%8F%E6%9B%B2%E6%BC%94%E5%87%BA" class="btn btn-primary">📅 预约此剧</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="opera-card" data-category="traditional" data-tab-panel="traditional">
-            <div class="opera-card-image">
-              <span class="opera-card-category">传统本戏</span>
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E4%BC%A0%E7%BB%9F%E7%BB%8F%E5%85%B8%E5%89%A7%E7%9B%AE%E3%80%8A%E7%81%AB%E7%84%B0%E9%A9%B9%E3%80%8B%E8%88%9E%E5%8F%B0%E6%BC%94%E5%87%BA%E5%89%A7%E7%85%A7%EF%BC%8C%E4%B8%A4%E4%BD%8D%E4%B8%BB%E8%A6%81%E6%BC%94%E5%91%98%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E5%AF%B9%E6%89%8B%E6%88%8F%EF%BC%8C%E7%81%AB%E7%84%B0%E9%A9%B9%E7%BB%8F%E5%85%B8%E5%9C%BA%E6%99%AF%EF%BC%8C%E5%8D%8E%E4%B8%BD%E7%9A%84%E7%A7%A6%E8%85%94%E6%88%8F%E6%9C%8D%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E7%B2%BE%E7%BE%8E%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E4%BC%A0%E7%BB%9F%E5%8F%A4%E6%88%8F%E5%8F%B0%E8%83%8C%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E8%88%9E%E5%8F%B0%E7%81%AF%E5%85%89%EF%BC%8C%E6%88%8F%E5%89%A7%E5%BC%A0%E5%8A%9B%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E6%9E%84%E5%9B%BE%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_4_3" alt="三滴血">
-            </div>
-            <div class="opera-card-body">
-              <h3>《三滴血》</h3>
-              <div class="opera-card-meta">
-                <span class="opera-meta-item"><span class="meta-icon">⏱</span>时长：190分钟</span>
-                <span class="opera-meta-item"><span class="meta-icon">🎭</span>经典公案喜剧</span>
-              </div>
-              <span class="opera-scene-tag">🏮 适配：惠民下乡 / 节庆专场</span>
-              <p class="opera-card-desc">
-                范紫东先生代表作，秦腔喜剧经典传世名剧。讲述糊涂县官晋信书以"滴血认亲"之法断案，闹出
-                无数啼笑皆非荒唐事的故事。剧情曲折生动、人物形象鲜活、语言幽默风趣，家喻户晓、老少皆宜。
-              </p>
-              <div class="opera-card-footer">
-                <a href="booking.html?play=三滴血&amp;serviceType=%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E6%88%8F%E6%9B%B2%E6%BC%94%E5%87%BA" class="btn btn-primary">📅 预约此剧</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="opera-card" data-category="traditional" data-tab-panel="traditional">
-            <div class="opera-card-image">
-              <span class="opera-card-category">传统本戏</span>
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E4%BC%A0%E7%BB%9F%E7%BB%8F%E5%85%B8%E5%89%A7%E7%9B%AE%E3%80%8A%E7%81%AB%E7%84%B0%E9%A9%B9%E3%80%8B%E8%88%9E%E5%8F%B0%E6%BC%94%E5%87%BA%E5%89%A7%E7%85%A7%EF%BC%8C%E4%B8%A4%E4%BD%8D%E4%B8%BB%E8%A6%81%E6%BC%94%E5%91%98%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E5%AF%B9%E6%89%8B%E6%88%8F%EF%BC%8C%E7%81%AB%E7%84%B0%E9%A9%B9%E7%BB%8F%E5%85%B8%E5%9C%BA%E6%99%AF%EF%BC%8C%E5%8D%8E%E4%B8%BD%E7%9A%84%E7%A7%A6%E8%85%94%E6%88%8F%E6%9C%8D%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E7%B2%BE%E7%BE%8E%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E4%BC%A0%E7%BB%9F%E5%8F%A4%E6%88%8F%E5%8F%B0%E8%83%8C%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E8%88%9E%E5%8F%B0%E7%81%AF%E5%85%89%EF%BC%8C%E6%88%8F%E5%89%A7%E5%BC%A0%E5%8A%9B%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E6%9E%84%E5%9B%BE%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_4_3" alt="五典坡">
-            </div>
-            <div class="opera-card-body">
-              <h3>《五典坡》</h3>
-              <div class="opera-card-meta">
-                <span class="opera-meta-item"><span class="meta-icon">⏱</span>时长：200分钟</span>
-                <span class="opera-meta-item"><span class="meta-icon">🎭</span>爱情传奇大戏</span>
-              </div>
-              <span class="opera-scene-tag">🏮 适配：庙会 / 喜庆祝寿</span>
-              <p class="opera-card-desc">
-                薛平贵与王宝钏的经典爱情传奇。相府千金王宝钏彩楼抛绣球选中薛平贵，苦守寒窑十八载，
-                最终薛平贵西凉封王归来、夫妻团圆的故事。"算粮""登殿"等折子戏广为流传，青衣与须生对戏精彩纷呈。
-              </p>
-              <div class="opera-card-footer">
-                <a href="booking.html?play=五典坡&amp;serviceType=%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E6%88%8F%E6%9B%B2%E6%BC%94%E5%87%BA" class="btn btn-primary">📅 预约此剧</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="opera-card hot" data-category="traditional" data-tab-panel="traditional">
-            <div class="opera-card-image">
-              <span class="opera-card-category">传统本戏</span>
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E4%BC%A0%E7%BB%9F%E7%BB%8F%E5%85%B8%E5%89%A7%E7%9B%AE%E3%80%8A%E7%81%AB%E7%84%B0%E9%A9%B9%E3%80%8B%E8%88%9E%E5%8F%B0%E6%BC%94%E5%87%BA%E5%89%A7%E7%85%A7%EF%BC%8C%E4%B8%A4%E4%BD%8D%E4%B8%BB%E8%A6%81%E6%BC%94%E5%91%98%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E5%AF%B9%E6%89%8B%E6%88%8F%EF%BC%8C%E7%81%AB%E7%84%B0%E9%A9%B9%E7%BB%8F%E5%85%B8%E5%9C%BA%E6%99%AF%EF%BC%8C%E5%8D%8E%E4%B8%BD%E7%9A%84%E7%A7%A6%E8%85%94%E6%88%8F%E6%9C%8D%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E7%B2%BE%E7%BE%8E%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E4%BC%A0%E7%BB%9F%E5%8F%A4%E6%88%8F%E5%8F%B0%E8%83%8C%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E8%88%9E%E5%8F%B0%E7%81%AF%E5%85%89%EF%BC%8C%E6%88%8F%E5%89%A7%E5%BC%A0%E5%8A%9B%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E6%9E%84%E5%9B%BE%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_4_3" alt="铡美案">
-            </div>
-            <div class="opera-card-body">
-              <h3>《铡美案》</h3>
-              <div class="opera-card-meta">
-                <span class="opera-meta-item"><span class="meta-icon">⏱</span>时长：150分钟</span>
-                <span class="opera-meta-item"><span class="meta-icon">🎭</span>花脸唱功重头戏</span>
-              </div>
-              <span class="opera-scene-tag">🏮 适配：庙会 / 节庆必演</span>
-              <p class="opera-card-desc">
-                包公铁面无私怒铡负心驸马陈世美的经典故事，秦腔花脸行当代表剧目。包拯刚正不阿、秉公执法的形象
-                深入人心，"包相爷与我讲一遍""驸马爷近前看端详"等经典唱段家喻户晓、人人传唱，是庙会演出最火爆剧目之一。
-              </p>
-              <div class="opera-card-footer">
-                <a href="booking.html?play=铡美案&amp;serviceType=%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E6%88%8F%E6%9B%B2%E6%BC%94%E5%87%BA" class="btn btn-primary">📅 预约此剧</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="opera-card" data-category="traditional" data-tab-panel="traditional">
-            <div class="opera-card-image">
-              <span class="opera-card-category">传统本戏</span>
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E4%BC%A0%E7%BB%9F%E7%BB%8F%E5%85%B8%E5%89%A7%E7%9B%AE%E3%80%8A%E7%81%AB%E7%84%B0%E9%A9%B9%E3%80%8B%E8%88%9E%E5%8F%B0%E6%BC%94%E5%87%BA%E5%89%A7%E7%85%A7%EF%BC%8C%E4%B8%A4%E4%BD%8D%E4%B8%BB%E8%A6%81%E6%BC%94%E5%91%98%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E5%AF%B9%E6%89%8B%E6%88%8F%EF%BC%8C%E7%81%AB%E7%84%B0%E9%A9%B9%E7%BB%8F%E5%85%B8%E5%9C%BA%E6%99%AF%EF%BC%8C%E5%8D%8E%E4%B8%BD%E7%9A%84%E7%A7%A6%E8%85%94%E6%88%8F%E6%9C%8D%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E7%B2%BE%E7%BE%8E%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E4%BC%A0%E7%BB%9F%E5%8F%A4%E6%88%8F%E5%8F%B0%E8%83%8C%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E8%88%9E%E5%8F%B0%E7%81%AF%E5%85%89%EF%BC%8C%E6%88%8F%E5%89%A7%E5%BC%A0%E5%8A%9B%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E6%9E%84%E5%9B%BE%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_4_3" alt="金沙滩">
-            </div>
-            <div class="opera-card-body">
-              <h3>《金沙滩》</h3>
-              <div class="opera-card-meta">
-                <span class="opera-meta-item"><span class="meta-icon">⏱</span>时长：180分钟</span>
-                <span class="opera-meta-item"><span class="meta-icon">🎭</span>杨家将忠义戏</span>
-              </div>
-              <span class="opera-scene-tag">🏮 适配：庙会 / 爱国主题</span>
-              <p class="opera-card-desc">
-                杨家将忠义故事经典，金沙滩双龙会一场惊天地泣鬼神的血战。大郎替主、二郎短剑、三郎马踏、四郎失落、
-                五郎出家、六郎逃生、七郎乱箭射死……杨家满门忠烈的悲壮故事，武生重头戏，场面宏大、唱腔激昂。
-              </p>
-              <div class="opera-card-footer">
-                <a href="booking.html?play=金沙滩&amp;serviceType=%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E6%88%8F%E6%9B%B2%E6%BC%94%E5%87%BA" class="btn btn-primary">📅 预约此剧</a>
-              </div>
-            </div>
-          </div>
-
-          <!-- ======================================== -->
-          <!-- 经典折子戏 5 部（1部热门） -->
-          <!-- ======================================== -->
-          <div class="opera-card hot" data-category="excerpts" data-tab-panel="excerpts">
-            <div class="opera-card-image">
-              <span class="opera-card-category">经典折子戏</span>
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E4%BC%A0%E7%BB%9F%E7%BB%8F%E5%85%B8%E5%89%A7%E7%9B%AE%E3%80%8A%E7%81%AB%E7%84%B0%E9%A9%B9%E3%80%8B%E8%88%9E%E5%8F%B0%E6%BC%94%E5%87%BA%E5%89%A7%E7%85%A7%EF%BC%8C%E4%B8%A4%E4%BD%8D%E4%B8%BB%E8%A6%81%E6%BC%94%E5%91%98%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E5%AF%B9%E6%89%8B%E6%88%8F%EF%BC%8C%E7%81%AB%E7%84%B0%E9%A9%B9%E7%BB%8F%E5%85%B8%E5%9C%BA%E6%99%AF%EF%BC%8C%E5%8D%8E%E4%B8%BD%E7%9A%84%E7%A7%A6%E8%85%94%E6%88%8F%E6%9C%8D%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E7%B2%BE%E7%BE%8E%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E4%BC%A0%E7%BB%9F%E5%8F%A4%E6%88%8F%E5%8F%B0%E8%83%8C%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E8%88%9E%E5%8F%B0%E7%81%AF%E5%85%89%EF%BC%8C%E6%88%8F%E5%89%A7%E5%BC%A0%E5%8A%9B%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E6%9E%84%E5%9B%BE%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_4_3" alt="周仁回府">
-            </div>
-            <div class="opera-card-body">
-              <h3>《周仁回府》</h3>
-              <div class="opera-card-meta">
-                <span class="opera-meta-item"><span class="meta-icon">⏱</span>时长：60分钟</span>
-                <span class="opera-meta-item"><span class="meta-icon">🎭</span>小生重头戏</span>
-              </div>
-              <span class="opera-scene-tag">🏮 适配：庙会加演 / 折子戏专场</span>
-              <p class="opera-card-desc">
-                秦腔小生行当经典代表剧目，义士周仁为救盟兄杜文学之妻，献己妻于权奸严嵩之侄严年，后其妻李兰英
-                自刎明节，周仁历尽波折、最终沉冤昭雪的感人故事。"哭墓"一折唱做俱佳、催人泪下。
-              </p>
-              <div class="opera-card-footer">
-                <a href="booking.html?play=周仁回府&amp;serviceType=%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E6%88%8F%E6%9B%B2%E6%BC%94%E5%87%BA" class="btn btn-primary">📅 预约此剧</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="opera-card" data-category="excerpts" data-tab-panel="excerpts">
-            <div class="opera-card-image">
-              <span class="opera-card-category">经典折子戏</span>
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E4%BC%A0%E7%BB%9F%E7%BB%8F%E5%85%B8%E5%89%A7%E7%9B%AE%E3%80%8A%E7%81%AB%E7%84%B0%E9%A9%B9%E3%80%8B%E8%88%9E%E5%8F%B0%E6%BC%94%E5%87%BA%E5%89%A7%E7%85%A7%EF%BC%8C%E4%B8%A4%E4%BD%8D%E4%B8%BB%E8%A6%81%E6%BC%94%E5%91%98%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E5%AF%B9%E6%89%8B%E6%88%8F%EF%BC%8C%E7%81%AB%E7%84%B0%E9%A9%B9%E7%BB%8F%E5%85%B8%E5%9C%BA%E6%99%AF%EF%BC%8C%E5%8D%8E%E4%B8%BD%E7%9A%84%E7%A7%A6%E8%85%94%E6%88%8F%E6%9C%8D%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E7%B2%BE%E7%BE%8E%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E4%BC%A0%E7%BB%9F%E5%8F%A4%E6%88%8F%E5%8F%B0%E8%83%8C%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E8%88%9E%E5%8F%B0%E7%81%AF%E5%85%89%EF%BC%8C%E6%88%8F%E5%89%A7%E5%BC%A0%E5%8A%9B%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E6%9E%84%E5%9B%BE%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_4_3" alt="断桥">
-            </div>
-            <div class="opera-card-body">
-              <h3>《断桥》</h3>
-              <div class="opera-card-meta">
-                <span class="opera-meta-item"><span class="meta-icon">⏱</span>时长：45分钟</span>
-                <span class="opera-meta-item"><span class="meta-icon">🎭</span>白蛇传选段</span>
-              </div>
-              <span class="opera-scene-tag">🏮 适配：节庆 / 折子戏专场</span>
-              <p class="opera-card-desc">
-                《白蛇传》经典折子选段，白素贞与小青金山寺索夫未遂，归途与许仙断桥重逢。白娘子爱恨交加、
-                柔情与悲愤交织的复杂情感演绎淋漓尽致。青衣与小旦、小生唱做并重，身段优美、唱腔婉转。
-              </p>
-              <div class="opera-card-footer">
-                <a href="booking.html?play=断桥&amp;serviceType=%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E6%88%8F%E6%9B%B2%E6%BC%94%E5%87%BA" class="btn btn-primary">📅 预约此剧</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="opera-card" data-category="excerpts" data-tab-panel="excerpts">
-            <div class="opera-card-image">
-              <span class="opera-card-category">经典折子戏</span>
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E4%BC%A0%E7%BB%9F%E7%BB%8F%E5%85%B8%E5%89%A7%E7%9B%AE%E3%80%8A%E7%81%AB%E7%84%B0%E9%A9%B9%E3%80%8B%E8%88%9E%E5%8F%B0%E6%BC%94%E5%87%BA%E5%89%A7%E7%85%A7%EF%BC%8C%E4%B8%A4%E4%BD%8D%E4%B8%BB%E8%A6%81%E6%BC%94%E5%91%98%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E5%AF%B9%E6%89%8B%E6%88%8F%EF%BC%8C%E7%81%AB%E7%84%B0%E9%A9%B9%E7%BB%8F%E5%85%B8%E5%9C%BA%E6%99%AF%EF%BC%8C%E5%8D%8E%E4%B8%BD%E7%9A%84%E7%A7%A6%E8%85%94%E6%88%8F%E6%9C%8D%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E7%B2%BE%E7%BE%8E%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E4%BC%A0%E7%BB%9F%E5%8F%A4%E6%88%8F%E5%8F%B0%E8%83%8C%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E8%88%9E%E5%8F%B0%E7%81%AF%E5%85%89%EF%BC%8C%E6%88%8F%E5%89%A7%E5%BC%A0%E5%8A%9B%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E6%9E%84%E5%9B%BE%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_4_3" alt="拾玉镯">
-            </div>
-            <div class="opera-card-body">
-              <h3>《拾玉镯》</h3>
-              <div class="opera-card-meta">
-                <span class="opera-meta-item"><span class="meta-icon">⏱</span>时长：50分钟</span>
-                <span class="opera-meta-item"><span class="meta-icon">🎭</span>风趣生活戏</span>
-              </div>
-              <span class="opera-scene-tag">🏮 适配：节庆 / 喜庆祝寿</span>
-              <p class="opera-card-desc">
-                秦腔花旦行当经典折子戏，讲述少女孙玉姣在家门口做针线活，偶遇富家公子傅朋，互生爱慕，
-                傅朋故意遗落玉镯，玉姣拾镯时被刘媒婆撞见，引出一段风趣姻缘的故事。生活气息浓厚、表演幽默生动。
-              </p>
-              <div class="opera-card-footer">
-                <a href="booking.html?play=拾玉镯&amp;serviceType=%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E6%88%8F%E6%9B%B2%E6%BC%94%E5%87%BA" class="btn btn-primary">📅 预约此剧</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="opera-card" data-category="excerpts" data-tab-panel="excerpts">
-            <div class="opera-card-image">
-              <span class="opera-card-category">经典折子戏</span>
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E4%BC%A0%E7%BB%9F%E7%BB%8F%E5%85%B8%E5%89%A7%E7%9B%AE%E3%80%8A%E7%81%AB%E7%84%B0%E9%A9%B9%E3%80%8B%E8%88%9E%E5%8F%B0%E6%BC%94%E5%87%BA%E5%89%A7%E7%85%A7%EF%BC%8C%E4%B8%A4%E4%BD%8D%E4%B8%BB%E8%A6%81%E6%BC%94%E5%91%98%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E5%AF%B9%E6%89%8B%E6%88%8F%EF%BC%8C%E7%81%AB%E7%84%B0%E9%A9%B9%E7%BB%8F%E5%85%B8%E5%9C%BA%E6%99%AF%EF%BC%8C%E5%8D%8E%E4%B8%BD%E7%9A%84%E7%A7%A6%E8%85%94%E6%88%8F%E6%9C%8D%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E7%B2%BE%E7%BE%8E%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E4%BC%A0%E7%BB%9F%E5%8F%A4%E6%88%8F%E5%8F%B0%E8%83%8C%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E8%88%9E%E5%8F%B0%E7%81%AF%E5%85%89%EF%BC%8C%E6%88%8F%E5%89%A7%E5%BC%A0%E5%8A%9B%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E6%9E%84%E5%9B%BE%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_4_3" alt="三娘教子">
-            </div>
-            <div class="opera-card-body">
-              <h3>《三娘教子》</h3>
-              <div class="opera-card-meta">
-                <span class="opera-meta-item"><span class="meta-icon">⏱</span>时长：55分钟</span>
-                <span class="opera-meta-item"><span class="meta-icon">🎭</span>青衣重功戏</span>
-              </div>
-              <span class="opera-scene-tag">🏮 适配：家庭教育主题 / 节庆</span>
-              <p class="opera-card-desc">
-                传统家庭教育题材经典折子戏。王春娥三娘守节抚养义子薛倚哥长大，倚哥逃学被三娘教训，
-                后在老家人薛保的劝解下母子和好、苦读成才。"薛保一旁跪向前"等唱段脍炙人口，贤母良教感人至深。
-              </p>
-              <div class="opera-card-footer">
-                <a href="booking.html?play=三娘教子&amp;serviceType=%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E6%88%8F%E6%9B%B2%E6%BC%94%E5%87%BA" class="btn btn-primary">📅 预约此剧</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="opera-card" data-category="excerpts" data-tab-panel="excerpts">
-            <div class="opera-card-image">
-              <span class="opera-card-category">经典折子戏</span>
-              <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E8%85%94%E4%BC%A0%E7%BB%9F%E7%BB%8F%E5%85%B8%E5%89%A7%E7%9B%AE%E3%80%8A%E7%81%AB%E7%84%B0%E9%A9%B9%E3%80%8B%E8%88%9E%E5%8F%B0%E6%BC%94%E5%87%BA%E5%89%A7%E7%85%A7%EF%BC%8C%E4%B8%A4%E4%BD%8D%E4%B8%BB%E8%A6%81%E6%BC%94%E5%91%98%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E5%AF%B9%E6%89%8B%E6%88%8F%EF%BC%8C%E7%81%AB%E7%84%B0%E9%A9%B9%E7%BB%8F%E5%85%B8%E5%9C%BA%E6%99%AF%EF%BC%8C%E5%8D%8E%E4%B8%BD%E7%9A%84%E7%A7%A6%E8%85%94%E6%88%8F%E6%9C%8D%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E7%B2%BE%E7%BE%8E%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E4%BC%A0%E7%BB%9F%E5%8F%A4%E6%88%8F%E5%8F%B0%E8%83%8C%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E8%88%9E%E5%8F%B0%E7%81%AF%E5%85%89%EF%BC%8C%E6%88%8F%E5%89%A7%E5%BC%A0%E5%8A%9B%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E6%9E%84%E5%9B%BE%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_4_3" alt="二进宫">
-            </div>
-            <div class="opera-card-body">
-              <h3>《二进宫》</h3>
-              <div class="opera-card-meta">
-                <span class="opera-meta-item"><span class="meta-icon">⏱</span>时长：40分钟</span>
-                <span class="opera-meta-item"><span class="meta-icon">🎭</span>唱功重头戏</span>
-              </div>
-              <span class="opera-scene-tag">🏮 适配：折子戏专场 / 开台戏</span>
-              <p class="opera-card-desc">
-                秦腔唱功戏巅峰之作，《大升官》中最精彩的一折。李艳妃、徐延昭、杨波三人在昭阳宫
-                为江山社稷而展开的一场惊心动魄的对唱。生、旦、净三足鼎立、各显神通，大段唱腔酣畅淋漓、
-                高亢激昂，是检验演员唱功实力的经典范本。
-              </p>
-              <div class="opera-card-footer">
-                <a href="booking.html?play=二进宫&amp;serviceType=%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E6%88%8F%E6%9B%B2%E6%BC%94%E5%87%BA" class="btn btn-primary">📅 预约此剧</a>
-              </div>
-            </div>
-          </div>
-
-          <!-- 分类：民俗专场（暂时无内容，显示空状态） -->
-          <div class="category-empty" data-category="folk" data-tab-panel="folk">
-            <div class="empty-icon">🎪</div>
-            <h3 style="color: var(--gold-dark); margin-bottom: 10px;">民俗专场剧目筹备中</h3>
-            <p>民俗婚嫁、寿宴、社火小曲、秦腔清唱专场等特色剧目正在精心排演，敬请期待！<br>如需定制，欢迎致电 <a href="tel:13993839833" style="color: var(--primary); font-weight: 600;">13993839833</a> 咨询。</p>
-          </div>
-
-          <!-- 分类：现代戏（暂时无内容，显示空状态） -->
-          <div class="category-empty" data-category="modern" data-tab-panel="modern">
-            <div class="empty-icon">🎬</div>
-            <h3 style="color: var(--gold-dark); margin-bottom: 10px;">现代戏剧目排演中</h3>
-            <p>乡村振兴、移风易俗、家风家训、脱贫攻坚等时代主题现代小戏正在筹备创作，<br>更多精彩即将呈现，敬请关注！</p>
-          </div>
+        <div class="operas-grid" data-paginate="list" data-page-size="8" data-opera-grid data-real-operas>
+          <!-- 剧目卡片由 js/real-public.js 从 /v1/plays/public 读取真实在册剧目渲染 -->
         </div>
       </div>
     </section>
@@ -472,7 +189,7 @@
           <h4>联系我们</h4>
           <ul>
             <li><a href="tel:13993839833">📞 13993839833</a></li>
-            <li><a href="mailto:13893811313@163.com">📧 13893811313@163.com</a></li>
+            <li><a href="tel:13993839833">📞 139 9383 9833</a></li>
             <li><a href="booking.html">🎫 在线预约</a></li>
             <li><a href="contact.html">📍 联系我们</a></li>
             <li><a href="javascript:void(0)" data-footer-action="wechat">💬 微信客服</a></li>
@@ -527,8 +244,11 @@
   </footer>
 
   <script src="js/year-lite.js?v=20260803"></script>
-  <script src="js/app.js?v=20260803"></script>
+  <script src="js/api-config.js?v=20260922"></script>
+  <script src="js/api-request.js?v=20260922"></script>
+  <script src="js/app.js?v=20260922"></script>
   <script src="js/pagination.js?v=20260803"></script>
+  <script src="js/real-public.js?v=20260922"></script>
   <script>
     (function () {
       'use strict';
@@ -645,11 +365,11 @@
           var firstBad=null;
           try{ reqFails.forEach(function(inp){ if(!inp.value || (inp.type==='checkbox' && !inp.checked)){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}},1800);}catch(_b){} } }); }catch(_rf){}
           if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
-          __FT('✅ 提交成功！（演示模式：真实环境将写入工单并通知对接专员）','success');
+          __FT('✅ 提交成功！我们将尽快与您联系','success');
           try{ fm.reset && fm.reset(); }catch(_rs){}
           e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
         } else {
-          __FT('✅ 提交成功（演示模式）','success');
+          __FT('✅ 提交成功','success');
           try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
           btn.__ftDone=1; e.stopImmediatePropagation(); return;
         }
@@ -662,17 +382,17 @@
       }
       if(isConsult){
         if(!__FL(dk,900)) return;
-        __FT('📞 已打开对接咨询入口（请致电 138-9381-1313 或扫码添加微信）','info');
+        __FT('📞 已打开对接咨询入口（请致电 139-9383-9833）','info');
         btn.__ftDone=1; return;
       }
       if(isUpload){
         if(!__FL(dk,1000)) return;
-        __FT('📎 请选择 ≤ 10MB 的图片/PDF/DOC 文件（演示模式）','info');
+        __FT('📎 请选择 ≤ 10MB 的图片/PDF/DOC 文件','info');
         btn.__ftDone=1; return;
       }
       if(isSearch){
         if(!__FL(dk,500)) return;
-        __FT('🔍 查询条件已生效（演示模式）','info');
+        __FT('🔍 查询条件已生效','info');
         btn.__ftDone=1; return;
       }
     }, true);

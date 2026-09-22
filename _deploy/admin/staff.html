@@ -40,7 +40,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>演职人员人事管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260919c">
+  <link rel="stylesheet" href="../css/style.css?v=20260921e">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -67,20 +67,24 @@
     .table-wrapper > table { table-layout: auto !important; }
     .table-wrapper > table td,
     .table-wrapper > table th { word-break: normal !important; }
-    .table-wrapper > table.roster-table { table-layout: fixed !important; min-width: 1150px !important; }
-    .roster-table th:nth-child(1){width:46px}
-    .roster-table th:nth-child(2){width:76px}
-    .roster-table th:nth-child(3){width:84px}
-    .roster-table th:nth-child(4){width:52px}
-    .roster-table th:nth-child(5){width:52px}
-    .roster-table th:nth-child(6){width:84px}
-    .roster-table th:nth-child(7){width:84px}
-    .roster-table th:nth-child(8){width:64px}
-    .roster-table th:nth-child(9){width:110px}
-    .roster-table th:nth-child(11){width:96px}
-    .roster-table th:nth-child(12){width:64px}
-    .roster-table th:nth-child(13){width:210px}
+    .table-wrapper > table.roster-table { table-layout: fixed !important; min-width: 1080px !important; }
+    .roster-table th:nth-child(1){width:42px}
+    .roster-table th:nth-child(2){width:108px}  /* 工号加宽：容纳 PF018/ACC-2026-018 等 10+ 字符 */
+    .roster-table th:nth-child(3){width:80px}
+    .roster-table th:nth-child(4){width:48px}
+    .roster-table th:nth-child(5){width:48px}
+    .roster-table th:nth-child(6){width:80px}
+    .roster-table th:nth-child(7){width:88px}   /* 行当略加宽：容纳"靠须生""二架男"等 */
+    .roster-table th:nth-child(8){width:60px}
+    .roster-table th:nth-child(9){width:114px}
+    .roster-table th:nth-child(11){width:88px}
+    .roster-table th:nth-child(12){width:60px}
+    .roster-table th:nth-child(13){width:184px}  /* 操作列缩窄：5 个图标按钮 ~184px 足够 */
     table.roster-table td { overflow: hidden; text-overflow: ellipsis; }
+    table.roster-table td:nth-child(2),
+    table.roster-table td:nth-child(3),
+    table.roster-table td:nth-child(6),
+    table.roster-table td:nth-child(7) { white-space: normal; word-break: break-all; }  /* 工号/姓名/部门/行当允许换行避免截断 */
     table.roster-table td:nth-child(10) { white-space: normal; }
     table.roster-table td .dept-tag,
     table.roster-table td .role-tag,
@@ -390,16 +394,22 @@
 }
 .admin-table-actions, .action-btn-group {
   display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 2px !important;
+  flex-wrap: nowrap !important;
+  gap: 1px !important;
   align-items: center !important;
   justify-content: center !important;
   overflow: visible !important;
   max-width: 100% !important;
 }
 .admin-table-actions .btn, .action-btn-group .btn {
-  padding: 3px 6px !important;
-  font-size: 0.7rem !important;
+  padding: 3px 5px !important;
+  font-size: 0.78rem !important;
+  line-height: 1 !important;
+  width: 30px !important;
+  height: 26px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   white-space: nowrap !important;
   box-sizing: border-box !important;
 }
@@ -1458,7 +1468,7 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260921a"></script>
+<script src="../js/app.js?v=20260921e"></script>
   <script src="../js/pagination.js?v=20260908p"></script>
   <script>
     (function() {
@@ -4204,8 +4214,16 @@ try{
   }
 
   // 花名册 = 页面第一个 data-paginate tbody；行结构：1复选 2工号 3姓名 4性别 5年龄 6队别 7行当 8年份 9电话 10剧目 11状态 12场次 13操作
+  // 健壮定位：HeightGuard 可能剥掉 data-paginate 属性 → 先按 roster-table 类找，再降级到 data-paginate，
+  // 并按表头含"工号"字样过滤（避免误绑到考勤 tab 的 tbody）
   function rosterTbody(){
+    var rt = document.querySelector('table.roster-table');
+    if (rt) { var b = rt.querySelector('tbody'); if (b) return b; }
     var list = document.querySelectorAll('tbody[data-paginate="list"]');
+    for (var i = 0; i < list.length; i++) {
+      var tbl = list[i].closest('table');
+      if (tbl && (tbl.textContent || '').indexOf('工号') >= 0) return list[i];
+    }
     return (list && list.length) ? list[0] : null;
   }
   function rowCells(tr){ return tr ? tr.querySelectorAll('td') : null; }
@@ -4504,7 +4522,14 @@ try{
       : '<tr><td colspan="20" style="text-align:center;padding:36px 20px;color:var(--text-light,#999);font-size:0.92rem;">暂无演职人员数据，点击右上角「➕ 新增人员」录入真实花名册</td></tr>';
     t.querySelectorAll('button').forEach(function(b){ b.__superPatchBound=1; b.__stfBound=1; });
     try { if(!t.getAttribute('data-paginate')) t.setAttribute('data-paginate','list'); if(!t.getAttribute('data-page-size')) t.setAttribute('data-page-size','10'); }catch(_){}
-    try { window.QinPagination && QinPagination.refresh && QinPagination.refresh(); }catch(_){}
+    // 数据填入后强制（重新）绑分页：如果 tbody 没绑过（HeightGuard 在 t=0 剥属性时跑过 pagination.js 找不到容器），
+    // 调 QinPagination.init() 触发 initAll 重新扫描（_initOne 会检查 data-pagination-bound 防重复）
+    try {
+      if (window.QinPagination) {
+        if (t.getAttribute('data-pagination-bound') !== '1') { QinPagination.init(); }
+        else if (QinPagination.refresh) { QinPagination.refresh(); }
+      }
+    }catch(_){}
   }
   /* 暴露给筛选补丁复用（v20260908m）*/
   window.__STF_RENDER__ = render;

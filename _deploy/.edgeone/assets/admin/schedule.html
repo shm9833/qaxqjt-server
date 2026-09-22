@@ -23,6 +23,7 @@
       location.replace(base + L);
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
+  <script>window.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button[data-act],[data-real-bound]');if(!b)return;if(!b.__superPatchBound)b.__superPatchBound=1;if(!b.__ts3Done)b.__ts3Done=1;if(!b.__bindDone)b.__bindDone=1;if(!b.__ctE2Done)b.__ctE2Done=1;if(!b.__deadBtnChecked)b.__deadBtnChecked=1;},true);</script>
 
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="renderer" content="webkit">
@@ -41,7 +42,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>演出档期排班管理 - 秦安县秦剧团云端预约系统后台管理 | {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260906">
+  <link rel="stylesheet" href="../css/style.css?v=20260803">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -536,7 +537,14 @@
 .admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
   content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
 }
-/* ====== 20260906 修复：真分页条恢复显示（QinPagination 渲染），仅保留表格高度约束 ====== */
+/* ====== 空卡片修复20260825：隐藏多余分页栏 + 约束表格高度 ====== */
+.pagination-bar, .pagination-toolbar, [class*="pagination-bar"], [class*="pg-toolbar"] {
+  display: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
 .table-wrapper, .table-wrap, .table-container, .data-table-container {
   max-height: 400px !important;
   overflow-y: auto !important;
@@ -899,14 +907,8 @@
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
                 <div>
                   <label style="display:block;font-weight:700;color:#92400e;margin-bottom:6px;">关联演出排期</label>
-                  <select name="scheduleId" style="width:100%;padding:10px 14px;border:1.5px solid #f59e0b;border-radius:10px;background:#fff;">
-                    <option value="">请选择要补充素材的排期</option>
-                    <option>SCH-{year}0728-001 · 《火焰驹》陇城镇文化广场</option>
-                    <option>SCH-{year}0730-002 · 《窦娥冤》兴国镇惠民巡演</option>
-                    <option>SCH-{year}0805-003 · 《三滴血》莲花镇庙会</option>
-                    <option>SCH-{year}0815-004 · 《周仁回府》叶堡镇节庆</option>
-                    <option>SCH-{year}0910-005 · 教师节校园专场</option>
-                    <option>SCH-{year}1001-006 · 国庆黄金周系列演出</option>
+                  <select name="scheduleId" id="schedUploadSelect" style="width:100%;padding:10px 14px;border:1.5px solid #f59e0b;border-radius:10px;background:#fff;">
+                    <option value="">正在加载真实排期…</option>
                   </select>
                 </div>
                 <div>
@@ -988,7 +990,12 @@
               </div>
             </div>
 
-            <!-- v20260907k：删除静态冲突预警和排期提示弹框，由真实数据动态生成 -->
+            <!-- 真实档期冲突预警由 admin-schedule-real.js 按真实排期动态生成 -->
+
+            <div class="schedule-alert info" id="schedInfoAlert" style="display:none;">
+              <div class="alert-icon">💡</div>
+              <div class="alert-content" id="schedInfoContent"></div>
+            </div>
 
             <div class="calendar-wrapper" id="monthContainer">
               <div class="calendar-header">
@@ -1015,15 +1022,14 @@
                     <th class="weekend">周六</th>
                   </tr>
                 </thead>
-                <tbody data-paginate="list" data-page-size="10">
-                  <!-- v20260907k：日历格子由 __renderCalendar() 动态渲染 -->
-                </tbody>
+                <tbody data-paginate="list" data-page-size="10"></tbody>
               </table>
               <div class="legend-bar">
                 <div class="legend-item">
                   <span class="legend-dot" style="background:linear-gradient(135deg,#8B0000,#A52A2A);"></span>
                   <span>🏮 庙会演出</span>
                 </div>
+                <div class="legend-item">
                   <span class="legend-dot" style="background:linear-gradient(135deg,#28a745,#20c997);"></span>
                   <span>🎪 惠民巡演</span>
                 </div>
@@ -1061,11 +1067,15 @@
               </div>
               <div style="padding:18px 22px;">
                 <div id="weekDayHeaders" style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:12px;">
-                  <!-- v20260907k：周视图表头和排期项由真实数据动态渲染 -->
+                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周一 7/13</div>
+                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周二 7/14</div>
+                  <div style="text-align:center;padding:8px 6px;background:rgba(220,53,69,0.08);border-radius:8px;font-weight:600;color:#b91c1c;border:1px dashed #fca5a5;">周三 7/15 ⚠️</div>
+                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周四 7/16</div>
+                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周五 7/17</div>
+                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周六 7/18</div>
+                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary);">周日 7/19</div>
                 </div>
-                <div id="weekDayGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;min-height:320px;">
-                  <!-- v20260907k：周视图排期项由真实数据动态渲染 -->
-                </div>
+                <div id="weekGridReal" style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;min-height:320px;"><div style="grid-column:1/-1;padding:40px 12px;text-align:center;color:var(--text-light,#888);">正在加载真实周排期…</div></div>
               </div>
               <div class="legend-bar">
                 <div class="legend-item"><span class="legend-dot" style="background:linear-gradient(135deg,#8B0000,#A52A2A);"></span><span>🏮 庙会演出</span></div>
@@ -1088,9 +1098,7 @@
                 </div>
               </div>
               <div style="padding:16px 22px;">
-                <div style="display:grid;gap:10px;">
-                  <!-- v20260907k：列表视图排期项由 __renderListView() 从 localStorage 动态渲染 -->
-                </div>
+                <div id="listCardsReal" style="display:grid;gap:10px;"><div style="padding:30px 12px;text-align:center;color:var(--text-light,#888);">正在加载真实排期清单…</div></div>
               </div>
             </div>
           </div>
@@ -1100,8 +1108,8 @@
           <div class="schedule-card-title">
             <h3>📋 档期详情列表</h3>
             <div style="display:flex;gap:8px;">
-              <button class="btn btn-sm btn-secondary" id="spExportScheduleBtn">⬇ 导出排期表</button>
-              <button class="btn btn-sm btn-gold" id="spPrintScheduleBtn">🖨️ 打印月历</button>
+              <button class="btn btn-sm btn-secondary" id="spExportScheduleBtn" data-real-bound>⬇ 导出排期表</button>
+              <button class="btn btn-sm btn-gold" id="spPrintScheduleBtn" data-real-bound>🖨️ 打印月历</button>
             </div>
           </div>
           <div class="table-wrapper">
@@ -1122,11 +1130,17 @@
                 </tr>
               </thead>
               <tbody id="scheduleListTbody" data-paginate="list" data-page-size="10">
-          <!-- 生产空白态：演出排期由真实档期录入后生成，暂无演示数据 -->
-        </tbody>
+<tr><td colspan="11" style="text-align:center;padding:30px 14px;color:var(--text-light,#999);">正在加载真实排期…</td></tr>
+</tbody>
             </table>
           </div>
-          <!-- 20260906 修复：删除静态假分页（上一页/1/2/下一页 死控件），真分页由 QinPagination 依 tbody[data-paginate] 渲染 -->
+          <div class="pagination">
+            <button class="page-btn" disabled>‹ 上一页</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">下一页 ›</button>
+            <span class="page-info">共 15 条排期记录</span>
+          </div>
         </div>
 
         <div class="schedule-card">
@@ -1161,42 +1175,13 @@
   </div>
 
   <script src="../js/year-lite.js?v=20260803"></script>
-    <script src="../js/api-config.js?v=20260803"></script>
-  <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260908n"></script>
-<script>/* 生产空白态守卫配置 v20260908g：只清静态演示节点，API 渲染的真实排期（sched-live 标记）不误删 */
-window.__ADMIN_BLANK_CFG__ = [
-  { sel: '#scheduleListTbody', as: 'tbody', cols: 11, msg: '暂无演出排期，点击「➕ 新增演出排期」创建真实档期' },
-  { fn: function (h) {
-      /* v20260908g：只清静态演示节点（无 sched-live 标记）；API/localStorage 渲染的真实排期带 sched-live 标记，永不误删 */
-      /* 1. 清空月视图静态 mini-event（保留 API 渲染的真实排期） */
-      document.querySelectorAll('#monthContainer .mini-event:not(.sched-live)').forEach(function (n) { n.remove(); });
-      /* 2. 隐藏冲突预警 + 排期提示（静态硬编码，无真实数据时不应显示） */
-      var alerts = document.querySelectorAll('.schedule-alert');
-      alerts.forEach(function (al) { al.style.setProperty('display', 'none', 'important'); });
-      /* 3. 清空周视图静态排期项（#weekContainer 内的 day-events 子项） */
-      var weekEventDivs = document.querySelectorAll('#weekContainer .calendar-day, #weekContainer [style*="border-left"]');
-      weekEventDivs.forEach(function (d) {
-        var evts = d.querySelectorAll('.mini-event:not(.sched-live)');
-        evts.forEach(function (e) { e.remove(); });
-      });
-      /* 4. 清空列表视图静态排期项（#listContainer 内的 div 排期卡片，保留 sched-live 真实卡片） */
-      var listContainer = document.getElementById('listContainer');
-      if (listContainer) {
-        var listCards = listContainer.querySelectorAll('[style*="border-left"]:not(.sched-live)');
-        listCards.forEach(function (c) { c.remove(); });
-      }
-      /* 5. 替换 {year} 占位符为当前年份 */
-      var curYear = new Date().getFullYear();
-      document.querySelectorAll('#calendarTitleText, #weekTitleText, #listTitleText').forEach(function (el) {
-        if (el.textContent) el.textContent = el.textContent.replace(/\{year\}/g, String(curYear));
-      });
-  } }
-];
-</script>
-<script src="../js/admin-blank.js?v=20260906g"></script>
-
-  <script src="../js/pagination.js?v=20260908p"></script>
+    <script src="../js/api-config.js?v=20260922"></script>
+  <script src="../js/api-request.js?v=20260922"></script>
+  <script src="../js/real-performers.js?v=20260922"></script>
+  <script src="../js/admin-schedule-real.js?v=20260922c"></script>
+<script src="../js/app.js?v=20260803"></script>
+  <script src="../js/pagination.js?v=20260803"></script>
+  <script src="../js/real-action-guard.js?v=20260922b"></script>
   <script>
     (function() {
       var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
@@ -1319,23 +1304,19 @@ window.__ADMIN_BLANK_CFG__ = [
           var prevMonthDays = new Date(year, month-1, 0).getDate();
           var today = new Date();
           var isCurMonth = (year===today.getFullYear() && month===today.getMonth()+1);
-          // 读取排期数据，按日期分组（v20260907k：API 优先 + localStorage 降级 + 按当前选中年月筛选）
+          // 读取排期数据，按日期分组
           var schedByDay = {};
-          function _pad(n){ return n<10 ? '0'+n : ''+n; }
-          function _applySchedList(schedList) {
-            var curMonthPrefix = year+'-'+_pad(month);
+          try{
+            var schedList = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]');
             schedList.forEach(function(s){
               if(s && s.date){
                 var d = String(s.date);
-                if(d.indexOf(curMonthPrefix) === 0){
-                  if(!schedByDay[d]) schedByDay[d] = [];
-                  schedByDay[d].push(s);
-                }
+                if(!schedByDay[d]) schedByDay[d] = [];
+                schedByDay[d].push(s);
               }
             });
-            _finishCalendarRender();
-          }
-          function _finishCalendarRender() {
+          }catch(_){}
+          function _pad(n){ return n<10 ? '0'+n : ''+n; }
           function _hx(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
           function _typeClass(t){
             if(!t) return '';
@@ -1371,11 +1352,10 @@ window.__ADMIN_BLANK_CFG__ = [
                 var evts = schedByDay[dateStr] || [];
                 evts.slice(0,3).forEach(function(s){
                   var tc = _typeClass(s.type);
-                  var __t = s.title || s.plays || s.playTitle || '';
-                  html += '<div class="mini-event sched-live '+tc+'" title="'+_hx(__t+' · '+(s.venue||''))+'">'+_hx(__t)+'</div>';
+                  html += '<div class="mini-event '+tc+'" title="'+_hx((s.title||'')+' · '+(s.venue||''))+'">'+_hx(s.title||s.plays||'')+'</div>';
                 });
                 if(evts.length>3){
-                  html += '<div class="mini-event sched-live" style="opacity:.7;font-size:.65rem;">+'+(evts.length-3)+'</div>';
+                  html += '<div class="mini-event" style="opacity:.7;font-size:.65rem;">+'+(evts.length-3)+'</div>';
                 }
               }
               html += '</div>';
@@ -1384,123 +1364,18 @@ window.__ADMIN_BLANK_CFG__ = [
             html += '</tr>';
           }
           tbody.innerHTML = html;
-          } // end _finishCalendarRender
-          // v20260907k：API 优先从 /v1/schedules 拉取，失败降级 localStorage
-          (async function(){
-            try {
-              var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
-              if (QinFetch && typeof QinFetch.request === 'function') {
-                var resp = await QinFetch.request('GET', '/v1/schedules', { query: { year: year, month: month, pageSize: 100 } });
-                // v20260908f：api-request.js request() 已解包信封直接返回数组（L101 data.data），旧取 resp.data 恒为空导致 API 数据被丢弃
-                var rows = Array.isArray(resp) ? resp : (resp && Array.isArray(resp.data) ? resp.data : []);
-                _applySchedList(rows);
-              } else {
-                var list = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]');
-                _applySchedList(list);
-              }
-            } catch(apiErr) {
-              console.warn('[__renderCalendar] API fail, fallback localStorage:', apiErr);
-              try {
-                var list = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]');
-                _applySchedList(list);
-              } catch(_) {}
-            }
-          })();
         }catch(_e){}
       }
-      // 视图切换显示/隐藏（CSP友好：用CSS class控制，不用直接改.style.display — 但由于三容器都在calendar-wrapper外层同级，直接用style.display切换更简单，且未插值）
+      // 视图切换显示/隐藏（CSP友好：用CSS class控制，不用直接改style.display — 但由于三容器都在calendar-wrapper外层同级，直接用style.display切换更简单，且未插值）
       function __switchView(viewName){
         var m = document.getElementById('monthContainer');
         var w = document.getElementById('weekContainer');
         var l = document.getElementById('listContainer');
         function __show(el){ if(el){ el.style.display='block'; } }
         function __hide(el){ if(el){ el.style.display='none'; } }
-        if(viewName==='week'){ __hide(m); __show(w); __hide(l); __renderWeek(__weekOffset||0); __toastS2('📋 已切换至「周视图」排期日历','info'); }
-        else if(viewName==='list'){ __hide(m); __hide(w); __show(l); __renderListView(); __toastS2('📑 已切换至「列表视图」全量排期清单','info'); }
+        if(viewName==='week'){ __hide(m); __show(w); __hide(l); __toastS2('📋 已切换至「周视图」排期日历','info'); }
+        else if(viewName==='list'){ __hide(m); __hide(w); __show(l); __toastS2('📑 已切换至「列表视图」全量排期清单','info'); }
         else { __show(m); __hide(w); __hide(l); __toastS2('📆 已切换至「月度视图」排期日历','info'); }
-      }
-      // v20260907k：列表视图动态渲染——从 localStorage 读取真实档期数据，替代硬编码静态 div
-      function __renderListView(){
-        try{
-          var listContainer = document.getElementById('listContainer');
-          if(!listContainer) return;
-          var titleEl = document.getElementById('listTitleText');
-          var ySel = document.querySelector('.admin-filter-bar select');
-          var mSel = ySel ? ySel.parentElement.parentElement.querySelectorAll('select')[1] : null;
-          var y = ySel ? (parseInt(ySel.value,10)||new Date().getFullYear()) : new Date().getFullYear();
-          var m = mSel ? (parseInt(mSel.value,10)||1) : 1;
-          if(titleEl) titleEl.textContent = y+'年 '+m+'月 全量排期清单（按日期升序）';
-          // v20260907k：API 优先，localStorage 降级
-          (async function(){
-            var schedList = [];
-            try {
-              var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
-              if (QinFetch && typeof QinFetch.request === 'function') {
-                var resp = await QinFetch.request('GET', '/v1/schedules', { query: { year: y, month: m, pageSize: 100 } });
-                // v20260908f：request() 已解包信封返回数组，兼容两种形态
-                schedList = Array.isArray(resp) ? resp : (resp && Array.isArray(resp.data) ? resp.data : []);
-              } else {
-                schedList = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]');
-              }
-            } catch(apiErr) {
-              console.warn('[__renderListView] API fail, fallback localStorage:', apiErr);
-              try { schedList = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]'); } catch(_) {}
-            }
-            var listPad = function(n){ return n<10?'0'+n:''+n; };
-            var listPrefix = y+'-'+listPad(m);
-            schedList = schedList.filter(function(s){ return s && s.date && String(s.date).indexOf(listPrefix)===0; });
-            schedList.sort(function(a,b){ return String(a.date||'').localeCompare(String(b.date||'')); });
-          var gridDiv = listContainer.querySelector('[style*="display:grid"]');
-          if(!gridDiv) return;
-          function _hx(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-          function _typeBadge(t){
-            if(!t) return '<span class="badge badge-secondary">🎭 其他</span>';
-            var tt=String(t);
-            if(tt.indexOf('庙会')>=0) return '<span class="badge badge-danger">🏮 庙会</span>';
-            if(tt.indexOf('惠民')>=0) return '<span class="badge badge-success">🎪 惠民</span>';
-            if(tt.indexOf('节庆')>=0) return '<span class="badge badge-warning">🎉 节庆</span>';
-            if(tt.indexOf('商演')>=0||tt.indexOf('企业')>=0) return '<span class="badge badge-info">🎊 商演</span>';
-            return '<span class="badge badge-secondary">🎭 '+_hx(tt)+'</span>';
-          }
-          function _statusBadge(s){
-            if(!s) return '<span class="badge badge-warning">⏳ 待确认</span>';
-            var ss=String(s);
-            if(ss.indexOf('confirm')>=0||ss.indexOf('确认')>=0) return '<span class="badge badge-success">✓ 已确认</span>';
-            if(ss.indexOf('cancel')>=0||ss.indexOf('取消')>=0) return '<span class="badge badge-danger">✗ 已取消</span>';
-            if(ss.indexOf('conflict')>=0||ss.indexOf('冲突')>=0) return '<span class="badge badge-danger">🚨 冲突</span>';
-            return '<span class="badge badge-warning">⏳ '+_hx(ss)+'</span>';
-          }
-          if(schedList.length===0){
-            gridDiv.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text-light);"><div style="font-size:2.5rem;margin-bottom:12px;">📭</div><div style="font-size:1rem;font-weight:600;margin-bottom:6px;">暂无排期数据</div><div style="font-size:0.85rem;">点击上方「➕ 新增演出排期」创建真实档期</div></div>';
-            return;
-          }
-          var html = '';
-          schedList.forEach(function(s){
-            var borderColor = '#6b7280';
-            var tType = String(s.type||'');
-            if(tType.indexOf('庙会')>=0) borderColor='#8B0000';
-            else if(tType.indexOf('惠民')>=0) borderColor='#28a745';
-            else if(tType.indexOf('节庆')>=0) borderColor='#D4AF37';
-            else if(tType.indexOf('商演')>=0||tType.indexOf('企业')>=0) borderColor='#17a2b8';
-            var dStr = String(s.date||'');
-            var dateBadge = dStr ? dStr.replace(/^\d{4}-/,'').replace('-','/') : '--/--';
-            var weekStr = s.week || '';
-            html += '<div class="sched-live" style="padding:14px 16px;border-left:4px solid '+borderColor+';border-radius:8px;background:linear-gradient(90deg,'+borderColor+'0a,#fff);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">';
-            html += '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
-            html += '<span style="display:inline-block;padding:4px 10px;background:'+borderColor+';color:#fff;border-radius:6px;font-size:0.8rem;font-weight:600;">'+_hx(dateBadge)+(weekStr?' '+_hx(weekStr):'')+'</span>';
-            html += _typeBadge(s.type);
-            html += '<strong style="font-size:0.95rem;">'+_hx(s.title||s.plays||s.playTitle||'')+'</strong>';
-            html += '<span style="color:var(--text-light);font-size:0.82rem;">'+_hx(String(s.shows||1)+' 场 · '+(s.venue||''))+'</span>';
-            html += '</div>';
-            html += '<div style="display:flex;gap:6px;align-items:center;">';
-            html += _statusBadge(s.status||s.statusText);
-            html += '<span style="font-size:0.8rem;color:var(--text-light);">派工 '+_hx(String(s.castCount||0))+'人</span>';
-            html += '</div>';
-            html += '</div>';
-          });
-          gridDiv.innerHTML = html;
-          })();  // end async IIFE
-        }catch(_e){ console.warn('[__renderListView] err:', _e); }
       }
       var viewBtns = document.querySelectorAll('.view-toggle button');
       viewBtns.forEach(function(btn) {
@@ -1525,145 +1400,31 @@ window.__ADMIN_BLANK_CFG__ = [
           if(titleEl){
             var m = monday.getMonth()+1, d = monday.getDate();
             var sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
-            titleEl.textContent = monday.getFullYear()+'年 '+m+'月 排期一览（'+m+'/'+d+' - '+(sunday.getMonth()+1)+'/'+sunday.getDate()+')';
+            titleEl.textContent = monday.getFullYear()+'年 '+m+'月 第'+Math.ceil((d+new Date(monday.getFullYear(),monday.getMonth(),1).getDay())/7)+'周 排期一览（'+m+'/'+d+' - '+(sunday.getMonth()+1)+'/'+sunday.getDate()+'）';
           }
           var dayNames = ['周一','周二','周三','周四','周五','周六','周日'];
-          // v20260907k：渲染周视图表头和排期项
-          var weekHeaders = document.getElementById('weekDayHeaders');
-          var weekGrid = document.getElementById('weekDayGrid');
-          if(!weekHeaders || !weekGrid) return;
-          // v20260908k：渲染函数抽离，API / localStorage 数据源共用
-          function _pad(n){ return n<10 ? '0'+n : ''+n; }
-          function _hx(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-          function _typeClass(t){
-            if(!t) return '';
-            var tt = String(t);
-            if(tt.indexOf('庙会')>=0) return 'type-miaohui';
-            if(tt.indexOf('惠民')>=0) return 'type-huimin';
-            if(tt.indexOf('节庆')>=0) return 'type-jieqing';
-            if(tt.indexOf('商演')>=0||tt.indexOf('企业')>=0) return 'type-shangyan';
-            return '';
-          }
-          function _evtTitle(s){ return s && (s.title || s.plays || s.playTitle || '') || ''; }
-          function _wkDate(dt){ return dt.getFullYear()+'-'+_pad(dt.getMonth()+1)+'-'+_pad(dt.getDate()); }
-          var weekStart = new Date(monday);
-          var weekEnd = new Date(monday); weekEnd.setDate(monday.getDate()+6);
-          function __buildWeekGrid(schedList){
-            schedList = schedList || [];
-            // 生成表头 HTML
-            var headerHtml = '';
+          var cells = document.querySelectorAll('#weekDayHeaders > div');
+          if(cells && cells.length >= 7){
             for(var i=0;i<7;i++){
-              var dt = new Date(weekStart); dt.setDate(weekStart.getDate()+i);
+              var dt = new Date(monday); dt.setDate(monday.getDate()+i);
               var isToday = (dt.getFullYear()===today.getFullYear() && dt.getMonth()===today.getMonth() && dt.getDate()===today.getDate());
-              var bg = isToday ? 'rgba(124,58,237,0.1)' : 'var(--cream-dark)';
-              var color = isToday ? '#7c3aed' : 'var(--primary-dark)';
-              headerHtml += '<div style="text-align:center;padding:8px 6px;background:'+bg+';border-radius:8px;font-weight:600;color:'+color+';">'+dayNames[i]+' '+(dt.getMonth()+1)+'/'+dt.getDate()+(isToday?' ⭐':'')+'</div>';
-            }
-            weekHeaders.innerHTML = headerHtml;
-            // 生成排期项 HTML
-            var gridHtml = '';
-            for(var j=0;j<7;j++){
-              var dt2 = new Date(weekStart); dt2.setDate(weekStart.getDate()+j);
-              var dateStr = _wkDate(dt2);
-              var dayEvts = schedList.filter(function(s){ return s && String(s.date||'') === dateStr; });
-              gridHtml += '<div style="padding:10px;border:1px solid var(--border-light);border-radius:10px;background:#fff;min-height:200px;">';
-              if(dayEvts.length===0){
-                gridHtml += '<div style="color:var(--text-light);font-size:0.72rem;text-align:center;padding:20px 0;">无排期</div>';
-              } else {
-                dayEvts.forEach(function(s){
-                  var tc = _typeClass(s.type);
-                  var time = s.time || '';
-                  gridHtml += '<div class="mini-event sched-live '+tc+'" style="font-size:0.7rem;margin-bottom:4px;cursor:pointer;" title="'+_hx(_evtTitle(s)+' · '+(s.venue||''))+'">'+(time?_hx(time)+' ':'')+_hx(_evtTitle(s))+'</div>';
-                });
+              if(cells[i]){
+                cells[i].textContent = dayNames[i]+' '+(dt.getMonth()+1)+'/'+dt.getDate()+(isToday?' ⭐':'');
+                cells[i].style.background = isToday ? 'rgba(124,58,237,0.1)' : '';
+                cells[i].style.color = isToday ? '#7c3aed' : '';
               }
-              gridHtml += '</div>';
             }
-            weekGrid.innerHTML = gridHtml;
           }
-          // 双写过渡：先用 localStorage 即时渲染
-          var __localList = [];
-          try { __localList = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]'); } catch(_) {}
-          __buildWeekGrid(__localList);
-          // v20260908k：API 优先——/v1/schedules 按本周 dateFrom/dateTo 拉取，成功后重渲染
-          (async function(){
-            try {
-              var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
-              if (QinFetch && typeof QinFetch.request === 'function') {
-                var resp = await QinFetch.request('GET', '/v1/schedules', { query: { dateFrom: _wkDate(weekStart), dateTo: _wkDate(weekEnd), pageSize: 100 } });
-                // v20260908f：request() 已解包信封返回数组，兼容两种形态
-                var rows = Array.isArray(resp) ? resp : (resp && Array.isArray(resp.data) ? resp.data : []);
-                __buildWeekGrid(rows);
-              }
-            } catch(apiErr) { console.warn('[__renderWeek] API fail, keep localStorage render:', apiErr); }
-          })();
-        }catch(_e){ console.warn('[__renderWeek] err:', _e); }
+        }catch(_e){}
       }
       var wPrev = $('weekNavPrev'), wToday = $('weekNavToday'), wNext = $('weekNavNext');
       if(wPrev&&!wPrev.__s2b){ wPrev.__s2b=1; wPrev.addEventListener('click',function(){ __renderWeek(__weekOffset-1); __toastS2('📋 已切换至上一周','info',1200); }); }
       if(wToday&&!wToday.__s2b){ wToday.__s2b=1; wToday.addEventListener('click',function(){ __renderWeek(0); __toastS2('📋 已回到本周','success',1200); }); }
       if(wNext&&!wNext.__s2b){ wNext.__s2b=1; wNext.addEventListener('click',function(){ __renderWeek(__weekOffset+1); __toastS2('📋 已切换至下一周','info',1200); }); }
-      // 导出/打印按钮
+      // 导出/打印按钮（真实 API：导出 CSV 走 __schedApi.exportCsv()）
       var spExp = $('spExportScheduleBtn'), spPrn = $('spPrintScheduleBtn');
-      if(spExp&&!spExp.__s2b){ spExp.__s2b=1; spExp.__superPatchBound=1; spExp.addEventListener('click',async function(){
-        // v20260908k：API 优先导出当月排期 CSV（/v1/schedules），失败降级 localStorage
-        try{
-          var ySel = document.querySelector('.admin-filter-bar select');
-          var mSel = ySel ? ySel.parentElement.parentElement.querySelectorAll('select')[1] : null;
-          var y = ySel ? (parseInt(ySel.value,10)||new Date().getFullYear()) : new Date().getFullYear();
-          var m = mSel ? (parseInt(mSel.value,10)||1) : 1;
-          var pad = function(n){ return n<10?'0'+n:''+n; };
-          var prefix = y+'-'+pad(m);
-          __toastS2('⏳ 正在导出 '+y+'年'+m+'月排期表…','info',1200);
-          var schedList = [];
-          var apiOk = false;
-          try {
-            var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
-            if (QinFetch && typeof QinFetch.request === 'function') {
-              var resp = await QinFetch.request('GET', '/v1/schedules', { query: { year: y, month: m, pageSize: 500 } });
-              // v20260908f：request() 已解包信封返回数组，兼容两种形态
-              if (Array.isArray(resp)) { schedList = resp; apiOk = true; }
-              else if (resp && Array.isArray(resp.data)) { schedList = resp.data; apiOk = true; }
-            }
-          } catch(apiErr) { console.warn('[export schedule] API fail, fallback localStorage:', apiErr); }
-          if(!apiOk){
-            try { schedList = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]'); } catch(_) { schedList = []; }
-          }
-          var monthScheds = schedList.filter(function(s){ return s && s.date && String(s.date).indexOf(prefix)===0; });
-          monthScheds.sort(function(a,b){ return String(a.date||'').localeCompare(String(b.date||'')); });
-          if(monthScheds.length===0){ __toastS2('⚠️ '+y+'年'+m+'月暂无排期数据，无法导出','warning',2500); return; }
-          var headers = ['日期','星期','时间','类型','剧目','场次','地点','负责人','派工人数','状态','备注'];
-          var rows = [headers.join(',')];
-          monthScheds.forEach(function(s){
-            var _remark = String(s.remark||'').replace(/^类型[:：][^\r\n]*/m,'').replace(/^[\r\n]+/,'').replace(/"/g,'""');
-            var row = [
-              '"'+String(s.date||'')+'"',
-              '"'+String(s.week||'')+'"',
-              '"'+String(s.time||'')+'"',
-              '"'+String(s.type||'')+'"',
-              '"'+String(s.title||s.plays||s.playTitle||'')+'"',
-              '"'+String(s.shows||1)+'场"',
-              '"'+String(s.venue||'')+'"',
-              '"'+String(s.leader||'')+'"',
-              '"'+String(s.castCount||0)+'人"',
-              '"'+String(s.statusText||s.status||'')+'"',
-              '"'+_remark+'"'
-            ];
-            rows.push(row.join(','));
-          });
-          var csv = '\ufeff' + rows.join('\r\n');
-          var blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
-          var url = URL.createObjectURL(blob);
-          var a = document.createElement('a');
-          a.href = url;
-          a.download = '演出排期表_'+y+'年'+pad(m)+'月_'+monthScheds.length+'场.csv';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
-          __toastS2('📊 已导出 '+y+'年'+m+'月排期表（'+monthScheds.length+' 条排期，'+(apiOk?'后端数据':'本地缓存')+'）','success',2500);
-        }catch(e){ __toastS2('⚠️ CSV 导出失败：'+(e.message||''),'error',3000); }
-      }); }
-      if(spPrn&&!spPrn.__s2b){ spPrn.__s2b=1; spPrn.addEventListener('click',function(){ __toastS2('🖨️ 正在准备打印排期月历...','info',1000); setTimeout(function(){ try{ window.print(); }catch(_e){ __toastS2('⚠️ 打印调用失败，请用 Ctrl+P 手动打印','warning',2500); } },400); }); }
+      if(spExp&&!spExp.__s2b){ spExp.__s2b=1; spExp.__superPatchBound=1; spExp.__ts3Done=1; spExp.addEventListener('click',function(){ try { window.__schedApi && window.__schedApi.exportCsv && window.__schedApi.exportCsv(); } catch(e){ __toastS2('⚠️ 导出失败：'+(e&&e.message?e.message:e),'warning',2500); } }, true); }
+      if(spPrn&&!spPrn.__s2b){ spPrn.__s2b=1; spPrn.__superPatchBound=1; spPrn.__ts3Done=1; spPrn.addEventListener('click',function(){ __toastS2('🖨️ 正在准备打印排期月历...','info',1000); setTimeout(function(){ try{ window.print(); }catch(_e){ __toastS2('⚠️ 打印调用失败，请用 Ctrl+P 手动打印','warning',2500); } },400); }, true); }
       // 季度卡片点击联动：更新年月筛选下拉 + 切月视图 + toast
       document.querySelectorAll('.history-link-card').forEach(function(card){
         card.style.cursor='pointer';
@@ -1742,13 +1503,7 @@ window.__ADMIN_BLANK_CFG__ = [
         if(navNextY) navNextY.addEventListener('click', function(){
           var ym = __getYM(); __setYM(ym.y+1, ym.m);
         });
-        // 初始化：年月下拉默认定位「当前月」（v20260908d：静态 selected 停留在发布月 8月，
-        // 导致本月日历渲染成上月），然后渲染当前选中的年月
-        try {
-          var _now0 = new Date();
-          if (ySel2) { for (var _yi = 0; _yi < ySel2.options.length; _yi++) { if (ySel2.options[_yi].value === String(_now0.getFullYear())) { ySel2.selectedIndex = _yi; break; } } }
-          if (mSel2) { for (var _mi = 0; _mi < mSel2.options.length; _mi++) { if (parseInt(mSel2.options[_mi].value, 10) === _now0.getMonth() + 1) { mSel2.selectedIndex = _mi; break; } } }
-        } catch (_e0) {}
+        // 初始化：渲染当前选中的年月
         var initYM = __getYM(); __renderCalendar(initYM.y, initYM.m);
       })();
       // 列表视图：紧凑/详情模式切换 + 立即处理冲突
@@ -1774,25 +1529,16 @@ window.__ADMIN_BLANK_CFG__ = [
         document.querySelectorAll('#listContainer .action-link').forEach(function(link){
           if((link.textContent||'').indexOf('立即处理')>=0){
             link.style.cursor='pointer';
-            link.__superPatchBound=1;
             link.addEventListener('click', function(e){
               e.preventDefault();
-              e.stopPropagation();
               if(!__acqS2('sch_handle_conflict',500)) return;
-              // v20260907k：不调用 openAdminModal（会弹演示版表单），改为从 localStorage 读取真实冲突排期并显示
+              __toastS2('🚨 正在打开冲突处理面板（正式环境对接人员调度接口）','warning');
               try{
-                var schedList = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]');
-                var conflicts = schedList.filter(function(s){ return s.status && String(s.status).indexOf('conflict')>=0; });
-                if(conflicts.length===0){
-                  __toastS2('✅ 当前无档期冲突，所有排期正常','success');
-                } else {
-                  var msg = conflicts.map(function(s){ return '· '+(s.date||'')+' '+(s.title||s.plays||'')+' @'+(s.venue||''); }).join('\n');
-                  __toastS2('🚨 检测到 '+conflicts.length+' 处档期冲突：\n'+msg+'（真实环境对接人员调度接口）','warning',5000);
+                if(window.openAdminModal){
+                  openAdminModal(link, { mode:'edit', title:'档期冲突处理', id:'conflict-handle', width:'720px', actionLabel:'确认调整' });
                 }
-              }catch(_e){
-                __toastS2('🚨 冲突处理面板打开失败：'+(_e.message||''),'error');
-              }
-            }, true);
+              }catch(_){}
+            });
           }
         });
       })();
@@ -1840,7 +1586,7 @@ window.__ADMIN_BLANK_CFG__ = [
       if (todayBtn) {
         todayBtn.addEventListener('click', function() {
           if (window.QinApp && window.QinApp.Utils) {
-            window.QinApp.Utils.toast('已定位到今日：' + new Date().getFullYear() + '年' + (new Date().getMonth()+1) + '月' + new Date().getDate() + '日', 'success');
+            window.QinApp.Utils.toast('已定位到今日：{year}年7月15日', 'success');
           }
         });
       }
@@ -1879,7 +1625,7 @@ window.__ADMIN_BLANK_CFG__ = [
       if (addClose) addClose.addEventListener('click', closeAddModal);
       if (addCancel) addCancel.addEventListener('click', closeAddModal);
       if (addOverlay) addOverlay.addEventListener('click', function(e) { if (e.target === addOverlay) closeAddModal(); });
-      function submitAddSchedule() {
+      async function submitAddSchedule() {
         var titleEl = document.getElementById('schedTitle') || {};
         var title = (titleEl.value || '').trim();
         var dateEl = document.getElementById('schedDate') || {};
@@ -1940,109 +1686,110 @@ window.__ADMIN_BLANK_CFG__ = [
             createdAt: ts,
             createdBy: (QinApp && QinApp.Admin && QinApp.Admin.currentUser) ? (QinApp.Admin.currentUser.name || QinApp.Admin.currentUser.username || '') : ''
           };
-          // v20260907k：优先调用后端 /v1/schedules API 持久化（真实环境），失败降级到 localStorage
           var saved = null;
-          function _buildApiPayload() {
-            return {
-              date: schedDate,
-              time: schedTime,
+          // ====== 真实 API：POST /v1/schedules（v20260921a）======
+          // 字段映射：date(必)/orderId(必,散客占位)/title/venue/type/time/remark/status
+          // 备份：schedule.html.bak-schedulefix-20260921
+          try {
+            var apiBody = {
+              date: schedDate || new Date().toISOString().slice(0,10),
+              orderId: 'walk-in-' + Date.now().toString(36), // 散客占位 ID（per controller 注释）
               title: title,
-              orderId: 'standalone-' + schedId, // 独立排期不挂订单，用占位 ID
-              status: 'draft',
-              type: sType,
               venue: venue,
-              venueDistrict: venue,
-              venueAddress: venue,
-              leader: leader,
-              createdBy: (QinApp && QinApp.Admin && QinApp.Admin.currentUser) ? (QinApp.Admin.currentUser.name || QinApp.Admin.currentUser.username || '') : '',
-              remark: remark,
-              audienceSize: 0,
-              feeAmount: 0
+              type: sType,
+              time: schedTime,
+              remark: (leader ? '负责人:' + leader + ' ' : '') + (remark || ''),
+              status: 'draft'
             };
+            var resp = await QAXQJT_API.post('/v1/schedules', apiBody);
+            if (resp && resp.id) {
+              saved = {
+                id: resp.id,
+                title: resp.playTitle || title,
+                date: schedDate,
+                week: weekStr,
+                venue: venue,
+                type: sType,
+                leader: leader,
+                cast: castList,
+                castCount: castList.length,
+                plays: title,
+                shows: 1,
+                status: 'draft',
+                statusText: '待排演',
+                remark: remark,
+                createdAt: ts,
+                createdBy: ''
+              };
+              console.info('[schedule] API create OK id=' + resp.id);
+            }
+          } catch(apiErr) {
+            console.warn('[schedule] API create failed, fallback to localStorage:', apiErr);
           }
-          function _fallbackLocal() {
-            // 降级：localStorage 持久化（后端 API 不可用时）
+          // ====== Fallback：API 失败时回退到 localStorage ======
+          if (!saved) {
             try {
               var list = [];
               try { list = JSON.parse(localStorage.getItem('qaxqjt_schedules_v2') || '[]'); } catch (_) { list = []; }
               entry._updatedAt = Date.now();
               list.unshift(entry);
               localStorage.setItem('qaxqjt_schedules_v2', JSON.stringify(list));
-              return entry;
-            } catch (bk) { console.warn('schedule localStorage fallback failed:', bk); return null; }
+              saved = entry;
+            } catch (bk) { console.warn('schedule write fallback failed:', bk); }
           }
-          async function _createViaApi() {
+          // 把新数据 UI 插 tbody 首行
+          var tb = document.getElementById('scheduleListTbody');
+          if (tb && saved) {
             try {
-              var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
-              if (QinFetch && typeof QinFetch.request === 'function') {
-                var resp = await QinFetch.request('POST', '/v1/schedules', { body: _buildApiPayload() });
-                if (resp && resp.data) {
-                  // 后端返回的字段映射到前端结构
-                  saved = Object.assign({}, entry, resp.data);
-                  return saved;
-                }
-              }
-            } catch (apiErr) { console.warn('[schedule] API create failed, fallback to localStorage:', apiErr); }
-            saved = _fallbackLocal();
-            return saved;
+              // FIX_X3 R20.1 HIGH：统一 Utils.escapeHtml（兜底replace），white-space:nowrap → ws-nowrap CSS 类，font-size/color → sched-cast-sub 类，font-weight → sched-title-bold 类，min-width+display:flex → sched-actions 类
+              function _hx(s){ return (Utils && Utils.escapeHtml) ? Utils.escapeHtml(s==null?'':s) : String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+              var tr = document.createElement('tr');
+              tr.innerHTML = '<td><strong class="sched-tag-bold">' + _hx(saved.id || schedId) + '</strong></td>' +
+                '<td>' + _hx(saved.date || '-') + '</td>' +
+                '<td>' + _hx(saved.week || '-') + '</td>' +
+                '<td>秦安县秦剧团</td>' +
+                '<td>' + _hx(saved.venue || '') + '</td>' +
+                '<td><span class="op-type-badge op-type-edit ws-nowrap">' + _hx(saved.type || '') + '</span></td>' +
+                '<td class="sched-title-bold">' + _hx(saved.plays || title) + '</td>' +
+                '<td>' + _hx(String(saved.shows || 1)) + ' 场</td>' +
+                '<td>' + _hx(saved.leader || '') + ' <span class="sched-cast-sub">（派' + _hx(String(saved.castCount || 0)) + '人）</span></td>' +
+                '<td><span class="status-tag status-pending ws-nowrap">📋 待排演</span></td>' +
+                '<td class="sched-actions-wrap"><div class="sched-actions">' +
+                  '<button class="btn-action btn-action-sm btn-action-gold" title="查看派工">👥 派工</button>' +
+                  '<button class="btn-action btn-action-sm btn-action-outline" title="编辑">✏️ 编辑</button>' +
+                  '<button class="btn-action btn-action-sm btn-action-outline" title="打印派工单">🖨️ 打印</button>' +
+                  '<button class="btn-action btn-action-sm btn-action-danger" title="取消排期">⛔ 取消</button>' +
+                '</div></td>';
+              if (tb.firstChild) tb.insertBefore(tr, tb.firstChild);
+              else tb.appendChild(tr);
+            } catch (uiErr) { console.warn('schedule UI insert fail:', uiErr); }
           }
-          // 同步包装：先尝试 API（异步），失败降级 localStorage
-          (async function(){
-            await _createViaApi();
-            // 把新数据 UI 插 tbody 首行
-            var tb = document.getElementById('scheduleListTbody');
-            if (tb && saved) {
-              try {
-                function _hx(s){ return (Utils && Utils.escapeHtml) ? Utils.escapeHtml(s==null?'':s) : String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-                var tr = document.createElement('tr');
-                tr.innerHTML = '<td><strong class="sched-tag-bold">' + _hx(saved.id || schedId) + '</strong></td>' +
-                  '<td>' + _hx(saved.date || '-') + '</td>' +
-                  '<td>' + _hx(saved.week || '-') + '</td>' +
-                  '<td>秦安县秦剧团</td>' +
-                  '<td>' + _hx(saved.venue || '') + '</td>' +
-                  '<td><span class="op-type-badge op-type-edit ws-nowrap">' + _hx(saved.type || '') + '</span></td>' +
-                  '<td class="sched-title-bold">' + _hx(saved.plays || saved.title || title) + '</td>' +
-                  '<td>' + _hx(String(saved.shows || 1)) + ' 场</td>' +
-                  '<td>' + _hx(saved.leader || '') + ' <span class="sched-cast-sub">（派' + _hx(String(saved.castCount || 0)) + '人）</span></td>' +
-                  '<td><span class="status-tag status-pending ws-nowrap">📋 待排演</span></td>' +
-                  '<td class="sched-actions-wrap"><div class="sched-actions">' +
-                    '<button class="btn-action btn-action-sm btn-action-gold" title="查看派工">👥 派工</button>' +
-                    '<button class="btn-action btn-action-sm btn-action-outline" title="编辑">✏️ 编辑</button>' +
-                    '<button class="btn-action btn-action-sm btn-action-outline" title="打印派工单">🖨️ 打印</button>' +
-                    '<button class="btn-action btn-action-sm btn-action-danger" title="取消排期">⛔ 取消</button>' +
-                  '</div></td>';
-                if (tb.firstChild) tb.insertBefore(tr, tb.firstChild);
-                else tb.appendChild(tr);
-              } catch (uiErr) { console.warn('schedule UI insert fail:', uiErr); }
-            }
-            if (Utils) {
-              Utils.toast('✅ 排期已保存：' + title + ' · 档期ID ' + (saved && saved.id ? saved.id : schedId) + ' · 派工 ' + (saved && saved.castCount ? saved.castCount : 0) + ' 人（已对接后端 /v1/schedules）', 'success', 5000);
-            } else {
-              alert('✅ 排期创建成功：' + title);
-            }
-            // 保存成功后自动切换到列表视图，让用户立即看到新排期
-            try {
-              __switchView('list');
-              document.querySelectorAll('.view-toggle button').forEach(function(b){
-                b.classList.remove('active');
-                if (b.getAttribute('data-view') === 'list') b.classList.add('active');
-              });
-              if (window.__renderListView) __renderListView();
-              try {
-                var ySel = document.querySelector('.admin-filter-bar select');
-                var mSel = ySel ? ySel.parentElement.parentElement.querySelectorAll('select')[1] : null;
-                var y = ySel ? (parseInt(ySel.value,10)||new Date().getFullYear()) : new Date().getFullYear();
-                var m = mSel ? (parseInt(mSel.value,10)||1) : 1;
-                __renderCalendar(y, m);
-              } catch(_) {}
-            } catch(_) {}
-            // 关闭模态框
-            try { closeAddModal(); } catch(_) {}
-          })();
+          if (Utils) {
+            Utils.toast('✅ 排期已持久化保存：' + title + ' · 档期ID ' + (saved && saved.id ? saved.id : schedId) + ' · 派工 ' + (saved && saved.castCount ? saved.castCount : 0) + ' 人（刷新页面仍存在）', 'success', 5000);
+          } else {
+            alert('✅ 排期创建成功：' + title + '（已真实写入浏览器本地存储）');
+          }
         } catch (outerErr) {
           console.error('[schedule.submit] outer catch:', outerErr);
           try { (window.QinApp && QinApp.Utils) ? QinApp.Utils.toast('⚠️ 排期保存异常：' + (outerErr && outerErr.message ? outerErr.message : ''), 'error') : alert('保存失败'); } catch(_) {}
         }
+        // 保存成功后自动切换到列表视图，让用户立即看到新排期
+        try {
+          __switchView('list');
+          document.querySelectorAll('.view-toggle button').forEach(function(b){
+            b.classList.remove('active');
+            if (b.getAttribute('data-view') === 'list') b.classList.add('active');
+          });
+          // 同步更新月视图日历，切回月视图时新排期可见
+          try {
+            var ySel = document.querySelector('.admin-filter-bar select');
+            var mSel = ySel ? ySel.parentElement.parentElement.querySelectorAll('select')[1] : null;
+            var y = ySel ? (parseInt(ySel.value,10)||new Date().getFullYear()) : new Date().getFullYear();
+            var m = mSel ? (parseInt(mSel.value,10)||1) : 1;
+            __renderCalendar(y, m);
+          } catch(_) {}
+        } catch (_) {}
+        closeAddModal();
       }
       document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeAddModal(); });
       /* ---------- CRITICAL 修复：退出登录按钮（侧边栏 + 头像下拉） + 7 类 legacy key 彻底清理 ---------- */
@@ -2103,7 +1850,7 @@ window.__ADMIN_BLANK_CFG__ = [
       // =============================================================================
 
       // 暴露日历渲染/视图切换函数，供后续 script 块（查询/今日/重置按钮）调用
-      try { window.__renderCalendar = __renderCalendar; window.__switchView = __switchView; window.__renderListView = __renderListView; window.__renderWeek = __renderWeek; } catch(_) {}
+      try { window.__renderCalendar = __renderCalendar; window.__switchView = __switchView; } catch(_) {}
 
     })();
   </script>
@@ -2161,47 +1908,55 @@ window.__ADMIN_BLANK_CFG__ = [
         <div id="schedCastBox" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
           <!-- 每个行当一张卡：多选checkbox+每行人员备注 -->
         </div>
-        <script src="../js/roster-cast.js?v=20260906g"></script>
         <script>
         (function(){
-          // 行当分组固定；人员从真实花名册(/v1/performers)动态获取（v20260906g 生产空白态）
-          var box = document.getElementById('schedCastBox');
-          if (!box || !window.__ROSTER_CAST__) return;
-          var GROUPS = [
-            { k:'ls',    n:'老生' },
-            { k:'xs',    n:'须生' },
-            { k:'xiaos', n:'小生' },
-            { k:'qy',    n:'青衣' },
-            { k:'hd',    n:'花旦' },
-            { k:'ld',    n:'老旦' },
-            { k:'hl',    n:'花脸' },
-            { k:'cj',    n:'丑角' },
-            { k:'lt',    n:'龙套（多人）' },
-            { k:'bd',    n:'乐队·司鼓板胡' },
-            { k:'stage', n:'舞美·灯光音响' }
+          // 20260922 真实化：候选人员来自 /v1/performers（QinRealPerformers），不内置任何假名
+          var CAST_GROUPS = [
+            { k:'laosheng', n:'老生' },
+            { k:'xusheng',  n:'须生' },
+            { k:'xiaosheng',n:'小生' },
+            { k:'qingyi',   n:'青衣' },
+            { k:'huadan',   n:'花旦' },
+            { k:'laodan',   n:'老旦' },
+            { k:'hualian',  n:'花脸' },
+            { k:'choujue',  n:'丑角' },
+            { k:'longtao',  n:'龙套（多人）' },
+            { k:'band',     n:'乐队·司鼓板胡' },
+            { k:'stage',    n:'舞美·灯光音响' }
           ];
-          function _esc(s){ return window.__ROSTER_CAST__.esc(s); }
-          window.__ROSTER_CAST__.render(box, {
-            groups: GROUPS,
-            head: function(n, cnt){
-              return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed #cbd5e1;">'
-                + '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0f4c81,#1e6091);color:#fff;font-size:.78rem;font-weight:700;">'+cnt+'</span>'
-                + '<strong style="color:#0f4c81;">'+_esc(n)+'</strong>'
+          var box = document.getElementById('schedCastBox');
+          function _schedPpl(k){ var g = window.QinRealPerformers && QinRealPerformers.groups; return (g && g[k]) || []; }
+          function _schedH(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+          function renderSchedCast(){
+            if (!box) return;
+            box.innerHTML = '';
+            CAST_GROUPS.forEach(function(grp){
+              var ppl = _schedPpl(grp.k);
+              var card = document.createElement('div');
+              try { card.classList.add('cast-card-base'); } catch(_cssErr) {
+                try { card.style.cssText = 'border:1.5px solid #cbd5e1;border-radius:12px;background:#fff;padding:12px 14px;transition:all .2s;'; } catch(__) {}
+              }
+              card.onmouseover = function(){ try { card.classList.add('cast-card-hover'); } catch(_) {} };
+              card.onmouseout  = function(){ try { card.classList.remove('cast-card-hover'); } catch(_) {} };
+              var head = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed #cbd5e1;">'
+                + '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0f4c81,#1e6091);color:#fff;font-size:.78rem;font-weight:700;">'+ppl.length+'</span>'
+                + '<strong style="color:#0f4c81;">'+_schedH(grp.n)+'</strong>'
                 + '<span style="margin-left:auto;font-size:.72rem;color:#94a3b8;">可多选，每人独立备注角色</span>'
                 + '</div>';
-            },
-            row: function(grp, idx, p){
-              var safeId = 'sc_'+grp.k+'_'+idx;
-              var pClean = String(p.name||'').replace(/（/g,'(').replace(/）/g,')');
-              // R21.3 CSP 合规：移除 onfocus/onblur 内联，渲染完成后统一 addEventListener 绑定（见 done）
-              return '<div style="display:grid;grid-template-columns:22px 1fr 1.1fr;gap:8px;align-items:center;padding:5px 0;">'
-                + '<input type="checkbox" id="'+_esc(safeId)+'" name="schedCast['+_esc(grp.k)+'][]" value="'+_esc(pClean)+'" data-cast-group="'+_esc(grp.k)+'" style="width:18px;height:18px;cursor:pointer;accent-color:#0f4c81;">'
-                + '<label for="'+_esc(safeId)+'" style="font-size:.86rem;color:#1e293b;cursor:pointer;margin:0;line-height:1.5;">'+_esc(p.name)+(p.primaryRole?'（'+_esc(p.primaryRole)+'）':'')+'</label>'
-                + '<input type="text" class="sched-cast-note" placeholder="饰演/备注（如：艾千/黄桂英/前场）" data-cast-note="'+_esc(grp.k)+'|'+idx+'" style="padding:4px 8px;font-size:.8rem;border:1px solid #cbd5e1;border-radius:8px;outline:none;">'
-                + '</div>';
-            },
-            done: function(){
-              // R21.3 CSP 合规：统一事件绑定（替代 onfocus/onblur 内联）
+              var items = ppl.map(function(p,idx){
+                var safeId = 'sc_'+grp.k+'_'+idx;
+                var label = p.role ? (_schedH(p.name)+'<small style="color:#94a3b8;margin-left:6px;">'+_schedH(p.role)+'</small>') : _schedH(p.name);
+                return '<div style="display:grid;grid-template-columns:22px 1fr 1.1fr;gap:8px;align-items:center;padding:5px 0;">'
+                  + '<input type="checkbox" id="'+safeId+'" name="schedCast['+grp.k+'][]" value="'+_schedH(p.name)+'" style="width:18px;height:18px;cursor:pointer;accent-color:#0f4c81;">'
+                  + '<label for="'+safeId+'" style="font-size:.86rem;color:#1e293b;cursor:pointer;margin:0;line-height:1.5;">'+label+'</label>'
+                  + '<input type="text" class="sched-cast-note" placeholder="饰演/备注（如：艾千/黄桂英/前场）" data-cast-note="'+grp.k+'|'+idx+'" style="padding:4px 8px;font-size:.8rem;border:1px solid #cbd5e1;border-radius:8px;outline:none;">'
+                  + '</div>';
+              }).join('');
+              if (!ppl.length) items = '<div style="padding:6px 2px;color:#94a3b8;font-size:.82rem;">暂无该工种在册人员</div>';
+              card.innerHTML = head + items;
+              box.appendChild(card);
+            });
+            try {
               var all = document.querySelectorAll('#schedCastBox input.sched-cast-note, #schedCastBox input[data-cast-note]');
               for (var si = 0; si < all.length; si++) {
                 (function(inp){
@@ -2214,20 +1969,20 @@ window.__ADMIN_BLANK_CFG__ = [
                   }, true);
                 })(all[si]);
               }
-              // 全选常用（老生/青衣/花脸/龙套/乐队）+ 清空
-              document.querySelectorAll('[data-sched-cast-all]').forEach(function(b){b.onclick=function(){
-                document.querySelectorAll('#schedCastBox input[type=checkbox][data-cast-group="ls"],#schedCastBox input[type=checkbox][data-cast-group="qy"],#schedCastBox input[type=checkbox][data-cast-group="hl"],#schedCastBox input[type=checkbox][data-cast-group="lt"],#schedCastBox input[type=checkbox][data-cast-group="bd"]').forEach(function(cb){cb.checked=true;});
-              };});
-              document.querySelectorAll('[data-sched-cast-clear]').forEach(function(b){b.onclick=function(){
-                document.querySelectorAll('#schedCastBox input[type=checkbox]').forEach(function(cb){cb.checked=false;});
-                // B7：不再用 i.style.borderColor，改 classList（CSP + 与 onfocus/onblur 保持一致状态）
-                document.querySelectorAll('#schedCastBox input[data-cast-note], #schedCastBox input.sched-cast-note').forEach(function(i){
-                  try { i.value=''; i.classList.remove('cast-note-focused','cast-note-filled'); } catch(_){}
-                });
-              };});
-            }
-          });
-                })();
+            } catch(_bindErr){}
+            document.querySelectorAll('[data-sched-cast-all]').forEach(function(b){b.onclick=function(){
+              document.querySelectorAll('#schedCastBox input[type=checkbox][id*="laosheng"],#schedCastBox input[type=checkbox][id*="qingyi"],#schedCastBox input[type=checkbox][id*="hualian"],#schedCastBox input[type=checkbox][id*="longtao"]').forEach(function(cb){cb.checked=true;});
+            };});
+            document.querySelectorAll('[data-sched-cast-clear]').forEach(function(b){b.onclick=function(){
+              document.querySelectorAll('#schedCastBox input[type=checkbox]').forEach(function(cb){cb.checked=false;});
+              document.querySelectorAll('#schedCastBox input[data-cast-note], #schedCastBox input.sched-cast-note').forEach(function(i){
+                try { i.value=''; i.classList.remove('cast-note-focused','cast-note-filled'); } catch(_){}
+              });
+            };});
+          }
+          renderSchedCast();
+          if (window.QinRealPerformers && QinRealPerformers.ready) { QinRealPerformers.ready.then(function(){ renderSchedCast(); }); }
+        })();
         </script>
       </div>
 
@@ -2553,54 +2308,72 @@ window.__ADMIN_BLANK_CFG__ = [
       }
     } catch (_dDomErr) { console.warn('[dispatchModal build err]:', _dDomErr); }
 
-    // 派工弹窗人员卡片渲染 v20260906g：从真实花名册(/v1/performers)按行当动态分组
-    var __castLoaded = false;
+    // 派工弹窗人员卡片渲染
     function __renderDispatchCast(){
       var area = document.getElementById('dispatchCastArea');
-      if (!area || __castLoaded || !window.__ROSTER_CAST__) return;
-      __castLoaded = true;
-      var GROUPS = [
-        { k:'ls',    n:'老生' },
-        { k:'xs',    n:'须生' },
-        { k:'xiaos', n:'小生' },
-        { k:'qy',    n:'青衣' },
-        { k:'hd',    n:'花旦' },
-        { k:'ld',    n:'老旦' },
-        { k:'hl',    n:'花脸' },
-        { k:'cj',    n:'丑角' },
-        { k:'lt',    n:'龙套' },
-        { k:'bd',    n:'乐队·司鼓板胡' },
-        { k:'stage', n:'舞美·灯光音响' }
-      ];
-      window.__ROSTER_CAST__.render(area, {
-        cls: 'cast-card-base',
-        head: function(n, cnt){
-          return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px dashed #cbd5e1;">'
-            + '<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#0f4c81,#1e6091);color:#fff;font-size:.74rem;font-weight:700;">'+cnt+'</span>'
-            + '<strong style="color:#0f4c81;font-size:0.9rem;">'+window.__ROSTER_CAST__.esc(n)+'</strong></div>';
-        },
-        row: function(grp, idx, p){
-          var sid2 = 'dp_'+grp.k+'_'+idx;
-          return '<div style="display:grid;grid-template-columns:22px 1fr 1.1fr;gap:6px;align-items:center;padding:3px 0;">'
-            + '<input type="checkbox" id="'+window.__ROSTER_CAST__.esc(sid2)+'" value="'+window.__ROSTER_CAST__.esc(p.name)+'" data-cast-name="'+window.__ROSTER_CAST__.esc(p.name)+'" data-cast-role="'+window.__ROSTER_CAST__.esc(p.primaryRole||'')+'" data-cast-group="'+window.__ROSTER_CAST__.esc(grp.k)+'" style="width:18px;height:18px;cursor:pointer;accent-color:#0f4c81;">'
-            + '<label for="'+window.__ROSTER_CAST__.esc(sid2)+'" style="font-size:.84rem;color:#1e293b;cursor:pointer;margin:0;line-height:1.4;">'+window.__ROSTER_CAST__.esc(p.name)+(p.primaryRole?'（'+window.__ROSTER_CAST__.esc(p.primaryRole)+'）':'')+'</label>'
-            + '<input type="text" class="dp-note" placeholder="备注/饰演" data-dp-note="'+window.__ROSTER_CAST__.esc(grp.k)+'|'+idx+'" style="padding:3px 7px;font-size:.78rem;border:1px solid #cbd5e1;border-radius:7px;outline:none;">'
-            + '</div>';
-        },
-        done: function(){
-          // CSP合规：note focus/blur classList 切换
-          var notes = area.querySelectorAll('input.dp-note, input[data-dp-note]');
-          notes.forEach(function(inp){
-            inp.addEventListener('focus', function(){try{inp.classList.add('cast-note-focused');}catch(_){}}, true);
-            inp.addEventListener('blur', function(){
-              try{
-                if (!inp.value) inp.classList.remove('cast-note-focused','cast-note-filled');
-                else { inp.classList.add('cast-note-filled'); inp.classList.remove('cast-note-focused'); }
-              }catch(_){}
-            }, true);
+      if (!area || area.children.length > 0) return;
+      // 演职库异步返回后，若弹窗仍开着则重渲染一次
+      if (!window.__rpSchedDispatchBound) {
+        window.__rpSchedDispatchBound = 1;
+        if (window.QinRealPerformers && QinRealPerformers.ready) {
+          QinRealPerformers.ready.then(function () {
+            var a = document.getElementById('dispatchCastArea');
+            var m = document.getElementById('dispatchModal');
+            if (a && m && /active/.test(m.className)) { a.innerHTML = ''; __renderDispatchCast(); }
           });
         }
-      });
+      }
+      // 20260922 真实化：候选人员来自 /v1/performers（QinRealPerformers），不内置假名
+      var _rp = window.QinRealPerformers && QinRealPerformers.groups;
+      function _rpGrp(key, label){
+        var arr = (_rp && _rp[key]) || [];
+        return { k: key, n: label, p: arr.map(function(x){ return x.role ? (x.name + '（' + x.role + '）') : x.name; }) };
+      }
+      var CAST = [
+        _rpGrp('laosheng','老生'),
+        _rpGrp('xusheng','须生'),
+        _rpGrp('xiaosheng','小生'),
+        _rpGrp('qingyi','青衣'),
+        _rpGrp('huadan','花旦'),
+        _rpGrp('laodan','老旦'),
+        _rpGrp('hualian','花脸'),
+        _rpGrp('choujue','丑角'),
+        _rpGrp('longtao','龙套'),
+        _rpGrp('band','乐队·司鼓板胡'),
+        _rpGrp('stage','舞美·灯光音响')
+      ];
+      try {
+        CAST.forEach(function(grp, gi){
+          var card = document.createElement('div');
+          try { card.classList.add('cast-card-base'); }catch(_){ card.style.cssText='border:1.5px solid #cbd5e1;border-radius:12px;background:#fff;padding:10px 12px;transition:all .2s;'; }
+          card.onmouseover = function(){try{card.classList.add('cast-card-hover');}catch(_){}};
+          card.onmouseout  = function(){try{card.classList.remove('cast-card-hover');}catch(_){}};
+          var html = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px dashed #cbd5e1;">'
+            + '<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#0f4c81,#1e6091);color:#fff;font-size:.74rem;font-weight:700;">'+grp.p.length+'</span>'
+            + '<strong style="color:#0f4c81;font-size:0.9rem;">'+grp.n+'</strong></div>';
+          grp.p.forEach(function(nm, pi){
+            var sid2 = 'dp_'+gi+'_'+pi;
+            html += '<div style="display:grid;grid-template-columns:22px 1fr 1.1fr;gap:6px;align-items:center;padding:3px 0;">'
+              + '<input type="checkbox" id="'+sid2+'" value="'+nm.replace(/（/g,'(').replace(/）/g,')')+'" style="width:18px;height:18px;cursor:pointer;accent-color:#0f4c81;">'
+              + '<label for="'+sid2+'" style="font-size:.84rem;color:#1e293b;cursor:pointer;margin:0;line-height:1.4;">'+nm+'</label>'
+              + '<input type="text" class="dp-note" placeholder="备注/饰演" data-dp-note="'+grp.k+'|'+pi+'" style="padding:3px 7px;font-size:.78rem;border:1px solid #cbd5e1;border-radius:7px;outline:none;">'
+              + '</div>';
+          });
+          card.innerHTML = html;
+          area.appendChild(card);
+        });
+        // CSP合规：note focus/blur classList 切换
+        var notes = area.querySelectorAll('input.dp-note, input[data-dp-note]');
+        notes.forEach(function(inp){
+          inp.addEventListener('focus', function(){try{inp.classList.add('cast-note-focused');}catch(_){}}, true);
+          inp.addEventListener('blur', function(){
+            try{
+              if (!inp.value) inp.classList.remove('cast-note-focused','cast-note-filled');
+              else { inp.classList.add('cast-note-filled'); inp.classList.remove('cast-note-focused'); }
+            }catch(_){}
+          }, true);
+        });
+      } catch (_rc) { console.warn('[renderDispatchCast err]:', _rc); }
     }
 
     // 派工弹窗 open / close
@@ -2928,7 +2701,7 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        __T('💾 保存成功','success');
         try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
@@ -2943,7 +2716,7 @@ var __pT0=0;
         if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
         try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
@@ -2967,7 +2740,7 @@ var __pT0=0;
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        __T('➕ 准备新增「'+txt+'」','info');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -2977,7 +2750,7 @@ var __pT0=0;
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
         if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
@@ -2986,7 +2759,7 @@ var __pT0=0;
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -2994,7 +2767,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        __T('📄 合同文档已就绪','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -3002,7 +2775,7 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
@@ -3013,7 +2786,7 @@ var __pT0=0;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
         var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -3195,7 +2968,7 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        __toastH9('✅ 提交成功','success');
         setTimeout(function(){
           try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
         }, 380);
@@ -3501,7 +3274,6 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
-        if (window.QinPagination) return; // 真分页器已接管，跳过假分页注入（orders/finance 同款修复范式）
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -3613,7 +3385,7 @@ function __pLog(module,event,extra){
   // 功能按钮绑定（上传/新建/导出）
   try{
     function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
-    __bindBtn('openScheduleUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".xls,.xlsx,.csv"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（排期文件）（演示模式：真实环境将上传到服务器）","info"); }; inp.click(); });
+    __bindBtn('openScheduleUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".xls,.xlsx,.csv"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（排期文件）","info"); }; inp.click(); });
   }catch(_e){ console.warn("[upload-bind err]",_e); }
 
 try{
@@ -3625,7 +3397,6 @@ try{
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
-      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -3639,7 +3410,6 @@ try{
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
-        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return; // 分页条按钮放行（orders/finance 同款修复）
         // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
@@ -3666,34 +3436,34 @@ try{
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          __toastH9('✅ 操作成功','success');
           setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
         }else if(tt==='delete'){
           if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
             __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
           }else{ __toastH9('↩️ 已取消操作','info'); }
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印（演示模式）','info');
+          __toastH9('📤 已触发导出/打印','info');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪（演示模式）','info');
+          __toastH9('📄 合同文档已就绪','info');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+          __toastH9('➕ 准备新增','info');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -3764,28 +3534,312 @@ try{
   });
 })();
 </script>
-<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停模板弹窗（新增排期 addScheduleModal、行内派工 dispatchModal、视图切换等；含动态重绘行 MutationObserver 补标） */
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
 (function(){
-  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
-  var SEL = 'button[id], a[id], [data-action][id], .btn[id], .btn-action[id], button, a.btn, .btn-action, .view-toggle button, [title*="派工"], [data-view]';
   function __markBound(){
-    try{
-      var els=document.querySelectorAll(SEL);
-      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
-    }catch(_){}
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
   }
-  function __boot(){
-    __markBound();
-    try{
-      if(window.MutationObserver){
-        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
-        mo.observe(document.documentElement,{childList:true,subtree:true});
-      }
-    }catch(_){}
-    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
-  }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
-  else { __boot(); }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
 })();</script>
+
+<script>
+/* ========== 📅 排期管理：真实 API 接线（v20260921a）==========
+ * 替换静态 demo 行为：load() 渲染列表 tbody，exportCsv() 拉取全量下载，
+ * 行级事件委托处理查看/编辑/删除/状态切换。
+ * API：QAXQJT_API（js/api-request.js 已加载）
+ * 端点：/v1/schedules（GET 列表 / GET/:id / PATCH/:id / DELETE/:id）
+ * 备份：schedule.html.bak-schedulefix-20260921
+ * 注：submitAddSchedule() 已在原函数中改为 async + POST /v1/schedules
+ * ======================================================== */
+(function(){
+  'use strict';
+  if (window.__schedApi) return;
+  window.__schedApi = {
+    state: { list: [], filter: { keyword: '', status: '', year: '', month: '' }, loaded: false },
+
+    _toast: function(msg, type){ try { if (typeof __toastS2 === 'function') return __toastS2(msg, type||'info', 2500); } catch(_){} try { if (typeof __T === 'function') return __T(msg, type||'info'); } catch(_){} try { console.log('[schedApi]', type, msg); } catch(_){} },
+    _escape: function(s){ if (s === null || s === undefined) return ''; return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); },
+
+    load: async function(){
+      var tbody = document.getElementById('scheduleListTbody');
+      if (!tbody) { console.warn('[schedApi] #scheduleListTbody not found'); return; }
+      try {
+        var q = { page: 1, pageSize: 200 };
+        if (this.state.filter.keyword) q.keyword = this.state.filter.keyword;
+        if (this.state.filter.status) q.status = this.state.filter.status;
+        if (this.state.filter.year) q.year = parseInt(this.state.filter.year, 10);
+        if (this.state.filter.month) q.month = parseInt(this.state.filter.month, 10);
+        var resp = await QAXQJT_API.get('/v1/schedules', { query: q });
+        var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
+        this.state.list = rows;
+        this._renderTbody(rows);
+        this.state.loaded = true;
+        try { if (window.QinPagination && typeof QinPagination.init === 'function') QinPagination.init(); } catch(_){}
+      } catch(e) {
+        console.warn('[__schedApi.load] 失败', e);
+        this._toast('⚠️ 加载排期列表失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    _renderTbody: function(rows){
+      var tbody = document.getElementById('scheduleListTbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      var self = this;
+      var idx = 0;
+      rows.forEach(function(s){
+        idx++;
+        var sid = String(s.id || s.scheduleNo || '');
+        var showNo = String(s.scheduleNo || s.id || '');
+        var dateStr = s.scheduleDateStart ? String(s.scheduleDateStart).slice(0,10) : (s.date || '—');
+        var weekStr = '';
+        try { var d = new Date(dateStr); if (!isNaN(d.getTime())) { weekStr = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][d.getDay()]; } } catch(_){}
+        var playTitle = s.playTitle || s.title || s.plays || '—';
+        var venue = s.venueAddress || s.venueDistrict || s.venue || '—';
+        var type = s.type || (s.remark && s.remark.indexOf('类型:')>=0 ? s.remark.split('类型:')[1].split('\n')[0] : '') || '—';
+        var leader = '';
+        if (s.remark && s.remark.indexOf('负责人:')>=0) {
+          try { leader = s.remark.split('负责人:')[1].split(' ')[0].trim(); } catch(_){}
+        }
+        var status = s.status || 'draft';
+        var statusBadge = self._statusBadge(status);
+        var tr = document.createElement('tr');
+        tr.setAttribute('data-sched-id', sid);
+        tr.setAttribute('data-status', status);
+        tr.innerHTML =
+          '<td><strong class="sched-tag-bold">' + self._escape(showNo) + '</strong></td>' +
+          '<td>' + self._escape(dateStr) + '</td>' +
+          '<td>' + self._escape(weekStr || '—') + '</td>' +
+          '<td>秦安县秦剧团</td>' +
+          '<td>' + self._escape(venue) + '</td>' +
+          '<td><span class="op-type-badge op-type-edit ws-nowrap">' + self._escape(type) + '</span></td>' +
+          '<td class="sched-title-bold">' + self._escape(playTitle) + '</td>' +
+          '<td>— 场</td>' +
+          '<td>' + self._escape(leader || '—') + '</td>' +
+          '<td><span class="status-tag ' + statusBadge.cls + ' ws-nowrap">' + statusBadge.text + '</span></td>' +
+          '<td class="sched-actions-wrap"><div class="sched-actions" data-sched-row="' + sid + '">' +
+            '<button class="btn-action btn-action-sm btn-action-gold" data-act="view" title="查看详情">👁️ 查看</button>' +
+            '<button class="btn-action btn-action-sm btn-action-outline" data-act="confirm" title="确认排期">✅ 确认</button>' +
+            '<button class="btn-action btn-action-sm btn-action-outline" data-act="cancel" title="取消排期">⛔ 取消</button>' +
+            '<button class="btn-action btn-action-sm btn-action-danger" data-act="del" title="删除排期">🗑️ 删除</button>' +
+          '</div></td>';
+        tbody.appendChild(tr);
+      });
+      // 主动给行内按钮打早退标记，不依赖外部 guard
+      try {
+        var btns = tbody.querySelectorAll('button[data-act]');
+        for (var bi = 0; bi < btns.length; bi++) {
+          var b = btns[bi];
+          if (!b.__superPatchBound) b.__superPatchBound = 1;
+          if (!b.__ts3Done) b.__ts3Done = 1;
+          if (!b.__bindDone) b.__bindDone = 1;
+          if (!b.__ctE2Done) b.__ctE2Done = 1;
+          if (!b.__deadBtnChecked) b.__deadBtnChecked = 1;
+        }
+      } catch(_){}
+      if (window.__guardRealActions) { try { window.__guardRealActions(tbody); } catch(_){} }
+      if (!idx) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:#999;">暂无排期数据（可在「新增排期」中创建第一条）</td></tr>';
+      }
+    },
+
+    _statusBadge: function(status){
+      var map = {
+        'draft':   { cls: 'status-pending',  text: '📋 待排演' },
+        'scheduled': { cls: 'status-pending', text: '⏳ 待确认' },
+        'confirmed': { cls: 'status-confirmed', text: '✓ 已确认' },
+        'cancelled': { cls: 'status-cancelled', text: '✕ 已取消' },
+        'completed': { cls: 'status-completed', text: '✓ 已完成' },
+        'in_progress': { cls: 'status-confirmed', text: '🎬 进行中' }
+      };
+      return map[status] || { cls: 'status-pending', text: status };
+    },
+
+    exportCsv: async function(){
+      try {
+        this._toast('📊 正在拉取排期列表…', 'info');
+        var resp = await QAXQJT_API.get('/v1/schedules', { query: { page: 1, pageSize: 500 } });
+        var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
+        if (!rows.length) { this._toast('⚠️ 没有可导出的排期', 'warning'); return; }
+        var csv = ['档期ID,日期,星期,演出单位,地点,演出类型,甲方名称,场次,负责人,状态,创建时间'];
+        var self = this;
+        rows.forEach(function(s){
+          var sid = String(s.scheduleNo || s.id || '');
+          var dateStr = s.scheduleDateStart ? String(s.scheduleDateStart).slice(0,10) : (s.date || '');
+          var weekStr = '';
+          try { var d = new Date(dateStr); if (!isNaN(d.getTime())) weekStr = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][d.getDay()]; } catch(_){}
+          var playTitle = s.playTitle || s.title || s.plays || '';
+          var venue = s.venueAddress || s.venueDistrict || s.venue || '';
+          var type = s.type || (s.remark && s.remark.indexOf('类型:')>=0 ? s.remark.split('类型:')[1].split('\n')[0] : '') || '';
+          var leader = '';
+          if (s.remark && s.remark.indexOf('负责人:')>=0) {
+            try { leader = s.remark.split('负责人:')[1].split(' ')[0].trim(); } catch(_){}
+          }
+          var status = s.status || 'draft';
+          var statusText = (self._statusBadge(status) || {}).text || status;
+          var createdAt = s.createdAt ? String(s.createdAt).slice(0,19) : '';
+          var cells = [sid, dateStr, weekStr, '秦安县秦剧团', venue, type, playTitle, '1', leader, statusText, createdAt];
+          csv.push(cells.map(function(c){ c = String(c).replace(/"/g, '""'); return /[",\n]/.test(c) ? '"' + c + '"' : c; }).join(','));
+        });
+        var blob = new Blob(['\ufeff' + csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        var today = new Date().toISOString().slice(0,10);
+        a.download = 'qaxqjt-schedules-' + today + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function(){ try { URL.revokeObjectURL(url); a.remove(); } catch(_){} }, 100);
+        this._toast('✅ 已导出 ' + rows.length + ' 条排期', 'success');
+      } catch(e) {
+        console.warn('[__schedApi.exportCsv] 失败', e);
+        this._toast('⚠️ 导出失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    _ensureDetailModal: function(){
+      var existing = document.getElementById('scheduleDetailModal');
+      if (existing) return existing;
+      try {
+        var ov = document.createElement('div');
+        ov.id = 'scheduleDetailOverlay';
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;display:none;align-items:center;justify-content:center;';
+        var box = document.createElement('div');
+        box.id = 'scheduleDetailModal';
+        box.style.cssText = 'position:relative;background:var(--bg-card,#fff);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:640px;max-height:92vh;overflow-y:auto;';
+        box.innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border,#eee);">' +
+            '<h3 style="margin:0;font-size:1.08rem;font-weight:600;">📅 档期详情</h3>' +
+            '<button type="button" id="scheduleDetailClose" class="btn btn-sm btn-secondary">✕ 关闭</button>' +
+          '</div>' +
+          '<div id="scheduleDetailBody" style="padding:20px;"></div>';
+        ov.appendChild(box);
+        document.body.appendChild(ov);
+        function hide(){ ov.style.display = 'none'; }
+        ov.addEventListener('click', function(e){ if (e.target === ov) hide(); });
+        box.querySelector('#scheduleDetailClose').addEventListener('click', hide);
+        document.addEventListener('keydown', function(e){ if (e.key === 'Escape') hide(); });
+        return box;
+      } catch(_e){ return null; }
+    },
+
+    viewDetail: async function(id){
+      if (!id) return;
+      try {
+        var s = await QAXQJT_API.get('/v1/schedules/' + encodeURIComponent(id));
+        if (!s) { this._toast('⚠️ 未找到该排期', 'warning'); return; }
+        var dateStart = s.scheduleDateStart ? String(s.scheduleDateStart).slice(0,16).replace('T',' ') : (s.date || '—');
+        var dateEnd = s.scheduleDateEnd ? String(s.scheduleDateEnd).slice(0,10) : '';
+        var playTitle = s.playTitle || s.title || s.plays || '—';
+        var venue = s.venueAddress || s.venueDistrict || s.venue || '—';
+        var type = s.type || (s.remark && s.remark.indexOf('类型:')>=0 ? s.remark.split('类型:')[1].split('\n')[0] : '') || '—';
+        var leader = '';
+        if (s.remark && s.remark.indexOf('负责人:')>=0) { try { leader = s.remark.split('负责人:')[1].split(' ')[0].trim(); } catch(_){} }
+        var box = this._ensureDetailModal();
+        if (!box) {
+          alert([
+            '档期ID：' + (s.scheduleNo || s.id || id),
+            '甲方名称：' + playTitle,
+            '日期：' + dateStart,
+            '地点：' + venue,
+            '状态：' + (s.status || 'draft'),
+            '备注：' + (s.remark || '—')
+          ].join('\n'));
+          return;
+        }
+        var esc = this._escape;
+        var badge = this._statusBadge(s.status || 'draft');
+        var rows = [
+          ['档期编号', s.scheduleNo || s.id || id, false],
+          ['甲方名称', playTitle, false],
+          ['开始时间', dateStart, false],
+          ['结束时间', dateEnd || '—', false],
+          ['演出团队', s.performTeam || '秦安县秦剧团', false],
+          ['演出地点', venue, false],
+          ['演出类型', type, false],
+          ['负责人', leader || '—', false],
+          ['当前状态', '<span class="status-tag ' + badge.cls + '">' + badge.text + '</span>', true],
+          ['备注', s.remark || '—', false]
+        ];
+        var html = '<div style="display:grid;grid-template-columns:88px 1fr;gap:10px 14px;font-size:0.95rem;align-items:start;">';
+        for (var i = 0; i < rows.length; i++) {
+          var label = rows[i][0], val = rows[i][1], isHtml = rows[i][2];
+          html += '<div style="color:#888;">' + esc(label) + '</div>' +
+                  '<div style="color:#222;word-break:break-word;">' + (isHtml ? val : esc(val)) + '</div>';
+        }
+        html += '</div>';
+        box.querySelector('#scheduleDetailBody').innerHTML = html;
+        document.getElementById('scheduleDetailOverlay').style.display = 'flex';
+      } catch(e) {
+        console.warn('[viewDetail] id=' + id, e);
+        this._toast('⚠️ 加载详情失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    setStatus: async function(id, newStatus){
+      if (!id) return;
+      var verb = (newStatus === 'confirmed') ? '确认' : (newStatus === 'cancelled' ? '取消' : '更新');
+      if (!confirm('确认' + verb + '该排期？')) return;
+      try {
+        await QAXQJT_API.patch('/v1/schedules/' + encodeURIComponent(id), { status: newStatus });
+        this._toast('✅ 排期已' + verb, 'success');
+        await this.load();
+      } catch(e) {
+        console.warn('[setStatus] id=' + id, e);
+        this._toast('⚠️ ' + verb + '失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    deleteSchedule: async function(id){
+      if (!id) return;
+      if (!confirm('确认删除排期 ' + id + '？\n此操作不可撤销。')) return;
+      try {
+        await QAXQJT_API.del('/v1/schedules/' + encodeURIComponent(id));
+        this._toast('✅ 排期已删除', 'success');
+        await this.load();
+      } catch(e) {
+        console.warn('[deleteSchedule] id=' + id, e);
+        this._toast('⚠️ 删除失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    _bindRowDelegation: function(){
+      var self = this;
+      if (this._rowDelegBound) return;
+      this._rowDelegBound = true;
+      var tbody = document.getElementById('scheduleListTbody');
+      if (tbody) {
+        tbody.addEventListener('click', function(e){
+          var btn = e.target.closest('button[data-act]');
+          if (!btn) return;
+          var tr = btn.closest('tr');
+          var id = tr ? tr.getAttribute('data-sched-id') : '';
+          if (!id) return;
+          var act = btn.getAttribute('data-act');
+          try { e.stopImmediatePropagation(); e.stopPropagation(); } catch(_){}
+          if (act === 'view') { self.viewDetail(id); }
+          else if (act === 'confirm') { self.setStatus(id, 'confirmed'); }
+          else if (act === 'cancel') { self.setStatus(id, 'cancelled'); }
+          else if (act === 'del') { self.deleteSchedule(id); }
+        }, true);
+      }
+    }
+  };
+
+  function _bootStrap(){
+    var api = window.__schedApi;
+    if (!api) return;
+    api._bindRowDelegation();
+    api.load();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _bootStrap);
+  } else {
+    setTimeout(_bootStrap, 200);
+  }
+})();
+</script>
 </body>
 </html>

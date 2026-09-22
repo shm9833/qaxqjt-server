@@ -110,6 +110,10 @@ const update = async ctx => {
   patch.updatedAt = new Date();
   patch.ts = BigInt(nowMs());
   const row = await prisma.accountsV2.update({ where: { id: ctx.params.id }, data: patch });
+  if (b.password) {
+    // 改密即吊销该账号全部 refresh 会话（access token 30 分钟内自然过期）
+    await _revokeSessions(row.id);
+  }
   await audit({ ctx, module: 'iam', action: 'ACCOUNT_UPDATE', targetId: row.id, detail: Object.keys(patch) });
   return success(ctx, _stripPwd(row));
 };
@@ -135,6 +139,7 @@ const resetPwd = async ctx => {
     where: { id: ctx.params.id },
     data: { passwordHash: await hashPassword(String(password)), forcePwdChange: true, updatedAt: new Date(), ts: BigInt(nowMs()) }
   });
+  await _revokeSessions(row.id);
   await audit({ ctx, module: 'iam', action: 'ACCOUNT_RESET_PWD', targetId: row.id });
   return success(ctx, { id: row.id, forcePwdChange: true });
 };
@@ -153,9 +158,19 @@ const changeMyPwd = async ctx => {
     where: { id: meId },
     data: { passwordHash: await hashPassword(String(newPassword)), forcePwdChange: false, updatedAt: new Date(), ts: BigInt(nowMs()) }
   });
+  await _revokeSessions(meId);
   await audit({ ctx, module: 'iam', action: 'ACCOUNT_CHANGE_MY_PWD', targetId: meId });
-  return success(ctx, { ok: true, forcePwdChange: false });
+  return success(ctx, { ok: true, forcePwdChange: false, reloginRequired: true });
 };
+
+// 改密后吊销该账号全部服务端会话，旧 refresh token 立即不能换新 access
+async function _revokeSessions(accountId) {
+  try {
+    await prisma.adminSession.deleteMany({ where: { accountId } });
+  } catch (_) {
+    /* 会话清理失败不阻断改密主流程 */
+  }
+}
 
 function _stripPwd(r) {
   const { passwordHash, ...rest } = r;
