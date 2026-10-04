@@ -1,0 +1,1793 @@
+/* finance.js — 从 admin/finance.html 抽取的内联脚本（第 3/3 段，保持原执行位置） */
+
+/* ===== finance.html inline block (run 3, #1/7) ===== */
+(function() {
+      'use strict';
+
+      var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
+      var LOGOUT_BLACKLIST_KEY = 'qaxqjt_logout_blacklist';
+      // BLOCKER B8 FIX：退出登录时，一并清理历史遗留/辅助登录态 keys（v2/token/remember/permissions/info 等），防残留鉴权绕过
+      var __ADMIN_LEGACY_KEYS = ['qaxqjt_admin_session','admin_session','qaxqjt_admin_sess_v2','admin_sess_v2','qaxqjt_admin_remember','qaxqjt_admin_token','qaxqjt_admin_info','qaxqjt_admin_permissions','qaxqjt_auth_permissions_v1'];
+      function __clearAdminLegacyKeys(excludeKey) { for (var __k=0; __k<__ADMIN_LEGACY_KEYS.length; __k++) { var __kk=__ADMIN_LEGACY_KEYS[__k]; if (excludeKey && __kk===excludeKey) continue; try { localStorage.removeItem(__kk); } catch(_){} } }
+
+      function __isBlacklistedSess(sessId) {
+        if (!sessId) return false;
+        try {
+          var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
+          if (!raw) return false;
+          var list = JSON.parse(raw) || [];
+          for (var bi = 0; bi < list.length; bi++) {
+            if (list[bi].id === sessId) return true;
+          }
+        } catch (_) {}
+        return false;
+      }
+
+      function __pruneBlacklist() {
+        try {
+          var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
+          if (!raw) return;
+          var list = JSON.parse(raw) || [];
+          var cutoff = Date.now() - 24 * 60 * 60 * 1000;
+          var newList = list.filter(function (x) { return (x.ts || 0) > cutoff; });
+          if (newList.length !== list.length) localStorage.setItem(LOGOUT_BLACKLIST_KEY, JSON.stringify(newList));
+        } catch (_) {}
+      }
+
+      function checkAuth() {
+        var session = null;
+        try {
+          var raw = localStorage.getItem(ADMIN_STORAGE_KEY);
+          if (raw) session = JSON.parse(raw);
+        } catch (e) { session = null; }
+        if (!session) {
+          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
+          window.location.replace('login.html');
+          return null;
+        }
+        if (session.expiresAt && Date.now() > parseInt(session.expiresAt, 10)) {
+          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
+          __pruneBlacklist();
+          window.location.replace('login.html');
+          return null;
+        }
+        if (__isBlacklistedSess(session.id)) {
+          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
+          window.location.replace('login.html');
+          return null;
+        }
+        return session;
+      }
+
+      try {
+        window.addEventListener('storage', function (evt) {
+          if (!evt) return;
+          if (evt.key === ADMIN_STORAGE_KEY && !evt.newValue) {
+            try { window.location.replace('login.html'); } catch (_) {}
+          }
+          if (evt.key === LOGOUT_BLACKLIST_KEY) {
+            try {
+              var cur = localStorage.getItem(ADMIN_STORAGE_KEY);
+              if (cur) {
+                var curSess = JSON.parse(cur);
+                if (__isBlacklistedSess(curSess && curSess.id)) window.location.replace('login.html');
+              }
+            } catch (_) {}
+          }
+        }, false);
+      } catch (_evt) {}
+
+      // —— 角色级别映射（与后端 ROLE_LEVEL 对齐，前端 admin→super_admin, finance→finance_admin）——
+      var __ROLE_LEVEL = { super_admin:999, admin:999, ops:800, director:700, finance_checker:600, finance_cashier:520, finance_maker:550, finance_view:510, finance_admin:500, finance:500, staff:100 };
+      function __getRoleLevel(role) {
+        if (!role) return 0;
+        return __ROLE_LEVEL[role] || 0;
+      }
+      // —— 基于角色过滤侧边栏菜单（隐藏无权限菜单项）——
+      function __applyRoleMenuFilter(session) {
+        if (!session) return;
+        var userLevel = __getRoleLevel(session.role);
+        var items = document.querySelectorAll('.admin-sidebar-menu .admin-menu-item[data-role-level]');
+        items.forEach(function(item) {
+          var need = parseInt(item.getAttribute('data-role-level'), 10) || 0;
+          if (userLevel < need) {
+            item.style.display = 'none';
+          }
+        });
+      }
+
+      var currentSession = checkAuth();
+      __applyRoleMenuFilter(currentSession);
+      // —— 页面级权限拦截：直接访问 URL 时检查角色，不足则跳首页 ——
+      (function() {
+        if (!currentSession) return;
+        var userLvl = __getRoleLevel(currentSession.role);
+        if (userLvl < 500) {
+          location.replace('index.html');
+        }
+      })();
+
+      var tabItems = document.querySelectorAll('.tab-item');
+      var tabContents = document.querySelectorAll('.tab-content');
+      tabItems.forEach(function(item) {
+        item.addEventListener('click', function() {
+          var tab = this.getAttribute('data-tab');
+          tabItems.forEach(function(i) { i.classList.remove('active'); });
+          tabContents.forEach(function(c) { c.classList.remove('active'); });
+          this.classList.add('active');
+          var target = document.getElementById('tab-' + tab);
+          if (target) target.classList.add('active');
+        });
+      });
+
+      var sidebar = document.getElementById('adminSidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+      var toggle = document.getElementById('sidebarToggle');
+      function openMobileSidebar() {
+        sidebar.classList.add('mobile-open');
+        overlay.classList.add('active');
+      }
+      function closeMobileSidebar() {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('active');
+      }
+      if (toggle) {
+        toggle.addEventListener('click', function() {
+          if (sidebar.classList.contains('mobile-open')) {
+            closeMobileSidebar();
+          } else {
+            openMobileSidebar();
+          }
+        });
+      }
+      if (overlay) {
+        overlay.addEventListener('click', closeMobileSidebar);
+      }
+
+      window.toggleFullscreen = function() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen && document.exitFullscreen();
+        }
+      };
+
+      function logout() {
+        if (window.confirm('确定要退出登录吗？')) {
+          try {
+            var curSessId = (currentSession && currentSession.id) ? currentSession.id : null;
+            if (curSessId) {
+              var blackList = [];
+              try {
+                var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
+                if (raw) blackList = JSON.parse(raw) || [];
+              } catch (_) {}
+              blackList.push({ id: curSessId, ts: Date.now() });
+              if (blackList.length > 100) blackList = blackList.slice(-100);
+              try { localStorage.setItem(LOGOUT_BLACKLIST_KEY, JSON.stringify(blackList)); } catch (_) {}
+            }
+          } catch (_blk) {}
+          localStorage.removeItem(ADMIN_STORAGE_KEY);
+          __clearAdminLegacyKeys(ADMIN_STORAGE_KEY);
+          if (window.QinApp && window.QinApp.Admin) {
+            try { window.QinApp.Admin.logout(); } catch (_a) {}
+          }
+          try { window.location.replace('login.html'); } catch (_loc) { window.location.href = 'login.html'; }
+        }
+      }
+      var logoutBtn = document.getElementById('logoutBtnSidebar');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+      }
+
+      // =============================================================================
+      // 🔧 D2 FIX：财务台账全按钮自动化事件绑定 + 去抖
+      // 问题：之前所有「新增收入/支出/对账/行级查看编辑删除」按钮均无 onclick 属性且无 addEventListener，点击无响应
+      // =============================================================================
+
+    })();
+
+  // =============================================================================
+  // 🔧 E3 FIX：财务管理 全按钮自动化事件绑定 + 去抖锁
+  // =============================================================================
+
+/* ===== finance.html inline block (run 3, #2/7) ===== */
+/* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
+if (window.__DBF_V20260804_INJECTED__ !== true) {
+  window.__DBF_V20260804_INJECTED__ = true;
+
+/* ========== 📊 JSON 性能日志（默认关闭，开启后输出NDJSON便于ELK采集） ========== */
+function __pEna(){try{return window.localStorage&&localStorage.getItem('__ENABLE_PERF_LOG__')==='true'}catch(e){return false}}
+function __pFmt(){try{return(window.localStorage&&localStorage.getItem('__PERF_FORMAT__')||'json').toLowerCase()}catch(e){return'json'}}
+function __pTid(){if(!window.__pCur){window.__pCur='tr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}return window.__pCur}
+function __pUA(){try{return navigator.userAgent||''}catch(e){return''}}
+function __pURL(){try{return location.href||''}catch(e){return''}}
+function __pLog(module,event,extra){
+  if(!__pEna())return;
+  try{
+    var now=new Date();
+    var duration_ms = (window.__pT0 ? (Date.now()-window.__pT0) : 0);
+    var payload = {
+      '@timestamp': now.toISOString(),
+      'level': 'INFO',
+      'service': 'qaxqjt-admin',
+      'trace_id': __pTid(),
+      'span_id': 'sp_'+now.getTime().toString(36),
+      'module': module,            // 'DBF' 或 'SP'
+      'event': event,              // 'save_click' / 'audit_pass' 等
+      'branch': (extra && extra.branch) ? extra.branch : null,
+      'btn_text': (extra && extra.txt) ? extra.txt : null,
+      'bound':    (extra && typeof extra.bound==='boolean') ? extra.bound : null,
+      'lock_wait_ms': (extra && typeof extra.lockWait==='number') ? extra.lockWait : 0,
+      'duration_ms': duration_ms,
+      'page_url': __pURL(),
+      'user_agent': __pUA(),
+      'extra': extra || {}
+    };
+    // 删除已经提出来的重复字段，避免冗余
+    if(payload.extra){
+      ['branch','txt','bound','lockWait'].forEach(function(k){if(payload.extra[k]!==undefined)delete payload.extra[k]});
+    }
+    // 输出 NDJSON（一行一条），便于 Filebeat / Logstash 直接采集
+    console.log(JSON.stringify(payload));
+  }catch(_){}
+}
+var __pT0=0;
+
+
+  (function(){
+    function __T(msg,type){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(msg,type||'info',3000); }catch(_e){ try{(type==='error'?alert:console.log)('[deadhook] '+msg);}catch(_f){} } }
+    function __L(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||600); }catch(_){}
+      return true;
+    }
+    // 只在 capture 阶段处理，便于在页面原有 handlers 之前运行：若按钮已存在 onclick / 已绑过事件，直接跳过
+    document.addEventListener('click', function(e){
+    __pT0 = Date.now();
+    var __pEvt = {target: e.target && e.target.tagName, btn: null, txt: null, branch: null, bound: null, lockWait: 0};
+    window.__pCur = 'tr_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+    var t = e.target;
+      if(!t) return;
+      // 向上找最近的按钮元素/可点击锚点 - 扩大匹配范围，包含a标签和所有含btn/action类的元素
+      var btn = (t.tagName||'').toLowerCase() === 'button' ? t :
+                (t.closest ? t.closest('button, a, [role="button"], .btn, .btn-action, .btn-sm, .action-link, [data-action]') : null);
+      if(!btn) return;
+      // 跳过已有 onclick / 正常href跳转 / 已在脚本中手动绑定过（__bindDone=1 或 __ctE2Done=1）的按钮
+      // 注意：data-action仅作为标识，不代表已绑定事件；父元素检查仅对onclick生效
+      try{
+  function __btnHasBound(btn){
+    if(!btn) return false;
+    if(btn.__superPatchBound) return true;
+    var oc = btn.getAttribute && btn.getAttribute('onclick');
+    var hr = btn.getAttribute && btn.getAttribute('href');
+    if(oc && oc.length > 3) return true;
+    // 仅当href不是占位符且不是javascript伪协议时才算有效跳转
+    if(hr && hr !== '#' && hr !== 'javascript:;' && hr !== 'javascript:void(0);' && hr !== 'javascript:void(0)' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+    var p = btn.parentElement, lvl = 0;
+    while(p && lvl < 4){
+      try {
+        var pOc = p.getAttribute && p.getAttribute('onclick');
+        // 父级onclick长度>3才算有效绑定
+        if(pOc && pOc.length > 3) return true;
+      }catch(_){}
+      p = p.parentElement; lvl++;
+    }
+    // 移除：匹配业务关键词=已绑定的错误逻辑。这些恰恰是需要兜底的按钮！
+    return false;
+  }
+  var __pBnd = __btnHasBound(btn);
+    __pEvt.bound = __pBnd;
+    __pLog('DBF','hasBound_result', {bound:__pBnd, check_ms:Date.now()-__pT0});
+    if(__pBnd) return;
+    var __pDrp = (btn.__bindDone || btn.__ctE2Done);
+    if(__pDrp){__pLog('DBF','dedup_skip', {reason: btn.__bindDone?'bindDone':'ctE2Done'}); return;}
+}catch(_a){}
+      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
+      // 放宽文本长度限制：从20字符放宽到50字符，覆盖"确认订单""取消订单""派工安排"等复合文本
+      __pEvt.txt = txt;
+    __pLog('DBF','txt_resolved', {txt:txt, len:txt.length});
+    if(!txt || txt.length > 50) return;
+      var tr = btn.closest ? btn.closest('tr') : null;
+      var trKey = '';
+      if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
+      // 各按钮分发行文
+      var isSave = (txt.indexOf('保存')>=0 || txt.indexOf('提交')>=0 || txt.indexOf('确认')>=0);
+      var isEdit = (txt.indexOf('编辑')>=0);
+      var isDel  = (txt.indexOf('删除')>=0 && txt.length <= 10);
+      var isView = (txt.indexOf('查看')>=0 || (txt==='👁') || (txt.indexOf('👁')>=0 && txt.length<=6) || txt.indexOf('详情')>=0 || txt.indexOf('预览')>=0);
+      var isVerify = (txt.indexOf('核销')>=0);
+      var isExport = (txt.indexOf('导出')>=0);
+      var isAdd = (txt.indexOf('新增')>=0);
+      var doneKey = 'e2_'+(isSave?'s':isEdit?'e':isDel?'d':isView?'v':isVerify?'y':isExport?'x':isAdd?'a':'k')+'_'+(trKey||Math.random().toString(36).slice(2,6));
+      if(isSave){
+    /* P1修复:假成功已移除——死按钮无真实保存实现，诚实提示并阻止原生提交刷新 */
+    __pLog('DBF','save_unwired', Object.assign({},__pEvt,{row:trKey}));
+    try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_a){}
+    console.warn('[P1] 未接线按钮:', txt||'保存');
+    __T('该功能暂未接入后端','warning');
+    btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
+      }
+      if(isEdit){
+        /* P1修复:假成功已移除——无真实编辑实现，诚实提示 */
+        __pLog('DBF','edit_unwired', Object.assign({},__pEvt,{row:trKey}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'编辑');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
+      }
+      if(isDel){
+        /* P1修复:假成功已移除——原分支假确认+假移除行+假删除toast，改为诚实提示（真实删除走行内🗑按钮 API.del） */
+        __pLog('DBF','delete_unwired', Object.assign({},__pEvt,{row:trKey}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'删除');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
+      }
+      if(isView){
+        /* P1修复:假成功已移除——无真实查看实现，诚实提示（真实查看走行内👁按钮） */
+        __pLog('DBF','view_unwired', Object.assign({},__pEvt,{row:trKey}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'查看');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
+      }
+      if(isVerify){
+        /* P1修复:假成功已移除——后端无核销端点，诚实提示 */
+        __pLog('DBF','verify_unwired', Object.assign({},__pEvt,{row:trKey}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'核销');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
+      }
+      if(isExport){
+        /* P1修复:假成功已移除——无真实导出实现，诚实提示（真实导出走工具栏📥导出Excel按钮） */
+        __pLog('DBF','export_unwired', Object.assign({},__pEvt,{row:trKey}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'导出');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
+      }
+      if(isAdd){
+        /* P1修复:假成功已移除——无真实新增实现，诚实提示（真实新增走工具栏➕按钮） */
+        __pLog('DBF','add_unwired', Object.assign({},__pEvt,{branch:'add'}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'新增');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
+      }
+      // ---- 新增：审核/审批/驳回/通过 ----
+      var isAudit = txt.indexOf('审核')>=0 || txt.indexOf('审批')>=0 || txt.indexOf('驳回')>=0 || txt.indexOf('通过')>=0;
+      if(isAudit){
+        /* P1修复:假成功已移除——无真实审核实现，诚实提示 */
+        __pLog('DBF','audit_unwired', Object.assign({},__pEvt,{row:trKey, branch:'audit'}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'审核');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; btn.__superPatchBound = 1; return;
+      }
+      // ---- 新增：签约/签订 ----
+      var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
+      if(isSign){
+        /* P1修复:假成功已移除——无真实签约实现，诚实提示 */
+        __pLog('DBF','sign_unwired', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'签约');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; btn.__superPatchBound = 1; return;
+      }
+      // ---- 新增：合同/生成合同 ----
+      var isContract = txt.indexOf('合同')>=0 && !isSign;
+      if(isContract){
+        /* P1修复:假成功已移除——无真实合同生成实现，诚实提示 */
+        __pLog('DBF','contract_unwired', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'合同');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; btn.__superPatchBound = 1; return;
+      }
+      // ---- 新增：排期/排班/安排档期 ----
+      var isScheduleBtn = txt.indexOf('排期')>=0 || txt.indexOf('排班')>=0 || (txt.indexOf('安排')>=0 && (txt.length<=8 || txt.indexOf('档期')>=0));
+      if(isScheduleBtn){
+        /* P1修复:假成功已移除——无真实排期实现，诚实提示 */
+        __pLog('DBF','schedule_unwired', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'排期');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; btn.__superPatchBound = 1; return;
+      }
+      // ---- 新增：取消/处理/确认接单 ----
+      var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
+      if(isCancelOrHandle && !isDel && !isSave){
+        /* P1修复:假成功已移除——无真实取消/派工/接单实现，诚实提示 */
+        __pLog('DBF','status_unwired', Object.assign({},__pEvt,{row:trKey}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'处理');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; btn.__superPatchBound = 1; return;
+      }
+
+    }, true);
+    console.info('[DeadButtonFallback 已加载：×兜底 + 保存/编辑/删除/查看/核销/导出/新增 死按钮兜底委托]');
+    try{ window.__T = __T; window.__L = __L; }catch(_){}
+  })();
+  
+} /* end of 防重复注入保护 if */
+
+/* ===== finance.html inline block (run 3, #3/7) ===== */
+/* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
+if (window.__SP_V20260804_INJECTED__ !== true) {
+  window.__SP_V20260804_INJECTED__ = true;
+
+/* ========== 📊 JSON 性能日志（默认关闭，开启后输出NDJSON便于ELK采集） ========== */
+function __pEna(){try{return window.localStorage&&localStorage.getItem('__ENABLE_PERF_LOG__')==='true'}catch(e){return false}}
+function __pFmt(){try{return(window.localStorage&&localStorage.getItem('__PERF_FORMAT__')||'json').toLowerCase()}catch(e){return'json'}}
+function __pTid(){if(!window.__pCur){window.__pCur='tr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}return window.__pCur}
+function __pUA(){try{return navigator.userAgent||''}catch(e){return''}}
+function __pURL(){try{return location.href||''}catch(e){return''}}
+var __spT0=0;
+var __spEvt={};
+function __pLog(module,event,extra){
+  if(!__pEna())return;
+  try{
+    var now=new Date();
+    var duration_ms = (__spT0 ? (Date.now()-__spT0) : 0);
+    var payload = {
+      '@timestamp': now.toISOString(),
+      'level': 'INFO',
+      'service': 'qaxqjt-admin',
+      'trace_id': __pTid(),
+      'span_id': 'sp_'+now.getTime().toString(36),
+      'module': module,
+      'event': event,
+      'branch': (extra && extra.branch) ? extra.branch : null,
+      'btn_text': (extra && extra.txt) ? extra.txt : null,
+      'btn_selector': (extra && extra.btn) ? extra.btn : null,
+      'bound': (extra && typeof extra.bound==='boolean') ? extra.bound : null,
+      'lock_wait_ms': (extra && typeof extra.lockWait==='number') ? extra.lockWait : 0,
+      'duration_ms': duration_ms,
+      'page_url': __pURL(),
+      'user_agent': __pUA(),
+      'extra': extra || {}
+    };
+    if(payload.extra){
+      ['branch','txt','bound','lockWait','btn'].forEach(function(k){if(payload.extra[k]!==undefined)delete payload.extra[k]});
+    }
+    console.log(JSON.stringify(payload));
+  }catch(_){}
+}
+
+
+(function(){
+  'use strict';
+  var PATCH_ID = 'adminSuperPatchV20260730';
+
+  function _genId(prefix){
+    var d = new Date();
+    var pad = function(n){ return n<10?'0'+n:''+n; };
+    var ymd = d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());
+    var hms = pad(d.getHours())+pad(d.getMinutes())+pad(d.getSeconds());
+    var rnd = Math.floor(Math.random()*90+10);
+    return prefix + ymd + hms + rnd;
+  }
+
+  function _pad2(n){ return n<10?'0'+n:''+n; }
+
+  if(!window.__toastH9){
+    window.__toastH9 = function(msg, type){
+      try{
+        if(window.QinApp && QinApp.Utils && typeof QinApp.Utils.toast==='function'){
+          QinApp.Utils.toast(msg, type||'info');
+          return;
+        }
+        var ts = document.querySelector('.toast-stack');
+        if(!ts){
+          ts = document.createElement('div');
+          ts.className = 'toast-stack';
+          ts.setAttribute('aria-live','polite');
+          ts.style.cssText='position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+          document.body.appendChild(ts);
+        }
+        var el = document.createElement('div');
+        var bg = 'linear-gradient(135deg,#475569,#334155)';
+        if(type==='success') bg='linear-gradient(135deg,#16a34a,#15803d)';
+        if(type==='error') bg='linear-gradient(135deg,#dc2626,#b91c1c)';
+        if(type==='warning') bg='linear-gradient(135deg,#f59e0b,#d97706)';
+        if(type==='info') bg='linear-gradient(135deg,#0284c7,#0369a1)';
+        el.style.cssText='background:'+bg+';color:#fff;padding:10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.18);font-size:0.85rem;max-width:360px;pointer-events:auto;animation:toastInH9 .25s ease;';
+        el.textContent = msg;
+        ts.appendChild(el);
+        var st = document.createElement('style');
+        if(!document.getElementById('_toastH9Anim')){
+          st.id='_toastH9Anim';
+          st.textContent='@keyframes toastInH9{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}';
+          document.head.appendChild(st);
+        }
+        setTimeout(function(){ el.style.transition='opacity .3s,transform .3s'; el.style.opacity='0'; el.style.transform='translateY(-8px)'; setTimeout(function(){ el.remove(); },320); }, 2600);
+      }catch(e){ console.warn('[toastH9]',e); }
+    };
+  }
+
+  if(!window.__acqH9){
+    window.__acqH9 = function(btn, txtType){
+      var lockKey = '__acqLock_'+(btn&&btn.dataset?btn.dataset.acqKey:'global');
+      var now = Date.now();
+      var last = parseInt(btn&&btn.dataset?btn.dataset.__acqLast:'0',10)||0;
+      var expire = 400;
+      if(txtType==='save'||txtType==='submit'||txtType==='confirm') expire=900;
+      if(txtType==='delete'||txtType==='cancel'||txtType==='disable') expire=1200;
+      if(now-last<expire){ return false; }
+      if(btn&&btn.dataset){ btn.dataset.__acqLast = now; }
+      return true;
+    };
+  }
+
+  try{
+    console.info('[SuperPatch 1/6] FORM SUBMIT/RESET 防刷新 + 必填校验 初始化...');
+    document.addEventListener('submit', function(e){
+      try{
+        var form = e.target;
+        if(!form||form.tagName!=='FORM') return;
+        e.preventDefault();
+        e.stopPropagation();
+        var fields = form.querySelectorAll('input,select,textarea');
+        var ok = true;
+        var firstErr = null;
+        fields.forEach(function(f){
+          if(f.disabled||f.type==='file'||f.type==='hidden'||f.type==='button'||f.type==='submit'||f.type==='reset') return;
+          var isRequired = f.hasAttribute('required')||(f.classList&&f.classList.contains('required'));
+          var lbl = '';
+          var labelEl = form.querySelector('label[for="'+f.id+'"]')||f.closest('label');
+          if(labelEl) lbl = labelEl.textContent.trim();
+          if(!lbl){
+            var ph = f.getAttribute('placeholder')||'';
+            if(ph&&ph.slice(-1)==='*'){ isRequired=true; lbl=ph.slice(0,-1).trim(); }
+          }
+          if(labelEl&&labelEl.textContent.indexOf('*')>=0){ isRequired=true; lbl=labelEl.textContent.replace(/\*/g,'').trim(); }
+          if(!lbl){
+            var nm = f.getAttribute('name')||f.id||'';
+            lbl = '「'+nm+'」';
+          }
+          var val = (f.value||'').trim();
+          f.classList.remove('input-error');
+          if(isRequired&&!val){
+            f.classList.add('input-error');
+            f.style.borderColor='#dc2626'; f.style.boxShadow='0 0 0 3px rgba(220,38,38,0.1)';
+            __toastH9('⚠️ 请完整填写'+lbl+'后再提交','error');
+            ok=false; if(!firstErr) firstErr=f;
+            return;
+          }
+          if(val){
+            var t = f.type||'';
+            var n = (f.getAttribute('name')||'').toLowerCase();
+            var telReg = /^1[3-9]\d{9}$/;
+            var mailReg = /^[\w.+-]+@[\w-]+\.[\w.-]+$/;
+            var dateReg = /^\d{4}-\d{2}-\d{2}$/;
+            if(t==='tel'||n.indexOf('phone')>=0||n.indexOf('mobile')>=0){
+              if(!telReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'格式不正确（11位手机号）','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='email'||n.indexOf('mail')>=0){
+              if(!mailReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'邮箱格式不正确','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(n.indexOf('amount')>=0||n.indexOf('price')>=0||n.indexOf('money')>=0){
+              var nv = Number(val);
+              if(isNaN(nv)||nv<0){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'金额必须≥0','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='number'){
+              var nv2 = +val;
+              if(!Number.isInteger(nv2)||nv2<0){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'必须是非负整数','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='date'){
+              if(!dateReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'日期格式应为YYYY-MM-DD','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+          }
+        });
+        if(firstErr){ try{ firstErr.focus(); }catch(_){} }
+        if(!ok) return false;
+        /* P1修复:假成功已移除——财务凭证上传表单走真实 /v1/upload；其余表单无真实提交实现，诚实提示（必填校验为真实助手保留） */
+        if(form.id==='financeAttachForm' && typeof window.__finUploadSubmit==='function'){
+          try{ window.__finUploadSubmit(form); }catch(_up){ console.warn('[SuperPatch 1/6 upload err]',_up); __toastH9('❌ 凭证上传失败','error'); }
+          return false;
+        }
+        console.warn('[P1] 未接线表单:', (form.id||form.name||'(未命名)'));
+        __toastH9('该功能暂未接入后端','warning');
+        return false;
+      }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
+    }, true);
+
+    document.addEventListener('reset', function(e){
+      try{
+        var form = e.target;
+        if(!form||form.tagName!=='FORM') return;
+        e.preventDefault();
+        e.stopPropagation();
+        form.querySelectorAll('input,select,textarea').forEach(function(f){
+          if(f.type==='file'){ try{f.value='';}catch(_){} }
+          else if(f.type==='checkbox'||f.type==='radio'){ f.checked=false; }
+          else{ f.value=''; }
+          f.classList.remove('input-error');
+          try{ f.style.borderColor=''; f.style.boxShadow=''; }catch(_){}
+        });
+        __toastH9('🔄 已重置','info');
+        return false;
+      }catch(e2){ console.warn('[SuperPatch 1/6 reset err]',e2); return false; }
+    }, true);
+
+    var cssErr = document.createElement('style');
+    cssErr.textContent = '.input-error{border-color:#dc2626 !important;box-shadow:0 0 0 3px rgba(220,38,38,0.12) !important;transition:all .2s;}';
+    document.head.appendChild(cssErr);
+    console.info('[SuperPatch 1/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 1/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 2/6] 编号自动生成（只读、不可手改）初始化...');
+    var idRules = [
+      {keys:['订单编号','orderNo','orderId'], prefix:'QAX'},
+      {keys:['收款编号','收款单','receiptId'], prefix:'SK'},
+      {keys:['票据编号','凭证编号','voucherId'], prefix:'PZ'},
+      {keys:['工资条编号','wageId'], prefix:'GZ'},
+      {keys:['派工编号','dispatchId'], prefix:'PG'},
+      {keys:['档期编号','scheduleId'], prefix:'DQ'},
+      {keys:['合同编号','HT','contractId'], prefix:'HT'}
+    ];
+    function _matchIdRule(inp){
+      var hay = [inp.id||'', inp.name||'', inp.getAttribute('aria-label')||'', inp.getAttribute('placeholder')||''];
+      try{
+        var lbl = document.querySelector('label[for="'+inp.id+'"]');
+        if(lbl) hay.push(lbl.textContent||'');
+        var par = inp.closest('[class*="form-group"],[class*="form-item"],td,th,div');
+        if(par) hay.push(par.textContent||'');
+      }catch(_){}
+      var s = hay.join(' ');
+      for(var i=0;i<idRules.length;i++){
+        var r = idRules[i];
+        for(var j=0;j<r.keys.length;j++){
+          if(s.indexOf(r.keys[j])>=0) return r;
+        }
+      }
+      return null;
+    }
+    function _fillIds(scope){
+      try{
+        var inputs = (scope||document).querySelectorAll('input[type=text],input:not([type])');
+        inputs.forEach(function(inp){
+          if(inp.readOnly||inp.disabled) return;
+          var rule = _matchIdRule(inp);
+          if(!rule) return;
+          if((inp.value||'').trim()!=='') return;
+          inp.value = _genId(rule.prefix);
+          inp.setAttribute('readonly','readonly');
+          inp.style.cursor='not-allowed';
+          inp.style.background='#f8fafc';
+        });
+      }catch(e){ console.warn('[SuperPatch 2/6 fillIds err]',e); }
+    }
+    function _refreshIdsOnNew(scope){
+      try{
+        var inputs = (scope||document).querySelectorAll('input[readonly]');
+        inputs.forEach(function(inp){
+          var rule = _matchIdRule(inp);
+          if(!rule) return;
+          inp.value = _genId(rule.prefix);
+        });
+      }catch(e){ console.warn('[SuperPatch 2/6 refreshIds err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', function(){ _fillIds(); }, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _fillIds(); }
+    else{ setTimeout(_fillIds, 50); }
+    if(typeof MutationObserver!=='undefined'){
+      var mo = new MutationObserver(function(muts){
+        muts.forEach(function(m){
+          if(m.addedNodes&&m.addedNodes.length){
+            m.addedNodes.forEach(function(n){
+              if(n.nodeType===1) _fillIds(n);
+            });
+          }
+        });
+      });
+      mo.observe(document.body, {childList:true, subtree:true});
+    }
+    document.addEventListener('click', function(e){
+      try{
+        var btn = e.target.closest('button,a,[role=button]');
+        if(!btn) return;
+    __spT0 = Date.now();
+    __spEvt={target: (btn.tagName||'?') + '.' + (btn.className||'').slice(0,40), txt: (btn.textContent||'').trim()};
+    __pLog('SP','click_match', {btn:__spEvt.target, txt:__spEvt.txt, ms:Date.now()-__spT0});
+    var txt = (btn.textContent||'').trim().toLowerCase();
+        var html = (btn.innerHTML||'').toLowerCase();
+        var idCls = (btn.id||'').toLowerCase()+' '+(btn.className||'').toLowerCase();
+        if(txt.indexOf('新建')>=0||txt.indexOf('➕')>=0||txt.indexOf('+new')>=0||html.indexOf('➕')>=0||idCls.indexOf('btnadd')>=0||idCls.indexOf('-new')>=0||idCls.indexOf('new')>=0){
+          setTimeout(function(){ _refreshIdsOnNew(); }, 80);
+        }
+      }catch(_){}
+    }, true);
+    console.info('[SuperPatch 2/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 2/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 3/6] 取消/关闭/我知道了/× 关弹窗不刷新 初始化...');
+    var closeTexts = ['取消','关闭','我知道了','我明白了','知道了','确定取消'];
+    var closeChs = ['×','✕','✖','✘','❌','⨯'];
+    document.addEventListener('click', function(e){
+      try{
+        var el = e.target;
+        var txt = (el.textContent||'').trim();
+        if(!txt&&el.closest){ txt = (el.closest('button,a,[role=button],span,div')||{}).textContent||''; txt=txt.trim(); }
+        var isClose = false;
+        if(closeChs.indexOf(txt)>=0) isClose=true;
+        for(var i=0;i<closeTexts.length;i++){
+          if(txt===closeTexts[i]||(txt.length<=12&&txt.indexOf(closeTexts[i])>=0)){ isClose=true; break; }
+        }
+        if(!isClose) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var handled=false;
+        try{ if(typeof window.__closeAnyModal==='function'){ window.__closeAnyModal(); handled=true; } }catch(_){}
+        if(!handled){
+          var sels = [
+            'div[class*="modal-"]','div[class*="Modal"]','div[class*="overlay"]',
+            'div[id*="Modal"]','div[id*="modal"]','div[class*="popup"]','div[class*="Popup"]',
+            'div[class*="dialog"]','div[class*="Dialog"]'
+          ];
+          sels.forEach(function(sel){
+            try{
+              var arr = document.querySelectorAll(sel);
+              arr.forEach(function(n){
+                if(n&&n.style){
+                  n.style.display='none';
+                  try{ n.classList.add('csp-hide'); }catch(_){}
+                }
+              });
+            }catch(_){}
+          });
+        }
+        __toastH9('↩️ 已关闭弹窗','info');
+      }catch(e3){ console.warn('[SuperPatch 3/6 click err]',e3); }
+    }, true);
+    console.info('[SuperPatch 3/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 3/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 4/6] 分页器标准化 (pagination.js结构) 初始化...');
+    var pgStateMap = new WeakMap();
+    function _isPgContainer(el){
+      try{
+        if(!el || el.nodeType!==1) return false;
+        if(el.closest && el.closest('.sp-pg-toolbar-20260730,.pagination-toolbar')) return false;
+        var tag = (el.tagName||'').toUpperCase();
+        if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
+        var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
+        if(c.search(/pagination|pager|pagebar|pageBar|paginate|page-number-item|pagerbar|pagebar/i)<0) return false;
+        var exclude = /admin[-_]?main|admin[-_]?content|main[-_]?content|stats[-_]?grid|list[-_]?grid|card[-_]?grid|table[-_]?wrap|table[-_]?container|data[-_]?wrap|content[-_]?wrap|page[-_]?content|admin[-_]?wrap|app[-_]?main/i;
+        if(exclude.test(c)) return false;
+        if(el.querySelector('[data-pg]')||el.querySelector('.page-number-item')||el.querySelector('button[data-pg]')) return true;
+        return true;
+      }catch(_){ return false; }
+    }
+    function _ensurePgState(container){
+      if(!pgStateMap.has(container)){
+        var total = 100;
+        var tbody = document.querySelector('tbody[data-paginate=list]');
+        if(tbody){
+          var sz = parseInt(tbody.getAttribute('data-page-size')||'10',10);
+          var rows = tbody.querySelectorAll('tr:not([style*=none]):not(.csp-hide)').length;
+          total = Math.max(100, rows*sz);
+        }
+        var size = 10;
+        var existing = container.querySelector('select[data-pg=size]');
+        if(existing){ try{ size = parseInt(existing.value||'10',10)||10; }catch(_){} }
+        pgStateMap.set(container, {total:total, pages:Math.ceil(total/size), current:1, size:size});
+      }
+      return pgStateMap.get(container);
+    }
+    function _buildPg(container){
+      try{
+        if(container.hasAttribute('data-pg-built')||container.querySelector('.sp-pg-toolbar-20260730')) return; container.setAttribute('data-pg-built','1');
+        if(container.classList && (container.classList.contains('sp-pg-toolbar-20260730')||container.classList.contains('pagination-toolbar'))) return;
+        var oldToolbar = container.querySelector('.pagination-toolbar');
+        if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
+        var st = _ensurePgState(container);
+        var children = container.children, nonPg = 0, i;
+        for(i=0;i<children.length;i++){
+          var c = children[i]; if(!c) continue;
+          var cn = (c.className||'').toString(); var id = (c.id||'').toString(); var tag = (c.tagName||'').toString().toUpperCase();
+          if(tag==='BUTTON'||tag==='SELECT'||tag==='SPAN'||tag==='INPUT') continue;
+          if(cn.indexOf('pagination')>=0 || cn.indexOf('pager')>=0 || cn.indexOf('pagebar')>=0 || cn.indexOf('page-')>=0 || id.indexOf('page')>=0) continue;
+          nonPg++;
+        }
+        if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
+        var wrap = document.createElement('div');
+        wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.setAttribute('data-pg-built','1');
+        wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
+        wrap.innerHTML = ''+
+          '<button class="btn btn-sm" data-pg="first">首页</button>'+
+          '<button class="btn btn-sm" data-pg="prev">上一页</button>'+
+          '<div class="page-number-wrap" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;"></div>'+
+          '<button class="btn btn-sm" data-pg="next">下一页</button>'+
+          '<button class="btn btn-sm" data-pg="last">末页</button>'+
+          '<span style="margin-left:6px;">跳 <input type="number" data-pg="jump" min="1" style="width:60px;padding:4px 6px;border:1.5px solid var(--border-light,#cbd5e1);border-radius:6px;"> 页</span>'+
+          '<select data-pg="size" style="padding:4px 8px;border:1.5px solid var(--border-light,#cbd5e1);border-radius:6px;">'+
+            '<option value="10">10条/页</option><option value="20">20条/页</option><option value="50">50条/页</option><option value="100">100条/页</option>'+
+          '</select>'+
+          '<span data-pg="info" style="margin-left:auto;color:var(--text-light,#64748b);">共 0 条 / 第 1 页</span>';
+        container.appendChild(wrap);
+        wrap.querySelectorAll('button').forEach(function(b){ b.style.borderRadius='999px'; });
+        var sel = wrap.querySelector('select[data-pg=size]'); if(sel&&st.size!=10){ sel.value=String(st.size); }
+        _updatePgUI(container);
+        wrap.addEventListener('click', function(ev){
+          try{
+            var t = ev.target.closest('[data-pg]');
+            if(!t) return;
+            var act = t.getAttribute('data-pg');
+            var s = _ensurePgState(container);
+            if(act==='first') s.current=1;
+            else if(act==='prev') s.current=Math.max(1,s.current-1);
+            else if(act==='next') s.current=Math.min(s.pages,s.current+1);
+            else if(act==='last') s.current=s.pages;
+            else return;
+            _updatePgUI(container);
+          }catch(_){}
+        });
+        var jp = wrap.querySelector('input[data-pg=jump]');
+        if(jp){
+          jp.addEventListener('change', function(){
+            try{
+              var s = _ensurePgState(container);
+              var v = parseInt(jp.value||'1',10);
+              if(isNaN(v)||v<1) v=1;
+              if(v>s.pages) v=s.pages;
+              s.current=v; jp.value=v;
+              _updatePgUI(container);
+            }catch(_){}
+          });
+          jp.addEventListener('keydown', function(ev){
+            if(ev.key==='Enter'){ ev.preventDefault(); jp.dispatchEvent(new Event('change')); }
+          });
+        }
+        var sz = wrap.querySelector('select[data-pg=size]');
+        if(sz){
+          sz.addEventListener('change', function(){
+            try{
+              var s = _ensurePgState(container);
+              s.size = parseInt(sz.value||'10',10)||10;
+              s.pages = Math.ceil(s.total/s.size);
+              s.current = 1;
+              _updatePgUI(container);
+            }catch(_){}
+          });
+        }
+      }catch(e){ console.warn('[SuperPatch 4/6 buildPg err]',e); }
+    }
+    function _updatePgUI(container){
+      try{
+        var wrap = container.querySelector('.sp-pg-toolbar-20260730') || container.querySelector('.pagination-toolbar');
+        if(!wrap) return;
+        var s = _ensurePgState(container);
+        var pnWrap = wrap.querySelector('.page-number-wrap');
+        var info = wrap.querySelector('[data-pg=info]');
+        if(!pnWrap && !info){ return; }
+        if(pnWrap){
+          pnWrap.innerHTML='';
+          var maxBtns = 7;
+          var cur = s.current, totalPages=s.pages;
+          var start = Math.max(1, cur - Math.floor(maxBtns/2));
+          var end = Math.min(totalPages, start+maxBtns-1);
+          start = Math.max(1, end-maxBtns+1);
+          for(var p=start;p<=end;p++){
+            var bb = document.createElement('button');
+            bb.className='btn btn-sm';
+            bb.setAttribute('data-pg','num');
+            bb.style.borderRadius='999px';
+            if(p===cur){ bb.style.background='linear-gradient(135deg,var(--primary,#0F4C81),var(--primary-dark,#0a3a63))'; bb.style.color='#fff'; bb.style.borderColor='var(--gold,#D4AF37)'; }
+            bb.textContent = String(p);
+            (function(pg){ bb.addEventListener('click', function(){ var st=_ensurePgState(container); st.current=pg; _updatePgUI(container); }); })(p);
+            pnWrap.appendChild(bb);
+          }
+        }
+        var info = wrap.querySelector('[data-pg=info]');
+        if(info){ info.textContent = '共 '+s.total+' 条 / 第 '+s.current+' 页 / 共 '+s.pages+' 页'; }
+        var firstB = wrap.querySelector('[data-pg=first]'), prevB=wrap.querySelector('[data-pg=prev]'), nxtB=wrap.querySelector('[data-pg=next]'), lastB=wrap.querySelector('[data-pg=last]');
+        var atFirst = s.current<=1, atLast=s.current>=s.pages;
+        [firstB,prevB].forEach(function(b){ if(b){ b.disabled=atFirst; b.style.opacity=atFirst?'0.45':'1'; b.style.cursor=atFirst?'not-allowed':'pointer'; } });
+        [nxtB,lastB].forEach(function(b){ if(b){ b.disabled=atLast; b.style.opacity=atLast?'0.45':'1'; b.style.cursor=atLast?'not-allowed':'pointer'; } });
+      }catch(e){ console.warn('[SuperPatch 4/6 updateUI err]',e); }
+    }
+    function _scanPagination(){
+      try{
+        var all = document.querySelectorAll('div,nav,section,span');
+        all.forEach(function(el){ if(el.hasAttribute('data-pg-built')) return; if(_isPgContainer(el)) _buildPg(el); });
+        var sty = document.createElement('style');
+        if(!document.getElementById('_pgPatchCSS20260730')){
+          sty.id='_pgPatchCSS20260730';
+          sty.textContent='.pagination-toolbar button{border-radius:999px !important;}';
+          document.head.appendChild(sty);
+        }
+      }catch(e){ console.warn('[SuperPatch 4/6 scan err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', _scanPagination, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _scanPagination(); }
+    else{ setTimeout(_scanPagination, 100); }
+    if(typeof MutationObserver!=='undefined'){
+      var mo2 = new MutationObserver(function(){ clearTimeout(window.__pgTimer); window.__pgTimer=setTimeout(_scanPagination, 200); });
+      mo2.observe(document.body, {childList:true, subtree:true});
+    }
+    console.info('[SuperPatch 4/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 4/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 5/6] 左侧栏 9 大主菜单 + 当前页高亮 初始化...');
+    var main9 = [
+      {title:'首页', href:'index.html', icon:'🏠'},
+      {title:'订单预约与客户管理', href:'orders.html', icon:'📋'},
+      {title:'剧目管理中心', href:'operas.html', icon:'🎭'},
+      {title:'演出档期排班', href:'schedule.html', icon:'📅'},
+      {title:'演员阵容与派工', href:'cast-sheet.html', icon:'👥'},
+      {title:'内容与资讯管理', href:'content.html', icon:'📰'},
+      {title:'财务与收款管理', href:'finance.html', icon:'💰'},
+      {title:'员工与人事档案', href:'staff.html', icon:'👤'},
+      {title:'系统设置', href:'system.html', icon:'⚙️'}
+    ];
+    function _getSidebarParent(){
+      return document.getElementById('adminSidebar')||document.querySelector('.admin-sidebar')||document.querySelector('.admin-sidebar-wrap')||document.querySelector('.admin-sidebar-menu-wrap')||document.querySelector('nav .admin-menu-item, nav .admin-sidebar-menu, nav')||document.querySelector('nav');
+    }
+    function _getMenuContainer(){
+      return document.querySelector('.admin-sidebar-menu')||document.querySelector('#adminSidebar nav')||document.querySelector('#adminSidebar');
+    }
+    function _standardizeMenu(){
+      try{
+        var sidebar = _getSidebarParent();
+        if(!sidebar) return;
+        var deployLinks = sidebar.querySelectorAll('a[href*="../deploy.html"],a[href*="deploy.html"]');
+        deployLinks.forEach(function(a){ try{ a.classList.add('csp-hide'); }catch(_){} });
+        var menuBox = _getMenuContainer();
+        if(!menuBox) return;
+        var existing = {};
+        menuBox.querySelectorAll('a.admin-menu-item,a[href$=".html"]').forEach(function(a){
+          var h = (a.getAttribute('href')||'').split('/').pop().toLowerCase();
+          if(h) existing[h]=a;
+        });
+        var firstGroup = menuBox.querySelector('.admin-menu-group');
+        var insertTarget = firstGroup||menuBox;
+        var logoutAnchor = null;
+        try{
+          var tmp = sidebar.querySelector('#logoutBtnSidebar, a[href*="logout"], a:contains(退出)');
+          if(tmp){
+            logoutAnchor = tmp;
+            while(logoutAnchor&&logoutAnchor.parentNode!==menuBox) logoutAnchor = logoutAnchor.parentNode;
+          }
+        }catch(_){ logoutAnchor=null; }
+        var lastInGroup = insertTarget.lastElementChild;
+        main9.forEach(function(m){
+          var href = m.href.toLowerCase();
+          if(existing[href]) return;
+          var a = document.createElement('a');
+          a.href = m.href;
+          a.className = 'admin-menu-item';
+          a.innerHTML = '<span class="menu-icon">'+m.icon+'</span><span>'+m.title+'</span>';
+          if(logoutAnchor&&logoutAnchor.parentNode===insertTarget){
+            insertTarget.insertBefore(a, logoutAnchor);
+          }else if(lastInGroup){
+            insertTarget.insertBefore(a, lastInGroup.nextSibling||null);
+          }else{
+            insertTarget.appendChild(a);
+          }
+        });
+        var curPage = (location.pathname||'').split('/').pop().toLowerCase();
+        if(!curPage){ try{ curPage = (location.href||'').split('/').pop().split('?')[0].toLowerCase(); }catch(_){} }
+        menuBox.querySelectorAll('a.admin-menu-item,a[href$=".html"]').forEach(function(a){
+          var href = (a.getAttribute('href')||'').split('/').pop().toLowerCase();
+          a.classList.remove('active');
+          try{ a.style.background=''; a.style.color=''; a.style.border=''; a.style.borderRadius=''; a.style.margin=''; }catch(_){}
+          if(href===curPage){
+            a.classList.add('active');
+            try{
+              var cs = getComputedStyle(a);
+              var hasActiveStyle = (cs.backgroundImage&&cs.backgroundImage.indexOf('gradient')>=0)||(cs.color&&cs.color!=='');
+              if(!hasActiveStyle||cs.background==='rgba(0,0,0,0)'){
+                a.style.background='linear-gradient(135deg, rgba(212,175,55,0.25), rgba(139,0,0,0.18))';
+                a.style.color='#fef3c7';
+                a.style.border='1px solid rgba(212,175,55,0.45)';
+                a.style.borderRadius='8px';
+                a.style.margin='2px 0';
+              }
+            }catch(_){}
+          }
+        });
+      }catch(e){ console.warn('[SuperPatch 5/6 standardize err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', _standardizeMenu, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _standardizeMenu(); }
+    else{ setTimeout(_standardizeMenu, 50); }
+    console.info('[SuperPatch 5/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 5/6 init err]',e); }
+
+  
+  // 功能按钮绑定（上传/新建/导出）
+  try{
+    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
+    __bindBtn('openFinanceUploadBtn', function(){ /* P1修复:假成功已移除——原为临时input+假"已选择"toast，改为打开真实上传表单的文件选择框 */ var inp=document.getElementById("financeAttachFiles"); if(inp){ inp.click(); } else { __T("未找到凭证文件选择框","error"); } });
+  }catch(_e){ console.warn("[upload-bind err]",_e); }
+
+try{
+    console.info('[SuperPatch 6/6] 死按钮兜底 + toast通道 初始化...');
+    function _hasAction(btn){
+      if(!btn) return false;
+      // 仅onclick算真正绑定；data-action只是业务标识，不算；href需为真实跳转链接
+      var oc = btn.getAttribute('onclick');
+      var hr = btn.getAttribute('href');
+      if(oc && oc.length > 3) return true;
+      if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(btn.__deadBtnChecked) return true;
+      if(btn.__superPatchBound) return true;
+      return false;
+    }
+    function _txtMatch(txt, list){
+      for(var i=0;i<list.length;i++){ if(txt.indexOf(list[i])>=0) return true; }
+      return false;
+    }
+    document.addEventListener('click', function(e){
+      try{
+        // 修复：选择器扩大，包含a标签和[data-action]标识元素
+        var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
+        if(!btn) return;
+                // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
+        if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
+        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
+        if(_hasAction(btn)) return;
+        if(btn.__superPatchBound) return;
+        btn.__superPatchBound = 1;
+        var txt = (btn.textContent||'').trim();
+        var tt = 'other';
+        // 修复：扩充业务分支，覆盖派工/审核/通过/驳回/签约/排期/确认接单等
+        if(_txtMatch(txt,['保存','提交','确认','通过','签约','签订','确认接单','核销'])) tt='save';
+        else if(_txtMatch(txt,['删除','作废','禁用','取消','驳回'])) tt='delete';
+        else if(_txtMatch(txt,['编辑','查看','详情','预览'])) tt='view';
+        else if(_txtMatch(txt,['导出','打印'])) tt='export';
+        else if(_txtMatch(txt,['排期','排班','安排','派工','调度'])) tt='schedule';
+        else if(_txtMatch(txt,['审核','审批'])) tt='audit';
+        else if(_txtMatch(txt,['合同'])) tt='contract';
+        else if(_txtMatch(txt,['新增','新建','添加'])) tt='add';
+        if(!__acqH9(btn, tt)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var tr = btn.closest ? btn.closest('tr') : null;
+        var trKey = '';
+        if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
+        __spT0 = Date.now();
+        if(tt==='save'){
+          /* P1修复:假成功已移除——无真实保存实现，诚实提示 */
+          __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
+          console.warn('[P1] 未接线按钮:', txt||'保存');
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='delete'){
+          /* P1修复:假成功已移除——原分支假确认框+假执行toast，改为诚实提示 */
+          __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey});
+          console.warn('[P1] 未接线按钮:', txt||'删除');
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='view'){
+          /* P1修复:假成功已移除——无真实查看实现，诚实提示 */
+          __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
+          console.warn('[P1] 未接线按钮:', txt||'查看');
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='export'){
+          /* P1修复:假成功已移除——无真实导出实现，诚实提示 */
+          __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
+          console.warn('[P1] 未接线按钮:', txt||'导出');
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='schedule'){
+          /* P1修复:假成功已移除——无真实排期实现，诚实提示 */
+          __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
+          console.warn('[P1] 未接线按钮:', txt||'排期');
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='audit'){
+          /* P1修复:假成功已移除——无真实审核实现，诚实提示 */
+          __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
+          console.warn('[P1] 未接线按钮:', txt||'审核');
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='contract'){
+          /* P1修复:假成功已移除——无真实合同实现，诚实提示 */
+          __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
+          console.warn('[P1] 未接线按钮:', txt||'合同');
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='add'){
+          /* P1修复:假成功已移除——无真实新增实现，诚实提示 */
+          __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
+          console.warn('[P1] 未接线按钮:', txt||'新增');
+          __toastH9('该功能暂未接入后端','warning');
+        }else{
+          /* P1修复:假成功已移除——未分类死按钮统一诚实提示 */
+          __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
+          console.warn('[P1] 未接线按钮:', txt);
+          __toastH9('该功能暂未接入后端','warning');
+        }
+        return false;
+      }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
+    }, true);
+    console.info('[SuperPatch 6/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 6/6 init err]',e); }
+
+  console.info('['+PATCH_ID+'] 6合1超级补丁全部加载完毕 ✓');
+})();
+
+} /* end of 防重复注入保护 if */
+
+/* ===== finance.html inline block (run 3, #4/7) ===== */
+/* ========== 🔽 下拉菜单 Click 切换（兼容移动端） ========== */
+(function(){
+  if(window.__DD_CLICK_INJECTED__) return;
+  window.__DD_CLICK_INJECTED__ = true;
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('.action-dropdown-btn') : null;
+    var menu = e.target.closest ? e.target.closest('.action-dropdown-menu') : null;
+    // 关闭所有下拉菜单
+    document.querySelectorAll('.action-dropdown-menu').forEach(function(m){
+      if(m !== menu) m.style.display = 'none';
+    });
+    // 切换当前下拉菜单
+    if(btn){
+      var dd = btn.closest('.action-dropdown');
+      if(dd){
+        var m = dd.querySelector('.action-dropdown-menu');
+        if(m){
+          e.preventDefault();
+          e.stopPropagation();
+          m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+        }
+      }
+    }
+  });
+})();
+
+/* ===== finance.html inline block (run 3, #5/7) ===== */
+/* ========== 🔒 通用 __closeAnyModal：关闭所有弹窗/遮罩 ========== */
+(function(){
+  if(window.__closeAnyModal) return;
+  window.__closeAnyModal = function(){
+    try{
+      var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], .modal-overlay-root, [data-overlay]');
+      overlays.forEach(function(o){
+        try{ o.classList.remove('active','show','modal-overlay-show'); o.classList.add('s-overlay-hide','modal-overlay-hide','csp-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
+      });
+      var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, .generic-modal-root, [data-modal], [role="dialog"]');
+      modals.forEach(function(m){
+        try{ m.classList.remove('active','show','modal-show'); m.classList.add('s-modal-hide','modal-wrap-hide','csp-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
+      });
+    try{ document.body.classList.remove('body-modal-locked','modal-open','nav-locked'); }catch(_b){}
+    }catch(err){ console.warn('[__closeAnyModal] err:', err); }
+  };
+  // ESC 键关闭弹窗
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      var fns = ['closeAddModal','closeEditModal','closeDispatchModal','closeOrderViewModal','closeDeleteConfirm'];
+      for(var i=0;i<fns.length;i++){ try{ if(typeof window[fns[i]]==='function') window[fns[i]](); }catch(_){} }
+      window.__closeAnyModal();
+    }
+  });
+})();
+
+/* ===== finance.html inline block (run 3, #6/7) ===== */
+/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+(function(){
+  function __markBound(){
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
+})();
+
+/* ===== finance.html inline block (run 3, #7/7) ===== */
+/* ===== __finApi: 财务收支台账真实 CRUD ===== */
+window.__finApi = (function(){
+  var API = window.QAXQJT_API;
+  var T = function(m,t){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(m,t||'info',3000); }catch(_){} };
+
+  function _tbody(){ return document.getElementById('finLedgerTbody') || document.querySelectorAll('.table-wrapper tbody')[0] || null; }
+  // 弹窗按钮接线：window 捕获阶段早于页面 SuperPatch 3/6（其在 document 捕获拦截含“取消”文本的点击，
+  // 仅加隐藏类、不移除节点），在此抢先处理，确保取消真实移除节点、保存真实提交，避免重复弹窗 id 冲突。
+  function _wireModal(m, cancelSel, saveSel, onSave){
+    function handler(ev){
+      if(!m.isConnected){ window.removeEventListener('click', handler, true); return; }
+      var t = ev.target;
+      var node = (t && t.closest) ? t.closest(cancelSel+','+saveSel) : null;
+      if(!node || !m.contains(node)) return;
+      ev.preventDefault(); ev.stopPropagation();
+      try{ ev.stopImmediatePropagation(); }catch(_){}
+      if(node.matches(saveSel)){ onSave(); }
+      else { m.remove(); window.removeEventListener('click', handler, true); }
+    }
+    window.addEventListener('click', handler, true);
+    /* v20260929fix：点击遮罩空白处关闭弹窗（target 为根遮罩本身，不影响内容区点击），与全站弹窗交互一致 */
+    m.addEventListener('click', function(ev){ if(ev.target === m){ m.remove(); try{ window.removeEventListener(handler, true); }catch(_){} } });
+  }
+  function _esc(s){ return (s==null?'':String(s)).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});}
+  function _fmtMoney(n){ var v = Number(n)||0; return (v>=0?'+':'')+'¥'+v.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function _fmtDate(d){ if(!d) return '—'; try{ return new Date(d).toISOString().slice(0,10); }catch(_){ return '—'; } }
+  function _statusBadge(s){
+    var map={draft:'draft',checked:'checked',reconciled:'reconciled',void:'void'};
+    var txt={draft:'草稿',checked:'已复核',reconciled:'已对账',void:'已作废'};
+    return '<span class="status-badge '+(map[s]||'draft')+'">● '+_esc(txt[s]||s)+'</span>';
+  }
+
+  async function load(){
+    var tb = _tbody(); if(!tb) return;
+    try{
+      var q = { page:1, pageSize:200 };
+      var inputs = document.querySelectorAll('.admin-content input[type=date]');
+      if(inputs[0] && inputs[0].value) q.fromDate = inputs[0].value;
+      if(inputs[1] && inputs[1].value) q.toDate = inputs[1].value;
+      var rows = await API.get((QAXQJT_PATHS.FIN_LEDGER || '/v1/fin/ledger'), { query:q });
+      rows = rows || [];
+      tb.innerHTML = '';
+      if(!rows.length){
+        tb.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--text-light);">暂无财务记录</td></tr>';
+        _updateStats([]);
+        return;
+      }
+      var html = rows.map(function(r){
+        var isIncome = Number(r.creditAmount)>0;
+        var amt = isIncome?r.creditAmount:-r.debitAmount;
+        return '<tr data-id="'+_esc(r.id)+'">'
+          + '<td style="text-align:center;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>'
+          + '<td class="stat-voucher-id">'+_esc(r.voucherNo||'—')+'</td>'
+          + '<td>'+_fmtDate(r.voucherDate)+'</td>'
+          + '<td>'+_esc(r.summary||'—')+'</td>'
+          + '<td><span class="type-badge '+(isIncome?'income':'expense')+'">● '+(isIncome?'收入':'支出')+'</span></td>'
+          + '<td>'+_esc(r.voucherCategory||'—')+'</td>'
+          + '<td>'+(r.orderId?'<span style="color:var(--primary);font-family:monospace;">'+_esc(r.orderId)+'</span>':'—')+'</td>'
+          + '<td class="'+(isIncome?'amount-income':'amount-expense')+'">'+_fmtMoney(amt)+'</td>'
+          + '<td>'+_esc(r.offsetAccount||'—')+'</td>'
+          + '<td>'+_statusBadge(r.status)+'</td>'
+          + '<td>'+_esc(r.createdBy||'—')+'</td>'
+          + '<td><div class="admin-table-actions">'
+          + '<button class="btn btn-secondary btn-sm __fin-view" title="查看">👁</button>'
+          + '<button class="btn btn-primary btn-sm __fin-edit" title="编辑">✏️</button>'
+          + '<button class="btn btn-sm __fin-check" style="color:#28a745;padding:6px 10px;" title="复核">✓</button>'
+          + '<button class="btn btn-sm __fin-del" style="color:#dc3545;padding:6px 10px;" title="删除">🗑</button>'
+          + '</div></td></tr>';
+      }).join('');
+      tb.innerHTML = html;
+      _bindRowActions();
+      _updateStats(rows);
+    }catch(e){ console.warn('[__finApi.load]',e); T('❌ 加载失败：'+(e.message||e),'error'); }
+  }
+
+  function _updateStats(rows){
+    var income = rows.reduce(function(s,r){ return s+(Number(r.creditAmount)||0); },0);
+    var expense = rows.reduce(function(s,r){ return s+(Number(r.debitAmount)||0); },0);
+    var v1 = document.querySelector('.finance-stat-card.income .fsc-value'); if(v1) v1.textContent = '¥'+income.toLocaleString('zh-CN',{minimumFractionDigits:2});
+    var v2 = document.querySelector('.finance-stat-card.expense .fsc-value'); if(v2) v2.textContent = '¥'+expense.toLocaleString('zh-CN',{minimumFractionDigits:2});
+  }
+
+  function _bindRowActions(){
+    var tb = _tbody(); if(!tb) return;
+    tb.querySelectorAll('tr').forEach(function(tr){
+      var id = tr.getAttribute('data-id'); if(!id) return;
+      tr.querySelectorAll('button').forEach(function(b){ b.__superPatchBound=1; b.__ts3Done=1; });
+      var edit = tr.querySelector('.__fin-edit'); if(edit) edit.onclick = function(){ openEdit(id); };
+      var del = tr.querySelector('.__fin-del'); if(del) del.onclick = function(){ remove(id); };
+      var view = tr.querySelector('.__fin-view'); if(view) view.onclick = function(){ openView(id); };
+      var check = tr.querySelector('.__fin-check'); if(check) check.onclick = function(){ doCheck(id); };
+    });
+  }
+
+  function openAdd(kind){ _openForm(null, kind||'income'); }
+  function openEdit(id){ API.get((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(id)).then(function(d){ _openForm(d, Number(d.creditAmount)>0?'income':'expense'); }).catch(function(){ T('❌ 加载详情失败','error'); }); }
+  function openView(id){ API.get((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(id)).then(function(d){ alert('凭证号：'+(d.voucherNo||'—')+'\n摘要：'+(d.summary||'—')+'\n收入：¥'+(d.creditAmount||0)+'\n支出：¥'+(d.debitAmount||0)+'\n状态：'+(d.status||'—')); }).catch(function(){ T('❌ 加载失败','error'); }); }
+
+  function _openForm(d, kind){
+    d = d||{};
+    var isIncome = kind==='income';
+    var __oldFin = document.querySelectorAll('#__finModal');
+    for(var __fi=0;__fi<__oldFin.length;__fi++){ __oldFin[__fi].remove(); }
+    var html = '<div id="__finModal" role="dialog" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
+      + '<div style="background:#fff;border-radius:12px;padding:24px;width:520px;max-width:92vw;max-height:88vh;overflow-y:auto;">'
+      + '<h3 style="margin:0 0 16px;color:var(--primary,#0F4C81);">'+(d.id?'编辑凭证':(isIncome?'新增收入':'新增支出'))+'</h3>'
+      + '<div style="display:grid;gap:12px;">'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">凭证日期</label><input id="__fin_date" type="date" class="form-control" value="'+(d.voucherDate?_fmtDate(d.voucherDate):new Date().toISOString().slice(0,10))+'"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">摘要 *</label><input id="__fin_summary" class="form-control" value="'+_esc(d.summary||'')+'"></div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">分类</label><input id="__fin_cat" class="form-control" placeholder="如：商演收入/人员工资" value="'+_esc(d.voucherCategory||'')+'"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">关联订单号</label><input id="__fin_order" class="form-control" value="'+_esc(d.orderId||'')+'"></div>'
+      + '</div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">金额(元) *</label><input id="__fin_amount" type="number" step="0.01" class="form-control" value="'+(isIncome?(d.creditAmount||''):(d.debitAmount||''))+'"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">支付方式</label><input id="__fin_pay" class="form-control" placeholder="如：现金/银行转账/微信" value="'+_esc(d.offsetAccount||'')+'"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">备注</label><textarea id="__fin_remark" class="form-control" rows="2">'+_esc(d.remark||'')+'</textarea></div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">'
+      + '<button id="__fin_cancel" data-modal-close="1" class="btn btn-secondary">取消</button>'
+      + '<button id="__fin_save" data-modal-act="save" class="btn btn-primary" style="background:var(--primary,#0F4C81);color:#fff;border:none;">保存</button>'
+      + '</div></div></div>';
+    var div=document.createElement('div'); div.innerHTML=html; document.body.appendChild(div.firstChild);
+    var m=document.getElementById('__finModal');
+    var cBtn=m.querySelector('#__fin_cancel'); var sBtn=m.querySelector('#__fin_save');
+    cBtn.__superPatchBound=1; cBtn.__ts3Done=1;
+    sBtn.__superPatchBound=1; sBtn.__ts3Done=1;
+    _wireModal(m, '#__fin_cancel', '#__fin_save', function(){ submit(d.id, isIncome); });
+  }
+
+  async function submit(id, isIncome){
+    var summary = document.getElementById('__fin_summary').value.trim();
+    if(!summary){ T('⚠️ 摘要必填','error'); return; }
+    var amount = Number(document.getElementById('__fin_amount').value);
+    if(!amount || amount<=0){ T('⚠️ 金额必须大于0','error'); return; }
+    var body = {
+      voucherDate: document.getElementById('__fin_date').value,
+      summary: summary
+    };
+    var v;
+    v = document.getElementById('__fin_cat').value.trim(); if(v) body.voucherCategory = v;
+    v = document.getElementById('__fin_order').value.trim(); if(v) body.orderId = v;
+    v = document.getElementById('__fin_pay').value.trim(); if(v) body.offsetAccount = v;
+    v = document.getElementById('__fin_remark').value.trim(); if(v) body.remark = v;
+    if(isIncome){ body.creditAmount = amount; body.debitAmount = 0; body.voucherType = 'receipt'; }
+    else { body.debitAmount = amount; body.creditAmount = 0; body.voucherType = 'payment'; }
+    try{
+      if(id){ await API.patch((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(id), body); T('✅ 凭证已更新','success'); }
+      else { await API.post((QAXQJT_PATHS.FIN_LEDGER || '/v1/fin/ledger'), body); T('✅ 凭证已创建','success'); }
+      document.getElementById('__finModal').remove();
+      await load();
+    }catch(e){ T('❌ 保存失败：'+(e.message||e),'error'); }
+  }
+
+  async function remove(id){
+    if(!confirm('确认删除该凭证？')) return;
+    try{ await API.del((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(id)); T('🗑 已删除','success'); await load(); }
+    catch(e){ T('❌ 删除失败：'+(e.message||e),'error'); }
+  }
+
+  async function doCheck(id){
+    try{ await API.patch((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(id), { status:'checked' }); T('✓ 已复核','success'); await load(); }
+    catch(e){ T('❌ 复核失败：'+(e.message||e),'error'); }
+  }
+
+  /* ===== 20260922 真实化：统计卡/月度图/年度汇总/项目账目 全部由真实台账+订单+排期生成 ===== */
+  function _finYM(d){ var m=String(d||"").match(/^(\d{4})-(\d{2})/); return m?m[1]+"-"+m[2]:""; }
+  function _finM0(n){ return "¥"+Number(n||0).toLocaleString("zh-CN"); }
+  function _finRows(d){ return Array.isArray(d)?d:((d&&d.items)||[]); }
+  function _finSet(sel,val){ var el=document.querySelector(sel); if(el) el.innerHTML=val; }
+  async function renderExtras(){
+    try{
+      var all=_finRows(await API.get((QAXQJT_PATHS.FIN_LEDGER || '/v1/fin/ledger'),{query:{page:1,pageSize:500}}));
+      var year=new Date().getFullYear();
+      var thisYM=year+"-"+String(new Date().getMonth()+1).padStart(2,"0");
+      var yIn=0,yOut=0,mIn=0,mOut=0,mInCnt=0,mOutCnt=0, monthly={};
+      all.forEach(function(r){
+        var ym=_finYM(r.voucherDate); if(!ym) return;
+        var c=Number(r.creditAmount)||0, d=Number(r.debitAmount)||0, cat=String(r.voucherCategory||"");
+        if(ym.indexOf(year+"-")===0){ yIn+=c; yOut+=d; }
+        if(ym===thisYM){ mIn+=c; mOut+=d; if(c>0)mInCnt++; if(d>0)mOutCnt++; }
+        if(!monthly[ym]) monthly[ym]={in:0,out:0,person:0,equip:0,other:0};
+        monthly[ym].in+=c; monthly[ym].out+=d;
+        if(d>0){ if(/工资|劳务|人员|薪酬/.test(cat)) monthly[ym].person+=d; else if(/道具|设备|服装|器材|乐器/.test(cat)) monthly[ym].equip+=d; else monthly[ym].other+=d; }
+      });
+      _finSet(".finance-stat-card.income .fsc-value", _finM0(yIn));
+      _finSet(".finance-stat-card.expense .fsc-value", _finM0(yOut));
+      _finSet(".finance-stat-card.month-income .fsc-value", _finM0(mIn));
+      _finSet(".finance-stat-card.month-income .fsc-sub", "当月 "+mInCnt+" 笔收入");
+      _finSet(".finance-stat-card.month-expense .fsc-value", _finM0(mOut));
+      _finSet(".finance-stat-card.month-expense .fsc-sub", "当月 "+mOutCnt+" 笔支出");
+      var mProfit=mIn-mOut, mRate=mIn>0?Math.round(mProfit/mIn*1000)/10:0;
+      _finSet(".finance-stat-card.profit .fsc-value", (mProfit<0?"-":"")+_finM0(Math.abs(mProfit)));
+      _finSet(".finance-stat-card.profit .fsc-sub", "利润率 <strong>"+mRate.toFixed(1)+"%</strong>");
+      var sch=_finRows(await API.get((QAXQJT_PATHS.SCHEDULES || '/v1/schedules'),{query:{page:1,pageSize:500}}).catch(function(){return [];}));
+      var shows={}; sch.forEach(function(s){ var ym=_finYM(s.date); if(ym) shows[ym]=(shows[ym]||0)+1; });
+      _renderFinMonthChart(monthly, year);
+      _renderFinSummary(monthly, shows, year);
+      var orders=_finRows(await API.get((QAXQJT_PATHS.ORDERS || '/v1/orders'),{query:{page:1,pageSize:500}}).catch(function(){return [];}));
+      _renderFinProjects(orders, all);
+      var pending=0, pendCnt=0;
+      orders.forEach(function(o){
+        if(["cancelled","refunded"].indexOf(o.status)>=0) return;
+        var total=Number(o.totalAmount!=null?o.totalAmount:o.finalAmount)||0, paid=Number(o.paidAmount)||0;
+        var rest=total-paid;
+        if(rest>0 && ["paid","completed"].indexOf(o.status)<0){ pending+=rest; pendCnt++; }
+      });
+      _finSet(".finance-stat-card.pending .fsc-value", _finM0(pending)+(pendCnt?' <span style="font-size:0.95rem;color:var(--text-light);">('+pendCnt+'笔)</span>':""));
+    }catch(e){ console.warn("[fin.renderExtras]",e); }
+  }
+  function _renderFinMonthChart(monthly, year){
+    var box=document.getElementById("finMonthChart"); if(!box) return;
+    var vals=[]; for(var i=1;i<=12;i++){ var m=monthly[year+"-"+String(i).padStart(2,"0")]; vals.push({in:m?m.in:0,out:m?m.out:0}); }
+    var max=1; vals.forEach(function(v){ if(v.in>max)max=v.in; if(v.out>max)max=v.out; });
+    box.innerHTML=vals.map(function(v,i){
+      var hi=Math.max(6,Math.round(v.in/max*100)), ho=Math.max(6,Math.round(v.out/max*100));
+      function lbl(n){ return n>=10000? "¥"+Math.round(n/1000)+"K" : (n? "¥"+Math.round(n) : "¥0"); }
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">'
+        +'<div style="display:flex;gap:3px;align-items:flex-end;height:220px;width:100%;justify-content:center;">'
+        +'<div class="chart-bar income" style="height:'+(v.in?hi:3)+'%;"><span class="chart-bar-value">'+lbl(v.in)+'</span></div>'
+        +'<div class="chart-bar expense" style="height:'+(v.out?ho:3)+'%;"><span class="chart-bar-value">'+lbl(v.out)+'</span></div>'
+        +'</div><div class="chart-month-label">'+(i+1)+'月</div></div>';
+    }).join("");
+  }
+  function _renderFinSummary(monthly, shows, year){
+    var tb=document.getElementById('finSummaryTbody') || document.querySelectorAll(".table-wrapper tbody")[1]; if(!tb) return;
+    var yms=Object.keys(monthly).filter(function(ym){ return ym.indexOf(year+"-")===0; }).sort();
+    if(!yms.length){ tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text-light);">本年暂无台账记录</td></tr>'; return; }
+    var T={in:0,out:0,person:0,equip:0,other:0,shows:0};
+    tb.innerHTML=yms.map(function(ym){
+      var m=monthly[ym], prof=m.in-m.out, rate=m.in>0?(Math.round(prof/m.in*1000)/10).toFixed(1):"0.0";
+      var sc=shows[ym]||0; T.in+=m.in; T.out+=m.out; T.person+=m.person; T.equip+=m.equip; T.other+=m.other; T.shows+=sc;
+      var mm=Number(ym.slice(5))+"月";
+      return '<tr><td style="font-weight:600;">'+mm+'</td>'
+        +'<td>'+(sc?sc+"场":"—")+'</td>'
+        +'<td style="color:#28a745;font-weight:600;">'+_finM0(m.in)+'</td>'
+        +'<td style="color:var(--primary);font-weight:600;">'+_finM0(m.out)+'</td>'
+        +'<td>'+(m.person?_finM0(m.person):"—")+'</td>'
+        +'<td>'+(m.equip?_finM0(m.equip):"—")+'</td>'
+        +'<td>'+(m.other?_finM0(m.other):"—")+'</td>'
+        +'<td style="color:'+(prof>=0?"#28a745":"#dc3545")+';font-weight:700;">'+(prof>=0?"+":"-")+_finM0(Math.abs(prof))+'</td>'
+        +'<td>'+rate+'%</td><td>—</td></tr>';
+    }).join("")
+    + '<tr style="background:linear-gradient(90deg, rgba(139,0,0,0.08), rgba(212,175,55,0.08));font-weight:700;">'
+    +'<td style="font-size:1rem;color:var(--primary-dark);">📊 '+year+'年度汇总</td>'
+    +'<td style="color:var(--primary-dark);">'+(T.shows?T.shows+"场":"—")+'</td>'
+    +'<td style="color:#28a745;font-size:1rem;">'+_finM0(T.in)+'</td>'
+    +'<td style="color:var(--primary);font-size:1rem;">'+_finM0(T.out)+'</td>'
+    +'<td>'+_finM0(T.person)+'</td><td>'+_finM0(T.equip)+'</td><td>'+_finM0(T.other)+'</td>'
+    +'<td style="color:'+(T.in-T.out>=0?"#28a745":"#dc3545")+';font-size:1rem;">'+(T.in-T.out>=0?"+":"-")+_finM0(Math.abs(T.in-T.out))+'</td>'
+    +'<td style="color:var(--gold-dark);">'+(T.in>0?(Math.round((T.in-T.out)/T.in*1000)/10).toFixed(1):"0.0")+'%</td>'
+    +'<td><span class="badge badge-info">真实台账</span></td></tr>';
+    try{ if(window.QinPagination&&typeof QinPagination.init==="function") QinPagination.init(); }catch(_){}
+  }
+  var _FIN_ST={draft:["badge-secondary","草稿"],confirmed:["badge-info","已确认"],partial_paid:["badge-warning","部分付款"],paid:["badge-success","已付款"],performance:["badge-warning","演出中"],completed:["badge-success","已完成"],cancelled:["badge-danger","已取消"],refunded:["badge-danger","已退款"]};
+  function _renderFinProjects(orders, ledger){
+    var box=document.getElementById("finProjectBox"); if(!box) return;
+    var cnt=document.getElementById("finProjCount");
+    if(cnt) cnt.textContent=year0()+"年度 · 共"+orders.length+"个订单";
+    if(!orders.length){ box.innerHTML='<div style="padding:40px 10px;text-align:center;color:var(--text-light);">📭 暂无订单项目（订单创建并关联收支后在此展示项目账目）</div>'; return; }
+    box.style.textAlign="left"; box.style.padding="0";
+    box.innerHTML=orders.slice(0,50).map(function(o){
+      var rel=ledger.filter(function(r){ return r.orderId && (r.orderId===o.id || r.orderId===o.orderNo); });
+      var inc=rel.reduce(function(s,r){return s+(Number(r.creditAmount)||0);},0);
+      var exp=rel.reduce(function(s,r){return s+(Number(r.debitAmount)||0);},0);
+      var total=Number(o.totalAmount!=null?o.totalAmount:o.finalAmount)||0;
+      var paid=Number(o.paidAmount)||0;
+      var st=_FIN_ST[o.status]||["badge-secondary",_esc(o.status||"草稿")];
+      var no=o.orderNo||o.id||"—";
+      var who=_esc(o.customerName||o.organization||"未填写客户");
+      var dt=o.performanceStartDate?String(o.performanceStartDate).slice(0,10):"日期待定";
+      var plays=_esc(o.playTitles||o.orderType||"演出");
+      var prof=inc-exp||(total?paid:0);
+      function row(l,v,cls){ return '<div class="pac-list-item"><span class="label">'+l+'</span><span class="value '+(cls||"")+'">'+v+'</span></div>'; }
+      return '<div class="project-account-card"><div class="pac-header"><div class="pac-order-info">'
+        +'<h4>订单 '+_esc(no)+' · '+plays+'</h4><div class="pac-order-meta">'
+        +'<span>👤 客户：<strong>'+who+'</strong></span>'
+        +'<span>📅 演出日期：<strong>'+dt+'</strong></span>'
+        +'<span>🎭 场次：<strong>'+(o.performanceCount||1)+'场</strong></span></div></div>'
+        +'<div><span class="badge '+st[0]+'">'+st[1]+'</span></div></div><div class="pac-body">'
+        +'<div class="pac-income"><div class="pac-section-title">📈 项目收入（台账）</div>'
+        +row("订单金额",_finM0(total))+row("已收/台账收入",_finM0(inc||paid),"")+row("待收",_finM0(Math.max(total-paid,0)),"")
+        +'<div class="pac-total-row"><span>收入合计</span><span style="color:#28a745;">'+_finM0(inc||total)+'</span></div></div>'
+        +'<div class="pac-expense"><div class="pac-section-title">📉 项目支出（台账）</div>'
+        +(exp? row("关联支出合计",_finM0(exp)) : '<div class="pac-list-item"><span class="label" style="color:var(--text-light);">暂无关联支出凭证</span></div>')
+        +'<div class="pac-total-row"><span>支出合计</span><span style="color:var(--primary);">'+_finM0(exp)+'</span></div></div>'
+        +'<div class="pac-profit"><div class="pac-section-title">🎯 项目盈亏</div>'
+        +'<div class="profit-amount '+(prof>=0?"positive":"negative")+'">'+(prof>=0?"+":"-")+_finM0(Math.abs(prof))+'</div>'
+        +'<div class="pac-profit-info"><div style="margin-bottom:6px;">利润率：<strong style="color:'+(prof>=0?"#28a745":"#dc3545")+';">'+((inc||total)>0?(Math.round(prof/(inc||total)*1000)/10).toFixed(1):"0.0")+'%</strong></div></div></div>'
+        +'</div></div>';
+    }).join("");
+  }
+  function year0(){ return new Date().getFullYear(); }
+
+  /* ===== 20260925：月度对账弹窗 + 年度财务汇总 Excel（真实台账/订单/排期） ===== */
+  var _FIN_VTT={receipt:'收款',payment:'付款'};
+  var _FIN_VST={draft:'草稿',checked:'已复核',reconciled:'已对账',void:'已作废'};
+  var _FIN_OST={draft:'草稿',confirmed:'已确认',partial_paid:'部分付款',paid:'已付款',performance:'演出中',completed:'已完成',cancelled:'已取消',refunded:'已退款'};
+  function _finPd(v){ if(!v) return null; var d=new Date(v); if(!isNaN(d.getTime())) return d; var m=String(v).match(/^(\d{4})-(\d{2})(?:-(\d{2}))?/); return m?new Date(+m[1],+m[2]-1,+(m[3]||1)):null; }
+  function _finD2(d){ return d? (d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')) :''; }
+  function _finN2(n){ return Math.round(Number(n||0)*100)/100; }
+  function _finMF(n){ return '¥'+Number(_finN2(n)).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  // 聚合指定年度：12个月桶 + 年度合计 + 订单待收
+  async function _finGather(year){
+    var rs=await Promise.all([
+      API.get((QAXQJT_PATHS.FIN_LEDGER || '/v1/fin/ledger'),{query:{page:1,pageSize:500}}).then(_finRows),
+      API.get((QAXQJT_PATHS.ORDERS || '/v1/orders'),{query:{page:1,pageSize:500}}).then(_finRows).catch(function(){return [];}),
+      API.get((QAXQJT_PATHS.SCHEDULES || '/v1/schedules'),{query:{page:1,pageSize:500}}).then(_finRows).catch(function(){return [];})
+    ]);
+    var all=rs[0], orders=rs[1], sch=rs[2], months=[];
+    for(var i=0;i<12;i++){ months.push({label:(i+1)+'月',in:0,out:0,rCnt:0,pCnt:0,cnt:0,rec:0,shows:0}); }
+    var yLed=[];
+    all.forEach(function(r){
+      var d=_finPd(r.voucherDate); if(!d||d.getFullYear()!==year) return;
+      yLed.push({r:r,d:d});
+      var b=months[d.getMonth()], c=Number(r.creditAmount)||0, e=Number(r.debitAmount)||0;
+      b.cnt++; b.in+=c; b.out+=e; if(c>0)b.rCnt++; if(e>0)b.pCnt++; if(r.isReconciled)b.rec++;
+    });
+    yLed.sort(function(a,b){ return a.d.getTime()-b.d.getTime() || String(a.r.voucherNo).localeCompare(String(b.r.voucherNo)); });
+    sch.forEach(function(s){ var d=_finPd(s.date); if(d&&d.getFullYear()===year) months[d.getMonth()].shows++; });
+    var T={in:0,out:0,rCnt:0,pCnt:0,cnt:yLed.length,rec:0,shows:0};
+    months.forEach(function(b){ T.in+=b.in; T.out+=b.out; T.rCnt+=b.rCnt; T.pCnt+=b.pCnt; T.rec+=b.rec; T.shows+=b.shows; });
+    T.net=T.in-T.out;
+    var pending=0,pendCnt=0;
+    orders.forEach(function(o){
+      if(['cancelled','refunded'].indexOf(o.status)>=0) return;
+      var total=Number(o.totalAmount!=null?o.totalAmount:o.finalAmount)||0, paid=Number(o.paidAmount)||0, rest=_finN2(total-paid);
+      if(rest>0 && ['paid','completed'].indexOf(o.status)<0){ pending+=rest; pendCnt++; }
+    });
+    T.pending=_finN2(pending); T.pendCnt=pendCnt;
+    return {year:year, months:months, ledger:yLed, orders:orders, totals:T};
+  }
+  function _finReconStat(b){
+    if(!b.cnt) return {t:'无发生', st:{fill:{fgColor:{rgb:'FFF2F2F2'}},font:{color:{rgb:'FF8A8A8A'}},alignment:{horizontal:'center'}}};
+    if(b.rec===b.cnt) return {t:'已对账', st:{fill:{fgColor:{rgb:'FFE2EFDA'}},font:{color:{rgb:'FF1E6B2E'},bold:true},alignment:{horizontal:'center'}}};
+    if(b.rec>0) return {t:'部分 '+b.rec+'/'+b.cnt, st:{fill:{fgColor:{rgb:'FFFFF2CC'}},font:{color:{rgb:'FF7A5C00'},bold:true},alignment:{horizontal:'center'}}};
+    return {t:'未对账', st:{fill:{fgColor:{rgb:'FFFFC7CE'}},font:{color:{rgb:'FF9C0006'},bold:true},alignment:{horizontal:'center'}}};
+  }
+  function _finMarkBtn(el){ if(!el)return; ['__superPatchBound','__ts3Done','__bindDone','__deadBtnChecked'].forEach(function(k){ try{el[k]=1;}catch(_){} }); }
+
+  /* ---- 月度对账弹窗 ---- */
+  async function openMonthlyRecon(){
+    var year=new Date().getFullYear();
+    var olds=document.querySelectorAll('#__frModal'); for(var i=0;i<olds.length;i++) olds[i].remove();
+    var yOpts='';
+    for(var y=year-1;y<=year+1;y++){ yOpts+='<option value="'+y+'"'+(y===year?' selected':'')+'>'+y+'年度</option>'; }
+    var html='<div id="__frModal" role="dialog" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
+      +'<div style="background:#fff;border-radius:12px;padding:22px 24px;width:980px;max-width:95vw;max-height:90vh;overflow-y:auto;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">'
+      +'<h3 style="margin:0;color:#0F4C81;">📊 月度对账</h3>'
+      +'<div style="display:flex;gap:8px;align-items:center;">'
+      +'<select id="__fr_year" class="form-control" style="width:auto;padding:6px 10px;">'+yOpts+'</select>'
+      +'<button id="__fr_export" class="btn" style="background:#1e7a34;color:#fff;border:none;padding:7px 14px;">📥 导出年度Excel</button>'
+      +'<button id="__fr_close" class="btn btn-secondary">关闭</button>'
+      +'</div></div>'
+      +'<div id="__fr_head" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;"></div>'
+      +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.86rem;min-width:760px;">'
+      +'<thead><tr style="background:#0F4C81;color:#fff;">'
+      +['月份','凭证笔数','收款笔数','付款笔数','收入合计','支出合计','净额','已对账','对账状态'].map(function(h){return '<th style="padding:9px 8px;text-align:center;white-space:nowrap;">'+h+'</th>';}).join('')
+      +'</tr></thead><tbody id="__fr_body"><tr><td colspan="9" style="text-align:center;padding:28px;color:#888;">正在汇总真实台账数据…</td></tr></tbody>'
+      +'<tfoot id="__fr_foot"></tfoot></table></div>'
+      +'<div style="margin-top:10px;font-size:0.78rem;color:#888;">说明：数据来自财务台账（/v1/fin/ledger）+ 订单 + 演出排期；"已对账"按凭证核销标记统计，未核销凭证请在流水列表中核对后核销。</div>'
+      +'</div></div>';
+    var wrap=document.createElement('div'); wrap.innerHTML=html; document.body.appendChild(wrap.firstChild);
+    var m=document.getElementById('__frModal');
+    var close=document.getElementById('__fr_close'), exp=document.getElementById('__fr_export'), sel=document.getElementById('__fr_year');
+    _finMarkBtn(close); _finMarkBtn(exp);
+    close.onclick=function(){ m.remove(); };
+    exp.onclick=function(){ exportFinanceXlsx(Number(sel.value)); };
+    sel.onchange=function(){ _finFillRecon(Number(sel.value)); };
+    m.addEventListener('click',function(e){ if(e.target===m) m.remove(); });
+    _finFillRecon(year);
+  }
+  function _finHeadCard(title,val,sub,color,bg){
+    return '<div style="border:1px solid #e3e3e3;border-radius:10px;padding:10px 14px;background:'+(bg||'#fafafa')+';">'
+      +'<div style="font-size:0.78rem;color:#777;">'+title+'</div>'
+      +'<div style="font-size:1.25rem;font-weight:800;color:'+(color||'#222')+';margin:2px 0;">'+val+'</div>'
+      +'<div style="font-size:0.74rem;color:#999;">'+(sub||'')+'</div></div>';
+  }
+  async function _finFillRecon(year){
+    var body=document.getElementById('__fr_body'), foot=document.getElementById('__fr_foot'), head=document.getElementById('__fr_head');
+    if(!body) return;
+    body.innerHTML='<tr><td colspan="9" style="text-align:center;padding:28px;color:#888;">正在汇总 '+year+' 年度真实台账…</td></tr>';
+    foot.innerHTML=''; head.innerHTML='';
+    var g; try{ g=await _finGather(year); }catch(e){ body.innerHTML='<tr><td colspan="9" style="text-align:center;padding:28px;color:#c00;">加载失败：'+_esc(e.message||e)+'</td></tr>'; return; }
+    var T=g.totals;
+    head.innerHTML=_finHeadCard('年度总收入',_finMF(T.in),T.rCnt+' 笔收款','#1e7a34','#f0fbf3')
+      +_finHeadCard('年度总支出',_finMF(T.out),T.pCnt+' 笔付款','#b3261e','#fdf3f2')
+      +_finHeadCard('年度净额',(T.net<0?'-':'')+_finMF(Math.abs(T.net)),'收入 − 支出',T.net>=0?'#1e7a34':'#b3261e',T.net>=0?'#f0fbf3':'#fdf3f2')
+      +_finHeadCard('订单待收',_finMF(T.pending),T.pendCnt+' 笔未结订单','#9a6b00','#fdf8e8');
+    body.innerHTML=g.months.map(function(b){
+      var net=b.in-b.out, st=_finReconStat(b);
+      function td(v,cls,style){ return '<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;'+(style||'')+'" class="'+(cls||'')+'">'+v+'</td>'; }
+      return '<tr>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;font-weight:700;text-align:center;">'+b.label+'</td>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">'+(b.cnt||'—')+'</td>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">'+(b.rCnt||'—')+'</td>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">'+(b.pCnt||'—')+'</td>'
+        +td(_finMF(b.in),'', b.in?'color:#1e7a34;font-weight:600;':'color:#aaa;')
+        +td(_finMF(b.out),'', b.out?'color:#b3261e;font-weight:600;':'color:#aaa;')
+        +td((net<0?'-':'')+_finMF(Math.abs(net)),'', 'font-weight:700;color:'+(net>=0?'#1e7a34':'#b3261e')+';')
+        +'<td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">'+(b.rec?b.rec+'/'+b.cnt:'—')+'</td>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;"><span style="display:inline-block;padding:3px 10px;border-radius:10px;font-size:0.78rem;white-space:nowrap;">'+st.t+'</span></td>'
+        +'</tr>';
+    }).join('');
+    // 状态徽标上色（span 无类名，按文字匹配不好处理，改为直接给最后一格 td 的 span 注入样式）
+    var rows=body.querySelectorAll('tr');
+    g.months.forEach(function(b,i){ var sp=rows[i]&&rows[i].querySelector('td:last-child span'); var st=_finReconStat(b); if(sp){ sp.style.cssText='display:inline-block;padding:3px 10px;border-radius:10px;font-size:0.78rem;white-space:nowrap;background:'+((st.st.fill&&st.st.fill.fgColor.rgb.replace(/^FF/,'#'))||'#f2f2f2')+';color:'+(st.st.font&&st.st.font.color.rgb.replace(/^FF/,'#')||'#888')+';'+(st.st.font&&st.st.font.bold?'font-weight:700;':''); } });
+    foot.innerHTML='<tr style="background:#eef3fa;font-weight:800;color:#0F4C81;">'
+      +'<td style="padding:9px;text-align:center;">年度合计</td><td style="padding:9px;text-align:center;">'+T.cnt+'</td>'
+      +'<td style="padding:9px;text-align:center;">'+T.rCnt+'</td><td style="padding:9px;text-align:center;">'+T.pCnt+'</td>'
+      +'<td style="padding:9px;text-align:right;color:#1e7a34;">'+_finMF(T.in)+'</td>'
+      +'<td style="padding:9px;text-align:right;color:#b3261e;">'+_finMF(T.out)+'</td>'
+      +'<td style="padding:9px;text-align:right;color:'+(T.net>=0?'#1e7a34':'#b3261e')+';">'+(T.net<0?'-':'')+_finMF(Math.abs(T.net))+'</td>'
+      +'<td style="padding:9px;text-align:center;">'+T.rec+'/'+T.cnt+'</td><td></td></tr>';
+  }
+
+  /* ---- 导出年度财务 Excel（3 个工作表：年度汇总 / 月度对账 / 流水明细） ---- */
+  async function exportFinanceXlsx(year){
+    year=year||new Date().getFullYear();
+    if(typeof XLSX==='undefined' || !XLSX.utils || typeof XLSX.write!=='function'){
+      T('⚠️ Excel 组件未加载，已改用 CSV 导出流水明细','warning',3500); _finExportCsv(year); return;
+    }
+    var g; try{ g=await _finGather(year); }catch(e){ T('❌ 数据加载失败：'+(e.message||e),'error'); return; }
+    var X=XLSX.utils, BD={top:{style:'thin',color:{rgb:'FFCCCCCC'}},bottom:{style:'thin',color:{rgb:'FFCCCCCC'}},left:{style:'thin',color:{rgb:'FFCCCCCC'}},right:{style:'thin',color:{rgb:'FFCCCCCC'}}};
+    function mk(o){ return Object.assign({border:BD,font:{sz:10}},o||{}); }
+    var S_TTL=mk({fill:{fgColor:{rgb:'FF0F4C81'}},font:{color:{rgb:'FFFFFFFF'},bold:true,sz:14},alignment:{horizontal:'center',vertical:'center'}});
+    var S_BAND=mk({fill:{fgColor:{rgb:'FFD9E2F3'}},font:{bold:true,color:{rgb:'FF0F4C81'},sz:11}});
+    var S_META=mk({font:{sz:9,color:{rgb:'FF777777'}}});
+    var S_LBL=mk({fill:{fgColor:{rgb:'FFF3E9DA'}},font:{bold:true,sz:10},alignment:{horizontal:'center'}});
+    var S_HEAD=mk({fill:{fgColor:{rgb:'FF0F4C81'}},font:{color:{rgb:'FFFFFFFF'},bold:true,sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true}});
+    var S_TOT=mk({fill:{fgColor:{rgb:'FFEEF3FA'}},font:{bold:true,sz:10}});
+    var S_CTR=mk({alignment:{horizontal:'center'}});
+    var S_IN=mk({font:{color:{rgb:'FF1E7A34'},bold:true},alignment:{horizontal:'right'}});
+    var S_OUT=mk({font:{color:{rgb:'FFB3261E'},bold:true},alignment:{horizontal:'right'}});
+    var S_MONEY=mk({alignment:{horizontal:'right'},numFmt:'#,##0.00'});
+    var S_NOTE=mk({font:{sz:9,color:{rgb:'FF999999'}}});
+    function money(n){ return {t:'n',v:_finN2(n),z:'#,##0.00'}; }
+    function paint(ws,aoa,sg,merges,cols){
+      ws=X.aoa_to_sheet(aoa);
+      for(var r=0;r<aoa.length;r++) for(var c=0;c<aoa[r].length;c++){
+        var addr=X.encode_cell?X.encode_cell({r:r,c:c}):String.fromCharCode(65+c)+(r+1);
+        if(ws[addr] && sg[r] && sg[r][c]) ws[addr].s=sg[r][c];
+      }
+      ws['!merges']=merges; ws['!cols']=cols; ws['!rows']=[{hpt:26}]; return ws;
+    }
+    var nowTxt=new Date().toLocaleString('zh-CN');
+
+    // —— Sheet1 年度汇总（7列 A-G） ——
+    var a1=[], s1=[];
+    a1.push(['秦安县秦剧团 '+year+'年度财务汇总','','','','','','']); s1.push([S_TTL,S_TTL,S_TTL,S_TTL,S_TTL,S_TTL,S_TTL]);
+    a1.push(['导出时间：'+nowTxt,'','','','','','']); s1.push([S_META,null,null,null,null,null,null]);
+    a1.push(['数据来源：财务台账 / 订单 / 演出排期（仅统计已录入凭证，未制单数据不在内）','','','','','','']); s1.push([S_NOTE,null,null,null,null,null,null]);
+    a1.push(['']); s1.push([null]);
+    a1.push(['一、年度总览','','','','','','']); s1.push([S_BAND,S_BAND,S_BAND,S_BAND,S_BAND,S_BAND,S_BAND]);
+    var TT=g.totals;
+    a1.push(['年度总收入',money(TT.in),'年度总支出',money(TT.out),'年度净额',money(TT.net),'']);
+    s1.push([S_LBL,S_MONEY,S_LBL,S_MONEY,S_LBL,mk({alignment:{horizontal:'right'},numFmt:'#,##0.00',font:{bold:true,color:{rgb:TT.net>=0?'FF1E7A34':'FFB3261E'}}}),null]);
+    a1.push(['收款笔数',TT.rCnt+' 笔','付款笔数',TT.pCnt+' 笔','订单待收',money(TT.pending),'（'+TT.pendCnt+' 笔未结订单）']);
+    s1.push([S_LBL,S_CTR,S_LBL,S_CTR,S_LBL,S_MONEY,S_NOTE]);
+    a1.push(['']); s1.push([null]);
+    a1.push(['二、月度收支汇总','','','','','','']); s1.push([S_BAND,S_BAND,S_BAND,S_BAND,S_BAND,S_BAND,S_BAND]);
+    a1.push(['月份','演出场次','收入(元)','支出(元)','净额(元)','收款笔数','付款笔数']); s1.push([S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD]);
+    g.months.forEach(function(b){
+      var net=b.in-b.out;
+      a1.push([b.label,b.shows||'',money(b.in),money(b.out),money(net),b.rCnt||'',b.pCnt||'']);
+      s1.push([S_CTR,S_CTR,b.in?S_IN:S_MONEY,b.out?S_OUT:S_MONEY,mk({alignment:{horizontal:'right'},numFmt:'#,##0.00',font:{bold:true,color:{rgb:net>=0?'FF1E7A34':'FFB3261E'}}}),S_CTR,S_CTR]);
+    });
+    a1.push(['年度合计',TT.shows||'',money(TT.in),money(TT.out),money(TT.net),TT.rCnt,TT.pCnt]);
+    s1.push([S_TOT,S_CTR,mk(Object.assign({},S_IN,{font:{bold:true,color:{rgb:'FF1E7A34'}}})),mk(Object.assign({},S_OUT,{font:{bold:true,color:{rgb:'FFB3261E'}}})),mk(Object.assign({},S_TOT,{alignment:{horizontal:'right'},numFmt:'#,##0.00',font:{bold:true,color:{rgb:TT.net>=0?'FF1E7A34':'FFB3261E'}}})),S_TOT,S_TOT]);
+    a1.push(['']); s1.push([null]);
+    a1.push(['三、订单应收明细','','','','','','']); s1.push([S_BAND,S_BAND,S_BAND,S_BAND,S_BAND,S_BAND,S_BAND]);
+    a1.push(['订单号','客户','演出日期','订单总额(元)','已收(元)','待收(元)','状态']); s1.push([S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD]);
+    var oCnt=0,oRest=0;
+    g.orders.filter(function(o){ return ['cancelled','refunded'].indexOf(o.status)<0 && (Number(o.totalAmount!=null?o.totalAmount:o.finalAmount)||0)>0; }).forEach(function(o){
+      var total=_finN2(o.totalAmount!=null?o.totalAmount:o.finalAmount), paid=_finN2(o.paidAmount), rest=Math.max(0,_finN2(total-paid));
+      oCnt++; oRest+=rest;
+      a1.push([o.orderNo||o.id,o.customerName||o.organization||'—',o.performanceStartDate?String(o.performanceStartDate).slice(0,10):'待定',money(total),money(paid),money(rest),_FIN_OST[o.status]||o.status||'草稿']);
+      s1.push([mk({}),mk({}),S_CTR,S_MONEY,S_MONEY,rest>0?mk(Object.assign({},S_MONEY,{font:{color:{rgb:'FF9A6B00'},bold:true}})):S_MONEY,S_CTR]);
+    });
+    if(!oCnt){ a1.push(['（本年度暂无订单）','','','','','','']); s1.push([S_NOTE,null,null,null,null,null,null]); }
+    else { a1.push(['待收合计','','','','',money(oRest),'']); s1.push([S_TOT,null,null,null,null,S_MONEY,null]); }
+    var ws1=paint({},a1,s1,
+      [{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}},{s:{r:2,c:0},e:{r:2,c:6}},
+       {s:{r:4,c:0},e:{r:4,c:6}},{s:{r:8,c:0},e:{r:8,c:6}},{s:{r:24,c:0},e:{r:24,c:6}}],
+      [{wch:22},{wch:14},{wch:13},{wch:13},{wch:13},{wch:13},{wch:12}]);
+
+    // —— Sheet2 月度对账（9列 A-I） ——
+    var a2=[], s2=[];
+    a2.push([year+'年度 月度对账表','','','','','','','','']); for(var k2=0;k2<9;k2++) (s2[0]=s2[0]||[]).push(S_TTL);
+    a2.push(['导出时间：'+nowTxt+'　｜　数据来源：财务台账','','','','','','','','']); s2.push([S_META,null,null,null,null,null,null,null,null]);
+    a2.push(['月份','凭证笔数','收款笔数','付款笔数','收入(元)','支出(元)','净额(元)','已对账笔数','对账状态']); s2.push([S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD]);
+    g.months.forEach(function(b){
+      var net=b.in-b.out, st=_finReconStat(b);
+      a2.push([b.label,b.cnt,b.rCnt,b.pCnt,money(b.in),money(b.out),money(net),b.rec?b.rec+'/'+b.cnt:'—',st.t]);
+      s2.push([S_CTR,S_CTR,S_CTR,S_CTR,b.in?S_IN:S_MONEY,b.out?S_OUT:S_MONEY,mk({alignment:{horizontal:'right'},numFmt:'#,##0.00',font:{bold:true,color:{rgb:net>=0?'FF1E7A34':'FFB3261E'}}}),S_CTR,mk(st.st)]);
+    });
+    a2.push(['年度合计',TT.cnt,TT.rCnt,TT.pCnt,money(TT.in),money(TT.out),money(TT.net),TT.rec+'/'+TT.cnt,TT.rec===TT.cnt&&TT.cnt?'全部已对账':(TT.rec?'部分对账':'未对账')]);
+    s2.push([S_TOT,S_TOT,S_TOT,S_TOT,mk(Object.assign({},S_IN,{font:{bold:true,color:{rgb:'FF1E7A34'}}})),mk(Object.assign({},S_OUT,{font:{bold:true,color:{rgb:'FFB3261E'}}})),mk(Object.assign({},S_TOT,{alignment:{horizontal:'right'},numFmt:'#,##0.00',font:{bold:true,color:{rgb:TT.net>=0?'FF1E7A34':'FFB3261E'}}})),S_TOT,mk({alignment:{horizontal:'center'},font:{bold:true,color:{rgb:'FF0F4C81'}}})]);
+    a2.push(['']); s2.push([null]);
+    a2.push(['说明：绿色=当月凭证全部已对账；黄色=部分对账（已对账/总笔数）；红色=未对账；灰色=当月无发生额。','','','','','','','','']); s2.push([S_NOTE,null,null,null,null,null,null,null,null]);
+    var ws2=paint({},a2,s2,
+      [{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}},{s:{r:17,c:0},e:{r:17,c:8}}],
+      [{wch:10},{wch:10},{wch:10},{wch:10},{wch:14},{wch:14},{wch:14},{wch:11},{wch:12}]);
+
+    // —— Sheet3 流水明细（11列 A-K，按时间正序） ——
+    var a3=[], s3=[];
+    a3.push([year+'年度 收支流水明细（全部凭证 · 按日期排序）','','','','','','','','','','']); for(var k3=0;k3<11;k3++) (s3[0]=s3[0]||[]).push(S_TTL);
+    a3.push(['导出时间：'+nowTxt+'　｜　共 '+g.ledger.length+' 笔凭证','','','','','','','','','','']); s3.push([S_META,null,null,null,null,null,null,null,null,null,null]);
+    a3.push(['日期','凭证号','类型','分类','摘要','关联订单','收入(元)','支出(元)','对方账户/方式','凭证状态','对账']); s3.push(Array(11).fill(S_HEAD));
+    var tIn=0,tOut=0;
+    g.ledger.forEach(function(it){
+      var r=it.r, c=Number(r.creditAmount)||0, e=Number(r.debitAmount)||0; tIn+=c; tOut+=e;
+      a3.push([_finD2(it.d),r.voucherNo||'—',_FIN_VTT[r.voucherType]||r.voucherType||'—',r.voucherCategory||'—',r.summary||'—',r.orderId||'—',
+        c?money(c):'',e?money(e):'',r.offsetAccount||'—',_FIN_VST[r.status]||r.status||'—',r.isReconciled?'已对账':'未对账']);
+      s3.push([S_CTR,mk({}),S_CTR,S_CTR,mk({}),mk({}),c?S_IN:'',e?S_OUT:'',mk({}),S_CTR,mk({alignment:{horizontal:'center'},font:{color:{rgb:r.isReconciled?'FF1E7A34':'FF9C0006'}}})]);
+    });
+    if(!g.ledger.length){ a3.push(['（本年度暂无台账凭证）','','','','','','','','','','']); s3.push([S_NOTE,null,null,null,null,null,null,null,null,null,null]); }
+    a3.push(['合计','','','','','',money(tIn),money(tOut),'净额 '+(tIn-tOut<0?'-':'')+_finMF(Math.abs(tIn-tOut)),'','']);
+    s3.push([S_TOT,null,null,null,null,null,mk(Object.assign({},S_IN,{font:{bold:true,color:{rgb:'FF1E7A34'}}})),mk(Object.assign({},S_OUT,{font:{bold:true,color:{rgb:'FFB3261E'}}})),mk({font:{bold:true,color:{rgb:'FF0F4C81'},alignment:{horizontal:'left'}}}),null,null]);
+    var ws3=paint({},a3,s3,
+      [{s:{r:0,c:0},e:{r:0,c:10}},{s:{r:1,c:0},e:{r:1,c:10}}],
+      [{wch:12},{wch:20},{wch:7},{wch:11},{wch:34},{wch:20},{wch:12},{wch:12},{wch:16},{wch:9},{wch:9}]);
+
+    var wb={ SheetNames:['年度汇总','月度对账','流水明细'], Sheets:{ '年度汇总':ws1, '月度对账':ws2, '流水明细':ws3 } };
+    try{
+      XLSX.writeFile(wb,'秦安秦剧团_财务年度汇总_'+year+'.xlsx',{cellStyles:true});
+      T('✅ 已导出 '+year+'年度财务汇总（年度汇总/月度对账/流水明细 3 个工作表）','success',3500);
+    }catch(err){ console.warn('[fin.export]',err); T('❌ Excel 生成失败，改用 CSV 导出','error',3500); _finExportCsv(year); }
+  }
+  // CSV 兜底：流水明细（BOM，Excel 直接打开不乱码）
+  async function _finExportCsv(year){
+    try{
+      var g=await _finGather(year);
+      var head=['日期','凭证号','类型','分类','摘要','关联订单','收入(元)','支出(元)','对方账户/方式','凭证状态','对账'];
+      var lines=[head.join(',')];
+      g.ledger.forEach(function(it){
+        var r=it.r,row=[_finD2(it.d),r.voucherNo||'',_FIN_VTT[r.voucherType]||'',r.voucherCategory||'',r.summary||'',r.orderId||'',Number(r.creditAmount)||'',Number(r.debitAmount)||'',r.offsetAccount||'',_FIN_VST[r.status]||r.status||'',r.isReconciled?'已对账':'未对账'];
+        lines.push(row.map(function(v){ v=String(v==null?'':v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }).join(','));
+      });
+      var blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+      var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='秦安秦剧团_财务流水明细_'+year+'.csv'; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },2000);
+    }catch(e){ T('❌ 导出失败：'+(e.message||e),'error'); }
+  }
+
+  function bind(){
+    var btns = document.querySelectorAll('.admin-page-actions .btn');
+    if(btns[0]){ btns[0].__superPatchBound=1; btns[0].onclick=function(){ openAdd('income'); }; }
+    if(btns[1]){ btns[1].__superPatchBound=1; btns[1].onclick=function(){ openAdd('expense'); }; }
+    if(btns[2]){ _finMarkBtn(btns[2]); btns[2].onclick=function(){ openMonthlyRecon(); }; }
+    if(btns[3]){ _finMarkBtn(btns[3]); btns[3].onclick=function(){ exportFinanceXlsx(); }; }
+    /* P1修复:批量核销无后端端点→诚实提示（台账状态机仅 draft/checked，无核销接口）；批量删除走真实 DELETE /v1/fin/ledger/:id */
+    if(btns[4]){ _finMarkBtn(btns[4]); btns[4].title='该功能暂未接入后端'; btns[4].onclick=function(){ T('该功能暂未接入后端：台账状态机仅支持 草稿/已复核 流转，暂无批量核销接口（如需批量复核请逐行点击 ✓）','warning',4500); }; }
+    if(btns[5]){ _finMarkBtn(btns[5]); btns[5].onclick=function(){ batchRemove(); }; }
+    var qBtn = document.querySelector('.btn-primary.btn-sm');
+    if(qBtn && qBtn.textContent.indexOf('查询')>=0){ qBtn.__superPatchBound=1; qBtn.onclick=function(){ load(); }; }
+  }
+
+  /* ===== P1修复:批量删除 真实接入 DELETE /v1/fin/ledger/:id（仅草稿可删，逐笔执行，成功后刷新列表） ===== */
+  async function batchRemove(){
+    var tb=_tbody(); if(!tb) return;
+    var ids=[];
+    tb.querySelectorAll('input.batch-row-check:checked').forEach(function(cb){
+      var tr=cb.closest('tr'); var id=tr?tr.getAttribute('data-id'):null; if(id) ids.push(id);
+    });
+    if(!ids.length){ T('⚠️ 请先在列表中勾选要删除的凭证','warning'); return; }
+    if(!confirm('确认删除选中的 '+ids.length+' 笔凭证？仅草稿状态凭证可删除（已复核/已对账将被服务端拒绝），操作不可撤销！')) return;
+    var okCnt=0, failCnt=0, lastErr='';
+    for(var i=0;i<ids.length;i++){
+      try{ await API.del((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(ids[i])); okCnt++; }
+      catch(e){ failCnt++; lastErr=(e&&(e.message||e))?String(e.message||e):'未知错误'; }
+    }
+    if(!failCnt){ T('🗑 已删除 '+okCnt+' 笔凭证','success'); }
+    else if(okCnt){ T('⚠️ 已删除 '+okCnt+' 笔，'+failCnt+' 笔失败：'+lastErr,'warning',4500); }
+    else { T('❌ 删除失败：'+lastErr,'error'); }
+    await load();
+  }
+
+  /* ===== P1修复:财务凭证上传 真实接入 POST /v1/upload（multipart 字段 file，返回 data:{url,...}，地址回显至 __finUploadResult） ===== */
+  async function finUploadSubmit(form){
+    var inp = form.querySelector('#financeAttachFiles');
+    if(!inp || !inp.files || !inp.files.length){ T('⚠️ 请先选择要上传的凭证票据文件','error'); return; }
+    var fs = Array.prototype.slice.call(inp.files, 0);
+    var okUrls = [], failNames = [];
+    T('⏳ 正在上传 '+fs.length+' 个凭证文件…','info');
+    for(var i=0;i<fs.length;i++){
+      var f = fs[i];
+      if(f.size > 10*1024*1024){ failNames.push(f.name+'（超过10MB）'); continue; }
+      try{
+        var fd = new FormData();
+        fd.append('file', f);
+        var d = await API.post((QAXQJT_PATHS.UPLOAD || '/v1/upload'), fd);
+        if(d && d.url) okUrls.push(d.url);
+        else failNames.push(f.name+'（返回异常）');
+      }catch(e){ failNames.push(f.name+'（'+((e&&e.message)||'上传失败')+'）'); console.warn('[fin.upload]', f.name, e); }
+    }
+    var box = document.getElementById('__finUploadResult');
+    if(box){
+      box.style.display='block';
+      if(okUrls.length){ box.textContent = '✅ 已上传 '+okUrls.length+'/'+fs.length+' 个文件，地址：'+okUrls.join(' ｜ ')+(failNames.length?('；失败：'+failNames.join('、')):''); }
+      else { box.textContent = '❌ 上传失败：'+failNames.join('、'); }
+    }
+    if(okUrls.length && !failNames.length){ T('✅ 已上传 '+okUrls.length+' 个凭证文件（地址已回显在表单下方）','success',4000); try{ inp.value=''; }catch(_){} }
+    else if(okUrls.length){ T('⚠️ 部分凭证上传成功：'+okUrls.length+' 成功 / '+failNames.length+' 失败','warning',4200); }
+    else { T('❌ 凭证上传失败：'+(failNames[0]||'请检查网络与登录状态'),'error',4200); }
+  }
+  window.__finUploadSubmit = finUploadSubmit;
+
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ bind(); load(); renderExtras(); }); }
+  else { bind(); load(); renderExtras(); }
+
+  return { load:load, openAdd:openAdd, openEdit:openEdit, submit:submit, remove:remove };
+})();
