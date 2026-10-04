@@ -65,7 +65,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>演出演员表配置 - 秦安县秦剧团文化演出管理系统</title>
-<link rel="stylesheet" href="../css/style.css?v=20260803">
+<link rel="stylesheet" href="../css/style.css?v=20260926p">
 <style>
 /* ============================================================
    FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -212,8 +212,8 @@ body[data-mode="preview"] .mobile-fab-bar{display:none !important;}
   body.__card_print_mode__ .print-header,
   body.__card_print_mode__ .print-footer,
   body.__card_print_mode__ .cast-opera-card:not(.__card_active__){display:none !important;}
-  body.__card_print_mode__ @page {size:A4 landscape;margin:10mm 2mm 10mm 2mm;}
-  body.__card_print_mode__{background:#fff;}
+  @page card-landscape {size:A4 landscape;margin:10mm 2mm 10mm 2mm;}
+  body.__card_print_mode__{page:card-landscape;background:#fff;}
   body.__card_print_mode__ .cast-page-wrap{padding:0;margin:0;max-width:100%;}
   body.__card_print_mode__ .cast-opera-card.__card_active__{
     border:2.5px solid #0f4c81;border-radius:14px;padding:18px 20px 16px;
@@ -286,7 +286,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
 .op-print-scope-bar .ps-btn.emerald:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(5,150,105,0.35);}
 /* ===================== P4：手机端快速配置（<640px） ===================== */
 @media (max-width: 640px){
-  .admin-sidebar{display:none !important;}
+  /* v20260926m 侧边栏改由 style.css 抽屉统一控制（.mobile-open），不再强隐 */
   .cast-page-wrap{padding:10px 10px 90px 10px;}
   .show-banner{padding:18px 15px 16px;border-radius:14px;margin-bottom:14px;}
   .show-banner .comp-name{font-size:1.25rem;letter-spacing:1px;}
@@ -606,7 +606,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         <a href="accounts.html" data-role-level="999" class="admin-menu-item">
           <span class="menu-icon">👥</span><span>账号权限管理</span>
         </a>
-        <a href="schedule.html" data-role-level="800" class="admin-menu-item">
+        <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
           <span class="menu-icon">📅</span><span>演出档期排班</span>
           <span class="menu-badge">8</span>
         </a>
@@ -638,6 +638,10 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         <a href="content.html" data-role-level="800" class="admin-menu-item">
           <span class="menu-icon">📝</span><span>官网内容管理</span>
         </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
+          </a>
         <a href="reports.html" data-role-level="700" class="admin-menu-item">
           <span class="menu-icon">📈</span><span>数据统计报表</span>
         </a>
@@ -663,6 +667,9 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
           <span>🏠</span><span>返回前台首页</span>
         </a>
+        <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+          <span>📖</span><span>操作手册</span>
+        </a>
         <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
           <span>🚪</span><span>退出登录</span>
         </a>
@@ -677,7 +684,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         <span class="separator">/</span>
         <span class="current">演出演员表</span>
       </div>
-      <div class="topbar-user">👨‍💼 秦剧团管理员 / <a href="#" id="logoutLink2">退出</a></div>
+      <div class="topbar-user">👨‍💼 秦剧团管理员 / <a href="#" id="logoutLink2" data-toggle="logout" class="action-link">退出</a></div>
     </div>
     <div class="cast-page-wrap">
       <div class="print-header">
@@ -709,11 +716,11 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
       <div class="troupe-bar" id="troupeBar">
         <span class="tb-title">民营剧团组团模板 · 天工资商议</span>
         <span class="tb-stat" id="tp-total" title="组团总人数（含替补）">总人数 <em class="n">0</em></span>
-        <span class="tb-stat" id="tp-actor" title="演员组：老生/小生/花旦/青衣/花脸/丑/武生等">演员 <em class="n">0</em></span>
+        <span class="tb-stat" id="tp-actor" title="演员组：生行(文须生/武须生/小生)+旦行(正旦/小旦/彩旦/二架旦)+净行(大花脸/二花脸)+丑角+二架(门官/家院)+角子(龙套/校尉/刀斧手/丫鬟/彩女)">演员 <em class="n">0</em></span>
         <span class="tb-stat" id="tp-band"  title="乐队组：武场(打击)+文场(管弦)">乐队 <em class="n">0</em></span>
-        <span class="tb-stat" id="tp-front" title="前场：舞台监督/前台/检票/引导/字幕">前场 <em class="n">0</em></span>
-        <span class="tb-stat" id="tp-costume" title="服装化妆：服装师/盔箱/化妆师/道具师">服装 <em class="n">0</em></span>
-        <span class="tb-stat" id="tp-electric" title="电工：灯光师/音响师/配电/设备">电工 <em class="n">0</em></span>
+        <span class="tb-stat" id="tp-front" title="前场（后勤）：舞台监督/前台/检票/引导/字幕/催场">前场 <em class="n">0</em></span>
+        <span class="tb-stat" id="tp-costume" title="衣箱/帽箱（后勤）：行头/盔帽/化妆/勾脸/道具管理">服装 <em class="n">0</em></span>
+        <span class="tb-stat" id="tp-electric" title="电工（后勤）：灯光师/音响师/配电/设备">电工 <em class="n">0</em></span>
         <span class="tb-stat" id="tp-status" title="民营团标配需≥30人，建议30-40人" style="min-width:110px;text-align:center;">标配检测 <em class="n">-</em></span>
         <span class="tb-stat ok" id="tp-wage-day" title="单日所有人员日薪合计（不含食宿路费等）" style="background:linear-gradient(135deg,#fef9c3,#fde68a);border-color:#fcd34d;color:#78350f;">日工资合计 <em class="n">¥0</em></span>
         <span class="tb-stat bad" id="tp-wage-total" title="演出天数 × 日工资合计 = 本场演出人工成本预算" style="min-width:200px;">
@@ -723,8 +730,9 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
           <button class="tb-btn tb-btn-blue"   id="tpBtnSync2Cast" data-action="troupe-sync-cast"  type="button" title="把人员名单写入实际演员表7大板块（武场/文场/角色/舞台保障/节目单）">🧩 同步到演员表</button>
           <button class="tb-btn tb-btn-amber"  id="tpBtnWagePrint" data-action="troupe-wage-print"  type="button" title="打印「天工资商议单」用于给甲方报价/跟演员结算">💰 打印工资单</button>
           <button class="tb-btn tb-btn-rose"   id="tpBtnWage2Fin"  data-action="troupe-wage-fin"   type="button" title="本次演出×天数的工资合计生成财务台账「应付工资」草稿凭证">📒 转财务待发工资</button>
+          <button class="tb-btn tb-btn-amber"  id="tpBtnWage2FinRetry" data-action="troupe-wage-fin-retry" type="button" style="display:none;" title="上次转财务失败，点击按当前工资预算数据重新提交（网络/服务端故障最多可重试3次；登录过期、无权限、数据校验、重复凭证等问题请按提示处理）">🔄 重试</button>
           <button class="tb-btn tb-btn-green"  id="tpBtnWageCsv"   data-action="troupe-wage-csv"    type="button" title="导出工资预算评估CSV（每人日薪×天数+分项汇总，方便发给甲方/演员）">📊 预算评估CSV</button>
-          <button class="tb-btn tb-btn-emerald" id="tpBtnWageXlsx"  data-action="troupe-wage-xlsx"   type="button" title="导出工资预算评估Excel.xlsx（多Sheet+列宽自适应+冻结首行+数字格式，发给甲方/演员/会计）">📘 预算评估XLSX</button>
+          <button class="tb-btn tb-btn-emerald" id="tpBtnWageXlsx"  data-action="troupe-wage-xlsx"   type="button" title="导出工资预算评估Excel.xlsx（多Sheet+列宽+数字格式，发给甲方/演员/会计）">📘 预算评估XLSX</button>
           <span style="margin:0 2px;display:inline-block;align-self:stretch;width:2px;background:#bfdbfe;border-radius:2px;"></span>
           <button class="tb-btn tb-btn-blue"   id="tpBtnLoad"      data-action="troupe-load-list"  type="button">📋 从模板载入</button>
           <button class="tb-btn tb-btn-amber"  id="tpBtnSaveAs"    data-action="troupe-save-as"   type="button">💾 另存为组团模板</button>
@@ -737,6 +745,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
       <!-- ===== 组团模板 · End ===== -->
       <div class="page-actions">
         <button class="btn-action btn-red" id="btnReset" data-action="cast-reset" type="button">🧹 重置空白</button>
+        <button class="btn-action btn-blue" id="btnSyncRoster" data-action="cast-sync-roster" type="button" title="从花名册API同步所有演职人员到姓名补全列表">🔄 同步花名册</button>
         <button class="btn-action btn-gold" id="btnSave" data-action="cast-save" type="button">💾 保存本地</button>
         <button class="btn-action btn-green" id="btnLoad" data-action="cast-load" type="button">📂 读取上次</button>
         <button class="btn-action btn-primary mode-edit" id="btnPreview" data-action="cast-preview" type="button">👁 预览模式</button>
@@ -744,7 +753,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         <button class="btn-action btn-gray" id="btnPrint" data-action="cast-print" type="button">🖨 整页打印</button>
         <button class="btn-action btn-orange" id="btnPrintSelected2" data-action="cast-print-selected" type="button">🎯 按勾选打印</button>
         <button class="btn-action btn-green" id="btnExport" data-action="cast-export" type="button">📤 导出 CSV</button>
-        <button class="btn-action btn-emerald" id="btnXlsxAll" data-action="cast-xlsx-all" type="button" title="一键导出全表演出演员表Excel.xlsx（8大板块分别为独立Sheet，冻结首行+列宽自适应+数字格式）">📊 整表导出XLSX</button>
+        <button class="btn-action btn-emerald" id="btnXlsxAll" data-action="cast-xlsx-all" type="button" title="一键导出全表演出演员表Excel.xlsx（演出信息/主创/剧目/乐队/舞台/节目单/工资预算 各自独立Sheet+列宽+数字格式）">📊 整表导出XLSX</button>
       </div>
 
       <!-- ===== 20260922 真实后端同步：关联排期 / 载入线上阵容 / 发布到官网 ===== -->
@@ -842,7 +851,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
           <h3>舞台技术保障 &amp; 后勤（后台/前台）</h3>
           <label class="print-scope-check no-print" data-ps-label="sec"><input type="checkbox" data-ps-cb-sec="stage"> 打印此板块</label>
           <button class="mobile-fold-btn" type="button" data-fold="sec-stage">▼</button>
-          <span class="sec-sub">舞台监督 ★★ · 盔箱（秦腔特色岗）★ · 灯光 · 音响 · 服装 · 化妆 · 道具</span>
+          <span class="sec-sub">舞台监督 ★★ · 帽箱/盔箱（秦腔特色岗）★ · 灯光 · 音响 · 服装 · 化妆 · 道具</span>
         </div>
         <div class="sec-body" id="sec-stage">
           <table class="cast-table">
@@ -972,14 +981,23 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
 <datalist id="datalist-wuchang"></datalist>
 <datalist id="datalist-wenchang"></datalist>
 <datalist id="datalist-stage"></datalist>
+<datalist id="datalist-creative-pos">
+  <option value="出品人"><option value="总策划"><option value="监制"><option value="艺术总监">
+  <option value="编剧"><option value="总导演"><option value="副导演"><option value="场记">
+  <option value="唱腔设计"><option value="作曲"><option value="配器"><option value="指挥">
+  <option value="舞美设计"><option value="灯光设计"><option value="服装设计"><option value="化妆造型设计">
+  <option value="道具设计"><option value="字幕设计"><option value="舞台监督"><option value="剧务主任">
+  <option value="宣传"><option value="统筹"><option value="策划"><option value="艺术指导">
+</datalist>
 
 <script src="../js/favicon-inject.js?v=20260803"></script>
 <script src="../js/wechat-fallback.js?v=20260803"></script>
 <script src="../js/year-lite.js?v=20260803"></script>
   <script src="../js/api-config.js?v=20260922"></script>
   <script src="../js/api-request.js?v=20260922"></script>
-<script src="../js/app.js?v=20260922"></script>
-<!-- ===== 2026-08-03 D 类：xlsx.min.js（SheetJS 0.18.5 full）三路径加载（CDN优先 + 本地 + 备用CDN），零网络不崩 ===== -->
+<script src="../js/app.js?v=20260930a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+<!-- ===== 2026-09-30 P3 懒加载：xlsx.min.js（SheetJS 0.18.5 full）四路径按需加载（导出时才拉，首屏不占带宽），失败清缓存可重试 ===== -->
 <script>
 (function(){
   var XLSX_CDNS = [
@@ -988,23 +1006,33 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',             // ③cdnjs 备用
     'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'                              // ④unpkg 备用
   ];
-  var done=false, idx=0;
-  function next(){
-    if(done || idx>=XLSX_CDNS.length) return;
-    var s=document.createElement('script');
-    s.src = XLSX_CDNS[idx++];
-    s.onload = function(){
-      if(window.XLSX && typeof window.XLSX.writeFile==='function'){
-        done=true;
-        window.__XLSX_LOADED_FROM__ = s.src;
-        if(typeof console!=='undefined') try{ console.info('[xlsx 0.18.5] loaded from: '+s.src); }catch(_){}
-      } else { next(); }
-    };
-    s.onerror = function(){ next(); };
-    s.async = false;
-    document.head.appendChild(s);
-  }
-  next();
+  var _promise = null;
+  function _ready(){ return !!(window.XLSX && window.XLSX.utils && window.XLSX.writeFile); }
+  window.__castEnsureXlsx = function(){
+    if (_ready()) return Promise.resolve(window.XLSX);          // 已载（含 app.js __qaEnsureXlsx 或他处）直接复用
+    if (_promise) return _promise;                              // 并发去重
+    _promise = new Promise(function(resolve, reject){
+      var done = false, idx = 0;
+      function next(){
+        if (done || idx >= XLSX_CDNS.length){ reject(new Error('xlsx all paths failed')); return; }
+        var s = document.createElement('script');
+        s.src = XLSX_CDNS[idx++];
+        s.onload = function(){
+          if (_ready()){
+            done = true;
+            window.__XLSX_LOADED_FROM__ = s.src;
+            if(typeof console!=='undefined') try{ console.info('[xlsx 0.18.5] loaded from: '+s.src); }catch(_){}
+            resolve(window.XLSX);
+          } else { next(); }
+        };
+        s.onerror = function(){ next(); };
+        document.head.appendChild(s);
+      }
+      next();
+    });
+    _promise.catch(function(){ _promise = null; });            // 失败清缓存，允许下次重试
+    return _promise;
+  };
 })();
 </script>
 <script>
@@ -1124,19 +1152,39 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
 
   // 20260922 真实化：不再内置任何假演职人员；名单由 /v1/performers 同步
   var DEFAULT_PERFORMERS = {};
-  var PERFORMER_CATS = ['老生','红生','小生','武生','青衣','花旦','老旦','彩旦','花脸','丑行','武场','文场','舞台'];
+  // 行当口径（20261003 修订）：生行/丑行/净行/旦行 + 二架/角子/后勤，共 23 个角色岗；武场/文场单列
+  var PERFORMER_CATS = ['文须生','武须生','小生','丑角','大花脸','二花脸','正旦','小旦','彩旦','二架旦','门官','家院','龙套','校尉','刀斧手','丫鬟','彩女','长随官','帽箱','电工','前场','剧务','衣箱','武场','文场'];
   function _bucketOf(role){
     var s = String(role||'');
     var rules = [
-      ['武场', /司鼓|板鼓|梆子|大锣|小锣|马锣|铙|钹|镲|堂鼓|战鼓|木鱼|打击|鼓/],
-      ['文场', /板胡|二胡|高胡|椰胡|扬琴|琵琶|三弦|古筝|竹笛|梅管|唢呐|海笛|笙|大提琴|贝司|提琴|电子琴|琴/],
-      ['舞台', /舞台监督|监督|剧务|催场|场记|灯光|音响|话筒|耳麦|麦|服装|跟包|盔箱|化妆|大头|勾脸|脸谱|道具|装台|布景|拆台|字幕|电工|后勤/],
-      ['红生', /红生/], ['老生', /老生/], ['小生', /小生/], ['武生', /武生/],
-      ['青衣', /青衣|正旦/], ['花旦', /花旦|闺门旦|武旦/], ['老旦', /老旦/],
-      ['彩旦', /彩旦|丑婆/], ['花脸', /花脸|铜锤|架子花|净/], ['丑行', /丑/]
+      ['武场', /武场|司鼓|板鼓|梆子|大锣|小锣|马锣|铙|钹|镲|堂鼓|战鼓|木鱼|打击|鼓师|武二手|鼓/],
+      ['文场', /文场|板胡|二胡|高胡|椰胡|扬琴|琵琶|三弦|古筝|竹笛|梅管|唢呐|海笛|笙|大提琴|贝司|提琴|电子琴|文二手|琴/],
+      ['帽箱', /帽箱|盔箱|盔头|盔|戏帽|帽倌|王帽|纱帽|扎巾|额子|凤冠|驸马套/],
+      ['衣箱', /衣箱|箱倌|行头|服装|跟包|化妆|大头|勾脸|脸谱|道具/],
+      ['电工', /电工|灯光|音响|话筒|耳麦|麦|配电|设备/],
+      ['剧务', /剧务|舞台监督|监督|催场|场记|字幕|装台|布景|拆台/],
+      ['前场', /前场|前台|检票|引导|后勤/],
+      ['大花脸', /大花脸|大净|铜锤|包公|包拯|徐延昭|尉迟恭/],
+      ['二花脸', /二花脸|架子花|武花|副净|武净|花脸|净|张飞|李逵|曹操/],
+      ['丑角', /丑/],
+      ['武须生', /武须生|靠把|红生|武老生|武生|关羽|关公|赵匡胤/],
+      ['文须生', /须生|老生|安工|衰派/],
+      ['小生', /小生/],
+      ['正旦', /正旦|青衣|老旦/],
+      ['小旦', /小旦|花旦|闺门旦|武旦|刀马旦/],
+      ['彩旦', /彩旦|丑婆|丑旦/],
+      ['二架旦', /二架旦|二路旦|二架女/],
+      ['门官', /门官|二架男/],
+      ['家院', /家院|老管家|老仆/],
+      ['校尉', /校尉/],
+      ['刀斧手', /刀斧手|刽子手/],
+      ['丫鬟', /丫鬟|丫环|使女/],
+      ['彩女', /彩女|宫娥/],
+      ['长随官', /长随官|长随/],
+      ['龙套', /龙套|青袍|文堂|流行/]
     ];
     for(var i=0;i<rules.length;i++){ if(rules[i][1].test(s)) return rules[i][0]; }
-    return '舞台';
+    return '前场';
   }
   function getFlatPerformers(){
     var list = [];
@@ -1254,31 +1302,61 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     return all;
   }
   function guessTypeByName(name){
-    if(/娘|母|太|氏|婆|姐|嫂|妻|妃|姑|娥|莲|兰|英|梅|桂|春|玉|香|凤|云|青|娟|燕/.test(name)) return '青衣';
-    if(/包公|包|丞|相|尉|太师|严|屠|侯|霸|太岁|王|帝|龙|赵|虎/.test(name) && name.length<=3) return '花脸';
-    if(/公|翁|伯|父亲|爹|老爷|丞|杨|千岁$|大人$/.test(name) && name.length<=4) return '老生';
-    if(/郎|朋|鹏|云|天|文|武|周|秦|唐|小|俞|傅|岳|张|李|王/.test(name) && name.length<=3) return '小生';
-    if(/媒|奶|妈|姑|嫂|婆/.test(name)) return '彩旦';
-    if(/丑|驴|保|淘气|公道|官|差|役|贼|骗/.test(name)) return '丑行';
-    return '生角';
+    // 新行当口径（20261002）：判定顺序
+    // 1) 角子/二架显式角色名（龙套/校尉/刀斧手/门官/家院/丫鬟/彩女）
+    // 2) 彩旦（婆/媒/奶最先分流）→ 3) 小旦 → 4) 正旦（女性通类）
+    // 5) 大花脸 → 6) 二花脸 → 7) 武须生 → 8) 文须生 → 9) 丑角 → 10) 小生
+    if(/刀斧手|刽子/.test(name)) return '刀斧手';
+    if(/校尉|锦衣/.test(name)) return '校尉';
+    if(/门官/.test(name)) return '门官';
+    if(/家院|老管家|老仆/.test(name)) return '家院';
+    if(/丫鬟|丫环|使女/.test(name)) return '丫鬟';
+    if(/彩女|宫娥/.test(name)) return '彩女';
+    if(/长随官|长随/.test(name)) return '长随官';
+    if(/龙套|青袍|文堂/.test(name)) return '龙套';
+    if(/帽箱|盔箱|盔头|盔|戏帽|帽倌/.test(name)) return '帽箱';
+    if(/衣箱|箱倌/.test(name)) return '衣箱';
+    if(/电工|灯光|音响/.test(name)) return '电工';
+    if(/剧务|舞台监督|场记|催场/.test(name)) return '剧务';
+    if(/前场|前台|检票|引导/.test(name)) return '前场';
+    if(/媒婆|媒人|媒|奶妈|奶娘|老妈|妈|巫婆|稳婆|婆子|鸨/.test(name)) return '彩旦';
+    if(/二架旦|二路旦/.test(name)) return '二架旦';
+    if(/小旦|花旦|闺门|武旦|刀马旦/.test(name)) return '小旦';
+    if(/大花脸|大净|铜锤|包公|包拯|徐延昭|尉迟恭|尉迟/.test(name)) return '大花脸';
+    if(/二花脸|架子花|花脸|武净|净|张飞|李逵|曹操|屠岸贾/.test(name)) return '二花脸';
+    if(/丑/.test(name)) return '丑角';
+    if(/武须生|靠把|红生|关羽|关公|云长|赵匡胤|武生/.test(name)) return '武须生';
+    if(/文须生|须生|老生/.test(name)) return '文须生';
+    // 女性角色通类（“婆/媒/奶”已在上方分流；姐/姑/妹/巧/娇/玲多为年轻女角，归小旦）
+    if(/姐|姑|妹|巧|娇|玲/.test(name)) return '小旦';
+    if(/娘|母|太|氏|嫂|妻|妃|娥|莲|兰|英|梅|桂|春|玉|香|凤|云|青|娟|燕|钏|钗/.test(name)) return '正旦';
+    if(/公|翁|伯|父亲|爹|老爷|丞|杨|千岁$|大人$/.test(name) && name.length<=4) return '文须生';
+    if(/驴|保|淘气|公道|官|差|役|贼|骗/.test(name)) return '丑角';
+    if(/小生|郎|朋|鹏|天|文|武|周|秦|唐|小|俞|傅|岳|张|李|王/.test(name) && name.length<=3) return '小生';
+    return '龙套';
   }
 
   var DEFAULT_CREATIVE = [
     {pos:'出品人', name:'', note:''},
     {pos:'总策划', name:'', note:''},
+    {pos:'监 制', name:'', note:''},
     {pos:'艺术总监 ★', name:'', note:''},
-    {pos:'编剧', name:'', note:''},
+    {pos:'编 剧', name:'', note:''},
     {pos:'总导演', name:'', note:''},
     {pos:'副导演 / 场记', name:'', note:''},
     {pos:'唱腔设计', name:'', note:'秦腔传统板式：慢板/二六板/垫板/滚白/带板'},
     {pos:'作曲 / 配器', name:'', note:''},
-    {pos:'指挥（如适用）', name:'', note:''},
+    {pos:'指 挥（如适用）', name:'', note:''},
     {pos:'舞美设计', name:'', note:''},
     {pos:'灯光设计', name:'', note:''},
     {pos:'服装设计', name:'', note:'秦腔传统蟒袍/靠/褶子/帔'},
     {pos:'化妆造型设计', name:'', note:'花脸勾脸/旦角大头/生角巾帽'},
     {pos:'道具设计', name:'', note:''},
-    {pos:'字幕设计', name:'', note:''}
+    {pos:'字 幕 设 计', name:'', note:''},
+    {pos:'舞台监督', name:'', note:''},
+    {pos:'剧务主任', name:'', note:''},
+    {pos:'宣 传', name:'', note:''},
+    {pos:'统 筹', name:'', note:''}
   ];
   var DEFAULT_WUCHANG = [
     {pos:'司鼓 / 板鼓指挥 ★★', name:'', note:'秦腔"鼓令"，演出最高节奏指挥'},
@@ -1333,30 +1411,34 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
   ];
   var DEFAULT_CATEGORIES_FOR_PROG = ['开场锣鼓','加演折子戏','幕间休息','主场大本戏（上本）','主场大本戏（下本）','谢幕加唱/返场'];
   var CAST_GROUPS = [
-    {key:'老生', name:'✨ 老生行（安工/衰派/靠把）', hint:'成熟男性角色，唱功重头'},
-    {key:'红生', name:'🔴 红生行（关羽/赵匡胤类）', hint:'红脸忠勇形象'},
-    {key:'小生', name:'🌿 小生行（贫生/袍带/武小生）', hint:'青年男性角色'},
-    {key:'武生', name:'⚔ 武生行（长靠/短打）', hint:'青年男性武打角色'},
-    {key:'青衣', name:'💎 青衣/正旦（苦情/大家闺秀）', hint:'成年女性核心角色，唱功重头'},
-    {key:'花旦', name:'🌸 花旦/闺门旦/武旦', hint:'少女/活泼/武功女性'},
-    {key:'老旦', name:'👵 老旦行', hint:'老年女性角色'},
-    {key:'彩旦', name:'🤡 彩旦/丑婆行', hint:'喜剧/滑稽/媒婆/奶妈形象'},
-    {key:'花脸', name:'🎭 花脸行（铜锤/架子/武花）', hint:'净行勾脸，声若洪钟'},
-    {key:'丑行', name:'😜 丑行（文丑/武丑/娃娃丑）', hint:'喜剧调节气氛'}
+    {key:'生行', roles:['文须生','武须生','小生'], name:'🎼 生行（文须生/武须生/小生）', hint:'男性正面角色，不勾脸'},
+    {key:'丑行', roles:['丑角'], name:'😜 丑行（丑角）', hint:'勾豆腐块，滑稽机趣'},
+    {key:'净行', roles:['大花脸','二花脸'], name:'🎭 净行（大花脸/二花脸）', hint:'勾脸男性，声洪工架'},
+    {key:'旦行', roles:['正旦','小旦','彩旦','二架旦'], name:'💎 旦行（正旦/小旦/彩旦/二架旦）', hint:'女性角色'},
+    {key:'二架', roles:['门官','家院'], name:'👔 二架（门官/家院）', hint:'二路里子配角'},
+    {key:'角子', roles:['龙套','校尉','刀斧手','丫鬟','彩女','长随官'], name:'🎪 角子（龙套/校尉/刀斧手/丫鬟/彩女/长随官）', hint:'零碎底包角色'}
   ];
 
   function defaultCastMini(n){
     var arr=[]; for(var i=0;i<(n||2);i++){
-      arr.push({role:'', type:(i===0?'青衣':'小生'), actorA:'', actorB:'', actorC:'', group:'', note:'', isPublic:true});
+      var tp=(i===0?'正旦':'小生');
+      var grp='';
+      var _g=CAST_GROUPS.find(function(g){return g.roles.indexOf(tp)>=0;}); if(_g) grp=_g.name;
+      arr.push({role:'', type:tp, actorA:'', actorB:'', actorC:'', group:grp, note:'', isPublic:true});
     }
     return arr;
   }
-  var TYPE_OPTIONS = ['老生','红生','小生','武生','青衣','花旦','老旦','彩旦','花脸','丑行','（反串/其他）'];
+  var TYPE_OPTIONS = ['文须生','武须生','小生','丑角','大花脸','二花脸','正旦','小旦','彩旦','二架旦','门官','家院','龙套','校尉','刀斧手','丫鬟','彩女','长随官','电工','前场','剧务','衣箱','（反串/其他）'];
+  // 行当下拉：旧存档值（老生/青衣/花脸等）不在新选项时，保留为临时选中项，不丢数据
+  function _typeOptionsHtml(cur, esc){
+    var extra = (cur && TYPE_OPTIONS.indexOf(cur)<0) ? '<option selected>'+esc(cur)+'</option>' : '';
+    return extra + TYPE_OPTIONS.map(function(o){return '<option'+(o===cur?' selected':'')+'>'+esc(o)+'</option>';}).join('');
+  }
   var SIMPLE_META = {
     creative: { bodyId:'bodyCreative', cols:['pos','name','note'], placeholders:['例：编剧/总导演/唱腔设计…','填写姓名','分工说明/擅长曲目…'], newRow:function(){ return {pos:'',name:'',note:'',isPublic:true}; }, editables:{pos:'text',name:'text',note:'textarea'} },
     wuchang:  { bodyId:'bodyWuchang',  cols:['pos','name','note'], placeholders:['例：司鼓/梆子/大锣/铙钹…','填写演奏员姓名','常用曲牌/分工…'], newRow:function(){ return {pos:'',name:'',note:'',isPublic:true}; }, editables:{pos:'text',name:'text',note:'textarea'}, datalist:'datalist-wuchang' },
     wenchang: { bodyId:'bodyWenchang', cols:['pos','name','note'], placeholders:['例：板胡/二胡/扬琴/琵琶/三弦…','填写演奏员姓名','擅长曲目/声部…'], newRow:function(){ return {pos:'',name:'',note:'',isPublic:true}; }, editables:{pos:'text',name:'text',note:'textarea'}, datalist:'datalist-wenchang' },
-    stage:    { bodyId:'bodyStage',    cols:['pos','name','note'], placeholders:['例：舞台监督/盔箱/化妆/道具…','填写负责人姓名','具体分工…'], newRow:function(){ return {pos:'',name:'',note:'',isPublic:true}; }, editables:{pos:'text',name:'text',note:'textarea'}, datalist:'datalist-stage' },
+    stage:    { bodyId:'bodyStage',    cols:['pos','name','note'], placeholders:['例：舞台监督/帽箱/化妆/道具…','填写负责人姓名','具体分工…'], newRow:function(){ return {pos:'',name:'',note:'',isPublic:true}; }, editables:{pos:'text',name:'text',note:'textarea'}, datalist:'datalist-stage' },
     program:  { bodyId:'bodyProgram',  cols:['cat','name','duration','actors','note'], placeholders:['分类','节目名称/章节','例：8','主演名/角色名','详细说明…'], newRow:function(){ return {cat:'加演折子戏',name:'',duration:'',actors:'',note:'',isPublic:true}; }, editables:{cat:'select',name:'text',duration:'number',actors:'text',note:'textarea'} }
   };
 
@@ -1370,7 +1452,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
       mainOpera: [{
         opera:'', duration:'', type:'传统本戏', rating:'', intro:'',
         cast: [
-          {role:'', type:'小生', actorA:'', actorB:'', actorC:'', group:'', note:'', isPublic:true}
+          {role:'', type:'小生', actorA:'', actorB:'', actorC:'', group:(CAST_GROUPS.find(function(g){return g.roles.indexOf('小生')>=0;})||{}).name||'', note:'', isPublic:true}
         ]
       }],
       addOpera: [],
@@ -1480,7 +1562,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     var newCast = (op.cast||[]).map(function(c){
       var type = c.type || guessTypeByName(c.role||'');
       var pool = (perf.performers && perf.performers[type]) || [];
-      var groupObj = CAST_GROUPS.find(function(g){return g.key===type;});
+      var groupObj = CAST_GROUPS.find(function(g){return g.roles.indexOf(type)>=0;});
       return {
         role: c.role, type: type,
         actorA: c.actorA || (pool[0]?pool[0].name:''),
@@ -1578,14 +1660,14 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
             DEFAULT_CATEGORIES_FOR_PROG.map(function(c){ return '<option value="'+_hx_v(c)+'"'+(r.cat===c?' selected':'')+'>'+_hx_t(c)+'</option>'; }).join('') + '</select></td>';
         } else {
           var tag = meta.editables[col]==='textarea' ? 'textarea' : (meta.editables[col]==='select'?'select':'input');
-          var dl = (col==='name' && meta.datalist) ? ' list="'+meta.datalist+'"' : ((col==='name' && (key==='creative')) ? ' list="datalist-performers-all"' : '');
+          var dl = (col==='name' && meta.datalist) ? ' list="'+meta.datalist+'"' : ((col==='name' && (key==='creative')) ? ' list="datalist-performers-all"' : ((col==='pos' && key==='creative') ? ' list="datalist-creative-pos"' : ''));
           var typeAttr = (tag==='input' && col==='duration') ? ' type="number"' : (tag==='input' ? ' type="text"' : '');
           if(tag==='input'){
             var valRaw = r[col];
             var valStr = (valRaw===null||valRaw===undefined)?'':String(valRaw);
             html += '<td><input'+typeAttr+' placeholder="'+_hx_v(meta.placeholders[ci]||'')+'" data-key="'+key+'" data-i="'+i+'" data-col="'+col+'" value="'+_hx_v(valStr)+'"'+dl+'></td>';
           } else if(tag==='select'){
-            html += '<td><select data-key="'+key+'" data-i="'+i+'" data-col="'+col+'"><option value="">--</option>'+TYPE_OPTIONS.map(function(o){return '<option'+(o===r[col]?' selected':'')+'>'+_hx_t(o)+'</option>';}).join('')+'</select></td>';
+            html += '<td><select data-key="'+key+'" data-i="'+i+'" data-col="'+col+'"><option value="">--</option>'+_typeOptionsHtml(r[col], _hx_t)+'</select></td>';
           } else {
             // textarea：完整转义，防 </textarea> 闭合注入
             html += '<td><textarea placeholder="'+_hx_v(meta.placeholders[ci]||'')+'" data-key="'+key+'" data-i="'+i+'" data-col="'+col+'" rows="2">'+_hx_t(r[col]||'')+'</textarea></td>';
@@ -1648,7 +1730,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
           '<thead><tr><th style="width:38px;">#</th><th style="width:130px;">角色名</th><th style="width:110px;">行当</th><th style="width:130px;"><b style="color:#b91c1c;">A 角 ★</b>（主演）</th><th style="width:130px;">B 角（替补）</th><th style="width:130px;">C 角（实习/学员）</th><th style="width:160px;">分组/行当</th><th>剧情说明 / 备注</th><th style="width:58px;" title="勾选=观众可见，取消=内部保密">公开</th><th style="width:54px;">操作</th></tr></thead>' +
           '<tbody>' +
           (oper.cast||[]).map(function(c,ci){
-            var typeSel = '<select data-okey="'+key+'" data-oi="'+oidx+'" data-oci="'+ci+'" data-cfield="type">'+TYPE_OPTIONS.map(function(t){return '<option'+(t===c.type?' selected':'')+'>'+_hx_t(t)+'</option>';}).join('')+'</select>';
+            var typeSel = '<select data-okey="'+key+'" data-oi="'+oidx+'" data-oci="'+ci+'" data-cfield="type">'+_typeOptionsHtml(c.type, _hx_t)+'</select>';
             var grpSel = '<select data-okey="'+key+'" data-oi="'+oidx+'" data-oci="'+ci+'" data-cfield="group"><option value="">（不分组）</option>'+CAST_GROUPS.map(function(g){return '<option value="'+_hx_v(g.name)+'"'+(g.name===c.group?' selected':'')+'>'+_hx_t(g.name)+'</option>';}).join('')+'</select>';
             return '<tr class="cast-row" data-oci-tr="'+ci+'">'+
               '<td class="seq">'+(ci+1)+'</td>' +
@@ -1717,7 +1799,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     if(all) all.innerHTML = build(flat);
     if(wuchang) wuchang.innerHTML = build(flat.filter(function(p){ return p.category==='武场'; }));
     if(wenchang) wenchang.innerHTML = build(flat.filter(function(p){ return p.category==='文场'; }));
-    if(stage) stage.innerHTML = build(flat.filter(function(p){ return p.category==='舞台'; }));
+    if(stage) stage.innerHTML = build(flat.filter(function(p){ return ['电工','前场','剧务','衣箱','帽箱'].indexOf(p.category)>=0; }));
   }
 
   function bindSimpleBlockInputs(){
@@ -1805,16 +1887,21 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
   function buildCastPickerBody(){
     var perf = loadPerformers();
     var groups = CAST_GROUPS.map(function(g){
-      var arr = (perf.performers[g.key]||[]).map(function(p){
+      var people = [];
+      g.roles.forEach(function(r){
+        (perf.performers[r]||[]).forEach(function(p){ people.push({p:p, roleKey:r}); });
+      });
+      var arr = people.map(function(x){
+        var p = x.p;
         var checked = cpChecked[p.name] ? ' checked' : '';
         var sel = cpChecked[p.name] ? ' cp-selected' : '';
         return '<label class="cp-item'+sel+'" data-cpi="'+p.name+'">' +
           '<input type="checkbox" data-cpn="'+p.name+'"'+checked+'>' +
           '<span>'+p.name+'</span>' +
-          '<span class="cpi-type">'+(p.skill||g.key)+'</span>' +
+          '<span class="cpi-type">'+(p.skill||x.roleKey)+'</span>' +
         '</label>';
       }).join('');
-      return '<div class="cp-cat"><h4>'+g.name+' <em>'+(perf.performers[g.key]||[]).length+'人</em></h4><div class="cp-cat-grid">'+arr+'</div></div>';
+      return '<div class="cp-cat"><h4>'+g.name+' <em>'+people.length+'人</em></h4><div class="cp-cat-grid">'+arr+'</div></div>';
     }).join('');
     return groups;
   }
@@ -1852,7 +1939,9 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
   function applyCommonCast(){
     var perf = loadPerformers();
     CAST_GROUPS.forEach(function(g){
-      (perf.performers[g.key]||[]).slice(0,2).forEach(function(p){ cpChecked[p.name]=true; });
+      g.roles.forEach(function(r){
+        (perf.performers[r]||[]).slice(0,2).forEach(function(p){ cpChecked[p.name]=true; });
+      });
     });
     $('cpBody').innerHTML = buildCastPickerBody();
     bindCastPickerClicks();
@@ -1874,7 +1963,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         var hit = perf.performers[k].find(function(p){ return p.name === nm; });
         if(hit){ found = hit; cat = k; break; }
       }
-      if(!cat) cat = '生角';
+      if(!cat) cat = '龙套';
       if(!perfByType[cat]) perfByType[cat] = [];
       perfByType[cat].push(nm);
     });
@@ -1894,7 +1983,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     });
     chosenNames.forEach(function(nm){
       if(!allAssigned[nm]){
-        var cat = '生角';
+        var cat = '龙套';
         for(var k in perf.performers){ if(perf.performers[k].find(function(p){return p.name===nm;})){ cat=k; break; } }
         op.cast.push({role:nm+'（待分配角色）', type:cat, actorA:nm, actorB:'', actorC:'', group:'', note:'勾选后自动追加，请手动改角色名', isPublic:true});
       }
@@ -1994,6 +2083,33 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
       },true);
     });
   }
+  /* ---------- 自定义确认弹窗（替代原生 confirm，防 SuperPatch 拦截） ---------- */
+  function __showConfirm(msg, onOk){
+    var ov=document.getElementById('__cfOverlay');
+    if(!ov){
+      ov=document.createElement('div');
+      ov.id='__cfOverlay';
+      ov.style.cssText='display:none;position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;transform:none!important;top:0!important;left:0!important;right:0!important;bottom:0!important;';
+      ov.innerHTML='<div style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:min(420px,92vw);overflow:hidden;">'+
+        '<div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;"><h3 style="margin:0;font-size:1.05rem;font-weight:700;color:#8b0000;">⚠️ 操作确认</h3></div>'+
+        '<div id="__cfMsg" style="padding:20px 24px;font-size:0.95rem;color:#334155;line-height:1.6;"></div>'+
+        '<div style="padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;gap:10px;justify-content:flex-end;">'+
+        '<button id="__cfCancel" type="button" style="padding:8px 18px;border:1.5px solid #cbd5e1;background:#fff;color:#475569;border-radius:8px;cursor:pointer;font-weight:600;">取消</button>'+
+        '<button id="__cfOk" type="button" style="padding:8px 20px;border:none;background:linear-gradient(135deg,#8b0000,#6b0000);color:#fff;border-radius:8px;cursor:pointer;font-weight:700;">确定</button>'+
+        '</div></div>';
+      document.body.appendChild(ov);
+    }
+    document.getElementById('__cfMsg').textContent=msg;
+    ov.style.display='flex';
+    document.body.classList.add('body-modal-locked');
+    var okBtn=document.getElementById('__cfOk'), caBtn=document.getElementById('__cfCancel');
+    var done=false;
+    function close(){ if(done)return; done=true; ov.style.display='none'; document.body.classList.remove('body-modal-locked'); }
+    okBtn.onclick=function(){ close(); if(typeof onOk==='function') onOk(); };
+    caBtn.onclick=function(){ close(); };
+    ov.onclick=function(e){ if(e.target===ov) close(); };
+  }
+
   function bindDeleteButtons(){
     Object.keys(SIMPLE_META).forEach(function(key){
       var body=$(SIMPLE_META[key].bodyId); if(!body) return;
@@ -2003,9 +2119,12 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
           e.preventDefault();
           e.stopPropagation && e.stopPropagation();
           e.stopImmediatePropagation && e.stopImmediatePropagation();
-          if(!confirm('确认删除 '+key+' 第 '+(parseInt(i,10)+1)+' 行？')) return;
-          state[key].splice(parseInt(i,10),1);
-          renderSimpleBlock(key);
+          var idx=parseInt(i,10);
+          __showConfirm('确认删除 '+key+' 第 '+(idx+1)+' 行？', function(){
+            state[key].splice(idx,1);
+            renderSimpleBlock(key);
+          });
+          return;
         }
       },true);
     });
@@ -2032,16 +2151,22 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
           e.preventDefault(); e.stopPropagation && e.stopPropagation(); e.stopImmediatePropagation && e.stopImmediatePropagation();
           var oi=parseInt(t.getAttribute('data-i')||'0',10);
           var nm=state[od][oi] && (state[od][oi].opera||state[od][oi].name);
-          if(!confirm('确认删除本剧：'+(nm||'未命名')+'？')) return;
-          state[od].splice(oi,1);
-          renderOperaBlock(od, bid==='blkMainOpera'?'blkMainOpera':'blkAddOpera');
+          var delOd=od, delOi=oi, delBid=bid;
+          __showConfirm('确认删除本剧：'+(nm||'未命名')+'？', function(){
+            state[delOd].splice(delOi,1);
+            renderOperaBlock(delOd, delBid==='blkMainOpera'?'blkMainOpera':'blkAddOpera');
+          });
+          return;
         } else if(di){
           e.preventDefault(); e.stopPropagation && e.stopPropagation(); e.stopImmediatePropagation && e.stopImmediatePropagation();
           var oi2=parseInt(t.getAttribute('data-oi')||'0',10);
           var ci2=parseInt(t.getAttribute('data-ci')||'0',10);
-          if(!confirm('确认删除该角色行？')) return;
-          state[di][oi2].cast.splice(ci2,1);
-          renderOperaBlock(di, bid);
+          var delDi=di, delOi2=oi2, delCi2=ci2, delBid2=bid;
+          __showConfirm('确认删除该角色行？', function(){
+            state[delDi][delOi2].cast.splice(delCi2,1);
+            renderOperaBlock(delDi, delBid2);
+          });
+          return;
         } else if(ar){
           e.preventDefault(); e.stopPropagation && e.stopPropagation(); e.stopImmediatePropagation && e.stopImmediatePropagation();
           var oi3=parseInt(t.getAttribute('data-i')||'0',10);
@@ -2084,7 +2209,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     }catch(e){ alert('读取失败：'+e.message); return false;}
   }
   function resetState(){
-    if(!confirm('⚠ 这将清空所有内容（仅保留空白模板，确认？')) return;
+    __showConfirm('⚠ 这将清空所有内容（仅保留空白模板，确认？）', function(){
     var blank = defaultState();
     blank.header = {title:'', host:'', organizer:'', coorganizer:'', sponsor:'', date:'', time:'', venue:'', notice:''};
     blank.creative = [{pos:'出品人',name:'',note:''},{pos:'艺术总监 ★',name:'',note:''},{pos:'总导演',name:'',note:''}];
@@ -2093,6 +2218,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     state = blank;
     renderAll();
     if(typeof toast !== 'undefined') toast('🧹 已重置为空白','success',2200);
+    });
   }
   function setMode(m){
     document.body.setAttribute('data-mode', m);
@@ -2157,6 +2283,116 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     setTimeout(function(){ try{ URL.revokeObjectURL(url); }catch(e){} }, 500);
     if(typeof toast !== 'undefined') toast('📤 已导出CSV：'+fn,'success',3200);
   }
+  /* ---------- 20260928 整表导出XLSX / 按勾选板块导出XLSX（多Sheet+列宽+数字格式） ---------- */
+  function __xlsxReady(){ return !!(window.XLSX && window.XLSX.utils && window.XLSX.writeFile); }
+  function __sheetFromAoa(aoa, widths, numCols){
+    var ws = window.XLSX.utils.aoa_to_sheet(aoa);
+    if(widths && widths.length) ws['!cols'] = widths.map(function(w){ return { wch: w }; });
+    if(numCols && numCols.length){
+      for(var r=0;r<aoa.length;r++){
+        for(var nc=0;nc<numCols.length;nc++){
+          var c = numCols[nc];
+          var cell = ws[window.XLSX.utils.encode_cell({r:r,c:c})];
+          if(cell && typeof cell.v === 'number'){ cell.z = '#,##0'; }
+        }
+      }
+    }
+    return ws;
+  }
+  function __operaSheet(title, list){
+    var aoa = [[title+' · 共'+(list||[]).length+'部']];
+    (list||[]).forEach(function(op){
+      aoa.push(['剧目', (op.opera||'未命名'), '分类', op.type||'', '时长(分)', op.duration||'', '评级', op.rating||'']);
+      if(op.intro) aoa.push(['剧情简介', op.intro]);
+      aoa.push(['#','角色','行当','A角(主演)','B角(替补)','C角(实习)','分组/行当','备注说明']);
+      (op.cast||[]).forEach(function(c, ci){ aoa.push([ci+1, c.role||'', c.type||'', c.actorA||'', c.actorB||'', c.actorC||'', c.group||'', c.note||'']); });
+      aoa.push([]);
+    });
+    return __sheetFromAoa(aoa, [5,16,10,12,12,12,12,26]);
+  }
+  function __simpleSheet(list, c1){
+    var aoa = [['#', c1, '姓名/演奏员', '备注']];
+    (list||[]).forEach(function(r,i){ aoa.push([i+1, r.pos||'', r.name||'', r.note||'']); });
+    return __sheetFromAoa(aoa, [5,20,14,34]);
+  }
+  function buildAllWorkbook(){
+    var wb = window.XLSX.utils.book_new();
+    var h = state.header || {};
+    var info = [
+      ['秦安县秦剧团文化演出有限公司 · 演出演员表'],
+      ['导出时间', new Date().toLocaleString('zh-CN')],
+      [],
+      ['演出标题', h.title||''], ['主办单位', h.host||''], ['承办单位', h.organizer||''],
+      ['协办单位', h.coorganizer||''], ['赞助单位', h.sponsor||''],
+      ['演出日期', h.date||''], ['开演时间', h.time||''], ['演出地点', h.venue||''],
+      ['温馨提示', h.notice||'']
+    ];
+    window.XLSX.utils.book_append_sheet(wb, __sheetFromAoa(info, [14,42]), '演出信息');
+    var cr = [['#','职位','姓名','备注 / 分工说明']];
+    (state.creative||[]).forEach(function(r,i){ cr.push([i+1, r.pos||'', r.name||'', r.note||'']); });
+    window.XLSX.utils.book_append_sheet(wb, __sheetFromAoa(cr, [5,18,12,34]), '主创团队');
+    if((state.mainOpera||[]).length) window.XLSX.utils.book_append_sheet(wb, __operaSheet('主场演出剧目（大本戏）', state.mainOpera), '主场剧目');
+    if((state.addOpera||[]).length) window.XLSX.utils.book_append_sheet(wb, __operaSheet('加演剧目（折子戏/清唱）', state.addOpera), '加演剧目');
+    window.XLSX.utils.book_append_sheet(wb, __simpleSheet(state.wuchang,'岗位/乐器'), '武场乐队');
+    window.XLSX.utils.book_append_sheet(wb, __simpleSheet(state.wenchang,'岗位/乐器'), '文场乐队');
+    window.XLSX.utils.book_append_sheet(wb, __simpleSheet(state.stage,'岗位/职责'), '舞台保障');
+    var pg = [['#','分类','节目名称/章节','时长(分)','参演人员/负责人','备注说明']];
+    (state.program||[]).forEach(function(r,i){ pg.push([i+1, r.cat||'', r.name||'', r.duration||'', r.actors||'', r.note||'']); });
+    window.XLSX.utils.book_append_sheet(wb, __sheetFromAoa(pg, [5,12,30,10,22,26]), '节目单');
+    try{
+      if(typeof window.__csWageBudgetAoa === 'function'){
+        var wAoa = window.__csWageBudgetAoa();
+        if(wAoa) window.XLSX.utils.book_append_sheet(wb, __sheetFromAoa(wAoa, [5,12,10,14,8,10,7,12], [5,6,7]), '工资预算');
+      }
+    }catch(_e){}
+    return wb;
+  }
+  async function exportAllXlsx(){
+    try { await window.__castEnsureXlsx(); } catch(_){
+      if(typeof exportCSV === 'function'){ if(typeof toast !== 'undefined') toast('⚠️ Excel 组件加载失败，已改为导出 CSV','warning',2500); exportCSV(); }
+      return;
+    }
+    if(typeof toast !== 'undefined') toast('📊 准备 Excel 组件...','info',1200);
+    var wb = buildAllWorkbook();
+    var h = state.header || {};
+    var fn = '秦安县秦剧团-演出演员表-'+(h.date||new Date().toISOString().slice(0,10))+'-'+String(h.title||'未命名').replace(/[《》\\/:*?"<>|]/g,'').slice(0,20)+'.xlsx';
+    window.XLSX.writeFile(wb, fn);
+    if(typeof toast !== 'undefined') toast('📊 已导出全表 XLSX（'+wb.SheetNames.length+'个Sheet）：'+fn,'success',3400);
+  }
+  async function exportSelectedXlsx(){
+    var cbs = document.querySelectorAll('input[type="checkbox"][data-ps-cb-sec]');
+    var checked = [];
+    for(var i=0;i<cbs.length;i++){ if(cbs[i].checked) checked.push(cbs[i].getAttribute('data-ps-cb-sec')); }
+    if(!checked.length){ if(typeof toast !== 'undefined') toast('⚠️ 请先勾选要导出的板块','warning',2000); return; }
+    try { await window.__castEnsureXlsx(); } catch(_){
+      if(typeof exportCSV === 'function'){ if(typeof toast !== 'undefined') toast('⚠️ Excel 组件加载失败，已改为导出整表 CSV','warning',2500); exportCSV(); }
+      return;
+    }
+    if(typeof toast !== 'undefined') toast('📊 准备 Excel 组件...','info',1200);
+    var wb = window.XLSX.utils.book_new();
+    var SEC = {
+      creative: function(){ var aoa=[['#','职位','姓名','备注 / 分工说明']]; (state.creative||[]).forEach(function(r,i){aoa.push([i+1,r.pos||'',r.name||'',r.note||'']);}); return ['主创团队', __sheetFromAoa(aoa,[5,18,12,34])]; },
+      mainOpera: function(){ return ['主场剧目', __operaSheet('主场演出剧目（大本戏）', state.mainOpera||[])]; },
+      addOpera: function(){ return ['加演剧目', __operaSheet('加演剧目（折子戏/清唱）', state.addOpera||[])]; },
+      stage: function(){ return ['舞台保障', __simpleSheet(state.stage,'岗位/职责')]; },
+      wuchang: function(){ return ['武场乐队', __simpleSheet(state.wuchang,'岗位/乐器')]; },
+      wenchang: function(){ return ['文场乐队', __simpleSheet(state.wenchang,'岗位/乐器')]; },
+      program: function(){ var aoa=[['#','分类','节目名称/章节','时长(分)','参演人员/负责人','备注说明']]; (state.program||[]).forEach(function(r,i){aoa.push([i+1,r.cat||'',r.name||'',r.duration||'',r.actors||'',r.note||'']);}); return ['节目单', __sheetFromAoa(aoa,[5,12,30,10,22,26])]; }
+    };
+    var added = 0;
+    for(var k=0;k<checked.length;k++){
+      var f = SEC[checked[k]]; if(!f) continue;
+      var pair = f();
+      try{ window.XLSX.utils.book_append_sheet(wb, pair[1], pair[0]); added++; }catch(_e){}
+    }
+    if(!added){ if(typeof toast !== 'undefined') toast('⚠️ 勾选的板块暂无可导出内容','warning',2000); return; }
+    var h2 = state.header || {};
+    var fn2 = '秦安县秦剧团-演员表勾选板块-'+(h2.date||new Date().toISOString().slice(0,10))+'.xlsx';
+    window.XLSX.writeFile(wb, fn2);
+    if(typeof toast !== 'undefined') toast('📊 已导出 '+added+' 个板块：'+fn2,'success',3200);
+  }
+  window.__csExportAllXlsx = exportAllXlsx;
+  window.__csExportSelectedXlsx = exportSelectedXlsx;
   /* ---------- 手机折叠 ---------- */
   function bindFoldBtns(){
     document.querySelectorAll('.mobile-fold-btn').forEach(function(b){
@@ -2197,6 +2433,15 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
   function bindTopButtons(){
     function on(id, fn){ var el=$(id); if(!el) return; el.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation && e.stopPropagation(); e.stopImmediatePropagation && e.stopImmediatePropagation(); fn(); },true); }
     on('btnReset', resetState);
+    on('btnSyncRoster', function(){
+      if(!(window.QAXQJT_API && QAXQJT_API.get)){ toast('⚠️ API 未就绪，无法同步','warning'); return; }
+      toast('⏳ 正在从花名册同步演职人员...','info',2000);
+      syncPerformersFromApi().then(function(){
+        var perf = loadPerformers();
+        var n = (perf.flat||[]).length;
+        toast('✅ 已同步 '+n+' 名演职人员到姓名补全列表','success',3000);
+      });
+    });
     on('btnSave', function(){ saveState(false); });
     on('btnLoad', loadState);
     on('btnPreview', function(){ setMode('preview'); window.scrollTo({top:0,behavior:'smooth'}); });
@@ -2978,6 +3223,7 @@ function __pLog(module,event,extra){
     function _isPgContainer(el){
       try{
         if(!el || el.nodeType!==1) return false;
+        if(el.closest && el.closest('.sp-pg-toolbar-20260730,.pagination-toolbar')) return false;
         var tag = (el.tagName||'').toUpperCase();
         if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
         var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
@@ -3006,7 +3252,8 @@ function __pLog(module,event,extra){
     }
     function _buildPg(container){
       try{
-        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
+        if(container.hasAttribute('data-pg-built')||container.querySelector('.sp-pg-toolbar-20260730')) return; container.setAttribute('data-pg-built','1');
+        if(container.classList && (container.classList.contains('sp-pg-toolbar-20260730')||container.classList.contains('pagination-toolbar'))) return;
         var oldToolbar = container.querySelector('.pagination-toolbar');
         if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
         var st = _ensurePgState(container);
@@ -3021,6 +3268,7 @@ function __pLog(module,event,extra){
         if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
         var wrap = document.createElement('div');
         wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.setAttribute('data-pg-built','1');
         wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
         wrap.innerHTML = ''+
           '<button class="btn btn-sm" data-pg="first">首页</button>'+
@@ -3119,7 +3367,7 @@ function __pLog(module,event,extra){
       try{
         if (window.QinPagination) return; // 真分页器已接管，跳过假分页注入（orders/finance 同款修复范式）
         var all = document.querySelectorAll('div,nav,section,span');
-        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
+        all.forEach(function(el){ if(el.hasAttribute('data-pg-built')) return; if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
         if(!document.getElementById('_pgPatchCSS20260730')){
           sty.id='_pgPatchCSS20260730';
@@ -3358,9 +3606,11 @@ function __pLog(module,event,extra){
   function deleteSheet(){
     var curId=getCurId(); var sheets=getSheets(); var cur=sheets.filter(function(s){return s.id===curId;})[0];
     if(!cur){ toast('⚠️ 默认存档不可删除','warning',2000); return; }
-    if(!confirm('确定删除存档「'+cur.name+'」？此操作不可撤销！')) return;
-    sheets=sheets.filter(function(s){return s.id!==curId;}); saveSheets(sheets); setCurId('default'); refreshSheetSelect();
-    toast('🗑️ 已删除：'+cur.name,'success',2000); setTimeout(function(){ location.reload(); },1000);
+    var delName=cur.name;
+    __showConfirm('确定删除存档「'+delName+'」？此操作不可撤销！', function(){
+      sheets=getSheets().filter(function(s){return s.id!==curId;}); saveSheets(sheets); setCurId('default'); refreshSheetSelect();
+      toast('🗑️ 已删除：'+delName,'success',2000); setTimeout(function(){ location.reload(); },1000);
+    });
   }
   function switchSheet(id){
     setCurId(id); var sheets=getSheets(); var cur=sheets.filter(function(s){return s.id===id;})[0];
@@ -3375,10 +3625,10 @@ function __pLog(module,event,extra){
       var p=loadPerformers(); var flat=(p&&p.flat)||[];
       flat.forEach(function(x){
         var role=x.skill||''; var cb=x.category;
-        if(['老生','红生','小生','武生','青衣','花旦','老旦','彩旦','花脸','丑行'].indexOf(cb)>=0) groups.actor.push(x.name);
+        if(['文须生','武须生','小生','正旦','小旦','彩旦','二架旦','大花脸','二花脸','丑角','门官','家院','龙套','校尉','刀斧手','丫鬟','彩女'].indexOf(cb)>=0) groups.actor.push(x.name);
         else if(cb==='武场'||cb==='文场') groups.band.push(x.name);
-        else if(/灯|音响|话筒|耳麦|麦|配电|电工|设备/.test(role)) groups.electric.push(x.name);
-        else if(/服装|盔|跟包|化妆|妆|勾脸|道具/.test(role)) groups.costume.push(x.name);
+        else if(cb==='电工'||/灯|音响|话筒|耳麦|麦|配电|电工|设备/.test(role)) groups.electric.push(x.name);
+        else if(cb==='衣箱'||/衣箱|服装|盔|跟包|化妆|妆|勾脸|道具/.test(role)) groups.costume.push(x.name);
         else groups.front.push(x.name);
       });
     }catch(e){}
@@ -3388,15 +3638,15 @@ function __pLog(module,event,extra){
   function generate36Template(){
     var template=[];
     var pool=_realNamePool();
-    var actorSlots=[['老生','W5'],['老生','W4'],['小生','W5'],['小生','W3'],['青衣','W6'],['青衣','W4'],['花旦','W5'],['花旦','W3'],['花脸','W6'],['花脸','W4'],['丑行','W4'],['武生','W5'],['老旦','W4'],['彩旦','W3'],['红生','W5'],['丑行','W3'],['花脸','W4'],['武生','W4']];
+    var actorSlots=[['文须生','W5'],['文须生','W4'],['小生','W5'],['小生','W3'],['正旦','W6'],['正旦','W4'],['小旦','W5'],['小旦','W3'],['大花脸','W6'],['二花脸','W4'],['丑角','W4'],['武须生','W5'],['二架旦','W4'],['彩旦','W3'],['武须生','W5'],['丑角','W3'],['二花脸','W4'],['门官','W3']];
     actorSlots.forEach(function(s,i){ template.push(_slot('actor', pool.actor[i], s[0], s[1])); });
     var bandSlots=[['板胡','W6'],['二胡','W4'],['竹笛','W4'],['三弦','W3'],['司鼓','W6'],['大锣','W3'],['铙钹','W3'],['梆子','W2']];
     bandSlots.forEach(function(s,i){ template.push(_slot('band', pool.band[i], s[0], s[1])); });
-    var frontSlots=[['舞台监督','W5'],['前台','W2'],['字幕','W2'],['检票','W1']];
+    var frontSlots=[['前场','W5'],['前场','W2'],['前场','W2'],['前场','W1']];
     frontSlots.forEach(function(s,i){ template.push(_slot('front', pool.front[i], s[0], s[1])); });
-    var costumeSlots=[['服装师','W4'],['化妆师','W3'],['盔箱','W3']];
+    var costumeSlots=[['衣箱','W4'],['衣箱','W3'],['衣箱','W3']];
     costumeSlots.forEach(function(s,i){ template.push(_slot('costume', pool.costume[i], s[0], s[1])); });
-    var electricSlots=[['灯光师','W4'],['音响师','W4'],['配电','W2']];
+    var electricSlots=[['电工','W4'],['电工','W4'],['电工','W2']];
     electricSlots.forEach(function(s,i){ template.push(_slot('electric', pool.electric[i], s[0], s[1])); });
     return template;
   }
@@ -3442,7 +3692,7 @@ function __pLog(module,event,extra){
       var row={pos:p.role, name:p.name, note:(p.grade?WAGE_GRADES[p.grade].name:'')+' / ¥'+(p.daily||0)+'/天'};
       if(p.cat==='actor') actors.push(row);
       else if(p.cat==='band'){
-        if(/板胡|二胡|笛子|三弦|琵琶|扬琴|大提琴/.test(p.role)) wenchang.push(row);
+        if(/板胡|二胡|高胡|椰胡|扬琴|琵琶|三弦|古筝|竹笛|笛子|梅管|唢呐|海笛|笙|大提琴|贝司|提琴|电子琴|琴/.test(p.role)) wenchang.push(row);
         else wuchang.push(row);
       }
       else stage.push(row);
@@ -3463,11 +3713,11 @@ function __pLog(module,event,extra){
   }
   // ===== 自定义组团 =====
   var CG_ROLES={
-    actor:['老生','小生','青衣','花旦','花脸','丑角','武生','老旦','彩旦','红生','小丑','武净','武旦'],
-    band:['板胡','二胡','笛子','三弦','琵琶','扬琴','大提琴','鼓师','锣','铙钹','梆子','大锣'],
-    front:['舞台监督','前台','字幕','检票','引导','催场'],
-    costume:['服装师','化妆师','盔箱','道具师'],
-    electric:['灯光师','音响师','配电','设备']
+    actor:['文须生','武须生','小生','正旦','小旦','彩旦','二架旦','大花脸','二花脸','丑角','门官','家院','龙套','校尉','刀斧手','丫鬟','彩女'],
+    band:['板胡','二胡','笛子','三弦','琵琶','扬琴','大提琴','司鼓','锣','铙钹','梆子','大锣'],
+    front:['前场','舞台监督','前台','字幕','检票','引导','催场'],
+    costume:['衣箱','服装师','化妆师','帽箱','盔箱','道具师'],
+    electric:['电工','灯光师','音响师','配电','设备']
   };
   // 20260922 原内置假名表 CG_NAMES 已删除，人选统一走真实演职库
   function openCustomGroupModal(){
@@ -3500,6 +3750,9 @@ function __pLog(module,event,extra){
     if(closeBtn&&!closeBtn.__cgBound){ closeBtn.__cgBound=1; closeBtn.addEventListener('click',closeCustomGroupModal); }
     if(cancelBtn&&!cancelBtn.__cgBound){ cancelBtn.__cgBound=1; cancelBtn.addEventListener('click',closeCustomGroupModal); }
     if(genBtn&&!genBtn.__cgBound){ genBtn.__cgBound=1; genBtn.addEventListener('click',generateCustomTemplate); }
+    /* v20260929fix：点击遮罩空白处关闭自定义组团弹窗（target 为根遮罩本身，不影响内容区点击），与全站弹窗交互一致 */
+    var cgModal=$('customGroupModal');
+    if(cgModal&&!cgModal.__cgBackdropBound){ cgModal.__cgBackdropBound=1; cgModal.addEventListener('click', function(e){ if(e.target===cgModal) closeCustomGroupModal(); }); }
   }
   function generateCustomTemplate(){
     var a=parseInt($('cgActor').value)||0, b=parseInt($('cgBand').value)||0;
@@ -3541,7 +3794,16 @@ function __pLog(module,event,extra){
       var cnt=fillBlocksFromTemplate(saved);
       toast('📋 已载入模板：'+saved.length+'人（角色'+cnt.actors+' / 文场'+cnt.wenchang+' / 武场'+cnt.wuchang+' / 舞台保障'+cnt.stage+'）','success',2500);
     }else{
-      toast('⚠️ 无保存的模板，请先点击「一键生成36人标配」','warning',3000);
+      var lib=getTplLib();
+      if(lib.length&&lib[0].data&&lib[0].data.length){
+        try{ localStorage.setItem(LS_TROUPE, JSON.stringify(lib[0].data)); }catch(_){}
+        updateTroupeStats(lib[0].data);
+        fillBlocksFromTemplate(lib[0].data);
+        var td=$('tpDays'); if(td&&lib[0].days) td.value=lib[0].days;
+        toast('📋 已载入最近保存的模板「'+lib[0].name+'」（'+lib[0].data.length+'人）；更多模板请点「⚙️ 组团模板管理」','success',3400);
+      }else{
+        toast('⚠️ 无保存的模板，请先点击「一键生成36人标配」','warning',3000);
+      }
     }
   }
   function printWageSheet(e){
@@ -3559,6 +3821,402 @@ function __pLog(module,event,extra){
     html+='</table><scr'+'ipt>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */\n(function(){\n  function __markBound(){\n    var els=document.querySelectorAll("button[id], a[id], [data-action][id], .btn[id], .btn-action[id]");\n    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }\n  }\n  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded",__markBound); }\n  else { __markBound(); setTimeout(__markBound,500); }\n})();<\/scr'+'ipt>\n</body></html>';
     win.document.write(html); win.document.close(); setTimeout(function(){ win.print(); },500);
   }
+  /* ==================== 20260928 工具栏按钮真实化 ==================== */
+  function markSafe(b){ b.__superPatchBound=1; b.__ts3Done=1; b.__bindDone=1; b.__ctE2Done=1; b.__deadBtnChecked=1; return b; }
+  /* ---- 工资等级持久化（W1-W7 可编辑） ---- */
+  var WG_LS='qaxqjt_wage_grades_v1';
+  // 云端存储单例（脚本在页面底部加载，函数调用时再取，避免加载顺序问题）
+  function _tc(){ try{ return (window.TroupeCloudStore&&window.TroupeCloudStore.getStore)?window.TroupeCloudStore.getStore():null; }catch(_){ return null; } }
+  function _applyGradesObj(o){
+    if(!o) return false; var hit=false;
+    for(var k in WAGE_GRADES){ if(o[k]&&o[k].name){ WAGE_GRADES[k].name=String(o[k].name); WAGE_GRADES[k].daily=Number(o[k].daily)||0; hit=true; } }
+    return hit;
+  }
+  function loadWageGrades(){
+    var tc=_tc();
+    if(tc){ if(_applyGradesObj(tc.getGrades())) return; }
+    try{
+      var raw=localStorage.getItem(WG_LS); if(!raw) return;
+      var o=JSON.parse(raw);
+      _applyGradesObj(o);
+    }catch(_){}
+  }
+  function saveWageGrades(){
+    try{ localStorage.setItem(WG_LS, JSON.stringify(WAGE_GRADES)); }catch(_){}
+    var tc=_tc(); if(tc) tc.saveGrades(JSON.parse(JSON.stringify(WAGE_GRADES)));
+  }
+  loadWageGrades();
+  /* ---- 组团模板库（另存/管理/载入/重命名/删除；云端为主、本机缓存兜底） ---- */
+  var TPL_LIB_KEY='troupe_templates_v1';
+  function getTplLib(){
+    var tc=_tc();
+    if(tc){ var a=tc.getTemplates(); if(Array.isArray(a)) return a; }
+    try{ var x=JSON.parse(localStorage.getItem(TPL_LIB_KEY)||'[]'); return Array.isArray(x)?x:[]; }catch(_){ return []; }
+  }
+  function setTplLib(a){
+    try{ localStorage.setItem(TPL_LIB_KEY, JSON.stringify(a)); }catch(_){}
+    var tc=_tc(); if(tc) tc.saveTemplates(a);
+  }
+  function _tplDays(){ return parseInt(($('tpDays')&&$('tpDays').value))||3; }
+  function _stamp(){ var d=new Date(); function p2(n){ return (n<10?'0':'')+n; } return ''+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate()); }
+  function _fmtTime(iso){ try{ var dt=new Date(iso); return isNaN(dt.getTime())?'':(dt.toLocaleDateString('zh-CN')+' '+dt.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})); }catch(_){ return ''; } }
+  function tplSaveAs(){
+    var tpl=getCurrentTemplate();
+    if(!tpl||tpl.length===0){ toast('⚠️ 当前没有组团数据，请先「一键生成标配样板」或「自定义组团」','warning',2800); return; }
+    var n=prompt('请输入模板名称：','组团模板_'+_stamp());
+    if(n===null) return;
+    n=String(n).trim();
+    if(!n){ toast('⚠️ 模板名称不能为空','warning',2000); return; }
+    var lib=getTplLib();
+    lib.unshift({ id:'tp_'+Date.now().toString(36), name:n, data:tpl, days:_tplDays(), savedAt:new Date().toISOString() });
+    if(lib.length>50) lib.length=50;
+    setTplLib(lib);
+    toast('💾 已另存为组团模板「'+n+'」（'+tpl.length+'人×'+_tplDays()+'天）','success',3000);
+  }
+  function tplManage(){
+    var m=$('tplManageModal'); if(!m){ buildTplManageModal(); m=$('tplManageModal'); }
+    renderTplManageList();
+    m.style.display='flex'; document.body.classList.add('body-modal-locked');
+  }
+  function tplManageClose(){
+    var m=$('tplManageModal'); if(m) m.style.display='none';
+    document.body.classList.remove('body-modal-locked');
+  }
+  function buildTplManageModal(){
+    var d=document.createElement('div');
+    d.id='tplManageModal';
+    d.style.cssText='display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:flex-start;justify-content:center;padding-top:8vh;overflow-y:auto;transform:none!important;';
+    d.innerHTML='<div style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:min(680px,94vw);max-height:84vh;overflow-y:auto;">'
+      +'<div style="padding:18px 22px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;"><h3 style="margin:0;font-size:1.1rem;font-weight:700;color:#0f4c81;">📋 组团模板管理</h3><button type="button" id="tplMgClose" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">✕</button></div>'
+      +'<div style="padding:14px 22px 20px;"><div id="tplMgList"></div></div></div>';
+    document.body.appendChild(d);
+    var x=$('tplMgClose'); if(x&&!x.__tplMg){ x.__tplMg=1; markSafe(x); x.addEventListener('click',tplManageClose,true); }
+    d.addEventListener('click',function(e){ if(e.target===d) tplManageClose(); });
+  }
+  function renderTplManageList(){
+    var lib=getTplLib(); var box=$('tplMgList'); if(!box) return;
+    if(!lib.length){ box.innerHTML='<div style="text-align:center;color:#94a3b8;padding:34px 0;font-size:.9rem;">暂无保存的组团模板。<br>先在上方生成样板，再点「💾 另存为组团模板」。</div>'; return; }
+    var h='<table style="width:100%;border-collapse:collapse;font-size:.86rem;"><thead><tr>'
+      +'<th style="text-align:left;padding:8px 6px;border-bottom:2px solid #e2e8f0;">模板名称</th>'
+      +'<th style="padding:8px 6px;border-bottom:2px solid #e2e8f0;">人数</th>'
+      +'<th style="padding:8px 6px;border-bottom:2px solid #e2e8f0;">天数</th>'
+      +'<th style="padding:8px 6px;border-bottom:2px solid #e2e8f0;">保存时间</th>'
+      +'<th style="padding:8px 6px;border-bottom:2px solid #e2e8f0;width:210px;">操作</th></tr></thead><tbody>';
+    lib.forEach(function(t){
+      h+='<tr data-tpl-id="'+_hx(t.id||'')+'" style="border-bottom:1px solid #f1f5f9;">'
+        +'<td style="padding:8px 6px;font-weight:600;color:#334155;">'+_hx(t.name||'未命名')+'</td>'
+        +'<td style="padding:8px 6px;text-align:center;">'+((t.data&&t.data.length)||0)+'</td>'
+        +'<td style="padding:8px 6px;text-align:center;">'+(t.days||3)+'</td>'
+        +'<td style="padding:8px 6px;color:#64748b;font-size:.8rem;">'+_fmtTime(t.savedAt)+'</td>'
+        +'<td style="padding:8px 6px;text-align:center;white-space:nowrap;">'
+        +'<button type="button" class="tplmg-act" data-tact="load" style="padding:5px 12px;margin:0 2px;border:1px solid #0284c7;background:#fff;color:#0284c7;border-radius:7px;cursor:pointer;font-size:.8rem;">📥 载入</button>'
+        +'<button type="button" class="tplmg-act" data-tact="rename" style="padding:5px 12px;margin:0 2px;border:1px solid #d97706;background:#fff;color:#d97706;border-radius:7px;cursor:pointer;font-size:.8rem;">✏ 重命名</button>'
+        +'<button type="button" class="tplmg-act" data-tact="del" style="padding:5px 12px;margin:0 2px;border:1px solid #dc2626;background:#fff;color:#dc2626;border-radius:7px;cursor:pointer;font-size:.8rem;">🗑 删除</button>'
+        +'</td></tr>';
+    });
+    h+='</tbody></table>';
+    box.innerHTML=h;
+    var acts=box.querySelectorAll('.tplmg-act');
+    for(var i=0;i<acts.length;i++){ var b=acts[i]; markSafe(b); b.addEventListener('click',onTplManageAct,true); }
+  }
+  function onTplManageAct(e){
+    var btn=e.currentTarget||e.target;
+    var tr=btn.closest&&btn.closest('tr[data-tpl-id]'); if(!tr) return;
+    var id=tr.getAttribute('data-tpl-id');
+    var act=btn.getAttribute('data-tact');
+    var lib=getTplLib(); var idx=-1;
+    for(var i=0;i<lib.length;i++){ if(lib[i].id===id){ idx=i; break; } }
+    if(idx<0){ toast('⚠️ 模板不存在或已被删除','warning',2000); renderTplManageList(); return; }
+    var t=lib[idx];
+    if(act==='load'){
+      try{ localStorage.setItem(LS_TROUPE, JSON.stringify(t.data)); }catch(_){}
+      updateTroupeStats(t.data); fillBlocksFromTemplate(t.data);
+      var td=$('tpDays'); if(td&&t.days) td.value=t.days;
+      tplManageClose();
+      toast('📥 已载入模板「'+t.name+'」（'+((t.data&&t.data.length)||0)+'人）','success',2800);
+    } else if(act==='rename'){
+      var n=prompt('重命名模板：', t.name||''); if(n===null) return; n=String(n).trim();
+      if(!n){ toast('⚠️ 名称不能为空','warning',1800); return; }
+      t.name=n; setTplLib(lib); renderTplManageList(); toast('✏ 已重命名为「'+n+'」','success',1800);
+    } else if(act==='del'){
+      if(btn.getAttribute('data-armed')!=='1'){
+        btn.setAttribute('data-armed','1'); btn.textContent='确认删除？';
+        setTimeout(function(){ try{ btn.removeAttribute('data-armed'); btn.textContent='🗑 删除'; }catch(_){} },3000);
+        return;
+      }
+      lib.splice(idx,1); setTplLib(lib); renderTplManageList();
+      toast('🗑 已删除模板「'+t.name+'」','success',2000);
+    }
+  }
+  /* ---- 工资等级编辑（W1-W7） ---- */
+  function wgEdit(){
+    var m=$('wgEditModal'); if(!m){ buildWgEditModal(); m=$('wgEditModal'); }
+    renderWgEditRows();
+    m.style.display='flex'; document.body.classList.add('body-modal-locked');
+  }
+  function wgEditClose(){ var m=$('wgEditModal'); if(m) m.style.display='none'; document.body.classList.remove('body-modal-locked'); }
+  function buildWgEditModal(){
+    var d=document.createElement('div');
+    d.id='wgEditModal';
+    d.style.cssText='display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:flex-start;justify-content:center;padding-top:8vh;overflow-y:auto;transform:none!important;';
+    d.innerHTML='<div style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:min(560px,94vw);max-height:84vh;overflow-y:auto;">'
+      +'<div style="padding:18px 22px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;"><h3 style="margin:0;font-size:1.1rem;font-weight:700;color:#0f4c81;">💰 工资等级设置（W1-W7）</h3><button type="button" id="wgEdClose" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">✕</button></div>'
+      +'<div style="padding:12px 22px 6px;font-size:.82rem;color:#64748b;">保存后：新等级用于「一键生成标配样板 / 自定义组团」，并同步刷新当前模板中同等级人员的日薪。</div>'
+      +'<div style="padding:8px 22px 4px;"><table style="width:100%;border-collapse:collapse;font-size:.88rem;"><thead><tr><th style="text-align:left;padding:8px 6px;border-bottom:2px solid #e2e8f0;">等级</th><th style="text-align:left;padding:8px 6px;border-bottom:2px solid #e2e8f0;">名称</th><th style="padding:8px 6px;border-bottom:2px solid #e2e8f0;">日薪(元/天)</th></tr></thead><tbody id="wgEdRows"></tbody></table></div>'
+      +'<div style="padding:14px 22px 20px;display:flex;gap:10px;justify-content:flex-end;"><button type="button" id="wgEdCancel" style="padding:9px 20px;border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:9px;cursor:pointer;">取消</button><button type="button" id="wgEdSave" style="padding:9px 24px;border:none;background:#0f4c81;color:#fff;border-radius:9px;cursor:pointer;font-weight:700;">💾 保存</button></div></div>';
+    document.body.appendChild(d);
+    ['wgEdClose','wgEdCancel'].forEach(function(id){ var b=$(id); if(b&&!b.__wgEd){ b.__wgEd=1; markSafe(b); b.addEventListener('click',wgEditClose,true); } });
+    var sv=$('wgEdSave'); if(sv&&!sv.__wgEd){ sv.__wgEd=1; markSafe(sv); sv.addEventListener('click',wgEditSave,true); }
+    d.addEventListener('click',function(e){ if(e.target===d) wgEditClose(); });
+  }
+  function renderWgEditRows(){
+    var box=$('wgEdRows'); if(!box) return;
+    var h='';
+    for(var k in WAGE_GRADES){
+      var g=WAGE_GRADES[k];
+      h+='<tr><td style="padding:7px 6px;font-weight:700;color:#0f4c81;">'+k+'</td>'
+        +'<td style="padding:7px 6px;"><input id="wged-name-'+k+'" value="'+_hx(g.name)+'" style="width:100%;padding:7px 10px;border:1.5px solid #cbd5e1;border-radius:7px;box-sizing:border-box;"></td>'
+        +'<td style="padding:7px 6px;text-align:right;"><input id="wged-daily-'+k+'" type="number" min="0" value="'+(g.daily||0)+'" style="width:120px;padding:7px 10px;border:1.5px solid #cbd5e1;border-radius:7px;text-align:right;box-sizing:border-box;"></td></tr>';
+    }
+    box.innerHTML=h;
+  }
+  function wgEditSave(){
+    var vals=[];
+    for(var k in WAGE_GRADES){
+      var nEl=$('wged-name-'+k), dEl=$('wged-daily-'+k); if(!nEl||!dEl) return;
+      var n=String(nEl.value).trim(); var dv=Number(dEl.value);
+      if(!n){ toast('⚠️ '+k+' 名称不能为空','warning',2000); return; }
+      if(isNaN(dv)||dv<0){ toast('⚠️ '+k+' 日薪必须为 ≥0 的数字','warning',2000); return; }
+      vals.push([k,n,dv]);
+    }
+    vals.forEach(function(v){ WAGE_GRADES[v[0]].name=v[1]; WAGE_GRADES[v[0]].daily=v[2]; });
+    saveWageGrades();
+    var tpl=getCurrentTemplate(); var hit=0;
+    if(tpl&&tpl.length){
+      tpl.forEach(function(p){ var g=WAGE_GRADES[p.grade]; if(g&&p.daily!==g.daily){ p.daily=g.daily; hit++; } });
+      if(hit){ try{ localStorage.setItem(LS_TROUPE,JSON.stringify(tpl)); }catch(_){ } updateTroupeStats(tpl); }
+    }
+    wgEditClose();
+    toast('💾 已保存工资等级'+(hit?('，同步更新当前模板 '+hit+' 人日薪'):'（新样板将按新标准生成）'),'success',3000);
+  }
+  /* ---- 预算评估导出 CSV / XLSX ---- */
+  var CAT_NAMES={actor:'演员组',band:'乐队组',front:'前场',costume:'服装化妆',electric:'电工'};
+  function wageBudgetData(silent){
+    var tpl=getCurrentTemplate();
+    if(!tpl||tpl.length===0){ if(!silent) toast('⚠️ 请先生成或载入组团模板（当前无组团数据）','warning',2800); return null; }
+    var days=_tplDays();
+    var rows=[], total=0, catSum={}, catCnt={};
+    for(var i=0;i<tpl.length;i++){
+      var p=tpl[i]; var sub=(p.daily||0)*days; total+=sub;
+      catSum[p.cat]=(catSum[p.cat]||0)+sub; catCnt[p.cat]=(catCnt[p.cat]||0)+1;
+      rows.push([i+1, p.name||'（待定）', CAT_NAMES[p.cat]||p.cat, p.role||'', (WAGE_GRADES[p.grade]?WAGE_GRADES[p.grade].name:p.grade)||'', p.daily||0, days, sub]);
+    }
+    var catRows=[];
+    ['actor','band','front','costume','electric'].forEach(function(c){
+      if(catCnt[c]) catRows.push([CAT_NAMES[c], catCnt[c], Math.round(catSum[c]/(days||1)), catSum[c]]);
+    });
+    return {tpl:tpl, days:days, rows:rows, catRows:catRows, total:total};
+  }
+  function _dlBlob(blob, fn){
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download=fn;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ try{ URL.revokeObjectURL(url); }catch(_){} },500);
+  }
+  window.__csWageBudgetAoa=function(){
+    var d=wageBudgetData(true); if(!d) return null;
+    var aoa=[['#','姓名','组别','行当/岗位','等级','日薪(元)','天数','小计(元)']];
+    d.rows.forEach(function(r){ aoa.push(r); });
+    aoa.push(['合计', d.tpl.length+'人','','','','','', d.total]);
+    return aoa;
+  };
+  function wageCsv(){
+    var d=wageBudgetData(); if(!d) return;
+    var esc=function(s){ return '"'+String(s==null?'':s).replace(/"/g,'""')+'"'; };
+    var L=[];
+    L.push(['秦安县秦剧团 · 工资预算评估表（组团 '+d.tpl.length+'人 × '+d.days+'天）'].map(esc).join(','));
+    L.push(['导出时间', new Date().toLocaleString('zh-CN')].map(esc).join(','));
+    L.push('');
+    L.push(['#','姓名','组别','行当/岗位','等级','日薪(元)','天数','小计(元)'].map(esc).join(','));
+    d.rows.forEach(function(r){ L.push(r.map(esc).join(',')); });
+    L.push(['合计', d.tpl.length+'人','','','','','', d.total].map(esc).join(','));
+    L.push('');
+    L.push('=== 分组汇总 ===');
+    L.push(['组别','人数','日均工资(元/天)',d.days+'天合计(元)'].map(esc).join(','));
+    d.catRows.forEach(function(r){ L.push(r.map(esc).join(',')); });
+    L.push('');
+    L.push(['预算总额（'+d.tpl.length+'人×'+d.days+'天）', d.total].map(esc).join(','));
+    var fn='工资预算评估_'+_stamp()+'.csv';
+    _dlBlob(new Blob(['\uFEFF'+L.join('\n')], {type:'text/csv;charset=utf-8;'}), fn);
+    toast('📊 已导出：'+fn+'（总额 ¥'+d.total.toLocaleString('zh-CN')+'）','success',3200);
+  }
+  async function wageXlsx(){
+    var d=wageBudgetData(); if(!d) return;
+    try { await window.__castEnsureXlsx(); } catch(_){ wageCsv(); return; }
+    if(typeof toast !== 'undefined') toast('📘 准备 Excel 组件...','info',1200);
+    var X=window.XLSX;
+    var wb=X.utils.book_new();
+    var aoa=[['秦安县秦剧团 · 工资预算评估表'],['组团人数', d.tpl.length+'人','演出天数', d.days+'天','预算总额(元)', d.total],[]];
+    aoa.push(['#','姓名','组别','行当/岗位','等级','日薪(元)','天数','小计(元)']);
+    d.rows.forEach(function(r){ aoa.push(r); });
+    aoa.push(['合计', d.tpl.length+'人','','','','','', d.total]);
+    var ws=X.utils.aoa_to_sheet(aoa);
+    ws['!cols']=[{wch:5},{wch:12},{wch:10},{wch:14},{wch:8},{wch:10},{wch:7},{wch:12}];
+    for(var r=5;r<=aoa.length;r++){ ['F','H'].forEach(function(col){ var c=ws[col+r]; if(c&&typeof c.v==='number') c.z='#,##0'; }); }
+    X.utils.book_append_sheet(wb, ws, '工资明细');
+    var ws2=X.utils.aoa_to_sheet([['组别','人数','日均工资(元/天)',d.days+'天合计(元)']].concat(d.catRows));
+    ws2['!cols']=[{wch:12},{wch:8},{wch:16},{wch:16}];
+    X.utils.book_append_sheet(wb, ws2, '分组汇总');
+    var fn='工资预算评估_'+_stamp()+'.xlsx';
+    X.writeFile(wb, fn);
+    toast('📘 已导出：'+fn+'（总额 ¥'+d.total.toLocaleString('zh-CN')+'）','success',3200);
+  }
+  /* ---- 转财务待发工资（后端制单入口强制 status=draft，复核走财务台账） ----
+   * 失败策略：错误原因细分提示；可重试错误（网络/超时/限流/5xx）最多重试 3 次，
+   * 不可重试错误（登录过期/无权限/数据校验/冲突重复/接口缺失）直接给定向指引；
+   * 重试耗尽后锁定本次操作（防 tight-loop 与重复制单），刷新页面可重新计数。 */
+  var W2F_MAX_RETRY=3;
+  var _w2fBusy=false;
+  var _w2fChain=false;   // 是否处于一次「失败链」中（成功或不可重试错误后复位）
+  var _w2fAttempts=0;    // 当前失败链累计提交次数（含首次）
+  var _w2fLocked=false;  // 重试上限耗尽，刷新前禁止再次提交
+  var _w2fBtnDef='📒 转财务待发工资';
+  var _w2fTitleDef='';
+  var W2F_LAST_KEY='qaxqjt_wage2fin_last';
+  function _w2fRetryBtn(show,left){
+    var rb=$('tpBtnWage2FinRetry');
+    if(!rb) return;
+    rb.style.display=show?'':'none';
+    if(show) rb.textContent='🔄 重试'+(typeof left==='number'?('（剩'+left+'次）'):'');
+  }
+  /* 失败原因细分：依据 err.status/code/name/message 归类
+   * @returns {{kind:string,retryable:boolean,short:string,title:string,toast:string}} */
+  function _w2fClassify(err){
+    var st=err&&err.status, code=String((err&&err.code)||''), name=String((err&&err.name)||'');
+    var msg=String((err&&err.message)||'未知错误').slice(0,200);
+    var blob=(msg+' '+code).toLowerCase();
+    if(!st||name==='AbortError'||/failed to fetch|networkerror|network|timeout|timed out|abort|econn|socket|load failed/i.test(blob)){
+      return { kind:'network', retryable:true, short:'网络异常/超时',
+        title:'网络异常或请求超时：'+msg+'（超时情况下凭证可能已在财务端生成，请先到「财务台账」核对，避免重复制单）',
+        toast:'🌐 网络异常或请求超时（'+msg+'）。请检查网络后点「🔄 重试」；若可能已制单，请先到「财务台账」核对，避免重复。' };
+    }
+    if(st===401||/unauthorized|token_expired|invalid_token/i.test(blob))
+      return { kind:'auth', retryable:false, short:'登录已过期',
+        title:'登录已过期：'+msg,
+        toast:'🔐 登录状态已过期，请刷新页面重新登录后再提交（直接重试无效）。' };
+    if(st===403||/forbidden/i.test(blob))
+      return { kind:'forbidden', retryable:false, short:'无转财务权限',
+        title:'无转财务权限：'+msg,
+        toast:'⛔ 当前账号没有「转财务制单」权限，请联系管理员授权后再操作（重试无效）。' };
+    if(st===400||st===422||/validation|invalid|bad_?request/i.test(blob))
+      return { kind:'validation', retryable:false, short:'数据校验未通过',
+        title:'提交数据被后端拒绝：'+msg,
+        toast:'📝 提交数据未通过校验：'+msg+'。请调整工资表（金额/人员/天数）后重新点击转财务，原参数直接重试无意义。' };
+    if(st===409||/conflict|duplicate|already exists/i.test(blob))
+      return { kind:'conflict', retryable:false, short:'凭证可能已存在',
+        title:'冲突/重复提交：'+msg,
+        toast:'⚠️ 后端提示可能已存在相同凭证（'+msg+'）。请先到「财务台账」核对，确认未制单后再重新提交，避免重复。' };
+    if(st===404||/not_?found/i.test(blob))
+      return { kind:'missing', retryable:false, short:'接口不存在',
+        title:'转财务接口不存在：'+msg,
+        toast:'🔧 转财务接口不存在或尚未部署（'+msg+'），请联系系统管理员处理（重试无效）。' };
+    if(st===429||/rate|too many/i.test(blob))
+      return { kind:'rate', retryable:true, short:'操作过于频繁',
+        title:'请求被限流：'+msg,
+        toast:'⏳ 操作过于频繁被限流（'+msg+'），请等待约 30 秒后再点「🔄 重试」。' };
+    if(st===408)
+      return { kind:'network', retryable:true, short:'请求超时',
+        title:'请求超时：'+msg,
+        toast:'⏱ 请求超时（'+msg+'），请检查网络后重试；必要时先到「财务台账」核对是否已制单。' };
+    if(st&&st>=500)
+      return { kind:'server', retryable:true, short:'服务端故障',
+        title:'财务服务端暂时故障：HTTP '+st+' '+msg,
+        toast:'🖥 财务服务暂时故障（HTTP '+st+'：'+msg+'），可点「🔄 重试」；若多次失败请先用「预算评估导出」备用并联系管理员。' };
+    return { kind:'unknown', retryable:true, short:'未知错误',
+      title:'未知错误：'+(st?('HTTP '+st+' '):'')+msg,
+      toast:'⚠️ 转财务遇到未知错误（'+(st?('HTTP '+st+'：'):'')+msg+'），可点「🔄 重试」，仍失败请联系管理员。' };
+  }
+  function _w2fResetChain(){ _w2fChain=false; _w2fAttempts=0; _w2fLocked=false; }
+  function _w2fBtnReset(btn){
+    setTimeout(function(){
+      if(btn&&!_w2fLocked){ btn.textContent=_w2fBtnDef; btn.disabled=false; btn.style.opacity=''; if(!_w2fChain) btn.title=_w2fTitleDef||''; }
+      _w2fBusy=false;
+    },4200);
+  }
+  function wageToFin(){
+    var d=wageBudgetData(); if(!d) return;
+    var btn=$('tpBtnWage2Fin');
+    if(!(window.QAXQJT_API&&QAXQJT_API.post)){ toast('⚠️ API 组件未就绪，无法转财务','error',2600); return; }
+    if(_w2fBusy){ toast('⏳ 正在转财务，请稍候…','warning',1500); return; }
+    if(_w2fLocked){
+      toast('⛔ 已连续提交失败、重试达上限（'+W2F_MAX_RETRY+' 次），为避免重复制单已停止重试。请先到「财务台账」核对是否已制单，或用「预算评估导出」备用；刷新页面后可重新提交，持续失败请联系管理员。','error',5600);
+      return;
+    }
+    try{
+      var last=JSON.parse(localStorage.getItem(W2F_LAST_KEY)||'null');
+      if(!_w2fChain&&last&&last.day===new Date().toISOString().slice(0,10)&&last.no){ toast('ℹ️ 今日已生成过草稿凭证 '+last.no+'，本次将再新增一张','info',2800); }
+    }catch(_){}
+    if(!_w2fChain) _w2fAttempts=0;
+    _w2fAttempts++;
+    var isRetry=_w2fAttempts>1;
+    _w2fBusy=true;
+    _w2fRetryBtn(false);
+    if(btn){ btn.disabled=true; btn.style.opacity='0.6'; btn.textContent=isRetry?('🔄 重试中…（'+(_w2fAttempts-1)+'/'+W2F_MAX_RETRY+'）'):'⏳ 转财务中…'; }
+    var dayTotal=0; d.tpl.forEach(function(p){ dayTotal+=(p.daily||0); });
+    QAXQJT_API.post('/v1/fin/ledger', {
+      summary:'演出天工资预算（组团'+d.tpl.length+'人×'+d.days+'天）',
+      voucherType:'payment',
+      voucherCategory:'工资',
+      debitAmount: d.total,
+      status:'draft',
+      remark:'预算评估转入待发工资：全员日薪合计 ¥'+dayTotal.toLocaleString('zh-CN')+'/天；明细见演出演员表-组团工资表（'+_stamp()+'）'
+    }, { showErrorToast:false }).then(function(row){
+      _w2fResetChain();
+      var no=(row&&row.voucherNo)||'';
+      try{ localStorage.setItem(W2F_LAST_KEY, JSON.stringify({ day:new Date().toISOString().slice(0,10), no:no, amount:d.total, at:new Date().toISOString() })); }catch(_){}
+      if(btn){ btn.textContent='✅ 已转财务'; btn.title='最近凭证：'+(no||'（未返回凭证号）')+' · ¥'+d.total.toLocaleString('zh-CN')+'（草稿，待财务复核）'; }
+      toast('📒 已生成财务待发工资草稿'+(no?('（凭证号 '+no+'）'):'')+'，请到「财务台账」复核','success',3600);
+      _w2fBtnReset(btn);
+    },function(err){
+      var c=_w2fClassify(err);
+      _w2fBusy=false;
+      if(btn){ btn.disabled=false; btn.style.opacity=''; btn.title=c.title; }
+      if(!c.retryable){
+        // 不可重试错误：不显示重试按钮，结束失败链（用户修正数据/重新登录后的提交视为新链）
+        _w2fChain=false;
+        _w2fRetryBtn(false);
+        if(btn) btn.textContent='❌ '+c.short;
+        toast(c.toast,'error',5400);
+        setTimeout(function(){ if(btn){ btn.textContent=_w2fBtnDef; } },4200);
+        return;
+      }
+      // 可重试错误：累计失败链提交次数，未到上限显示剩余重试次数
+      _w2fChain=true;
+      var left=W2F_MAX_RETRY-(_w2fAttempts-1);
+      if(left>0){
+        if(btn) btn.textContent='⚠️ 转财务失败·点此重试（剩'+left+'次）';
+        _w2fRetryBtn(true,left);
+        toast(c.toast+'（第'+_w2fAttempts+'次提交失败，还可重试 '+left+' 次）','error',5000);
+      }else{
+        _w2fLocked=true; _w2fChain=false;
+        _w2fRetryBtn(false);
+        if(btn){ btn.textContent='❌ 转财务失败（重试已达上限'+W2F_MAX_RETRY+'次）'; btn.title=c.title+'｜已连续提交 '+_w2fAttempts+' 次均失败。'; }
+        toast(c.toast+' ⛔ 已达重试上限（'+W2F_MAX_RETRY+' 次），为避免重复制单已停止。请先到「财务台账」核对或用「预算评估导出」备用，刷新页面后可再试，持续失败请联系管理员。','error',6500);
+      }
+    });
+  }
+  // 暴露分类器供自动化测试（页面业务无其他用途）
+  try{ window.__w2fClassify=_w2fClassify; window.__W2F_MAX_RETRY=function(){ return W2F_MAX_RETRY; }; }catch(_){}
+  // 页面载入：保存按钮默认 title；把上次转财务的凭证号恢复到按钮 title（状态持久提示）
+  (function(){
+    try{
+      var b0=$('tpBtnWage2Fin');
+      if(b0) _w2fTitleDef=b0.title||'';
+      var last=JSON.parse(localStorage.getItem(W2F_LAST_KEY)||'null');
+      if(last&&last.no&&b0) b0.title='最近转财务：'+last.no+' · ¥'+Number(last.amount||0).toLocaleString('zh-CN')+'（'+_fmtTime(last.at)+'，草稿待复核）';
+    }catch(_){}
+  })();
   function bindAll(){
     var btnNew=$('csBtnNew'); var btnSaveAs=$('csBtnSaveAs'); var btnDelete=$('csBtnDelete'); var selSheet=$('csSheetSelect');
     if(btnNew&&!btnNew.__csBound){ btnNew.__csBound=1; btnNew.__superPatchBound=1; btnNew.addEventListener('click',newSheet,true); }
@@ -3571,7 +4229,9 @@ function __pLog(module,event,extra){
     if(btnLoad&&!btnLoad.__csBound){ btnLoad.__csBound=1; btnLoad.__superPatchBound=1; btnLoad.addEventListener('click',loadTemplate,true); }
     if(btnSync&&!btnSync.__csBound){ btnSync.__csBound=1; btnSync.__superPatchBound=1; btnSync.addEventListener('click',syncToCast,true); }
     if(btnWagePrint&&!btnWagePrint.__csBound){ btnWagePrint.__csBound=1; btnWagePrint.__superPatchBound=1; btnWagePrint.addEventListener('click',printWageSheet,true); }
-    if(btnWage2Fin&&!btnWage2Fin.__csBound){ btnWage2Fin.__csBound=1; btnWage2Fin.__superPatchBound=1; btnWage2Fin.addEventListener('click',function(){ toast('📒 已生成财务待发工资草稿','info',2500); },true); }
+    if(btnWage2Fin&&!btnWage2Fin.__csBound){ btnWage2Fin.__csBound=1; btnWage2Fin.__superPatchBound=1; btnWage2Fin.addEventListener('click',wageToFin,true); }
+    var btnW2fRetry=$('tpBtnWage2FinRetry');
+    if(btnW2fRetry&&!btnW2fRetry.__csBound){ btnW2fRetry.__csBound=1; btnW2fRetry.__superPatchBound=1; btnW2fRetry.addEventListener('click',function(){ wageToFin(); },true); }
     var daysInput=$('tpDays'); if(daysInput&&!daysInput.__csBound){ daysInput.__csBound=1; daysInput.addEventListener('input',function(){ var tpl=getCurrentTemplate(); if(tpl) updateTroupeStats(tpl); }); }
     // 打印范围选择按钮
     var psSelAll=$('psSelectAll'); var psClrAll=$('psClearAll'); var psOperaOnly=$('psSelectOperaOnly');
@@ -3581,19 +4241,43 @@ function __pLog(module,event,extra){
     if(psClrAll&&!psClrAll.__csBound){ psClrAll.__csBound=1; psClrAll.__superPatchBound=1; psClrAll.addEventListener('click',function(){ __getPsCbs().forEach(function(c){ c.checked=false; }); toast('❌ 已清空所有勾选','info',1500); },true); }
     if(psOperaOnly&&!psOperaOnly.__csBound){ psOperaOnly.__csBound=1; psOperaOnly.__superPatchBound=1; psOperaOnly.addEventListener('click',function(){ __getPsCbs().forEach(function(c){ c.checked=(c.getAttribute('data-ps-cb-sec')==='mainOpera'||c.getAttribute('data-ps-cb-sec')==='addOpera'); }); toast('🎭 已仅选场次剧目板块','success',1500); },true); }
     if(psPrint&&!psPrint.__csBound){ psPrint.__csBound=1; psPrint.__superPatchBound=1; psPrint.addEventListener('click',function(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} var cbs=__getPsCbs(); var checked=[].filter.call(cbs,function(c){return c.checked;}); if(checked.length===0){ toast('⚠️ 请先勾选要打印的板块','warning',2000); return; } toast('🖨 正在打印 '+checked.length+' 个勾选板块...','info',1500); setTimeout(function(){ try{ window.print(); }catch(_e){ toast('⚠️ 打印调用失败，请用 Ctrl+P 手动打印','warning',2500); } },400); },true); }
-    if(psXlsx&&!psXlsx.__csBound){ psXlsx.__csBound=1; psXlsx.__superPatchBound=1; psXlsx.addEventListener('click',function(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} var cbs=__getPsCbs(); var checked=[].filter.call(cbs,function(c){return c.checked;}); if(checked.length===0){ toast('⚠️ 请先勾选要导出的板块','warning',2000); return; } toast('📊 正在导出 '+checked.length+' 个板块的 XLSX','info',2500); },true); }
-    // 工资表操作按钮
+    if(psXlsx&&!psXlsx.__csBound){ psXlsx.__csBound=1; psXlsx.__superPatchBound=1; psXlsx.addEventListener('click',function(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} var cbs=__getPsCbs(); var checked=[].filter.call(cbs,function(c){return c.checked;}); if(checked.length===0){ toast('⚠️ 请先勾选要导出的板块','warning',2000); return; } if(typeof window.__csExportSelectedXlsx==='function'){ window.__csExportSelectedXlsx(); } else { toast('⚠️ 导出组件未就绪，请刷新页面重试','error',2500); } },true); }
+    // 工资表操作按钮（20260928 全部真实化）
     var tpWgCsv=$('tpBtnWageCsv'), tpWgXlsx=$('tpBtnWageXlsx'), tpSaveAs=$('tpBtnSaveAs'), tpManage=$('tpBtnManage'), tpWgEdit=$('tpBtnWgEdit'), btnXlsxAll=$('btnXlsxAll');
-    if(tpWgCsv&&!tpWgCsv.__csBound){ tpWgCsv.__csBound=1; tpWgCsv.__superPatchBound=1; tpWgCsv.addEventListener('click',function(){ toast('📊 工资表 CSV 导出中','info',2000); },true); }
-    if(tpWgXlsx&&!tpWgXlsx.__csBound){ tpWgXlsx.__csBound=1; tpWgXlsx.__superPatchBound=1; tpWgXlsx.addEventListener('click',function(){ toast('📊 工资表 XLSX 导出中','info',2000); },true); }
-    if(tpSaveAs&&!tpSaveAs.__csBound){ tpSaveAs.__csBound=1; tpSaveAs.__superPatchBound=1; tpSaveAs.addEventListener('click',function(){ var n=prompt('请输入存档名称：','演出演员表_'+new Date().toISOString().slice(0,10)); if(n){ toast('💾 已另存为：'+n+'','success',2000); } },true); }
-    if(tpManage&&!tpManage.__csBound){ tpManage.__csBound=1; tpManage.__superPatchBound=1; tpManage.addEventListener('click',function(){ toast('📋 存档管理面板','info',2000); },true); }
-    if(tpWgEdit&&!tpWgEdit.__csBound){ tpWgEdit.__csBound=1; tpWgEdit.__superPatchBound=1; tpWgEdit.addEventListener('click',function(){ toast('✏️ 工资表编辑','info',2000); },true); }
-    if(btnXlsxAll&&!btnXlsxAll.__csBound){ btnXlsxAll.__csBound=1; btnXlsxAll.__superPatchBound=1; btnXlsxAll.addEventListener('click',function(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} toast('📊 全部演出演员表 XLSX 导出中','info',2000); },true); }
+    if(tpWgCsv&&!tpWgCsv.__csBound){ tpWgCsv.__csBound=1; tpWgCsv.__superPatchBound=1; tpWgCsv.addEventListener('click',wageCsv,true); }
+    if(tpWgXlsx&&!tpWgXlsx.__csBound){ tpWgXlsx.__csBound=1; tpWgXlsx.__superPatchBound=1; tpWgXlsx.addEventListener('click',wageXlsx,true); }
+    if(tpSaveAs&&!tpSaveAs.__csBound){ tpSaveAs.__csBound=1; tpSaveAs.__superPatchBound=1; tpSaveAs.addEventListener('click',tplSaveAs,true); }
+    if(tpManage&&!tpManage.__csBound){ tpManage.__csBound=1; tpManage.__superPatchBound=1; tpManage.addEventListener('click',tplManage,true); }
+    if(tpWgEdit&&!tpWgEdit.__csBound){ tpWgEdit.__csBound=1; tpWgEdit.__superPatchBound=1; tpWgEdit.addEventListener('click',wgEdit,true); }
+    if(btnXlsxAll&&!btnXlsxAll.__csBound){ btnXlsxAll.__csBound=1; btnXlsxAll.__superPatchBound=1; btnXlsxAll.addEventListener('click',function(e){ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} if(typeof window.__csExportAllXlsx==='function'){ window.__csExportAllXlsx(); } else { toast('⚠️ 导出组件未就绪，请刷新页面重试','error',2500); } },true); }
     refreshSheetSelect(); var saved=getCurrentTemplate(); if(saved&&saved.length>0){ updateTroupeStats(saved); }
     console.log('[cast-sheet-fix] buttons bound, template:', saved?saved.length+'人':'none');
   }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ setTimeout(bindAll,300); }); } else { setTimeout(bindAll,300); }
+  /* ---- 云端配置启动：拉取云端模板库/工资等级，应用到当前页面状态 ---- */
+  function _troupeCloudBoot(){
+    var tc=_tc(); if(!tc) return;
+    tc.bootstrap({
+      report:{
+        info:function(m){ toast(m,'info',3400); },
+        warn:function(m){ toast('☁️ '+m,'warning',3200); },
+        error:function(m){ toast(m,'error',4000); }
+      },
+      onApply:function(arg){
+        // 应用云端工资等级到页面全局，并同步当前组团模板同档人员日薪（多设备口径一致）
+        var changed=_applyGradesObj(arg.grades);
+        var hit=0; var tpl=getCurrentTemplate();
+        if(tpl&&tpl.length){
+          tpl.forEach(function(p){ var g=WAGE_GRADES[p.grade]; if(g&&p.daily!==g.daily){ p.daily=g.daily; hit++; } });
+          if(hit){ try{ localStorage.setItem(LS_TROUPE,JSON.stringify(tpl)); }catch(_){} updateTroupeStats(tpl); }
+        }
+        if(changed||hit){ /* 等级或日薪有更新 */ }
+        // 弹窗若开着则用云端数据重绘
+        var wm=$('wgEditModal'); if(wm&&wm.style.display==='flex') renderWgEditRows();
+        var mm=$('tplManageModal'); if(mm&&mm.style.display==='flex') renderTplManageList();
+      }
+    });
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ setTimeout(function(){ bindAll(); _troupeCloudBoot(); },300); }); } else { setTimeout(function(){ bindAll(); _troupeCloudBoot(); },300); }
 })();
 </script>
 
@@ -3623,8 +4307,8 @@ function __pLog(module,event,extra){
 })();
 </script>
 <!-- ===== 自定义组团模态框 ===== -->
-<div id="customGroupModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:center;justify-content:center;">
-  <div class="modal-overlay-root" style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:min(640px,94vw);max-height:92vh;overflow-y:auto;">
+<div id="customGroupModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:flex-start;justify-content:center;padding-top:8vh;overflow-y:auto;transform:none!important;top:0!important;left:0!important;right:0!important;bottom:0!important;">
+  <div class="modal-overlay-root" style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:min(640px,94vw);max-height:84vh;overflow-y:auto;">
     <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
       <h3 style="margin:0;font-size:1.15rem;font-weight:700;color:#0f4c81;">🛠 自定义组团配置</h3>
       <button type="button" id="cgCloseBtn" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;line-height:1;">✕</button>
@@ -3672,7 +4356,8 @@ function __pLog(module,event,extra){
     </div>
   </div>
 </div>
-<script src="../js/cast-sheet-real.js?v=20260922"></script>
+<script src="../js/cast-sheet-real.js?v=20260924"></script>
+<script src="../js/troupe-cloud-store.js?v=20260928i"></script>
 <script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
 (function(){
   function __markBound(){
@@ -3682,5 +4367,6 @@ function __pLog(module,event,extra){
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
   else { __markBound(); setTimeout(__markBound,500); }
 })();</script>
+<script src="../js/admin-mobile-sidebar.js?v=20260926m"></script>
 </body>
 </html>

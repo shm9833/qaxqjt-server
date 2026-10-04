@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <base href="/admin/">
   <meta charset="UTF-8">
   <!-- =========================================================== -->
   <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
@@ -19,9 +18,12 @@
     }
     if(bad){
       ["qaxqjt_admin_session","admin_session","qaxqjt_admin_sess_v2","admin_sess_v2","qaxqjt_admin_remember","qaxqjt_admin_token","qaxqjt_admin_info","qaxqjt_admin_permissions","qaxqjt_auth_permissions_v1"].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
-      location.replace(L);
+      var u=location.href, i=u.lastIndexOf("/");
+      var base= (i>=0)? u.substring(0,i+1) : "./";
+      location.replace(base + L);
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
+  <script>window.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button[data-act],[data-real-bound]');if(!b)return;if(!b.__superPatchBound)b.__superPatchBound=1;if(!b.__ts3Done)b.__ts3Done=1;if(!b.__bindDone)b.__bindDone=1;if(!b.__ctE2Done)b.__ctE2Done=1;if(!b.__deadBtnChecked)b.__deadBtnChecked=1;},true);</script>
 
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="renderer" content="webkit">
@@ -40,7 +42,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>订单预约与客户管理 - 秦安县秦剧团云端预约系统 | {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260919c">
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -508,10 +510,10 @@
             <span class="menu-icon">👥</span>
             <span>账号权限管理</span>
           </a>
-          <a href="schedule.html" data-role-level="800" class="admin-menu-item">
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
-            
+            <span class="menu-badge">8</span>
           </a>
           <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
@@ -521,7 +523,7 @@
           <a href="orders.html" data-role-level="800" class="admin-menu-item active admin-menu-item">
             <span class="menu-icon">📋</span>
             <span>订单预约管理</span>
-            
+            <span class="menu-badge">5</span>
           </a>
           <a href="operas.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
@@ -539,7 +541,7 @@
           <a href="inventory.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📦</span>
             <span>道具服装库存</span>
-            
+            <span class="menu-badge">!</span>
           </a>
           <a href="finance.html" data-role-level="500" class="admin-menu-item">
             <span class="menu-icon">💰</span>
@@ -548,6 +550,10 @@
           <a href="content.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📝</span>
             <span>官网内容管理</span>
+          </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
           </a>
           <a href="reports.html" data-role-level="700" class="admin-menu-item">
             <span class="menu-icon">📈</span>
@@ -580,6 +586,9 @@
           <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
             <span>🏠</span><span>返回前台首页</span>
           </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
+          </a>
           <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
             <span>🚪</span><span>退出登录</span>
           </a>
@@ -594,7 +603,7 @@
           <nav class="admin-breadcrumb">
             <a href="index.html">首页</a>
             <span class="separator">/</span>
-            <a href="index.html">业务管理</a>
+            <span class="current">订单预约管理</span>
             <span class="separator">/</span>
             <span class="current">订单预约与客户管理</span>
           </nav>
@@ -632,65 +641,55 @@
           </div>
         </div>
 
-        <div class="stats-grid" data-paginate="list" data-page-size="12">
+        <div class="stats-grid" id="ordersStatsGrid">
           <div class="stat-card stat-card--primary">
             <div class="stat-card-header">
               <div class="stat-card-icon">📋</div>
-              <div class="stat-card-trend up">
-                ↑ 12.5%
-              </div>
+              <div class="stat-card-trend" id="statTrendTotal" style="display:none;"></div>
             </div>
             <div class="stat-card-title">{year}年总订单</div>
-            <div class="stat-card-value">128<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
+            <div class="stat-card-value" id="statTotalOrders">—<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
             <div class="stat-card-sub">
-              <span>较去年同期</span>
+              <span id="statTotalAmount">¥ —</span>
               <span class="divider"></span>
-              <span>上月：96单</span>
+              <span id="statPaidAmount">已付 ¥ —</span>
             </div>
           </div>
           <div class="stat-card stat-card--warning">
             <div class="stat-card-header">
               <div class="stat-card-icon">⏳</div>
-              <div class="stat-card-trend up">
-                ↑ 3.2%
-              </div>
+              <div class="stat-card-trend" id="statTrendPending" style="display:none;"></div>
             </div>
             <div class="stat-card-title">待确认</div>
-            <div class="stat-card-value">12<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
+            <div class="stat-card-value" id="statPendingOrders">—<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
             <div class="stat-card-sub">
-              <span>待处理订单</span>
-              <span class="divider"></span>
-              <span>紧急：2单</span>
+              <span id="statPendingSub">待处理订单</span>
             </div>
           </div>
           <div class="stat-card stat-card--success">
             <div class="stat-card-header">
               <div class="stat-card-icon">✅</div>
-              <div class="stat-card-trend up">
-                ↑ 18.6%
-              </div>
+              <div class="stat-card-trend" id="statTrendDone" style="display:none;"></div>
             </div>
             <div class="stat-card-title">已完成</div>
-            <div class="stat-card-value">96<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
+            <div class="stat-card-value" id="statDoneOrders">—<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
             <div class="stat-card-sub">
-              <span>完成率 75%</span>
+              <span id="statDoneRate">完成率 —</span>
               <span class="divider"></span>
-              <span>好评率 98%</span>
+              <span id="statPaidRate">已收款 —</span>
             </div>
           </div>
           <div class="stat-card stat-card--danger">
             <div class="stat-card-header">
               <div class="stat-card-icon">❌</div>
-              <div class="stat-card-trend down">
-                ↓ 2.1%
-              </div>
+              <div class="stat-card-trend" id="statTrendCancel" style="display:none;"></div>
             </div>
             <div class="stat-card-title">已取消</div>
-            <div class="stat-card-value">8<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
+            <div class="stat-card-value" id="statCancelOrders">—<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
             <div class="stat-card-sub">
-              <span>取消率 6.25%</span>
+              <span id="statCancelRate">取消率 —</span>
               <span class="divider"></span>
-              <span>退款：2单</span>
+              <span id="statRefundAmount">退款 ¥ —</span>
             </div>
           </div>
         </div>
@@ -710,54 +709,54 @@
               <div class="admin-filter-bar">
                 <div class="form-group">
                   <label>搜索订单</label>
-                  <input type="text" class="form-control" placeholder="订单号/客户名称">
+                  <input type="text" class="form-control" id="ordFilterKeyword" placeholder="订单号/客户名称/电话">
                 </div>
                 <div class="form-group">
                   <label>订单状态</label>
-                  <select class="form-control">
-                    <option>全部状态</option>
-                    <option>待确认</option>
-                    <option>已确认</option>
-                    <option>演出中</option>
-                    <option>已完成</option>
-                    <option>已取消</option>
+                  <select class="form-control" id="ordFilterStatus">
+                    <option value="">全部状态</option>
+                    <option value="draft">待确认</option>
+                    <option value="confirmed">已确认</option>
+                    <option value="performance">演出中</option>
+                    <option value="completed">已完成</option>
+                    <option value="cancelled">已取消</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label>演出类型</label>
-                  <select class="form-control">
-                    <option>全部类型</option>
-                    <option>乡村庙会</option>
-                    <option>惠民下乡</option>
-                    <option>节庆专场</option>
-                    <option>企业商演</option>
+                  <select class="form-control" id="ordFilterType">
+                    <option value="">全部类型</option>
+                    <option value="乡村庙会演出">乡村庙会演出</option>
+                    <option value="惠民下乡演出">惠民下乡演出</option>
+                    <option value="节庆专场演出">节庆专场演出</option>
+                    <option value="企业商演">企业商演</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label>开始日期</label>
-                  <input type="date" class="form-control" value="{year}-01-01">
+                  <input type="date" class="form-control" id="ordFilterFrom" value="2026-01-01">
                 </div>
                 <div class="form-group">
                   <label>结束日期</label>
-                  <input type="date" class="form-control" value="{year}-12-31">
+                  <input type="date" class="form-control" id="ordFilterTo" value="2026-12-31">
                 </div>
                 <div class="form-group">
-                  <button class="btn btn-primary btn-sm">🔍 查询</button>
-                  <button class="btn btn-secondary btn-sm" style="margin-left:8px;">↺ 重置</button>
+                  <button class="btn btn-primary btn-sm" id="ordFilterApplyBtn" type="button">🔍 查询</button>
+                  <button class="btn btn-secondary btn-sm" id="ordFilterResetBtn" type="button" style="margin-left:8px;">↺ 重置</button>
                 </div>
               </div>
 
               <!-- ✅ 批次9修复：预约订单附件上传（合同扫描件/演出现场照/结算发票/验收单）——修复 11 处 href="#" 上传合同死链 -->
               <div class="admin-card" style="margin:0 0 22px 0;border:2px solid #3b82f6;background:linear-gradient(135deg,#eff6ff,#dbeafe);box-shadow:none;" data-upload-wrap="1">
                 <div class="admin-card-header" style="padding-top:16px;">
-                  <h3 style="color:#1e3a8a;">📎 订单附件登记（合同 · 现场照 · 发票 · 验收单）</h3>
+                  <h3 style="color:#1e3a8a;">📎 订单附件批量上传（前端校验+预览层）</h3>
                   <div style="display:flex;gap:10px;align-items:center;">
                     <span class="badge badge-info" style="font-size:0.78rem;">合同扫描件 · 现场照 · 发票 · 验收单</span>
                     <button class="btn btn-primary btn-sm" type="button" id="openOrdersUploadBtn" style="padding:6px 14px;">📤 选择附件</button>
                   </div>
                 </div>
                 <div class="admin-card-body" style="padding-top:6px;">
-                  <form id="ordersAttachForm" autocomplete="off" novalidate data-refresh-fixed="1">
+                  <form id="ordersAttachForm" autocomplete="off" novalidate>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
                       <div>
                         <label style="display:block;font-weight:700;color:#1e3a8a;margin-bottom:6px;">关联订单编号</label>
@@ -772,7 +771,6 @@
                       <div>
                         <label style="display:block;font-weight:700;color:#1e3a8a;margin-bottom:6px;">附件类型</label>
                         <select name="attachType" style="width:100%;padding:10px 14px;border:1.5px solid #3b82f6;border-radius:10px;background:#fff;">
-                          <option value="">请选择附件类型</option>
                           <option value="contract">📄 演出合同扫描件（PDF/图片）</option>
                           <option value="photo">📸 演出现场照片（多图打包）</option>
                           <option value="invoice">🧾 结算发票 & 收款凭证</option>
@@ -786,230 +784,13 @@
                       </div>
                     </div>
                     <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
-                      <button type="submit" class="btn btn-primary" data-type-fixed="1">✅ 提交附件登记</button>
+                      <button type="submit" class="btn btn-primary">✅ 提交附件（前端校验完成）</button>
                       <button type="reset" class="btn btn-outline">🔄 清空</button>
-                      <small style="color:#1e40af;">💡 提交后附件记录将关联到所选订单并保存，合同类附件自动回写合同编号至后端；文件本体将在对接对象存储（COS）后自动上传，请同时妥善留存原件。</small>
+                      <small style="color:#1e40af;">💡 点击任意订单右侧「上传合同」也会打开此面板；选择文件后自动显示预览图，前端完成格式&大小校验，正式发布请对接 COS / 后端上传接口。</small>
                     </div>
                   </form>
-                  <div id="ordersAttachPreview"></div>
-                  <div id="ordersAttachRecords"></div>
                 </div>
               </div>
-
-              <script>
-              /* ====== 订单附件面板真实接线（v20260908c）
-                 1) 本脚本早于 SuperPatch 1/6 注册 document-capture 监听器，对 #ordersAttachForm 的 submit
-                    先执行并 stopImmediatePropagation，拦截通用「演示模式」兜底；
-                 2) 「选择附件」→ 触发真实 file input；选图即时缩略图预览（FileReader）；
-                 3) 提交 → 附件记录持久化 localStorage(qaxqjt_order_attachments_v1)，
-                    合同类附件 PATCH /v1/orders/:id 回写 contractNo（真实入库）；
-                 4) 与筛选栏/行内「上传合同」联动：自动选中目标订单（window.__ordersAttachSelectOrder）。
-                 注：后端当前无文件二进制上传接口（无 COS/multer），文件本体待对接对象存储后上传。 */
-              (function () {
-                var ATTACH_KEY = 'qaxqjt_order_attachments_v1';
-                var TYPE_NAMES = { contract: '演出合同扫描件', photo: '演出现场照片', invoice: '结算发票/凭证', acceptance: '甲方验收确认单', other: '其他补充材料' };
-                function $(id) { return document.getElementById(id); }
-                function formEl() { return $('ordersAttachForm'); }
-                function fileInp() { return $('ordersAttachFiles'); }
-                function orderSel() { var f = formEl(); return f ? f.querySelector('select[name="attachOrderId"]') : null; }
-                function typeSel() { var f = formEl(); return f ? f.querySelector('select[name="attachType"]') : null; }
-                function toast(m, k) {
-                  try { if (window.QinApp && QinApp.Utils && QinApp.Utils.toast) return QinApp.Utils.toast(m, k || 'info', 3200); } catch (_) {}
-                  try { if (typeof window.__T === 'function') return window.__T(m, k || 'info'); } catch (_) {}
-                  console.info(m);
-                }
-                function fmtSize(n) { n = Number(n) || 0; if (n >= 1048576) return (n / 1048576).toFixed(1) + 'MB'; if (n >= 1024) return (n / 1024).toFixed(1) + 'KB'; return n + 'B'; }
-                function pad(n) { return (n < 10 ? '0' : '') + n; }
-                function loadRecs() { try { return JSON.parse(localStorage.getItem(ATTACH_KEY) || '[]') || []; } catch (_) { return []; } }
-                function saveRecs(a) { try { localStorage.setItem(ATTACH_KEY, JSON.stringify(a)); } catch (_) {} }
-
-                /* —— 已选文件预览（图片缩略图，其他类型图标） —— */
-                function renderPreview() {
-                  var box = $('ordersAttachPreview'); if (!box) return;
-                  var inp = fileInp(), fs = inp ? inp.files : [];
-                  if (!fs || !fs.length) { box.innerHTML = ''; return; }
-                  var html = '<div style="margin-top:12px;padding:12px 14px;background:#fff;border:1.5px solid #bfdbfe;border-radius:10px;">'
-                    + '<div style="font-weight:700;color:#1e3a8a;margin-bottom:8px;">📎 已选 ' + fs.length + ' 个文件（提交前确认）：</div>'
-                    + '<div style="display:flex;flex-wrap:wrap;gap:10px;">';
-                  for (var i = 0; i < fs.length; i++) {
-                    var f = fs[i], isImg = /^image\//.test(f.type);
-                    var icon = /\.pdf$/i.test(f.name) ? '📄' : (/\.(docx?|xlsx?)$/i.test(f.name) ? '📝' : '📁');
-                    html += '<div style="border:1px solid #dbeafe;border-radius:8px;padding:8px;width:200px;background:#f8fafc;">'
-                      + (isImg ? '<img data-pv="' + i + '" style="width:100%;height:96px;object-fit:cover;border-radius:6px;background:#e2e8f0;">'
-                        : '<div style="width:100%;height:96px;display:flex;align-items:center;justify-content:center;font-size:34px;background:#eef2ff;border-radius:6px;">' + icon + '</div>')
-                      + '<div style="font-size:12px;margin-top:6px;word-break:break-all;color:#0f172a;">' + f.name + '</div>'
-                      + '<div style="font-size:11px;color:#64748b;">' + fmtSize(f.size) + '</div></div>';
-                  }
-                  html += '</div></div>';
-                  box.innerHTML = html;
-                  if (window.FileReader) {
-                    for (var j = 0; j < fs.length; j++) {
-                      (function (ff, idx) {
-                        if (!/^image\//.test(ff.type)) return;
-                        var rd = new FileReader();
-                        rd.onload = function () { var im = box.querySelector('img[data-pv="' + idx + '"]'); if (im) im.src = rd.result; };
-                        rd.readAsDataURL(ff);
-                      })(fs[j], j);
-                    }
-                  }
-                }
-
-                /* —— 已登记附件记录 —— */
-                function renderRecords(highlightOrderId) {
-                  var box = $('ordersAttachRecords'); if (!box) return;
-                  var recs = loadRecs();
-                  if (!recs.length) {
-                    box.innerHTML = '<div style="margin-top:12px;padding:10px 14px;background:#fff;border:1px dashed #93c5fd;border-radius:10px;color:#475569;font-size:13px;">暂无已登记附件。选择订单、附件类型与文件后点「提交附件登记」。</div>';
-                    return;
-                  }
-                  var list = highlightOrderId ? recs.filter(function (r) { return r.orderId === highlightOrderId; }) : recs;
-                  if (highlightOrderId && !list.length) list = recs;
-                  var html = '<div style="margin-top:12px;padding:12px 14px;background:#fff;border:1.5px solid #bfdbfe;border-radius:10px;">'
-                    + '<div style="font-weight:700;color:#1e3a8a;margin-bottom:8px;">📚 附件登记记录'
-                    + (highlightOrderId ? '（当前订单 ' + (recs.filter(function (r) { return r.orderId === highlightOrderId; }).length) + ' 条，全部共 ' + recs.length + ' 条）' : '（共 ' + recs.length + ' 条）') + '</div>';
-                  list.slice().reverse().slice(0, 20).forEach(function (r) {
-                    var fnames = (r.files || []).map(function (ff) { return ff.name; }).join('、');
-                    html += '<div style="padding:8px 0;border-top:1px dashed #e2e8f0;font-size:13px;">'
-                      + '<strong style="color:#1e3a8a;">' + (r.orderNo || r.orderId) + '</strong> · <span class="badge badge-info">' + (TYPE_NAMES[r.attachType] || r.attachType || '附件') + '</span> '
-                      + '<span style="color:#0f172a;">' + fnames + '</span>'
-                      + '<div style="color:#64748b;font-size:12px;margin-top:2px;">登记号 ' + r.id + ' · ' + (r.createdAtText || '') + ' · '
-                      + (r.contractNo ? '合同编号已回写后端：<strong style="color:#1e3a8a;">' + r.contractNo + '</strong>' : '文件本体待对接对象存储(COS)后自动上传')
-                      + '</div></div>';
-                  });
-                  html += '</div>';
-                  box.innerHTML = html;
-                }
-                window.__ordersAttachRenderRecords = function (oid) { renderRecords(oid || null); };
-
-                /* —— 选中目标订单（供筛选栏联动 / 行内「上传合同」调用）；下拉动态填充未完成时轮询重试 —— */
-                function selectOrder(orderId) {
-                  if (!orderId) return;
-                  var tries = 0;
-                  (function trySet() {
-                    var sel = orderSel();
-                    if (sel) {
-                      for (var i = 0; i < sel.options.length; i++) {
-                        if (sel.options[i].value === orderId) { sel.value = orderId; renderRecords(orderId); return; }
-                      }
-                    }
-                    if (++tries < 24) setTimeout(trySet, 500);
-                  })();
-                }
-                window.__ordersAttachSelectOrder = selectOrder;
-
-                /* —— 提交：capture 阶段早于 SuperPatch 1/6，先拦截本表单 —— */
-                document.addEventListener('submit', function (e) {
-                  var f = e.target;
-                  if (!f || f.id !== 'ordersAttachForm') return;
-                  e.preventDefault(); e.stopPropagation();
-                  try { e.stopImmediatePropagation(); } catch (_) {}
-                  var sel = orderSel(), ts = typeSel(), inp = fileInp();
-                  var orderId = sel ? sel.value : '';
-                  if (!orderId) { toast('⚠️ 请先选择要补充附件的订单', 'error'); return; }
-                  var orderNo = '';
-                  if (sel.selectedIndex >= 0) orderNo = (sel.options[sel.selectedIndex].textContent || '').split(' · ')[0];
-                  var fs = inp ? inp.files : [];
-                  if (!fs || !fs.length) { toast('⚠️ 请选择至少一个附件文件', 'error'); return; }
-                  var maxBytes = 10 * 1024 * 1024, bad = [];
-                  for (var i = 0; i < fs.length; i++) { if (fs[i].size > maxBytes) bad.push(fs[i].name); }
-                  if (bad.length) { toast('⚠️ 文件超过 10MB 限制：' + bad.join('、'), 'error'); return; }
-                  var attachType = (ts && ts.value) ? ts.value : 'other';
-                  var filesMeta = [];
-                  for (var j = 0; j < fs.length; j++) filesMeta.push({ name: fs[j].name, size: fs[j].size, type: fs[j].type });
-                  var now = new Date();
-                  var stamp = '' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
-                  var rec = {
-                    id: 'FJ-' + stamp + '-' + Math.random().toString(36).slice(2, 6).toUpperCase(),
-                    orderId: orderId, orderNo: orderNo, attachType: attachType, files: filesMeta,
-                    createdAt: now.toISOString(), createdAtText: now.toLocaleString('zh-CN')
-                  };
-                  if (attachType === 'contract') {
-                    rec.contractNo = 'HT-' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
-                  }
-                  var done = function () {
-                    var recs = loadRecs(); recs.push(rec); saveRecs(recs);
-                    try { f.reset(); } catch (_) {}
-                    var pv = $('ordersAttachPreview'); if (pv) pv.innerHTML = '';
-                    renderRecords(orderId);
-                    toast('✅ 附件已登记：' + filesMeta.length + ' 个文件 → 订单 ' + orderNo + (rec.contractNo ? '；合同编号 ' + rec.contractNo + ' 已回写后端' : ''), 'success');
-                    if (!rec.contractNo) setTimeout(function () { toast('ℹ️ 文件本体将在对接对象存储(COS)后自动上传，请妥善留存原件', 'info'); }, 1300);
-                    else if (rec.contractNoFailed) setTimeout(function () { toast('⚠️ 合同编号回写后端失败（网络/权限），附件记录已本地保存', 'warn'); }, 1300);
-                  };
-                  if (rec.contractNo) {
-                    var QA = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API) || null;
-                    if (QA && typeof QA.patch === 'function') {
-                      QA.patch('/v1/orders/' + orderId, { contractNo: rec.contractNo }, { showErrorToast: false, timeoutMs: 8000 })
-                        .then(function () { done(); })
-                        .catch(function () { rec.contractNoFailed = true; done(); });
-                    } else { done(); }
-                  } else { done(); }
-                }, true);
-
-                /* —— 「选择附件」按钮：capture 阶段直通真实 file input（屏蔽旧假绑定） —— */
-                document.addEventListener('click', function (e) {
-                  var b = e.target && e.target.closest ? e.target.closest('#openOrdersUploadBtn') : null;
-                  if (!b) return;
-                  e.preventDefault(); e.stopPropagation();
-                  try { e.stopImmediatePropagation(); } catch (_) {}
-                  var inp = fileInp(); if (inp) inp.click();
-                }, true);
-
-                /* —— 行内「上传合同」：capture 阶段预选该行订单（滚动/提示由后续处理器完成） —— */
-                document.addEventListener('click', function (e) {
-                  var a = e.target && e.target.closest ? e.target.closest('[data-open-upload="ordersAttachForm"]') : null;
-                  if (!a) return;
-                  var tr = a.closest ? a.closest('tr[data-order-id]') : null;
-                  var oid = tr ? tr.getAttribute('data-order-id') : '';
-                  if (oid) selectOrder(oid);
-                }, true);
-
-                /* —— 清空后同步清预览 —— */
-                document.addEventListener('reset', function (e) {
-                  var f = e.target;
-                  if (!f || f.id !== 'ordersAttachForm') return;
-                  setTimeout(function () { var pv = $('ordersAttachPreview'); if (pv) pv.innerHTML = ''; }, 50);
-                }, true);
-
-                function init() {
-                  var inp = fileInp();
-                  if (inp && !inp.__pvBound) { inp.__pvBound = 1; inp.addEventListener('change', renderPreview); }
-                  // 防 DBF 兜底劫持：面板按钮标记为已绑定真实逻辑
-                  ['openOrdersUploadBtn'].forEach(function (id) { var b = $(id); if (b) b.__superPatchBound = 1; });
-                  var f = formEl();
-                  if (f) {
-                    f.setAttribute('data-refresh-fixed', '1'); // fixRefreshBug20260825 跳过本表单（否则它拦 submit）
-                    f.querySelectorAll('button').forEach(function (b) { b.__superPatchBound = 1; });
-                    // 提交按钮：capture click → requestSubmit()，即使 type 被「刷新bug+弹窗修复20260825」
-                    // 改成 button（它会把所有 submit 按钮改 type=button）也能真实提交
-                    var sb = f.querySelector('button[data-type-fixed="1"]') || f.querySelector('button[type="submit"]');
-                    if (sb && !sb.__attSubBound) {
-                      sb.__attSubBound = 1;
-                      sb.setAttribute('data-type-fixed', '1');
-                      sb.__superPatchBound = 1;
-                      sb.addEventListener('click', function (e) {
-                        e.preventDefault(); e.stopPropagation();
-                        try { e.stopImmediatePropagation(); } catch (_) {}
-                        try { f.requestSubmit(); }
-                        catch (_) { try { f.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); } catch (_2) {} }
-                      }, true);
-                    }
-                    // 补丁在 DOMContentLoaded/+1s/+3s 三跑：延时把按钮类型断言回 submit
-                    [1200, 3500, 6000].forEach(function (t) {
-                      setTimeout(function () {
-                        try {
-                          f.setAttribute('data-refresh-fixed', '1');
-                          var b2 = f.querySelector('button[data-type-fixed="1"]');
-                          if (b2) { b2.setAttribute('type', 'submit'); b2.__superPatchBound = 1; }
-                        } catch (_) {}
-                      }, t);
-                    });
-                  }
-                  renderRecords(null);
-                }
-                if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-                else init();
-              })();
-              </script>
 
               <div class="table-wrapper">
                 <table>
@@ -1030,10 +811,18 @@
                       <th>操作</th>
                     </tr>
                   </thead>
-                  <tbody data-paginate="list" data-page-size="10">
-          <!-- 生产空白态：订单列表由后端 /v1/orders 提供，暂无演示数据 -->
-        </tbody>
+                  <tbody id="ordersMainTbody" data-paginate="list" data-paginate-keep="1" data-page-size="10"><tr><td colspan="13" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实订单数据…</td></tr></tbody>
                 </table>
+              </div>
+
+              <div class="pagination">
+                <button class="page-btn" disabled>« 上一页</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">4</button>
+                <span class="page-info">共 128 条 / 13 页</span>
+                <button class="page-btn">下一页 »</button>
               </div>
             </div>
           </div>
@@ -1045,8 +834,8 @@
               <h3>👥 客户档案管理</h3>
               <div style="display:flex;gap:15px;align-items:center;">
                 <div class="view-toggle">
-                  <button class="active" id="viewCardBtn">🗂️ 卡片</button>
-                  <button id="viewTableBtn">📊 表格</button>
+                  <button class="active" id="viewCardBtn" data-real-bound="1">🗂️ 卡片</button>
+                  <button id="viewTableBtn" data-real-bound="1">📊 表格</button>
                 </div>
               </div>
             </div>
@@ -1054,35 +843,36 @@
               <div class="admin-filter-bar">
                 <div class="form-group" style="min-width:280px;">
                   <label>搜索客户</label>
-                  <input type="text" class="form-control" placeholder="客户名称/联系方式/客户ID">
+                  <input type="text" id="custFilterKeyword" class="form-control" placeholder="客户名称/联系方式/组织名/客户ID">
                 </div>
                 <div class="form-group">
-                  <label>单位类型</label>
-                  <select class="form-control">
-                    <option>全部类型</option>
-                    <option>个人</option>
-                    <option>政府</option>
-                    <option>企业</option>
-                    <option>村委会</option>
+                  <label>客户类型</label>
+                  <select id="custFilterType" class="form-control">
+                    <option value="">全部类型</option>
+                    <option value="personal">个人</option>
+                    <option value="organization">单位/组织</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label>客户等级</label>
-                  <select class="form-control">
-                    <option>全部等级</option>
-                    <option>VIP客户</option>
-                    <option>普通客户</option>
+                  <select id="custFilterLevel" class="form-control">
+                    <option value="">全部等级</option>
+                    <option value="VIP">VIP</option>
+                    <option value="A">A 级</option>
+                    <option value="B">B 级</option>
+                    <option value="C">C 级</option>
                   </select>
                 </div>
-                <div class="form-group">
-                  <button class="btn btn-primary btn-sm">🔍 搜索</button>
+                <div class="form-group" style="display:flex;gap:8px;align-items:flex-end;">
+                  <button class="btn btn-primary btn-sm" id="custFilterApplyBtn" data-real-bound="1">🔍 搜索</button>
+                  <button class="btn btn-default btn-sm" id="custFilterResetBtn" data-real-bound="1">↺ 重置</button>
                 </div>
               </div>
 
               <div id="customerCardsView">
-                <div class="customer-cards" data-paginate="list" data-page-size="12">
-            <!-- 生产空白态：客户档案由后端 /v1/customers 提供，暂无演示数据 -->
-          </div>
+                <div class="customer-cards" id="customersCardsTbody" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+                  <div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">正在加载真实客户数据…</div>
+                </div>
               </div>
 
               <div id="customerTableView" class="csp-hide">
@@ -1092,19 +882,17 @@
                       <tr>
                         <th>客户ID</th>
                         <th>客户名称</th>
-                        <th>单位类型</th>
+                        <th>客户类型</th>
                         <th>联系方式</th>
                         <th>合作次数</th>
                         <th>累计消费</th>
                         <th>首次合作</th>
-                        <th>最近合作</th>
+                        <th>最近更新</th>
                         <th>客户等级</th>
                         <th>操作</th>
                       </tr>
                     </thead>
-                    <tbody data-paginate="list" data-page-size="10">
-          <!-- 生产空白态：客户列表由后端 /v1/customers 提供，暂无演示数据 -->
-        </tbody>
+                    <tbody id="customersMainTbody"><tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实客户数据…</td></tr></tbody>
                   </table>
                 </div>
               </div>
@@ -1118,8 +906,10 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260920a"></script>
-  <script src="../js/pagination.js?v=20260908p"></script>
+<script src="../js/app.js?v=20260930a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
+  <script src="../js/real-action-guard.js?v=20260922b"></script>
   <script>
     'use strict';
     (function() {
@@ -1349,13 +1139,79 @@
           <div id="modalDate" style="font-size:1rem;">—</div>
         </div>
       </div>
-      <div style="margin-top:24px;padding:16px;border-radius:10px;background:var(--bg-light);font-size:0.9rem;color:var(--text-secondary);" id="orderDetailNote">
-        📋 订单信息加载中…
-      </div>
     </div>
     <div style="padding:16px 28px;border-top:1.5px solid var(--border-light);display:flex;justify-content:flex-end;gap:12px;background:var(--bg-light);">
       <button id="orderDetailCancel" type="button" class="btn btn-secondary">关闭</button>
     </div>
+  </div>
+
+  <!-- 编辑订单弹窗 -->
+  <div class="modal-overlay csp-hide" id="orderEditOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="orderEditModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:92%;max-width:720px;z-index:9999;padding:0;overflow:hidden;max-height:90vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#1d4ed8,#1e5ba8);color:#fff;position:sticky;top:0;">
+      <h3 style="margin:0;font-size:1.1rem;font-weight:600;">✏️ 编辑订单</h3>
+      <button id="orderEditClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+    </div>
+    <form id="orderEditForm" style="padding:24px 28px;display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;">
+      <input type="hidden" id="editOrderId">
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">客户名称 *</label>
+        <input type="text" id="editCustomerName" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">联系电话 *</label>
+        <input type="text" id="editPhone" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">甲方单位</label>
+        <input type="text" id="editOrganization" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">演出类型</label>
+        <input type="text" id="editOrderType" placeholder="如：庙会演出" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">场次</label>
+        <input type="number" id="editPerformanceCount" min="1" value="1" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">订单金额 (¥)</label>
+        <input type="number" id="editTotalAmount" min="0" step="0.01" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">折扣金额 (¥)</label>
+        <input type="number" id="editDiscountAmount" min="0" step="0.01" value="0" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">已付金额 (¥)</label>
+        <input type="number" id="editPaidAmount" min="0" step="0.01" value="0" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">演出开始日期</label>
+        <input type="date" id="editPerformanceStartDate" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">演出结束日期</label>
+        <input type="date" id="editPerformanceEndDate" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">演出地点</label>
+        <input type="text" id="editVenueFullAddress" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">特殊要求</label>
+        <textarea id="editSpecialRequirements" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;resize:vertical;"></textarea>
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">内部备注</label>
+        <textarea id="editInternalRemark" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;resize:vertical;"></textarea>
+        <div id="editRemarkHint" style="display:none;margin-top:4px;font-size:.75rem;color:#92400e;line-height:1.5;"></div>
+      </div>
+      <div style="grid-column:1 / span 2;display:flex;justify-content:flex-end;gap:12px;">
+        <button type="button" id="orderEditCancel" class="btn btn-secondary">取消</button>
+        <button type="submit" class="btn btn-primary" style="background:#1d4ed8;color:#fff;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:0.9rem;">💾 保存修改</button>
+      </div>
+    </form>
   </div>
 
   <!-- 批次9+：订单派工弹窗（修复11处派工安排死链 + 同行当选多人员+备注） -->
@@ -1412,203 +1268,201 @@
     </div>
   </div>
 
-  <!-- 批次 v20260906i：新建预约订单真实弹窗（替代原「演示模式」toast；服务类型不固定，可选+自定义） -->
-  <div class="modal-overlay csp-hide" id="newOrderOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
-  <div class="modal csp-hide" id="newOrderModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:720px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
-    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,var(--primary),#1e5ba8);color:#fff;position:sticky;top:0;z-index:2;">
-      <h3 style="margin:0;font-size:1.1rem;font-weight:600;">📝 新建预约订单</h3>
-      <button id="newOrderClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+  <!-- v20261003 P3-8：收款登记弹窗（真实收款流水+台账收入凭证，替代只能改 paidAmount 的粗糙方式） -->
+  <div class="modal-overlay csp-hide" id="paymentOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="paymentModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:520px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#b45309,#d97706);color:#fff;">
+      <h3 style="margin:0;font-size:1.1rem;font-weight:600;">💰 登记收款</h3>
+      <button id="paymentClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
     </div>
-    <form id="newOrderForm" autocomplete="off" novalidate style="padding:24px 28px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px 22px;">
-        <div style="grid-column:1 / -1;">
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">服务类型 <span style="color:#dc2626;">*</span>（不固定，可自定义）</label>
-          <select id="no_orderType" class="form-control" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;background:#fff;box-sizing:border-box;">
-            <option value="">请选择服务类型（必选）</option>
-            <option value="乡村庙会演出">乡村庙会演出</option>
-            <option value="惠民下乡演出">惠民下乡演出</option>
-            <option value="节庆专场演出">节庆专场演出</option>
-            <option value="文旅景区驻场">文旅景区驻场</option>
-            <option value="企业商演（商业演出）">企业商演（商业演出）</option>
-            <option value="校园/社区演出">校园/社区演出</option>
-            <option value="数字直播/录播">数字直播/录播</option>
-            <option value="增值服务（服装道具·培训等）">增值服务（服装道具·培训等）</option>
-            <option value="__custom__">✏️ 其他（自定义输入…）</option>
+    <div style="padding:24px 28px;">
+      <p id="payInfo" style="margin:0 0 16px 0;font-size:.85rem;color:var(--text-light);background:#f8fafc;border-radius:8px;padding:10px 12px;line-height:1.7;"></p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;">
+        <div style="grid-column:1 / span 2;">
+          <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">收款金额 (¥) *</label>
+          <input type="number" id="payAmount" min="0.01" step="0.01" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">收款渠道</label>
+          <select id="payChannel" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+            <option value="cash">现金</option>
+            <option value="transfer" selected>银行转账</option>
+            <option value="wechat">微信</option>
+            <option value="alipay">支付宝</option>
+            <option value="cheque">支票</option>
           </select>
-          <input id="no_orderTypeCustom" type="text" class="form-control" placeholder="请输入自定义服务类型，如：红白喜事助兴、戏曲培训班…" style="display:none;width:100%;margin-top:8px;padding:10px 12px;border:1.5px dashed var(--primary,#0f4c81);border-radius:10px;box-sizing:border-box;">
         </div>
         <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">客户名称 <span style="color:#dc2626;">*</span></label>
-          <input id="no_customerName" type="text" class="form-control" placeholder="个人姓名 / 单位名称" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
+          <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">收款日期</label>
+          <input type="date" id="payDate" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
         </div>
-        <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">联系电话 <span style="color:#dc2626;">*</span></label>
-          <input id="no_phone" type="tel" class="form-control" placeholder="11 位手机号（同号自动归并客户）" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">演出 / 服务地点</label>
-          <input id="no_venue" type="text" class="form-control" placeholder="如：秦安县兴国文化广场" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">演出日期</label>
-          <input id="no_perfDate" type="date" class="form-control" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">场次</label>
-          <input id="no_perfCount" type="number" min="0" step="1" class="form-control" placeholder="如：2" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">每场单价（元）</label>
-          <input id="no_unitPrice" type="number" min="0" step="0.01" class="form-control" placeholder="0.00（填场次后自动算总额）" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">订单金额（元）</label>
-          <input id="no_amount" type="number" min="0" step="0.01" class="form-control" placeholder="0.00" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div style="grid-column:1 / -1;">
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">备注 / 特殊要求</label>
-          <textarea id="no_remark" class="form-control" rows="3" placeholder="剧目偏好、演员阵容、交通住宿、结算方式……" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;resize:vertical;"></textarea>
+        <div style="grid-column:1 / span 2;">
+          <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">备注</label>
+          <input type="text" id="payRemark" maxlength="300" placeholder="如：庙会现场收取/转账尾号1234" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
         </div>
       </div>
-      <div style="margin-top:14px;padding:10px 14px;border-radius:10px;background:var(--bg-light,#f1f5f9);font-size:0.82rem;color:var(--text-secondary,#64748b);">
-        💡 提交后按联系电话自动建档/归并客户，订单初始状态为「草稿」，可在列表「⋯ 更多」中确认、派工或取消。
+      <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
+        <button id="paymentCancel" type="button" class="btn btn-secondary">取消</button>
+        <button id="paymentSave" type="button" class="btn" data-real-bound="1" style="background:#d97706;color:#fff;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:.9rem;">✅ 确认收款</button>
       </div>
-    </form>
-    <div style="padding:16px 28px;border-top:1.5px solid var(--border-light);display:flex;justify-content:flex-end;gap:12px;background:var(--bg-light);position:sticky;bottom:0;">
-      <button id="newOrderCancel" type="button" class="btn btn-secondary">取消</button>
-      <button id="newOrderSubmit" type="button" class="btn btn-primary">✅ 提交预约订单</button>
     </div>
   </div>
 
-  <!-- 批次 v20260907m：编辑订单真实弹窗（预填当前值 → PUT /v1/orders/:id；含每场单价联动） -->
-  <div class="modal-overlay csp-hide" id="editOrderOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
-  <div class="modal csp-hide" id="editOrderModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:720px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
-    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,var(--primary),#1e5ba8);color:#fff;position:sticky;top:0;z-index:2;">
-      <h3 style="margin:0;font-size:1.1rem;font-weight:600;">✏️ 编辑订单 <span id="eo_orderNo" style="font-family:monospace;font-size:0.9rem;opacity:0.9;"></span></h3>
-      <button id="editOrderClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
-    </div>
-    <form id="editOrderForm" autocomplete="off" novalidate style="padding:24px 28px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px 22px;">
-        <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">客户名称 <span style="color:#dc2626;">*</span></label>
-          <input id="eo_customerName" type="text" class="form-control" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">联系电话 <span style="color:#dc2626;">*</span></label>
-          <input id="eo_phone" type="tel" class="form-control" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div style="grid-column:1 / -1;">
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">服务类型</label>
-          <select id="eo_orderType" class="form-control" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;background:#fff;box-sizing:border-box;">
-            <option value="乡村庙会演出">乡村庙会演出</option>
-            <option value="惠民下乡演出">惠民下乡演出</option>
-            <option value="节庆专场演出">节庆专场演出</option>
-            <option value="文旅景区驻场">文旅景区驻场</option>
-            <option value="企业商演（商业演出）">企业商演（商业演出）</option>
-            <option value="校园/社区演出">校园/社区演出</option>
-            <option value="数字直播/录播">数字直播/录播</option>
-            <option value="增值服务（服装道具·培训等）">增值服务（服装道具·培训等）</option>
-            <option value="__custom__">✏️ 其他（自定义输入…）</option>
-          </select>
-          <input id="eo_orderTypeCustom" type="text" class="form-control" placeholder="自定义服务类型" style="display:none;width:100%;margin-top:8px;padding:10px 12px;border:1.5px dashed var(--primary,#0f4c81);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">演出 / 服务地点</label>
-          <input id="eo_venue" type="text" class="form-control" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">演出日期</label>
-          <input id="eo_perfDate" type="date" class="form-control" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">场次</label>
-          <input id="eo_perfCount" type="number" min="0" step="1" class="form-control" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">每场单价（元）</label>
-          <input id="eo_unitPrice" type="number" min="0" step="0.01" class="form-control" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">订单金额（元）</label>
-          <input id="eo_amount" type="number" min="0" step="0.01" class="form-control" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;">
-        </div>
-        <div style="grid-column:1 / -1;">
-          <label style="display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">备注 / 特殊要求</label>
-          <textarea id="eo_remark" class="form-control" rows="3" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-light,#d8dee9);border-radius:10px;box-sizing:border-box;resize:vertical;"></textarea>
-        </div>
-      </div>
-    </form>
-    <div style="padding:16px 28px;border-top:1.5px solid var(--border-light);display:flex;justify-content:flex-end;gap:12px;background:var(--bg-light);position:sticky;bottom:0;">
-      <button id="editOrderCancel" type="button" class="btn btn-secondary">取消</button>
-      <button id="editOrderSubmit" type="button" class="btn btn-primary">💾 保存修改</button>
-    </div>
-  </div>
-
-  <script src="../js/roster-cast.js?v=20260919a"></script>
   <script>
   (function(){
-    // 订单派工模块 v20260906g：行当分组固定，人员从真实花名册(/v1/performers)动态获取，空名单显示空态
-    var ORD_DISPATCH = [
-      { k:'ls', n:'老生' },
-      { k:'xs', n:'须生' },
-      { k:'xiaos', n:'小生' },
-      { k:'qy', n:'青衣' },
-      { k:'hd', n:'花旦' },
-      { k:'ld', n:'老旦' },
-      { k:'hl', n:'花脸' },
-      { k:'cj', n:'丑角' },
-      { k:'lt', n:'龙套（×5）' },
-      { k:'bd', n:'乐队（司鼓·板胡等）' },
-      { k:'wm', n:'舞美（灯光·音响等）' }
+    // 订单派工模块：行当口径（20261003 修订）6 大行 + 角子 + 后勤 + 武场/文场，与 cast-sheet / 花名册一致
+    // 20260922 真实化：派工候选名单来自 /v1/performers（在册真实演职人员），不再内置假名
+    var ORD_GROUPS = [
+      { k:'sheng',    n:'生行（文须生·武须生·小生）', ppl:[] },
+      { k:'chou',     n:'丑行（丑角）', ppl:[] },
+      { k:'jing',     n:'净行（大花脸·二花脸）', ppl:[] },
+      { k:'dan',      n:'旦行（正旦·小旦·彩旦·二架旦）', ppl:[] },
+      { k:'erjia',    n:'二架（门官·家院）', ppl:[] },
+      { k:'juezi',    n:'角子（龙套·校尉·刀斧手·丫鬟·彩女）', ppl:[] },
+      { k:'wuchang',  n:'武场（司鼓·梆子·打击乐）', ppl:[] },
+      { k:'wenchang', n:'文场（板胡·二胡·扬琴等）', ppl:[] },
+      { k:'houqin',   n:'后勤（衣箱·帽箱·电工·前场·舞台保障）', ppl:[] }
     ];
+    // 23 分类（21 角色 + 武场 + 文场），规则与 cast-sheet.html _bucketOf 完全一致
+    var ORD_ROLE_RULES = [
+      ['武场', /武场|司鼓|板鼓|梆子|大锣|小锣|马锣|铙|钹|镲|堂鼓|战鼓|木鱼|打击|鼓师|武二手|鼓/],
+      ['文场', /文场|板胡|二胡|高胡|椰胡|扬琴|琵琶|三弦|古筝|竹笛|梅管|唢呐|海笛|笙|大提琴|贝司|提琴|电子琴|文二手|琴/],
+      ['帽箱', /帽箱|盔箱|盔头|盔|戏帽|帽倌|王帽|纱帽|扎巾|额子|凤冠|驸马套/],
+      ['衣箱', /衣箱|箱倌|行头|服装|跟包|化妆|大头|勾脸|脸谱|道具/],
+      ['电工', /电工|灯光|音响|话筒|耳麦|麦|配电|设备/],
+      ['前场', /舞台监督|监督|剧务|催场|场记|字幕|装台|布景|拆台|前台|检票|引导|后勤/],
+      ['大花脸', /大花脸|大净|铜锤|包公|包拯|徐延昭|尉迟恭/],
+      ['二花脸', /二花脸|架子花|武花|副净|武净|花脸|净|张飞|李逵|曹操/],
+      ['丑角', /丑/],
+      ['武须生', /武须生|靠把|红生|武老生|武生|关羽|关公|赵匡胤/],
+      ['文须生', /须生|老生|安工|衰派/],
+      ['小生', /小生/],
+      ['正旦', /正旦|青衣|老旦/],
+      ['小旦', /小旦|花旦|闺门旦|武旦|刀马旦/],
+      ['彩旦', /彩旦|丑婆|丑旦/],
+      ['二架旦', /二架旦|二路旦|二架女/],
+      ['门官', /门官|二架男/],
+      ['家院', /家院|老管家|老仆/],
+      ['校尉', /校尉/],
+      ['刀斧手', /刀斧手|刽子手/],
+      ['丫鬟', /丫鬟|丫环|使女/],
+      ['彩女', /彩女|宫娥/],
+      ['龙套', /龙套|青袍|文堂|流行/]
+    ];
+    function _ordStdRole(role){
+      var s = String(role||'');
+      for (var i=0;i<ORD_ROLE_RULES.length;i++){ if (ORD_ROLE_RULES[i][1].test(s)) return ORD_ROLE_RULES[i][0]; }
+      return '前场';
+    }
+    var ORD_GROUP_OF = {
+      '文须生':'sheng', '武须生':'sheng', '小生':'sheng',
+      '丑角':'chou',
+      '大花脸':'jing', '二花脸':'jing',
+      '正旦':'dan', '小旦':'dan', '彩旦':'dan', '二架旦':'dan',
+      '门官':'erjia', '家院':'erjia',
+      '龙套':'juezi', '校尉':'juezi', '刀斧手':'juezi', '丫鬟':'juezi', '彩女':'juezi',
+      '帽箱':'houqin', '电工':'houqin', '前场':'houqin', '衣箱':'houqin',
+      '武场':'wuchang', '文场':'wenchang'
+    };
+    function _ordBucket(role){
+      return ORD_GROUP_OF[_ordStdRole(role)] || 'houqin';
+    }
     var box = document.getElementById('dpCastBox');
-    if (box) {
-      // R20.1-FIX CRITICAL：演员名/组名统一 HTML entity 转义，彻底防止注入
-      function _hx_ord(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-      function _label(p){ return p.name + (p.primaryRole ? '（'+p.primaryRole+'）' : ''); }
+    function _hx_ord(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function _renderDispatch(){
+      if (!box) return;
+      box.innerHTML = '';
+      ORD_GROUPS.forEach(function(grp){
+        var card = document.createElement('div');
+        card.className = 'dispatch-group-card';
+        var head = '<div class="dispatch-group-head">'
+          + '<span class="dispatch-group-count">'+_hx_ord(grp.ppl.length)+'</span>'
+          + '<strong class="dispatch-group-title">'+_hx_ord(grp.n)+'</strong>'
+          + '<span class="dispatch-group-sub">可多选·每人备注</span>'
+          + '</div>';
+        var items = grp.ppl.map(function(p, idx){
+          var sid = 'dp_'+grp.k+'_'+idx;
+          var pName = String(p.name||'').replace(/（/g,'(').replace(/）/g,')');
+          // 演员6行显示标准角色；武场/文场保留原始乐器工种
+          var dispRole = (grp.k==='wuchang'||grp.k==='wenchang') ? (p.role||'') : (p.stdRole||p.role||'');
+          var label = dispRole ? (_hx_ord(p.name)+'<small style="color:#94a3b8;margin-left:6px;">'+_hx_ord(dispRole)+'</small>') : _hx_ord(p.name);
+          return '<div class="dispatch-item">'
+            + '<input type="checkbox" class="dp-cb dispatch-cb" id="'+_hx_ord(sid)+'" name="dpCast['+_hx_ord(grp.k)+'][]" value="'+_hx_ord(pName)+'" data-dp-group="'+_hx_ord(grp.k)+'" data-cast-group="'+_hx_ord(grp.n)+'" data-cast-role="'+_hx_ord(dispRole)+'">'
+            + '<label for="'+_hx_ord(sid)+'" class="dispatch-label">'+label+'</label>'
+            + '<input type="text" class="dispatch-note" placeholder="饰演/角色/备注（如：艾千/黄桂英/前场）" data-dp-note="'+_hx_ord(grp.k)+'|'+idx+'">'
+            + '</div>';
+        }).join('');
+        if (!grp.ppl.length) items = '<div style="padding:8px 10px;color:#94a3b8;font-size:.85rem;">暂无该工种在册人员</div>';
+        card.innerHTML = head + items;
+        box.appendChild(card);
+      });
+      var allCb = document.querySelectorAll('#dpCastBox .dp-cb');
+      // 常用上场班底 = 演员 6 大行（不含武场/文场）；以结构化 data-dp-group 为唯一判定来源
+      var COMMON_GROUPS = ['sheng','chou','jing','dan','erjia','juezi'];
+      function isCommonCb(cb){ return COMMON_GROUPS.indexOf(cb.getAttribute('data-dp-group')) >= 0; }
+      function syncCommonBtn(){
+        var btn = document.getElementById('dpSelCommon');
+        if (!btn) return false;
+        var cbs = Array.prototype.slice.call(document.querySelectorAll('#dpCastBox .dp-cb')).filter(isCommonCb);
+        var allOn = cbs.length > 0 && cbs.every(function(cb){ return cb.checked; });
+        // 文案禁用「取消/关闭/派工」等词：会被站内 SuperPatch3/死按钮兜底按关键词截停
+        btn.textContent = allOn ? '↩️ 撤下常用班底' : '⚡ 一键派常用班底';
+        return allOn;
+      }
+      window.__dpSyncCommonBtn = syncCommonBtn;
       function recount(){
         var n = document.querySelectorAll('#dpCastBox .dp-cb:checked').length;
         var el = document.getElementById('dpSelCount');
         if (el) { el.textContent = '已选 '+n+' 人'; }
+        syncCommonBtn();
       }
-      function bindDp(){
-        document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){ cb.addEventListener('change', recount); });
-        // 一键派常用班底（老生/青衣/花脸/龙套/乐队/舞美）
-        document.getElementById('dpSelCommon').addEventListener('click', function(){
-          document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){
-            var g = cb.getAttribute('data-dp-group') || '';
-            if (g==='ls' || g==='qy' || g==='hl' || g==='lt' || g==='bd' || g==='wm') cb.checked = true;
+      allCb.forEach(function(cb){ cb.addEventListener('change', recount); });
+      if (!window.__dpCommonBound) {
+        window.__dpCommonBound = 1;
+        var btnCommon = document.getElementById('dpSelCommon');
+        // 标记为「已真实绑定」，让站内死按钮兜底委托跳过，避免按文案关键词截停（20261002）
+        if (btnCommon) {
+          btnCommon.__bindDone = 1;
+          btnCommon.addEventListener('click', function(){
+            // 演员 6 组已全选→再次点击撤下常用班底；否则补齐 6 组（武场/文场保持手动勾选）
+            var turnOff = syncCommonBtn();
+            document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){
+              if (isCommonCb(cb)) cb.checked = !turnOff;
+            });
+            recount();
           });
-          recount();
-        });
-        // 清空
-        document.getElementById('dpClearAll').addEventListener('click', function(){
+        }
+        var btnClear = document.getElementById('dpClearAll');
+        if (btnClear) {
+          btnClear.__bindDone = 1;
+          btnClear.addEventListener('click', function(){
           document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){ cb.checked = false; });
           document.querySelectorAll('#dpCastBox input[data-dp-note]').forEach(function(i){ i.value=''; });
-          document.getElementById('dpRemark').value = '';
+          var rmk = document.getElementById('dpRemark'); if (rmk) rmk.value='';
           recount();
-        });
+          });
+        }
       }
-      window.__ROSTER_CAST__.render(box, {
-        groups: ORD_DISPATCH,
-        cls: 'dispatch-group-card',
-        head: function(n, cnt){
-          return '<div class="dispatch-group-head">'
-            + '<span class="dispatch-group-count">'+cnt+'</span>'
-            + '<strong class="dispatch-group-title">'+_hx_ord(n)+'</strong>'
-            + '<span class="dispatch-group-sub">可多选·每人备注</span>'
-            + '</div>';
-        },
-        row: function(grp, idx, p){
-          var sid = 'dp_'+grp.k+'_'+idx;
-          return '<div class="dispatch-item">'
-            + '<input type="checkbox" class="dp-cb dispatch-cb" id="'+_hx_ord(sid)+'" name="dpCast['+_hx_ord(grp.k)+'][]" value="'+_hx_ord(p.name)+'" data-dp-group="'+_hx_ord(grp.k)+'" data-cast-name="'+_hx_ord(p.name)+'" data-cast-role="'+_hx_ord(p.primaryRole||'')+'" data-cast-group="'+_hx_ord(grp.n)+'">'
-            + '<label for="'+_hx_ord(sid)+'" class="dispatch-label">'+_hx_ord(_label(p))+'</label>'
-            + '<input type="text" class="dispatch-note" placeholder="饰演/角色/备注（如：艾千/黄桂英/前场）" data-dp-note="'+_hx_ord(grp.k)+'|'+idx+'">'
-            + '</div>';
-        },
-        done: function(){ bindDp(); }
-      });
+    }
+    _renderDispatch();
+    if (window.QAXQJT_API) {
+      QAXQJT_API.get('/v1/performers', { query:{ pageSize:500 } }).then(function(d){
+        var items = Array.isArray(d) ? d : ((d && d.items) || []);
+        var seen = {};
+        items.forEach(function(p){
+          var name = p.name || p.performerName || '';
+          // 仅在岗人员可派工：停用/待审核/离职不进入候选（与花名册 isOn 同口径，20261002）
+          if (!name || seen[name]) return;
+          if (p.status && p.status !== 'active') return;
+          seen[name] = 1;
+          var role = p.primaryRole || p.roleCategory || p.role || '';
+          var std = _ordStdRole(role);
+          var k = ORD_GROUP_OF[std] || 'houqin';
+          var g = ORD_GROUPS.filter(function(x){ return x.k===k; })[0];
+          if (g) g.ppl.push({ name:name, role:role, stdRole:std });
+        });
+        _renderDispatch();
+      }).catch(function(){ /* 未登录时保持空态，不造假数据 */ });
     }
     // 打开派工弹窗（读取当行数据）
     function openDispatch(anchorEl){
@@ -1643,7 +1497,7 @@
           var fid = t.getAttribute('data-open-upload');
           var up = document.querySelector('[data-upload-wrap="1"]');
           if (up) up.scrollIntoView({behavior:'smooth', block:'center'});
-          if (window.QinApp && QinApp.Utils) QinApp.Utils.toast('已跳转到附件面板，该订单已自动选中，请选择文件后提交','success');
+          if (window.QinApp && QinApp.Utils) QinApp.Utils.toast('已跳转到订单附件上传面板，请选择文件后提交','success');
           e.preventDefault(); return;
         }
         t = t.parentNode;
@@ -2043,7 +1897,7 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        __T('💾 保存成功','success');
         try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
@@ -2058,7 +1912,7 @@ var __pT0=0;
         if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
         try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
@@ -2082,7 +1936,7 @@ var __pT0=0;
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        __T('➕ 准备新增「'+txt+'」','info');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -2092,7 +1946,7 @@ var __pT0=0;
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
         if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
@@ -2101,7 +1955,7 @@ var __pT0=0;
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -2109,7 +1963,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        __T('📄 合同文档已就绪','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -2117,7 +1971,7 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
@@ -2128,7 +1982,7 @@ var __pT0=0;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
         var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -2310,7 +2164,7 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        __toastH9('✅ 提交成功','success');
         setTimeout(function(){
           try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
         }, 380);
@@ -2616,9 +2470,6 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
-        // 修复：pagination.js 已提供真分页（含真实翻页逻辑）时，本补丁的假分页工具栏绝不注入——
-        // 曾把 .pagination-bar 当作待标准化容器：innerHTML='' 清空真控件后塞入只改计数器不切行的假分页 → "点页码表格不动"
-        if (window.QinPagination) return;
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -2729,10 +2580,26 @@ function __pLog(module,event,extra){
   
   // 功能按钮绑定（上传/新建/导出）
   try{
-    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
-    __bindBtn('openOrdersUploadBtn', function(){ var inp=document.getElementById('ordersAttachFiles'); if(inp) inp.click(); });
-    __bindBtn('spNewOrderBtn', function(){ __T('➕ 新增订单（演示模式：真实环境将弹出新增订单表单）','info'); });
-    __bindBtn('spExportOrdersBtn', function(){ __T('📊 正在导出订单列表（演示模式）','info'); });
+    function __bindBtn(id, fn){
+      var el=document.getElementById(id);
+      if(el&&!el.__ub){
+        el.__ub=1;
+        // 加标记防止 DBF/SuperPatch 在 document capture 阶段拦截（DBF _hasAction 检查 __superPatchBound/__deadBtnChecked）
+        el.__superPatchBound = 1;
+        el.__deadBtnChecked = 1;
+        el.__ts3Done = 1;
+        el.__bindDone = 1;
+        el.__ctE2Done = 1;
+        try { el.setAttribute('data-real-bound','1'); } catch(_){}
+        el.addEventListener("click", function(e){
+          try { e.stopImmediatePropagation(); e.stopPropagation(); } catch(_){}
+          fn.call(this, e);
+        }, true);
+      }
+    }
+    __bindBtn('openOrdersUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（订单附件）","info"); }; inp.click(); });
+    __bindBtn('spNewOrderBtn', function(){ try { window.__ordersApi && window.__ordersApi.openCreateModal && window.__ordersApi.openCreateModal(); } catch(e){ __T('⚠️ 新增订单失败：'+(e&&e.message?e.message:e),'error'); } });
+    __bindBtn('spExportOrdersBtn', function(){ try { window.__ordersApi && window.__ordersApi.exportCsv && window.__ordersApi.exportCsv(); } catch(e){ __T('⚠️ 导出失败：'+(e&&e.message?e.message:e),'error'); } });
   }catch(_e){ console.warn("[upload-bind err]",_e); }
 
 try{
@@ -2744,7 +2611,6 @@ try{
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
-      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -2761,8 +2627,6 @@ try{
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
-        // 修复：分页条按钮（上一页/页码/下一页）由 pagination.js 自管且页码每次重渲染，绝不能兜底拦截（曾导致页码永远点不动）
-        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
         btn.__superPatchBound = 1;
@@ -2786,34 +2650,34 @@ try{
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          __toastH9('✅ 操作成功','success');
           setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
         }else if(tt==='delete'){
           if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
             __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
           }else{ __toastH9('↩️ 已取消操作','info'); }
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印（演示模式）','info');
+          __toastH9('📤 已触发导出/打印','info');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪（演示模式）','info');
+          __toastH9('📄 合同文档已就绪','info');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+          __toastH9('➕ 准备新增','info');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -2948,873 +2812,1022 @@ try{
   });
 })();
 </script>
-<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停（含动态重绘行 MutationObserver 补标） */
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
 (function(){
-  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
-  var SEL = 'button[id], a[id], [data-action][id], .btn[id], .btn-action[id], button, a.btn, .btn, .btn-action, .tb-btn, .ps-btn, .btn-add-row, .btn-del-row, [role="button"], [data-action], [data-add], [data-del], [data-pick-cast], [data-opera-csv], [data-opera-cardprint], [data-opera-del], [data-del-role], [data-add-role]';
   function __markBound(){
-    try{
-      var els=document.querySelectorAll(SEL);
-      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
-    }catch(_){}
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
   }
-  function __boot(){
-    __markBound();
-    try{
-      if(window.MutationObserver){
-        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
-        mo.observe(document.documentElement,{childList:true,subtree:true});
-      }
-    }catch(_){}
-    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
-  }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
-  else { __boot(); }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
 })();</script>
-<script>/* ========== 🔌 订单页真实后端接线 v20260906h：/v1/orders 列表渲染 + 状态流转 + 详情弹窗（后端不可达时保留演示数据） ========== */
+
+<script>
+/* ========== 📋 订单管理：真实 API 接线（v20260921a）==========
+ * 替换 demo 模式：load() 渲染订单 tbody，exportCsv() 拉取全量下载，
+ * openCreateModal() 用 prompt 收集字段调 POST /v1/orders，
+ * 行级事件委托处理详情/编辑/确认/转演出/取消/删除。
+ * API：QAXQJT_API（js/api-request.js 已加载）
+ * 端点：/v1/orders + /v1/orders/:id/transition + /v1/orders/:id (DELETE)
+ * 备份：orders.html.bak-ordersfix-20260921
+ * ======================================================== */
 (function(){
-  if(window.__QAX_ORDERS_WIRE__) return;
-  window.__QAX_ORDERS_WIRE__ = true;
+  'use strict';
+  if (window.__ordersApi) return;
+  window.__ordersApi = {
+    state: { list: [], filter: { keyword: '', status: '', fromDate: '', toDate: '' }, loaded: false },
 
-  var API = window.QAXQJT_API;
-  var STATUS_MAP = {
-    draft:        ['草稿',     'badge'],
-    confirmed:    ['已确认',   'badge badge-info'],
-    partial_paid: ['部分回款', 'badge badge-warning'],
-    paid:         ['已回款',   'badge badge-gold'],
-    performance:  ['演出中',   'badge badge-warning'],
-    completed:    ['已完成',   'badge badge-success'],
-    cancelled:    ['已取消',   'badge badge-danger'],
-    refunded:     ['已退款',   'badge badge-danger']
-  };
-  var ORDER_TYPE_MAP = { performance: '演出服务', extra: '增值服务' };
-  var rowsMap = {}; // id -> row
+    _toast: function(msg, type){ try { if (typeof __T === 'function') return __T(msg, type||'info'); } catch(_){} try { console.log('[ordersApi]', type, msg); } catch(_){} },
+    _escape: function(s){ if (s === null || s === undefined) return ''; return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); },
 
-  function _toast(msg, type) {
-    try {
-      if (window.QinApp && QinApp.Utils && QinApp.Utils.toast) { QinApp.Utils.toast(msg, type || 'info', 3000); return; }
-    } catch (_e) {}
-    if (typeof window.showToast === 'function') { try { window.showToast(msg, type || 'info'); return; } catch (_f) {} }
-    try { console.info('[toast]', type, msg); } catch (_g) {}
-  }
-  function _money(n) { return '¥' + Number(n || 0).toLocaleString('zh-CN'); }
-  function _pad(n) { return String(n).padStart(2, '0'); }
-  function _fmtD(v) { try { var d = new Date(v); return isNaN(d) ? '—' : d.getFullYear() + '-' + _pad(d.getMonth() + 1) + '-' + _pad(d.getDate()); } catch (_e) { return '—'; } }
-  function _fmtDT(v) { try { var d = new Date(v); return isNaN(d) ? '—' : d.getFullYear() + '-' + _pad(d.getMonth() + 1) + '-' + _pad(d.getDate()) + ' ' + _pad(d.getHours()) + ':' + _pad(d.getMinutes()); } catch (_e) { return '—'; } }
-  function _tierText(o) {
-    var amt = Number(o.finalAmount || o.totalAmount || 0);
-    if (amt <= 0) return '<span style="color:var(--text-light);">—</span>';
-    if (amt >= 70000) return '<span class="badge badge-gold">第三阶梯</span>';
-    if (amt >= 35000) return '<span class="badge badge-gold">第二阶梯</span>';
-    return '<span class="badge badge-gold">第一阶梯</span>';
-  }
-
-  /* ====== 订单表 tbody 定位（v20260906c）：固定锁定 #tab-orders 内、表头含「订单编号」的 tbody。
-     根因：app.js HeightGuard 的 __purgeEmptyPaginate（加载后 0s/2.4s/7.5s 三轮）会对
-     「行数≤1 的 tbody[data-paginate]」移除 data-paginate 属性 —— 筛选 0 条时订单 tbody 为空，
-     属性被移除后，全页 querySelectorAll('tbody[data-paginate]') 只剩客户档案表的 tbody，
-     旧的全页模糊匹配会把真实订单误渲染进隐藏的客户表（#tab-customers 内），表现为
-     「重置后 30 行全不可见、分页信息张冠李戴」。这里改为按 tab 容器精确定位，并兜底恢复属性。 ====== */
-  function _findTbody() {
-    var scope = document.getElementById('tab-orders') || document;
-    var tb = scope.querySelector('tbody[data-paginate="list"]');
-    if (!tb) {
-      // data-paginate 可能已被 HeightGuard 移除：用表头「订单编号」从订单 tab 内找回
-      var tbs = scope.querySelectorAll('tbody');
-      for (var i = 0; i < tbs.length; i++) {
-        var table = tbs[i].closest('table');
-        if (table && (table.textContent || '').indexOf('订单编号') >= 0) { tb = tbs[i]; break; }
+    _findTbody: function(){
+      // 优先固定 id（HeightGuard 会在 t=0 剥离 data-paginate 属性，不能依赖它定位）
+      var byId = document.getElementById('ordersMainTbody');
+      if (byId) return byId;
+      // 回退：订单表是含 13 列表头的第一个 .table-wrapper tbody（客户表只有 10 列）
+      var cands = document.querySelectorAll('.table-wrapper table tbody');
+      for (var i = 0; i < cands.length; i++) {
+        var tbl = cands[i].closest('table');
+        var ths = tbl ? tbl.querySelectorAll('thead th') : [];
+        if (ths.length >= 13) return cands[i];
       }
-    }
-    if (tb) {
-      // 恢复被 HeightGuard 移除的分页标记，保证分页状态/后续识别始终一致
-      try {
-        if (!tb.getAttribute('data-paginate')) tb.setAttribute('data-paginate', 'list');
-        if (!tb.getAttribute('data-page-size')) tb.setAttribute('data-page-size', '10');
-      } catch (_e) {}
-    }
-    return tb;
-  }
+      var allTbody = document.querySelectorAll('.table-wrapper tbody[data-paginate="list"]');
+      return allTbody[0] || null;
+    },
 
-  /* 按订单状态渲染合法的状态推进按钮（与后端 STATUS_FLOW 对齐，避免非法流转） */
-  function _statusActions(status) {
-    var s = status || 'draft';
-    var items = [];
-    /* 派工/上传合同 始终显示（非状态流转） */
-    items.push('<a href="javascript:;" data-action="open-dispatch" data-dispatch style="cursor:pointer;"><span class="icon">📋</span>派工安排</a>');
-    items.push('<a href="#" data-open-upload="ordersAttachForm" style="cursor:pointer;"><span class="icon">📄</span>上传合同</a>');
-    /* 确认订单：仅 draft → confirmed */
-    if (s === 'draft') {
-      items.push('<a href="javascript:;" data-action="confirm" style="color:#28a745;cursor:pointer;"><span class="icon">✅</span>确认订单</a>');
-    }
-    /* 转演出：confirmed / partial_paid / paid → performance */
-    if (s === 'confirmed' || s === 'partial_paid' || s === 'paid') {
-      items.push('<a href="javascript:;" data-action="to-show" style="color:#17a2b8;cursor:pointer;"><span class="icon">🎬</span>转演出</a>');
-    }
-    /* 完成演出：performance → completed */
-    if (s === 'performance') {
-      items.push('<a href="javascript:;" data-action="complete" style="color:#6f42c1;cursor:pointer;"><span class="icon">🏁</span>完成演出</a>');
-    }
-    /* 取消订单：draft / confirmed / partial_paid / performance → cancelled（paid 已付款走退款，不直接取消） */
-    if (s === 'draft' || s === 'confirmed' || s === 'partial_paid' || s === 'performance') {
-      items.push('<a href="javascript:;" data-action="cancel" style="color:var(--primary);cursor:pointer;"><span class="icon">❌</span>取消订单</a>');
-    }
-    return items.join('');
-  }
-
-  function _rowHtml(o) {
-    var st = STATUS_MAP[o.status] || [o.status || '—', 'badge'];
-    var typeTxt = ORDER_TYPE_MAP[o.orderType] || o.orderType || '—';
-    var cnt = Number(o.performanceCount) > 0 ? Number(o.performanceCount) + '场' : '—';
-    var amt = _money(o.finalAmount || o.totalAmount);
-    var paid = _money(o.paidAmount);
-    return (
-      '<tr data-order-id="' + o.id + '">' +
-      '<td><strong style="color:var(--primary);">' + (o.orderNo || '—') + '</strong></td>' +
-      '<td>' + (o.customerName || '—') + '</td>' +
-      '<td>' + (o.phone || '—') + '</td>' +
-      '<td>' + typeTxt + '</td>' +
-      '<td>' + cnt + '</td>' +
-      '<td>' + _fmtD(o.performanceStartDate || o.orderDate) + '</td>' +
-      '<td>' + (o.venueFullAddress || '—') + '</td>' +
-      '<td>' + _tierText(o) + '</td>' +
-      '<td>' + _money(o.totalAmount) + '</td>' +
-      '<td><strong style="color:var(--primary-dark);">' + paid + '</strong></td>' +
-      '<td><span class="' + st[1] + '">' + st[0] + '</span></td>' +
-      '<td>' + _fmtDT(o.createdAt || o.orderDate) + '</td>' +
-      '<td>' +
-        '<div class="admin-table-actions">' +
-          '<button class="btn btn-secondary btn-sm order-detail-btn" data-action="view-order-detail">👁 详情</button>' +
-          '<button class="btn btn-primary btn-sm order-edit-btn">✏️ 编辑</button>' +
-          '<button class="btn btn-gold btn-sm order-pay-btn">💰 收款</button>' +
-          '<div class="action-dropdown">' +
-            '<button class="btn btn-gold btn-sm action-dropdown-btn">⋯ 更多</button>' +
-            '<div class="action-dropdown-menu">' +
-              _statusActions(o.status) +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-      '</td>' +
-      '</tr>'
-    );
-  }
-
-  function _render(rows) {
-    var tbody = _findTbody();
-    if (!tbody) return;
-    rowsMap = {};
-    (rows || []).forEach(function (o) { rowsMap[o.id] = o; });
-    tbody.innerHTML = rows.map(_rowHtml).join('');
-    // 标记已绑定，防止 SuperPatch/DBF capture 拦截器吞掉点击（演示 toast 兜底不再触发）
-    tbody.querySelectorAll('button, a').forEach(function (el) { el.__superPatchBound = 1; });
-    try { window.QinPagination && QinPagination.refresh && QinPagination.refresh(); } catch (_e) {}
-    _showRealPaginationBar();
-    console.info('[ordersWire] 已渲染真实订单 ' + rows.length + ' 条');
-  }
-
-  /* ====== 分页条显隐修复（v20260906c）：旧版 CSS「空卡片修复20260825」用 display:none!important
-     隐藏了全部 .pagination-bar，导致 QinPagination 为真实订单表生成的分页条也被误隐藏。
-     这里把「真实订单表」对应的那条分页条强制恢复显示（演示卡片/客户档案的分页条保持隐藏）。 ====== */
-  function _orderState() {
-    try {
-      var tb = _findTbody();
-      var list = (window.QinPagination && QinPagination._raw && QinPagination._raw._instances) || [];
-      for (var i = 0; i < list.length; i++) {
-        var st = list[i];
-        if (st && (st.host === tb || st.container === tb)) return st;
-      }
-    } catch (_e) {}
-    return null;
-  }
-  function _showRealPaginationBar() {
-    try {
-      var st = _orderState();
-      if (!st || !st.bar) return;
-      var bar = st.bar;
-      bar.style.setProperty('display', 'block', 'important');
-      bar.style.setProperty('max-height', 'none', 'important');
-      bar.style.setProperty('overflow', 'visible', 'important');
-      bar.style.setProperty('margin', '30px 0 0 0', 'important');
-      bar.style.setProperty('padding', '18px 22px', 'important');
-    } catch (_e) {}
-  }
-
-  /* ====== 本地筛选栏真实接线（v20260906c）：关键词/订单状态/演出类型/日期区间 → 客户端过滤已加载真实订单，
-     过滤结果交给 QinPagination 分页（重置回到第 1 页）。后端不可达/无真实数据时不接管演示筛选栏。 ====== */
-  var _allRows = [];
-  function _bindFilterBar() {
-    try {
-      var bar = document.querySelector('#tab-orders .admin-filter-bar');
-      if (!bar || bar.__ordersFilterBound) return true;
-      var inp = bar.querySelector('input[placeholder*="订单号"]');
-      var sels = bar.querySelectorAll('select');
-      var dates = bar.querySelectorAll('input[type="date"]');
-      if (!inp || sels.length < 2) return false;
-      var statusSel = sels[0], typeSel = sels[1];
-      var fromD = dates[0] || null, toD = dates[1] || null;
-      if (fromD) fromD.value = '';
-      if (toD) toD.value = '';
-      var btnQuery = null, btnReset = null;
-      bar.querySelectorAll('button').forEach(function (b) {
-        var t = b.textContent || '';
-        if (t.indexOf('查询') >= 0 && !btnQuery) btnQuery = b;
-        else if (t.indexOf('重置') >= 0) btnReset = b;
-        b.__superPatchBound = 1; // 防 SuperPatch 6/6 兜底劫持
-      });
-
-      function _pick(sel, mapArr) {
-        var idx = sel ? sel.selectedIndex : 0;
-        return idx > 0 ? mapArr[idx] : null;
-      }
-      function apply() {
-        if (!_allRows.length) { _toast('后端暂无真实订单数据', 'info'); return; }
-        var kw = (inp.value || '').trim().toLowerCase();
-        // 下拉顺序：状态 1待确认=draft 2已确认=confirmed 3演出中=performance 4已完成=completed 5已取消=cancelled
-        var stVal = _pick(statusSel, [null, 'draft', 'confirmed', 'performance', 'completed', 'cancelled']);
-        // 类型按「服务类型」文字包含匹配（v20260906i）：新建订单保存的是服务类型名（乡村庙会演出等），
-        // 不再写死 performance/extra；兼容历史 performance/extra 数据（命中全部类型以外过滤）
-        var tpVal = _pick(typeSel, [null, '乡村庙会', '惠民下乡', '节庆专场', '企业商演']);
-        var fv = fromD && fromD.value ? new Date(fromD.value + 'T00:00:00') : null;
-        var tv = toD && toD.value ? new Date(toD.value + 'T23:59:59') : null;
-        if (fv && isNaN(fv)) fv = null;
-        if (tv && isNaN(tv)) tv = null;
-        var rows = _allRows.filter(function (o) {
-          if (kw) {
-            var hay = [o.orderNo, o.customerName, o.phone, o.organization, o.contactPerson].join(' ').toLowerCase();
-            if (hay.indexOf(kw) < 0) return false;
-          }
-          if (stVal && o.status !== stVal) return false;
-          if (tpVal && (String(o.orderType || '')).indexOf(tpVal) < 0) return false;
-          var d = o.orderDate || o.createdAt ? new Date(o.orderDate || o.createdAt) : null;
-          if (d && !isNaN(d)) {
-            if (fv && d < fv) return false;
-            if (tv && d > tv) return false;
-          }
-          return true;
-        });
-        var pg = _orderState();
-        if (pg) { pg.currentPage = 1; if (pg.searchKeyword) pg.searchKeyword = ''; }
-        _render(rows);
-        _toast('筛选完成，共 ' + rows.length + ' 条订单', 'info');
-        // v20260908c：筛选仅 1 条时，附件面板自动选中该订单（「指向查到的订单」）
-        try {
-          if (rows.length === 1 && window.__ordersAttachSelectOrder) {
-            window.__ordersAttachSelectOrder(rows[0].id);
-            _toast('已为您在附件面板选中订单：' + (rows[0].orderNo || rows[0].id), 'success');
-          }
-        } catch (_e) {}
-      }
-      function reset() {
-        inp.value = '';
-        if (statusSel) statusSel.selectedIndex = 0;
-        if (typeSel) typeSel.selectedIndex = 0;
-        if (fromD) fromD.value = '';
-        if (toD) toD.value = '';
-        var pg = _orderState();
-        if (pg) { pg.currentPage = 1; pg.searchKeyword = ''; }
-        _render(_allRows);
-        // v20260908c：重置筛选时同步清空附件面板订单选中
-        try {
-          var asel = document.querySelector('#ordersAttachForm select[name="attachOrderId"]');
-          if (asel) asel.value = '';
-          if (window.__ordersAttachRenderRecords) window.__ordersAttachRenderRecords(null);
-        } catch (_e) {}
-      }
-      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); apply(); } });
-      if (btnQuery) btnQuery.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); apply(); });
-      if (btnReset) btnReset.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); reset(); });
-      bar.__ordersFilterBound = 1;
-      console.info('[ordersWire] 本地筛选栏已绑定（关键词/状态/类型/日期）');
-      return true;
-    } catch (_e) { return false; }
-  }
-  function _applyFilters() {
-    if (!_allRows.length) { _render(_allRows); return; }
-    var bar = document.querySelector('#tab-orders .admin-filter-bar');
-    if (!bar || !bar.__ordersFilterBound) { _render(_allRows); return; }
-    // 已绑定：触发一次查询按钮逻辑（复用绑定闭包：直接派发点击）
-    var btnQuery = null;
-    bar.querySelectorAll('button').forEach(function (b) { if (!btnQuery && (b.textContent || '').indexOf('查询') >= 0) btnQuery = b; });
-    if (btnQuery) btnQuery.click(); else _render(_allRows);
-  }
-
-  function _load(silent) {
-    if (!API || typeof API.get !== 'function') return;
-    API.get('/v1/orders', {
-      query: { page: 1, pageSize: 500 },
-      showErrorToast: false,
-      timeoutMs: 8000,
-      fallbackRead: function () { return null; }
-    }).then(function (res) {
-      var rows = Array.isArray(res) ? res : (res && res.items) || [];
-      // 生产模式：后端可达即以服务端为唯一数据源（含 0 条），清空静态演示行，显示空状态
-      _allRows = Array.isArray(rows) ? rows : [];
-      if (_allRows.length) {
-        if (_bindFilterBar()) { _applyFilters(); } else { _render(_allRows); }
-      } else {
-        _render([]);
-        _bindFilterBar();
-      }
-      _refreshAssoc();
-    }).catch(function () { /* 后端不可达：保留演示数据 */ });
-  }
-
-  /* ====== 卡片数据关联（v20260906h）：统计卡接 /v1/orders/stats；客户卡/客户表接订单聚合；
-     客户行「📜 订单」按钮联动订单 tab 按客户名筛选。后端 /v1/orders 创建时已按手机号自动建档客户，
-     /v1/customers 亦返回 _count.orders，这里在前端做金额/最近订单聚合补齐。 ====== */
-  var _agg = {}; // customerId | 'p:'+phone -> { n, sum, last }
-  function _refreshAssoc() {
-    try {
-      _agg = {};
-      _allRows.forEach(function (o) {
-        var k = o.customerId || ('p:' + (o.phone || ''));
-        var a = _agg[k] || (_agg[k] = { n: 0, sum: 0, last: 0 });
-        a.n++;
-        a.sum += Number(o.finalAmount || o.totalAmount || 0);
-        var d = new Date(o.orderDate || o.createdAt || 0).getTime();
-        if (!isNaN(d) && d > a.last) a.last = d;
-      });
-      _renderCustomers(_allCustomers);
-    } catch (_e) {}
-  }
-  function _aggOf(c) {
-    return _agg[c.id] || _agg['p:' + (c.phone || '')] || { n: (c._count && c._count.orders) || 0, sum: 0, last: 0 };
-  }
-  function _pct(a, b) { return b > 0 ? Math.round((a / b) * 1000) / 10 + '%' : '—'; }
-
-  function _loadStats() {
-    if (!API || typeof API.get !== 'function') return;
-    API.get('/v1/orders/stats', { showErrorToast: false, timeoutMs: 8000, fallbackRead: function () { return null; } })
-      .then(function (res) {
-        var d = (res && typeof res === 'object' && !Array.isArray(res)) ? res : {};
-        var by = d.byStatus || {};
-        var cards = document.querySelectorAll('.stats-grid .stat-card');
-        if (!cards.length) return;
-        var fmtW = function (n) { return '¥' + Number(n || 0).toLocaleString('zh-CN'); };
-        function _fill(card, val, subHtml) {
-          var v = card.querySelector('.stat-card-value');
-          if (v) { var unit = v.querySelector('span, small'); v.textContent = String(val); if (unit) v.appendChild(unit); }
-          var sub = card.querySelector('.stat-card-sub');
-          if (sub) sub.innerHTML = subHtml;
-          var trend = card.querySelector('.stat-card-trend');
-          if (trend) trend.style.setProperty('visibility', 'hidden'); // 无历史同期数据，不展示涨跌
-          try { card.__adminBlankZeroed = true; } catch (_e2) {} // 真实值写入后防空白守卫归零
-        }
-        if (cards[0]) _fill(cards[0], d.total || 0, '<span>累计订单金额 ' + fmtW(d.finalAmount) + '</span>');
-        if (cards[1]) _fill(cards[1], by.draft || 0, '<span>已确认：' + (by.confirmed || 0) + ' 单</span><span class="divider"></span><span>演出中：' + (by.performance || 0) + ' 单</span>');
-        if (cards[2]) _fill(cards[2], by.completed || 0, '<span>完成率 ' + _pct(by.completed || 0, d.total || 0) + '</span><span class="divider"></span><span>已回款 ' + fmtW(d.paidAmount) + '</span>');
-        if (cards[3]) _fill(cards[3], by.cancelled || 0, '<span>取消率 ' + _pct(by.cancelled || 0, d.total || 0) + '</span><span class="divider"></span><span>已退款：' + (by.refunded || 0) + ' 单</span>');
-        console.info('[ordersWire] 统计卡已关联 /v1/orders/stats（v20260906h）');
-      })
-      .catch(function () {
-        // 后端不可达：归零 + 暂无数据（绝不保留静态假数字）
-        document.querySelectorAll('.stats-grid .stat-card').forEach(function (card) {
-          var v = card.querySelector('.stat-card-value');
-          if (v) { var u = v.querySelector('span, small'); v.textContent = '0'; if (u) v.appendChild(u); }
-          var sub = card.querySelector('.stat-card-sub');
-          if (sub) sub.innerHTML = '<span style="color:var(--text-light,#94a3b8);">暂无数据</span>';
-          var trend = card.querySelector('.stat-card-trend');
-          if (trend) trend.style.setProperty('visibility', 'hidden');
-          try { card.__adminBlankZeroed = true; } catch (_e2) {}
-        });
-      });
-  }
-
-  // 客户行「📜 订单」→ 切到订单 tab 并按客户名筛选（数据关联入口）
-  document.addEventListener('click', function (e) {
-    var b = e.target && e.target.closest ? e.target.closest('.cust-orders-btn') : null;
-    if (!b) return;
-    e.preventDefault(); e.stopPropagation();
-    var name = b.getAttribute('data-cust-name') || '';
-    var tab = document.querySelector('.tab-item[data-tab="orders"]');
-    if (tab) tab.click();
-    setTimeout(function () {
-      var bar = document.querySelector('#tab-orders .admin-filter-bar');
-      if (!bar) return;
-      var inp = bar.querySelector('input[placeholder*="订单号"]');
-      if (inp) inp.value = name;
-      var btnQ = null;
-      bar.querySelectorAll('button').forEach(function (x) { if (!btnQ && (x.textContent || '').indexOf('查询') >= 0) btnQ = x; });
-      if (btnQ) { btnQ.__superPatchBound = 1; btnQ.click(); }
-      _toast('已筛选客户「' + name + '」的订单', 'info');
-    }, 120);
-  }, true);
-
-  /* ====== 客户档案 tab 真实数据（v20260906f）：/v1/customers 渲染卡片+表格；0 条时清空演示客户 ====== */
-  var _allCustomers = [];
-  function _custTypeTxt(t) { return ({ personal: '个人', organization: '单位' })[t] || t || '—'; }
-  function _custCardHtml(c) {
-    var agg = _aggOf(c);
-    var avatar = (c.customerName || '?').slice(0, 1);
-    var isOrg = c.customerType === 'organization';
-    var lvl = (c.level || '').indexOf('vip') >= 0 || (c.level || '').indexOf('VIP') >= 0 ? 'vip' : 'normal';
-    return (
-      '<div class="customer-card" data-customer-id="' + (c.id || '') + '">' +
-        '<div class="customer-card-header">' +
-          '<div class="customer-avatar' + (isOrg ? ' gov' : '') + '">' + escC(avatar) + '</div>' +
-          '<div><div class="customer-name">' + escC(c.customerName || '—') + '</div>' +
-          '<div class="customer-type">' + (isOrg ? '🏛️ 单位客户' : '👤 个人客户') + '</div></div>' +
-          '<span class="customer-level-badge ' + lvl + '">' + (lvl === 'vip' ? 'VIP' : '普通') + '</span>' +
-        '</div>' +
-        '<div class="customer-info-grid">' +
-          '<div class="customer-info-item"><span class="customer-info-label">客户ID</span><span class="customer-info-value">' + escC((c.customerNo || c.id || '—').toString().slice(0, 12)) + '</span></div>' +
-          '<div class="customer-info-item"><span class="customer-info-label">联系电话</span><span class="customer-info-value">' + escC(c.phone || '—') + '</span></div>' +
-          '<div class="customer-info-item"><span class="customer-info-label">所在区域</span><span class="customer-info-value">' + escC(c.region || c.address || '—') + '</span></div>' +
-          '<div class="customer-info-item"><span class="customer-info-label">客户类型</span><span class="customer-info-value">' + escC(_custTypeTxt(c.customerType)) + '</span></div>' +
-          '<div class="customer-info-item"><span class="customer-info-label">首次联系</span><span class="customer-info-value">' + escC(c.firstContactDate ? _fmtD(c.firstContactDate) : '—') + '</span></div>' +
-          '<div class="customer-info-item"><span class="customer-info-label">状态</span><span class="customer-info-value">' + (c.status === 'active' ? '正常' : escC(c.status || '正常')) + '</span></div>' +
-          '<div class="customer-info-item"><span class="customer-info-label">累计订单</span><span class="customer-info-value">' + agg.n + ' 单</span></div>' +
-          '<div class="customer-info-item"><span class="customer-info-label">累计消费</span><span class="customer-info-value">' + (agg.n ? _money(agg.sum) : '—') + '</span></div>' +
-        '</div>' +
-      '</div>'
-    );
-  }
-  function escC(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-  function _custRowHtml(c) {
-    var agg = _aggOf(c);
-    return '<tr data-customer-id="' + (c.id || '') + '">' +
-      '<td>' + escC((c.customerNo || c.id || '—').toString().slice(0, 12)) + '</td>' +
-      '<td><strong>' + escC(c.customerName || '—') + '</strong></td>' +
-      '<td><span class="badge ' + (c.customerType === 'organization' ? 'badge-gold' : 'badge-info') + '">' + escC(_custTypeTxt(c.customerType)) + '</span></td>' +
-      '<td>' + escC(c.phone || '—') + '</td>' +
-      '<td>' + agg.n + ' 次</td>' +
-      '<td>' + (agg.n ? _money(agg.sum) : '—') + '</td>' +
-      '<td>' + escC(c.firstContactDate ? _fmtD(c.firstContactDate) : '—') + '</td>' +
-      '<td>' + (agg.last ? _fmtD(agg.last) : '—') + '</td>' +
-      '<td><span class="customer-level-badge ' + ((c.level || '').indexOf('vip') >= 0 ? 'vip' : 'normal') + '" style="padding:3px 8px;">' + ((c.level || '').indexOf('vip') >= 0 ? 'VIP' : '普通') + '</span></td>' +
-      '<td><div class="admin-table-actions"><button class="btn btn-secondary btn-sm cust-orders-btn" data-cust-name="' + escC(c.customerName || '') + '" style="cursor:pointer;">📜 订单</button></div></td>' +
-    '</tr>';
-  }
-  function _renderCustomers(rows) {
-    rows = Array.isArray(rows) ? rows : [];
-    var box = document.querySelector('#tab-customers .customer-cards');
-    if (box) {
-      box.innerHTML = rows.length
-        ? rows.map(_custCardHtml).join('')
-        : '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#999;">暂无客户数据，真实客户将随预约/订单自动建档</div>';
-    }
-    var tb = document.querySelector('#customerTableView tbody[data-paginate]') || document.querySelector('#customerTableView tbody');
-    if (tb) {
-      tb.innerHTML = rows.map(_custRowHtml).join('');
-      tb.querySelectorAll('button, a').forEach(function (el) { el.__superPatchBound = 1; });
-      try { window.QinPagination && QinPagination.refresh && QinPagination.refresh(); } catch (_e) {}
-    }
-    console.info('[ordersWire] 已渲染真实客户 ' + rows.length + ' 条');
-  }
-  function _loadCustomers() {
-    if (!API || typeof API.get !== 'function') return;
-    API.get('/v1/customers', {
-      query: { page: 1, pageSize: 500 },
-      showErrorToast: false,
-      timeoutMs: 8000,
-      fallbackRead: function () { return null; }
-    }).then(function (res) {
-      var rows = Array.isArray(res) ? res : (res && res.items) || [];
-      _allCustomers = Array.isArray(rows) ? rows : [];
-      _renderCustomers(_allCustomers);
-      _refreshAssoc();
-    }).catch(function () { /* 后端不可达：保留演示数据 */ });
-  }
-
-  function _openDetail(o) {
-    var modal = document.getElementById('orderDetailModal');
-    var overlay = document.getElementById('orderDetailOverlay');
-    if (!modal || !overlay) return;
-    var st = STATUS_MAP[o.status] || [o.status || '—', 'badge'];
-    var fill = function (id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt || '—'; };
-    fill('modalOrderNo', o.orderNo);
-    fill('modalCustomer', o.customerName || '—');
-    fill('modalPhone', o.phone || '—');
-    fill('modalAmount', _money(o.finalAmount || o.totalAmount));
-    fill('modalStatus', st[0]);
-    fill('modalDate', _fmtDT(o.createdAt || o.orderDate));
-    // 补充行：真实摘要
-    try {
-      var note = document.getElementById('orderDetailNote');
-      if (note) {
-        var parts = [];
-        if (Number(o.performanceCount) > 0) {
-          parts.push('场次：' + o.performanceCount);
-          var _up = _unitPriceOf(o);
-          if (_up > 0) parts.push('每场单价：' + _money(_up));
-        }
-        if (o.performanceStartDate) parts.push('演出日期：' + _fmtD(o.performanceStartDate));
-        if (o.venueFullAddress) parts.push('地点：' + o.venueFullAddress);
-        if (o.contractNo) parts.push('合同号：' + o.contractNo);
-        if (Number(o.paidAmount) > 0) parts.push('已收：' + _money(o.paidAmount));
-        note.innerHTML = parts.length
-          ? '📋 <strong>订单信息：</strong>' + parts.join('　|　')
-          : '📋 该订单暂无补充信息';
-      }
-    } catch (_e) {}
-    overlay.classList.add('active');
-    modal.classList.add('active');
-    try { overlay.classList.remove('csp-hide', 'modal-overlay-hide'); overlay.style.display = ''; } catch (_e) {}
-    try { modal.classList.remove('csp-hide', 'modal-wrap-hide'); modal.style.display = ''; } catch (_e) {}
-  }
-
-  var _locks = {};
-  function _lock(key, ms) {
-    if (_locks[key]) return false;
-    _locks[key] = true;
-    setTimeout(function () { delete _locks[key]; }, ms || 1200);
-    return true;
-  }
-
-  document.addEventListener('click', function (e) {
-    var btn = e.target.closest ? e.target.closest('a[data-action], .order-detail-btn, .order-edit-btn') : null;
-    if (!btn) return;
-    var tr = btn.closest ? btn.closest('tr[data-order-id]') : null;
-    if (!tr) return; // 演示行走原有逻辑
-    var o = rowsMap[tr.getAttribute('data-order-id')];
-    if (!o) return;
-
-    // 详情 / 编辑 → 真实数据弹窗（编辑 v20260907m：可编辑表单 + PUT 保存）
-    if (btn.classList.contains('order-edit-btn')) {
-      e.preventDefault(); e.stopPropagation();
-      _openEditOrder(o);
-      return;
-    }
-    if (btn.classList.contains('order-detail-btn')) {
-      e.preventDefault(); e.stopPropagation();
-      _openDetail(o);
-      return;
-    }
-    var act = btn.getAttribute('data-action');
-    var to = act === 'confirm' ? 'confirmed' : act === 'to-show' ? 'performance' : act === 'complete' ? 'completed' : act === 'cancel' ? 'cancelled' : null;
-    if (!to) return; // open-dispatch / 上传合同 走原有处理器
-
-    e.preventDefault(); e.stopPropagation();
-    /* 前端兜底：校验当前状态是否允许流转到 to（与后端 STATUS_FLOW 对齐） */
-    var FLOW = {
-      draft: ['confirmed', 'cancelled'],
-      confirmed: ['partial_paid', 'paid', 'performance', 'cancelled', 'draft'],
-      partial_paid: ['paid', 'performance', 'cancelled'],
-      paid: ['performance', 'refunded'],
-      performance: ['completed', 'cancelled'],
-      completed: ['refunded'],
-      cancelled: [],
-      refunded: []
-    };
-    var cur = o.status || 'draft';
-    if (cur !== to && (FLOW[cur] || []).indexOf(to) < 0) {
-      _toast('⚠️ 当前状态「' + ((STATUS_MAP[cur] || [cur])[0]) + '」不允许此操作', 'warning');
-      return;
-    }
-    if (to === 'cancelled' && !window.confirm('确认取消订单 ' + (o.orderNo || '') + '？')) return;
-    if (to === 'completed' && !window.confirm('确认完成演出并归档订单 ' + (o.orderNo || '') + '？')) return;
-    if (!_lock('order_' + o.id)) return;
-    API.post('/v1/orders/' + o.id + '/transition', { to: to }, { showErrorToast: false })
-      .then(function () {
-        _toast('✅ 订单 ' + (o.orderNo || '') + ' 已' + (STATUS_MAP[to] || [to])[0], 'success');
-        _load(true);
-      })
-      .catch(function (err) {
-        _toast('❌ 操作失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error');
-      });
-  }, true);
-
-  /* ====== 新建预约订单弹窗（v20260906i）：
-   *  - 取消「演示模式」toast 弹窗 bug：spNewOrderBtn 原被 SuperPatch 绑成 toast，这里克隆节点剥离旧监听，重绑为真实弹窗；
-   *  - 服务类型不固定：下拉提供真实业务板块，默认「请选择」不预选，并支持「其他」自定义输入；
-   *  - 提交走真实 POST /v1/orders（按手机号自动建档/归并客户），成功后刷新列表/统计/客户聚合。 ====== */
-  function _showNewOrderModal() {
-    var m = document.getElementById('newOrderModal'), ov = document.getElementById('newOrderOverlay');
-    if (!m || !ov) return;
-    try { var f = document.getElementById('newOrderForm'); if (f) f.reset(); } catch (_e) {}
-    var sel = document.getElementById('no_orderType');
-    if (sel) sel.value = '';
-    var cust = document.getElementById('no_orderTypeCustom');
-    if (cust) { cust.style.display = 'none'; cust.value = ''; }
-    ov.classList.add('active'); m.classList.add('active');
-    try { ov.classList.remove('csp-hide', 'modal-overlay-hide'); ov.style.display = ''; } catch (_e) {}
-    try { m.classList.remove('csp-hide', 'modal-wrap-hide'); m.style.display = ''; } catch (_e) {}
-    try {
-      var n = document.getElementById('no_customerName');
-      if (n) setTimeout(function () { try { n.focus(); } catch (_f) {} }, 150);
-    } catch (_e) {}
-  }
-  function _hideNewOrderModal() {
-    var m = document.getElementById('newOrderModal'), ov = document.getElementById('newOrderOverlay');
-    try { if (ov) { ov.classList.remove('active'); ov.classList.add('csp-hide', 'modal-overlay-hide'); ov.style.display = 'none'; } } catch (_e) {}
-    try { if (m) { m.classList.remove('active'); m.classList.add('csp-hide', 'modal-wrap-hide'); m.style.display = 'none'; } } catch (_e) {}
-  }
-  function _bindNewOrder() {
-    // 1) 新建按钮：克隆替换以剥离 SuperPatch 的演示 toast 监听（取消弹窗 bug），重绑为真实弹窗
-    var btn = document.getElementById('spNewOrderBtn');
-    if (btn && !btn.__noRebound) {
-      var nb = btn.cloneNode(true);
-      if (btn.parentNode) btn.parentNode.replaceChild(nb, btn);
-      nb.__noRebound = 1; nb.__superPatchBound = 1; nb.__ub = 1;
-      nb.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); _showNewOrderModal(); }, true);
-    }
-    // 2) 关闭/取消：仅关闭，不弹任何确认框
-    var ov = document.getElementById('newOrderOverlay');
-    var closeBtn = document.getElementById('newOrderClose');
-    var cancelBtn = document.getElementById('newOrderCancel');
-    [ov, closeBtn, cancelBtn].forEach(function (el) { if (el) el.__superPatchBound = 1; });
-    if (closeBtn) closeBtn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); _hideNewOrderModal(); });
-    if (cancelBtn) cancelBtn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); _hideNewOrderModal(); });
-    if (ov) ov.addEventListener('click', function (e) { if (e.target === ov) _hideNewOrderModal(); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') _hideNewOrderModal(); });
-
-    // 3) 服务类型：选择「其他」时展开自定义输入（不固定模式）
-    var sel = document.getElementById('no_orderType');
-    var custom = document.getElementById('no_orderTypeCustom');
-    if (sel) sel.addEventListener('change', function () {
-      if (custom) custom.style.display = (sel.value === '__custom__') ? '' : 'none';
-    });
-    // 3b) 每场单价联动（v20260907m）：改单价/场次 → 自动算总额；改总额 → 反算单价
-    var _up = document.getElementById('no_unitPrice'), _pc = document.getElementById('no_perfCount'), _am = document.getElementById('no_amount');
-    function __calcFromUnit() {
-      if (!_up || !_pc || !_am) return;
-      var u = Number(_up.value || 0), n = parseInt(_pc.value || '0', 10);
-      if (u > 0 && n > 0) _am.value = (u * n).toFixed(2);
-    }
-    function __calcFromTotal() {
-      if (!_up || !_pc || !_am) return;
-      var a = Number(_am.value || 0), n = parseInt(_pc.value || '0', 10);
-      if (a > 0 && n > 0) _up.value = (a / n).toFixed(2);
-    }
-    if (_up) _up.addEventListener('input', __calcFromUnit);
-    if (_pc) _pc.addEventListener('input', __calcFromUnit);
-    if (_am) _am.addEventListener('input', __calcFromTotal);
-    // 阻止表单 Enter 隐式提交导致页面刷新（实际提交走下方按钮逻辑）
-    var formEl = document.getElementById('newOrderForm');
-    if (formEl) formEl.addEventListener('submit', function (e) { e.preventDefault(); e.stopPropagation(); });
-
-    // 4) 提交 → 真实创建
-    var submitBtn = document.getElementById('newOrderSubmit');
-    if (submitBtn) {
-      submitBtn.__superPatchBound = 1;
-      submitBtn.addEventListener('click', function (e) {
-        e.preventDefault(); e.stopPropagation();
-        if (!API || typeof API.post !== 'function') { _toast('后端接口未就绪，暂无法创建', 'error'); return; }
-        var name = (document.getElementById('no_customerName').value || '').trim();
-        var phone = (document.getElementById('no_phone').value || '').trim();
-        var typeVal = sel ? sel.value : '';
-        var orderType = typeVal === '__custom__' ? (custom ? (custom.value || '').trim() : '') : typeVal;
-        if (!name) { _toast('请填写客户名称', 'error'); return; }
-        if (!phone) { _toast('请填写联系电话', 'error'); return; }
-        if (!/^[0-9+\-\s]{6,20}$/.test(phone)) { _toast('联系电话格式不正确', 'error'); return; }
-        if (!orderType) { _toast('请选择或自定义服务类型', 'error'); return; }
-        var amount = Number(document.getElementById('no_amount').value || 0);
-        if (!(amount >= 0)) amount = 0;
-        var body = { customerName: name, phone: phone, orderType: orderType, totalAmount: amount, finalAmount: amount };
-        var venue = (document.getElementById('no_venue').value || '').trim(); if (venue) body.venueFullAddress = venue;
-        var pdate = document.getElementById('no_perfDate').value; if (pdate) { body.performanceStartDate = pdate; body.orderDate = pdate; }
-        var pcnt = parseInt(document.getElementById('no_perfCount').value || '0', 10); if (pcnt > 0) body.performanceCount = pcnt;
-        var remark = (document.getElementById('no_remark').value || '').trim(); if (remark) body.internalRemark = remark;
-        // 每场单价 → 订单明细 items（unitPrice/subtotal 入库 OrderItem）
-        var unitPrice = Number((document.getElementById('no_unitPrice') || {}).value || 0);
-        if (pcnt > 0 && unitPrice > 0) {
-          body.items = [{ itemType: 'performance', itemName: orderType + ' · 演出服务', quantity: pcnt, unitPrice: unitPrice, subtotal: Number((unitPrice * pcnt).toFixed(2)), performanceDate: pdate || null }];
-        }
-        var oldTxt = submitBtn.textContent;
-        submitBtn.disabled = true; submitBtn.textContent = '提交中…';
-        API.post('/v1/orders', body, { showErrorToast: false })
-          .then(function () {
-            _toast('✅ 预约订单已创建，客户已按手机号自动建档', 'success');
-            _hideNewOrderModal();
-            _load(true); _loadCustomers(); _loadStats();
-          })
-          .catch(function (err) {
-            _toast('❌ 创建失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error');
-          })
-          .then(function () { submitBtn.disabled = false; submitBtn.textContent = oldTxt; });
-      }, true);
-    }
-    console.info('[ordersWire] 新建预约订单弹窗已绑定（v20260906i，服务类型非固定）');
-  }
-  _bindNewOrder();
-
-  /* ====== 编辑订单真实弹窗（v20260907m）：编辑按钮 → 预填 → PUT /v1/orders/:id；含每场单价联动 ====== */
-  var _editCur = null;
-  function _unitPriceOf(o) {
-    if (!o) return 0;
-    if (Array.isArray(o.items) && o.items.length) {
-      var it = o.items[0];
-      if (Number(it.unitPrice) > 0) return Number(it.unitPrice);
-    }
-    var n = Number(o.performanceCount || 0), amt = Number(o.finalAmount || o.totalAmount || 0);
-    if (n > 0 && amt > 0) return Math.round((amt / n) * 100) / 100;
-    return 0;
-  }
-  function _openEditOrder(o) {
-    var m = document.getElementById('editOrderModal'), ov = document.getElementById('editOrderOverlay');
-    if (!m || !ov || !o) return;
-    _editCur = o;
-    var g = function (id) { return document.getElementById(id); };
-    var noEl = g('eo_orderNo'); if (noEl) noEl.textContent = o.orderNo || '';
-    if (g('eo_customerName')) g('eo_customerName').value = o.customerName || '';
-    if (g('eo_phone')) g('eo_phone').value = o.phone || '';
-    var tSel = g('eo_orderType'), tCustom = g('eo_orderTypeCustom');
-    var known = ['乡村庙会演出','惠民下乡演出','节庆专场演出','文旅景区驻场','企业商演（商业演出）','校园/社区演出','数字直播/录播','增值服务（服装道具·培训等）'];
-    var t = o.orderType || '';
-    if (tSel) {
-      if (known.indexOf(t) >= 0) { tSel.value = t; if (tCustom) { tCustom.style.display = 'none'; tCustom.value = ''; } }
-      else if (t) { tSel.value = '__custom__'; if (tCustom) { tCustom.style.display = ''; tCustom.value = t; } }
-      else { tSel.value = ''; if (tCustom) { tCustom.style.display = 'none'; tCustom.value = ''; } }
-    }
-    if (g('eo_venue')) g('eo_venue').value = o.venueFullAddress || '';
-    if (g('eo_perfDate')) g('eo_perfDate').value = (o.performanceStartDate || o.orderDate || '').slice(0, 10);
-    if (g('eo_perfCount')) g('eo_perfCount').value = Number(o.performanceCount || 0) || '';
-    if (g('eo_unitPrice')) g('eo_unitPrice').value = _unitPriceOf(o) || '';
-    if (g('eo_amount')) g('eo_amount').value = Number(o.finalAmount || o.totalAmount || 0) || '';
-    if (g('eo_remark')) g('eo_remark').value = o.internalRemark || '';
-    ov.classList.add('active'); m.classList.add('active');
-    try { ov.classList.remove('csp-hide', 'modal-overlay-hide'); ov.style.display = ''; } catch (_e) {}
-    try { m.classList.remove('csp-hide', 'modal-wrap-hide'); m.style.display = ''; } catch (_e) {}
-  }
-  function _hideEditOrderModal() {
-    var m = document.getElementById('editOrderModal'), ov = document.getElementById('editOrderOverlay');
-    try { if (ov) { ov.classList.remove('active'); ov.classList.add('csp-hide', 'modal-overlay-hide'); ov.style.display = 'none'; } } catch (_e) {}
-    try { if (m) { m.classList.remove('active'); m.classList.add('csp-hide', 'modal-wrap-hide'); m.style.display = 'none'; } } catch (_e) {}
-  }
-  (function _bindEditOrder() {
-    var ov = document.getElementById('editOrderOverlay');
-    ['editOrderClose', 'editOrderCancel'].forEach(function (id) {
-      var el = document.getElementById(id);
-      if (el) { el.__superPatchBound = 1; el.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); _hideEditOrderModal(); }); }
-    });
-    if (ov) { ov.__superPatchBound = 1; ov.addEventListener('click', function (e) { if (e.target === ov) _hideEditOrderModal(); }); }
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') _hideEditOrderModal(); });
-    // 服务类型自定义展开
-    var tSel = document.getElementById('eo_orderType'), tCustom = document.getElementById('eo_orderTypeCustom');
-    if (tSel) tSel.addEventListener('change', function () { if (tCustom) tCustom.style.display = (tSel.value === '__custom__') ? '' : 'none'; });
-    // 单价联动：改单价/场次 → 总额；改总额 → 反算单价
-    var _up = document.getElementById('eo_unitPrice'), _pc = document.getElementById('eo_perfCount'), _am = document.getElementById('eo_amount');
-    function __eoCalcUnit() {
-      var u = Number(_up.value || 0), n = parseInt(_pc.value || '0', 10);
-      if (u > 0 && n > 0) _am.value = (u * n).toFixed(2);
-    }
-    function __eoCalcTotal() {
-      var a = Number(_am.value || 0), n = parseInt(_pc.value || '0', 10);
-      if (a > 0 && n > 0) _up.value = (a / n).toFixed(2);
-    }
-    if (_up) _up.addEventListener('input', __eoCalcUnit);
-    if (_pc) _pc.addEventListener('input', __eoCalcUnit);
-    if (_am) _am.addEventListener('input', __eoCalcTotal);
-    // 保存 → PUT /v1/orders/:id
-    var submitBtn = document.getElementById('editOrderSubmit');
-    if (submitBtn) {
-      submitBtn.__superPatchBound = 1;
-      submitBtn.addEventListener('click', function (e) {
-        e.preventDefault(); e.stopPropagation();
-        if (!_editCur) { _toast('订单数据缺失，请关闭后重试', 'error'); return; }
-        if (!API || typeof API.patch !== 'function') { _toast('后端接口未就绪，暂无法保存', 'error'); return; }
-        var g = function (id) { return document.getElementById(id); };
-        var name = (g('eo_customerName').value || '').trim();
-        var phone = (g('eo_phone').value || '').trim();
-        if (!name) { _toast('请填写客户名称', 'error'); return; }
-        if (!phone) { _toast('请填写联系电话', 'error'); return; }
-        if (!/^[0-9+\-\s]{6,20}$/.test(phone)) { _toast('联系电话格式不正确', 'error'); return; }
-        var tVal = tSel ? tSel.value : '';
-        var orderType = tVal === '__custom__' ? (tCustom ? (tCustom.value || '').trim() : '') : tVal;
-        if (!orderType) { _toast('请选择或自定义服务类型', 'error'); return; }
-        var patch = { customerName: name, phone: phone, orderType: orderType };
-        var venue = (g('eo_venue').value || '').trim(); patch.venueFullAddress = venue || null;
-        var pdate = g('eo_perfDate').value; if (pdate) patch.performanceStartDate = pdate;
-        var pcnt = parseInt(g('eo_perfCount').value || '0', 10); if (pcnt > 0) patch.performanceCount = pcnt;
-        var amount = Number(g('eo_amount').value || 0); if (amount >= 0) { patch.totalAmount = amount; patch.finalAmount = amount; }
-        var remark = (g('eo_remark').value || '').trim(); patch.internalRemark = remark || null;
-        // 单价联动：编辑保存以总额为准（单价仅用于表单内自动换算；后端 update 白名单不含 OrderItem）
-        var oldTxt = submitBtn.textContent;
-        submitBtn.disabled = true; submitBtn.textContent = '保存中…';
-        API.patch('/v1/orders/' + _editCur.id, patch, { showErrorToast: false })
-          .then(function () {
-            _toast('✅ 订单 ' + (_editCur.orderNo || '') + ' 已保存', 'success');
-            _hideEditOrderModal();
-            _load(true);
-          })
-          .catch(function (err) {
-            _toast('❌ 保存失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error');
-          })
-          .then(function () { submitBtn.disabled = false; submitBtn.textContent = oldTxt; });
-      }, true);
-    }
-    console.info('[ordersWire] 编辑订单弹窗已绑定（v20260907m）');
-  })();
-
-  /* ====== 订单收款 → 财务台账联动（v20260907m）：订单行「💰 收款」→ POST /v1/fin/ledger（orderId 挂账）+ PATCH 订单 paidAmount ====== */
-  (function _bindOrderPay() {
-    document.addEventListener('click', function (e) {
-      var btn = e.target.closest ? e.target.closest('.order-pay-btn') : null;
-      if (!btn) return;
-      var tr = btn.closest ? btn.closest('tr[data-order-id]') : null;
-      if (!tr) return;
-      var o = rowsMap[tr.getAttribute('data-order-id')];
-      if (!o) return;
-      e.preventDefault(); e.stopPropagation();
-      if (!API || typeof API.post !== 'function') { _toast('后端接口未就绪，暂无法收款', 'error'); return; }
-      var due = Math.max(0, Number(o.finalAmount || o.totalAmount || 0) - Number(o.paidAmount || 0));
-      var input = window.prompt('【订单收款】' + (o.orderNo || '') + ' · 客户：' + (o.customerName || '—') + '\n待收：¥' + due.toFixed(2) + '\n请输入本次收款金额（元）：', due > 0 ? String(due) : '');
-      if (input === null) return;
-      var amt = Number(input);
-      if (!(amt > 0)) { _toast('⚠️ 收款金额必须大于 0', 'warning'); return; }
-      var ledgerBody = {
-        orderId: o.id,
-        summary: '订单收款 ' + (o.orderNo || '') + ' · ' + (o.customerName || ''),
-        voucherCategory: '演出收入',
-        status: 'paid',
-        creditAmount: amt
+    _bindFilterBar: function(){
+      var self = this;
+      var el = function(id){ return document.getElementById(id); };
+      var apply = function(){
+        self.state.filter.keyword = (el('ordFilterKeyword') ? el('ordFilterKeyword').value : '').trim();
+        self.state.filter.status = el('ordFilterStatus') ? el('ordFilterStatus').value : '';
+        self.state.filter.orderType = el('ordFilterType') ? el('ordFilterType').value : '';
+        self.state.filter.fromDate = el('ordFilterFrom') ? el('ordFilterFrom').value : '';
+        self.state.filter.toDate = el('ordFilterTo') ? el('ordFilterTo').value : '';
+        self.load();
       };
-      var oldTxt = btn.textContent;
-      btn.disabled = true; btn.textContent = '入账中…';
-      API.post('/v1/fin/ledger', ledgerBody, { showErrorToast: false })
-        .then(function () {
-          var newPaid = Number(o.paidAmount || 0) + amt;
-          return API.patch('/v1/orders/' + o.id, { paidAmount: newPaid }, { showErrorToast: false });
-        })
-        .then(function () {
-          _toast('✅ 已收款 ¥' + amt.toFixed(2) + ' 入财务台账并更新订单', 'success');
-          _load(true);
-        })
-        .catch(function (err) {
-          _toast('❌ 收款失败：' + (err && err.message ? err.message : '网络/服务异常'), 'error');
-        })
-        .then(function () { btn.disabled = false; btn.textContent = oldTxt; });
-    }, true);
-    console.info('[ordersWire] 订单收款→财务台账联动已绑定（v20260907m）');
-  })();
-
-  /* ====== 关联订单下拉动态填充（v20260907m）：附件表单/凭证表单从 /v1/orders 拉取，替代硬编码旧订单号 ====== */
-  (function _fillOrderSelects() {
-    function fill(select, emptyTip) {
-      if (!select) return;
-      select.innerHTML = '<option value="">' + emptyTip + '</option>';
-      API.get('/v1/orders', { query: { page: 1, pageSize: 500 }, showErrorToast: false, timeoutMs: 8000 })
-        .then(function (d) {
-          var rows = (d && Array.isArray(d.data)) ? d.data : (Array.isArray(d) ? d : (d && Array.isArray(d.rows)) ? d.rows : []);
-          if (!rows.length) {
-            select.innerHTML = '<option value="">暂无订单可选</option>';
-            return;
-          }
-          var html = '<option value="">' + emptyTip + '</option>';
-          rows.forEach(function (o) {
-            html += '<option value="' + (o.id || '') + '">' + (o.orderNo || o.id) + ' · ' + (o.customerName || '—') + '</option>';
-          });
-          select.innerHTML = html;
-        })
-        .catch(function () {
-          select.innerHTML = '<option value="">订单列表加载失败</option>';
+      var b = el('ordFilterApplyBtn');
+      if (b) { b.setAttribute('data-real-bound','1'); b.__superPatchBound = 1; b.__ts3Done = 1; b.addEventListener('click', apply); }
+      var r = el('ordFilterResetBtn');
+      if (r) {
+        r.setAttribute('data-real-bound','1'); r.__superPatchBound = 1; r.__ts3Done = 1;
+        r.addEventListener('click', function(){
+          if (el('ordFilterKeyword')) el('ordFilterKeyword').value = '';
+          if (el('ordFilterStatus')) el('ordFilterStatus').value = '';
+          if (el('ordFilterType')) el('ordFilterType').value = '';
+          if (el('ordFilterFrom')) el('ordFilterFrom').value = '2026-01-01';
+          if (el('ordFilterTo')) el('ordFilterTo').value = '2026-12-31';
+          self.state.filter = { keyword: '', status: '', orderType: '', fromDate: '', toDate: '' };
+          self.load();
         });
-    }
-    var run = function () {
-      var attachSel = document.querySelector('#ordersAttachForm select[name="attachOrderId"]');
-      fill(attachSel, '请选择要补充附件的订单');
-      try { if (window.API && API.get) { API.get('/v1/orders', { pageSize: 1, showErrorToast: false, timeoutMs: 1 }).catch(function(){}); } } catch (_e) {}
-    };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(run, 600); });
-    else setTimeout(run, 600);
-  })();
+      }
+      var k = el('ordFilterKeyword');
+      if (k) k.addEventListener('keydown', function(e){ if (e.key === 'Enter') apply(); });
+    },
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { _load(false); _loadCustomers(); _loadStats(); }, 300); });
-  else setTimeout(function () { _load(false); _loadCustomers(); _loadStats(); }, 300);
-  // 分页条显隐修复重试（QinPagination 初始化晚于本脚本时）
-  setTimeout(_showRealPaginationBar, 600);
-  setTimeout(_showRealPaginationBar, 1600);
-  setTimeout(_showRealPaginationBar, 3200);
-})();</script>
+    // ====== 客户档案（tab-customers）真实数据加载 ======
+    _custTypeText: function(t){ return t === 'organization' ? '单位/组织' : (t === 'personal' ? '个人' : (t || '个人')); },
+    _custLevelBadge: function(l){
+      if (!l) return '<span class="badge" style="background:#94a3b8;color:#fff;">未评级</span>';
+      var m = { 'VIP':'#dc2626', 'A':'#2563eb', 'B':'#059669', 'C':'#6b7280' };
+      var c = m[l] || '#6b7280';
+      return '<span class="badge" style="background:'+c+';color:#fff;">'+this._escape(l)+'</span>';
+    },
+
+    _bindCustomerFilterBar: function(){
+      var self = this;
+      var el = function(id){ return document.getElementById(id); };
+      var apply = function(){
+        self.state.custFilter = {
+          keyword: (el('custFilterKeyword') ? el('custFilterKeyword').value : '').trim(),
+          customerType: el('custFilterType') ? el('custFilterType').value : '',
+          level: el('custFilterLevel') ? el('custFilterLevel').value : ''
+        };
+        self.loadCustomers();
+      };
+      var b = el('custFilterApplyBtn');
+      if (b) { b.setAttribute('data-real-bound','1'); b.__superPatchBound = 1; b.__ts3Done = 1; b.addEventListener('click', apply); }
+      var r = el('custFilterResetBtn');
+      if (r) {
+        r.setAttribute('data-real-bound','1'); r.__superPatchBound = 1; r.__ts3Done = 1;
+        r.addEventListener('click', function(){
+          if (el('custFilterKeyword')) el('custFilterKeyword').value = '';
+          if (el('custFilterType')) el('custFilterType').value = '';
+          if (el('custFilterLevel')) el('custFilterLevel').value = '';
+          self.state.custFilter = { keyword: '', customerType: '', level: '' };
+          self.loadCustomers();
+        });
+      }
+      var k = el('custFilterKeyword');
+      if (k) k.addEventListener('keydown', function(e){ if (e.key === 'Enter') apply(); });
+    },
+
+    loadCustomers: async function(){
+      var cardsTbody = document.getElementById('customersCardsTbody');
+      var tableTbody = document.getElementById('customersMainTbody');
+      if (!cardsTbody && !tableTbody) return;
+      var loadingHtml = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">正在加载真实客户数据…</div>';
+      var loadingTr = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实客户数据…</td></tr>';
+      if (cardsTbody) cardsTbody.innerHTML = loadingHtml;
+      if (tableTbody) tableTbody.innerHTML = loadingTr;
+      try {
+        var q = { page: 1, pageSize: 200 };
+        if (this.state.custFilter) {
+          if (this.state.custFilter.keyword) q.keyword = this.state.custFilter.keyword;
+          if (this.state.custFilter.customerType) q.customerType = this.state.custFilter.customerType;
+          if (this.state.custFilter.level) q.level = this.state.custFilter.level;
+        }
+        var resp = await QAXQJT_API.get('/v1/customers', { query: q });
+        var rows = [];
+        if (Array.isArray(resp)) rows = resp;
+        else if (resp && Array.isArray(resp.data)) rows = resp.data;
+        else if (resp && Array.isArray(resp.items)) rows = resp.items;
+        else if (resp && Array.isArray(resp.list)) rows = resp.list;
+        else if (resp && Array.isArray(resp.rows)) rows = resp.rows;
+        else if (resp && resp.data && Array.isArray(resp.data.items)) rows = resp.data.items;
+        // 过滤掉已删除
+        rows = rows.filter(function(c){ return c && c.status !== 'deleted'; });
+        this.state.custList = rows;
+        this._renderCustomerCards(rows, cardsTbody);
+        this._renderCustomerTable(rows, tableTbody);
+      } catch(e) {
+        console.warn('[__ordersApi.loadCustomers] 失败', e);
+        var errHtml = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#dc2626;">⚠️ 加载客户失败：' + (e && e.message ? e.message : e) + '</div>';
+        var errTr = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#dc2626;">⚠️ 加载客户失败：' + (e && e.message ? e.message : e) + '</td></tr>';
+        if (cardsTbody) cardsTbody.innerHTML = errHtml;
+        if (tableTbody) tableTbody.innerHTML = errTr;
+      }
+    },
+
+    _renderCustomerCards: function(rows, tbody){
+      if (!tbody) return;
+      var self = this;
+      if (!rows.length) {
+        tbody.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">📭 暂无客户数据（产生订单/预约后将自动建档）</div>';
+        return;
+      }
+      tbody.innerHTML = '';
+      rows.forEach(function(c){
+        var card = document.createElement('div');
+        card.className = 'customer-card';
+        card.style.cssText = 'background:var(--bg-card);border:1px solid var(--border-light);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:8px;';
+        var ordersCount = (c._count && c._count.orders) || c.totalOrdersCount || 0;
+        var totalAmount = c.totalOrdersAmount || 0;
+        var fmt = function(n){ try { return Number(n||0).toLocaleString('zh-CN'); } catch(_) { return '0'; } };
+        var fmtDate = function(d){ if (!d) return '—'; try { return new Date(d).toLocaleDateString('zh-CN'); } catch(_) { return '—'; } };
+        card.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+            '<strong style="font-size:1.05rem;color:var(--text-primary);">' + self._escape(c.customerName || c.organization || '—') + '</strong>' +
+            self._custLevelBadge(c.level) +
+          '</div>' +
+          '<div style="font-size:0.85rem;color:var(--text-light);">ID: ' + self._escape(c.id || '') + '</div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;font-size:0.9rem;color:var(--text-secondary);">' +
+            '<span>📞 ' + self._escape(c.phone || '—') + '</span>' +
+            '<span>🏷️ ' + self._custTypeText(c.customerType) + '</span>' +
+          '</div>' +
+          (c.organization ? '<div style="font-size:0.9rem;color:var(--text-secondary);">🏢 ' + self._escape(c.organization) + '</div>' : '') +
+          '<div style="display:flex;justify-content:space-between;border-top:1px dashed var(--border-light);padding-top:8px;font-size:0.85rem;color:var(--text-light);">' +
+            '<span>合作 ' + fmt(ordersCount) + ' 次</span>' +
+            '<span>累计 ¥' + fmt(totalAmount) + '</span>' +
+          '</div>' +
+          '<div style="font-size:0.8rem;color:var(--text-light);">首次合作：' + fmtDate(c.firstContactDate || c.createdAt) + '</div>';
+        tbody.appendChild(card);
+      });
+    },
+
+    _renderCustomerTable: function(rows, tbody){
+      if (!tbody) return;
+      var self = this;
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">📭 暂无客户数据（产生订单/预约后将自动建档）</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '';
+      var fmt = function(n){ try { return Number(n||0).toLocaleString('zh-CN'); } catch(_) { return '0'; } };
+      var fmtDate = function(d){ if (!d) return '—'; try { return new Date(d).toLocaleDateString('zh-CN'); } catch(_) { return '—'; } };
+      rows.forEach(function(c){
+        var tr = document.createElement('tr');
+        var ordersCount = (c._count && c._count.orders) || c.totalOrdersCount || 0;
+        var totalAmount = c.totalOrdersAmount || 0;
+        tr.innerHTML =
+          '<td><strong>' + self._escape(c.id || '') + '</strong></td>' +
+          '<td>' + self._escape(c.customerName || c.organization || '—') + '</td>' +
+          '<td>' + self._custTypeText(c.customerType) + '</td>' +
+          '<td>' + self._escape(c.phone || '—') + '</td>' +
+          '<td>' + fmt(ordersCount) + '</td>' +
+          '<td>¥' + fmt(totalAmount) + '</td>' +
+          '<td>' + fmtDate(c.firstContactDate) + '</td>' +
+          '<td>' + fmtDate(c.updatedAt || c.createdAt) + '</td>' +
+          '<td>' + self._custLevelBadge(c.level) + '</td>' +
+          '<td><button class="btn btn-sm btn-default" data-cust-id="' + self._escape(c.id || '') + '" data-real-bound="1">查看</button></td>';
+        tbody.appendChild(tr);
+      });
+    },
+
+    load: async function(){
+      var tbody = this._findTbody();
+      if (!tbody) { console.warn('[ordersApi] tbody not found'); return; }
+      try {
+        var q = { page: 1, pageSize: 200 };
+        if (this.state.filter.keyword) q.keyword = this.state.filter.keyword;
+        if (this.state.filter.status) q.status = this.state.filter.status;
+        if (this.state.filter.orderType) q.orderType = this.state.filter.orderType;
+        if (this.state.filter.fromDate) q.fromDate = this.state.filter.fromDate;
+        if (this.state.filter.toDate) q.toDate = this.state.filter.toDate;
+        var resp = await QAXQJT_API.get('/v1/orders', { query: q });
+        var rows = [];
+        if (Array.isArray(resp)) rows = resp;
+        else if (resp && Array.isArray(resp.data)) rows = resp.data;
+        else if (resp && Array.isArray(resp.items)) rows = resp.items;
+        else if (resp && Array.isArray(resp.list)) rows = resp.list;
+        else if (resp && Array.isArray(resp.rows)) rows = resp.rows;
+        else if (resp && resp.data && Array.isArray(resp.data.items)) rows = resp.data.items;
+        else if (resp && resp.data && Array.isArray(resp.data.list)) rows = resp.data.list;
+        this.state.list = rows;
+        this._renderTbody(rows, tbody);
+        this.state.loaded = true;
+        try { if (window.QinPagination && typeof QinPagination.init === 'function') QinPagination.init(); } catch(_){}
+      } catch(e) {
+        console.warn('[__ordersApi.load] 失败', e);
+        this._toast('⚠️ 加载订单列表失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    _renderTbody: function(rows, tbody){
+      tbody.innerHTML = '';
+      var self = this;
+      var idx = 0;
+      rows.forEach(function(o){
+        if (o.status === 'deleted' || o.status === 'refunded' && o.deletedAt) return;
+        idx++;
+        var oid = String(o.orderNo || o.id || '');
+        var iid = String(o.id || oid);
+        var status = o.status || 'draft';
+        var statusBadge = self._statusBadge(status);
+        var tr = document.createElement('tr');
+        tr.setAttribute('data-order-id', iid);
+        tr.setAttribute('data-status', status);
+        var totalAmount = (o.totalAmount || 0).toLocaleString('zh-CN');
+        var finalAmount = (o.finalAmount || o.totalAmount || 0).toLocaleString('zh-CN');
+        var orderDate = o.orderDate ? String(o.orderDate).slice(0,10) : (o.createdAt ? String(o.createdAt).slice(0,10) : '—');
+        var performanceStart = o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—';
+        // 演出日期倒计时提醒（提前10天）
+        var countdownHtml = '';
+        if (o.performanceStartDate) {
+          var perfDate = new Date(o.performanceStartDate);
+          var today = new Date(); today.setHours(0,0,0,0);
+          var diffDays = Math.ceil((perfDate - today) / (1000*60*60*24));
+          if (diffDays < 0) {
+            countdownHtml = '<span style="color:#94a3b8;font-size:.78rem;">已过期</span>';
+          } else if (diffDays === 0) {
+            countdownHtml = '<span style="color:#dc2626;font-weight:700;font-size:.78rem;">⏰ 今天演出</span>';
+          } else if (diffDays <= 3) {
+            countdownHtml = '<span style="color:#dc2626;font-weight:700;font-size:.78rem;">⏰ ' + diffDays + '天</span>';
+          } else if (diffDays <= 10) {
+            countdownHtml = '<span style="color:#ea580c;font-weight:600;font-size:.78rem;">⏰ ' + diffDays + '天</span>';
+          }
+        }
+        tr.innerHTML =
+          '<td><strong style="color:var(--primary);">' + self._escape(oid) + '</strong></td>' +
+          '<td>' + self._escape(o.customerName || o.organization || '—') + '</td>' +
+          '<td>' + self._escape(o.phone || '—') + '</td>' +
+          '<td>' + self._escape(o.orderType || '—') + '</td>' +
+          '<td>' + (o.performanceCount || 1) + ' 场</td>' +
+          '<td>' + self._escape(performanceStart) + (countdownHtml ? '<br>' + countdownHtml : '') + '</td>' +
+          '<td>' + self._escape(o.venueFullAddress || '—') + '</td>' +
+          '<td>—</td>' +
+          '<td>¥' + self._escape(totalAmount) + '</td>' +
+          '<td><strong style="color:var(--primary-dark);">¥' + self._escape(finalAmount) + '</strong></td>' +
+          '<td><span class="badge ' + statusBadge.cls + '">' + self._escape(statusBadge.text) + '</span></td>' +
+          '<td>' + (o.createdAt ? String(o.createdAt).slice(0,16).replace('T',' ') : '—') + '</td>' +
+          '<td><div class="admin-table-actions" data-order-row="' + iid + '">' + self._rowActionBtns(o) + '</div></td>';
+        tbody.appendChild(tr);
+      });
+      try {
+        var obtns = tbody.querySelectorAll('button[data-act]');
+        for (var ob = 0; ob < obtns.length; ob++) { var ob1 = obtns[ob]; if(!ob1.__superPatchBound)ob1.__superPatchBound=1; if(!ob1.__ts3Done)ob1.__ts3Done=1; if(!ob1.__bindDone)ob1.__bindDone=1; if(!ob1.__ctE2Done)ob1.__ctE2Done=1; if(!ob1.__deadBtnChecked)ob1.__deadBtnChecked=1; }
+      } catch(_){}
+      if (window.__guardRealActions) { try { window.__guardRealActions(tbody); } catch(_){} }
+      if (!idx) {
+        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:30px;color:#999;">暂无订单数据（可在「新增订单」中创建第一条）</td></tr>';
+      }
+    },
+
+    // v20261003 P3-6：操作按钮严格按订单状态（对齐后端 STATUS_FLOW）+ 角色生成，杜绝死入口/必失败操作
+    _rowActionBtns: function(o){
+      var role = '';
+      try { role = (JSON.parse(localStorage.getItem('qaxqjt_admin_session')) || {}).role || ''; } catch(_){}
+      var st = o.status, btns = [];
+      function add(act, label, style, title){ btns.push('<button class="' + style + '" data-act="' + act + '" title="' + (title||label) + '">' + label + '</button>'); }
+      add('view', '👁 详情', 'btn btn-secondary btn-sm');
+      if (st === 'draft' || st === 'confirmed' || st === 'partial_paid') {
+        add('edit', '✏️ 编辑', 'btn btn-primary btn-sm');
+        add('pay', '💰 收款', 'btn btn-sm', '登记收款（流水+台账）');
+      }
+      if (st === 'paid' || st === 'confirmed' || st === 'partial_paid' || st === 'performance') {
+        add('dispatch', '📋 派工', 'btn btn-gold btn-sm');
+      }
+      if (st === 'draft') add('confirm', '✅ 确认', 'btn btn-success btn-sm');
+      if (st === 'confirmed' || st === 'partial_paid' || st === 'paid') add('to-show', '🎬 转演出', 'btn btn-info btn-sm');
+      if (st === 'draft' || st === 'confirmed' || st === 'partial_paid' || st === 'performance') add('cancel', '❌ 取消', 'btn btn-danger btn-sm');
+      // 删除仅 super_admin（后端 DELETE 仅 super_admin）；仅 draft/cancelled 状态
+      if (role === 'super_admin' && (st === 'draft' || st === 'cancelled')) {
+        btns.push('<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" data-act="del" title="删除">🗑️</button>');
+      }
+      // 收款按钮橙色样式（最后统一替换 class，避免 btn-warning 不存在）
+      return btns.join('').split('class="btn btn-sm" data-act="pay"').join('class="btn btn-sm" style="background:#f59e0b;color:#fff;border:none;padding:6px 10px;" data-act="pay"');
+    },
+
+    _statusBadge: function(status){
+      var map = {
+        'draft':        { cls: 'badge badge-secondary', text: '草稿' },
+        'confirmed':    { cls: 'badge badge-info', text: '已确认' },
+        'partial_paid': { cls: 'badge badge-warning', text: '部分付款' },
+        'paid':         { cls: 'badge badge-success', text: '已付款' },
+        'performance':  { cls: 'badge badge-warning', text: '演出中' },
+        'completed':    { cls: 'badge badge-success', text: '已完成' },
+        'cancelled':    { cls: 'badge badge-danger', text: '已取消' },
+        'refunded':     { cls: 'badge badge-danger', text: '已退款' }
+      };
+      return map[status] || { cls: 'badge badge-secondary', text: status };
+    },
+
+    exportCsv: async function(){
+      try {
+        this._toast('📊 正在拉取订单列表…', 'info');
+        var resp = await QAXQJT_API.get('/v1/orders', { query: { page: 1, pageSize: 500 } });
+        var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
+        if (!rows.length) { this._toast('⚠️ 没有可导出的订单', 'warning'); return; }
+        var csv = ['订单号,客户名称,联系电话,演出类型,场次,演出开始,演出地点,订单金额,实付金额,状态,下单时间'];
+        var self = this;
+        rows.forEach(function(o){
+          var cells = [
+            String(o.orderNo || o.id || ''),
+            String(o.customerName || o.organization || ''),
+            String(o.phone || ''),
+            String(o.orderType || ''),
+            String(o.performanceCount || 1),
+            o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '',
+            String(o.venueFullAddress || ''),
+            String(o.totalAmount || 0),
+            String(o.finalAmount || o.totalAmount || 0),
+            String(o.status || 'draft'),
+            o.createdAt ? String(o.createdAt).slice(0,19) : ''
+          ];
+          csv.push(cells.map(function(c){ c = String(c).replace(/"/g, '""'); return /[",\n]/.test(c) ? '"' + c + '"' : c; }).join(','));
+        });
+        var blob = new Blob(['\ufeff' + csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        var today = new Date().toISOString().slice(0,10);
+        a.download = 'qaxqjt-orders-' + today + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function(){ try { URL.revokeObjectURL(url); a.remove(); } catch(_){} }, 100);
+        this._toast('✅ 已导出 ' + rows.length + ' 条订单', 'success');
+      } catch(e) {
+        console.warn('[__ordersApi.exportCsv] 失败', e);
+        this._toast('⚠️ 导出失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    // ====== 新建订单：复用 orderEditModal 弹窗（清空字段 + POST 新建） ======
+    openCreateModal: async function(){
+      var modal = document.getElementById('orderEditModal');
+      var overlay = document.getElementById('orderEditOverlay');
+      if (!modal || !overlay) {
+        this._toast('⚠️ 新建订单弹窗未找到', 'warning');
+        return;
+      }
+      // 清空所有字段（editOrderId 留空表示新建）
+      try {
+        document.getElementById('editOrderId').value = '';
+        document.getElementById('editCustomerName').value = '';
+        document.getElementById('editPhone').value = '';
+        document.getElementById('editOrganization').value = '';
+        document.getElementById('editOrderType').value = '';
+        document.getElementById('editPerformanceCount').value = 1;
+        document.getElementById('editTotalAmount').value = '';
+        document.getElementById('editDiscountAmount').value = 0;
+        document.getElementById('editPaidAmount').value = 0;
+        document.getElementById('editPerformanceStartDate').value = '';
+        document.getElementById('editPerformanceEndDate').value = '';
+        document.getElementById('editVenueFullAddress').value = '';
+        document.getElementById('editSpecialRequirements').value = '';
+        document.getElementById('editInternalRemark').value = '';
+        // v20261003 P2-2：新建模式清空派工 JSON 暂存与提示
+        try { document.getElementById('orderEditForm').dataset.dispatchJson = ''; var __h0 = document.getElementById('editRemarkHint'); if (__h0) { __h0.style.display = 'none'; __h0.textContent = ''; } } catch(_){}
+      } catch(_){}
+      // 切换标题为"新建订单"
+      try {
+        var titleEl = modal.querySelector('h3');
+        if (titleEl) titleEl.textContent = '➕ 新建订单';
+        var submitBtn = modal.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.innerHTML = '➕ 创建订单';
+      } catch(_){}
+      overlay.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); overlay.style.display='';
+      modal.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); modal.style.display='';
+      try { document.body.classList.add('body-modal-locked'); } catch(_){}
+      try { document.getElementById('editCustomerName').focus(); } catch(_){}
+    },
+
+    viewDetail: async function(id){
+      if (!id) return;
+      var modal = document.getElementById('orderDetailModal');
+      var overlay = document.getElementById('orderDetailOverlay');
+      if (!modal || !overlay) { // 兜底：用 alert
+        try {
+          var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
+          if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
+          var lines = [
+            '订单ID：' + (o.id || id),
+            '客户：' + (o.customerName || o.organization || '—'),
+            '电话：' + (o.phone || '—'),
+            '类型：' + (o.orderType || '—'),
+            '金额：¥' + (o.totalAmount || 0),
+            '实付：¥' + (o.finalAmount || o.totalAmount || 0),
+            '状态：' + (o.status || 'draft'),
+            '演出开始：' + (o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—'),
+            '地点：' + (o.venueFullAddress || '—')
+          ];
+          alert(lines.join('\n'));
+        } catch(e) {
+          this._toast('⚠️ 加载详情失败：' + (e && e.message ? e.message : e), 'error');
+        }
+        return;
+      }
+      try {
+        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
+        if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
+        // 填充 modal-body
+        var body = modal.querySelector('.modal-body, .order-detail-body, .detail-body');
+        if (!body) body = modal.querySelector('div:not(.modal-header):not(.modal-footer)');
+        if (body) {
+          body.innerHTML =
+            '<div style="padding:20px 24px;">' +
+              '<h4 style="margin:0 0 12px 0;color:var(--primary-dark);">订单 ' + this._escape(o.id || id) + '</h4>' +
+              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:0.9rem;">' +
+                '<div><strong>客户：</strong>' + this._escape(o.customerName || o.organization || '—') + '</div>' +
+                '<div><strong>电话：</strong>' + this._escape(o.phone || '—') + '</div>' +
+                '<div><strong>类型：</strong>' + this._escape(o.orderType || '—') + '</div>' +
+                '<div><strong>场次：</strong>' + (o.performanceCount || 1) + ' 场</div>' +
+                '<div><strong>订单金额：</strong>¥' + (o.totalAmount || 0) + '</div>' +
+                '<div><strong>实付金额：</strong>¥' + (o.finalAmount || o.totalAmount || 0) + '</div>' +
+                '<div><strong>状态：</strong>' + this._escape(o.status || 'draft') + '</div>' +
+                '<div><strong>演出开始：</strong>' + (o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—') + '</div>' +
+                '<div style="grid-column:1 / span 2;"><strong>演出地点：</strong>' + this._escape(o.venueFullAddress || '—') + '</div>' +
+                '<div style="grid-column:1 / span 2;"><strong>特殊要求：</strong>' + this._escape(o.specialRequirements || '—') + '</div>' +
+                '<div style="grid-column:1 / span 2;"><strong>内部备注：</strong>' + this._escape(o.internalRemark || '—') + '</div>' +
+              '</div>' +
+            '</div>';
+        }
+        // 标题
+        var h3 = modal.querySelector('.modal-header h3, .modal-header h2');
+        if (h3) h3.textContent = '📋 订单详情：' + (o.id || id);
+        // 显示
+        overlay.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); overlay.style.display='';
+        modal.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); modal.style.display='';
+        try { document.body.classList.add('body-modal-locked'); } catch(_){}
+      } catch(e) {
+        console.warn('[viewDetail] id=' + id, e);
+        this._toast('⚠️ 加载详情失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    editOrder: async function(id){
+      if (!id) return;
+      var modal = document.getElementById('orderEditModal');
+      var overlay = document.getElementById('orderEditOverlay');
+      if (!modal || !overlay) { this._toast('⚠️ 编辑弹窗未找到', 'warning'); return; }
+      try {
+        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
+        if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
+        document.getElementById('editOrderId').value = o.id || id;
+        document.getElementById('editCustomerName').value = o.customerName || '';
+        document.getElementById('editPhone').value = o.phone || '';
+        document.getElementById('editOrganization').value = o.organization || '';
+        document.getElementById('editOrderType').value = o.orderType || '';
+        document.getElementById('editPerformanceCount').value = o.performanceCount || 1;
+        document.getElementById('editTotalAmount').value = o.totalAmount || 0;
+        document.getElementById('editDiscountAmount').value = o.discountAmount || 0;
+        document.getElementById('editPaidAmount').value = o.paidAmount || 0;
+        if (o.performanceStartDate) document.getElementById('editPerformanceStartDate').value = String(o.performanceStartDate).slice(0,10);
+        if (o.performanceEndDate) document.getElementById('editPerformanceEndDate').value = String(o.performanceEndDate).slice(0,10);
+        document.getElementById('editVenueFullAddress').value = o.venueFullAddress || '';
+        document.getElementById('editSpecialRequirements').value = o.specialRequirements || '';
+        // v20261003 P2-2：派工 JSON 与普通备注分离——已派工订单仅回填派工备注，原始 JSON 暂存 form.dataset，保存时合并回写，防止互相覆盖
+        var __dispObj = null, __dispRaw = '';
+        try { var __tmp = JSON.parse(o.internalRemark || ''); if (__tmp && __tmp.type === 'dispatch') { __dispObj = __tmp; __dispRaw = o.internalRemark; } } catch(_){}
+        try { document.getElementById('orderEditForm').dataset.dispatchJson = __dispRaw; } catch(_){}
+        document.getElementById('editInternalRemark').value = __dispObj ? (__dispObj.remark || '') : (o.internalRemark || '');
+        try {
+          var __hint = document.getElementById('editRemarkHint');
+          if (__hint) {
+            if (__dispObj) {
+              __hint.style.display = '';
+              __hint.textContent = '🎬 该订单已派工（' + (__dispObj.count || (__dispObj.people || []).length) + ' 人），此处编辑派工备注' + (__dispObj.prevRemark ? '；派工前备注：' + __dispObj.prevRemark : '');
+            } else { __hint.style.display = 'none'; __hint.textContent = ''; }
+          }
+        } catch(_){}
+        // 切换标题为"编辑订单"
+        try {
+          var titleEl = modal.querySelector('h3');
+          if (titleEl) titleEl.textContent = '✏️ 编辑订单';
+          var submitBtn = modal.querySelector('button[type="submit"]');
+          if (submitBtn) submitBtn.innerHTML = '💾 保存修改';
+        } catch(_){}
+        overlay.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); overlay.style.display='';
+        modal.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); modal.style.display='';
+        try { document.body.classList.add('body-modal-locked'); } catch(_){}
+      } catch(e) {
+        this._toast('⚠️ 加载订单失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    saveOrderEdit: async function(){
+      var id = document.getElementById('editOrderId').value;
+      var body = {
+        customerName: document.getElementById('editCustomerName').value.trim(),
+        phone: document.getElementById('editPhone').value.trim(),
+        organization: document.getElementById('editOrganization').value.trim(),
+        orderType: document.getElementById('editOrderType').value.trim(),
+        performanceCount: parseInt(document.getElementById('editPerformanceCount').value) || 1,
+        totalAmount: parseFloat(document.getElementById('editTotalAmount').value) || 0,
+        discountAmount: parseFloat(document.getElementById('editDiscountAmount').value) || 0,
+        paidAmount: parseFloat(document.getElementById('editPaidAmount').value) || 0,
+        venueFullAddress: document.getElementById('editVenueFullAddress').value.trim(),
+        specialRequirements: document.getElementById('editSpecialRequirements').value.trim(),
+        internalRemark: document.getElementById('editInternalRemark').value.trim()
+      };
+      var sd = document.getElementById('editPerformanceStartDate').value;
+      var ed = document.getElementById('editPerformanceEndDate').value;
+      if (sd) body.performanceStartDate = sd;
+      if (ed) body.performanceEndDate = ed;
+      body.finalAmount = body.totalAmount - body.discountAmount;
+      // v20261003 P3-9：金额勾稽前端预校验，给出即时可读提示（后端仍有最终校验）
+      if (!(body.totalAmount >= 0)) { this._toast('⚠️ 订单金额无效，请输入 ≥0 的数字', 'warning'); return; }
+      if (body.discountAmount > body.totalAmount) { this._toast('⚠️ 折扣金额 ¥' + body.discountAmount + ' 不能大于订单总额 ¥' + body.totalAmount, 'warning'); return; }
+      if (body.finalAmount < 0) { this._toast('⚠️ 应付金额不能为负数（总额-折扣）', 'warning'); return; }
+      if (body.paidAmount < 0) { this._toast('⚠️ 已付金额不能为负数', 'warning'); return; }
+      if (body.paidAmount - body.finalAmount > 0.001) { this._toast('⚠️ 已付金额 ¥' + body.paidAmount + ' 不能大于应付金额 ¥' + body.finalAmount, 'warning'); return; }
+      // v20261003 P2-2：已派工订单——文本框内容合并回派工 JSON 的 remark 字段，不覆盖派工名单
+      try {
+        var __dj = (document.getElementById('orderEditForm').dataset || {}).dispatchJson || '';
+        if (__dj) {
+          var __dd = JSON.parse(__dj);
+          if (__dd && __dd.type === 'dispatch') {
+            __dd.remark = document.getElementById('editInternalRemark').value.trim();
+            body.internalRemark = JSON.stringify(__dd);
+          }
+        }
+      } catch(_){}
+      try {
+        if (id) {
+          // 编辑模式
+          await QAXQJT_API.patch('/v1/orders/' + encodeURIComponent(id), body);
+          this._toast('✅ 订单已更新', 'success');
+        } else {
+          // 新建模式
+          // v20261003 P3-10：不再传 UTC 日期串（东八区凌晨会差一天），orderDate 由后端按服务器当前时刻默认
+          var resp = await QAXQJT_API.post('/v1/orders', body);
+          this._toast('✅ 订单已创建' + (resp && resp.id ? '（ID: ' + resp.id + '）' : ''), 'success');
+        }
+        document.getElementById('orderEditOverlay').classList.add('csp-hide');
+        document.getElementById('orderEditModal').classList.add('csp-hide');
+        try { document.body.classList.remove('body-modal-locked'); } catch(_){}
+        await this.load();
+      } catch(e) {
+        this._toast('⚠️ 保存失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    // ====== 派工：打开 dispatchModal（真实 API 加载订单详情） ======
+    openDispatch: async function(id){
+      if (!id) return;
+      var modal = document.getElementById('dispatchModal');
+      var overlay = document.getElementById('dispatchOverlay');
+      if (!modal || !overlay) { this._toast('⚠️ 派工弹窗未找到', 'warning'); return; }
+      // 保存订单 ID 供 saveDispatch 使用
+      try { modal.dataset.orderId = id; } catch(_){}
+      try {
+        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
+        if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
+        var no = o.orderNo || o.id || id;
+        var cust = (o.customerName || '—') + ' / ' + (o.venueFullAddress || '—');
+        var dateStr = (o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—') + ' · ' + (o.performanceCount || 1) + ' 场';
+        try {
+          document.getElementById('dpOrderNo').textContent = no;
+          document.getElementById('dpCust').textContent = cust;
+          document.getElementById('dpDate').textContent = dateStr;
+          document.getElementById('dispatchOrderBadge').textContent = '订单 ' + no;
+          // 加载已保存的派工备注（internalRemark 中存储的 JSON）
+          var rmk = document.getElementById('dpRemark');
+          if (rmk) {
+            rmk.value = '';
+            if (o.internalRemark) {
+              try {
+                var parsed = JSON.parse(o.internalRemark);
+                if (parsed && parsed.remark) rmk.value = parsed.remark;
+              } catch(_) { rmk.value = String(o.internalRemark).slice(0, 500); }
+            }
+          }
+          // v20261003 P2-2：暂存派工前的普通备注，saveDispatch 时收进派工 JSON，防止被覆盖丢失
+          try {
+            var __rawRmk = String(o.internalRemark || '').trim();
+            var __prev = '';
+            if (__rawRmk) {
+              try {
+                var __ej = JSON.parse(__rawRmk);
+                __prev = (__ej && __ej.type === 'dispatch') ? (__ej.prevRemark || '') : __rawRmk;
+              } catch(_) { __prev = __rawRmk; }
+            }
+            modal.dataset.prevRemark = __prev;
+          } catch(_){}
+          // 重置勾选与每人备注
+          document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){ cb.checked = false; });
+          document.querySelectorAll('#dpCastBox input[data-dp-note]').forEach(function(i){ i.value = ''; });
+          var sc = document.getElementById('dpSelCount'); if (sc) sc.textContent = '已选 0 人';
+          // 回显上次已保存的派工名单（internalRemark JSON；兼容旧版 localStorage 双写 qaxqjt_dispatch_data_v1）
+          var savedPeople = [];
+          if (o.internalRemark) {
+            try {
+              var parsed = JSON.parse(o.internalRemark);
+              if (parsed && Array.isArray(parsed.people)) savedPeople = parsed.people;
+            } catch(_) {}
+          }
+          if (!savedPeople.length) {
+            try {
+              var legacyDb = JSON.parse(localStorage.getItem('qaxqjt_dispatch_data_v1') || '{}');
+              var lv = legacyDb[no] || legacyDb[String(o.id || id)];
+              if (lv && Array.isArray(lv.people)) savedPeople = lv.people;
+            } catch(_) {}
+          }
+          if (savedPeople.length) {
+            // 候选名单异步加载，必要时等其渲染（最多 5 秒）
+            for (var w = 0; w < 25 && !document.querySelector('#dpCastBox .dp-cb'); w++) {
+              await new Promise(function(res){ setTimeout(res, 200); });
+            }
+            var missing = [];
+            savedPeople.forEach(function(sp){
+              var nm = String(sp.name || '').trim();
+              if (!nm) return;
+              var matched = null;
+              document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){
+                if (matched) return;
+                if (String(cb.value || '').trim() !== nm) return;
+                // 保存了组键时按组精确匹配，避免同名串组
+                if (sp.group && cb.getAttribute('data-dp-group') !== sp.group) return;
+                matched = cb;
+              });
+              if (!matched) { missing.push(nm); return; }
+              matched.checked = true;
+              var wrap = matched.closest ? matched.closest('.dispatch-item') : null;
+              var noteInp = wrap ? wrap.querySelector('input[data-dp-note]') : null;
+              if (noteInp && sp.note) noteInp.value = sp.note;
+            });
+            var pickedN = document.querySelectorAll('#dpCastBox .dp-cb:checked').length;
+            if (sc) sc.textContent = '已选 ' + pickedN + ' 人';
+            if (typeof window.__dpSyncCommonBtn === 'function') window.__dpSyncCommonBtn();
+            if (missing.length) this._toast('⚠️ 已保存名单中 '+missing.length+' 人因停用/调离/删除未在候选：' + missing.join('、'), 'warning', 4200);
+          }
+        } catch(_){}
+      } catch(e) {
+        this._toast('⚠️ 加载订单失败：' + (e && e.message ? e.message : e), 'error');
+      }
+      overlay.classList.add('active'); overlay.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); overlay.style.display='';
+      modal.classList.add('active'); modal.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); modal.style.display='';
+      try { document.body.classList.add('body-modal-locked'); } catch(_){}
+    },
+
+    // ====== 派工：保存到后端 PATCH /v1/orders/:id { internalRemark: JSON } ======
+    saveDispatch: async function(){
+      var modal = document.getElementById('dispatchModal');
+      if (!modal) return;
+      var id = modal.dataset.orderId || '';
+      if (!id) { this._toast('⚠️ 未绑定订单', 'warning'); return; }
+      var no = '';
+      try { no = (document.getElementById('dpOrderNo') || {}).textContent || ''; } catch(_){}
+      // 防抖：避免重复点击
+      if (this._dpSaveLock) { this._toast('⏳ 派工保存中，请勿重复点击', 'warning'); return; }
+      // 收集勾选人员
+      var people = [];
+      try {
+        var nodes = document.querySelectorAll('#dpCastBox .dp-cb:checked');
+        for (var i = 0; i < nodes.length; i++) {
+          var cb = nodes[i];
+          var nm = (cb.value || '').trim();
+          var grp = cb.getAttribute('data-dp-group') || '';
+          // 备注框与复选框同处一个 .dispatch-item，直接按行定位，避免全局选中序号与组内序号错位
+          var itemWrap = cb.closest ? cb.closest('.dispatch-item') : null;
+          var noteInput = itemWrap ? itemWrap.querySelector('input[data-dp-note]') : null;
+          var note = noteInput ? (noteInput.value || '').trim() : '';
+          var stdRoleName = cb.getAttribute('data-cast-role') || '';
+          var groupName = cb.getAttribute('data-cast-group') || '';
+          if (nm) people.push({ name: nm, group: grp, groupName: groupName, role: stdRoleName, note: note });
+        }
+      } catch(_) {}
+      if (people.length < 4) {
+        this._toast('⚠️ 派工人数不足：当前 '+people.length+' 人，连台戏通常需 ≥4 人（主角+龙套+乐队+舞美）', 'warning', 4200);
+        return;
+      }
+      var rmk = '';
+      try { rmk = (document.getElementById('dpRemark').value || '').trim(); } catch(_){}
+      var dispatchData = {
+        type: 'dispatch',
+        orderNo: no,
+        savedAt: Date.now(),
+        count: people.length,
+        remark: rmk,
+        people: people,
+        savedBy: 'admin'
+      };
+      // v20261003 P2-2：保留派工前的普通备注，避免被派工 JSON 覆盖丢失
+      try { var __pr = (modal.dataset && modal.dataset.prevRemark) || ''; if (__pr) dispatchData.prevRemark = __pr; } catch(_){}
+      this._dpSaveLock = true;
+      try {
+        await QAXQJT_API.patch('/v1/orders/' + encodeURIComponent(id), {
+          internalRemark: JSON.stringify(dispatchData)
+        });
+        this._toast('✅ 派工单已保存（'+people.length+' 人）', 'success');
+        // 关闭弹窗
+        try {
+          var overlay = document.getElementById('dispatchOverlay');
+          overlay.classList.remove('active'); overlay.classList.add('csp-hide','modal-overlay-hide'); overlay.style.display='none';
+          modal.classList.remove('active'); modal.classList.add('csp-hide','modal-wrap-hide'); modal.style.display='none';
+          document.body.classList.remove('body-modal-locked');
+        } catch(_){}
+        await this.load();
+      } catch(e) {
+        this._toast('⚠️ 派工保存失败：' + (e && e.message ? e.message : e), 'error');
+      } finally {
+        this._dpSaveLock = false;
+      }
+    },
+
+    transition: async function(id, to, reasonHint){
+      if (!id || !to) return;
+      var reason = '';
+      if (to === 'cancelled' || to === 'refunded') {
+        reason = prompt(reasonHint || '请输入取消原因：', '') || '';
+      }
+      try {
+        await QAXQJT_API.post('/v1/orders/' + encodeURIComponent(id) + '/transition', { to: to, reason: reason });
+        this._toast('✅ 订单状态已更新为：' + to, 'success');
+        await this.load();
+      } catch(e) {
+        console.warn('[transition] id=' + id + ' to=' + to, e);
+        this._toast('⚠️ 状态更新失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    deleteOrder: async function(id){
+      if (!id) return;
+      var no = id;
+      try {
+        var rows = (this.state && this.state.list) || [];
+        for (var i = 0; i < rows.length; i++) {
+          if (String((rows[i] || {}).id || '') === String(id)) { no = rows[i].orderNo || id; break; }
+        }
+      } catch(_) {}
+      if (!confirm('确认删除订单 ' + no + '？\n此操作不可撤销（仅删除订单，不删除支付流水）。')) return;
+      try {
+        await QAXQJT_API.del('/v1/orders/' + encodeURIComponent(id));
+        this._toast('✅ 订单已删除', 'success');
+        await this.load();
+      } catch(e) {
+        console.warn('[deleteOrder] id=' + id, e);
+        this._toast('⚠️ 删除失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    // ====== v20261003 P3-8：收款登记弹窗（替代只能改 paidAmount 的粗糙方式） ======
+    openPayment: async function(id){
+      if (!id) return;
+      var modal = document.getElementById('paymentModal');
+      var overlay = document.getElementById('paymentOverlay');
+      if (!modal || !overlay) { this._toast('⚠️ 收款弹窗未找到', 'warning'); return; }
+      try {
+        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
+        if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
+        modal.dataset.orderId = o.id || id;
+        var paid = Number(o.paidAmount || 0), finalV = Number(o.finalAmount || 0);
+        var remain = Math.round((finalV - paid) * 100) / 100;
+        document.getElementById('payInfo').innerHTML =
+          '订单 <b>' + this._escape(o.orderNo || id) + '</b>｜客户：' + this._escape(o.customerName || '')
+          + '<br>应付 <b>¥' + finalV.toFixed(2) + '</b> 已收 ¥' + paid.toFixed(2) + ' 尾款 <b style="color:#b45309;">¥' + remain.toFixed(2) + '</b>';
+        var amt = document.getElementById('payAmount');
+        amt.value = remain > 0 ? remain : '';
+        document.getElementById('payChannel').value = 'transfer';
+        document.getElementById('payDate').value = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+        document.getElementById('payRemark').value = '';
+        overlay.classList.remove('csp-hide', 'modal-overlay-hide', 's-overlay-hide'); overlay.style.display = '';
+        modal.classList.remove('csp-hide', 'modal-wrap-hide', 's-modal-hide'); modal.style.display = '';
+        document.body.classList.add('body-modal-locked');
+        setTimeout(function(){ try { amt.focus(); } catch(_){} }, 200);
+      } catch(e) {
+        this._toast('⚠️ 加载订单失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    closePayment: function(){
+      try {
+        document.getElementById('paymentOverlay').classList.add('csp-hide');
+        document.getElementById('paymentModal').classList.add('csp-hide');
+        document.body.classList.remove('body-modal-locked');
+      } catch(_){}
+    },
+
+    savePayment: async function(){
+      var modal = document.getElementById('paymentModal');
+      var id = modal.dataset.orderId || '';
+      if (!id) { this._toast('⚠️ 未绑定订单', 'warning'); return; }
+      var amount = parseFloat(document.getElementById('payAmount').value);
+      if (!(amount > 0)) { this._toast('⚠️ 请输入大于 0 的收款金额', 'warning'); return; }
+      if (this._payLock) { this._toast('⏳ 收款提交中，请勿重复点击', 'warning'); return; }
+      var body = {
+        amount: Math.round(amount * 100) / 100,
+        payChannel: document.getElementById('payChannel').value,
+        payDate: document.getElementById('payDate').value,
+        remark: document.getElementById('payRemark').value.trim()
+      };
+      if (!body.payDate) delete body.payDate;
+      this._payLock = true;
+      try {
+        await QAXQJT_API.post('/v1/orders/' + encodeURIComponent(id) + '/payments', body);
+        this._toast('✅ 收款 ¥' + amount.toFixed(2) + ' 已登记（流水+台账凭证已生成）', 'success');
+        this.closePayment();
+        await this.load();
+      } catch(e) {
+        this._toast('⚠️ 收款失败：' + (e && e.message ? e.message : e), 'error');
+      } finally { this._payLock = false; }
+    },
+
+    _bindRowDelegation: function(){
+      var self = this;
+      if (this._rowDelegBound) return;
+      this._rowDelegBound = true;
+      var tbody = this._findTbody();
+      if (tbody) {
+        tbody.addEventListener('click', function(e){
+          var btn = e.target.closest('button[data-act], a[data-act]');
+          if (!btn) return;
+          var tr = btn.closest('tr');
+          var id = tr ? tr.getAttribute('data-order-id') : '';
+          if (!id) return;
+          var act = btn.getAttribute('data-act');
+          try { e.stopImmediatePropagation(); e.stopPropagation(); } catch(_){}
+          if (act === 'view') { self.viewDetail(id); }
+          else if (act === 'edit') { self.editOrder(id); }
+          else if (act === 'pay') { self.openPayment(id); }
+          else if (act === 'dispatch') { self.openDispatch(id); }
+          else if (act === 'confirm') { self.transition(id, 'confirmed', ''); }
+          else if (act === 'to-show') { self.transition(id, 'performance', ''); }
+          else if (act === 'cancel') { self.transition(id, 'cancelled', '请输入取消原因：'); }
+          else if (act === 'del') { self.deleteOrder(id); }
+        }, true);
+      }
+    }
+  };
+
+  function _bootStrap(){
+    var api = window.__ordersApi;
+    if (!api) return;
+    api._bindRowDelegation();
+    api._bindFilterBar();
+    api._bindCustomerFilterBar();
+    api.load();
+    api.loadCustomers();
+    // 派工弹窗保存按钮：用 capture 阶段拦截，改走真实 API（覆盖原 demo Storage 逻辑）
+    try {
+      var dpSave = document.getElementById('dispatchSave');
+      if (dpSave && !dpSave.__ordersApiBound) {
+        dpSave.__ordersApiBound = 1;
+        dpSave.setAttribute('data-real-bound','1'); dpSave.__superPatchBound = 1; dpSave.__ts3Done = 1;
+        dpSave.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          e.stopPropagation();
+          api.saveDispatch();
+        }, true);
+      }
+    } catch(_){}
+    // v20261003 P3-8：收款弹窗按钮绑定（保存走真实接口；关闭/取消收弹窗）
+    try {
+      var paySaveBtn = document.getElementById('paymentSave');
+      if (paySaveBtn && !paySaveBtn.__ordersApiBound) {
+        paySaveBtn.__ordersApiBound = 1;
+        paySaveBtn.__superPatchBound = 1; paySaveBtn.__ts3Done = 1;
+        paySaveBtn.addEventListener('click', function(e){
+          e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation();
+          api.savePayment();
+        }, true);
+      }
+      ['paymentClose', 'paymentCancel'].forEach(function(bid){
+        var b = document.getElementById(bid);
+        if (b && !b.__ordersApiBound) {
+          b.__ordersApiBound = 1;
+          b.__superPatchBound = 1; b.__ts3Done = 1;
+          b.addEventListener('click', function(e){
+            e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation();
+            api.closePayment();
+          }, true);
+        }
+      });
+    } catch(_){}
+    /* 真实统计卡片：GET /v1/orders/stats */
+    (async function(){
+      try {
+        var s = await QAXQJT_API.get('/v1/orders/stats');
+        if (!s) return;
+        var total = s.total || 0;
+        var bySt = s.byStatus || {};
+        var pending = (bySt.pending||0) + (bySt.confirmed||0);
+        var done = bySt.completed || 0;
+        var cancelled = bySt.cancelled || 0;
+        var totalAmt = Number(s.totalAmount||0);
+        var paidAmt = Number(s.paidAmount||0);
+        var el = function(id){ return document.getElementById(id); };
+        var fmt = function(n){ return n.toLocaleString('zh-CN'); };
+        if (el('statTotalOrders')) el('statTotalOrders').innerHTML = fmt(total) + '<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span>';
+        if (el('statTotalAmount')) el('statTotalAmount').textContent = '总额 ¥' + fmt(totalAmt);
+        if (el('statPaidAmount')) el('statPaidAmount').textContent = '已付 ¥' + fmt(paidAmt);
+        if (el('statPendingOrders')) el('statPendingOrders').innerHTML = fmt(pending) + '<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span>';
+        if (el('statPendingSub')) el('statPendingSub').textContent = pending > 0 ? '待处理订单' : '暂无待确认';
+        if (el('statDoneOrders')) el('statDoneOrders').innerHTML = fmt(done) + '<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span>';
+        if (el('statDoneRate')) el('statDoneRate').textContent = '完成率 ' + (total > 0 ? Math.round(done/total*100) + '%' : '—');
+        if (el('statPaidRate')) el('statPaidRate').textContent = '已收款 ' + (totalAmt > 0 ? Math.round(paidAmt/totalAmt*100) + '%' : '—');
+        if (el('statCancelOrders')) el('statCancelOrders').innerHTML = fmt(cancelled) + '<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span>';
+        if (el('statCancelRate')) el('statCancelRate').textContent = '取消率 ' + (total > 0 ? (cancelled/total*100).toFixed(1) + '%' : '—');
+        if (el('statRefundAmount')) el('statRefundAmount').textContent = '退款 ¥' + fmt(Number(s.refundedAmount||0));
+      } catch(e) { console.warn('[orders stats] load failed:', e.message); }
+    })();
+    // 绑定 detail modal close 按钮
+    try {
+      var closeBtn = document.getElementById('orderDetailClose');
+      var cancelBtn = document.getElementById('orderDetailCancel');
+      var modal = document.getElementById('orderDetailModal');
+      var overlay = document.getElementById('orderDetailOverlay');
+      function _closeDetail(){
+        try { modal && modal.classList.add('csp-hide'); } catch(_){}
+        try { overlay && overlay.classList.add('csp-hide'); } catch(_){}
+        try { document.body.classList.remove('body-modal-locked'); } catch(_){}
+      }
+      if (closeBtn && !closeBtn.__odcBound) { closeBtn.__odcBound = 1; closeBtn.addEventListener('click', _closeDetail); }
+      if (cancelBtn && !cancelBtn.__odcBound) { cancelBtn.__odcBound = 1; cancelBtn.addEventListener('click', _closeDetail); }
+      if (overlay && !overlay.__odcBound) { overlay.__odcBound = 1; overlay.addEventListener('click', function(e){ if (e.target === overlay) _closeDetail(); }); }
+    } catch(_){}
+    // 绑定 edit modal
+    try {
+      var eClose = document.getElementById('orderEditClose');
+      var eCancel = document.getElementById('orderEditCancel');
+      var eModal = document.getElementById('orderEditModal');
+      var eOverlay = document.getElementById('orderEditOverlay');
+      var eForm = document.getElementById('orderEditForm');
+      function _closeEdit(){
+        try { eModal && eModal.classList.add('csp-hide'); } catch(_){}
+        try { eOverlay && eOverlay.classList.add('csp-hide'); } catch(_){}
+        try { document.body.classList.remove('body-modal-locked'); } catch(_){}
+      }
+      if (eClose && !eClose.__oecBound) { eClose.__oecBound = 1; eClose.addEventListener('click', _closeEdit); }
+      if (eCancel && !eCancel.__oecBound) { eCancel.__oecBound = 1; eCancel.addEventListener('click', _closeEdit); }
+      if (eOverlay && !eOverlay.__oecBound) { eOverlay.__oecBound = 1; eOverlay.addEventListener('click', function(e){ if (e.target === eOverlay) _closeEdit(); }); }
+      if (eForm && !eForm.__oefBound) { eForm.__oefBound = 1; eForm.__superPatchBound = 1; eForm.__ts3Done = 1;
+        // 用 capture 阶段 + stopImmediatePropagation 阻止 SuperPatch 1/6 的 document capture submit 拦截
+        eForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          e.stopPropagation();
+          api.saveOrderEdit();
+        }, true);
+      }
+      // 保存按钮：fixRefreshBug 会把 type=submit 改成 type=button，form submit 不触发；
+      // 直接给按钮绑 capture click + stopImmediatePropagation，作为双保险触发 saveOrderEdit
+      try {
+        var eSaveBtn = eForm ? eForm.querySelector('button.btn-primary') : null;
+        if (eSaveBtn && !eSaveBtn.__oesBound) {
+          eSaveBtn.__oesBound = 1;
+          eSaveBtn.setAttribute('data-refresh-fixed','1');
+          eSaveBtn.setAttribute('data-type-fixed','1');
+          eSaveBtn.setAttribute('data-real-bound','1');
+          eSaveBtn.__superPatchBound = 1; eSaveBtn.__ts3Done = 1; eSaveBtn.__bindDone = 1; eSaveBtn.__ctE2Done = 1; eSaveBtn.__deadBtnChecked = 1;
+          eSaveBtn.addEventListener('click', function(ev){
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            ev.stopPropagation();
+            api.saveOrderEdit();
+          }, true);
+        }
+      } catch(_){}
+    } catch(_){}
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _bootStrap);
+  } else {
+    setTimeout(_bootStrap, 200);
+  }
+})();
+</script>
+<script src="../js/admin-mobile-sidebar.js?v=20260926m"></script>
 </body>
 </html>

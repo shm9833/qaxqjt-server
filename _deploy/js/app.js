@@ -32,37 +32,44 @@
     try{ if(console && console.log) console.log('[toast]['+(type||'info')+'] '+msg); }catch(_){}
   }
 
-  // ★ FIX 导出功能：自动加载 xlsx 库（SheetJS），多路径降级
-  (function _loadXlsx() {
+  // ★ FIX 导出功能：xlsx 库（SheetJS）按需懒加载（多路径降级 + 并发去重）
+  // 优化（P3-0930）：原实现页面加载即无条件拉取 838KB xlsx.min.js（async=false），
+  // 严重拖慢 load 事件（实测下载中位数 ~2.9s）。但全站仅 staff「商议单存档导出」真正用到 XLSX，
+  // schedule/orders/operas 等页面均走纯 CSV。改为首次导出时才加载，纯 CSV 页面首屏不再承担该负担。
+  global.__qaEnsureXlsx = function () {
     try {
-      if (global.XLSX && typeof global.XLSX.writeFile === 'function') return;
+      if (global.XLSX && typeof global.XLSX.writeFile === 'function') {
+        return Promise.resolve(global.XLSX);
+      }
+      if (global.__qaXlsxPromise) return global.__qaXlsxPromise;
       var cdns = [
-        'js/xlsx.min.js',
+        '/js/xlsx.min.js',
         '../js/xlsx.min.js',
         'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
         'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
       ];
-      var idx = 0, done = false;
-      function next() {
-        if (done || idx >= cdns.length) return;
-        var s = document.createElement('script');
-        s.src = cdns[idx++];
-        s.onload = function () {
-          if (global.XLSX && typeof global.XLSX.writeFile === 'function') {
-            done = true;
-            try { console.info('[xlsx] loaded from: ' + s.src); } catch (_) {}
-          } else { next(); }
-        };
-        s.onerror = function () { next(); };
-        s.async = false;
-        try { document.head.appendChild(s); } catch (_) { next(); }
-      }
-      if (document && document.head) next();
-      else if (document && document.addEventListener) {
-        document.addEventListener('DOMContentLoaded', next, { once: true });
-      }
-    } catch (_) {}
-  })();
+      global.__qaXlsxPromise = new Promise(function (resolve, reject) {
+        var idx = 0;
+        function next() {
+          if (idx >= cdns.length) { reject(new Error('xlsx-load-failed')); return; }
+          var s = document.createElement('script');
+          s.src = cdns[idx++];
+          s.onload = function () {
+            if (global.XLSX && typeof global.XLSX.writeFile === 'function') {
+              try { console.info('[xlsx] lazy-loaded from: ' + s.src); } catch (_) {}
+              resolve(global.XLSX);
+            } else { next(); }
+          };
+          s.onerror = function () { next(); };
+          try { document.head.appendChild(s); } catch (_) { next(); }
+        }
+        next();
+      });
+      // 失败后清缓存，允许后续点击重试
+      global.__qaXlsxPromise.catch(function () { try { global.__qaXlsxPromise = null; } catch (_) {} });
+      return global.__qaXlsxPromise;
+    } catch (e) { return Promise.reject(e); }
+  };
 
   // ============================================================
   // 模块 0: 通用工具函数 Utils
@@ -557,10 +564,6 @@
      */
     exportDataToXlsx: function (data, headers, filename, sheetName) {
       try {
-        if (!window.XLSX || typeof window.XLSX.utils === 'undefined') {
-          Utils.toast('⚠️ xlsx 库未加载，请刷新页面后重试', 'error');
-          return false;
-        }
         var aoa = [];
         if (Array.isArray(headers) && headers.length > 0) aoa.push(headers);
         if (Array.isArray(data)) {
@@ -572,12 +575,26 @@
           Utils.toast('⚠️ 没有可导出的数据', 'warning');
           return false;
         }
-        var ws = window.XLSX.utils.aoa_to_sheet(aoa);
-        var wb = window.XLSX.utils.book_new();
-        window.XLSX.utils.book_append_sheet(wb, ws, (sheetName || 'Sheet1').slice(0, 31));
-        var fname = (filename || ('export_' + new Date().toISOString().slice(0, 10))) + '.xlsx';
-        window.XLSX.writeFile(wb, fname);
-        Utils.toast('✅ 已导出 ' + (data ? data.length : 0) + ' 条记录：' + fname, 'success');
+        if (typeof global.__qaEnsureXlsx !== 'function') {
+          Utils.toast('⚠️ xlsx 组件不可用，请刷新页面后重试', 'error');
+          return false;
+        }
+        // xlsx 按需懒加载（P3-0930）：首次导出才拉取 838KB 库
+        Utils.toast('⏳ 正在准备 Excel 组件，请稍候…', 'info', 1500);
+        global.__qaEnsureXlsx().then(function (XLSX) {
+          try {
+            var ws = XLSX.utils.aoa_to_sheet(aoa);
+            var wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, (sheetName || 'Sheet1').slice(0, 31));
+            var fname = (filename || ('export_' + new Date().toISOString().slice(0, 10))) + '.xlsx';
+            XLSX.writeFile(wb, fname);
+            Utils.toast('✅ 已导出 ' + (data ? data.length : 0) + ' 条记录：' + fname, 'success');
+          } catch (e2) {
+            Utils.toast('❌ 导出失败：' + (e2 && e2.message ? e2.message : e2), 'error');
+          }
+        }).catch(function () {
+          Utils.toast('⚠️ Excel 组件加载失败，请检查网络后重试（可改用 CSV 导出）', 'error');
+        });
         return true;
       } catch (e) {
         Utils.toast('❌ 导出失败：' + (e && e.message ? e.message : e), 'error');
@@ -1217,39 +1234,9 @@
     },
 
     /**
-     * 批量初始化演示数据
+     * 数据初始化（v20260922：不再写入任何演示剧目/演示预约，全部以后端真实数据为准）
      */
     seedDemoData: function () {
-      if (this._get(this.KEYS.PLAYS)) return;
-
-      var plays = [
-        { id: 'play_001', name: '《周仁回府》', category: '传统本戏', duration: '160分钟', synopsis: '经典秦腔传统剧目，讲述周仁为救盟兄之妻，献妻于贼的忠义故事。' },
-        { id: 'play_002', name: '《三滴血》', category: '传统本戏', duration: '180分钟', synopsis: '范紫东代表作，讲述晋信书以滴血认亲之法断案的故事。' },
-        { id: 'play_003', name: '《铡美案》', category: '传统本戏', duration: '150分钟', synopsis: '包拯怒铡陈世美，伸张正义的经典故事。' },
-        { id: 'play_004', name: '《窦娥冤》', category: '传统本戏', duration: '170分钟', synopsis: '关汉卿名作，窦娥蒙冤感天动地的悲剧。' },
-        { id: 'play_005', name: '《火焰驹》', category: '传统本戏', duration: '155分钟', synopsis: '李彦荣与黄桂英的爱情故事，以马踏火焰驹闻名。' }
-      ];
-      this._set(this.KEYS.PLAYS, plays);
-
-      var sampleAppointments = [
-        {
-          id: Utils.generateId('apt'),
-          customerName: '王建国',
-          phone: '13909380001',
-          organization: '兴国镇文化站',
-          shows: 5,
-          selectedPlays: ['play_001', 'play_003'],
-          preferredStartDate: '2026-09-15',
-          venue: '兴国镇文化广场',
-          remarks: '请提前3天搭台',
-          status: 'pending',
-          createdAt: '2026-07-20T10:30:00.000Z',
-          updatedAt: '2026-07-20T10:30:00.000Z'
-        }
-      ];
-      this._set(this.KEYS.APPOINTMENTS, sampleAppointments);
-
-      this._set(this.KEYS.ORDERS, []);
       // A-1 安全加固：生产模式（默认）不注入 admin 默认账号，避免任何硬编码密码落盘
       //   演示模式（qaxqjt_deploy_mode = "demo"）才写入，仅用于本地验收
       var DEPLOY_MODE_KEY = 'qaxqjt_deploy_mode';
@@ -2537,10 +2524,24 @@
 
     return { generate: generateDemoProductionData };
   })();
-  global.DemoDataFactory = DemoDataFactory;
-  global.QinApp && (QinApp.DemoDataFactory = DemoDataFactory);
-  // 便捷别名：window.genDemo() 直接跑（Console 一键运行）
-  global.genDemoProductionData = function(){ return DemoDataFactory.generate.apply(DemoDataFactory, arguments); };
+  // v20260922：生产环境禁用演示数据生成器（真实业务数据只能由后端/管理页录入）。
+  // 仅当显式设置 localStorage.setItem('qaxqjt_allow_demo_factory','1') 时（本地验收）放开。
+  var DemoDataFactorySafe = {
+    generate: function () {
+      var allow = false;
+      try { allow = localStorage.getItem('qaxqjt_allow_demo_factory') === '1'; } catch (_) {}
+      if (!allow) {
+        console.warn('[DemoDataFactory] 生产环境已禁用演示数据生成。如需本地验收，请先执行 localStorage.setItem("qaxqjt_allow_demo_factory","1")');
+        try { if (window.QinApp && QinApp.Utils && QinApp.Utils.toast) QinApp.Utils.toast('演示数据生成已在生产环境禁用', 'warn', 3000); } catch (_) {}
+        return null;
+      }
+      return DemoDataFactory.generate.apply(DemoDataFactory, arguments);
+    }
+  };
+  global.DemoDataFactory = DemoDataFactorySafe;
+  global.QinApp && (QinApp.DemoDataFactory = DemoDataFactorySafe);
+  // 便捷别名：window.genDemo()（生产环境同样受开关保护）
+  global.genDemoProductionData = function () { return DemoDataFactorySafe.generate.apply(DemoDataFactorySafe, arguments); };
 
   // ============================================================
   // 模块 4: 导航栏交互 NavBar
@@ -2694,18 +2695,36 @@
       var mpAccount = '秦安县秦剧团';
       var mpFullName = '秦安县秦剧团文化演出有限公司';
       var shipinhaoName = '秦安县秦剧团官方';
+      // 后台可维护项（admin/assets.html「微信客服信息」）：site.text.* 与客服二维码
+      var wechatId = '';
+      var wechatQrUrl = '';
+      (function loadContactCfg() {
+        try {
+          if (window.QAXSiteAssets && typeof window.QAXSiteAssets.getMap === 'function') {
+            window.QAXSiteAssets.getMap().then(function (map) {
+              if (!map) return;
+              if (map['site.text.wechat_id']) wechatId = map['site.text.wechat_id'];
+              if (map['site.text.mp_name']) mpAccount = map['site.text.mp_name'];
+              if (map['site.text.mp_fullname']) mpFullName = map['site.text.mp_fullname'];
+              if (map['site.text.shipinhao']) shipinhaoName = map['site.text.shipinhao'];
+              if (map['site.global.wechat_qr']) wechatQrUrl = map['site.global.wechat_qr'];
+            });
+          }
+        } catch (_) {}
+      })();
 
       // 预生成 Modal config，复用 Utils.openQRModal
       var modalCfgs = {
         'wechat': function () {
+          var idText = wechatId || wechatPhone;
           return {
             title: '微信客服联系',
             subtitle: '演出档期/报价/定制咨询 · 工作日 8:30-18:00',
-            qrImgUrl: Utils.buildQRImgUrl('https://u.wechat.com/contact/' + wechatPhone, 230),
-            codeText: '微信号 / 手机号：' + wechatPhone + '（微信同号）',
-            tip: '请打开微信 → 右上角「+」→ 添加朋友 → 粘贴上方手机号搜索',
+            qrImgUrl: wechatQrUrl || Utils.buildQRImgUrl('https://u.wechat.com/contact/' + idText, 230),
+            codeText: wechatId ? ('微信号：' + wechatId + '　|　手机号：' + wechatPhone) : ('微信号 / 手机号：' + wechatPhone + '（微信同号）'),
+            tip: wechatId ? '请打开微信 → 右上角「+」→ 添加朋友 → 粘贴上方微信号搜索' : '请打开微信 → 右上角「+」→ 添加朋友 → 粘贴上方手机号搜索',
             actions: [
-              { label: '📋 复制手机号', variant: 'btn-primary', onClick: function () { Utils.copyText(wechatPhone, '✅ 客服手机号已复制：' + wechatPhone); } },
+              { label: wechatId ? '📋 复制微信号' : '📋 复制手机号', variant: 'btn-primary', onClick: function () { Utils.copyText(idText, '✅ 客服' + (wechatId ? '微信号' : '手机号') + '已复制：' + idText); } },
               { label: '📞 直接拨打', variant: 'btn-outline', href: 'tel:' + wechatPhone },
               { label: '✕ 关闭', variant: 'btn-outline', onClick: function (e, close) { close(); } }
             ]
@@ -2728,10 +2747,11 @@
         'wechat-qr': function () {
           return {
             title: '微信公众号·官方二维码',
-            subtitle: '扫码/搜索关注「秦安县秦剧团」官方公众号',
-            plainPlaceholder: '📡 微信公众号二维码（防外采提示）\n\n受微信官方安全策略保护\n公众号二维码无法在站外直接展示图片\n\n请在微信内搜索下方公众号名称',
+            subtitle: '扫码/搜索关注「' + mpAccount + '」官方公众号',
+            qrImgUrl: wechatQrUrl || undefined,
+            plainPlaceholder: wechatQrUrl ? '' : '📡 微信公众号二维码（防外采提示）\n\n受微信官方安全策略保护\n公众号二维码无法在站外直接展示图片\n\n请在微信内搜索下方公众号名称',
             codeText: '公众号全称：' + mpFullName + '   |   简称：' + mpAccount,
-            tip: '搜索步骤：微信 → 通讯录 → 公众号 → + 号 → 粘贴名称',
+            tip: wechatQrUrl ? '微信「扫一扫」上方二维码，或搜索公众号名称关注' : '搜索步骤：微信 → 通讯录 → 公众号 → + 号 → 粘贴名称',
             actions: [
               { label: '📋 复制公众号全称', variant: 'btn-primary', onClick: function () { Utils.copyText(mpFullName, '✅ 公众号全称已复制'); } },
               { label: '📋 复制简称', variant: 'btn-outline', onClick: function () { Utils.copyText(mpAccount, '✅ 公众号简称已复制：' + mpAccount); } },
@@ -3595,122 +3615,126 @@
           submitBtn.innerHTML = '⏳ 提交中...';
         }
 
-        var record = {
-          id: 'QB-' + Utils.secureRandomHex(8).toUpperCase(),
-          source: '首页快速预约',
-          name: name.trim(),
-          phone: phone.trim(),
-          serviceType: serviceType,
-          eventDate: eventDate,
-          message: message,
-          createdAt: new Date().toISOString(),
-          status: 'pending',
-          statusText: '待审核'
-        };
-
-        try {
-          var now2 = new Date();
-          var year2 = String(now2.getFullYear()).slice(-2);
-          var prefix2 = year2 + '-QA-';
-          var allApps2 = Storage.list(Storage.KEYS.APPOINTMENTS) || [];
-          var maxSeq2 = 0;
-          for (var si2 = 0; si2 < allApps2.length; si2++) {
-            var row2 = allApps2[si2] || {};
-            if (row2.bookingId && typeof row2.bookingId === 'string' && row2.bookingId.indexOf(prefix2) === 0) {
-              var suffix2 = row2.bookingId.slice(prefix2.length);
-              var sn2 = parseInt(suffix2, 10);
-              if (!isNaN(sn2) && sn2 > maxSeq2) maxSeq2 = sn2;
-            }
-          }
-          var seqKey2 = Storage.PREFIX + 'appointments_seq_' + year2;
-          var seqFromKey2 = 0;
-          try { seqFromKey2 = parseInt(localStorage.getItem(seqKey2), 10) || 0; } catch (e) { seqFromKey2 = 0; }
-          var computedMax2 = Math.max(maxSeq2, seqFromKey2);
-          var nextSeq2 = computedMax2 + 1;
-          var seqStr2 = String(nextSeq2).padStart(4, '0');
-          var bookingId2 = prefix2 + seqStr2;
-          var guard2 = 0;
-          while (guard2 < 1000) {
-            var dup2 = false;
-            for (var di2 = 0; di2 < allApps2.length; di2++) {
-              if ((allApps2[di2] || {}).bookingId === bookingId2) { dup2 = true; break; }
-            }
-            if (!dup2) break;
-            nextSeq2++;
-            seqStr2 = String(nextSeq2).padStart(4, '0');
-            bookingId2 = prefix2 + seqStr2;
-            guard2++;
-          }
-          record.bookingId = bookingId2;
-          record.bookingTimeText = now2.toLocaleString('zh-CN', { hour12: false });
-        } catch (e) {}
-
-        try {
-          var saved = Storage.create(Storage.KEYS.APPOINTMENTS, record);
+        /* ===== 真实提交（v20260922）：优先 POST /v1/appointments；仅网络不可达时降级本地 ===== */
+        function _plus7d() { var d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0, 10); }
+        function _pkgOf(st) {
+          if (/庙会/.test(st)) return 'temple_fair';
+          if (/惠民|文旅|乡村|下乡/.test(st)) return 'cultural_tourism';
+          if (/校园|研学/.test(st)) return 'campus_tour';
+          return 'custom';
+        }
+        function _genLocalRecord() {
+          var rec = {
+            id: 'QB-' + Utils.secureRandomHex(8).toUpperCase(),
+            source: '首页快速预约',
+            name: name.trim(),
+            phone: phone.trim(),
+            serviceType: serviceType,
+            eventDate: eventDate,
+            message: message,
+            createdAt: new Date().toISOString(),
+            status: 'pending',
+            statusText: '待审核'
+          };
           try {
-            var saveSeqVal2 = Math.max(seqFromKey2 || 0, nextSeq2 || 0);
-            if (saveSeqVal2 > 0) localStorage.setItem(seqKey2, String(saveSeqVal2));
+            var now2 = new Date();
+            var year2 = String(now2.getFullYear()).slice(-2);
+            var prefix2 = year2 + '-QA-';
+            var allApps2 = Storage.list(Storage.KEYS.APPOINTMENTS) || [];
+            var maxSeq2 = 0;
+            for (var si2 = 0; si2 < allApps2.length; si2++) {
+              var row2 = allApps2[si2] || {};
+              if (row2.bookingId && typeof row2.bookingId === 'string' && row2.bookingId.indexOf(prefix2) === 0) {
+                var suffix2 = row2.bookingId.slice(prefix2.length);
+                var sn2 = parseInt(suffix2, 10);
+                if (!isNaN(sn2) && sn2 > maxSeq2) maxSeq2 = sn2;
+              }
+            }
+            var seqKey2 = Storage.PREFIX + 'appointments_seq_' + year2;
+            var seqFromKey2 = 0;
+            try { seqFromKey2 = parseInt(localStorage.getItem(seqKey2), 10) || 0; } catch (e) { seqFromKey2 = 0; }
+            var nextSeq2 = Math.max(maxSeq2, seqFromKey2) + 1;
+            rec.bookingId = prefix2 + String(nextSeq2).padStart(4, '0');
+            rec.bookingTimeText = now2.toLocaleString('zh-CN', { hour12: false });
+            rec._seqKey = seqKey2; rec._nextSeq = nextSeq2;
           } catch (e) {}
-          if (saved && saved.id) {
+          return rec;
+        }
+        function _saveLocal(rec) {
+          try {
+            var saved = Storage.create(Storage.KEYS.APPOINTMENTS, rec);
+            if (rec._seqKey) { try { localStorage.setItem(rec._seqKey, String(rec._nextSeq || 0)); } catch (e) {} }
+            return saved || rec;
+          } catch (err) { console.error('[QuickBook] local save error:', err); return rec; }
+        }
+        function _unlockBtn() {
+          setTimeout(function () {
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.removeAttribute('aria-disabled');
+              try { submitBtn.classList.remove('btn-submitting'); } catch (_csp) {}
+              submitBtn.innerHTML = originalText || '立即预约';
+            }
+          }, 600);
+        }
+        function _showSuccess(rec) {
+          Utils.toast('快速预约提交成功！我们将在 24 小时内与您联系', 'success');
+          var successCard = document.getElementById('quickBookSuccess');
+          var bookingIdEl = document.getElementById('qbBookingId');
+          if (successCard && bookingIdEl) {
+            bookingIdEl.textContent = (rec && (rec.bookingId || rec.id)) || '已受理';
+            successCard.style.display = 'block';
+            try { successCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+          }
+          form.reset();
+          var cc = form.querySelector('.qb-char-count');
+          if (cc) cc.textContent = '0 / 500';
+          try { form.style.display = 'none'; } catch (e) {}
+          var resetBtn = document.getElementById('qbResetBtn');
+          if (resetBtn && !resetBtn._qbBound) {
+            resetBtn._qbBound = true;
+            resetBtn.addEventListener('click', function () {
+              if (successCard) successCard.style.display = 'none';
+              try { form.style.display = ''; } catch (e) {}
+              try { form.querySelector('#name').focus(); } catch (e) {}
+            });
+          }
+          _unlockBtn();
+        }
+
+        var localRecord = _genLocalRecord();
+        var _A = (typeof window !== 'undefined' && window.QAXQJT_API) ? window.QAXQJT_API : null;
+        if (_A && typeof _A.post === 'function') {
+          var apiPayload = {
+            customerName: name.trim(),
+            contactPerson: name.trim(),
+            phone: phone.trim(),
+            sourceChannel: 'website_quick',
+            preferredStartDate: eventDate ? String(eventDate) : _plus7d(),
+            performanceCount: 1,
+            packageType: _pkgOf(serviceType),
+            specialRequirements: (serviceType ? ('演出类型：' + serviceType + '\n') : '') + (message ? ('备注：' + message) : ''),
+            smsVerifiedFlag: false
+          };
+          _A.post('/v1/appointments', apiPayload, {
+            skipAuth: true,
+            showErrorToast: false,
+            fallback: function () { return _saveLocal(localRecord); }
+          }).then(function (saved) {
+            var rec = localRecord;
             try {
-              var relist2 = Storage.list(Storage.KEYS.APPOINTMENTS) || [];
-              var dupCount2 = 0;
-              for (var di4 = 0; di4 < relist2.length; di4++) {
-                if ((relist2[di4] || {}).bookingId === saved.bookingId) dupCount2++;
-              }
-              if (dupCount2 > 1) {
-                var fixSeq2 = (parseInt(localStorage.getItem(seqKey2), 10) || saveSeqVal2 || 0) + 1;
-                var fixBookingId2 = year2 + '-QA-' + String(fixSeq2).padStart(4, '0');
-                saved.bookingId = fixBookingId2;
-                Storage.update(Storage.KEYS.APPOINTMENTS, saved.id, saved);
-                try { localStorage.setItem(seqKey2, String(fixSeq2)); } catch (e) {}
-              }
-            } catch (e) {}
-          }
-        } catch (err) {
-          console.error('[QuickBook] save error:', err);
-        }
-
-        Utils.toast('快速预约提交成功！我们将在 24 小时内与您联系', 'success');
-
-        /* 显示成功卡片（含预约编号） */
-        var successCard = document.getElementById('quickBookSuccess');
-        var bookingIdEl = document.getElementById('qbBookingId');
-        if (successCard && bookingIdEl) {
-          bookingIdEl.textContent = record.bookingId || record.id || '已受理';
-          successCard.style.display = 'block';
-          try { successCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
-        }
-
-        /* 隐藏表单、重置字段 */
-        form.reset();
-        var charCount = form.querySelector('.qb-char-count');
-        if (charCount) charCount.textContent = '0 / 500';
-        try { form.style.display = 'none'; } catch (e) {}
-
-        /* "再提交一条"按钮 → 恢复表单 */
-        var resetBtn = document.getElementById('qbResetBtn');
-        if (resetBtn && !resetBtn._qbBound) {
-          resetBtn._qbBound = true;
-          resetBtn.addEventListener('click', function () {
-            if (successCard) successCard.style.display = 'none';
-            try { form.style.display = ''; } catch (e) {}
-            try { form.querySelector('#name').focus(); } catch (e) {}
+              var sid = saved && (saved.bookingNo || saved.bookingId || saved.appointmentNo);
+              if (sid) rec.bookingId = sid;
+            } catch (_) {}
+            _showSuccess(rec);
+          }).catch(function (err) {
+            console.error('[QuickBook] API submit failed:', err);
+            Utils.toast('提交失败：' + ((err && err.message) ? err.message : '请稍后重试') + '。也可直接致电 13993839833', 'error');
+            _unlockBtn();
           });
+        } else {
+          _showSuccess(_saveLocal(localRecord));
         }
-
-        /* 更新字数计数 */
-        var msgInput = form.querySelector('#message');
-
-        setTimeout(function () {
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.removeAttribute('aria-disabled');
-            // B7 CSP合规：移除btn-submitting替代 style.opacity/cursor=''
-            try { submitBtn.classList.remove('btn-submitting'); } catch (_csp) {}
-            submitBtn.innerHTML = originalText || '立即预约';
-          }
-        }, 2200);
       });
     },
 
@@ -3761,6 +3785,7 @@
           submitBtn.innerHTML = '⏳ 提交中...';
         }
 
+        /* ===== 真实提交（v20260922）：留言转为预约/咨询工单 POST /v1/appointments；网络失败降级本地 ===== */
         var record = {
           id: 'QC-' + Utils.secureRandomHex(8).toUpperCase(),
           source: '联系页留言',
@@ -3771,32 +3796,60 @@
           status: 'pending',
           statusText: '待跟进'
         };
-        Storage.create(Storage.KEYS.APPOINTMENTS, record);
-        Utils.toast('留言提交成功！我们将尽快与您联系', 'success');
-        form.reset();
-        /* 重置字数统计 */
-        var charCountEl = form.querySelector('.qc-char-count');
-        if (charCountEl) charCountEl.textContent = '0 / 500';
-        if (successMsg) {
-          // B7 CSP合规：csp-hide替代style.display='block'/'none'
-          try { successMsg.classList.remove('csp-hide'); } catch (_csp) {}
-          try { successMsg.style.display = ''; } catch (e) {}
-          try { successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
-          var _tmpMsg = successMsg;
+        function _qcUnlock() {
           setTimeout(function () {
-            if (_tmpMsg) try { _tmpMsg.classList.add('csp-hide'); } catch (_csp) {}
-          }, 8000);
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.removeAttribute('aria-disabled');
+              try { submitBtn.classList.remove('btn-submitting'); } catch (_csp) {}
+              submitBtn.innerHTML = originalText || '提交留言';
+            }
+          }, 600);
         }
-
-        setTimeout(function () {
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.removeAttribute('aria-disabled');
-            // B7 CSP合规：移除btn-submitting替代 style.opacity/cursor=''
-            try { submitBtn.classList.remove('btn-submitting'); } catch (_csp) {}
-            submitBtn.innerHTML = originalText || '提交留言';
+        function _qcSuccess() {
+          Utils.toast('留言提交成功！我们将尽快与您联系', 'success');
+          form.reset();
+          var charCountEl = form.querySelector('.qc-char-count');
+          if (charCountEl) charCountEl.textContent = '0 / 500';
+          if (successMsg) {
+            try { successMsg.classList.remove('csp-hide'); } catch (_csp) {}
+            try { successMsg.style.display = ''; } catch (e) {}
+            try { successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+            var _tmpMsg = successMsg;
+            setTimeout(function () {
+              if (_tmpMsg) try { _tmpMsg.classList.add('csp-hide'); } catch (_csp) {}
+            }, 8000);
           }
-        }, 2200);
+          _qcUnlock();
+        }
+        var _Aq = (typeof window !== 'undefined' && window.QAXQJT_API) ? window.QAXQJT_API : null;
+        if (_Aq && typeof _Aq.post === 'function') {
+          var _d7 = new Date(); _d7.setDate(_d7.getDate() + 7);
+          _Aq.post('/v1/appointments', {
+            customerName: name.trim(),
+            contactPerson: name.trim(),
+            phone: phone.trim(),
+            sourceChannel: 'website_contact',
+            preferredStartDate: _d7.toISOString().slice(0, 10),
+            performanceCount: 1,
+            packageType: 'custom',
+            specialRequirements: '网站联系留言：\n' + message,
+            smsVerifiedFlag: false
+          }, {
+            skipAuth: true,
+            showErrorToast: false,
+            fallback: function () { try { Storage.create(Storage.KEYS.APPOINTMENTS, record); } catch (e) {} return record; }
+          }).then(function () {
+            _qcSuccess();
+          }).catch(function (err) {
+            console.error('[QuickContact] API submit failed:', err);
+            Utils.toast('提交失败：' + ((err && err.message) ? err.message : '请稍后重试') + '。也可直接致电 13993839833', 'error');
+            _qcUnlock();
+          });
+        } else {
+          Storage.create(Storage.KEYS.APPOINTMENTS, record);
+          _qcSuccess();
+        }
       });
     },
 
@@ -4732,14 +4785,14 @@
     perfectAttendanceBonus: 80000,  // 800元/月
     // 工龄补贴：每年工龄 单位：分/天
     seniorityPerYear: 200,  // 2元/天·年
-    // 扣款规则（单位：分或百分比）
+    // 扣款规则（单位：分或百分比；默认口径与《员工管理条例》第二条一致）
     deductions: {
-      lateUnder30min:    5000,   // 迟到<30分钟：扣50元
-      lateOver30min:    10000,   // 迟到≥30分钟：扣100元
-      absentHalfDay:    '50%',   // 旷工半天：扣当日50%
-      absentFullDay:   '100%',   // 旷工全天：扣当日100% + 罚款200
-      absentFine:      20000,    // 旷工罚款：200元/天
-      leavePersonal:   '100%',   // 事假：扣当日100%
+      lateUnder30min:    2000,   // 迟到/早退<30分钟：20元/次
+      lateOver30min:    '50%',   // 迟到/早退≥30分钟：按旷工半天，扣当日50%工资
+      absentHalfDay:   '100%',   // 旷工半天：扣当日100%工资
+      absentFullDay:   '200%',   // 旷工全天：扣两日工资（当日200%）
+      absentFine:          0,    // 旷工不再另收固定罚款（已含在200%扣薪内）
+      leavePersonal:   '100%',   // 事假：当日不计薪（扣当日100%）
       leaveSick:        '30%',   // 病假：扣当日30%
       socialInsurance:  '10.5%', // 社保个人：10.5%（养老8%+医疗2%+失业0.5%）
       housingFund:       '12%'   // 公积金个人：12%
@@ -4890,16 +4943,20 @@
         // 餐补/交通补
         detail.mealAllowance = (R.dailySubsidy && R.dailySubsidy.meal) || 0;
         detail.trafficAllowance = (R.dailySubsidy && R.dailySubsidy.traffic) || 0;
-        // 迟到扣款
+        // 迟到扣款（条例第二条：30分钟内20元/次；超30分钟按旷工半天扣当日一半工资）
         if (status === 'late') {
           var mins = dr.lateMinutes || 0;
           var D = R.deductions || {};
+          var lateKey, lateAmt;
           if (mins < 30) {
-            detail.deductionDetail['迟到<' + mins + '分钟'] = D.lateUnder30min || 5000;
+            lateKey = '迟到<' + mins + '分钟';
+            lateAmt = D.lateUnder30min != null ? (typeof D.lateUnder30min === 'string' ? Math.round(baseCents * this._parsePct(D.lateUnder30min)) : D.lateUnder30min) : 2000;
           } else {
-            detail.deductionDetail['迟到≥' + mins + '分钟'] = D.lateOver30min || 10000;
+            lateKey = '迟到≥' + mins + '分钟(按旷工半天)';
+            lateAmt = D.lateOver30min != null ? (typeof D.lateOver30min === 'string' ? Math.round(baseCents * this._parsePct(D.lateOver30min)) : D.lateOver30min) : Math.round(baseCents * 0.5);
           }
-          detail.deduction += detail.deductionDetail[Object.keys(detail.deductionDetail)[0]];
+          detail.deductionDetail[lateKey] = lateAmt;
+          detail.deduction += lateAmt;
         }
       }
 
@@ -5019,10 +5076,8 @@
           if (it.lateCount) totalLate += it.lateCount;
           else if (st === 'late') totalLate++;
         }
-        if (isWeekend) {
-          if (st === 'leave_sick' || st === 'leave_personal' || st === 'absent') hasLeaveOrAbsent = true;
-          continue;
-        }
+        // 周末不纳入考勤考核：周末的请假/旷工/半天均不影响全勤判定（迟到次数仍在上方累计）
+        if (isWeekend) continue;
         weekdaysSeen++;
         var isFullOk = (st === 'full_day') || (st === 'normal') || (st === 'late');
         var isHalf = (st === 'half_afternoon') || (st === 'half_night');
@@ -5047,6 +5102,8 @@
         sickDays: 0, personalDays: 0, performBenxi: 0, performZhezi: 0, performXiaxiang: 0, performOther: 0
       };
       var totals = { base:0, seniority:0, meal:0, traffic:0, performance:0, gross:0, deduction:0, net:0 };
+      // 当月有考勤记录的工作日数（全勤奖门槛：零工作日出勤不发全勤奖）
+      var weekdaysSeen = 0;
 
       for (var i = 0; i < list.length; i++) {
         var dr = list[i];
@@ -5054,14 +5111,21 @@
         dailyDetails.push(d);
         // 统计
         var st = dr.status || 'normal';
+        var recDate = dr.date ? new Date(dr.date) : null;
+        var hasDate = !!(recDate && !isNaN(recDate.getTime()));
+        var isWeekend = hasDate && (recDate.getDay() === 0 || recDate.getDay() === 6);
+        if (hasDate && !isWeekend) weekdaysSeen++;
         if (st === 'normal' || st === 'late') summary.workDays++;
         if (st === 'late') summary.lateDays++;
-        if (st === 'absent') {
-          if (dr.absentType === 'half') summary.absentHalfDays++;
-          else summary.absentFullDays++;
+        // 请假/旷工考核仅统计工作日：周末为演出日，不纳入考勤考核
+        if (!isWeekend) {
+          if (st === 'absent') {
+            if (dr.absentType === 'half') summary.absentHalfDays++;
+            else summary.absentFullDays++;
+          }
+          if (st === 'leave_sick') summary.sickDays++;
+          if (st === 'leave_personal') summary.personalDays++;
         }
-        if (st === 'leave_sick') summary.sickDays++;
-        if (st === 'leave_personal') summary.personalDays++;
         if (dr.performType && dr.performCount > 0) {
           if (dr.performType === 'benxi') summary.performBenxi += dr.performCount;
           else if (dr.performType === 'zhezi') summary.performZhezi += dr.performCount;
@@ -5077,9 +5141,9 @@
         totals.deduction += d.deduction;
       }
 
-      // 全勤奖：无旷工、无病假/事假、迟到<3次
+      // 全勤奖：当月有工作日考勤记录，且无旷工、无病假/事假、迟到<3次
       var perfectBonus = 0;
-      if (summary.absentFullDays === 0 && summary.absentHalfDays === 0
+      if (weekdaysSeen > 0 && summary.absentFullDays === 0 && summary.absentHalfDays === 0
           && summary.sickDays === 0 && summary.personalDays === 0 && summary.lateDays < 3) {
         perfectBonus = R.perfectAttendanceBonus || 0;
       }
@@ -5153,7 +5217,7 @@
           try {
             // 过滤：仅在职
             if (st.status && /离职|停用|resigned|off/.test(String(st.status))) continue;
-            var att = (typeof getAttendanceCb === 'function') ? (getAttendanceCb(st.id, monthStr) || []) : (this._mockAttendance(st.id, monthStr));
+            var att = (typeof getAttendanceCb === 'function') ? (getAttendanceCb(st.id, monthStr) || []) : [];
             var payslip = this.calcMonthlyWage(st, att, opts.extraBonusMap ? opts.extraBonusMap[st.id] : 0,
                                                      opts.extraDeductMap ? opts.extraDeductMap[st.id] : 0, rules);
             payslip.month = monthStr;
@@ -5178,46 +5242,9 @@
         return results;
       }
     },
-    _mockAttendance: function (staffId, monthStr) {
-      // 若未对接真实考勤流水，生成一份合理的模拟数据（22工作日+少量异常+演出）用于演示
-      var list = [];
-      if (!monthStr) return list;
-      var parts = monthStr.split('-');
-      var y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1;
-      var days = new Date(y, m + 1, 0).getDate();
-      var rand = function (max) { return Math.floor(Math.random() * max); };
-      for (var d = 1; d <= days; d++) {
-        var dateStr = monthStr + '-' + Utils.pad(String(d), 2, '0');
-        var dow = new Date(y, m, d).getDay();
-        if (dow === 0 || dow === 6) {
-          // 周末：20%概率有下乡/节日演出
-          if (rand(100) < 20) {
-            list.push({ date: dateStr, status: 'normal', performType: rand(2) ? 'xiaxiang' : 'festival', performCount: 1 });
-          }
-          continue;
-        }
-        var r = rand(100);
-        if (r < 3) {
-          list.push({ date: dateStr, status: 'late', lateMinutes: 10 + rand(40) });
-        } else if (r < 5) {
-          list.push({ date: dateStr, status: 'absent', absentType: rand(2) ? 'half' : 'full' });
-        } else if (r < 8) {
-          list.push({ date: dateStr, status: 'leave_sick' });
-        } else if (r < 10) {
-          list.push({ date: dateStr, status: 'leave_personal' });
-        } else {
-          // 正常出勤：约50%有演出
-          var pr = rand(100);
-          if (pr < 35) {
-            list.push({ date: dateStr, status: 'normal', performType: 'benxi', performCount: 1 });
-          } else if (pr < 55) {
-            list.push({ date: dateStr, status: 'normal', performType: 'zhezi', performCount: 1 + rand(2) });
-          } else {
-            list.push({ date: dateStr, status: 'normal' });
-          }
-        }
-      }
-      return list;
+    _mockAttendance: function () {
+      // v20260922：生产环境不再生成任何模拟考勤流水；无真实考勤时按零出勤处理
+      return [];
     },
 
     // ---------- 工资条 CRUD ----------
@@ -6097,7 +6124,9 @@
 
     initAdminSidebar: function () {
       var toggle = document.querySelector('.admin-sidebar-toggle, #sidebarToggle');
-      if (toggle) {
+      // v20260926n：≤900px 走手机抽屉（js/admin-mobile-sidebar.js），桌面折叠逻辑仅桌面绑定，
+      // 避免同一汉堡按钮双绑定导致手机端误触发 body.admin-sidebar-collapsed
+      if (toggle && window.innerWidth > 900) {
         toggle.addEventListener('click', function () {
           var collapsed = document.body.classList.toggle('admin-sidebar-collapsed');
           toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
@@ -6238,6 +6267,9 @@
         }
         var btn = e.target.closest('button, a, .btn-action');
         if (!btn) return;
+        // 全局早退：页面脚本已打标的业务按钮（staff.html/schedule.html/cast-sheet.html 行内编辑/删除/导出等）
+        // 由页面自己的事件委托处理，DBF 不抢开假弹窗（修 staff 编辑按钮被劫持打开"📋 操作窗口"假弹窗的 bug）
+        if (btn.__superPatchBound || btn.__ts3Done || btn.__deadBtnChecked || btn.__stfBound) return;
         if (btn.hasAttribute('onclick') && !btn.classList.contains('needs-delegate')) return;
         var href = btn.getAttribute && btn.getAttribute('href');
         if (href && href !== '#' && href !== '' && href.indexOf('javascript:') !== 0) return;
@@ -8623,7 +8655,7 @@
             html += '<div class="detail-value">' + (data[keys[di]] || '—') + '</div></div>';
           }
         } else {
-          html += '<div class="detail-empty-center">—— 详情视图（演示版：点击"编辑"可修改）——</div>';
+          html += '<div class="detail-empty-center">—— 暂无详情数据 ——</div>';
         }
         html += '</div>';
         return html;
@@ -8632,7 +8664,7 @@
         // R22 CSP合规：detail-demo-center / detail-demo-icon / gen-form-grid / gen-form-col-full / gen-form-label / gen-form-required / gen-form-field 替代所有内联 style
         html += '<div class="detail-demo-center">';
         html += '<div class="detail-demo-icon">📋</div>';
-        html += '<div>「' + title + '」表单（演示版）</div>';
+        html += '<div>「' + title + '」表单</div>';
         html += '</div>';
         html += '<div class="gen-form-grid">';
         html += '<div class="gen-form-col-full"><label class="gen-form-label">标题 / 名称 <span class="gen-form-required">*</span></label>';
@@ -9013,10 +9045,14 @@
         var CSS = [
           /* 1) 封横向溢出联动纵向假高（最常见「20屏假滚动」元凶） */
           'html, body { max-width: 100vw !important; overflow-x: hidden !important; }',
-          /* 2) ★ admin-layout 本身硬设最高 6 屏 + 内部滚动（解连环撑爆最核心一条） */
-          '.admin-layout { max-height: calc(100vh * 6) !important; overflow-y: auto !important; overflow-x: hidden !important; height: auto !important; min-height: 0 !important; position: relative; }',
-          /* 3) ★ wrapper 三层（admin-main / admin-content / main / content-wrapper / page-container）→ 继承上限、解 height:100% */
-          '.admin-content, main, .admin-main, .content-wrapper, .page-container, section.admin-content { height: auto !important; min-height: 0 !important; max-height: calc(100vh * 6 - 120px) !important; overflow-y: visible !important; overflow-x: hidden !important; }',
+          /* 2) ★ admin-layout 本身硬设最高 6 屏 + 内部滚动（解连环撑爆最核心一条）
+           *  修：overflow-y 由 auto 改为 hidden —— admin-layout 是 sidebar+main 并排的 flex 容器，
+           *  让 layout 整体不滚，sidebar 和 main 各自内部 overflow-y:auto 独立滚（否则侧边栏跟着主区一起滚） */
+          '.admin-layout { max-height: 100vh !important; overflow: hidden !important; height: 100% !important; min-height: 0 !important; position: relative; }',
+          /* 3) ★ wrapper 三层（admin-main / admin-content / main / content-wrapper / page-container）→ 继承上限、解 height:100%
+           *  修：overflow-y 由 visible 改 auto —— admin-layout 已 overflow:hidden，main 自己 overflow-y:auto 独立滚，
+           *  与 sidebar 的 overflow-y:auto 解耦，互不影响（滚动主区时侧边栏不动） */
+          '.admin-content, main, .admin-main, .content-wrapper, .page-container, section.admin-content { height: 100% !important; min-height: 0 !important; max-height: 100vh !important; overflow-y: auto !important; overflow-x: hidden !important; }',
           /* 4) pagination-bar 全类名封顶 180px（finance 只修了自己，这里覆盖所有页） */
           '[class*="pagination-bar"], [class*="pg-toolbar"], [class*="pagination-toolbar"], [class*="sp-pg-toolbar"] { max-height: 180px !important; min-height: unset !important; overflow: hidden !important; }',
           /* 5) 空 tbody / 空 table 不占空间（避免 0 行也有 200~400px 假高度） */
@@ -9025,12 +9061,18 @@
           'body { --max-allow-height: calc(100vh * 6); max-height: var(--max-allow-height) !important; height: auto !important; min-height: 0 !important; overflow-y: auto !important; overflow-x: hidden !important; position: relative; }',
           /* 7) 防止 wrapper flex:1 把父容器越撑越大（reports/staff 常见） */
           '.flex-1, [class*="flex:1"], [style*="flex:1 1"] { min-height: 0 !important; max-height: calc(100vh * 6) !important; overflow: hidden; }',
-          /* 8) 侧边栏/顶栏不参与撑高：固定/非拉伸布局（防止 dashboard 顶栏 + 侧栏 + 主区 + 底栏连环叠） */
-          '.admin-sidebar, aside[class*="sidebar"], nav[class*="sidebar"], .admin-header, header[class*="admin-header"], [class*="admin-nav"] { max-height: 100vh !important; overflow: hidden; height: auto !important; }',
+          /* 8) 侧边栏/顶栏不参与撑高：固定/非拉伸布局（防止 dashboard 顶栏 + 侧栏 + 主区 + 底栏连环叠）
+           *  侧边栏允许垂直滚动（overflow-y:auto），否则 13 个菜单项超过视口高度时底部"退出登录"等被截断不可见；
+           *  顶栏/header 仍保持 hidden（不需要内部滚动） */
+          '.admin-sidebar, aside[class*="sidebar"], nav[class*="sidebar"] { max-height: 100vh !important; overflow-y: auto !important; overflow-x: hidden !important; height: auto !important; }',
+          '.admin-header, header[class*="admin-header"], [class*="admin-nav"] { max-height: 100vh !important; overflow: hidden; height: auto !important; }',
           /* 9) ★ BUG FIX: 最新系统动态/通知列表区域限高，防止无限延长触发 HeightGuard 误判 */
           '.system-notice-list, .notice-list, .activity-list, .recent-activity { max-height: 400px !important; overflow-y: auto !important; }',
           /* 10) ★ BUG FIX: 表格容器不被 HeightGuard 兜底截断 — table/tbody 永远不设 maxHeight */
-          'table, tbody, thead, .table-wrapper, .table-container { max-height: none !important; overflow: visible !important; }'
+          'table, tbody, thead, .table-wrapper, .table-container { max-height: none !important; overflow: visible !important; }',
+          /* 10b) ★ BUG FIX: 移除各页内联 min-width:760px 强制最小宽度，改为自适应容器，消除表格自动放大/抖动 */
+          '.admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper, .data-table-container, [class*="table-wrapper"], .admin-content table, table { width: 100% !important; min-width: 0 !important; }',
+          '.table-wrapper, .data-table-container { overflow-x: auto !important; }'
         ].join('\n');
         var s = document.createElement('style');
         s.setAttribute('data-height-guard', 'v2026.8.3');
@@ -9058,6 +9100,9 @@
                 if (el.getAttribute && el.getAttribute('data-pagination-bound') === '1') continue;
               }
               if (rows <= 1) { // 0 行 / 只有 1 行（比如空表头或 1 条示例）→ 空表不移除分页器会生成异常高度
+                // 守卫：data-paginate-keep="1" 表示页面明确要求保留分页容器（staff.html 等 CRUD 表格初始只有 1 行占位，
+                // 后续异步填充真实数据；剥属性会导致 pagination.js 找不到容器，分页按钮永不渲染）
+                if (el.getAttribute && el.getAttribute('data-paginate-keep') === '1') continue;
                 try { el.removeAttribute('data-paginate'); removed++; } catch (_re) {}
                 // 已经生成的 pagination-bar（旧的）：强制 max-height/overflow
                 var siblings = el.parentNode ? el.parentNode.querySelectorAll('[class*="pagination-bar"], [class*="pg-toolbar"]') : [];
@@ -9205,160 +9250,6 @@
       try { initCspInlinePatch(); } catch (_patchErr) { try { console.warn('[CSP-patch] 初始化失败：', _patchErr); } catch (_) {} }
     }
 
-    // ============================================================
-    // 🔧 调试工具：模拟预约提交请求（在浏览器 DevTools 控制台执行）
-    // 使用方式：在 booking.html 页面控制台执行 __testMockAppointmentSubmit()
-    // ============================================================
-    (function () {
-      function _pad2(n) { return n < 10 ? ('0' + n) : ('' + n); }
-      function _addDays(d, days) {
-        var x = new Date(d.getTime()); x.setDate(x.getDate() + (days || 0)); return x;
-      }
-      function _resolveAppointmentsUrl() {
-        var base = '';
-        try {
-          if (window.QAXQJT_API_CONFIG) {
-            if (window.QAXQJT_API_CONFIG.BASE) base = window.QAXQJT_API_CONFIG.BASE;
-            else base = window.QAXQJT_API_CONFIG.HOMOLOGOUS_PROXY_PREFIX || '/api';
-            if (typeof window.QAXQJT_API_CONFIG.resolveUrl === 'function') return window.QAXQJT_API_CONFIG.resolveUrl('/v1/appointments');
-          }
-        } catch (_e) {}
-        if (base) return (base + '/v1/appointments').replace(/^\/+/, '/');
-        return '/api/v1/appointments';
-      }
-
-      global.__testMockAppointmentSubmit = async function (opts) {
-        opts = opts || {};
-        var today = new Date();
-        var future7 = _addDays(today, 7);
-        var mockData = {
-          customerName: opts.customerName || '测试客户_' + _pad2(Math.floor(Math.random() * 1000)),
-          phone: opts.phone || '139938398' + _pad2(Math.floor(Math.random() * 100)),
-          organization: opts.organization || '测试组织_秦安县陇城镇文化站',
-          contactPerson: '',
-          sourceChannel: 'website_booking_test',
-          preferredStartDate: opts.preferredStartDate || (future7.getFullYear() + '-' + _pad2(future7.getMonth() + 1) + '-' + _pad2(future7.getDate())),
-          performanceCount: typeof opts.performanceCount === 'number' ? opts.performanceCount : 1,
-          packageType: opts.packageType || 'temple_fair',
-          venueProvince: opts.venueProvince || '甘肃省',
-          venueCity: opts.venueCity || '天水市',
-          venueDistrict: opts.venueDistrict || '秦安县',
-          venueAddress: opts.venueAddress || '甘肃省天水市秦安县陇城镇张沟村文化广场',
-          estimatedBudget: typeof opts.estimatedBudget === 'number' ? opts.estimatedBudget : 6800,
-          totalPerformanceFee: typeof opts.totalPerformanceFee === 'number' ? opts.totalPerformanceFee : 6800,
-          specialRequirements: opts.specialRequirements || '【测试模拟提交】剧目：火焰驹/窦娥冤；要求：自带音响灯光，舞台尺寸6*10米',
-          remarkInternal: '[TEST_MOCK_' + new Date().toISOString() + ']',
-          smsVerifiedFlag: false,
-          plays: [{ playId: 'play_1', sortOrder: 1, note: opts.play1 || '《火焰驹》' }]
-        };
-        mockData.contactPerson = mockData.customerName;
-
-        var targetUrl = _resolveAppointmentsUrl();
-        var curl = opts.curlUrl || targetUrl;
-        var groupLabel = '%c[MockBooking] 🧪 模拟预约提交  curl=' + curl;
-        console.groupCollapsed(groupLabel, 'background:#7c3f00;color:#fff;padding:2px 8px;border-radius:4px;');
-        console.log('[MockBooking] ① 后端接口 URL =', curl);
-        console.log('[MockBooking] ② 请求 Payload =', JSON.stringify(mockData, null, 2));
-        var cURLCmd = 'curl -X POST "' + curl + '" -H "Content-Type: application/json; charset=utf-8" -H "Accept: application/json" -d \'' + JSON.stringify(mockData) + '\'';
-        console.log('[MockBooking] ③ 等效 curl 命令（复制到终端执行）：\n' + cURLCmd);
-        window.__lastMockBookingCurl = cURLCmd;
-
-        var result = {
-          url: curl,
-          payload: JSON.parse(JSON.stringify(mockData)),
-          requestOk: false,
-          responseRaw: null,
-          httpStatus: 0,
-          networkError: null,
-          jsonError: null,
-          saved: null
-        };
-
-        var _t0 = Date.now();
-        try {
-          var init = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify(mockData)
-          };
-          var controller = new (window.AbortController || function () { var o = {}; o.abort = function () {}; return o; })();
-          init.signal = controller.signal;
-          var timeoutMs = Number(opts.timeoutMs) || 8000;
-          var timer = setTimeout(function () { try { controller.abort(); } catch (_e) {} }, timeoutMs);
-
-          var res = await fetch(curl, init);
-          clearTimeout(timer);
-          result.httpStatus = res.status;
-          result._responseObj = res;
-          console.log('[MockBooking] ④ HTTP 请求完成：status=' + res.status + ' statusText=' + res.statusText + ' ok=' + res.ok + ' 耗时=' + (Date.now() - _t0) + 'ms');
-
-          try {
-            var txt = await res.text();
-            result.responseRaw = txt;
-            try {
-              result.data = JSON.parse(txt || 'null');
-            } catch (pe) {
-              result.jsonError = 'JSON 解析失败：' + pe.message + '；原始文本=' + txt.slice(0, 500);
-            }
-          } catch (txtErr) {
-            result.responseRaw = '<无法读取响应文本：' + (txtErr && txtErr.message) + '>';
-          }
-          console.log('[MockBooking] ⑤ 响应体解析：data=', result.data || '(空/非JSON)；raw=', result.responseRaw && result.responseRaw.slice(0, 800));
-
-          if (res.ok && (!result.data || result.data.ok !== false)) {
-            result.requestOk = true;
-            result.saved = result.data && result.data.data ? result.data.data : result.data;
-            console.log('%c[MockBooking] ✅ 后端接收成功！HTTP=' + res.status + (result.jsonError ? ' ⚠️但响应非JSON：' + result.jsonError : ''), 'color:green;font-weight:bold;');
-            if (typeof alert !== 'undefined') try { alert('✅ 模拟提交成功！\nHTTP=' + res.status + '\n响应详情已打印至 Console'); } catch (_) {}
-          } else {
-            console.error('%c[MockBooking] ❌ 后端返回业务错误：HTTP=' + res.status, 'color:red;font-weight:bold;');
-            var msg = (result.data && result.data.error && result.data.error.message) || ('HTTP ' + res.status);
-            console.error('[MockBooking] ❌ 错误消息：' + msg + '；error.code=' + (result.data && result.data.error && result.data.error.code));
-            if (res.status === 400) console.error('[MockBooking] ❌ 400 校验错误：常见为字段缺失/格式不符，上方 Payload 对照后端 Joi schema（customerName/phone 必填、手机号 11 位、日期 YYYY-MM-DD）');
-            if (res.status === 401) console.error('[MockBooking] ❌ 401 未授权：公开预约接口应 skipAuth=true；若确实保护了 /v1/appointments，请在 Authorization header 传 Bearer token');
-            if (res.status === 404) console.error('[MockBooking] ❌ 404 不存在：检查 API_BASE 是否指向正确服务端（/api/v1/appointments 或 http://host:port/v1/appointments）');
-            if (res.status === 500) console.error('[MockBooking] ❌ 500 内部错误：请查看后端日志（server/logs/app.log 或 docker logs api）');
-            if (typeof alert !== 'undefined') try { alert('❌ 模拟提交失败\nHTTP=' + res.status + '\n错误：' + msg + '\n详见 Console'); } catch (_) {}
-          }
-        } catch (netErr) {
-          result.networkError = netErr && netErr.message ? netErr.message : String(netErr);
-          var elapsed = Date.now() - _t0;
-          console.error('%c[MockBooking] ❌ 网络错误：' + result.networkError + ' 耗时=' + elapsed + 'ms', 'color:red;font-weight:bold;');
-          if (netErr && netErr.name === 'AbortError') console.error('[MockBooking] ❌ 原因：请求超时（>' + timeoutMs + 'ms），建议：1) 确认后端服务已启动；2) 确认 API_BASE 配置正确（当前解析=' + curl + '）；3) 防火墙未阻断端口');
-          else if (/Failed to fetch|NetworkError|TypeError.*fetch/i.test(result.networkError || '')) console.error('[MockBooking] ❌ 原因：后端不可达（CORS/CONN_REFUSED/SSL），建议：1) 本地启动后端 node server（_serve_backend.js 或 npm run dev:api）；2) 部署时确认 Nginx 反代 /api → 后端 3001 端口；3) 确认 API_BASE 与页面同源或 CORS 放行 origin');
-          else if (netErr && netErr.stack) console.error('[MockBooking] ❌ 错误栈追踪：\n' + netErr.stack);
-          if (typeof alert !== 'undefined') try { alert('❌ 模拟提交网络错误\n' + result.networkError + '\n详见 Console 排查建议'); } catch (_) {}
-        }
-        console.log('[MockBooking] ⑥ 汇总结果 =', JSON.stringify({
-          requestOk: result.requestOk,
-          httpStatus: result.httpStatus,
-          networkError: result.networkError,
-          jsonError: result.jsonError,
-          savedKeys: result.saved ? Object.keys(result.saved) : null
-        }, null, 2));
-        console.groupEnd();
-        return result;
-      };
-
-      global.__testMockAppointmentSubmit.help = [
-        '🧪 __testMockAppointmentSubmit() 用法：',
-        '  1) 打开 booking.html 页面，F12 控制台直接执行：__testMockAppointmentSubmit()',
-        '  2) 自定义字段：__testMockAppointmentSubmit({ customerName:"张三", phone:"13900001111", performanceCount: 2 })',
-        '  3) 指定后端地址（独立部署时）：__testMockAppointmentSubmit({ curlUrl:"http://192.168.1.100:3001/v1/appointments" })',
-        '  4) 打印出的 curl 命令可直接复制到终端执行：window.__lastMockBookingCurl',
-        '  5) 若后端不可用，仍会降级 localStorage 写入，提交日志可判断走了哪条路径'
-      ].join('\n');
-
-      // 控制台友好提示（booking.html 或 operas.html 加载后输出一次）
-      setTimeout(function () {
-        try {
-          if (location.pathname.indexOf('booking') >= 0 || location.pathname.indexOf('operas') >= 0) {
-            console.info('%c🧪 模拟预约提交工具已就绪：执行  __testMockAppointmentSubmit()  测试后端接口。详情 __testMockAppointmentSubmit.help', 'background:#F59E0B;color:#000;padding:2px 6px;border-radius:3px;');
-          }
-        } catch (_) {}
-      }, 1500);
-    })();
   }
 })(typeof window !== 'undefined' ? window : this);
 

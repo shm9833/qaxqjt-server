@@ -16,6 +16,7 @@ const { success, created, pageMeta, noContent } = require('../utils/response');
 const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
+const { syncOrderPayments } = require('../services/order-payment-sync');
 
 // 合法状态流转（订单下游）
 const STATUS_FLOW = {
@@ -40,6 +41,19 @@ const _checkFlow = (from, to) => {
 const MONEY_FIELDS = ['totalAmount', 'discountAmount', 'finalAmount', 'depositAmount', 'paidAmount'];
 const MAX_AMOUNT = 100000000; // 单字段 1 亿上限
 const round2 = n => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+
+// v20261003 P3-10：单号/凭证号时间戳固定按东八区生成，不依赖服务器时区设置
+const _cnStamp = () => {
+  const d = new Date(Date.now() + 8 * 3600 * 1000);
+  const p = n => String(n).padStart(2, '0');
+  return (
+    d.getUTCFullYear() +
+    p(d.getUTCMonth() + 1) +
+    p(d.getUTCDate()) +
+    p(d.getUTCHours()) +
+    p(d.getUTCMinutes())
+  );
+};
 
 /**
  * 归一化并勾稽订单金额。
@@ -143,15 +157,16 @@ const _mapOrderItems = (items, orderId) =>
 
 
 const _genOrderNo = () => {
-  const d = new Date();
+  // v20261003 P3-10：固定东八区
+  const d = new Date(Date.now() + 8 * 3600 * 1000);
   const pad = n => String(n).padStart(2, '0');
   return (
     'ORD' +
-    String(d.getFullYear()).slice(2) +
-    pad(d.getMonth() + 1) +
-    pad(d.getDate()) +
-    pad(d.getHours()) +
-    pad(d.getMinutes()) +
+    String(d.getUTCFullYear()).slice(2) +
+    pad(d.getUTCMonth() + 1) +
+    pad(d.getUTCDate()) +
+    pad(d.getUTCHours()) +
+    pad(d.getUTCMinutes()) +
     nanoid(4).toUpperCase()
   );
 };
@@ -160,14 +175,16 @@ const _genOrderNo = () => {
 const _syncOrderSchedules = async order => {
   try {
     if (!order || !order.performanceStartDate) return null;
-    const start = new Date(order.performanceStartDate);
-    start.setHours(19, 30, 0, 0);
-    let end = order.performanceEndDate ? new Date(order.performanceEndDate) : null;
-    if (!end && order.performanceCount && Number(order.performanceCount) > 1) {
-      end = new Date(start.getTime() + (Number(order.performanceCount) - 1) * 86400000);
+    // v20261003 P3-10：演出起止固定按东八区时刻构造（夜场19:30=UTC11:30；当晚23:59=UTC15:59），
+    // 不再用 setHours 依赖服务器本地时区（performanceStartDate 为 UTC 午夜的日期串）
+    const psd = new Date(order.performanceStartDate);
+    const start = new Date(Date.UTC(psd.getUTCFullYear(), psd.getUTCMonth(), psd.getUTCDate(), 11, 30, 0));
+    let endBase = order.performanceEndDate ? new Date(order.performanceEndDate) : null;
+    if (!endBase && order.performanceCount && Number(order.performanceCount) > 1) {
+      endBase = new Date(Date.UTC(psd.getUTCFullYear(), psd.getUTCMonth(), psd.getUTCDate() + Number(order.performanceCount) - 1));
     }
-    if (!end) end = new Date(start);
-    end.setHours(23, 59, 0, 0);
+    if (!endBase) endBase = new Date(Date.UTC(psd.getUTCFullYear(), psd.getUTCMonth(), psd.getUTCDate()));
+    const end = new Date(Date.UTC(endBase.getUTCFullYear(), endBase.getUTCMonth(), endBase.getUTCDate(), 15, 59, 0));
     const base = {
       scheduleDateStart: start,
       scheduleDateEnd: end,
@@ -209,6 +226,115 @@ const _syncOrderSchedules = async order => {
     });
   } catch (e) {
     console.error('[orders.syncSchedules] fail:', e && e.message);
+    return null;
+  }
+};
+
+/**
+ * 订单收款 → 财务凭证联动（失败隔离，不阻断订单主流程；内部增量对账，重复调用幂等）
+ */
+const _syncPaymentLedger = async (row, ctx) => {
+  try {
+    if (!row || Number(row.paidAmount || 0) <= 0) return null;
+    const r = await syncOrderPayments(row, { actor: ctx.state.user?.sub || 'system' });
+    if (r && r.synced === 1 && r.ledger) {
+      await audit({
+        ctx,
+        module: 'finance',
+        action: 'AUTO_LEDGER_FROM_ORDER',
+        targetId: r.ledger.id,
+        detail: {
+          orderNo: row.orderNo,
+          voucherNo: r.ledger.voucherNo,
+          payNo: r.payment && r.payment.payNo,
+          amount: r.diff
+        }
+      });
+    }
+    return r;
+  } catch (e) {
+    console.error('[orders.syncPaymentLedger] fail:', e && e.message);
+    return null;
+  }
+};
+
+/**
+ * v20261003 P2-5：订单派工（internalRemark JSON）→ 排期派工单（CastSheetsV1+CastSheetCrew）自动同步
+ * 在 _syncOrderSchedules 之后调用（确保排期已存在）；幂等：已存在派工单则 crew 整体替换 + 版本号递增。
+ * 无关联排期（订单未填演出日期）时跳过；失败隔离不阻断订单主流程。
+ */
+const _DISPATCH_CATEGORY = {
+  sheng: '主演', dan: '主演',
+  jing: '配角', chou: '配角', erjia: '配角',
+  juezi: '龙套',
+  houqin: '舞美',
+  wuchang: '乐队', wenchang: '乐队'
+};
+const _syncDispatchToCastSheet = async order => {
+  try {
+    if (!order || !order.internalRemark) return null;
+    let disp;
+    try { disp = JSON.parse(order.internalRemark); } catch (_) { return null; }
+    if (!disp || disp.type !== 'dispatch' || !Array.isArray(disp.people)) return null;
+
+    const sched = await prisma.scheduleV2.findFirst({
+      where: { orderId: order.id },
+      orderBy: { scheduleDateStart: 'asc' }
+    });
+    if (!sched) return 'NO_SCHEDULE';
+
+    const crewData = disp.people.map((p, idx) => ({
+      id: idByCtx('castCrew', 12, nanoid),
+      performerId: null,
+      performerName: String(p.name || ''),
+      category: _DISPATCH_CATEGORY[p.group] || '龙套',
+      roleName: p.role || null,
+      sortOrder: idx,
+      note: p.note || null,
+      ts: BigInt(nowMs())
+    }));
+    const base = {
+      playTitle: order.orderType || null,
+      performanceDate: sched.scheduleDateStart,
+      performanceTime: '夜场',
+      venueFull: order.venueFullAddress || null,
+      crewNote: disp.remark || null
+    };
+    const existing = await prisma.castSheetsV1.findFirst({
+      where: { scheduleId: sched.id },
+      orderBy: { createdAt: 'desc' }
+    });
+    if (existing) {
+      await prisma.castSheetCrew.deleteMany({ where: { castSheetId: existing.id } });
+      await prisma.castSheetsV1.update({
+        where: { id: existing.id },
+        data: { ...base, versionNumber: { increment: 1 }, updatedAt: new Date(), ts: BigInt(nowMs()) }
+      });
+      if (crewData.length) {
+        crewData.forEach(c => { c.castSheetId = existing.id; });
+        await prisma.castSheetCrew.createMany({ data: crewData });
+      }
+      return 'UPDATED';
+    }
+    const sheetId = idByCtx('castSheet', 12, nanoid);
+    await prisma.castSheetsV1.create({
+      data: {
+        id: sheetId,
+        sheetNo: 'CS' + _cnStamp() + nanoid(4).toUpperCase().replace(/[^0-9A-Z]/g, '0'),
+        scheduleId: sched.id,
+        status: 'draft',
+        createdBy: order.createdBy || 'system',
+        ts: BigInt(nowMs()),
+        ...base
+      }
+    });
+    if (crewData.length) {
+      crewData.forEach(c => { c.castSheetId = sheetId; });
+      await prisma.castSheetCrew.createMany({ data: crewData });
+    }
+    return 'CREATED';
+  } catch (e) {
+    console.error('[orders.syncDispatchToCastSheet] fail:', e && e.message);
     return null;
   }
 };
@@ -339,6 +465,9 @@ const create = async ctx => {
   // 订单→档期自动关联（含演出日期的订单自动生成排期）
   await _syncOrderSchedules(row);
 
+  // 订单收款 → 收付款流水 + 台账收入凭证（建单即带已收款时；幂等，失败隔离）
+  await _syncPaymentLedger(row, ctx);
+
   await audit({
     ctx,
     module: 'order',
@@ -375,6 +504,14 @@ const update = async ctx => {
   const old = await prisma.order.findUnique({ where: { id } });
   if (!old) throw new BusinessError('NOT_FOUND', '订单不存在');
   if (b.status && b.status !== old.status) _checkFlow(old.status, b.status);
+
+  // v20261003 P2-4：cancelled/refunded 终态禁止变更金额/明细（否则可给已取消订单生成新收款凭证）
+  if (['cancelled', 'refunded'].includes(old.status)) {
+    const moneyChanged = MONEY_FIELDS.some(k => b[k] != null) || Array.isArray(b.items);
+    if (moneyChanged) {
+      throw new BusinessError('CONFLICT', `订单已处于「${old.status}」终态，禁止变更金额/明细；确需调整请财务红冲后重建`);
+    }
+  }
 
   // 金额服务端归一化 + 与存量值合并勾稽（任何金额字段或明细变更都触发）
   const { values: amt, moneyTouched } = _normalizeAmounts(b, old);
@@ -432,6 +569,12 @@ const update = async ctx => {
   // 订单→档期自动关联（演出日期/状态变更时同步排期；空 PATCH 也会补建缺失排期）
   await _syncOrderSchedules(row);
 
+  // v20261003 P2-5：派工 JSON 自动同步到排期派工单（须在排期同步之后；幂等，失败隔离）
+  await _syncDispatchToCastSheet(row);
+
+  // 订单收款 → 收付款流水 + 台账收入凭证（paidAmount 增量自动补差；幂等，失败隔离）
+  if (moneyTouched) await _syncPaymentLedger(row, ctx);
+
   await audit({ ctx, module: 'order', action: 'ORDER_UPDATE', targetId: id, detail: { from: old.status, to: patch.status || old.status } });
   return success(ctx, row);
 };
@@ -443,10 +586,43 @@ const remove = async ctx => {
   if (!['draft', 'cancelled'].includes(old.status)) {
     throw new BusinessError('CONFLICT', '仅草稿/已取消订单允许删除');
   }
+  // v20261003 P1-1：资金证据链保护——已收款或存在收款流水/退款单/台账凭证的订单禁止物理删除，
+  // 否则收款流水被删而台账凭证（fin_ledger_v1.orderId 无外键）残留成孤儿，账实核查断裂；须先走退款/红冲流程
+  const paidAmt = Number(old.paidAmount || 0);
+  if (paidAmt > 0) {
+    throw new BusinessError('CONFLICT', `订单已收款 ¥${paidAmt.toFixed(2)}，请先走退款/红冲流程再删除`);
+  }
+  const [payCnt, refundCnt, voucherCnt] = await Promise.all([
+    prisma.finPaymentV1.count({ where: { orderId: id } }),
+    prisma.orderRefund.count({ where: { orderId: id } }),
+    prisma.finLedgerV1.count({ where: { orderId: id } })
+  ]);
+  if (payCnt > 0 || refundCnt > 0 || voucherCnt > 0) {
+    throw new BusinessError(
+      'CONFLICT',
+      `订单存在资金痕迹（收款流水${payCnt}条/退款单${refundCnt}张/台账凭证${voucherCnt}张），禁止删除；请财务红冲清理后再删`
+    );
+  }
   await prisma.orderItem.deleteMany({ where: { orderId: id } });
   await prisma.orderRefund.deleteMany({ where: { orderId: id } });
   await prisma.finPaymentV1.deleteMany({ where: { orderId: id } });
-  await prisma.scheduleV2.deleteMany({ where: { orderId: id } }); // 先删关联排期，防 ScheduleV2.orderId 外键约束
+  // v20261003 P2-3：删排期前先清其子资源（CastSheetsV1+CastSheetCrew、ScheduleVenue），
+  // schema 无 onDelete:Cascade，直接删 ScheduleV2 会因外键约束抛 500
+  const __scheds = await prisma.scheduleV2.findMany({ where: { orderId: id }, select: { id: true } });
+  if (__scheds.length) {
+    const __schedIds = __scheds.map(s => s.id);
+    const __sheets = await prisma.castSheetsV1.findMany({
+      where: { scheduleId: { in: __schedIds } },
+      select: { id: true }
+    });
+    if (__sheets.length) {
+      const __sheetIds = __sheets.map(s => s.id);
+      await prisma.castSheetCrew.deleteMany({ where: { castSheetId: { in: __sheetIds } } });
+      await prisma.castSheetsV1.deleteMany({ where: { id: { in: __sheetIds } } });
+    }
+    await prisma.scheduleVenue.deleteMany({ where: { scheduleId: { in: __schedIds } } });
+    await prisma.scheduleV2.deleteMany({ where: { id: { in: __schedIds } } });
+  }
   await prisma.order.delete({ where: { id } });
   await audit({ ctx, module: 'order', action: 'ORDER_DELETE', targetId: id, detail: { no: old.orderNo } });
   return noContent(ctx);
@@ -468,10 +644,147 @@ const transition = async ctx => {
   }
   if (to === 'completed') patch.completedDate = new Date();
   const row = await prisma.order.update({ where: { id }, data: patch });
+  // v20261003 P3-7：退款原因不再丢弃——登记退款单（金额=订单已收余额，含原因/审批人）
+  if (to === 'refunded') {
+    const refundAmt = round2(Math.max(0, Number(old.paidAmount || 0)));
+    if (refundAmt > 0 || (reason || '').trim()) {
+      await prisma.orderRefund.create({
+        data: {
+          id: idByCtx('refund', 12, nanoid),
+          orderId: id,
+          refundNo: 'RF' + _cnStamp() + nanoid(5).toUpperCase().replace(/[^0-9A-Z]/g, '0'),
+          refundDate: new Date(),
+          refundChannel: 'transfer',
+          amount: refundAmt,
+          reason: reason || null,
+          status: 'confirmed',
+          approvedBy: ctx.state.user?.realName || ctx.state.user?.sub || 'system',
+          ts: BigInt(nowMs())
+        }
+      });
+    }
+  }
   // 取消/完成订单时同步排期状态
   await _syncOrderSchedules(row);
   await audit({ ctx, module: 'order', action: 'ORDER_TRANSITION', targetId: id, detail: { from: old.status, to, reason: reason || null } });
   return success(ctx, row);
 };
 
-module.exports = { list, stats, create, detail, update, remove, transition, STATUS_FLOW };
+/**
+ * v20261003 P3-8：收款独立登记 POST /v1/orders/:id/payments
+ * 入参 { amount, payChannel, payDate, remark }：收款流水（真实渠道/日期）+ 台账收入凭证(draft) 同事务原子提交，
+ * 回写订单 paidAmount 并按状态机推进 draft→confirmed→partial_paid/paid；演出/完成后补登记只写流水不改状态。
+ */
+const registerPayment = async ctx => {
+  const id = ctx.params.id;
+  const b = ctx.request.body || {};
+  const old = await prisma.order.findUnique({ where: { id } });
+  if (!old) throw new BusinessError('NOT_FOUND', '订单不存在');
+  if (['cancelled', 'refunded'].includes(old.status)) {
+    throw new BusinessError('CONFLICT', '订单已取消/退款，不能登记收款');
+  }
+
+  const amount = round2(Number(b.amount));
+  if (!Number.isFinite(amount) || amount <= 0) throw new BusinessError('VALIDATION_ERROR', '收款金额必须大于 0');
+  const payChannel = ['cash', 'transfer', 'wechat', 'alipay', 'cheque'].includes(b.payChannel) ? b.payChannel : 'transfer';
+  const payDate = b.payDate ? new Date(b.payDate) : new Date();
+  const remark = b.remark || null;
+
+  const finalAmt = round2(Number(old.finalAmount || 0));
+  const curPaid = round2(Number(old.paidAmount || 0));
+  const newPaid = round2(curPaid + amount);
+  if (newPaid - finalAmt > 0.001) {
+    throw new BusinessError('CONFLICT', `收款后累计 ¥${newPaid} 超过应付 ¥${finalAmt}，多收款项请走预收/退款流程`);
+  }
+
+  // 状态机推进路径（仅业务前段状态自动推进；draft 须先经 confirmed）
+  let targetStatus = null;
+  if (['draft', 'confirmed', 'partial_paid'].includes(old.status)) {
+    targetStatus = finalAmt > 0 && newPaid + 0.001 >= finalAmt ? 'paid' : 'partial_paid';
+  }
+  const path = [];
+  if (old.status === 'draft') path.push('confirmed');
+  if (targetStatus && targetStatus !== old.status) path.push(targetStatus);
+  let stCur = old.status;
+  for (const t of path) {
+    _checkFlow(stCur, t);
+    stCur = t;
+  }
+
+  const now = new Date();
+  const stamp = _cnStamp();
+  const payNo = 'PAY' + stamp + nanoid(6).toUpperCase().replace(/[^0-9A-Z]/g, '0');
+  const voucherNo = 'LSR' + stamp + nanoid(4).toUpperCase().replace(/[^0-9A-Z]/g, '0');
+  const customerName = old.customerName || '';
+  const summary = '订单收款（' + old.orderNo + '）' + (customerName ? ' - ' + customerName : '');
+  const actor = ctx.state.user?.sub || 'system';
+
+  await prisma.$transaction(async tx => {
+    await tx.finPaymentV1.create({
+      data: {
+        id: idByCtx('pay', 12, nanoid),
+        orderId: id,
+        payNo,
+        payDate,
+        payChannel,
+        payType: 'in',
+        amount,
+        currency: 'CNY',
+        payerName: customerName || null,
+        voucherNo,
+        status: 'confirmed',
+        remark: remark || '订单收款登记（' + old.orderNo + '）',
+        createdBy: actor,
+        ts: BigInt(nowMs())
+      }
+    });
+    await tx.finLedgerV1.create({
+      data: {
+        id: idByCtx('ledger', 12, nanoid),
+        voucherNo,
+        voucherDate: payDate,
+        voucherType: 'receipt',
+        voucherCategory: '演出收入',
+        summary,
+        orderId: id,
+        debitAmount: 0,
+        creditAmount: amount,
+        balanceAmount: 0,
+        cashFlowType: 'in',
+        cashFlowAmount: amount,
+        status: 'draft',
+        makerAccountId: actor === 'system' ? null : actor,
+        madeAt: now,
+        doubleCheckRequired: amount >= 10000,
+        isReconciled: false,
+        remark: '收款登记自动生成，流水号 ' + payNo,
+        createdBy: actor,
+        ts: BigInt(nowMs())
+      }
+    });
+    const orderPatch = { paidAmount: newPaid, updatedAt: new Date(), ts: BigInt(nowMs()) };
+    if (path.length) orderPatch.status = path[path.length - 1];
+    await tx.order.update({ where: { id }, data: orderPatch });
+  });
+
+  await audit({
+    ctx,
+    module: 'order',
+    action: 'ORDER_PAYMENT_REGISTER',
+    targetId: id,
+    detail: {
+      no: old.orderNo,
+      amount,
+      payChannel,
+      payDate: payDate.toISOString(),
+      to: path[path.length - 1] || old.status
+    }
+  });
+  const result = await prisma.order.findUnique({
+    where: { id },
+    include: { payments: { orderBy: { payDate: 'desc' } } }
+  });
+  return created(ctx, result);
+};
+
+module.exports = { list, stats, create, detail, update, remove, transition, registerPayment, STATUS_FLOW };

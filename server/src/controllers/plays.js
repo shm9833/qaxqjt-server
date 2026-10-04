@@ -75,7 +75,7 @@ const update = async ctx => {
   const old = await prisma.play.findUnique({ where: { id } });
   if (!old) throw new BusinessError('NOT_FOUND', '剧目不存在');
   const patch = {};
-  ['playCode', 'title', 'subtitle', 'genre', 'author', 'posterUrl', 'synopsis', 'castSummary', 'difficultyLevel', 'status'].forEach(k => {
+  ['playCode', 'title', 'subtitle', 'genre', 'author', 'posterUrl', 'images', 'synopsis', 'castSummary', 'difficultyLevel', 'status'].forEach(k => {
     if (b[k] !== undefined) patch[k] = b[k];
   });
   // is_hot：API 字段名 snake_case，Prisma 客户端字段名 isHot（schema.prisma model Play.isHot @map("is_hot")）

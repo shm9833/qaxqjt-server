@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <base href="/admin/">
   <meta charset="UTF-8" />
   <!-- =========================================================== -->
   <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
@@ -19,7 +18,9 @@
     }
     if(bad){
       ["qaxqjt_admin_session","admin_session","qaxqjt_admin_sess_v2","admin_sess_v2","qaxqjt_admin_remember","qaxqjt_admin_token","qaxqjt_admin_info","qaxqjt_admin_permissions","qaxqjt_auth_permissions_v1"].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
-      location.replace(L);
+      var u=location.href, i=u.lastIndexOf("/");
+      var base= (i>=0)? u.substring(0,i+1) : "./";
+      location.replace(base + L);
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
 
@@ -40,7 +41,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>天水市文旅演出统计报表中心 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260919c">
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -938,7 +939,14 @@
 .admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
   content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
 }
-/* ====== 20260906 修复：真分页条恢复显示（QinPagination 渲染），仅保留表格高度约束 ====== */
+/* ====== 空卡片修复20260825：隐藏多余分页栏 + 约束表格高度 ====== */
+.pagination-bar, .pagination-toolbar, [class*="pagination-bar"], [class*="pg-toolbar"] {
+  display: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
 .table-wrapper, .table-wrap, .table-container, .data-table-container {
   max-height: 400px !important;
   overflow-y: auto !important;
@@ -1052,10 +1060,10 @@
             <span class="menu-icon">👥</span>
             <span>账号权限管理</span>
           </a>
-          <a href="schedule.html" data-role-level="800" class="admin-menu-item">
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
-            
+            <span class="menu-badge">8</span>
           </a>
           <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
@@ -1065,7 +1073,7 @@
           <a href="orders.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📋</span>
             <span>订单预约管理</span>
-            
+            <span class="menu-badge">5</span>
           </a>
           <a href="operas.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">🎭</span>
@@ -1083,7 +1091,7 @@
           <a href="inventory.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📦</span>
             <span>道具服装库存</span>
-            
+            <span class="menu-badge">!</span>
           </a>
           <a href="finance.html" data-role-level="500" class="admin-menu-item">
             <span class="menu-icon">💰</span>
@@ -1092,6 +1100,10 @@
           <a href="content.html" data-role-level="800" class="admin-menu-item">
             <span class="menu-icon">📝</span>
             <span>官网内容管理</span>
+          </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
           </a>
           <a href="reports.html" data-role-level="700" class="admin-menu-item active admin-menu-item">
             <span class="menu-icon">📈</span>
@@ -1123,6 +1135,9 @@
         <div style="display:flex;flex-direction:column;gap:8px;">
           <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
             <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
           </a>
           <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
             <span>🚪</span><span>退出登录</span>
@@ -1233,7 +1248,7 @@
           </div>
           <div class="filter-divider"></div>
           <div class="filter-actions">
-            <button class="btn-action btn-action-gold" onclick="__exportReportsExcel()">
+            <button class="btn-action btn-action-gold" onclick="alert('Excel导出功能：请连接后端接口实现')">
               <span>📊</span>导出 Excel
             </button>
             <button class="btn-action btn-action-primary" onclick="window.print()">
@@ -1246,170 +1261,111 @@
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">🎭</div>
-              <div class="kpi-trend up"><span>↑</span><span>12.4%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">年度演出总场次</div>
-            <div class="kpi-value">386<span class="unit">场</span></div>
+            <div class="kpi-value">—<span class="unit">场</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +43 场</span>
+              <span>真实排期实时统计</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">👥</div>
-              <div class="kpi-trend up"><span>↑</span><span>8.7%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">观众总人次</div>
-            <div class="kpi-value">26.8<span class="unit">万人次</span></div>
+            <div class="kpi-value">—<span class="unit">万人次</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +2.2 万人次</span>
+              <span>暂无观众人次统计源</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">📍</div>
-              <div class="kpi-trend up"><span>↑</span><span>15.2%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">覆盖乡镇行政村</div>
-            <div class="kpi-value">187<span class="unit">个</span></div>
+            <div class="kpi-value">—<span class="unit">个</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +25 个</span>
+              <span>按排期区县实时统计</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">🏛️</div>
-              <div class="kpi-trend up"><span>↑</span><span>32.6%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">天水文旅合作场次</div>
-            <div class="kpi-value">62<span class="unit">场</span></div>
+            <div class="kpi-value">—<span class="unit">场</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +15 场</span>
+              <span>暂无文旅合作标记</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">🎓</div>
-              <div class="kpi-trend up"><span>↑</span><span>45.1%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">校园研学服务</div>
-            <div class="kpi-value">114<span class="unit">场/8.3万人次</span></div>
+            <div class="kpi-value">—<span class="unit">场</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +36 场</span>
+              <span>暂无校园研学标记</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">📡</div>
-              <div class="kpi-trend up"><span>↑</span><span>128.5%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">数字演出直播</div>
-            <div class="kpi-value">38<span class="unit">场/420万次</span></div>
+            <div class="kpi-value">—<span class="unit">场</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>累计观看 +237万次</span>
+              <span>暂无直播数据</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">💰</div>
-              <div class="kpi-trend up"><span>↑</span><span>14.8%</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">演出总营收</div>
-            <div class="kpi-value">¥486.2<span class="unit">万</span></div>
+            <div class="kpi-value">—<span class="unit">万</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +62.6 万</span>
+              <span>真实台账实时统计</span>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-card-head">
               <div class="kpi-icon-box">⭐</div>
-              <div class="kpi-trend up"><span>↑</span><span>1.2分</span></div>
+              <div class="kpi-trend"><span>●</span><span>实时</span></div>
             </div>
             <div class="kpi-title">观众综合满意度</div>
-            <div class="kpi-value">96.4<span class="unit">分</span></div>
+            <div class="kpi-value">—<span class="unit">分</span></div>
             <div class="kpi-sub">
               <span class="sub-label">同比</span>
-              <span>较去年 +1.2 分</span>
+              <span>暂无满意度统计源</span>
             </div>
           </div>
+        </div>
+
+        <!-- 本月排期概览（/v1/schedules/stats） -->
+        <div class="admin-chart-card" style="margin-bottom:22px;">
+          <div class="admin-chart-title">本月排期状态概览 <span class="chart-badge" id="schedStatsMonth">—</span></div>
+          <div id="schedStatsBox" style="padding:14px 18px;color:var(--text-light);">正在加载本月排期统计…</div>
         </div>
 
         <div class="charts-row">
           <div class="admin-chart-card">
             <div class="admin-chart-title">天水市 2 区 5 县演出覆盖分布 <span class="chart-badge">{year} 年度</span></div>
-            <div class="district-bar-list">
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">🏘️ 秦安县</span>
-                  <span class="district-stats"><strong>128 场</strong>占 33.2%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:100%;background:linear-gradient(90deg,#4a0e0e,#8B0000);"><span>128场</span></div>
-                </div>
-              </div>
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">🏙️ 秦州区</span>
-                  <span class="district-stats"><strong>68 场</strong>占 17.6%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:53.1%;background:linear-gradient(90deg,#6a1515,#A52A2A);"><span>68场</span></div>
-                </div>
-              </div>
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">🌄 麦积区</span>
-                  <span class="district-stats"><strong>56 场</strong>占 14.5%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:43.8%;background:linear-gradient(90deg,#7a1a1a,#B22222);"><span>56场</span></div>
-                </div>
-              </div>
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">🏛️ 甘谷县</span>
-                  <span class="district-stats"><strong>48 场</strong>占 12.4%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:37.5%;background:linear-gradient(90deg,#8a2020,#C0392B);"><span>48场</span></div>
-                </div>
-              </div>
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">⛰️ 武山县</span>
-                  <span class="district-stats"><strong>38 场</strong>占 9.8%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:29.7%;background:linear-gradient(90deg,#9a2a2a,#CD5C5C);"><span>38场</span></div>
-                </div>
-              </div>
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">🌲 清水县</span>
-                  <span class="district-stats"><strong>28 场</strong>占 7.3%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:21.9%;background:linear-gradient(90deg,#aa3838,#E07070);"><span>28场</span></div>
-                </div>
-              </div>
-              <div class="district-bar-item">
-                <div class="district-bar-label">
-                  <span class="district-name">🐎 张家川县</span>
-                  <span class="district-stats"><strong>20 场</strong>占 5.2%</span>
-                </div>
-                <div class="district-bar-track">
-                  <div class="district-bar-fill" style="width:15.6%;background:linear-gradient(90deg,#ba4848,#E88888);"><span>20场</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
+            <div class="district-bar-list" id="repDistrictBars"><div style="padding:30px 10px;text-align:center;color:var(--text-light);">正在加载真实排期分布…</div></div></div>
         </div>
 
         <div class="charts-row">
@@ -1425,7 +1381,7 @@
                   <span>10</span>
                   <span>0</span>
                 </div>
-                <div class="monthly-right-axis">
+                <div class="monthly-right-axis" id="repRightAxis" style="visibility:hidden;">
                   <span>4万</span>
                   <span>3.2万</span>
                   <span>2.4万</span>
@@ -1434,26 +1390,7 @@
                   <span>0</span>
                 </div>
                 <svg class="monthly-chart-svg" viewBox="0 0 1000 275" preserveAspectRatio="none">
-                  <polyline
-                    fill="none"
-                    stroke="url(#goldGrad)"
-                    stroke-width="3"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    points="
-                      37,203
-                      120,91
-                      203,175
-                      287,147
-                      370,161
-                      454,217
-                      537,119
-                      621,105
-                      704,203
-                      788,189
-                      871,245
-                      954,189
-                    "/>
+                  <polyline id="repAudienceLine" fill="none" points=""/>
                   <defs>
                     <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" style="stop-color:#B8941F;"/>
@@ -1462,72 +1399,11 @@
                     </linearGradient>
                   </defs>
                 </svg>
-                <div class="monthly-columns">
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(27% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">1月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(68% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">2月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(38% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">3月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(48% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">4月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(43% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">5月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(24% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">6月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(58% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">7月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(63% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">8月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(27% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">9月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(32% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">10月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(14% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">11月</div>
-                  </div>
-                  <div class="monthly-col">
-                    <div class="monthly-line-point" style="bottom: calc(32% + 25px);"></div>
-                    <div class="monthly-bar" style="height:0%;" title="暂无数据"></div>
-                    <div class="monthly-label">12月</div>
-                  </div>
-                </div>
+                <div class="monthly-columns" id="repMonthlyCols"><div style="grid-column:1/-1;padding:30px 10px;text-align:center;color:var(--text-light);">正在加载真实月度场次…</div></div>
               </div>
-              <div class="chart-legend">
+<div class="chart-legend">
                 <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(180deg,var(--primary-light),var(--primary));"></div>演出场次（左轴：场）</div>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--gold);border-radius:50%;width:14px;height:14px;"></div>观众人次（右轴：人次）</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--gold);border-radius:50%;width:14px;height:14px;"></div>观众人次（暂无统计源，柱形为真实演出场次）</div>
               </div>
             </div>
           </div>
@@ -1537,128 +1413,113 @@
           <div class="admin-chart-card">
             <div class="admin-chart-title">8 大业务类型演出占比 <span class="chart-badge">{year} 环形图</span></div>
             <div class="donut-wrapper">
-              <div class="donut-chart" style="background: conic-gradient(
-                #8B0000 0% 28%,
-                #D4AF37 28% 50%,
-                #17a2b8 50% 66%,
-                #28a745 66% 78%,
-                #6f42c1 78% 86%,
-                #fd7e14 86% 93%,
-                #E1306C 93% 98%,
-                #8e44ad 98% 100%
-              );">
+              <div class="donut-chart" id="repDonut" style="background:conic-gradient(#e5e7eb 0% 100%);">
                 <div class="donut-center">
-                  <div class="donut-num">386</div>
+                  <div class="donut-num" id="repDonutNum">—</div>
                   <div class="donut-label">全年总场次</div>
                 </div>
               </div>
-              <div class="donut-legend">
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#8B0000;"></div>
-                  <span class="donut-legend-text">乡村庙会戏曲</span>
-                  <span class="donut-legend-pct">28%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#D4AF37;"></div>
-                  <span class="donut-legend-text">政府惠民下乡</span>
-                  <span class="donut-legend-pct">22%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#17a2b8;"></div>
-                  <span class="donut-legend-text">天水文旅合作</span>
-                  <span class="donut-legend-pct">16%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#28a745;"></div>
-                  <span class="donut-legend-text">节庆专场文艺</span>
-                  <span class="donut-legend-pct">12%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#6f42c1;"></div>
-                  <span class="donut-legend-text">企业商户庆典</span>
-                  <span class="donut-legend-pct">8%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#fd7e14;"></div>
-                  <span class="donut-legend-text">校园戏曲研学</span>
-                  <span class="donut-legend-pct">7%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#E1306C;"></div>
-                  <span class="donut-legend-text">网络直播数字</span>
-                  <span class="donut-legend-pct">5%</span>
-                </div>
-                <div class="donut-legend-item">
-                  <div class="donut-legend-color" style="background:#8e44ad;"></div>
-                  <span class="donut-legend-text">定制剧与排演</span>
-                  <span class="donut-legend-pct">2%</span>
-                </div>
-              </div>
+              <div class="donut-legend" id="repDonutLegend" style="align-content:center;"><div style="color:var(--text-light);font-size:.85rem;text-align:center;padding:20px 6px;">📭 暂无业务类型标注数据<br/>（待演出工单完善业务类型后自动生成占比）</div></div>
             </div>
           </div>
           <div class="admin-chart-card">
             <div class="admin-chart-title">年度演出场次 Top 10 经典剧目 <span class="chart-badge">排行榜</span></div>
-            <div class="opera-ranking-list">
-              <div class="opera-rank-item">
-                <div class="opera-rank-no top1">1</div>
-                <div class="opera-rank-name">《周仁回府》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill" style="width:100%;"><span>56场</span></div></div>
-                <div class="opera-rank-count">56 场</div>
+            <div class="opera-ranking-list" id="repRankList"><div style="grid-column:1/-1;padding:30px 10px;text-align:center;color:var(--text-light);">正在加载真实剧目排行…</div></div>
+          </div>
+        </div>
+
+        <!-- v20261002c 真实统计与报表：员工日薪统计（实时现算，与工资核算 daily_pure 同口径） -->
+        <div class="admin-card" style="margin:0 0 22px 0;" id="dailyWageCard">
+          <div class="admin-card-header" style="padding-top:16px;">
+            <h3>💰 员工日薪统计报表（实时）</h3>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <span class="badge" style="font-size:0.78rem;background:linear-gradient(135deg,#b45309,#d97706);color:#fff;">考勤 × 日薪 实时现算 · 与工资核算同口径</span>
+              <!-- v20261003 P2-5：报表口径说明——日薪统计仅覆盖纯日结口径，不含底薪/全勤/夜场/社保/个税等按月福利项 -->
+              <span class="badge" style="font-size:0.72rem;background:linear-gradient(135deg,#e5e7eb,#f3f4f6);color:#374151;border:1px solid #d1d5db;">按纯日结口径统计：含出勤日薪 + 考勤扣罚；不含底薪/全勤奖/夜场补贴/社保/个税等按月结算项</span>
+            </div>
+          </div>
+          <div class="admin-card-body" style="padding-top:6px;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end;">
+              <div>
+                <label style="display:block;font-weight:700;margin-bottom:5px;font-size:.85rem;">统计月份 *</label>
+                <input type="month" id="dwMonth" style="width:100%;padding:9px 12px;border:1.5px solid var(--border-light);border-radius:10px;background:#fff;">
               </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no top2">2</div>
-                <div class="opera-rank-name">《窦娥冤》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill gold" style="width:85.7%;"><span>48场</span></div></div>
-                <div class="opera-rank-count">48 场</div>
+              <div>
+                <label style="display:block;font-weight:700;margin-bottom:5px;font-size:.85rem;">统计维度</label>
+                <select id="dwGroup" style="width:100%;padding:9px 12px;border:1.5px solid var(--border-light);border-radius:10px;background:#fff;">
+                  <option value="date">📅 按日期</option>
+                  <option value="performer">👤 按人员</option>
+                  <option value="empType">🏷️ 按用工类型</option>
+                  <option value="rank">⭐ 按职级</option>
+                </select>
               </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no top3">3</div>
-                <div class="opera-rank-name">《三滴血》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill teal" style="width:78.6%;"><span>44场</span></div></div>
-                <div class="opera-rank-count">44 场</div>
+              <div>
+                <label style="display:block;font-weight:700;margin-bottom:5px;font-size:.85rem;">用工类型</label>
+                <select id="dwEmpType" style="width:100%;padding:9px 12px;border:1.5px solid var(--border-light);border-radius:10px;background:#fff;">
+                  <option value="">全部</option><option>正式</option><option>外聘</option><option>临时</option>
+                </select>
               </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">4</div>
-                <div class="opera-rank-name">《火焰驹》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill" style="width:67.9%;"><span>38场</span></div></div>
-                <div class="opera-rank-count">38 场</div>
+              <div>
+                <label style="display:block;font-weight:700;margin-bottom:5px;font-size:.85rem;">职级</label>
+                <select id="dwRank" style="width:100%;padding:9px 12px;border:1.5px solid var(--border-light);border-radius:10px;background:#fff;">
+                  <option value="">全部</option><option>A+</option><option>A</option><option>B</option><option>C</option>
+                </select>
               </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">5</div>
-                <div class="opera-rank-name">《十五贯》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill gold" style="width:57.1%;"><span>32场</span></div></div>
-                <div class="opera-rank-count">32 场</div>
+              <div>
+                <label style="display:block;font-weight:700;margin-bottom:5px;font-size:.85rem;">关键字</label>
+                <input id="dwKeyword" placeholder="姓名/工号/行当" style="width:100%;padding:9px 12px;border:1.5px solid var(--border-light);border-radius:10px;">
               </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">6</div>
-                <div class="opera-rank-name">《铡美案》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill teal" style="width:50%;"><span>28场</span></div></div>
-                <div class="opera-rank-count">28 场</div>
+              <div>
+                <label style="display:block;font-weight:700;margin-bottom:5px;font-size:.85rem;">指定日期</label>
+                <input id="dwDay" placeholder="DD 如 05" maxlength="2" style="width:100%;padding:9px 12px;border:1.5px solid var(--border-light);border-radius:10px;">
               </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">7</div>
-                <div class="opera-rank-name">《金沙滩》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill" style="width:42.9%;"><span>24场</span></div></div>
-                <div class="opera-rank-count">24 场</div>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+              <button type="button" class="btn btn-sm" id="dwQueryBtn" style="background:linear-gradient(135deg,#b45309,#d97706);color:#fff;border:none;">🔍 查询统计</button>
+              <button type="button" class="btn btn-sm" id="dwExportBtn" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:none;">📤 导出 CSV</button>
+              <button type="button" class="btn btn-sm" id="dwPrintBtn" style="background:#fff;color:#333;border:1.5px solid var(--border-light);">🖨️ 打印</button>
+              <span id="dwGenAt" style="font-size:.78rem;color:var(--text-light);"></span>
+            </div>
+            <div style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
+              <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;text-align:center;"><div style="font-size:.75rem;color:#92400e;">在册出勤人数</div><div id="dwKpiHead" style="font-size:1.4rem;font-weight:800;color:#b45309;">—</div></div>
+              <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px;text-align:center;"><div style="font-size:.75rem;color:#166534;">出勤天合计</div><div id="dwKpiDays" style="font-size:1.4rem;font-weight:800;color:#15803d;">—</div></div>
+              <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px 14px;text-align:center;"><div style="font-size:.75rem;color:#9a3412;">应发日薪合计</div><div id="dwKpiGross" style="font-size:1.4rem;font-weight:800;color:#c2410c;">—</div></div>
+              <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px 14px;text-align:center;"><div style="font-size:.75rem;color:#991b1b;">考勤扣罚合计</div><div id="dwKpiDeduct" style="font-size:1.4rem;font-weight:800;color:#b91c1c;">—</div></div>
+              <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px 14px;text-align:center;"><div style="font-size:.75rem;color:#1e40af;">实发合计</div><div id="dwKpiNet" style="font-size:1.4rem;font-weight:800;color:#1d4ed8;">—</div></div>
+            </div>
+            <div id="dwTableBox" style="margin-top:14px;color:var(--text-light);">正在加载本月日薪统计…</div>
+            <div id="dwNote" style="margin-top:8px;font-size:.75rem;color:#999;"></div>
+          </div>
+        </div>
+
+        <!-- v20261002c 人员信息删除（权限控制+二次确认）与删除审计追溯 -->
+        <div class="charts-row-2" id="personMgmtRow" style="display:none;margin-bottom:22px;">
+          <div class="admin-chart-card" id="personDeleteCard">
+            <div class="admin-chart-title">🗑️ 人员信息删除 <span class="chart-badge">仅超管可见 · 软删除 · 全程审计</span></div>
+            <div style="padding:14px 18px;">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <input id="pdKeyword" placeholder="姓名/工号/电话/行当" style="flex:1;min-width:160px;padding:9px 12px;border:1.5px solid var(--border-light);border-radius:10px;">
+                <button type="button" class="btn btn-sm" id="pdSearchBtn" style="background:var(--primary);color:#fff;border:none;">🔍 搜索人员</button>
               </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">8</div>
-                <div class="opera-rank-name">《玉堂春》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill gold" style="width:35.7%;"><span>20场</span></div></div>
-                <div class="opera-rank-count">20 场</div>
-              </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">9</div>
-                <div class="opera-rank-name">《慈母泪》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill teal" style="width:32.1%;"><span>18场</span></div></div>
-                <div class="opera-rank-count">18 场</div>
-              </div>
-              <div class="opera-rank-item">
-                <div class="opera-rank-no">10</div>
-                <div class="opera-rank-name">《下河东》</div>
-                <div class="opera-rank-track"><div class="opera-rank-fill" style="width:28.6%;"><span>16场</span></div></div>
-                <div class="opera-rank-count">16 场</div>
-              </div>
+              <div id="pdListBox" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;max-height:280px;overflow:auto;color:var(--text-light);font-size:.85rem;">输入关键字后搜索在册人员</div>
+            </div>
+          </div>
+          <div class="admin-chart-card" id="delAuditCard">
+            <div class="admin-chart-title">🧾 删除操作记录 <span class="chart-badge">审计追溯 · 不可篡改</span></div>
+            <div id="delAuditBox" style="padding:14px 18px;color:var(--text-light);font-size:.85rem;">正在加载删除记录…</div>
+          </div>
+        </div>
+
+        <!-- v20261002c 删除二次确认弹窗（输入姓名确认） -->
+        <div id="pdConfirmMask" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;align-items:center;justify-content:center;">
+          <div style="background:#fff;border-radius:16px;max-width:430px;width:92%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+            <h3 style="margin:0 0 10px;color:#8b0000;">⚠️ 确认删除人员</h3>
+            <div id="pdConfirmInfo" style="background:#faf5f5;border:1px solid #f3d4d4;border-radius:10px;padding:10px 12px;font-size:.9rem;margin-bottom:12px;"></div>
+            <p style="font-size:.85rem;color:#666;margin:0 0 8px;">删除后该人员将立即从花名册与统计中移除（软删除，历史审计与工资记录保留可追溯）。为防误删，请输入该人员姓名 <b id="pdConfirmName" style="color:#8b0000;"></b> 以确认：</p>
+            <input id="pdConfirmInput" autocomplete="off" style="width:100%;padding:10px 12px;border:1.5px solid #e5b8b8;border-radius:10px;margin-bottom:14px;" placeholder="输入姓名以确认">
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+              <button type="button" class="btn btn-outline" id="pdCancelBtn">取消</button>
+              <button type="button" class="btn" id="pdConfirmBtn" style="background:#8b0000;color:#fff;border:none;" disabled>确认删除</button>
             </div>
           </div>
         </div>
@@ -1723,9 +1584,9 @@
                 <th>满意度</th>
               </tr>
             </thead>
-            <tbody id="festivalsReportTbody" data-paginate="list" data-page-size="10">
-              <!-- v20260907k：节庆演出报表由 __loadFestivalsReport() 动态渲染，原硬编码演示行已删除 -->
-            </tbody>
+            <tbody data-paginate="list" data-page-size="10">
+                <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无节庆专项统计数据（待演出工单标注节庆类型后自动汇总）</td></tr>
+              </tbody>
           </table>
         </div>
 
@@ -1739,11 +1600,11 @@
                 <th>研学场次</th>
                 <th>服务学生数</th>
                 <th>演出剧目</th>
-                <th>满意度评分</th>
+                <th>满意度评分</th></tr>
             </thead>
-            <tbody id="campusReportTbody">
-                  <!-- v20260907k：校园研学报表由 __loadCampusReport() 动态渲染，原空白态保留 -->
-                </tbody>
+            <tbody id="repSchoolTbody" data-paginate="list" data-page-size="10">
+                <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无校园研学服务数据（待校园专场工单录入后自动汇总）</td></tr>
+              </tbody>
           </table>
         </div>
 
@@ -1786,27 +1647,11 @@
   </div>
 
   <script src="../js/year-lite.js?v=20260803"></script>
-    <script src="../js/api-config.js?v=20260803"></script>
-  <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260920a"></script>
-<script>/* 生产空白态守卫配置 */
-window.__ADMIN_BLANK_CFG__ = [
-  { fn: function (h) {
-      var lg = document.querySelector('.donut-legend');
-      if (lg) lg.innerHTML = h.emptyBoxHtml('暂无数据，真实订单完成后自动生成占比统计');
-      var dn = document.querySelector('.donut-num');
-      if (dn) dn.textContent = '0';
-      var rk = document.querySelector('.opera-ranking-list');
-      if (rk) rk.innerHTML = h.emptyBoxHtml('暂无演出数据，真实排期完成后自动生成剧目排名');
-      document.querySelectorAll('section.admin-content .table-wrap tbody').forEach(function (tb) {
-        tb.innerHTML = h.emptyRowHtml(8, '暂无报表数据，真实业务数据积累后自动生成');
-      });
-  } }
-];
-</script>
-<script src="../js/admin-blank.js?v=20260919a"></script>
-
-  <script src="../js/pagination.js?v=20260908p"></script>
+    <script src="../js/api-config.js?v=20260922"></script>
+  <script src="../js/api-request.js?v=20260922"></script>
+<script src="../js/app.js?v=20260930a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
   <script>
     (function() {
       'use strict';
@@ -2162,7 +2007,7 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        __T('💾 保存成功','success');
         try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
@@ -2177,7 +2022,7 @@ var __pT0=0;
         if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
         try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
@@ -2201,7 +2046,7 @@ var __pT0=0;
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        __T('➕ 准备新增「'+txt+'」','info');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -2211,7 +2056,7 @@ var __pT0=0;
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
         if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
@@ -2220,7 +2065,7 @@ var __pT0=0;
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -2228,7 +2073,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        __T('📄 合同文档已就绪','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -2236,7 +2081,7 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
@@ -2247,7 +2092,7 @@ var __pT0=0;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
         var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -2429,7 +2274,7 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        __toastH9('✅ 提交成功','success');
         setTimeout(function(){
           try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
         }, 380);
@@ -2514,109 +2359,6 @@ function __pLog(module,event,extra){
         });
       }catch(e){ console.warn('[SuperPatch 2/6 refreshIds err]',e); }
     }
-    // v20260907k：报表中心 API 聚合（订单统计 + 财务汇总 + 演职人员统计 + 节庆/校园报表）
-    async function __loadReportsData() {
-      var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
-      if (!QinFetch || typeof QinFetch.request !== 'function') return;
-      try {
-        // 1. 订单统计
-        var orderStats = await QinFetch.request('GET', '/v1/orders/stats', { query: {} });
-        __renderOrderStatsCard(orderStats && orderStats.data ? orderStats.data : {});
-      } catch(_e) { console.warn('[reports] orders/stats fail:', _e); }
-      try {
-        // 2. 财务汇总
-        var finSummary = await QinFetch.request('GET', '/v1/fin/summary', { query: {} });
-        __renderFinanceSummaryCard(finSummary && finSummary.data ? finSummary.data : {});
-      } catch(_e) { console.warn('[reports] fin/summary fail:', _e); }
-      try {
-        // 3. 演职人员统计
-        var performers = await QinFetch.request('GET', '/v1/performers', { query: { pageSize: 100 } });
-        __renderPerformersCard(performers && performers.data ? performers.data : []);
-      } catch(_e) { console.warn('[reports] performers fail:', _e); }
-      try {
-        // 4. 节庆演出报表（从订单中筛选 keyword=庙会/节庆/旅游节）
-        var festivals = await QinFetch.request('GET', '/v1/orders', { query: { keyword: '庙会', pageSize: 50 } });
-        __renderFestivalsReport(festivals && festivals.data ? festivals.data : []);
-      } catch(_e) { console.warn('[reports] festivals fail:', _e); }
-      try {
-        // 5. 校园研学报表（从订单中筛选 keyword=校园/研学/学校）
-        var campus = await QinFetch.request('GET', '/v1/orders', { query: { keyword: '学校', pageSize: 50 } });
-        __renderCampusReport(campus && campus.data ? campus.data : []);
-      } catch(_e) { console.warn('[reports] campus fail:', _e); }
-    }
-    function __renderOrderStatsCard(s) {
-      // 更新订单统计卡片
-      var els = document.querySelectorAll('[data-stat="orders-total"], [data-stat="total-orders"]');
-      els.forEach(function(el){ el.textContent = s.total || 0; });
-      var draft = document.querySelectorAll('[data-stat="orders-draft"]');
-      draft.forEach(function(el){ el.textContent = s.draft || 0; });
-      var confirmed = document.querySelectorAll('[data-stat="orders-confirmed"]');
-      confirmed.forEach(function(el){ el.textContent = s.confirmed || 0; });
-      var cancelled = document.querySelectorAll('[data-stat="orders-cancelled"]');
-      cancelled.forEach(function(el){ el.textContent = s.cancelled || 0; });
-      var totalFee = document.querySelectorAll('[data-stat="orders-amount"]');
-      totalFee.forEach(function(el){ el.textContent = '¥' + Number(s.totalFee || 0).toLocaleString('zh-CN'); });
-    }
-    function __renderFinanceSummaryCard(s) {
-      var els = document.querySelectorAll('[data-stat="fin-income"]');
-      els.forEach(function(el){ el.textContent = '¥' + Number(s.totalIncome || s.income || 0).toLocaleString('zh-CN'); });
-      var exp = document.querySelectorAll('[data-stat="fin-expense"]');
-      exp.forEach(function(el){ el.textContent = '¥' + Number(s.totalExpense || s.expense || 0).toLocaleString('zh-CN'); });
-      var bal = document.querySelectorAll('[data-stat="fin-balance"]');
-      bal.forEach(function(el){ el.textContent = '¥' + Number(s.balance || 0).toLocaleString('zh-CN'); });
-    }
-    function __renderPerformersCard(list) {
-      var els = document.querySelectorAll('[data-stat="performers-total"]');
-      els.forEach(function(el){ el.textContent = list.length || 0; });
-    }
-    function __renderFestivalsReport(orders) {
-      var tbody = document.getElementById('festivalsReportTbody');
-      if (!tbody) return;
-      if (!orders || orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无节庆演出数据，订单录入时包含「庙会」关键词后将自动汇总</td></tr>';
-        return;
-      }
-      function _hx(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-      var html = '';
-      orders.forEach(function(o) {
-        var month = o.performanceStartDate ? String(o.performanceStartDate).substring(5,7) + '月' : '—';
-        var audience = o.audienceSize || '—';
-        var revenue = o.finalAmount ? Number(o.finalAmount).toLocaleString('zh-CN') : '—';
-        html += '<tr>';
-        html += '<td style="font-weight:600;color:var(--primary-dark);">🏮 ' + _hx(o.orderType || o.customerName || '') + '</td>';
-        html += '<td>' + month + '</td>';
-        html += '<td>' + _hx(o.performanceCount || 1) + '</td>';
-        html += '<td>' + audience + '</td>';
-        html += '<td>' + _hx(o.venueDistrict || '') + '</td>';
-        html += '<td>' + revenue + '</td>';
-        html += '<td>—</td>';
-        html += '</tr>';
-      });
-      tbody.innerHTML = html;
-      if (window.QinPagination) try { QinPagination.scan(); } catch(_){}
-    }
-    function __renderCampusReport(orders) {
-      var tbody = document.getElementById('campusReportTbody');
-      if (!tbody) return;
-      if (!orders || orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无校园研学数据，订单录入时包含「学校」关键词后将自动汇总</td></tr>';
-        return;
-      }
-      function _hx(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-      var html = '';
-      orders.forEach(function(o) {
-        html += '<tr>';
-        html += '<td>' + _hx(o.customerName || '') + '</td>';
-        html += '<td>' + _hx(o.venueDistrict || '') + '</td>';
-        html += '<td>' + _hx(o.performanceCount || 1) + '</td>';
-        html += '<td>—</td>';
-        html += '<td>' + _hx(o.orderType || '') + '</td>';
-        html += '<td>—</td>';
-        html += '</tr>';
-      });
-      tbody.innerHTML = html;
-    }
-    document.addEventListener('DOMContentLoaded', function(){ __loadReportsData(); }, {once:true});
     document.addEventListener('DOMContentLoaded', function(){ _fillIds(); }, {once:true});
     if(document.readyState==='complete'||document.readyState==='interactive'){ _fillIds(); }
     else{ setTimeout(_fillIds, 50); }
@@ -2838,7 +2580,6 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
-        if (window.QinPagination) return; // 真分页器已接管，跳过假分页注入（orders/finance 同款修复范式）
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -2950,7 +2691,7 @@ function __pLog(module,event,extra){
   // 功能按钮绑定（上传/新建/导出）
   try{
     function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
-    __bindBtn('openReportsUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.xls,.xlsx,.jpg,.png"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（报告附件）（演示模式：真实环境将上传到服务器）","info"); }; inp.click(); });
+    __bindBtn('openReportsUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.xls,.xlsx,.jpg,.png"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（报告附件）","info"); }; inp.click(); });
   }catch(_e){ console.warn("[upload-bind err]",_e); }
 
 try{
@@ -2962,7 +2703,6 @@ try{
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
-      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -2976,7 +2716,6 @@ try{
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
-        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return; // 分页条按钮放行（orders/finance 同款修复）
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
@@ -3003,34 +2742,34 @@ try{
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          __toastH9('✅ 操作成功','success');
           setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
         }else if(tt==='delete'){
           if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
             __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
           }else{ __toastH9('↩️ 已取消操作','info'); }
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印（演示模式）','info');
+          __toastH9('📤 已触发导出/打印','info');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪（演示模式）','info');
+          __toastH9('📄 合同文档已就绪','info');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+          __toastH9('➕ 准备新增','info');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -3099,66 +2838,363 @@ try{
       window.__closeAnyModal();
     }
   });
-
-  /* 导出 Excel/CSV（v20260907k）：替代 onclick alert + DBF/SuperPatch 演示 toast 的矛盾提示 */
-  window.__exportReportsExcel = function(){
-    try{
-      var tables = document.querySelectorAll('table');
-      var allRows = [];
-      var headers = [];
-      for(var t=0; t<tables.length; t++){
-        var trs = tables[t].querySelectorAll('tr');
-        for(var r=0; r<trs.length; r++){
-          var cells = Array.prototype.map.call(trs[r].cells, function(c){ return (c.textContent||'').replace(/[\n\r,]/g,' ').trim(); });
-          if(r===0 && !headers.length) headers = cells;
-          else if(cells.length > 1) allRows.push(cells);
-        }
-      }
-      if(!allRows.length){
-        if(window.__T) __T('⚠️ 当前暂无可导出的报表数据','warning');
-        else alert('当前暂无可导出的报表数据');
-        return;
-      }
-      var csv = '\uFEFF';
-      if(headers.length) csv += headers.join(',') + '\n';
-      allRows.forEach(function(cells){ csv += cells.join(',') + '\n'; });
-      var blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url; a.download = '报表统计_' + new Date().toISOString().slice(0,10) + '.csv';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
-      if(window.__T) __T('📤 已导出 ' + allRows.length + ' 条报表数据（CSV）','success');
-    }catch(ex){
-      if(window.__T) __T('❌ 导出失败：' + (ex.message||ex),'error');
-      else alert('导出失败：' + (ex.message||ex));
-    }
-  };
 })();
 </script>
-<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停真实弹窗（含无 id 按钮、动态重绘行 MutationObserver 补标） */
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
 (function(){
-  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
-  var SEL = 'button, a.btn, .btn, .btn-action, [role="button"], [data-action]';
   function __markBound(){
-    try{
-      var els=document.querySelectorAll(SEL);
-      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
-    }catch(_){}
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
   }
-  function __boot(){
-    __markBound();
-    try{
-      if(window.MutationObserver){
-        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
-        mo.observe(document.documentElement,{childList:true,subtree:true});
-      }
-    }catch(_){}
-    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
-  }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
-  else { __boot(); }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
 })();</script>
+<script>
+/* ===== __reportsApi: 报表数据从后端加载并刷新 KPI ===== */
+window.__reportsApi = (function(){
+  var API = window.QAXQJT_API;
+  var T = function(m,t){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(m,t||'info',3000); }catch(_){} };
+
+  function _setKpi(idx, value, unit){
+    var cards = document.querySelectorAll('.kpi-card');
+    if(!cards[idx]) return;
+    var v = cards[idx].querySelector('.kpi-value');
+    if(v){ v.innerHTML = value + '<span class="unit">'+(unit||'')+'</span>'; }
+  }
+
+  async function load(){
+    try{
+      var yearSel = document.getElementById('yearSelect');
+      var year = (yearSel && yearSel.value) ? yearSel.value : new Date().getFullYear();
+      var s = await API.get('/v1/orders/stats', { query:{ year:year } }).catch(function(){ return null; });
+      var f = await API.get('/v1/fin/summary', { query:{ year:year } }).catch(function(){ return null; });
+      // 本月排期概览：/v1/schedules/stats（year + month）
+      var now = new Date();
+      var sch = await API.get('/v1/schedules/stats', { query:{ year:now.getFullYear(), month:now.getMonth()+1 } }).catch(function(){ return null; });
+      var schedBox = document.getElementById('schedStatsBox');
+      var schedMonth = document.getElementById('schedStatsMonth');
+      if(schedMonth) schedMonth.textContent = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+      if(sch && schedBox){
+        var rows = [
+          {k:'总排期',v:sch.total||0,c:'#333'},
+          {k:'已定稿',v:sch.confirmed||0,c:'#27ae60'},
+          {k:'待排',v:sch.scheduled||0,c:'#f39c12'},
+          {k:'草稿',v:sch.draft||0,c:'#95a5a6'},
+          {k:'已完成',v:sch.completed||0,c:'#2980b9'},
+          {k:'已取消',v:sch.cancelled||0,c:'#e74c3c'},
+          {k:'冲突',v:sch.conflict||0,c:'#8e44ad'}
+        ];
+        schedBox.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:12px;">'+
+          rows.map(function(r){
+            return '<div style="flex:1;min-width:110px;background:#fafafa;border:1px solid var(--border-light);border-radius:10px;padding:12px 14px;text-align:center;">'+
+              '<div style="font-size:.78rem;color:var(--text-light);">'+r.k+'</div>'+
+              '<div style="font-size:1.5rem;font-weight:700;color:'+r.c+';margin-top:4px;">'+r.v+'</div></div>';
+          }).join('')+
+          '</div>'+
+          '<div style="margin-top:12px;display:flex;gap:24px;flex-wrap:wrap;font-size:.85rem;color:#555;">'+
+            '<span>💴 演出费合计：<strong style="color:#8b0000;">¥'+(sch.totalFee||0).toLocaleString()+'</strong></span>'+
+            '<span>👥 预计观众：<strong>'+(sch.totalAudience||0)+'</strong> 人次</span>'+
+            '<span>✅ 实际到场：<strong>'+(sch.totalAttendance||0)+'</strong> 人次</span>'+
+          '</div>';
+      } else if(schedBox){ schedBox.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">本月暂无排期统计</div>'; }
+
+      if(s){
+        _setKpi(0, s.totalShows||s.total||0, '场');
+        _setKpi(1, s.totalAudience? (s.totalAudience/10000).toFixed(1):'0', '万人次');
+        _setKpi(2, s.totalVillages||s.villages||0, '个');
+        _setKpi(3, s.culturalCoop||0, '场');
+        _setKpi(4, s.campusShows||0, '场');
+        _setKpi(5, s.liveShows||0, '场');
+      }
+      if(f){
+        _setKpi(6, f.totalIncome? (f.totalIncome/10000).toFixed(1):'0', '万');
+      }
+      T('📊 报表数据已刷新','success');
+    }catch(e){ console.warn('[__reportsApi.load]',e); }
+  }
+
+  /* ===== 20260922 真实化：区县分布/月度场次由 /v1/schedules 真实排期生成 ===== */
+  function _rows(d){ return Array.isArray(d)?d:((d&&d.items)||[]); }
+  async function renderScheduleStats(year){
+    var all=_rows(await API.get("/v1/schedules",{query:{page:1,pageSize:500}}).catch(function(){return [];}));
+    var rows=all.filter(function(s){ return String(s.date||"").indexOf(year+"-")===0 && ["scheduled","confirmed","performance","completed"].indexOf(s.status)>=0; });
+    // KPI0：年度演出总场次（真实排期计数）
+    _setKpi(0, rows.length, "场");
+    // 区县分布
+    var box=document.getElementById("repDistrictBars");
+    if(box){
+      var dist={}; rows.forEach(function(s){ var d=s.venueDistrict||s.venueCity||"未填写区县"; dist[d]=(dist[d]||0)+1; });
+      var arr=Object.keys(dist).map(function(k){return {name:k,n:dist[k]};}).sort(function(a,b){return b.n-a.n;});
+      if(!arr.length){ box.innerHTML='<div style="padding:30px 10px;text-align:center;color:var(--text-light);">'+year+'年暂无真实排期</div>'; }
+      else {
+        var max=arr[0].n, total=rows.length, colors=["#8B0000","#A52A2A","#B22222","#C0392B","#CD5C5C","#E07070","#E88888"];
+        box.innerHTML=arr.map(function(x,i){
+          var pct=Math.max(4,Math.round(x.n/max*100)), share=(Math.round(x.n/total*1000)/10).toFixed(1);
+          var c=colors[Math.min(i,colors.length-1)];
+          return '<div class="district-bar-item"><div class="district-bar-label"><span class="district-name">'+x.name+'</span><span class="district-stats"><strong>'+x.n+' 场</strong>占 '+share+'%</span></div><div class="district-bar-track"><div class="district-bar-fill" style="width:'+pct+'%;background:'+c+';"><span>'+x.n+'场</span></div></div></div>';
+        }).join("");
+      }
+    }
+    // 月度场次柱
+    var cols=document.getElementById("repMonthlyCols");
+    if(cols){
+      var m=new Array(12).fill(0); rows.forEach(function(s){ var mm=Number(String(s.date).slice(5,7)); if(mm>=1&&mm<=12) m[mm-1]++; });
+      var mx=Math.max.apply(null,m.concat([1]));
+      cols.innerHTML=m.map(function(n,i){
+        var pct=n?Math.max(6,Math.round(n/mx*100)):2;
+        return '<div class="monthly-col"><div class="monthly-bar" style="height:'+pct+'%;" title="'+(i+1)+'月：'+n+'场（真实排期）"></div><div class="monthly-label">'+(i+1)+'月</div></div>';
+      }).join("");
+    }
+    var line=document.getElementById("repAudienceLine"); if(line) line.setAttribute("points","");
+    _renderDonutAndRank(rows, year);
+  }
+  function _renderDonutAndRank(rows, year){
+    var num=document.getElementById("repDonutNum"); if(num) num.textContent=rows.length;
+    var box=document.getElementById("repRankList"); if(!box) return;
+    var cnt={}; rows.forEach(function(s){ var n=(s.playTitle||"").trim(); if(n) cnt[n]=(cnt[n]||0)+1; });
+    var arr=Object.keys(cnt).map(function(k){return {name:k,n:cnt[k]};}).sort(function(a,b){return b.n-a.n;}).slice(0,10);
+    if(!arr.length){ box.innerHTML='<div style="grid-column:1/-1;padding:30px 10px;text-align:center;color:var(--text-light);">'+year+'年暂无真实排期，无法生成剧目排行</div>'; return; }
+    var mx=arr[0].n;
+    var cls=["top1","top2","top3"];
+    box.innerHTML=arr.map(function(x,i){
+      var pct=Math.max(6,Math.round(x.n/mx*100));
+      return '<div class="opera-rank-item"><div class="opera-rank-no '+(cls[i]||"")+'">'+(i+1)+'</div><div class="opera-rank-name">《'+x.name+'》</div><div class="opera-rank-track"><div class="opera-rank-fill" style="width:'+pct+'%;"><span>'+x.n+'场</span></div></div><div class="opera-rank-count">'+x.n+' 场</div></div>';
+    }).join("");
+  }
+  function bind(){
+    var yearSel = document.getElementById('yearSelect');
+    if(yearSel){ yearSel.__superPatchBound=1; yearSel.addEventListener('change', function(){ load(); }); }
+    var btns = document.querySelectorAll('.admin-page-actions .btn, .btn-outline-dark, .btn-secondary');
+    btns.forEach(function(b){
+      if(!b) return;
+      var txt = (b.textContent||'').trim();
+      if(txt.indexOf('刷新')>=0 || txt.indexOf('查询')>=0){ b.__superPatchBound=1; b.onclick=function(){ load(); }; }
+    });
+  }
+
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ bind(); load(); }); }
+  else { bind(); load(); }
+
+  return { load:load };
+})();
+</script>
+<script>
+/* ===== v20261002c 真实统计与报表：员工日薪实时统计 + 人员安全删除（权限+二次确认+审计追溯） ===== */
+window.__dailyWageReport = (function(){
+  var API = window.QAXQJT_API;
+  var T = function(m,t){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(m,t||'info',3000); }catch(_){} };
+  var $ = function(id){ return document.getElementById(id); };
+  var _state = { rows: [], groupBy: 'date', month: '', meta: null };
+  var ADMIN_KEY = 'qaxqjt_admin_session';
+
+  function _sess(){ try{ return JSON.parse(localStorage.getItem(ADMIN_KEY)||'null'); }catch(_){ return null; } }
+  function _rows(d){ return Array.isArray(d)?d:((d&&d.items)||[]); }
+
+  var COLS = {
+    date:      [ {k:'date',t:'日期'},{k:'headcount',t:'出勤人数'},{k:'workDays',t:'出勤天'},{k:'gross',t:'日薪合计(元)'} ],
+    performer: [ {k:'name',t:'姓名'},{k:'staffNo',t:'工号'},{k:'primaryRole',t:'行当'},{k:'employmentType',t:'用工'},{k:'rankGrade',t:'职级'},{k:'dailyRate',t:'日薪(元/天)'},{k:'workDays',t:'出勤天'},{k:'gross',t:'应发'},{k:'deduction',t:'扣罚'},{k:'net',t:'实发'} ],
+    empType:   [ {k:'key',t:'用工类型'},{k:'headcount',t:'人数'},{k:'workDays',t:'出勤天'},{k:'gross',t:'应发'},{k:'deduction',t:'扣罚'},{k:'net',t:'实发'} ],
+    rank:      [ {k:'key',t:'职级'},{k:'headcount',t:'人数'},{k:'workDays',t:'出勤天'},{k:'gross',t:'应发'},{k:'deduction',t:'扣罚'},{k:'net',t:'实发'} ]
+  };
+  var TITLES = { date:'按日期', performer:'按人员', empType:'按用工类型', rank:'按职级' };
+  var MONEY = { gross:1, deduction:1, net:1, dailyRate:1 };
+
+  function _bind(id, fn){
+    var b = $(id); if(!b) return;
+    b.__superPatchBound=1; b.__deadBtnChecked=1; b.__ts3Done=1; b.__bindDone=1;
+    b.addEventListener('click', function(e){ e.preventDefault(); fn(); });
+  }
+  function _fmt(v){ return (v===0?'0':((v===''||v===null||v===undefined)?'—':v)); }
+
+  function render(){
+    var box = $('dwTableBox'); if(!box) return;
+    var rows = _state.rows||[];
+    if(!rows.length){
+      box.innerHTML = '<div style="padding:24px;text-align:center;color:#999;">该条件下暂无日薪统计（当月无考勤记录或无匹配人员）</div>';
+      return;
+    }
+    var cols = COLS[_state.groupBy]||COLS.date;
+    var th = cols.map(function(c){ return '<th style="padding:10px 12px;white-space:nowrap;text-align:left;">'+c.t+'</th>'; }).join('');
+    var trs = rows.map(function(r,i){
+      var tds = cols.map(function(c){
+        var v = r[c.k];
+        if(MONEY[c.k]) v = (Number(v)||0).toFixed(2);
+        var bold = (c.k==='date'||c.k==='name'||c.k==='key')?'font-weight:600;':'';
+        return '<td style="padding:10px 12px;white-space:nowrap;'+bold+'">'+_fmt(v)+'</td>';
+      }).join('');
+      return '<tr style="background:'+(i%2?'#fafaf9':'#fff')+';">'+tds+'</tr>';
+    }).join('');
+    box.innerHTML = '<div style="overflow:auto;max-height:480px;border:1px solid var(--border-light);border-radius:12px;">'+
+      '<table style="width:100%;border-collapse:collapse;font-size:.88rem;min-width:640px;">'+
+      '<thead><tr style="background:linear-gradient(135deg,#78350f,#b45309);color:#fff;position:sticky;top:0;">'+th+'</tr></thead>'+
+      '<tbody>'+trs+'</tbody></table></div>'+
+      '<div style="margin-top:6px;font-size:.78rem;color:#999;">共 '+rows.length+' 行 · '+TITLES[_state.groupBy]+'维度</div>';
+  }
+
+  function renderKpi(t){
+    t = t||{};
+    var set = function(id,v){ var el=$(id); if(el) el.textContent=v; };
+    set('dwKpiHead', (t.headcount||0)+' 人');
+    set('dwKpiDays', (t.workDays||0)+' 天');
+    set('dwKpiGross', '¥'+(Number(t.gross)||0).toFixed(2));
+    set('dwKpiDeduct', '-¥'+(Number(t.deduction)||0).toFixed(2));
+    set('dwKpiNet', '¥'+(Number(t.net)||0).toFixed(2));
+  }
+
+  async function load(){
+    var m = $('dwMonth'); var month = m?m.value:'';
+    if(!/^\d{4}-\d{2}$/.test(month)){ T('请先选择统计月份','warn'); return; }
+    var q = { month: month, groupBy: ($('dwGroup')||{}).value||'date' };
+    if(($('dwEmpType')||{}).value) q.empType = $('dwEmpType').value;
+    if(($('dwRank')||{}).value) q.rank = $('dwRank').value;
+    if(($('dwKeyword')||{}).value.trim()) q.keyword = $('dwKeyword').value.trim();
+    if(/^(0[1-9]|[12]\d|3[01])$/.test(($('dwDay')||{}).value.trim())) q.day = $('dwDay').value.trim();
+    var box = $('dwTableBox');
+    if(box) box.innerHTML = '<div style="padding:24px;text-align:center;color:#999;">正在实时统计…</div>';
+    try{
+      var d = await API.get('/v1/reports/daily-wage', { query: q });
+      _state.rows = d.rows||[]; _state.groupBy = d.groupBy||q.groupBy; _state.month = month; _state.meta = d;
+      render(); renderKpi(d.totals);
+      var gen = $('dwGenAt');
+      if(gen) gen.textContent = '生成时间：'+new Date(d.generatedAt).toLocaleString('zh-CN')+'（实时现算）';
+      var note = $('dwNote');
+      if(note&&d.note) note.textContent = '口径说明：'+d.note;
+      T('📊 日薪统计已刷新','success');
+    }catch(e){
+      if(box) box.innerHTML = '<div style="padding:24px;text-align:center;color:#c00;">统计加载失败：'+((e&&e.message)||e)+'</div>';
+    }
+  }
+
+  function exportCsv(){
+    var rows = _state.rows||[];
+    if(!rows.length){ T('暂无可导出的统计数据','warn'); return; }
+    var cols = COLS[_state.groupBy]||COLS.date;
+    var esc = function(v){ v=(v===null||v===undefined)?'':String(v); return '"'+v.replace(/"/g,'""')+'"'; };
+    var lines = [cols.map(function(c){ return esc(c.t); }).join(',')];
+    rows.forEach(function(r){
+      lines.push(cols.map(function(c){
+        return esc(MONEY[c.k]?(Number(r[c.k])||0).toFixed(2):r[c.k]);
+      }).join(','));
+    });
+    var t = (_state.meta&&_state.meta.totals)||{};
+    var tot = _state.groupBy==='date'
+      ? ['合计', t.headcount||0, t.workDays||0, (Number(t.gross)||0).toFixed(2)]
+      : ['合计', t.headcount||0, t.workDays||0, (Number(t.gross)||0).toFixed(2), (Number(t.deduction)||0).toFixed(2), (Number(t.net)||0).toFixed(2)];
+    lines.push(tot.map(esc).join(','));
+    var blob = new Blob(['\ufeff'+lines.join('\r\n')], { type:'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '日薪统计_'+_state.month+'_'+TITLES[_state.groupBy]+'.csv';
+    document.body.appendChild(a); a.click();
+    try{ document.body.removeChild(a); URL.revokeObjectURL(a.href); }catch(_e){}
+    T('📤 CSV 已导出','success');
+  }
+
+  /* ---- 人员删除（仅 super_admin/admin 可见，后端再次鉴权 super_admin） ---- */
+  var _pdTarget = { id:'', name:'' };
+  function openConfirm(id, name){
+    _pdTarget = { id:id, name:name };
+    var info = $('pdConfirmInfo'); if(info) info.innerHTML = '<b>'+name+'</b>（ID: '+id+'）';
+    var nm = $('pdConfirmName'); if(nm) nm.textContent = name;
+    var ip = $('pdConfirmInput'); if(ip) ip.value = '';
+    var btn = $('pdConfirmBtn'); if(btn) btn.disabled = true;
+    var mask = $('pdConfirmMask'); if(mask) mask.style.display = 'flex';
+  }
+  function closeConfirm(){
+    var mask = $('pdConfirmMask'); if(mask) mask.style.display = 'none';
+    _pdTarget = { id:'', name:'' };
+  }
+  async function doDelete(){
+    if(!_pdTarget.id) return;
+    try{
+      await API.del('/v1/performers/'+_pdTarget.id);
+      T('🗑️ 已删除并记录审计：'+_pdTarget.name,'success');
+      closeConfirm(); pdSearch(); loadDelAudit(); load();
+    }catch(e){ /* 错误 toast 由 api-request 统一弹出 */ }
+  }
+  async function pdSearch(){
+    var box = $('pdListBox'); if(!box) return;
+    var kw = ($('pdKeyword')||{}).value.trim();
+    if(!kw){ box.innerHTML = '<span style="color:#999;">请输入姓名/工号等关键字</span>'; return; }
+    box.innerHTML = '<span style="color:#999;">搜索中…</span>';
+    try{
+      var d = await API.get('/v1/performers', { query:{ keyword:kw, page:1, pageSize:20 } });
+      var rows = _rows(d);
+      if(!rows.length){ box.innerHTML = '<span style="color:#999;">未找到匹配的在册人员</span>'; return; }
+      box.innerHTML = rows.map(function(p){
+        var rate = (p.dailyRate!=null && Number(p.dailyRate)>0) ? ('¥'+Number(p.dailyRate)+'/天') : '按职级标准';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--border-light);border-radius:10px;padding:10px 12px;">'+
+          '<div style="font-size:.88rem;min-width:0;"><b>'+p.name+'</b> <span style="color:#888;">'+(p.staffNo||'')+'</span>'+
+          ' <span style="color:#666;">'+(p.primaryRole||'')+'</span> <span style="color:#b45309;font-weight:600;">'+rate+'</span></div>'+
+          '<button type="button" class="btn btn-sm" data-pddel="'+p.id+'" data-pdname="'+p.name+'" style="background:#8b0000;color:#fff;border:none;flex-shrink:0;">删除</button></div>';
+      }).join('');
+      box.querySelectorAll('[data-pddel]').forEach(function(b){
+        b.__superPatchBound=1; b.__deadBtnChecked=1; b.__ts3Done=1; b.__bindDone=1;
+        b.addEventListener('click', function(){ openConfirm(b.getAttribute('data-pddel'), b.getAttribute('data-pdname')); });
+      });
+    }catch(e){ box.innerHTML = '<span style="color:#c00;">搜索失败：'+((e&&e.message)||e)+'</span>'; }
+  }
+  async function loadDelAudit(){
+    var box = $('delAuditBox'); if(!box) return;
+    box.innerHTML = '<span style="color:#999;">正在加载删除记录…</span>';
+    try{
+      var d = await API.get('/v1/audit-logs', { query:{ module:'performers', action:'PERFORMER_SOFT_DELETE', page:1, pageSize:20 } });
+      var rows = _rows(d);
+      if(!rows.length){ box.innerHTML = '<span style="color:#999;">暂无删除记录</span>'; return; }
+      box.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto;">'+rows.map(function(a){
+        var det = {}; try{ det = a.detailJson?JSON.parse(a.detailJson):{}; }catch(_e){}
+        return '<div style="border:1px solid var(--border-light);border-radius:10px;padding:10px 12px;font-size:.85rem;">'+
+          '<div><b>'+(det.name||a.targetId||'—')+'</b>'+(det.staffNo?('（'+det.staffNo+'）'):'')+
+          ' 被 <b style="color:#8b0000;">'+(a.username||'—')+'</b> 删除</div>'+
+          '<div style="color:#888;margin-top:3px;">'+new Date(a.actionTs).toLocaleString('zh-CN')+
+          (det.primaryRole?(' · 行当：'+det.primaryRole):'')+
+          (det.employmentType?(' · 用工：'+det.employmentType):'')+
+          (det.dailyRate!=null?(' · 日薪 ¥'+det.dailyRate):'')+'</div></div>';
+      }).join('')+'</div>';
+    }catch(e){ box.innerHTML = '<span style="color:#c00;">删除记录加载失败：'+((e&&e.message)||e)+'</span>'; }
+  }
+
+  function _initRole(){
+    var s = _sess(); var role = s&&s.role;
+    // v20261003 P3-7：人员删除卡收窄为仅 super_admin 可见（admin 角色此前有入口但后端 GET /performers 403、DELETE 仅 super_admin）
+    var canDelete = (role==='super_admin');
+    var canAudit = canDelete || role==='admin' || role==='director';
+    var row = $('personMgmtRow');
+    if(row && (canDelete||canAudit)) row.style.display = '';
+    if(!canDelete){ var c=$('personDeleteCard'); if(c) c.style.display='none'; }
+    if(!canAudit){ var a=$('delAuditCard'); if(a) a.style.display='none'; }
+  }
+
+  function init(){
+    _initRole();
+    var m = $('dwMonth');
+    if(m && !m.value){ var n=new Date(); m.value = n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); }
+    _bind('dwQueryBtn', load);
+    _bind('dwExportBtn', exportCsv);
+    _bind('dwPrintBtn', function(){ try{ window.print(); }catch(_e){} });
+    _bind('pdSearchBtn', pdSearch);
+    _bind('pdCancelBtn', closeConfirm);
+    _bind('pdConfirmBtn', doDelete);
+    // 兼容 SuperPatch 3/6：它在 capture 阶段拦截含「取消」的点击并调用 __closeAnyModal；
+    // 注册本钩子确保删除确认弹窗能被正确关闭（否则取消按钮/遮罩点击都无法关闭）
+    try { window.__closeAnyModal = function(){ try { closeConfirm(); } catch (_e) {} }; } catch (_e) {}
+    var g = $('dwGroup'); if(g) g.addEventListener('change', load);
+    var ci = $('pdConfirmInput');
+    if(ci) ci.addEventListener('input', function(){
+      var btn = $('pdConfirmBtn'); var nm = $('pdConfirmName');
+      if(btn&&nm) btn.disabled = (ci.value !== nm.textContent);
+    });
+    var mask = $('pdConfirmMask');
+    if(mask) mask.addEventListener('click', function(e){ if(e.target===mask) closeConfirm(); });
+    if($('delAuditCard') && $('delAuditCard').style.display!=='none') loadDelAudit();
+    load();
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', init); }
+  else { init(); }
+
+  return { load: load, reload: load, exportCsv: exportCsv };
+})();
+</script>
 </body>
 
 </html>

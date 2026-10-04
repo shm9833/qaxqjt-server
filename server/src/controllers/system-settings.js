@@ -10,6 +10,7 @@ const { success, created, pageMeta, noContent } = require('../utils/response');
 const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
+const securityConfig = require('../services/security-config');
 
 function toApi(row) {
   if (!row) return null;
@@ -82,6 +83,7 @@ const create = async ctx => {
     ts: nowMs()
   };
   const row = await prisma.setting.create({ data });
+  if (row.key === securityConfig.KEY_CAPTCHA) securityConfig.reloadCaptchaEnabled().catch(() => {});
   try { await audit({ ctx, module: 'setting', action: 'SETTING_CREATE', targetId: row.id, detail: { key: row.key, group: row.group } }); } catch (_) {}
   return created(ctx, toApi(row));
 };
@@ -97,6 +99,7 @@ const update = async ctx => {
   if (b.isPublic !== undefined) data.isPublic = b.isPublic;
   data.updatedBy = ctx.state.user ? ctx.state.user.username : null;
   const row = await prisma.setting.update({ where: { id: ctx.params.id }, data });
+  if (row.key === securityConfig.KEY_CAPTCHA) securityConfig.reloadCaptchaEnabled().catch(() => {});
   try { await audit({ ctx, module: 'setting', action: 'SETTING_UPDATE', targetId: row.id, detail: { key: row.key, fields: Object.keys(data).filter(k => k !== 'ts' && k !== 'updatedBy') } }); } catch (_) {}
   return success(ctx, toApi(row));
 };
@@ -136,6 +139,7 @@ const batchUpdate = async ctx => {
     });
     results.push(toApi(row));
   }
+  if (results.some(r => r.key === securityConfig.KEY_CAPTCHA)) securityConfig.reloadCaptchaEnabled().catch(() => {});
   try { await audit({ ctx, module: 'setting', action: 'SETTING_BATCH_UPDATE', targetId: 'batch', detail: { count: results.length, keys: results.map(r => r.key) } }); } catch (_) {}
   return success(ctx, results);
 };

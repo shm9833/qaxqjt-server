@@ -17,8 +17,12 @@ const list = async ctx => {
   if (kw) where.OR = [{ title: { contains: kw } }, { subtitle: { contains: kw } }];
   if (ctx.query.type) where.type = ctx.query.type;
   if (ctx.query.publishStatus) where.publishStatus = ctx.query.publishStatus;
+  // v20260927：后台列表同权重时按创建时间倒序，保证刚保存的文章排在前面
   const [rows, total] = await Promise.all([
-    prisma.contentV2.findMany({ where, skip, take, orderBy: { sortWeight: 'desc' } }),
+    prisma.contentV2.findMany({
+      where, skip, take,
+      orderBy: [{ sortWeight: 'desc' }, { createdAt: 'desc' }]
+    }),
     prisma.contentV2.count({ where })
   ]);
   return success(ctx, rows, { ...pageMeta(page, pageSize, total), total });

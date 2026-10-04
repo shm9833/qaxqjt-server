@@ -41,7 +41,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>道具服装设备库存管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -562,7 +562,7 @@
             <span class="menu-icon">👥</span>
             <span>账号权限管理</span>
           </a>
-          <a href="schedule.html" data-role-level="800" class="admin-menu-item">
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
             <span class="menu-badge">8</span>
@@ -603,6 +603,10 @@
             <span class="menu-icon">📝</span>
             <span>官网内容管理</span>
           </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
+          </a>
           <a href="reports.html" data-role-level="700" class="admin-menu-item">
             <span class="menu-icon">📈</span>
             <span>数据统计报表</span>
@@ -634,6 +638,9 @@
           <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
             <span>🏠</span><span>返回前台首页</span>
           </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
+          </a>
           <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
             <span>🚪</span><span>退出登录</span>
           </a>
@@ -650,7 +657,7 @@
           <div class="admin-breadcrumb">
             <a href="index.html">首页</a>
             <span class="separator">/</span>
-            <a href="#">资产管理</a>
+            <span class="current">道具服装库存</span>
             <span class="separator">/</span>
             <span class="current">道具服装设备库存管理</span>
           </div>
@@ -849,47 +856,39 @@
         <div class="admin-card" style="padding:0;overflow:hidden;">
           <div class="inv-tabs" id="invTabs">
             <div class="inv-tab active" data-tab="all">
-              📦 全部库存 <span class="tab-badge">486</span>
+              📦 全部库存 <span class="tab-badge" id="invTabCntAll">—</span>
             </div>
             <div class="inv-tab" data-tab="costume">
-              👘 戏曲服装 <span class="tab-badge">186</span>
+              👘 戏曲服装 <span class="tab-badge" id="invTabCntCostume">—</span>
             </div>
             <div class="inv-tab" data-tab="helmet">
-              🎩 盔头道具 <span class="tab-badge">212</span>
+              🎩 盔头道具 <span class="tab-badge" id="invTabCntHelmet">—</span>
             </div>
             <div class="inv-tab" data-tab="audio">
-              🎤 灯光音响设备 <span class="tab-badge">58</span>
+              🎤 灯光音响设备 <span class="tab-badge" id="invTabCntAudio">—</span>
             </div>
             <div class="inv-tab" data-tab="stage">
-              🎪 布景舞台 <span class="tab-badge">30</span>
+              🎪 布景舞台 <span class="tab-badge" id="invTabCntStage">—</span>
             </div>
           </div>
 
           <div class="admin-card-body">
-            <div class="filter-bar">
+            <div class="filter-bar" id="invListFilterBar">
               <div class="form-group">
                 <label>分类：</label>
-                <select class="form-control">
+                <select class="form-control" id="invFilterCategory">
                   <option value="">全部分类</option>
-                  <option>蟒袍</option>
-                  <option>女帔</option>
-                  <option>靠</option>
-                  <option>褶子</option>
-                  <option>盔头</option>
-                  <option>髯口</option>
-                  <option>把子</option>
-                  <option>线阵音响</option>
-                  <option>灯光设备</option>
                 </select>
               </div>
               <div class="form-group">
                 <label>状态：</label>
-                <select class="form-control">
+                <select class="form-control" id="invFilterStatus">
                   <option value="">全部状态</option>
-                  <option>在库</option>
-                  <option>借出</option>
-                  <option>维修中</option>
-                  <option>报废</option>
+                  <option value="in_stock">在库</option>
+                  <option value="borrowed">借出</option>
+                  <option value="repair">维修中</option>
+                  <option value="scrapped">报废</option>
+                  <option value="out_of_stock">缺货</option>
                 </select>
               </div>
               <div class="search-box">
@@ -988,8 +987,9 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
-  <script src="../js/pagination.js?v=20260803"></script>
+<script src="../js/app.js?v=20260930a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
   <script>
     (function() {
       'use strict';
@@ -1731,11 +1731,25 @@ function __pLog(module,event,extra){
   }catch(e){ console.warn('[SuperPatch 3/6 init err]',e); }
 
   try{
+    /* v20260926 停用：原 SuperPatch 4/6 伪造分页栏（条数写死 100、翻页不切数据，
+       且 MutationObserver 会把分页栏无限自嵌套）。真实分页统一由 /js/pagination.js 的 QinPagination 渲染 */
+    (function(){
+      try{
+        document.querySelectorAll('.sp-pg-toolbar-20260730').forEach(function(b){ try{ b.remove(); }catch(_){} });
+        document.querySelectorAll('div.pagination').forEach(function(d){
+          if(!d.querySelector('.pagination-bar')){ try{ d.remove(); }catch(_){} }
+        });
+        if(window.QinPagination && QinPagination.refresh){ setTimeout(function(){ try{ QinPagination.refresh(); }catch(_){} }, 60); }
+      }catch(_){}
+    })();
+    throw new Error('SP4/6 disabled v20260926: real pagination via QinPagination');
+    // eslint-disable-next-line no-unreachable
     console.info('[SuperPatch 4/6] 分页器标准化 (pagination.js结构) 初始化...');
     var pgStateMap = new WeakMap();
     function _isPgContainer(el){
       try{
         if(!el || el.nodeType!==1) return false;
+        if(el.closest && el.closest('.sp-pg-toolbar-20260730,.pagination-toolbar')) return false;
         var tag = (el.tagName||'').toUpperCase();
         if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
         var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
@@ -1764,7 +1778,8 @@ function __pLog(module,event,extra){
     }
     function _buildPg(container){
       try{
-        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
+        if(container.hasAttribute('data-pg-built')||container.querySelector('.sp-pg-toolbar-20260730')) return; container.setAttribute('data-pg-built','1');
+        if(container.classList && (container.classList.contains('sp-pg-toolbar-20260730')||container.classList.contains('pagination-toolbar'))) return;
         var oldToolbar = container.querySelector('.pagination-toolbar');
         if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
         var st = _ensurePgState(container);
@@ -1779,6 +1794,7 @@ function __pLog(module,event,extra){
         if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
         var wrap = document.createElement('div');
         wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.setAttribute('data-pg-built','1');
         wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
         wrap.innerHTML = ''+
           '<button class="btn btn-sm" data-pg="first">首页</button>'+
@@ -1876,7 +1892,7 @@ function __pLog(module,event,extra){
     function _scanPagination(){
       try{
         var all = document.querySelectorAll('div,nav,section,span');
-        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
+        all.forEach(function(el){ if(el.hasAttribute('data-pg-built')) return; if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
         if(!document.getElementById('_pgPatchCSS20260730')){
           sty.id='_pgPatchCSS20260730';
@@ -2165,8 +2181,10 @@ window.__invApi = (function(){
       else { m.remove(); window.removeEventListener('click', handler, true); }
     }
     window.addEventListener('click', handler, true);
+    /* v20260929fix：点击遮罩空白处关闭弹窗（target 为根遮罩本身，不影响内容区点击），与全站弹窗交互一致 */
+    m.addEventListener('click', function(ev){ if(ev.target === m){ m.remove(); try{ window.removeEventListener(handler, true); }catch(_){} } });
   }
-  function _esc(s){ return (s==null?'':String(s)).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
+  function _esc(s){ return (s==null?'':String(s)).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});}
   function _statusBadge(s){
     var map = { in_stock:'stock', borrowed:'borrowed', repair:'repair', scrapped:'scrapped', out_of_stock:'out' };
     var txt = { in_stock:'在库', borrowed:'借出', repair:'维修中', scrapped:'报废', out_of_stock:'缺货' };
@@ -2175,21 +2193,82 @@ window.__invApi = (function(){
   }
   function _fmtDate(d){ if(!d) return '—'; try{ return new Date(d).toISOString().slice(0,10); }catch(_){ return '—'; } }
 
+  // ====== v20260926 修复：全量缓存 + 本地筛选/tab/徽标 ======
+  // 旧实现用 document.querySelector('select') 取分类，误中顶部「资产补图」表单的 select(name=invCategory, 默认 clothes)，
+  // 导致每次请求都带 category=clothes，后端无匹配 → 列表永远“暂无库存数据”。
+  var __ALL_ITEMS = [];
+  var __ACTIVE_TAB = 'all';
+  // 后端 category 为自由文本（如“道具”），按关键词归入 4 个业务大类
+  function _tabOf(it){
+    var c = String(it.category||'');
+    if(/服|蟒|帔|靠|褶|衣|袍|裙/.test(c)) return 'costume';
+    if(/音|响|灯|光|设备|话筒|音箱|喇叭|功放|麦克/.test(c)) return 'audio';
+    if(/景|舞台|布景|幕布|大幕/.test(c)) return 'stage';
+    if(/道具|盔|髯|把|帽|马鞭|刀|枪|剑|兵器/.test(c)) return 'helmet';
+    return 'other';
+  }
+  function _filterBar(){ return document.getElementById('invListFilterBar'); }
+
   async function load(){
     var tb = _tbody();
     if(!tb){ return; }
     try{
-      var q = { page:1, pageSize:200 };
-      var sel1 = document.querySelector('select'); if(sel1 && sel1.value) q.category = sel1.value;
-      var kw = document.querySelector('.search-box input'); if(kw && kw.value.trim()) q.keyword = kw.value.trim();
-      var rows = await API.get('/v1/inventory/items', { query:q });
-      rows = rows || [];
-      tb.innerHTML = '';
-      if(!rows.length){
-        tb.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--text-light);">暂无库存数据，点击「新购入库」添加</td></tr>';
-        return;
+      var rows = await API.get('/v1/inventory/items', { query:{ page:1, pageSize:500 } });
+      rows = Array.isArray(rows) ? rows : (rows && (rows.items||rows.list)) || [];
+      __ALL_ITEMS = rows;
+      _refreshCategoryOptions();
+      _updateTabBadges();
+      _updateStats(rows);
+      renderFiltered();
+    }catch(e){ console.warn('[__invApi.load]',e); T('❌ 加载失败：'+(e.message||e),'error'); }
+  }
+
+  function _refreshCategoryOptions(){
+    var bar = _filterBar(); var sel = bar && bar.querySelector('#invFilterCategory');
+    if(!sel) return;
+    var keep = sel.value;
+    var cats = {};
+    __ALL_ITEMS.forEach(function(it){ var c = (it.category||'').trim(); if(c) cats[c]=1; });
+    var names = Object.keys(cats).sort();
+    sel.innerHTML = '<option value="">全部分类</option>' + names.map(function(c){ return '<option value="'+_esc(c)+'">'+_esc(c)+'</option>'; }).join('');
+    sel.value = names.indexOf(keep)>=0 ? keep : '';
+  }
+
+  function _updateTabBadges(){
+    var cnt = { all:__ALL_ITEMS.length, costume:0, helmet:0, audio:0, stage:0, other:0 };
+    __ALL_ITEMS.forEach(function(it){ cnt[_tabOf(it)]++; });
+    var map = { all:'invTabCntAll', costume:'invTabCntCostume', helmet:'invTabCntHelmet', audio:'invTabCntAudio', stage:'invTabCntStage' };
+    Object.keys(map).forEach(function(k){ var el = document.getElementById(map[k]); if(el) el.textContent = String(cnt[k]); });
+  }
+
+  function _filteredRows(){
+    var bar = _filterBar();
+    var cat = bar && bar.querySelector('#invFilterCategory');
+    var stat = bar && bar.querySelector('#invFilterStatus');
+    var kwEl = bar && bar.querySelector('.search-box input');
+    var catV = cat ? cat.value : '';
+    var statV = stat ? stat.value : '';
+    var kw = kwEl ? kwEl.value.trim().toLowerCase() : '';
+    return __ALL_ITEMS.filter(function(it){
+      if(__ACTIVE_TAB!=='all' && _tabOf(it)!==__ACTIVE_TAB) return false;
+      if(catV && String(it.category||'')!==catV) return false;
+      if(statV && String(it.status||'in_stock')!==statV) return false;
+      if(kw){
+        var hay = [it.name,it.sku,it.specModel,it.category,it.unit,it.location,it.borrower].join(' ').toLowerCase();
+        if(hay.indexOf(kw)<0) return false;
       }
-      var html = rows.map(function(it){
+      return true;
+    });
+  }
+
+  function renderFiltered(){
+    var tb = _tbody(); if(!tb) return;
+    var rows = _filteredRows();
+    tb.innerHTML = '';
+    if(!rows.length){
+      tb.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--text-light);">暂无库存数据，点击「新购入库」添加</td></tr>';
+    }else{
+      tb.innerHTML = rows.map(function(it){
         return '<tr data-id="'+_esc(it.id)+'">'
           + '<td style="text-align:center;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>'
           + '<td><strong style="color:var(--primary);">'+_esc(it.sku||'—')+'</strong></td>'
@@ -2214,17 +2293,70 @@ window.__invApi = (function(){
           + '<button class="btn btn-sm __inv-del" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" title="删除">🗑</button>'
           + '</div></td></tr>';
       }).join('');
-      tb.innerHTML = html;
-      _bindRowActions();
-      _updateStats(rows);
-    }catch(e){ console.warn('[__invApi.load]',e); T('❌ 加载失败：'+(e.message||e),'error'); }
+    }
+    _bindRowActions();
+    try{ if(window.QinPagination && QinPagination.refresh) QinPagination.refresh(); }catch(_){}
+  }
+
+  function _exportCsv(){
+    var rows = _filteredRows();
+    if(!rows.length){ T('⚠️ 当前没有可导出的库存数据','error'); return; }
+    var head = ['物品编号','物品名称','分类','规格型号','数量','安全库存','单位','入库日期','当前状态','借用人','预计归还','上次盘点','存放位置','备注'];
+    var lines = rows.map(function(it){
+      return [it.sku,it.name,it.category,it.specModel,it.quantity||0,it.safetyStock==null?'':it.safetyStock,it.unit,_fmtDate(it.createdAt),it.status||'in_stock',it.borrower,it.expectedReturnDate?_fmtDate(it.expectedReturnDate):'',it.lastCheckDate?_fmtDate(it.lastCheckDate):'',it.location,it.remark]
+        .map(function(v){ v = String(v==null?'':v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }).join(',');
+    });
+    var csv = '﻿' + head.join(',') + '\n' + lines.join('\n');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8;' }));
+    a.download = '库存清单_'+new Date().toISOString().slice(0,10)+'.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    T('✅ 已导出 '+rows.length+' 条库存记录','success');
+  }
+
+  function _bindListControls(){
+    var bar = _filterBar();
+    if(bar && !bar.__invFilterBound){
+      bar.__invFilterBound = 1;
+      bar.querySelector('#invFilterCategory').addEventListener('change', renderFiltered);
+      bar.querySelector('#invFilterStatus').addEventListener('change', renderFiltered);
+      var kw = bar.querySelector('.search-box input');
+      var t = null;
+      kw.addEventListener('input', function(){ clearTimeout(t); t = setTimeout(renderFiltered, 250); });
+      bar.querySelectorAll('button').forEach(function(b){
+        b.__superPatchBound=1; b.__ts3Done=1;
+        if((b.textContent||'').indexOf('刷新')>=0) b.addEventListener('click', function(){ load(); }, true);
+        if((b.textContent||'').indexOf('导出')>=0) b.addEventListener('click', function(){ _exportCsv(); }, true);
+      });
+    }
+    var tabs = document.getElementById('invTabs');
+    if(tabs && !tabs.__invTabsBound){
+      tabs.__invTabsBound = 1;
+      tabs.querySelectorAll('.inv-tab').forEach(function(tab){
+        tab.addEventListener('click', function(){
+          tabs.querySelectorAll('.inv-tab').forEach(function(x){ x.classList.toggle('active', x===tab); });
+          __ACTIVE_TAB = tab.getAttribute('data-tab') || 'all';
+          renderFiltered();
+        }, true);
+      });
+    }
   }
 
   function _updateStats(rows){
+    rows = rows || __ALL_ITEMS;
     var total = rows.reduce(function(s,r){ return s+(Number(r.quantity)||0); },0);
+    var kinds = rows.length;
     var v = document.querySelector('.stat-card--primary .stat-card-value'); if(v) v.innerHTML = total+'<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">件</span>';
+    // 趋势位改为"共 X 种"，消除 HTML 写死的"↑2"误导
+    var trend = document.querySelector('.stat-card--primary .stat-card-trend');
+    if(trend){ trend.className = 'stat-card-trend'; trend.style.background = 'rgba(15,76,129,0.08)'; trend.style.color = 'var(--primary,#0F4C81)'; trend.innerHTML = '<span>共</span><span>'+kinds+' 种</span>'; }
     var warn = rows.filter(function(r){ return r.safetyStock!=null && r.quantity<=r.safetyStock; }).length;
     var v2 = document.querySelector('.stat-card--danger .stat-card-value'); if(v2) v2.innerHTML = warn+'<span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">项</span>';
+    // 大类真实件数（取全量缓存，不受当前筛选影响）
+    var cg = { costume:0, helmet:0, audio:0, stage:0, other:0 };
+    __ALL_ITEMS.forEach(function(it){ cg[_tabOf(it)] += Number(it.quantity)||0; });
+    var sub = document.querySelector('.stat-card--primary .stat-card-sub');
+    if(sub) sub.innerHTML = '<span>服装'+cg.costume+'</span><span class="divider"></span><span>道具'+(cg.helmet+cg.other)+'</span><span class="divider"></span><span>设备'+(cg.audio+cg.stage)+'</span>';
   }
 
   function _bindRowActions(){
@@ -2250,7 +2382,7 @@ window.__invApi = (function(){
     d = d||{};
     var __oldMods = document.querySelectorAll('#__invModal');
     for(var __oi=0;__oi<__oldMods.length;__oi++){ __oldMods[__oi].remove(); }
-    var html = '<div id="__invModal" data-orig-qty="'+(d.quantity||0)+'" role="dialog" class="generic-modal-root" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
+    var html = '<div id="__invModal" data-orig-qty="'+(d.quantity||0)+'" role="dialog" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
       + '<div style="background:#fff;border-radius:12px;padding:24px;width:520px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">'
       + '<h3 style="margin:0 0 16px;color:var(--primary,#0F4C81);">'+(d.id?'编辑物品':'新购入库')+'</h3>'
       + '<div style="display:grid;gap:12px;">'
@@ -2324,7 +2456,7 @@ window.__invApi = (function(){
   }
 
   function openBorrow(id){
-    var html = '<div id="__invBorrowModal" role="dialog" class="generic-modal-root" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
+    var html = '<div id="__invBorrowModal" role="dialog" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
       + '<div style="background:#fff;border-radius:12px;padding:24px;width:400px;max-width:92vw;">'
       + '<h3 style="margin:0 0 16px;">借用登记</h3>'
       + '<div style="display:grid;gap:12px;">'
@@ -2376,19 +2508,227 @@ window.__invApi = (function(){
   function bind(){
     var btns = document.querySelectorAll('.admin-page-actions .btn');
     if(btns[0]){ btns[0].__superPatchBound=1; btns[0].onclick=function(){ openAdd(); }; }
-    if(btns[1]){ btns[1].__superPatchBound=1; btns[1].onclick=function(){ T('💡 请在表格中点击「📤」按钮对具体物品进行借用登记','info'); }; }
-    if(btns[2]){ btns[2].__superPatchBound=1; btns[2].onclick=function(){ T('💡 请在表格中点击「✅」按钮归还具体物品','info'); }; }
+    if(btns[1]){ btns[1].__superPatchBound=1; btns[1].onclick=function(){ openBorrowPicker(); }; }
+    if(btns[2]){ btns[2].__superPatchBound=1; btns[2].onclick=function(){ openReturnPicker(); }; }
+    if(btns[3]){ btns[3].__superPatchBound=1; btns[3].onclick=function(){ batchSetStatus('in_stock','启用'); }; }
+    if(btns[4]){ btns[4].__superPatchBound=1; btns[4].onclick=function(){ batchSetStatus('out_of_stock','禁用/下架'); }; }
+    if(btns[5]){ btns[5].__superPatchBound=1; btns[5].onclick=function(){ batchSetStatus('scrapped','报废'); }; }
+    if(btns[6]){ btns[6].__superPatchBound=1; btns[6].onclick=function(){ openStocktake(); }; }
     var refresh = document.querySelector('.btn-secondary.btn-sm');
     if(refresh && refresh.textContent.indexOf('刷新')>=0){ refresh.__superPatchBound=1; refresh.onclick=function(){ load(); }; }
   }
 
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ bind(); load(); }); }
-  else { bind(); load(); }
+  /* ========= 批量操作 + 盘点 + 借用/归还选择器 + 补货 ========= */
+  function _selectedIds(){
+    var ids = [];
+    document.querySelectorAll('.batch-row-check:checked').forEach(function(cb){
+      var tr = cb.closest('tr'); if(tr){ var id = tr.getAttribute('data-id'); if(id) ids.push(id); }
+    });
+    return ids;
+  }
 
-  return { load:load, openAdd:openAdd, openEdit:openEdit, submit:submit, remove:remove };
+  async function batchSetStatus(status, label){
+    var ids = _selectedIds();
+    if(!ids.length){ T('⚠️ 请先勾选要'+label+'的物品（表格最左侧复选框）','error',4000); return; }
+    if(!confirm('确认将选中的 '+ids.length+' 件物品批量「'+label+'」？')) return;
+    var ok = 0, fail = 0;
+    for(var i=0;i<ids.length;i++){
+      try{ await API.patch('/v1/inventory/items/'+ids[i], { status: status }); ok++; }
+      catch(e){ fail++; console.warn('[inv.batch] '+ids[i], e); }
+    }
+    T('✅ 批量'+label+'完成：成功 '+ok+' 件'+(fail?'/失败 '+fail+' 件':''), fail?'error':'success', 4000);
+    await load();
+  }
+
+  function openBorrowPicker(){
+    var available = __ALL_ITEMS.filter(function(it){ return String(it.status||'in_stock')==='in_stock' && (Number(it.quantity)||0)>0; });
+    if(!available.length){ T('⚠️ 暂无库存充足的物品可借用','error'); return; }
+    var html = '<div id="__invPickBorrow" role="dialog" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
+      + '<div style="background:#fff;border-radius:12px;padding:24px;width:520px;max-width:92vw;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">'
+      + '<h3 style="margin:0 0 16px;color:var(--primary,#0F4C81);">📤 借用登记 — 选择物品</h3>'
+      + '<p style="margin:0 0 12px;font-size:0.85rem;color:var(--text-light,#666);">点击下方物品进行借用登记，仅显示库存充足且在库的物品。</p>'
+      + '<div style="display:grid;gap:8px;">'
+      + available.map(function(it){
+          return '<div data-pick="'+_esc(it.id)+'" style="padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .15s;" onmouseover="this.style.borderColor=\'var(--primary,#0F4C81)\';this.style.background=\'#f0f7ff\'" onmouseout="this.style.borderColor=\'#e5e7eb\';this.style.background=\'#fff\'">'
+            + '<div><strong>'+_esc(it.name)+'</strong><div style="font-size:0.78rem;color:var(--text-light,#999);">'+_esc(it.sku||'—')+' · '+_esc(it.category||'—')+'</div></div>'
+            + '<div style="text-align:right;"><strong style="color:var(--primary);">'+(it.quantity||0)+' '+(it.unit||'件')+'</strong><div style="font-size:0.75rem;color:#28a745;">点击借用 →</div></div>'
+            + '</div>';
+        }).join('')
+      + '</div>'
+      + '<div style="display:flex;justify-content:flex-end;margin-top:16px;"><button id="__pb_cancel" data-modal-close="1" class="btn btn-secondary">取消</button></div>'
+      + '</div></div>';
+    var __old = document.querySelectorAll('#__invPickBorrow');
+    for(var i=0;i<__old.length;i++){ __old[i].remove(); }
+    var div = document.createElement('div'); div.innerHTML = html; document.body.appendChild(div.firstChild);
+    var m = document.getElementById('__invPickBorrow');
+    m.querySelectorAll('[data-pick]').forEach(function(row){
+      row.__superPatchBound=1; row.__ts3Done=1;
+      row.onclick = function(){ var id = row.getAttribute('data-pick'); m.remove(); openBorrow(id); };
+    });
+    var cBtn = m.querySelector('#__pb_cancel');
+    cBtn.__superPatchBound=1; cBtn.__ts3Done=1;
+    cBtn.onclick = function(){ m.remove(); };
+  }
+
+  function openReturnPicker(){
+    var borrowed = __ALL_ITEMS.filter(function(it){ return String(it.status||'')==='borrowed' || it.borrower; });
+    if(!borrowed.length){ T('⚠️ 当前没有借用中的物品','error'); return; }
+    var html = '<div id="__invPickReturn" role="dialog" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
+      + '<div style="background:#fff;border-radius:12px;padding:24px;width:520px;max-width:92vw;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">'
+      + '<h3 style="margin:0 0 16px;color:var(--primary,#0F4C81);">✅ 归还登记 — 选择物品</h3>'
+      + '<p style="margin:0 0 12px;font-size:0.85rem;color:var(--text-light,#666);">点击下方物品确认归还。</p>'
+      + '<div style="display:grid;gap:8px;">'
+      + borrowed.map(function(it){
+          return '<div data-ret="'+_esc(it.id)+'" style="padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .15s;" onmouseover="this.style.borderColor=\'#28a745\';this.style.background=\'#f0fff4\'" onmouseout="this.style.borderColor=\'#e5e7eb\';this.style.background=\'#fff\'">'
+            + '<div><strong>'+_esc(it.name)+'</strong><div style="font-size:0.78rem;color:var(--text-light,#999);">借用人：'+_esc(it.borrower||'—')+'</div></div>'
+            + '<div style="text-align:right;"><div style="font-size:0.75rem;color:#28a745;">点击归还 →</div></div>'
+            + '</div>';
+        }).join('')
+      + '</div>'
+      + '<div style="display:flex;justify-content:flex-end;margin-top:16px;"><button id="__pr_cancel" data-modal-close="1" class="btn btn-secondary">取消</button></div>'
+      + '</div></div>';
+    var __old = document.querySelectorAll('#__invPickReturn');
+    for(var i=0;i<__old.length;i++){ __old[i].remove(); }
+    var div = document.createElement('div'); div.innerHTML = html; document.body.appendChild(div.firstChild);
+    var m = document.getElementById('__invPickReturn');
+    m.querySelectorAll('[data-ret]').forEach(function(row){
+      row.__superPatchBound=1; row.__ts3Done=1;
+      row.onclick = function(){ var id = row.getAttribute('data-ret'); m.remove(); doReturn(id); };
+    });
+    var cBtn = m.querySelector('#__pr_cancel');
+    cBtn.__superPatchBound=1; cBtn.__ts3Done=1;
+    cBtn.onclick = function(){ m.remove(); };
+  }
+
+  function openStocktake(){
+    var rows = __ALL_ITEMS.slice();
+    if(!rows.length){ T('⚠️ 暂无库存物品可盘点','error'); return; }
+    var html = '<div id="__invStocktake" role="dialog" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
+      + '<div style="background:#fff;border-radius:12px;padding:24px;width:680px;max-width:94vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">'
+      + '<h3 style="margin:0 0 8px;color:var(--primary,#0F4C81);">📋 库存盘点</h3>'
+      + '<p style="margin:0 0 16px;font-size:0.85rem;color:var(--text-light,#666);">核对实际数量，系统将自动登记盘点差异台账。日期默认今天。</p>'
+      + '<div style="margin-bottom:12px;display:flex;gap:10px;align-items:center;"><label style="font-size:0.85rem;">盘点日期</label><input id="__st_date" type="date" class="form-control" style="width:160px;" value="'+new Date().toISOString().slice(0,10)+'"></div>'
+      + '<div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">'
+      + '<table style="width:100%;border-collapse:collapse;font-size:0.88rem;"><thead><tr style="background:#f9fafb;">'
+      + '<th style="padding:8px;text-align:left;">物品</th><th style="padding:8px;">系统数量</th><th style="padding:8px;">实际数量</th><th style="padding:8px;">差异</th>'
+      + '</tr></thead><tbody>'
+      + rows.map(function(it){
+          return '<tr data-id="'+_esc(it.id)+'" style="border-top:1px solid #f3f4f6;">'
+            + '<td style="padding:8px;"><strong>'+_esc(it.name)+'</strong><div style="font-size:0.75rem;color:var(--text-light,#999);">'+_esc(it.sku||'—')+'</div></td>'
+            + '<td style="padding:8px;text-align:center;">'+(it.quantity||0)+' '+(it.unit||'')+'</td>'
+            + '<td style="padding:8px;text-align:center;"><input type="number" class="__st_qty" data-orig="'+(it.quantity||0)+'" value="'+(it.quantity||0)+'" min="0" style="width:70px;padding:4px 6px;border:1px solid #d1d5db;border-radius:4px;text-align:center;"></td>'
+            + '<td class="__st_diff" style="padding:8px;text-align:center;color:#999;">0</td>'
+            + '</tr>';
+        }).join('')
+      + '</tbody></table></div>'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">'
+      + '<button id="__st_cancel" data-modal-close="1" class="btn btn-secondary">取消</button>'
+      + '<button id="__st_save" data-modal-act="save" class="btn btn-primary" style="background:var(--primary,#0F4C81);color:#fff;border:none;">确认盘点</button>'
+      + '</div></div></div>';
+    var __old = document.querySelectorAll('#__invStocktake');
+    for(var i=0;i<__old.length;i++){ __old[i].remove(); }
+    var div = document.createElement('div'); div.innerHTML = html; document.body.appendChild(div.firstChild);
+    var m = document.getElementById('__invStocktake');
+    m.querySelectorAll('.__st_qty').forEach(function(inp){
+      inp.addEventListener('input', function(){
+        var orig = Number(inp.getAttribute('data-orig'))||0;
+        var cur = Number(inp.value); if(isNaN(cur)) cur = orig;
+        var diff = cur - orig;
+        var td = inp.closest('tr').querySelector('.__st_diff');
+        td.textContent = diff===0 ? '0' : (diff>0 ? '+'+diff : String(diff));
+        td.style.color = diff>0 ? '#28a745' : (diff<0 ? '#dc3545' : '#999');
+      });
+    });
+    var cBtn = m.querySelector('#__st_cancel'), sBtn = m.querySelector('#__st_save');
+    cBtn.__superPatchBound=1; cBtn.__ts3Done=1;
+    sBtn.__superPatchBound=1; sBtn.__ts3Done=1;
+    cBtn.onclick = function(){ m.remove(); };
+    sBtn.onclick = function(){ submitStocktake(m); };
+  }
+
+  async function submitStocktake(m){
+    var date = document.getElementById('__st_date').value || new Date().toISOString().slice(0,10);
+    var rows = m.querySelectorAll('tbody tr');
+    var changed = [], unchanged = 0;
+    rows.forEach(function(tr){
+      var id = tr.getAttribute('data-id');
+      var inp = tr.querySelector('.__st_qty');
+      var orig = Number(inp.getAttribute('data-orig'))||0;
+      var cur = Number(inp.value); if(isNaN(cur) || cur<0) cur = orig;
+      if(cur !== orig){ changed.push({ id:id, qty:cur, name:tr.querySelector('strong').textContent }); }
+      else unchanged++;
+    });
+    if(!changed.length){ T('ℹ️ 盘点完成：'+unchanged+' 件物品数量无差异','info'); m.remove(); return; }
+    if(!confirm('共 '+changed.length+' 件物品数量有差异，将自动登记出入库台账。确认提交？')) return;
+    var ok = 0, fail = 0;
+    for(var i=0;i<changed.length;i++){
+      try{
+        await API.patch('/v1/inventory/items/'+changed[i].id, {
+          quantity: changed[i].qty,
+          adjustReason: '库存盘点调整（'+date+'）：'+(changed[i].qty>0?'盘盈':'盘亏'),
+          lastCheckDate: date
+        });
+        ok++;
+      }catch(e){ fail++; console.warn('[inv.stocktake] '+changed[i].id, e); }
+    }
+    T('✅ 盘点完成：'+ok+' 件已调整'+(unchanged?(' / '+unchanged+' 件无差异'):'')+(fail?('/ 失败 '+fail):''), fail?'error':'success', 5000);
+    m.remove();
+    await load();
+  }
+
+  function openRestock(id){
+    var it = __ALL_ITEMS.filter(function(x){ return x.id===id; })[0];
+    if(!it){ T('⚠️ 物品不存在','error'); return; }
+    var safe = Number(it.safetyStock)||0;
+    var cur = Number(it.quantity)||0;
+    var suggest = safe > cur ? (safe - cur) : 1;
+    var html = '<div id="__invRestock" role="dialog" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
+      + '<div style="background:#fff;border-radius:12px;padding:24px;width:420px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);">'
+      + '<h3 style="margin:0 0 16px;color:var(--primary,#0F4C81);">📦 立即补货</h3>'
+      + '<div style="background:#f9fafb;border-radius:8px;padding:12px;margin-bottom:14px;">'
+      + '<div><strong>'+_esc(it.name)+'</strong> <span style="color:var(--text-light,#999);font-size:0.85rem;">'+_esc(it.sku||'—')+'</span></div>'
+      + '<div style="font-size:0.85rem;margin-top:4px;">当前库存：<strong style="color:#dc3545;">'+cur+' '+(it.unit||'件')+'</strong>'
+      + (safe? ' · 安全库存：'+safe+' '+(it.unit||'件')+' · 缺额：'+(safe-cur):'') + '</div>'
+      + '</div>'
+      + '<div style="display:grid;gap:12px;">'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">补货数量 *</label><input id="__rs_qty" type="number" class="form-control" value="'+suggest+'" min="1"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">补货原因</label><input id="__rs_reason" class="form-control" value="库存低于安全阈值，紧急补货"></div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">'
+      + '<button id="__rs_cancel" data-modal-close="1" class="btn btn-secondary">取消</button>'
+      + '<button id="__rs_save" data-modal-act="save" class="btn btn-primary" style="background:var(--primary,#0F4C81);color:#fff;border:none;">确认补货</button>'
+      + '</div></div></div>';
+    var __old = document.querySelectorAll('#__invRestock');
+    for(var i=0;i<__old.length;i++){ __old[i].remove(); }
+    var div = document.createElement('div'); div.innerHTML = html; document.body.appendChild(div.firstChild);
+    var m = document.getElementById('__invRestock');
+    var cBtn = m.querySelector('#__rs_cancel'), sBtn = m.querySelector('#__rs_save');
+    cBtn.__superPatchBound=1; cBtn.__ts3Done=1;
+    sBtn.__superPatchBound=1; sBtn.__ts3Done=1;
+    cBtn.onclick = function(){ m.remove(); };
+    sBtn.onclick = async function(){
+      var qty = Number(document.getElementById('__rs_qty').value)||0;
+      if(!(qty>0)){ T('⚠️ 补货数量必须大于 0','error'); return; }
+      var reason = document.getElementById('__rs_reason').value.trim() || '库存补货';
+      try{
+        await API.patch('/v1/inventory/items/'+id, {
+          quantity: cur + qty,
+          adjustReason: reason
+        });
+        T('✅ 补货成功：+'+qty+' '+(it.unit||'件'), 'success');
+        m.remove();
+        await load();
+      }catch(e){ T('❌ 补货失败：'+(e.message||e),'error'); }
+    };
+  }
+
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ bind(); _bindListControls(); load(); }); }
+  else { bind(); _bindListControls(); load(); }
+
+  return { load:load, openAdd:openAdd, openEdit:openEdit, submit:submit, remove:remove, openRestock:openRestock, openBorrow:openBorrow, doReturn:doReturn, openStocktake:openStocktake, batchSetStatus:batchSetStatus };
 })();
 </script>
 
-<script src="../js/admin-inventory-real.js?v=20260922"></script>
+<script src="../js/admin-inventory-real.js?v=20260929"></script>
 </body>
 </html>

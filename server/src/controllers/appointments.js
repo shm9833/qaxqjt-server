@@ -422,10 +422,45 @@ const remove = async ctx => {
   if (old.status === 'converted') {
     throw new BusinessError('CONFLICT', '已转订单的预约不允许删除');
   }
-  await prisma.appointmentPlay.deleteMany({ where: { appointmentId: id } });
-  await prisma.appointmentAudit.deleteMany({ where: { appointmentId: id } });
-  await prisma.appointment.delete({ where: { id } });
-  await audit({ ctx, module: 'booking', action: 'APPOINTMENT_DELETE', targetId: id });
+
+  // O-001 修复：处理公开预约联动生成的 draft 订单
+  //   · 订单仍为 draft 且无收/退款流水 → 随预约在同一事务内安全删除（含订单明细）
+  //   · 订单已推进（confirmed/paid 等）或存在收/退款流水 → 阻止删除，保护财务数据
+  const linkedOrder = old.convertedOrderId
+    ? await prisma.order.findUnique({
+      where: { id: old.convertedOrderId },
+      include: { payments: true, refunds: true }
+    })
+    : await prisma.order.findUnique({
+      where: { appointmentId: id },
+      include: { payments: true, refunds: true }
+    });
+  if (linkedOrder) {
+    const hasMoneyFlow = linkedOrder.payments.length > 0 || linkedOrder.refunds.length > 0;
+    if (linkedOrder.status !== 'draft' || hasMoneyFlow) {
+      throw new BusinessError(
+        'CONFLICT',
+        `该预约已关联订单 ${linkedOrder.orderNo}（状态 ${linkedOrder.status}），请先在订单管理中取消或删除该订单后再删除预约`
+      );
+    }
+  }
+
+  await prisma.$transaction(async tx => {
+    await tx.appointmentPlay.deleteMany({ where: { appointmentId: id } });
+    await tx.appointmentAudit.deleteMany({ where: { appointmentId: id } });
+    if (linkedOrder) {
+      await tx.orderItem.deleteMany({ where: { orderId: linkedOrder.id } });
+      await tx.order.delete({ where: { id: linkedOrder.id } });
+    }
+    await tx.appointment.delete({ where: { id } });
+  });
+  await audit({
+    ctx,
+    module: 'booking',
+    action: 'APPOINTMENT_DELETE',
+    targetId: id,
+    detail: { linkedOrderDeleted: linkedOrder ? linkedOrder.orderNo : null }
+  });
   return noContent(ctx);
 };
 

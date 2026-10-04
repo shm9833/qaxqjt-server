@@ -16,12 +16,13 @@
 
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="js/favicon-inject.js?v=20260803" defer></script>
+    <script src="js/site-assets.js?v=20260929a" defer></script>
     <script src="js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="秦安县秦剧团文化演出有限公司企业资质展示，包含营业执照、演出经营许可证、非遗传承资质、税务登记证、剧团荣誉证书等">
   <meta name="keywords" content="秦安秦剧团,秦安县秦剧团文化演出有限公司,企业资质,营业执照,演出经营许可证,非遗传承,剧团荣誉">
   <title>企业资质展示 - 秦安县秦剧团文化演出有限公司 | {year}</title>
-  <link rel="stylesheet" href="css/style.css?v=20260803">
+  <link rel="stylesheet" href="css/style.css?v=20260923a">
   <style>
     .page-banner {
       background: linear-gradient(135deg, rgba(15, 76, 129, 0.92) 0%, rgba(30, 111, 181, 0.88) 100%),
@@ -242,7 +243,7 @@
   </header>
 
   <main>
-    <section class="page-banner" style="background:linear-gradient(135deg,rgba(15,76,129,0.82),rgba(127,29,29,0.74)),url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E5%AE%89%E5%8E%BF%E7%A7%A6%E5%89%A7%E5%9B%A2%E8%8D%A3%E8%AA%89%E5%B1%95%E5%8E%85%E5%AE%A4%EF%BC%8C%E5%A3%81%E4%B8%8A%E6%8C%82%E6%BB%A1%E5%A5%96%E7%8A%B6%E9%94%A6%E6%97%97%E8%8D%A3%E8%AA%89%E8%AF%81%E4%B9%A6%E8%90%A5%E4%B8%9A%E6%89%A7%E7%85%A7%E6%96%87%E5%8C%96%E9%83%A8%E9%97%A8%E8%B5%84%E8%B4%A8%EF%BC%8C%E4%B8%AD%E5%BC%8F%E5%8A%9E%E5%85%AC%E6%A1%8C%E5%8F%B0%E9%A3%8E%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E5%8F%AF%E9%9D%A0%E5%BD%A2%E8%B1%A1%EF%BC%8C%E8%87%AA%E7%84%B6%E5%85%89%E5%BD%B1%EF%BC%8C%E9%AB%98%E6%B8%85&image_size=landscape_16_9') center/cover no-repeat;">
+    <section class="page-banner" data-asset-key-bg="site.qualifications.banner" style="background:linear-gradient(135deg,rgba(15,76,129,0.82),rgba(127,29,29,0.74)),url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E5%AE%89%E5%8E%BF%E7%A7%A6%E5%89%A7%E5%9B%A2%E8%8D%A3%E8%AA%89%E5%B1%95%E5%8E%85%E5%AE%A4%EF%BC%8C%E5%A3%81%E4%B8%8A%E6%8C%82%E6%BB%A1%E5%A5%96%E7%8A%B6%E9%94%A6%E6%97%97%E8%8D%A3%E8%AA%89%E8%AF%81%E4%B9%A6%E8%90%A5%E4%B8%9A%E6%89%A7%E7%85%A7%E6%96%87%E5%8C%96%E9%83%A8%E9%97%A8%E8%B5%84%E8%B4%A8%EF%BC%8C%E4%B8%AD%E5%BC%8F%E5%8A%9E%E5%85%AC%E6%A1%8C%E5%8F%B0%E9%A3%8E%E6%99%AF%EF%BC%8C%E4%B8%93%E4%B8%9A%E5%8F%AF%E9%9D%A0%E5%BD%A2%E8%B1%A1%EF%BC%8C%E8%87%AA%E7%84%B6%E5%85%89%E5%BD%B1%EF%BC%8C%E9%AB%98%E6%B8%85&image_size=landscape_16_9') center/cover no-repeat;">
       <div class="container">
         <h1>📜 企业资质展示</h1>
         <div class="breadcrumb">
@@ -552,7 +553,7 @@
   </footer>
 
   <script src="js/year-lite.js?v=20260803"></script>
-  <script src="js/app.js?v=20260803"></script>
+  <script src="js/app.js?v=20260930a"></script>
   <!-- 🔧 D块前台×按钮兜底：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
   <script>
   (function(){
@@ -613,11 +614,13 @@
           var firstBad=null;
           try{ reqFails.forEach(function(inp){ if(!inp.value || (inp.type==='checkbox' && !inp.checked)){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}},1800);}catch(_b){} } }); }catch(_rf){}
           if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
-          __FT('✅ 提交成功！我们将尽快与您联系','success');
-          try{ fm.reset && fm.reset(); }catch(_rs){}
+          /* P1修复:假受理已改诚实暂存：数据仅存本设备localStorage，不伪造受理、不自动重置 */
+          var __dft={};try{for(var __ei=0;__ei<fm.elements.length;__ei++){var __el=fm.elements[__ei];if(!__el||!__el.name||__el.type==='file')continue;if(__el.type==='checkbox'){if(__el.checked)__dft[__el.name]=(__dft[__el.name]?__dft[__el.name]+'、':'')+(__el.value||'✓');continue;}var __vv=String(__el.value||'').trim();if(__vv)__dft[__el.name]=__vv.slice(0,500);}}catch(_se){}
+          try{var __dk='qaxqjt_public_form_draft_qualifications';var __arr=null;try{__arr=JSON.parse(localStorage.getItem(__dk)||'[]');}catch(_pe){__arr=null;}if(!Array.isArray(__arr))__arr=[];__arr.push({form:(fm.id||''),data:__dft,savedAt:new Date().toISOString()});localStorage.setItem(__dk,JSON.stringify(__arr.slice(-50)));}catch(_le){}
+          __FT('ℹ️ 本站暂未开通在线自动受理：信息已暂存在您的设备本地，不会自动提交给剧团，请通过页面下方的电话/微信联系我们（13993839833）','warning');
           e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
         } else {
-          __FT('✅ 提交成功','success');
+          /* P1修复:假受理已改诚实提示 */ __FT('ℹ️ 本站暂未开通在线自动受理：请拨打 13993839833 或通过页面下方的电话/微信与我们联系','info');
           try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
           btn.__ftDone=1; e.stopImmediatePropagation(); return;
         }

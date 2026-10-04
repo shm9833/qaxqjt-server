@@ -6,6 +6,7 @@
  * POST /v1/auth/refresh       刷新 access
  * POST /v1/auth/logout        注销
  * GET  /v1/auth/me            当前用户 + 角色/权限树（简化版）
+ * GET  /v1/auth/captcha       下发图形验证码 challenge（开关启用时校验）
  */
 const { nanoid } = require('nanoid');
 const prisma = require('../utils/prisma');
@@ -14,10 +15,54 @@ const { success, fail, pageMeta } = require('../utils/response');
 const { idByCtx, nowMs: now } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
+const captchaService = require('../services/captcha-service');
+const securityConfig = require('../services/security-config');
+
+// 验证码签发 IP 限流：同 IP 60s 内最多 30 次（防刷库/枚举）
+const CAPTCHA_RATE_WINDOW_MS = 60 * 1000;
+const CAPTCHA_RATE_MAX = 30;
+const _captchaIpCount = new Map(); // ip -> { count, resetAt }
+function _captchaIpLimited(ip) {
+  const now = Date.now();
+  const rec = _captchaIpCount.get(ip);
+  if (!rec || rec.resetAt < now) {
+    _captchaIpCount.set(ip, { count: 1, resetAt: now + CAPTCHA_RATE_WINDOW_MS });
+    return false;
+  }
+  rec.count++;
+  return rec.count > CAPTCHA_RATE_MAX;
+}
+
+// ========== 下发验证码 ==========
+const issueCaptcha = async ctx => {
+  if (_captchaIpLimited(ctx.ip)) {
+    throw new BusinessError('RATE_LIMITED', '验证码请求过于频繁，请稍后再试');
+  }
+  // 顺手清理过期 challenge（懒清理，避免长积累）
+  captchaService.cleanupExpired().catch(() => {});
+  const { id, svg } = await captchaService.issue(ctx.ip);
+  ctx.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  return success(ctx, { id, imageType: 'svg+xml', imageData: svg });
+};
 
 // ========== 登录 ==========
 const login = async ctx => {
-  const { username, password, captcha } = ctx.request.body;
+  const { username, password, captcha, captchaId } = ctx.request.body;
+
+  // 0. 验证码校验（开关启用时强制；失败不消耗账号锁定次数）
+  if (securityConfig.getCaptchaEnabled()) {
+    const r = await captchaService.verify(captchaId, captcha);
+    if (!r.ok) {
+      const msgMap = {
+        MISSING: '请输入验证码',
+        NOT_FOUND: '验证码不存在，请刷新',
+        EXPIRED: '验证码已过期，请刷新',
+        CONSUMED: '验证码已使用，请刷新',
+        WRONG: '验证码错误，请重新输入'
+      };
+      throw new BusinessError('CAPTCHA_INVALID', msgMap[r.code] || '验证码错误');
+    }
+  }
 
   const ua = (ctx.get('user-agent') || '').slice(0, 480);
   const ip = ctx.ip;
@@ -363,4 +408,4 @@ async function _recordAttempt({ username, ip, success, reason }) {
   }
 }
 
-module.exports = { login, refresh, logout, me, qrcodeCreate, qrcodeStatus, qrcodeConfirm, _hashPwdForSeed: hashPassword };
+module.exports = { login, refresh, logout, me, qrcodeCreate, qrcodeStatus, qrcodeConfirm, issueCaptcha, _hashPwdForSeed: hashPassword };

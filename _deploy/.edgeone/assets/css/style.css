@@ -1927,7 +1927,13 @@ tbody td {
   border-bottom: 1px solid var(--gold-light);
   color: var(--text-dark);
   font-size: 0.92rem;
-  transition: var(--transition);
+  /* 仅过渡非布局属性：禁止 width/min-width/padding 等触发翻页/刷新时的列宽动画抖动 */
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+}
+
+/* 表格全系列守卫：任何表格元素都不得对布局属性做过渡（防自动放大/抖动，v20260923a） */
+table, thead, tbody, tfoot, tr, th, td {
+  transition-property: background-color, color, border-color, box-shadow, opacity;
 }
 
 tbody tr:hover td {
@@ -2226,6 +2232,7 @@ tbody tr:nth-child(even):hover td {
   width: 240px;
   background: linear-gradient(180deg, #1565C0 0%, #0F4C81 40%, #1976D2 100%);
   color: #fff;
+  color-scheme: only light; /* v20260926n 阻止手机浏览器夜间模式反白侧边栏导致白底白字 */
   flex: 0 0 240px;
   position: sticky;
   top: 0;
@@ -5863,8 +5870,7 @@ form > table th:nth-child(1),
 /* 弹窗通用 wrapper：确保与现有 overlay / modal-overlay / modal-wrap 兼容 */
 .modal-overlay.modal-overlay-hide { display: none !important; }
 .modal-wrap.modal-wrap-hide       { display: none !important; }
-.modal-overlay:not(.modal-overlay-hide),
-.modal-wrap:not(.modal-wrap-hide) { /* 默认显示由原 CSS 控制 */ }
+/* 未带 hide 类时默认显示，沿用各自原有 CSS，无需额外规则 */
 
 /* ========== R22 CSP合规：后台弹窗内部结构样式（替代 injectOrReuseModal modal.innerHTML 内联 style） ========== */
 .admin-modal-root {
@@ -6183,3 +6189,69 @@ form > table th:nth-child(1),
 /* 对 .modal.active / .modal-overlay.active 的显示规则（双保险） */
 .modal-overlay.active:not(.csp-hide) { display: block !important; }
 .modal.active:not(.csp-hide) { display: block !important; }
+
+/* ==========================================================================
+   手机端后台侧边栏抽屉（v20260926m）
+   桌面隐藏汉堡按钮；<=900px 侧边栏改 fixed 抽屉，遮罩 z-90、侧栏 z-100
+   ========================================================================== */
+.admin-sidebar-toggle, .topbar-toggle { display: none; }
+.admin-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 90;
+}
+.admin-sidebar-overlay.active { display: block; }
+@media (max-width: 900px) {
+  .admin-sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 264px;
+    max-width: 82vw;
+    flex: none;
+    margin: 0;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.28s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+  }
+  .admin-sidebar.mobile-open { transform: translateX(0) !important; }
+  .admin-main { margin-left: 0 !important; width: 100% !important; max-width: 100% !important; }
+  .admin-sidebar-toggle, .topbar-toggle {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  body.m-nav-open { overflow: hidden; }
+
+  /* v20260926p：隔离前台 @media(max-width:768px) 裸 nav{} 对后台侧栏的样式泄漏。
+     前台手机端规则 nav{position:fixed;top:82px;transform:translateY(-130%);opacity:0;…}
+     会命中后台 <nav class="admin-sidebar-menu">，导致手机端侧栏菜单整体上移隐藏、
+     只剩菜单容器外的“退出登录”。此处用更高特异度还原为侧栏内的正常 flex 子项。 */
+  nav.admin-sidebar-menu {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    transform: none;
+    opacity: 1;
+    transition: none;
+    background: none;
+    padding: 8px 10px;
+    box-shadow: none;
+    border-top: none;
+    z-index: auto;
+    max-height: none;
+    backdrop-filter: none;
+    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  nav.admin-sidebar-menu.open { transform: none; opacity: 1; }
+  nav.admin-sidebar-menu ul { flex-direction: column; }
+}

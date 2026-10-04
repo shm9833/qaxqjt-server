@@ -19,6 +19,7 @@ const { env, isDev } = require('./config');
 const { errorHandler } = require('./middleware/error-handler');
 const { requestLog } = require('./middleware/request-log');
 const { jwtAuth, requireAuth, corsOrigin } = require('./middleware/auth');
+const serveUploads = require('./middleware/serve-uploads');
 const v1Router = require('./routes/v1');
 
 const app = new Koa();
@@ -89,6 +90,9 @@ app.use(async (ctx, next) => {
   }
   await next();
 });
+
+// 8.6 本地文件静态服务（/uploads/* → server/uploads/）
+app.use(serveUploads({ prefix: '/uploads' }));
 
 // 9. v1 路由
 app.use(v1Router.routes()).use(v1Router.allowedMethods());

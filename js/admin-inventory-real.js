@@ -1,5 +1,5 @@
 /* ============================================================
- * admin-inventory-real.js  v20260922
+ * admin-inventory-real.js  v20260929
  * 库存预警 + 借用归还流水：真实 /v1/inventory 接线
  * 原静态预警卡/流水演示行已在 HTML 中清空，本脚本负责真实渲染。
  * ============================================================ */
@@ -9,6 +9,8 @@
   window.__invReal = true;
   var API = window.QAXQJT_API;
   if (!API || typeof API.get !== 'function') return;
+  /* P3修复: PATHS 常量统一引用（带回退） */
+  var PATHS = (window.QAXQJT_API_CONFIG && window.QAXQJT_API_CONFIG.PATHS) || {};
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -80,7 +82,7 @@
         var play = esc(r.playTitle || r.performanceName || '—');
         var action = st === 'returned'
           ? '<span style="color:var(--text-light,#999);">已完结</span>'
-          : '<button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 12px;" data-ret="' + esc(r.id || '') + '">归还</button>';
+          : '<button class="btn btn-outline-dark btn-sm" style="color:#28a745;border-color:#28a745;padding:6px 12px;" data-ret="' + esc(r.id || '') + '" data-item="' + esc(r.itemId || '') + '">归还</button>';
         return '<tr>' +
           '<td style="font-weight:600;">' + (i + 1) + '</td>' +
           '<td><div><strong>' + esc(itemName(r)) + '</strong>' +
@@ -115,9 +117,19 @@
     var tb = document.getElementById('invRecordsTbody');
     if (tb) {
       tb.addEventListener('click', function (e) {
-        var ret = e.target && e.target.getAttribute && e.target.getAttribute('data-ret');
-        if (ret && window.QAXQJT_API) {
-          QAXQJT_API.post('/v1/inventory/records', { itemId: ret, opType: 'return', quantity: 1 })
+        var btn = e.target && e.target.getAttribute && e.target.closest ? e.target.closest('[data-ret]') : null;
+        if (btn && window.QAXQJT_API) {
+          // 修复：data-ret 是台账记录 id，归还接口需要物品 itemId（invItem_*），
+          // 旧代码直接把记录 id 当 itemId 提交，后端必抛 NOT_FOUND。
+          var recId = btn.getAttribute('data-ret');
+          var itemId = btn.getAttribute('data-item');
+          if (!itemId) {
+            for (var k = 0; k < ALL_RECORDS.length; k++) {
+              if (ALL_RECORDS[k] && ALL_RECORDS[k].id === recId) { itemId = ALL_RECORDS[k].itemId || ALL_RECORDS[k].item_id || ''; break; }
+            }
+          }
+          if (!itemId) { try { console.warn('[invReal] return skipped: itemId missing for record', recId); } catch (_) {} return; }
+          QAXQJT_API.post(PATHS.INVENTORY_RECORDS || '/v1/inventory/records', { itemId: itemId, opType: 'return', quantity: 1 })
             .then(function () { loadAll(); })
             .catch(function (err) { try { console.warn('[invReal] return', err); } catch (_) {} });
         }
@@ -151,7 +163,7 @@
             '<div class="wc-info-item">缺额：<strong>-' + gap + ' ' + unit + '</strong></div>' +
           '</div>' +
           '<span class="wc-reason">⚠ 库存低于安全阈值</span>' +
-          '<div class="wc-action"><button class="wc-btn">📦 立即补货</button></div>' +
+          '<div class="wc-action"><button class="wc-btn" data-restock="' + esc(it.id || '') + '">📦 立即补货</button></div>' +
         '</div>'
       );
     });
@@ -164,23 +176,44 @@
           '</div></div>' +
           '<div class="wc-info"><div class="wc-info-item">状态：<strong>维修中</strong></div></div>' +
           '<span class="wc-reason">🔧 已标记维修，完成后请更新状态</span>' +
-          '<div class="wc-action"><button class="wc-btn">🔧 维修记录</button></div>' +
+          '<div class="wc-action"><button class="wc-btn" data-repair="' + esc(it.id || '') + '">🔧 维修记录</button></div>' +
         '</div>'
       );
     });
     box.innerHTML = cards.length
       ? cards.join('')
       : '<div style="grid-column:1/-1;padding:36px 12px;text-align:center;color:var(--text-light,#888);">✅ 库存充足，暂无预警事项</div>';
+    // 绑定立即补货 / 维修记录按钮（用 onclick + __superPatchBound 避免 SuperPatch 拦截）
+    box.querySelectorAll('[data-restock]').forEach(function (btn) {
+      btn.__superPatchBound = 1; btn.__ts3Done = 1;
+      btn.onclick = function () {
+        var id = btn.getAttribute('data-restock');
+        if (window.__invApi && typeof window.__invApi.openRestock === 'function') {
+          window.__invApi.openRestock(id);
+        } else {
+          try { console.warn('[invReal] __invApi.openRestock 未暴露'); } catch (_) {}
+        }
+      };
+    });
+    box.querySelectorAll('[data-repair]').forEach(function (btn) {
+      btn.__superPatchBound = 1; btn.__ts3Done = 1;
+      btn.onclick = function () {
+        var id = btn.getAttribute('data-repair');
+        if (window.__invApi && typeof window.__invApi.openEdit === 'function') {
+          window.__invApi.openEdit(id);
+        }
+      };
+    });
   }
 
   function loadAll() {
-    API.get('/v1/inventory/items', { query: { page: 1, pageSize: 200 } })
+    API.get(PATHS.INVENTORY_ITEMS || '/v1/inventory/items', { query: { page: 1, pageSize: 200 } })
       .then(function (resp) { renderWarnings(unwrap(resp)); })
       .catch(function () {
         var box = document.getElementById('invWarnGrid');
         if (box) box.innerHTML = '<div style="grid-column:1/-1;padding:30px;text-align:center;color:var(--text-light,#888);">预警数据加载失败</div>';
       });
-    API.get('/v1/inventory/records', { query: { page: 1, pageSize: 200 } })
+    API.get(PATHS.INVENTORY_RECORDS || '/v1/inventory/records', { query: { page: 1, pageSize: 200 } })
       .then(function (resp) {
         ALL_RECORDS = unwrap(resp);
         var el = document.getElementById('invStatBorrow');

@@ -38,11 +38,14 @@ v1.post(
     body: Joi.object({
       username: Joi.string().trim().min(3).max(64).required(),
       password: Joi.string().min(6).max(128).required(),
-      captcha: Joi.string().allow('').optional()
+      captcha: Joi.string().allow('').optional(),
+      captchaId: Joi.string().allow('').max(64).optional()
     })
   }),
   authCtrl.login
 );
+// 图形验证码 challenge（无鉴权；开关启用时登录强制校验，见 security-config）
+v1.get('/auth/captcha', authCtrl.issueCaptcha);
 v1.post(
   '/auth/refresh',
   validate({ body: Joi.object({ refreshToken: Joi.string().required() }) }),
@@ -210,6 +213,24 @@ v1.get(
   }),
   requireRole(['super_admin', 'director']),
   auditCtrl.listAuditLogs
+);
+
+// ========== reports（真实统计与报表：员工日薪实时统计，口径与工资核算 daily_pure 一致） ==========
+const wageReportCtrl = require('../../controllers/wage-report');
+v1.get(
+  '/reports/daily-wage',
+  validate({
+    query: Joi.object({
+      month: Joi.string().pattern(/^\d{4}-\d{2}$/).required(),
+      groupBy: Joi.string().valid('date', 'performer', 'empType', 'rank').optional(),
+      empType: Joi.string().max(32).allow('').optional(),
+      rank: Joi.string().max(16).allow('').optional(),
+      keyword: Joi.string().max(64).allow('').optional(),
+      day: Joi.string().pattern(/^\d{2}$/).allow('').optional()
+    })
+  }),
+  requireRole(['super_admin', 'admin', 'ops', 'director', 'finance_view']),
+  wageReportCtrl.dailyWage
 );
 
 // ========== customers ==========
@@ -488,6 +509,17 @@ v1.post(
   performersCtrl.create
 );
 v1.get('/performers/stats', requireRole(['super_admin', 'ops', 'director', 'finance_view']), performersCtrl.stats);
+// 自助登记审核结果查询（公开接口，必须在 /performers/:id 之前注册，否则被 :id 吞掉 404）
+v1.get(
+  '/performers/self-register/status',
+  validate({
+    query: Joi.object({
+      phone: Joi.string().allow('').max(20).optional(),
+      idCardNo: Joi.string().allow('').max(18).optional()
+    })
+  }),
+  performersCtrl.selfRegisterStatus
+);
 v1.get('/performers/:id', requireRole(['super_admin', 'ops', 'director']), performersCtrl.detail);
 v1.patch(
   '/performers/:id',
@@ -524,6 +556,7 @@ v1.post(
   validate({
     body: Joi.object({
       name: Joi.string().trim().min(2).max(50).required(),
+      idCardNo: Joi.string().trim().pattern(/^\d{17}[\dXx]$/).required(),
       gender: Joi.string().valid('男', '女', 'other').allow('').optional(),
       phone: Joi.string().allow('').optional(),
       primaryRole: Joi.string().allow('').optional(),
@@ -657,6 +690,20 @@ v1.patch(
   }),
   requireRole(['super_admin', 'ops', 'director']),
   ordersCtrl.update
+);
+// v20261003 P3-8：收款独立登记（流水+台账凭证同事务，状态机自动推进）
+v1.post(
+  '/orders/:id/payments',
+  validate({
+    body: Joi.object({
+      amount: Joi.number().precision(2).positive().max(100000000).required(),
+      payChannel: Joi.string().valid('cash', 'transfer', 'wechat', 'alipay', 'cheque').optional(),
+      payDate: Joi.string().optional(),
+      remark: Joi.string().allow('').max(300).optional()
+    })
+  }),
+  requireRole(['super_admin', 'ops', 'director', 'finance_cashier', 'finance_checker']),
+  ordersCtrl.registerPayment
 );
 v1.delete('/orders/:id', requireRole('super_admin'), ordersCtrl.remove);
 v1.post(
@@ -968,6 +1015,12 @@ v1.patch(
 );
 v1.delete('/contents/:id', requireRole('super_admin'), contentCtrl.remove);
 
+/* ====== 文件上传 upload 路由注册（v20261004 补注册：控制器/存储层早已存在，仅缺路由挂载）====== */
+const uploadCtrl = require('../../controllers/upload');
+v1.post('/upload', requireRole(['super_admin', 'ops', 'director']), uploadCtrl.upload);
+v1.post('/upload/multi', requireRole(['super_admin', 'ops', 'director']), uploadCtrl.uploadMulti);
+v1.delete('/upload', requireRole(['super_admin', 'ops']), uploadCtrl.remove);
+
 /* ====== 排期 schedules 路由注册（v1）====== */
 const schedCtrl = require('../../controllers/schedules');
 v1.get(
@@ -989,6 +1042,20 @@ v1.post(
   schedCtrl.create
 );
 v1.get('/schedules/stats', requireRole(['super_admin', 'ops', 'director', 'finance_view']), schedCtrl.stats);
+// 日历视图（月历/周视图专用，轻量返回）—— 必须在 /schedules/:id 之前注册
+v1.get(
+  '/schedules/calendar',
+  validate({ query: Joi.object({ year: Joi.number().integer().optional(), month: Joi.number().integer().min(1).max(12).optional(), status: Joi.string().optional() }) }),
+  requireRole(['super_admin', 'admin', 'ops', 'director', 'finance_view', 'staff']),
+  schedCtrl.calendar
+);
+// 档期冲突检测（后端计算，前端不再全量扫描）
+v1.get(
+  '/schedules/conflicts',
+  validate({ query: Joi.object({ dateFrom: Joi.string().optional(), dateTo: Joi.string().optional() }) }),
+  requireRole(['super_admin', 'admin', 'ops', 'director']),
+  schedCtrl.conflicts
+);
 v1.get('/schedules/:id', requireRole(['super_admin', 'ops', 'director', 'finance_view']), schedCtrl.detail);
 v1.patch(
   '/schedules/:id',
@@ -1029,6 +1096,8 @@ v1.post(
   requireRole(['super_admin', 'ops', 'director']),
   attCtrl.create
 );
+// v20261004a：批量导入（≤500条/次；同人同日已存在→跳过不覆盖），鉴权与写接口一致
+v1.post('/attendance/import', requireRole(['super_admin', 'ops', 'director']), attCtrl.importRecords);
 v1.patch(
   '/attendance/:id',
   requireRole(['super_admin', 'ops', 'director']),
@@ -1103,5 +1172,44 @@ v1.post(
   settCtrl.batchUpdate
 );
 v1.delete('/system/settings/:id', requireRole('super_admin'), settCtrl.remove);
+
+/* ====== 站点图片位投放 site-assets 路由注册（v20260930 补注册）====== */
+const siteAssetsCtrl = require('../../controllers/site-assets');
+// 公开映射（无鉴权，前台各页面 js/site-assets.js 调用，仅返回已投放非空值）
+v1.get('/site-assets/public', siteAssetsCtrl.publicMap);
+// 管理端列表/投放（assets.html）
+v1.get('/site-assets', requireRole(['super_admin', 'ops', 'director']), siteAssetsCtrl.list);
+v1.put(
+  '/site-assets/:key',
+  validate({
+    params: Joi.object({ key: Joi.string().max(100).required() }),
+    body: Joi.object({
+      value: Joi.string().allow('').max(2000).required(),
+      description: Joi.string().allow('').max(200).optional()
+    })
+  }),
+  requireRole(['super_admin', 'ops']),
+  siteAssetsCtrl.upsert
+);
+
+/* ====== 组团配置云端共享 troupe-config 路由注册（v20260930 补注册）====== */
+const troupeConfigCtrl = require('../../controllers/troupe-config');
+v1.get(
+  '/troupe-config',
+  requireRole(['super_admin', 'ops', 'director', 'finance_view']),
+  troupeConfigCtrl.getAll
+);
+v1.put(
+  '/troupe-config/wage-grades',
+  validate({ body: Joi.object({ grades: Joi.object().required() }) }),
+  requireRole(['super_admin', 'ops', 'director']),
+  troupeConfigCtrl.putGrades
+);
+v1.put(
+  '/troupe-config/templates',
+  validate({ body: Joi.object({ templates: Joi.array().required() }) }),
+  requireRole(['super_admin', 'ops', 'director']),
+  troupeConfigCtrl.putTemplates
+);
 
 module.exports = v1;

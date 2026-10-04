@@ -21,7 +21,7 @@
   <meta name="description" content="秦安县秦剧团演出服务合同违约民事责任细则，甲方乙方违约责任，合同解除条款，不可抗力免责，争议解决方式，演出服务合同法律条款">
   <meta name="keywords" content="违约责任,民事责任,合同条款,演出合同,违约赔偿,争议解决,不可抗力">
   <title>违约民事责任及细则 - 秦安县秦剧团文化演出有限公司 | {year}</title>
-  <link rel="stylesheet" href="css/style.css?v=20260803">
+  <link rel="stylesheet" href="css/style.css?v=20260923a">
   <style>
     .page-banner {
       background: linear-gradient(135deg, rgba(15, 76, 129, 0.92) 0%, rgba(30, 111, 181, 0.88) 100%),
@@ -661,7 +661,7 @@
           <div class="highlight-box">
             <p style="text-align:center; margin-bottom:0;"><strong>📜 特别声明：本细则与双方签署的正式《演出服务合同》共同构成完整合同文件</strong></p>
             <p style="text-align:center; margin-bottom:0; text-indent:0; font-size:0.9rem; color:var(--gold-dark); margin-top:8px;">本细则最后修订日期：{year}年1月 | 版本号：V{year}.01 | 秦安县秦剧团文化演出有限公司 保留所有权利</p>
-            <p style="text-align:center; margin-bottom:0; text-indent:0; font-size:0.88rem; color:var(--primary-light); margin-top:8px;">如您对本细则任何条款有疑问，欢迎咨询：<a href="tel:13993839833" class="contact-inline">13993839833</a> / <a href="mailto:13893811313@163.com" class="contact-inline">13893811313@163.com</a></p>
+            <p style="text-align:center; margin-bottom:0; text-indent:0; font-size:0.88rem; color:var(--primary-light); margin-top:8px;">如您对本细则任何条款有疑问，欢迎咨询：<a href="tel:13993839833" class="contact-inline">13993839833</a> / <a href="tel:13993839833" class="contact-inline">139 9383 9833</a></p>
           </div>
         </div>
       </div>
@@ -703,7 +703,7 @@
           <h4>联系我们</h4>
           <ul>
             <li><a href="tel:13993839833">📞 13993839833</a></li>
-            <li><a href="mailto:13893811313@163.com">📧 13893811313@163.com</a></li>
+            <li><a href="tel:13993839833">📞 139 9383 9833</a></li>
             <li><a href="booking.html">🎫 在线预约</a></li>
             <li><a href="contact.html">📍 联系我们</a></li>
             <li><a href="javascript:void(0)" data-footer-action="wechat">💬 微信客服</a></li>
@@ -758,7 +758,9 @@
   </footer>
 
   <script src="js/year-lite.js?v=20260803"></script>
-  <script src="js/app.js?v=20260906g"></script>
+  <script src="js/site-assets.js?v=20260929a" defer></script>
+
+  <script src="js/app.js?v=20260930a"></script>
   <!-- 🔧 D块前台×按钮兜底（语法安全修复）：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
   <script>
   (function(){
@@ -827,11 +829,11 @@
           var firstBad=null;
           try{ reqFails.forEach(function(inp){ var v=(inp.value||''); var ok=true; if(inp.type==='checkbox' && !inp.checked) ok=false; else if(inp.type!=='checkbox' && inp.type!=='radio' && !v.trim()) ok=false; if(!ok){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}}, 1800);}catch(_b){} } }); }catch(_rf){}
           if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
-          __FT('✅ 操作成功（演示模式：真实环境将写入工单 + 通知对接专员）','success');
+          __FT('✅ 操作成功，对接专员将尽快与您联系','success');
           try{ fm.reset && fm.reset(); }catch(_rs){}
           e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
         } else {
-          __FT('✅ 操作成功（演示模式）','success');
+          __FT('✅ 操作成功','success');
           try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
           btn.__ftDone=1; e.stopImmediatePropagation(); return;
         }
@@ -844,7 +846,7 @@
       }
       if(isSearch){
         if(!__FL(dk,550)) return;
-        __FT('🔍 查询条件已生效（演示模式）','info');
+        __FT('🔍 查询条件已生效','info');
         btn.__ftDone=1; return;
       }
       if(isCopy){

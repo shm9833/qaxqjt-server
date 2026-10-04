@@ -64,8 +64,10 @@ const create = async ctx => {
     ts: BigInt(nowMs())
   };
   const row = await prisma.customersV1.create({ data });
-  // 可选：联系人子表
+  // 可选：联系人子表（主联系人唯一：有显式 isPrimary 取第一个显式项，否则首条兜底）
   if (Array.isArray(b.contacts) && b.contacts.length) {
+    const explicitPrimary = b.contacts.findIndex(c => c.isPrimary === true);
+    const primaryIndex = explicitPrimary >= 0 ? explicitPrimary : 0;
     await prisma.customerContact.createMany({
       data: b.contacts.map((c, i) => ({
         id: idByCtx('customer', 12, nanoid) + '_c' + i,
@@ -75,7 +77,7 @@ const create = async ctx => {
         phone: c.phone,
         wechatId: c.wechatId || null,
         email: c.email || null,
-        isPrimary: !!c.isPrimary || i === 0,
+        isPrimary: i === primaryIndex,
         remark: c.remark || null,
         ts: BigInt(nowMs())
       }))

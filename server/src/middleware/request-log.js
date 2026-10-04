@@ -10,8 +10,10 @@ const requestLog = () => async (ctx, next) => {
   const start = Date.now();
   ctx.state.traceId = `tr_${nanoid(10)}`;
 
-  // 不要把密码打印到日志
-  const body = ctx.request.body ? JSON.stringify(ctx.request.body).replace(/"password[^"]*":"[^"]*"/g, '"password":"***"') : undefined;
+  // 不要把密码打印到日志：键名中含 password 的字段（password/oldPassword/newPassword/passwordConfirm…）一律遮蔽，保留原键名
+  const body = ctx.request.body
+    ? JSON.stringify(ctx.request.body).replace(/"([^"]*password[^"]*)"\s*:\s*(?:"[^"]*"|null|true|false|-?\d+(?:\.\d+)?)/gi, '"$1":"***"')
+    : undefined;
 
   logger.debug(
     {

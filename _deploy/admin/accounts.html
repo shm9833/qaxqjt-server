@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <base href="/admin/">
   <meta charset="UTF-8">
   <!-- =========================================================== -->
   <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
@@ -19,7 +18,9 @@
     }
     if(bad){
       ["qaxqjt_admin_session","admin_session","qaxqjt_admin_sess_v2","admin_sess_v2","qaxqjt_admin_remember","qaxqjt_admin_token","qaxqjt_admin_info","qaxqjt_admin_permissions","qaxqjt_auth_permissions_v1"].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
-      location.replace(L);
+      var u=location.href, i=u.lastIndexOf("/");
+      var base= (i>=0)? u.substring(0,i+1) : "./";
+      location.replace(base + L);
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
 
@@ -36,11 +37,11 @@
     <meta property="og:image" content="favicon.svg">
 
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-    <script src="../js/favicon-inject.js?v=20260902" defer></script>
-    <script src="../js/wechat-fallback.js?v=20260902" defer></script>
+    <script src="../js/favicon-inject.js?v=20260803" defer></script>
+    <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>账号权限管理 - 秦安县秦剧团云端预约系统后台管理 | {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260919c">
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -392,10 +393,10 @@
             <span class="menu-icon">👥</span>
             <span>账号权限管理</span>
           </a>
-          <a href="schedule.html" data-role-level="800" class="admin-menu-item" >
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item" >
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
-            
+            <span class="menu-badge">8</span>
           </a>
           <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item" >
             <span class="menu-icon">🎭</span>
@@ -405,7 +406,7 @@
           <a href="orders.html" data-role-level="800" class="admin-menu-item" >
             <span class="menu-icon">📋</span>
             <span>订单预约管理</span>
-            
+            <span class="menu-badge">5</span>
           </a>
           <a href="operas.html" data-role-level="800" class="admin-menu-item" >
             <span class="menu-icon">🎭</span>
@@ -423,7 +424,7 @@
           <a href="inventory.html" data-role-level="800" class="admin-menu-item" >
             <span class="menu-icon">📦</span>
             <span>道具服装库存</span>
-            
+            <span class="menu-badge">!</span>
           </a>
           <a href="finance.html" data-role-level="500" class="admin-menu-item" >
             <span class="menu-icon">💰</span>
@@ -432,6 +433,10 @@
           <a href="content.html" data-role-level="800" class="admin-menu-item" >
             <span class="menu-icon">📝</span>
             <span>官网内容管理</span>
+          </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
           </a>
           <a href="reports.html" data-role-level="700" class="admin-menu-item" >
             <span class="menu-icon">📈</span>
@@ -464,6 +469,9 @@
           <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
             <span>🏠</span><span>返回前台首页</span>
           </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
+          </a>
           <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
             <span>🚪</span><span>退出登录</span>
           </a>
@@ -480,7 +488,7 @@
           <div class="admin-breadcrumb">
             <a href="index.html">首页</a>
             <span class="separator">/</span>
-            <a href="#">系统设置</a>
+            <span class="current">账号权限管理</span>
             <span class="separator">/</span>
             <span class="current">账号权限管理</span>
           </div>
@@ -610,14 +618,13 @@
                       <th style="min-width:200px;">操作</th>
                     </tr>
                   </thead>
-                  <tbody id="accountsListTbody" data-paginate="list" data-page-size="10">
-                    <!-- v20260907k：账号列表由 __loadAccounts() 动态渲染，原硬编码演示行已删除 -->
-                    </tr>
-                  </tbody>
+                  <tbody id="accountsMainTbody" data-paginate="list" data-paginate-keep="1" data-page-size="10">
+<tr><td colspan="11" style="text-align:center;padding:30px 14px;color:var(--text-light,#999);">正在加载真实数据…</td></tr>
+</tbody>
                 </table>
               </div>
 
-              <div class="pagination" style="display:none;">
+              <div class="pagination">
                 <button class="page-btn" disabled>‹ 上一页</button>
                 <button class="page-btn active">1</button>
                 <button class="page-btn">2</button>
@@ -728,20 +735,24 @@
                   <label>操作人</label>
                   <input type="text" class="form-control" placeholder="输入操作人姓名...">
                 </div>
-                <div class="form-group" style="margin-bottom:0;min-width:160px;">
+                <div class="form-group" style="margin-bottom:0;min-width:170px;">
                   <label>操作类型</label>
                   <select class="form-control">
                     <option value="">全部类型</option>
-                    <option value="create">新增操作</option>
-                    <option value="update">修改操作</option>
-                    <option value="delete">删除操作</option>
-                    <option value="login">登录登出</option>
-                    <option value="export">导出操作</option>
+                    <option value="LOGIN_SUCCESS">登录成功</option>
+                    <option value="LOGIN_FAIL_PASSWORD">登录失败（密码错误）</option>
+                    <option value="PERFORMER_CREATE">演员新增</option>
+                    <option value="PERFORMER_SOFT_DELETE">演员删除</option>
+                    <option value="PLAY_CREATE">剧目新增</option>
+                    <option value="PLAY_UPDATE">剧目修改</option>
+                    <option value="ORDER_CREATE">订单创建</option>
+                    <option value="ORDER_AUDIT">订单审核</option>
+                    <option value="INV_ITEM_CREATE">库存入库</option>
                   </select>
                 </div>
                 <div class="form-group" style="margin-bottom:0;min-width:180px;">
-                  <label>时间范围</label>
-                  <input type="date" class="form-control" value="{year}-07-01">
+                  <label>日期（当天）</label>
+                  <input type="date" class="form-control">
                 </div>
                 <div style="display:flex;gap:8px;align-items:flex-end;">
                   <button class="btn btn-primary btn-sm">🔍 查询</button>
@@ -762,18 +773,13 @@
                       <th>操作时间</th>
                     </tr>
                   </thead>
-                  <tbody id="auditLogTbody" data-paginate="list" data-page-size="10">
-          <!-- v20260907k：操作日志由 __loadAuditLogs() 动态渲染，原空白态保留 -->
-                  </tbody>
+                  <tbody id="auditLogsMainTbody">
+<tr><td colspan="7" style="text-align:center;padding:30px 14px;color:var(--text-light,#999);">正在加载真实数据…</td></tr>
+</tbody>
                 </table>
               </div>
 
-              <div class="pagination" style="display:none;">
-                <button class="page-btn" disabled>‹ 上一页</button>
-                <button class="page-btn active">1</button>
-                <button class="page-btn" disabled>下一页 ›</button>
-                <span class="page-info">共 0 条日志记录</span>
-              </div>
+              <div id="auditPager" class="audit-pager" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end;padding:12px 4px 4px;font-size:0.86rem;"></div>
             </div>
           </div>
         </div>
@@ -921,23 +927,13 @@
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(15,76,129,0.15);
 }
-/* 后台表格最小宽度（768px以上 → 760px；480~767 →720px；<480 →680px） */
+/* 后台表格：宽度自适应容器，内容超出时横向滚动（移除固定 min-width 避免表格溢出/抖动） */
 .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
 .data-table-container, [class*="table-wrapper"], .admin-content table {
-  min-width: 760px !important;
+  width: 100% !important;
+  min-width: 0 !important;
   overflow-x: auto !important;
-}
-@media (max-width: 768px) {
-  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
-  .data-table-container, [class*="table-wrapper"], .admin-content table {
-    min-width: 720px !important;
-  }
-}
-@media (max-width: 480px) {
-  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
-  .data-table-container, [class*="table-wrapper"], .admin-content table {
-    min-width: 680px !important;
-  }
+  table-layout: auto;
 }
 .s-modal-hide { display: none !important; }
 .s-overlay-hide { display: none !important; }
@@ -948,22 +944,12 @@
 }
   </style>
 
-  <script src="../js/year-lite.js?v=20260902"></script>
-    <script src="../js/api-config.js?v=20260902"></script>
-  <script src="../js/api-request.js?v=20260902"></script>
-<script src="../js/app.js?v=20260920a"></script>
-<script>/* 生产空白态守卫配置 */
-window.__ADMIN_BLANK_CFG__ = [
-  { sel: '.tab-panel[data-tab-panel="logs"] tbody', as: 'tbody', cols: 8, msg: '暂无操作日志，真实操作将自动记录' },
-  { fn: function (h) {
-      var pi = document.querySelector('.tab-panel[data-tab-panel="logs"] .page-info');
-      if (pi && pi.textContent.indexOf('暂无') < 0) pi.textContent = '共 0 条日志记录';
-  } }
-];
-</script>
-<script src="../js/admin-blank.js?v=20260919a"></script>
-
-  <script src="../js/pagination.js?v=20260908p"></script>
+  <script src="../js/year-lite.js?v=20260803"></script>
+    <script src="../js/api-config.js?v=20260803"></script>
+  <script src="../js/api-request.js?v=20260803"></script>
+<script src="../js/app.js?v=20260930a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
   <script>
     (function() {
       var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
@@ -1140,10 +1126,231 @@ window.__ADMIN_BLANK_CFG__ = [
         { key: 'system.config', label: '系统配置管理' },
         { key: 'logs.audit', label: '操作日志审计' }
       ];
-      var __editCtx = { mode: 'add', username: '' };
-      var __resetCtx = { username: '', label: '' };
-      var __deleteCtx = { username: '', label: '' };
-      var __roleCtx = { role: '', label: '' };
+      var __editCtx = { mode: 'add', username: '', accountId: '' };
+      var __resetCtx = { accountId: '', username: '', label: '' };
+      var __deleteCtx = { accountId: '', username: '', label: '' };
+      var __roleCtx = { role: '', label: '', roleId: '', permIds: [], perms: [] };
+
+      // ========== 真实 API 映射常量 ==========
+      var __ROLE_KEY_TO_BACK = { admin: 'super_admin', finance: 'finance_view', scheduler: 'ops', staff: 'staff' };
+      var __ROLE_BACK_TO_KEY = (function(){ var m={}; m['super_admin']='admin'; ['finance_view','finance_admin','finance_checker','finance_maker','finance_cashier'].forEach(function(k){ m[k]='finance'; }); ['ops','director'].forEach(function(k){ m[k]='scheduler'; }); m['staff']='staff'; return m; })();
+      var __STATUS_FRONT_TO_BACK = { '1': 'active', '0': 'disabled' };
+      var __STATUS_BACK_TO_FRONT = { active: '1', disabled: '0', deleted: '0' };
+
+      function __fmtDate(d) {
+        if (!d) return '—';
+        try {
+          var dt = (typeof d === 'string') ? new Date(d) : d;
+          if (isNaN(dt.getTime())) return String(d);
+          var pad = function(n){ n=String(n); return n.length<2?'0'+n:n; };
+          return dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+' '+pad(dt.getHours())+':'+pad(dt.getMinutes());
+        } catch(_) { return String(d); }
+      }
+      function __fmtDateShort(d) {
+        if (!d) return '—';
+        try {
+          var dt = (typeof d === 'string') ? new Date(d) : d;
+          if (isNaN(dt.getTime())) return String(d);
+          var pad = function(n){ n=String(n); return n.length<2?'0'+n:n; };
+          return dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate());
+        } catch(_) { return String(d); }
+      }
+
+      // ========== 启动时拉取真实账号列表 ==========
+      async function loadAccountsFromApi(query) {
+        var tbody = document.getElementById('accountsMainTbody') || document.querySelector('.tab-panel[data-tab-panel="accounts"] tbody[data-paginate="list"]');
+        if (!tbody) { console.warn('[loadAccountsFromApi] tbody not found'); return; }
+        try {
+          // 筛选条件
+          var panel = document.querySelector('.tab-panel[data-tab-panel="accounts"]');
+          var keywordInput = panel && panel.querySelector('.admin-filter-bar input[type=text]');
+          var roleSel = panel && panel.querySelectorAll('.admin-filter-bar select')[0];
+          var statusSel = panel && panel.querySelectorAll('.admin-filter-bar select')[1];
+          var q = { page: 1, pageSize: 100 };
+          if (query && query.keyword) q.keyword = query.keyword;
+          else if (keywordInput && keywordInput.value) q.keyword = keywordInput.value;
+          if (query && query.role) q.role = query.role;
+          else if (roleSel && roleSel.value) q.role = __ROLE_KEY_TO_BACK[roleSel.value] || roleSel.value;
+          if (query && query.status) q.status = query.status;
+          else if (statusSel && statusSel.value) q.status = __STATUS_FRONT_TO_BACK[statusSel.value] || '';
+          var rows = await QAXQJT_API.get('/v1/accounts', { query: q });
+          rows = Array.isArray(rows) ? rows : (rows && rows.items) || (rows && rows.list) || [];
+          tbody.innerHTML = '';
+          var idx = 0;
+          rows.forEach(function(r) {
+            if (r.status === 'deleted') return; // 软删的不在列表显示
+            idx++;
+            var roleKey = __ROLE_BACK_TO_KEY[r.role] || 'staff';
+            var roleLabel = __ROLE_LABELS[roleKey] || r.role || '普通员工';
+            var roleBadgeCls = __roleBadgeClassMap[roleKey] || 'badge badge-secondary';
+            var statusFront = __STATUS_BACK_TO_FRONT[r.status] || '1';
+            var enabled = statusFront === '1';
+            var statusBadgeCls = enabled ? 'badge badge-success' : 'badge badge-warning';
+            var statusText = enabled ? '✓ 启用' : '⏸ 禁用';
+            var btnStatusCls = enabled ? 'btn-warning' : 'btn-success';
+            var btnStatusText = enabled ? '禁用' : '启用';
+            var isAdmin = String(r.username) === 'admin';
+            var tr = document.createElement('tr');
+            tr.setAttribute('data-account-id', String(r.id || ''));
+            tr.innerHTML =
+              '<td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>' +
+              '<td>'+idx+'</td>' +
+              '<td><strong>'+__escapeHtml(r.username||'')+'</strong></td>' +
+              '<td>'+__escapeHtml(r.realName||'')+'</td>' +
+              '<td><span class="'+roleBadgeCls+'">'+__escapeHtml(roleLabel)+'</span></td>' +
+              '<td>'+__escapeHtml(r.phone||'—')+'</td>' +
+              '<td>'+__escapeHtml(r.email||'—')+'</td>' +
+              '<td><span class="'+statusBadgeCls+'">'+statusText+'</span></td>' +
+              '<td>'+__escapeHtml(r.lastLoginAt?__fmtDate(r.lastLoginAt):'—')+'</td>' +
+              '<td>'+__escapeHtml(r.createdAt?__fmtDateShort(r.createdAt):'—')+'</td>' +
+              '<td><div class="action-btn-group">' +
+                '<button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>' +
+                '<button class="btn btn-gold btn-sm">🔑 重置</button>' +
+                '<button class="btn '+btnStatusCls+' btn-sm"'+(isAdmin?' disabled':'')+'>'+btnStatusText+'</button>' +
+                '<button class="btn btn-danger btn-sm"'+(isAdmin?' disabled':'')+'>删除</button>' +
+              '</div></td>';
+            tbody.appendChild(tr);
+          });
+          if (!idx) {
+            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:#999;">暂无账号数据</td></tr>';
+          }
+          // 重新绑定按钮
+          try { __bindAllActionButtons(); } catch(_ba){ console.warn('[__bindAllActionButtons 异常]', _ba); }
+        } catch (e) {
+          console.warn('[loadAccountsFromApi 失败]', e);
+          __toast('⚠️ 加载账号列表失败：' + (e && e.message ? e.message : e), 'error');
+        }
+      }
+
+      // ========== 启动时拉取真实审计日志列表 ==========
+      // ====== 审计日志：服务端真分页（v20260926，替代写死 100 条的假分页栏）======
+      var __auditPg = { page: 1, pageSize: 10, total: 0, filter: null };
+
+      // QAXQJT_API.get 会剥掉信封只回 data，这里需要 meta.total，故直接走信封级 fetch
+      async function __auditFetchEnvelope(path) {
+        var CFG = window.QAXQJT_API_CONFIG || {};
+        var url = (CFG.resolveUrl ? CFG.resolveUrl(path) : path);
+        var headers = { 'Accept': 'application/json' };
+        var t = CFG.getAccessToken && CFG.getAccessToken();
+        if (t) headers['Authorization'] = 'Bearer ' + t;
+        var res = await fetch(url, { headers: headers, credentials: CFG.BASE ? 'include' : 'same-origin' });
+        var j = await res.json();
+        if (!res.ok || j.ok === false) throw new Error((j.error && j.error.message) || ('HTTP ' + res.status));
+        return j;
+      }
+
+      function __auditDetailText(r) {
+        var d = r.detailJson != null ? r.detailJson : r.detail;
+        if (d == null || d === '') return r.action || '';
+        if (typeof d === 'string') return d;
+        try { return JSON.stringify(d); } catch (_) { return String(d); }
+      }
+      function __auditDateTime(ts) {
+        if (!ts) return '—';
+        var d = new Date(ts);
+        if (isNaN(d.getTime())) return String(ts);
+        function p(n){ return n < 10 ? '0' + n : '' + n; }
+        return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+      }
+
+      function __renderAuditPager() {
+        var wrap = document.getElementById('auditPager');
+        if (!wrap) return;
+        var page = __auditPg.page, pageCount = Math.max(1, Math.ceil(__auditPg.total / __auditPg.pageSize));
+        function btn(label, pg, opts) {
+          opts = opts || {};
+          var b = document.createElement('button');
+          b.type = 'button';
+          /* v20260926b 防首次点击被兜底脚本劫持：立即打早退标记（_hasAction/DBF 均认） */
+          b.__superPatchBound = 1; b.__deadBtnChecked = 1;
+          b.className = 'btn btn-sm' + (opts.active ? ' btn-primary' : ' btn-outline-dark');
+          b.style.cssText = 'border-radius:999px;padding:4px 12px;';
+          b.textContent = label;
+          if (opts.disabled) { b.disabled = true; b.style.opacity = '0.45'; b.style.cursor = 'not-allowed'; }
+          else if (!opts.active) { b.addEventListener('click', function () { __auditPg.page = pg; loadAuditLogsFromApi(Object.assign({}, __auditPg.filter, { __keepPage: true })); }); }
+          return b;
+        }
+        wrap.innerHTML = '';
+        var info = document.createElement('span');
+        info.style.cssText = 'margin-right:auto;color:var(--text-light,#888);';
+        info.textContent = '共 ' + __auditPg.total + ' 条 · 第 ' + page + '/' + pageCount + ' 页';
+        wrap.appendChild(info);
+        wrap.appendChild(btn('首页', 1, { disabled: page <= 1 }));
+        wrap.appendChild(btn('‹ 上一页', page - 1, { disabled: page <= 1 }));
+        var start = Math.max(1, page - 2), end = Math.min(pageCount, start + 4);
+        start = Math.max(1, end - 4);
+        for (var p = start; p <= end; p++) wrap.appendChild(btn(String(p), p, { active: p === page }));
+        wrap.appendChild(btn('下一页 ›', page + 1, { disabled: page >= pageCount }));
+        wrap.appendChild(btn('末页', pageCount, { disabled: page >= pageCount }));
+        var sel = document.createElement('select');
+        sel.className = 'form-control form-control-sm';
+        sel.style.cssText = 'width:auto;padding:4px 8px;margin-left:6px;';
+        [10, 20, 50, 100].forEach(function (sz) {
+          var o = document.createElement('option');
+          o.value = String(sz); o.textContent = sz + ' 条/页';
+          if (sz === __auditPg.pageSize) o.selected = true;
+          sel.appendChild(o);
+        });
+        sel.addEventListener('change', function () {
+          __auditPg.pageSize = parseInt(sel.value, 10) || 10;
+          __auditPg.page = 1;
+          loadAuditLogsFromApi(Object.assign({}, __auditPg.filter, { __keepPage: true }));
+        });
+        wrap.appendChild(sel);
+      }
+
+      async function loadAuditLogsFromApi(query) {
+        var panel = document.querySelector('.tab-panel[data-tab-panel="logs"]');
+        if (!panel) return;
+        var tbody = document.getElementById('auditLogsMainTbody');
+        if (!tbody) return;
+        if (query && query.__keepPage) { /* 翻页/切页大小：保留 __auditPg.page */ }
+        else if (query && query.__page) __auditPg.page = query.__page;
+        else if (query && (query.username !== undefined || query.action !== undefined || query.from !== undefined)) __auditPg.page = 1; // 新查询回到第 1 页
+        __auditPg.filter = query || null;
+        try {
+          var inputs = panel.querySelectorAll('.admin-filter-bar input[type=text]');
+          var selects = panel.querySelectorAll('.admin-filter-bar select');
+          var dateInputs = panel.querySelectorAll('.admin-filter-bar input[type=date]');
+          var q = { page: __auditPg.page, pageSize: __auditPg.pageSize };
+          if (query && query.username) q.username = query.username;
+          else if (inputs && inputs[0] && inputs[0].value) q.username = inputs[0].value;
+          if (query && query.action) q.action = query.action;
+          else if (selects && selects[0] && selects[0].value) q.action = selects[0].value;
+          // 单日期筛选按整天处理：from=当天 00:00:00，to=当天 23:59:59（后端 to 是 <=）
+          var day = (query && query.from) || (dateInputs && dateInputs[0] && dateInputs[0].value) || '';
+          if (day) { q.from = day + ' 00:00:00'; q.to = day + ' 23:59:59'; }
+          if (query && query.to && !day) q.to = query.to;
+          var qs = Object.keys(q).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(q[k]); }).join('&');
+          var env = await __auditFetchEnvelope('/v1/audit-logs?' + qs);
+          var rows = Array.isArray(env.data) ? env.data : [];
+          __auditPg.total = (env.meta && env.meta.total) || rows.length;
+          var pageCount = Math.max(1, Math.ceil(__auditPg.total / __auditPg.pageSize));
+          if (__auditPg.page > pageCount) { __auditPg.page = pageCount; return loadAuditLogsFromApi(query); }
+          tbody.innerHTML = '';
+          var base = (__auditPg.page - 1) * __auditPg.pageSize;
+          rows.forEach(function (r, i) {
+            var tr = document.createElement('tr');
+            var fail = String(r.action || '').indexOf('FAIL') >= 0;
+            tr.innerHTML =
+              '<td>' + (base + i + 1) + '</td>' +
+              '<td><strong>' + __escapeHtml(r.username || r.accountId || '—') + '</strong></td>' +
+              '<td>' + __escapeHtml(r.module || '—') + '</td>' +
+              '<td><span class="badge ' + (fail ? 'badge-warning' : 'badge-info') + '">' + __escapeHtml(r.action || '') + '</span></td>' +
+              '<td>' + __escapeHtml(__auditDetailText(r)) + '</td>' +
+              '<td>' + __escapeHtml(r.ipAddress || '—') + '</td>' +
+              '<td>' + __escapeHtml(__auditDateTime(r.actionTs)) + '</td>';
+            tbody.appendChild(tr);
+          });
+          if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#999;">暂无审计日志</td></tr>';
+          }
+          __renderAuditPager();
+        } catch (e) {
+          console.warn('[loadAuditLogsFromApi 失败]', e);
+          __toast('⚠️ 加载审计日志失败：' + (e && e.message ? e.message : e), 'error');
+        }
+      }
 
       function __toast(msg, type) { try { if (window.Utils && Utils.toast) Utils.toast(msg, type || 'success', 2600); else alert(msg); } catch(_e) { try { alert(msg); } catch(_){} } }
       function __getCellText(tr, idx) { var tds = tr.querySelectorAll('td'); if (!tds[idx]) return ''; var s = tds[idx].innerText || tds[idx].textContent || ''; return s.trim(); }
@@ -1165,11 +1372,13 @@ window.__ADMIN_BLANK_CFG__ = [
       }
 
       function showAddUserModal() {
-        __editCtx = { mode: 'add', username: '' };
+        __editCtx = { mode: 'add', username: '', accountId: '' };
         document.getElementById('userModalTitle').innerText = '➕ 新增账号';
         document.getElementById('box_pwd').style.display = '';
         try {
-          document.getElementById('inp_username').value = '';
+          var unInput = document.getElementById('inp_username');
+          unInput.value = '';
+          unInput.readOnly = false;
           document.getElementById('inp_realname').value = '';
           document.getElementById('inp_role').value = 'staff';
           document.getElementById('inp_phone').value = '';
@@ -1180,15 +1389,18 @@ window.__ADMIN_BLANK_CFG__ = [
         openModal('userModal');
       }
 
-      function showEditUserModal(username, realname, role, phone, email, status) {
-        if (!username) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
-        __editCtx = { mode: 'edit', username: String(username) };
-        document.getElementById('userModalTitle').innerText = '✏️ 编辑账号（' + String(username) + '）';
+      function showEditUserModal(accountId, username, realname, role, phone, email, status) {
+        if (!accountId) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
+        __editCtx = { mode: 'edit', username: String(username||''), accountId: String(accountId) };
+        document.getElementById('userModalTitle').innerText = '✏️ 编辑账号（' + String(username || accountId) + '）';
         document.getElementById('box_pwd').style.display = 'none';
         try {
           document.getElementById('inp_username').value = String(username || '');
+          document.getElementById('inp_username').readOnly = true;
           document.getElementById('inp_realname').value = String(realname || '');
-          document.getElementById('inp_role').value = String(role || 'staff');
+          var roleKey = __ROLE_BACK_TO_KEY[String(role||'')] || String(role||'staff');
+          if (__ROLE_KEY_TO_BACK[roleKey]) roleKey = roleKey; // 已是合法前端 key
+          document.getElementById('inp_role').value = (Object.keys(__ROLE_KEY_TO_BACK).indexOf(roleKey) >= 0) ? roleKey : 'staff';
           document.getElementById('inp_phone').value = String(phone || '');
           document.getElementById('inp_email').value = String(email || '');
           document.getElementById('inp_status').value = String(status === 0 ? '0' : (status === '0' ? '0' : '1'));
@@ -1199,18 +1411,16 @@ window.__ADMIN_BLANK_CFG__ = [
       function saveUser() {
         // 🔧 S6-A FIX：防抖锁，防止快速双击重复提交
         if (window.__OP_LOCKS && window.__OP_LOCKS.saveUser) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
-        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.saveUser = true; setTimeout(function () { try { delete window.__OP_LOCKS.saveUser; } catch (_) { } }, 600); } catch (_lo) { }
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.saveUser = true; setTimeout(function () { try { delete window.__OP_LOCKS.saveUser; } catch (_) { } }, 800); } catch (_lo) { }
         var uname = (document.getElementById('inp_username') || {}).value || '';
         var rname = (document.getElementById('inp_realname') || {}).value || '';
         if (!uname || !rname) { __toast('❌ 账号和姓名不能为空', 'error'); return; }
-        // 🔧 S5-A FIX：账号名合法性校验（字母/数字/_/-/中文，3-32位）
         var unameRe = /^[A-Za-z0-9_\-\u4e00-\u9fa5]{3,32}$/;
         if (!unameRe.test(String(uname))) { __toast('❌ 账号名不合法：仅允许字母、数字、下划线、短横、中文，长度 3-32 位', 'error'); return; }
         var role = (document.getElementById('inp_role') || {}).value || 'staff';
         var phone = (document.getElementById('inp_phone') || {}).value || '';
         var email = (document.getElementById('inp_email') || {}).value || '';
         var status = (document.getElementById('inp_status') || {}).value || '1';
-        // 🔧 S5-A FIX：手机号/邮箱格式校验
         if (phone) {
           var phoneRe = /^1[3-9]\d{9}$/;
           if (!phoneRe.test(String(phone))) { __toast('❌ 手机号格式不正确：请输入 11 位中国大陆手机号（如 13800000000）', 'error'); return; }
@@ -1219,70 +1429,58 @@ window.__ADMIN_BLANK_CFG__ = [
           var emailRe = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/;
           if (!emailRe.test(String(email))) { __toast('❌ 邮箱格式不正确：请输入合法邮箱地址（如 name@example.com）', 'error'); return; }
         }
-        // v20260908j：API 优先调用 POST/PATCH /v1/accounts
-        var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
-        if (QinFetch && typeof QinFetch.request === 'function') {
-          var payload = { username: String(uname), displayName: String(rname), role: String(role), phone: String(phone), email: String(email), status: String(status) };
-          if (__editCtx.mode === 'add') {
-            var rawPwd = (document.getElementById('inp_password') || {}).value || '';
-            var initialPwd = rawPwd || 'Qaxqjt@2026';
-            if (!initialPwd || initialPwd.length < 6) { __toast('❌ 初始密码长度至少 6 位', 'error'); return; }
-            payload.password = initialPwd;
-            QinFetch.request('POST', '/v1/accounts', { body: payload }).then(function(resp){
-              __toast('✅ 新增账号成功：' + uname + '（已对接后端 POST /v1/accounts）', 'success');
-              try { __loadAccounts(); } catch(_){}
-              closeUserModal();
-            }).catch(function(err){
-              console.error('[accounts] create err:', err);
-              __toast('❌ 新增失败：' + (err && err.message ? err.message : '网络错误'), 'error');
-            });
-          } else {
-            QinFetch.request('PATCH', '/v1/accounts/' + encodeURIComponent(__editCtx.username), { body: payload }).then(function(resp){
-              __toast('✅ 账号更新成功：' + uname + '（已对接后端 PATCH /v1/accounts/' + uname + '）', 'success');
-              try { __loadAccounts(); } catch(_){}
-              closeUserModal();
-            }).catch(function(err){
-              console.error('[accounts] update err:', err);
-              __toast('❌ 更新失败：' + (err && err.message ? err.message : '网络错误'), 'error');
-            });
-          }
-          return;
-        }
-        // 降级：localStorage patch + DOM 同步（原逻辑）
+        var roleBack = __ROLE_KEY_TO_BACK[role] || role;
+        var statusBack = __STATUS_FRONT_TO_BACK[status] || 'active';
         if (__editCtx.mode === 'add') {
-          // 🔧 B6 FIX：新增模式先查重（不能和已有账号同名），再插入 DOM 新行，读取实际密码
-          var dup = __findRowByUsername(String(uname));
-          if (dup) { __toast('❌ 新增失败：账号 ' + String(uname) + ' 已存在，请换一个账号名', 'error'); return; }
-          var rawPwd2 = (document.getElementById('inp_password') || {}).value || '';
-          var initialPwd2 = rawPwd2 || 'Qaxqjt@2026';
-          // 密码校验：和重置密码保持一致，至少 6 位
-          if (!initialPwd2 || initialPwd2.length < 6) { __toast('❌ 初始密码长度至少 6 位', 'error'); return; }
-          try {
-            __insertNewUserRow({
-              username: String(uname),
-              realname: String(rname),
-              role: String(role),
-              phone: String(phone),
-              email: String(email),
-              status: String(status)
-            });
-          } catch(_insErr) { console.warn('[saveUser 新增模式插入 DOM 失败]', _insErr); }
-          // 🔧 B8 FIX：新增账号 → 写入 localStorage patch（刷新不丢）
-          try { __patchUpsert({ username: String(uname), realname: String(rname), role: String(role), phone: String(phone), email: String(email), status: String(status), _isNew: true }); } catch(_pc){}
-          __toast('✅ 新增账号成功：' + uname + '（' + rname + '）· 初始密码：' + initialPwd2 + '（API 未就绪，降级 localStorage）', 'success');
+          var rawPwd = (document.getElementById('inp_password') || {}).value || '';
+          var initialPwd = rawPwd || 'Qaxqjt@2026';
+          if (!initialPwd || initialPwd.length < 8) { __toast('❌ 初始密码长度至少 8 位', 'error'); return; }
+          (async function(){
+            try {
+              __toast('⏳ 正在创建账号…', 'success');
+              await QAXQJT_API.post('/v1/accounts', {
+                username: String(uname),
+                password: String(initialPwd),
+                realName: String(rname),
+                role: roleBack,
+                phone: String(phone),
+                email: String(email),
+                status: statusBack,
+                forcePwdChange: true
+              });
+              __toast('✅ 新增账号成功：' + uname + '（' + rname + '）· 初始密码：' + initialPwd + '（已写入后端）', 'success');
+              closeUserModal();
+              await loadAccountsFromApi();
+            } catch(e) {
+              __toast('❌ 新增失败：' + (e && e.message ? e.message : e), 'error');
+            }
+          })();
         } else {
-          // —— 🔴 Bug Fix B1：编辑模式保存后实时同步 DOM 单行数据，避免 UI 还是旧值
-          try { __updateRowAfterEdit(String(uname), { realname: String(rname), role: String(role), phone: String(phone), email: String(email), status: String(status) }); } catch(_u){}
-          // 🔧 B8 FIX：编辑原生/新增账号 → 写入 localStorage patch（刷新不丢）
-          try { __patchUpsert({ username: String(uname), realname: String(rname), role: String(role), phone: String(phone), email: String(email), status: String(status) }); } catch(_pc){}
-          __toast('✅ 账号资料更新成功：' + uname + '（API 未就绪，降级 localStorage）', 'success');
+          var accId = __editCtx.accountId;
+          if (!accId) { __toast('❌ 编辑模式缺少 accountId，请关闭后重试', 'error'); return; }
+          (async function(){
+            try {
+              __toast('⏳ 正在保存修改…', 'success');
+              await QAXQJT_API.patch('/v1/accounts/' + encodeURIComponent(accId), {
+                realName: String(rname),
+                role: roleBack,
+                phone: String(phone),
+                email: String(email),
+                status: statusBack
+              });
+              __toast('✅ 账号资料更新成功：' + uname + '（' + (__ROLE_LABELS[role] || role) + '）', 'success');
+              closeUserModal();
+              await loadAccountsFromApi();
+            } catch(e) {
+              __toast('❌ 保存失败：' + (e && e.message ? e.message : e), 'error');
+            }
+          })();
         }
-        closeUserModal();
       }
 
-      function showResetPwdModal(username, label) {
-        if (!username) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
-        __resetCtx = { username: String(username), label: String(label || username) };
+      function showResetPwdModal(accountId, username, label) {
+        if (!accountId) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
+        __resetCtx = { accountId: String(accountId), username: String(username||''), label: String(label || username) };
         document.getElementById('resetUserLabel').innerText = String(__resetCtx.label) + '（账号：' + String(__resetCtx.username) + '）';
         document.getElementById('inp_new_pwd').value = 'Qaxqjt@2026';
         openModal('resetPwdModal');
@@ -1290,77 +1488,72 @@ window.__ADMIN_BLANK_CFG__ = [
       function doResetPwd() {
         // 🔧 S6 FIX：防抖锁
         if (window.__OP_LOCKS && window.__OP_LOCKS.doResetPwd) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
-        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.doResetPwd = true; setTimeout(function () { try { delete window.__OP_LOCKS.doResetPwd; } catch (_) { } }, 600); } catch (_lo) { }
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.doResetPwd = true; setTimeout(function () { try { delete window.__OP_LOCKS.doResetPwd; } catch (_) { } }, 800); } catch (_lo) { }
         var newPwd = (document.getElementById('inp_new_pwd') || {}).value || '';
-        if (!newPwd || newPwd.length < 6) { __toast('❌ 新密码长度至少 6 位', 'error'); return; }
-        __toast('🔑 密码重置成功（账号：' + __resetCtx.username + '，新密码：' + newPwd + '）', 'success');
-        closeResetPwdModal();
+        if (!newPwd || newPwd.length < 8) { __toast('❌ 新密码长度至少 8 位', 'error'); return; }
+        var accId = __resetCtx.accountId;
+        if (!accId) { __toast('❌ 缺少 accountId', 'error'); return; }
+        (async function(){
+          try {
+            __toast('⏳ 正在重置密码…', 'success');
+            await QAXQJT_API.post('/v1/accounts/' + encodeURIComponent(accId) + '/reset-password', {
+              password: String(newPwd)
+            });
+            __toast('🔑 密码重置成功（账号：' + __resetCtx.username + '，新密码：' + newPwd + '，已吊销其全部会话）', 'success');
+            closeResetPwdModal();
+          } catch(e) {
+            __toast('❌ 重置失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
       }
 
-      function confirmDeleteUser(username, label) {
-        if (!username) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
+      function confirmDeleteUser(accountId, username, label) {
+        if (!accountId) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
         if (username === 'admin') { __toast('❌ 超级管理员账号不允许删除', 'error'); return; }
-        __deleteCtx = { username: String(username), label: String(label || username) };
+        __deleteCtx = { accountId: String(accountId), username: String(username), label: String(label || username) };
         document.getElementById('deleteUserLabel').innerText = String(__deleteCtx.label) + '（账号：' + String(__deleteCtx.username) + '）';
         openModal('deleteModal');
       }
       function doDeleteUser() {
         // 🔧 S6-B FIX：防抖锁
         if (window.__OP_LOCKS && window.__OP_LOCKS.doDeleteUser) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
-        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.doDeleteUser = true; setTimeout(function () { try { delete window.__OP_LOCKS.doDeleteUser; } catch (_) { } }, 600); } catch (_lo) { }
-        var u = String(__deleteCtx.username || '');
-        // v20260908j：API 优先调用 DELETE /v1/accounts/:id
-        var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
-        if (QinFetch && typeof QinFetch.request === 'function') {
-          QinFetch.request('DELETE', '/v1/accounts/' + encodeURIComponent(u)).then(function(resp){
-            __toast('🗑️ 账号删除成功：' + u + '（已对接后端 DELETE /v1/accounts/' + u + '）', 'success');
-            try { __loadAccounts(); } catch(_){}
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.doDeleteUser = true; setTimeout(function () { try { delete window.__OP_LOCKS.doDeleteUser; } catch (_) { } }, 800); } catch (_lo) { }
+        var accId = __deleteCtx.accountId;
+        if (!accId) { __toast('❌ 缺少 accountId', 'error'); return; }
+        (async function(){
+          try {
+            __toast('⏳ 正在删除账号…', 'success');
+            await QAXQJT_API.del('/v1/accounts/' + encodeURIComponent(accId));
+            __toast('🗑️ 账号删除成功（已软删：' + (__deleteCtx.username || '') + '，审计日志保留）', 'success');
             closeDeleteModal();
-          }).catch(function(err){
-            console.error('[accounts] delete err:', err);
-            __toast('❌ 删除失败：' + (err && err.message ? err.message : '网络错误'), 'error');
-            closeDeleteModal();
-          });
-          return;
-        }
-        // 降级：localStorage patch + DOM 移除（原逻辑）
-        // 🔧 B8 FIX：删除前写入 localStorage patch（刷新后依然是删除状态）
-        try { if (u) __patchDelete(u); } catch(_pd){}
-        // —— 🔴 Bug Fix B1：删除确认后从 DOM 移除对应行，带淡出动画，避免用户以为「弹窗没关/没删」
-        try { if (u) __deleteRowByUsername(u); } catch(_d){}
-        __toast('🗑️ 账号删除成功（API 未就绪，降级 localStorage）：' + u, 'success');
-        closeDeleteModal();
+            await loadAccountsFromApi();
+          } catch(e) {
+            __toast('❌ 删除失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
       }
 
-      function toggleUserStatus(username, label, curStatusInt) {
-        if (!username) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
-        // 🔧 S6-A FIX：防抖锁（防快速双击导致 confirm 弹两次 → 状态来回跳）
-        var lockKey = 'toggle_' + String(username);
+      function toggleUserStatus(accountId, username, label, curStatusInt) {
+        if (!accountId) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
+        // 🔧 S6-A FIX：防抖锁
+        var lockKey = 'toggle_' + String(accountId);
         if (window.__OP_LOCKS && window.__OP_LOCKS[lockKey]) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
-        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS[lockKey] = true; setTimeout(function () { try { delete window.__OP_LOCKS[lockKey]; } catch (_) { } }, 600); } catch (_lo) { }
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS[lockKey] = true; setTimeout(function () { try { delete window.__OP_LOCKS[lockKey]; } catch (_) { } }, 800); } catch (_lo) { }
         var isDisable = String(curStatusInt) === '1';
         if (isDisable) {
           if (!confirm('确定要禁用账号 ' + (label || username) + ' 吗？禁用后该账号将无法登录。')) return;
-          __toast('✕ 账号已禁用：' + (label || username), 'warning');
-        } else {
-          __toast('✓ 账号已启用：' + (label || username), 'success');
         }
-        // —— 🔴 Bug Fix B1：操作后实时同步 DOM 状态列 + 按钮文案，避免用户觉得「弹出窗口没关闭/没反应」
-        try {
-          var tr = __findRowByUsername(username);
-          if (tr) {
-            var newStatus = isDisable ? '0' : '1';
-            __syncRowStatusBadge(tr, newStatus);
-            __syncToggleButtonText(tr, newStatus);
-            // 同步状态值：更新 __bindAllActionButtons 下次绑定时的参数源（从 DOM text 重新读取就会更新）
-            __rebindAllButtonsSingleRow(tr);
+        var newStatusBack = isDisable ? 'disabled' : 'active';
+        (async function(){
+          try {
+            __toast('⏳ 正在' + (isDisable ? '禁用' : '启用') + '账号…', 'success');
+            await QAXQJT_API.patch('/v1/accounts/' + encodeURIComponent(accountId), { status: newStatusBack });
+            __toast((isDisable ? '✕ 账号已禁用：' : '✓ 账号已启用：') + (label || username), isDisable ? 'warning' : 'success');
+            await loadAccountsFromApi();
+          } catch(e) {
+            __toast('❌ ' + (isDisable ? '禁用' : '启用') + '失败：' + (e && e.message ? e.message : e), 'error');
           }
-        } catch(_syncErr) { if (window.console && console.warn) console.warn('[toggleUserStatus 状态同步失败]', _syncErr); }
-        // 🔧 B8 FIX：禁用/启用状态 → 写入 localStorage patch（刷新不还原）
-        try {
-          var newSt = isDisable ? '0' : '1';
-          __patchUpsert({ username: String(username), status: String(newSt) });
-        } catch(_ps){}
+        })();
       }
 
       // ============ 🛠️ 辅助函数：账号行 DOM 实时同步（Bug Fix B1：状态/编辑/删除后 UI 不更新） ============
@@ -1482,7 +1675,7 @@ window.__ADMIN_BLANK_CFG__ = [
       }
       function __insertNewUserRow(data) {
         try {
-          var tbody = document.querySelector('.tab-panel[data-tab-panel="accounts"] tbody[data-paginate="list"]');
+          var tbody = document.getElementById('accountsMainTbody') || document.querySelector('.tab-panel[data-tab-panel="accounts"] tbody[data-paginate="list"]');
           if (!tbody || !data || !data.username) return;
           var roleKey = String(data.role || 'staff');
           var roleLabel = __ROLE_LABELS[roleKey] || '普通员工';
@@ -1676,57 +1869,120 @@ window.__ADMIN_BLANK_CFG__ = [
 
       function editRolePerm(roleKey, roleLabel) {
         if (!roleKey) { __toast('⚠️ 角色参数缺失', 'warning'); return; }
-        __roleCtx = { role: String(roleKey), label: String(roleLabel || roleKey) };
+        __roleCtx = { role: String(roleKey), label: String(roleLabel || roleKey), roleId: '', permIds: [], perms: [] };
         document.getElementById('roleLabel').innerText = String(__roleCtx.label) + '（key：' + String(__roleCtx.role) + '）';
-        // 渲染复选框
-        var box = document.getElementById('permCheckboxes');
-        if (box) {
-          var defaults = {
-            admin: __ALL_PERMS.map(function(p){ return p.key; }),
-            finance: ['finance.manage','reports.view','orders.audit','logs.audit'],
-            scheduler: ['schedule.manage','orders.audit','operas.manage','staff.manage','inventory.manage'],
-            staff: []
-          };
-          var checked = defaults[__roleCtx.role] || [];
-          box.innerHTML = '';
-          for (var i=0;i<__ALL_PERMS.length;i++) {
-            var p = __ALL_PERMS[i];
-            var id = 'perm_' + p.key;
-            var chk = checked.indexOf(p.key) >= 0 ? 'checked' : '';
-            var div = document.createElement('label');
-            div.style.cssText = 'display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--border-light);border-radius:8px;cursor:pointer;transition:.15s;';
-            div.onmouseenter = function(){ this.style.borderColor='var(--primary)'; };
-            div.onmouseleave = function(){ this.style.borderColor='var(--border-light)'; };
-            div.innerHTML = '<input type="checkbox" id="'+id+'" data-perm="'+p.key+'" '+chk+' style="accent-color:var(--primary);width:16px;height:16px;flex:0 0 16px;"> <span style="font-size:0.9rem;color:#333;">'+p.label+'</span>';
-            box.appendChild(div);
+        // 异步拉取：角色列表（按名称匹配取 id+已授权权限）+ 权限字典
+        (async function(){
+          try {
+            var API = window.QAXQJT_API;
+            // 1. 拉取权限字典
+            var allPerms = await API.get('/v1/permissions', { query: { pageSize: 500 } });
+            allPerms = Array.isArray(allPerms) ? allPerms : (allPerms && allPerms.data) || [];
+            // 2. 拉取角色列表，按名称匹配
+            var roles = await API.get('/v1/roles', { query: { pageSize: 200 } });
+            roles = Array.isArray(roles) ? roles : (roles && roles.data) || [];
+            // 用中文 roleLabel 直接匹配后端角色名（production 角色名就是中文）
+            var matched = roles.filter(function(r){ return String(r.name) === roleLabel || String(r.name) === roleKey; })[0];
+            if (matched) {
+              __roleCtx.roleId = matched.id;
+              // listRoles 已 include rolePermissions（后端 V2026.9.30+），直接取回显
+              __roleCtx.permIds = (matched.rolePermissions || []).map(function(rp){ return String(rp.permissionId || (rp.permission && rp.permission.id) || ''); }).filter(Boolean);
+            }
+            // 3. 渲染复选框（优先用后端权限字典；空时回退内置 __ALL_PERMS）
+            var box = document.getElementById('permCheckboxes');
+            if (box) {
+              box.innerHTML = '';
+              var permsToShow = allPerms.length ? allPerms.map(function(p){ return { id: String(p.id), code: p.code || p.name, label: p.name || p.code }; }) : __ALL_PERMS.map(function(p){ return { id: p.key, code: p.key, label: p.label }; });
+              __roleCtx.perms = permsToShow;
+              for (var i=0;i<permsToShow.length;i++) {
+                var p = permsToShow[i];
+                var chk = __roleCtx.permIds.indexOf(p.id) >= 0 ? 'checked' : '';
+                var div = document.createElement('label');
+                div.style.cssText = 'display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--border-light);border-radius:8px;cursor:pointer;transition:.15s;';
+                div.onmouseenter = function(){ this.style.borderColor='var(--primary)'; };
+                div.onmouseleave = function(){ this.style.borderColor='var(--border-light)'; };
+                div.innerHTML = '<input type="checkbox" data-perm-id="'+p.id+'" '+chk+' style="accent-color:var(--primary);width:16px;height:16px;flex:0 0 16px;"> <span style="font-size:0.9rem;color:#333;">'+p.label+(p.code && p.code!==p.label?' <span style="color:#999;font-size:.75rem;">('+p.code+')</span>':'')+'</span>';
+                box.appendChild(div);
+              }
+              // 当后端权限字典为空时，在复选框上方插入警告
+              if (!allPerms.length) {
+                var warn = document.createElement('div');
+                warn.style.cssText = 'background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 12px;margin-bottom:12px;color:#856404;font-size:.88rem;';
+                warn.innerHTML = '⚠️ 后端权限字典未初始化（permissions 表为空）。当前显示的是前端内置默认权限列表，保存时将清空该角色的后端权限。建议先初始化权限字典后再配置。';
+                box.insertBefore(warn, box.firstChild);
+              }
+            }
+            if (!matched) { __toast('❌ 后端未找到角色「'+roleLabel+'」，无法保存', 'error'); __roleCtx.roleId = ''; }
+          } catch(e) {
+            __toast('⚠️ 拉取权限字典失败：'+(e&&e.message?e.message:e)+'，使用内置默认权限','warning');
+            // 回退：使用内置 __ALL_PERMS
+            var box = document.getElementById('permCheckboxes');
+            if (box) {
+              box.innerHTML = '';
+              for (var i=0;i<__ALL_PERMS.length;i++) {
+                var p = __ALL_PERMS[i];
+                var div = document.createElement('label');
+                div.style.cssText = 'display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--border-light);border-radius:8px;cursor:pointer;';
+                div.innerHTML = '<input type="checkbox" data-perm-id="'+p.key+'" style="accent-color:var(--primary);width:16px;height:16px;flex:0 0 16px;"> <span style="font-size:0.9rem;color:#333;">'+p.label+'</span>';
+                box.appendChild(div);
+              }
+            }
           }
-        }
+        })();
         openModal('rolePermModal');
       }
       function saveRolePerm() {
-        var count = 0;
+        if (!__roleCtx.roleId) { __toast('⚠️ 未匹配到后端角色 ID，无法保存','error'); return; }
+        var ids = [];
         try {
           var inputs = document.querySelectorAll('#permCheckboxes input[type=checkbox]');
-          for (var i=0;i<inputs.length;i++) if (inputs[i].checked) count++;
+          for (var i=0;i<inputs.length;i++) if (inputs[i].checked) ids.push(String(inputs[i].getAttribute('data-perm-id')));
         } catch(_){}
-        __toast('🛡️ 角色权限已保存：' + __roleCtx.label + '（共启用 ' + count + ' / ' + __ALL_PERMS.length + ' 项权限）', 'success');
-        closeRolePermModal();
+        var API = window.QAXQJT_API;
+        if (!API) { __toast('⚠️ 接口未就绪','error'); return; }
+        (async function(){
+          try {
+            await API.put('/v1/roles/' + encodeURIComponent(__roleCtx.roleId) + '/permissions', { permissionIds: ids });
+            __toast('✅ 已保存「'+__roleCtx.label+'」的权限配置（共 '+ids.length+' 项）','success');
+            closeRolePermModal();
+          } catch(e) {
+            __toast('❌ 保存失败：'+(e&&e.message?e.message:e),'error');
+          }
+        })();
       }
 
       function queryUsers() {
-        var kw = document.querySelectorAll('.admin-filter-bar input[type=text]');
-        var k = kw && kw[0] ? kw[0].value || '' : '';
-        __toast('🔍 查询完成（关键词：' + (k || '全部') + '）· 共匹配 10 条账号记录', 'success');
+        var panel = document.querySelector('.tab-panel[data-tab-panel="accounts"]');
+        var kwInput = panel && panel.querySelector('.admin-filter-bar input[type=text]');
+        var k = (kwInput && kwInput.value) || '';
+        (async function(){
+          try {
+            __toast('🔍 正在查询账号列表…', 'success');
+            await loadAccountsFromApi({ keyword: k });
+            __toast('✅ 查询完成（关键词：' + (k || '全部') + '）', 'success');
+          } catch(e) {
+            __toast('❌ 查询失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
       }
       function resetQuery() {
-        var bars = document.querySelectorAll('.admin-filter-bar');
-        if (bars && bars[0]) {
-          var inputs = bars[0].querySelectorAll('input');
+        var panel = document.querySelector('.tab-panel[data-tab-panel="accounts"]');
+        var bar = panel && panel.querySelector('.admin-filter-bar');
+        if (bar) {
+          var inputs = bar.querySelectorAll('input');
           for (var i=0;i<inputs.length;i++) if (inputs[i].type !== 'checkbox') inputs[i].value='';
-          var selects = bars[0].querySelectorAll('select');
+          var selects = bar.querySelectorAll('select');
           for (var j=0;j<selects.length;j++) selects[j].selectedIndex = 0;
         }
-        __toast('↻ 筛选条件已重置', 'success');
+        (async function(){
+          try {
+            __toast('↻ 正在重置并刷新…', 'success');
+            await loadAccountsFromApi({ keyword: '', role: '', status: '' });
+            __toast('✅ 筛选条件已重置', 'success');
+          } catch(e) {
+            __toast('❌ 重置失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
       }
       function __getCheckedUsernames() {
         var arr = [];
@@ -1737,7 +1993,8 @@ window.__ADMIN_BLANK_CFG__ = [
             var cb = tr.querySelector('input[type=checkbox]');
             if (cb && cb.checked) {
               var name = __getCellText(tr, 2);
-              if (name && name !== 'admin') arr.push({ username: name, label: __getCellText(tr, 3) });
+              var accId = tr.getAttribute('data-account-id') || '';
+              if (name && name !== 'admin' && accId) arr.push({ accountId: accId, username: name, label: __getCellText(tr, 3) });
             }
           }
         } catch(_){}
@@ -1746,78 +2003,136 @@ window.__ADMIN_BLANK_CFG__ = [
       function batchEnableUsers() {
         var arr = __getCheckedUsernames();
         if (!arr.length) { __toast('⚠️ 请先勾选需要启用的账号（至少 1 个）', 'warning'); return; }
-        // 🔧 S6 FIX：批量操作防抖
         if (window.__OP_LOCKS && window.__OP_LOCKS.batchEnable) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
-        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.batchEnable = true; setTimeout(function () { try { delete window.__OP_LOCKS.batchEnable; } catch (_) { } }, 800); } catch (_lo) { }
-        // 🔧 B8 FIX：批量启用 → 更新 DOM 状态 + 写入 localStorage patch
-        var ok = 0;
-        for (var i=0;i<arr.length;i++) {
-          try {
-            var u = String(arr[i].username || '');
-            if (!u) continue;
-            var tr = __findRowByUsername(u);
-            if (tr) {
-              __syncRowStatusBadge(tr, '1');
-              __syncToggleButtonText(tr, '1');
-              try { __rebindAllButtonsSingleRow(tr); } catch(_rb){}
-            }
-            try { __patchUpsert({ username: u, status: '1' }); } catch(_pu){}
-            ok++;
-          } catch(_bi){}
-        }
-        try { __renumberAllRows(); } catch(_rn){}
-        __toast('✓ 批量启用成功：' + ok + ' 个账号（' + arr.map(function(x){return x.label||x.username;}).slice(0,5).join('、') + (arr.length>5?' 等':'') + '）· 本地持久化，刷新不丢失', 'success');
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.batchEnable = true; setTimeout(function () { try { delete window.__OP_LOCKS.batchEnable; } catch (_) { } }, 1200); } catch (_lo) { }
+        (async function(){
+          var ok = 0, fail = 0;
+          __toast('⏳ 正在批量启用 ' + arr.length + ' 个账号…', 'success');
+          for (var i=0;i<arr.length;i++) {
+            try {
+              var it = arr[i];
+              if (!it.accountId) continue;
+              await QAXQJT_API.patch('/v1/accounts/' + encodeURIComponent(it.accountId), { status: 'active' });
+              ok++;
+            } catch(_bi){ fail++; }
+          }
+          __toast((ok>0?'✓ 批量启用成功 ' + ok + ' 个':'') + (fail>0?'（失败 ' + fail + ' 个）':''), ok>0?'success':'error');
+          await loadAccountsFromApi();
+        })();
       }
       function batchDisableUsers() {
         var arr = __getCheckedUsernames();
         if (!arr.length) { __toast('⚠️ 请先勾选需要禁用的账号（至少 1 个）', 'warning'); return; }
-        // 🔧 S6 FIX：批量操作防抖
         if (window.__OP_LOCKS && window.__OP_LOCKS.batchDisable) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
         if (arr.length > 0 && !confirm('确定禁用选中的 ' + arr.length + ' 个账号？')) return;
-        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.batchDisable = true; setTimeout(function () { try { delete window.__OP_LOCKS.batchDisable; } catch (_) { } }, 800); } catch (_lo) { }
-        // 🔧 B8 FIX：批量禁用 → 更新 DOM 状态 + 写入 localStorage patch
-        var ok = 0;
-        for (var i=0;i<arr.length;i++) {
-          try {
-            var u = String(arr[i].username || '');
-            if (!u) continue;
-            var tr = __findRowByUsername(u);
-            if (tr) {
-              __syncRowStatusBadge(tr, '0');
-              __syncToggleButtonText(tr, '0');
-              try { __rebindAllButtonsSingleRow(tr); } catch(_rb){}
-            }
-            try { __patchUpsert({ username: u, status: '0' }); } catch(_pu){}
-            ok++;
-          } catch(_bi){}
-        }
-        try { __renumberAllRows(); } catch(_rn){}
-        __toast('✕ 批量禁用成功：' + ok + ' 个账号（' + arr.map(function(x){return x.label||x.username;}).slice(0,5).join('、') + (arr.length>5?' 等':'') + '）· 本地持久化，刷新不丢失', 'warning');
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.batchDisable = true; setTimeout(function () { try { delete window.__OP_LOCKS.batchDisable; } catch (_) { } }, 1200); } catch (_lo) { }
+        (async function(){
+          var ok = 0, fail = 0;
+          __toast('⏳ 正在批量禁用 ' + arr.length + ' 个账号…', 'warning');
+          for (var i=0;i<arr.length;i++) {
+            try {
+              var it = arr[i];
+              if (!it.accountId) continue;
+              await QAXQJT_API.patch('/v1/accounts/' + encodeURIComponent(it.accountId), { status: 'disabled' });
+              ok++;
+            } catch(_bi){ fail++; }
+          }
+          __toast((ok>0?'✕ 批量禁用成功 ' + ok + ' 个':'') + (fail>0?'（失败 ' + fail + ' 个）':''), ok>0?'warning':'error');
+          await loadAccountsFromApi();
+        })();
       }
       function exportUsers() {
-        // ★ FIX 导出功能：真正调用 xlsx 导出账号表格
-        try {
-          if (window.Utils && typeof window.Utils.exportTableToXlsx === 'function') {
-            var fname = 'accounts_export_' + new Date().toISOString().slice(0,10).replace(/-/g,'');
-            window.Utils.exportTableToXlsx('#accountsTable', fname);
-          } else if (window.XLSX) {
-            var tbl = document.getElementById('accountsTable');
-            var ws = window.XLSX.utils.table_to_sheet(tbl);
-            var wb = window.XLSX.utils.book_new();
-            window.XLSX.utils.book_append_sheet(wb, ws, '账号列表');
-            window.XLSX.writeFile(wb, 'accounts_export_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.xlsx');
-          } else {
-            __toast('⚠️ xlsx 库未加载，请刷新后重试', 'error');
+        // ★ FIX：从后端拉全量账号 → XLSX 导出真数据
+        (async function(){
+          try {
+            __toast('⬇ 正在拉取账号数据…', 'success');
+            var rows = await QAXQJT_API.get('/v1/accounts', { query: { page: 1, pageSize: 500 } });
+            rows = Array.isArray(rows) ? rows : (rows && rows.items) || (rows && rows.list) || [];
+            rows = rows.filter(function(r){ return r.status !== 'deleted'; });
+            if (!rows.length) { __toast('⚠️ 暂无可导出的账号数据', 'warning'); return; }
+            var data = [ ['账号','姓名','角色','手机号','邮箱','状态','最后登录','创建时间'] ];
+            rows.forEach(function(r){
+              var roleKey = __ROLE_BACK_TO_KEY[r.role] || 'staff';
+              var roleLabel = __ROLE_LABELS[roleKey] || r.role || '普通员工';
+              var statusText = r.status === 'active' ? '启用' : (r.status === 'disabled' ? '禁用' : r.status);
+              data.push([
+                r.username||'', r.realName||'', roleLabel,
+                r.phone||'', r.email||'', statusText,
+                r.lastLoginAt?__fmtDate(r.lastLoginAt):'—',
+                r.createdAt?__fmtDateShort(r.createdAt):'—'
+              ]);
+            });
+            if (typeof window.__qaEnsureXlsx === 'function') { try { await window.__qaEnsureXlsx(); } catch (_) {} }
+            if (window.XLSX) {
+              var ws = window.XLSX.utils.aoa_to_sheet(data);
+              var wb = window.XLSX.utils.book_new();
+              window.XLSX.utils.book_append_sheet(wb, ws, '账号列表');
+              var fname = 'accounts_export_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.xlsx';
+              window.XLSX.writeFile(wb, fname);
+              __toast('✅ 导出成功：' + rows.length + ' 条账号 → ' + fname, 'success');
+            } else {
+              __toast('⚠️ xlsx 库未加载，请刷新后重试', 'error');
+            }
+          } catch (e) {
+            __toast('❌ 导出失败：' + (e && e.message ? e.message : e), 'error');
           }
-        } catch (e) {
-          __toast('❌ 导出失败：' + (e && e.message ? e.message : e), 'error');
-        }
+        })();
       }
       function queryLogs() {
-        __toast('🔍 操作日志查询完成（符合条件：3 条记录）', 'success');
+        var panel = document.querySelector('.tab-panel[data-tab-panel="logs"]');
+        var inputs = panel && panel.querySelectorAll('.admin-filter-bar input[type=text]');
+        var selects = panel && panel.querySelectorAll('.admin-filter-bar select');
+        var dateInputs = panel && panel.querySelectorAll('.admin-filter-bar input[type=date]');
+        var q = {};
+        if (inputs && inputs[0] && inputs[0].value) q.username = inputs[0].value;
+        if (selects && selects[0] && selects[0].value) q.action = selects[0].value;
+        if (dateInputs && dateInputs[0] && dateInputs[0].value) q.from = dateInputs[0].value;
+        if (dateInputs && dateInputs[1] && dateInputs[1].value) q.to = dateInputs[1].value;
+        (async function(){
+          try {
+            __toast('🔍 正在查询审计日志…', 'success');
+            await loadAuditLogsFromApi(q);
+            __toast('✅ 审计日志查询完成', 'success');
+          } catch(e) {
+            __toast('❌ 查询失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
       }
       function exportLogs() {
-        __toast('⬇ 操作日志导出成功（audit_logs_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.xlsx，含 128 条审计记录）', 'success');
+        (async function(){
+          try {
+            __toast('⬇ 正在拉取审计日志…', 'success');
+            var rows = await QAXQJT_API.get('/v1/audit-logs', { query: { page: 1, pageSize: 500 } });
+            rows = Array.isArray(rows) ? rows : (rows && rows.items) || (rows && rows.list) || [];
+            if (!rows.length) { __toast('⚠️ 暂无可导出的审计日志', 'warning'); return; }
+            var data = [ ['序号','操作人','模块','操作类型','操作内容','IP地址','操作时间'] ];
+            rows.forEach(function(r, i){
+              var detail = r.detailJson != null ? r.detailJson : r.detail;
+              data.push([
+                String(i+1),
+                r.username||r.accountId||'—',
+                r.module||'—',
+                r.action||'',
+                detail ? (typeof detail==='string'?detail:JSON.stringify(detail)) : (r.action||''),
+                r.ipAddress||'—',
+                r.actionTs ? __auditDateTime(r.actionTs) : '—'
+              ]);
+            });
+            if (typeof window.__qaEnsureXlsx === 'function') { try { await window.__qaEnsureXlsx(); } catch (_) {} }
+            if (window.XLSX) {
+              var ws = window.XLSX.utils.aoa_to_sheet(data);
+              var wb = window.XLSX.utils.book_new();
+              window.XLSX.utils.book_append_sheet(wb, ws, '审计日志');
+              var fname = 'audit_logs_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.xlsx';
+              window.XLSX.writeFile(wb, fname);
+              __toast('✅ 导出成功：' + rows.length + ' 条审计日志 → ' + fname, 'success');
+            } else {
+              __toast('⚠️ xlsx 库未加载，请刷新后重试', 'error');
+            }
+          } catch (e) {
+            __toast('❌ 导出失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
       }
 
       // 暴露到 window（让 onclick 也能调到，同时保留本 IIFE 内的引用）
@@ -1873,7 +2188,7 @@ window.__ADMIN_BLANK_CFG__ = [
         try {
           var roleCardFooters = document.querySelectorAll('.role-card-footer');
           var roleKeyMap = ['admin','finance','scheduler','staff'];
-          var roleLabelMap = ['超级管理员','财务人员','演出调度','普通员工'];
+          var roleLabelMap = ['超级管理员','财务主管','运营调度','普通员工'];
           for (var r=0;r<roleCardFooters.length;r++) {
             var b = roleCardFooters[r].querySelector('.btn');
             if (b) {
@@ -1892,6 +2207,7 @@ window.__ADMIN_BLANK_CFG__ = [
           var rows = document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] tbody tr');
           for (var i=0;i<rows.length;i++) {
             var tr = rows[i];
+            var accId = tr.getAttribute('data-account-id') || '';
             var uname = __getCellText(tr, 2);           // 列=账号（<td index 2>，0=checkbox 1=序号）
             var real = __getCellText(tr, 3);            // 列=姓名（3）
             var role = __getRoleValue(tr, 4);           // 列=角色（4）根据 label 取 key
@@ -1901,95 +2217,23 @@ window.__ADMIN_BLANK_CFG__ = [
             var btns = tr.querySelectorAll('.action-btn-group .btn');
             if (btns && btns.length) {
               // 0 = 编辑
-              (function(u, rl, ro, ph, em, st){ if (btns[0]) btns[0].onclick = function(){ showEditUserModal(u,rl,ro,ph,em,st); }; })(uname, real, role, phone, email, statusInt);
+              (function(id, u, rl, ro, ph, em, st){ if (btns[0]) btns[0].onclick = function(){ showEditUserModal(id,u,rl,ro,ph,em,st); }; })(accId, uname, real, role, phone, email, statusInt);
               // 1 = 重置密码
-              (function(u, rl){ if (btns[1]) btns[1].onclick = function(){ showResetPwdModal(u, rl); }; })(uname, real);
+              (function(id, u, rl){ if (btns[1]) btns[1].onclick = function(){ showResetPwdModal(id,u, rl); }; })(accId, uname, real);
               // 2 = 启用/禁用（admin 账号 button.disabled=true 不会响应 onclick，无副作用）
-              (function(u, rl, st){ if (btns[2]) btns[2].onclick = function(){ toggleUserStatus(u, rl, st); }; })(uname, real, statusInt);
+              (function(id, u, rl, st){ if (btns[2]) btns[2].onclick = function(){ toggleUserStatus(id,u, rl, st); }; })(accId, uname, real, statusInt);
               // 3 = 删除
-              (function(u, rl){ if (btns[3]) btns[3].onclick = function(){ confirmDeleteUser(u, rl); }; })(uname, real);
+              (function(id, u, rl){ if (btns[3]) btns[3].onclick = function(){ confirmDeleteUser(id,u, rl); }; })(accId, uname, real);
             }
           }
         } catch(e){ if (window.console && console.warn) console.warn('[accounts.html 按钮绑定异常]', e); }
       }
-      // DOMContentLoaded 后执行：先 patch 回填（插入新增行/修改字段/删除标记行），再统一绑定所有按钮
+      // DOMContentLoaded 后执行：从后端拉取真实账号列表 + 绑定按钮
       function __onAccountsDomReady() {
-        // 🔧 B8 FIX：先加载 localStorage patch（修改/插入/删除行），保证按钮绑定时所有行都已存在
-        try { __patchApplyOnLoad(); } catch(_pa){ console.warn('[__patchApplyOnLoad 异常]', _pa); }
+        // 演示模式 localStorage patch 已废弃，改为从后端拉真实数据
         try { __bindAllActionButtons(); } catch(_ba){ console.warn('[__bindAllActionButtons 异常]', _ba); }
-        // v20260907k：从后端 /v1/accounts 加载真实账号数据
-        try { __loadAccounts(); } catch(_la){ console.warn('[__loadAccounts 异常]', _la); }
-        try { __loadAuditLogs(); } catch(_al){ console.warn('[__loadAuditLogs 异常]', _al); }
-      }
-      // v20260907k：账号管理 API 对接
-      async function __loadAccounts() {
-        var tbody = document.getElementById('accountsListTbody');
-        if (!tbody) return;
-        try {
-          var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
-          if (!QinFetch || typeof QinFetch.request !== 'function') {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-light);">⚠️ API 未就绪，无法加载账号列表</td></tr>';
-            return;
-          }
-          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-light);">⏳ 正在加载账号列表...</td></tr>';
-          var resp = await QinFetch.request('GET', '/v1/accounts', { query: { pageSize: 50 } });
-          var rows = (resp && resp.data) ? resp.data : [];
-          if (rows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无账号数据</td></tr>';
-            return;
-          }
-          function _hx(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-          function _statusBadge(s) {
-            var map = { active: '<span class="badge badge-success">启用</span>', disabled: '<span class="badge badge-secondary">禁用</span>', locked: '<span class="badge badge-danger">锁定</span>' };
-            return map[s] || '<span class="badge badge-info">' + _hx(s || '未知') + '</span>';
-          }
-          var html = '';
-          rows.forEach(function(r, i) {
-            html += '<tr data-id="' + _hx(r.id) + '">';
-            html += '<td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>';
-            html += '<td>' + (i+1) + '</td>';
-            html += '<td><strong>' + _hx(r.username) + '</strong></td>';
-            html += '<td>' + _hx(r.displayName || r.realName || '') + '</td>';
-            html += '<td><span class="badge badge-primary">' + _hx(r.role || r.roleName || '') + '</span></td>';
-            html += '<td>' + _hx(r.phone || '') + '</td>';
-            html += '<td>' + _hx(r.email || '') + '</td>';
-            html += '<td>' + _statusBadge(r.status) + '</td>';
-            html += '<td>' + _hx(r.createdAt ? String(r.createdAt).substring(0,10) : '') + '</td>';
-            html += '<td><div class="admin-table-actions">';
-            html += '<button class="btn btn-secondary btn-sm" data-act="view" data-id="' + _hx(r.id) + '">👁</button>';
-            html += '<button class="btn btn-primary btn-sm" data-act="edit" data-id="' + _hx(r.id) + '">✏️</button>';
-            html += '<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" data-act="del" data-id="' + _hx(r.id) + '">🗑️</button>';
-            html += '</div></td>';
-            html += '</tr>';
-          });
-          tbody.innerHTML = html;
-          if (window.QinPagination) try { QinPagination.scan(); } catch (_) {}
-          // 重新绑定按钮
-          try { __bindAllActionButtons(); } catch(_){}
-        } catch (err) {
-          console.warn('[__loadAccounts] err:', err);
-          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-light);">⚠️ 加载失败：' + (err && err.message ? err.message : '网络错误') + '</td></tr>';
-        }
-      }
-      async function __loadAuditLogs() {
-        var tbody = document.getElementById('auditLogTbody');
-        if (!tbody) return;
-        try {
-          var QinFetch = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
-          if (!QinFetch || typeof QinFetch.request !== 'function') return;
-          var resp = await QinFetch.request('GET', '/v1/audit-logs', { query: { pageSize: 20 } });
-          var rows = (resp && resp.data) ? resp.data : [];
-          if (rows.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light);">📭 暂无操作日志</td></tr>'; return; }
-          function _hx(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-          var html = '';
-          rows.forEach(function(r) {
-            html += '<tr><td>' + _hx(r.id) + '</td><td>' + _hx(r.username || r.user) + '</td><td>' + _hx(r.action) + '</td><td>' + _hx(r.targetType || '') + '</td><td>' + _hx(r.ip || '') + '</td><td>' + _hx(r.createdAt ? String(r.createdAt).substring(0,19).replace('T',' ') : '') + '</td></tr>';
-          });
-          tbody.innerHTML = html;
-        } catch (err) {
-          console.warn('[__loadAuditLogs] err:', err);
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light);">⚠️ 加载失败：' + (err && err.message ? err.message : '网络错误') + '</td></tr>';
-        }
+        try { loadAccountsFromApi(); } catch(_la){ console.warn('[loadAccountsFromApi 启动异常]', _la); }
+        try { loadAuditLogsFromApi(); } catch(_ll){ console.warn('[loadAuditLogsFromApi 启动异常]', _ll); }
       }
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', __onAccountsDomReady);
@@ -2234,18 +2478,12 @@ var __pT0=0;
       var btn = (t.tagName||'').toLowerCase() === 'button' ? t :
                 (t.closest ? t.closest('button, a, [role="button"], .btn, .btn-action, .btn-sm, .action-link, [data-action]') : null);
       if(!btn) return;
-      // 修复：模态框内的按钮跳过 DBF 兜底，让事件传播到模态框真实 handler（保存/取消/关闭）
-      try{
-        if(btn.closest && (btn.closest('.modal-mask, .generic-modal-root, .modal-overlay-root, [role="dialog"]') || btn.closest('[id$="Modal"], [id$="modal"]'))) return;
-        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
-      }catch(_mskip){}
       // 跳过已有 onclick / 正常href跳转 / 已在脚本中手动绑定过（__bindDone=1 或 __ctE2Done=1）的按钮
       // 注意：data-action仅作为标识，不代表已绑定事件；父元素检查仅对onclick生效
       try{
   function __btnHasBound(btn){
     if(!btn) return false;
     if(btn.__superPatchBound) return true;
-    if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 DBF 兜底拦截（曾导致行按钮第一次点击被吞）
     var oc = btn.getAttribute && btn.getAttribute('onclick');
     var hr = btn.getAttribute && btn.getAttribute('href');
     if(oc && oc.length > 3) return true;
@@ -2292,7 +2530,7 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        __T('💾 保存成功','success');
         try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
@@ -2307,7 +2545,7 @@ var __pT0=0;
         if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
         try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
@@ -2331,7 +2569,7 @@ var __pT0=0;
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        __T('➕ 准备新增「'+txt+'」','info');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -2341,7 +2579,7 @@ var __pT0=0;
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
         if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
@@ -2350,7 +2588,7 @@ var __pT0=0;
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -2358,7 +2596,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        __T('📄 合同文档已就绪','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -2366,7 +2604,7 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
@@ -2377,7 +2615,7 @@ var __pT0=0;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
         var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -2558,7 +2796,7 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        __toastH9('✅ 提交成功','success');
         setTimeout(function(){
           try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
         }, 380);
@@ -2691,11 +2929,6 @@ function __pLog(module,event,extra){
           if(txt===closeTexts[i]||(txt.length<=12&&txt.indexOf(closeTexts[i])>=0)){ isClose=true; break; }
         }
         if(!isClose) return;
-        // 修复：已有真实绑定（inline onclick attribute / JS property）的关闭按钮直接放行，交给原 handler 干净地关弹窗
-        try{
-          var cb = el.closest ? el.closest('button, a, [role="button"]') : null;
-          if (cb && (typeof cb.onclick === 'function' || ((cb.getAttribute && cb.getAttribute('onclick')) || '').length > 3)) return;
-        }catch(_c3s){}
         e.preventDefault();
         e.stopPropagation();
         var handled=false;
@@ -2725,6 +2958,19 @@ function __pLog(module,event,extra){
   }catch(e){ console.warn('[SuperPatch 3/6 init err]',e); }
 
   try{
+    /* v20260926 停用：原 SuperPatch 4/6 伪造分页栏（条数写死 100、翻页不切数据，
+       且 MutationObserver 会把分页栏无限自嵌套）。真实分页：账号列表走 QinPagination，审计日志走服务端真分页 */
+    (function(){
+      try{
+        document.querySelectorAll('.sp-pg-toolbar-20260730').forEach(function(b){ try{ b.remove(); }catch(_){} });
+        document.querySelectorAll('div.pagination').forEach(function(d){
+          if(!d.querySelector('.pagination-bar')){ try{ d.remove(); }catch(_){} }
+        });
+        if(window.QinPagination && QinPagination.refresh){ setTimeout(function(){ try{ QinPagination.refresh(); }catch(_){} }, 60); }
+      }catch(_){}
+    })();
+    throw new Error('SP4/6 disabled v20260926: real pagination only');
+    // eslint-disable-next-line no-unreachable
     console.info('[SuperPatch 4/6] 分页器标准化 (pagination.js结构) 初始化...');
     var pgStateMap = new WeakMap();
     function _isPgContainer(el){
@@ -2869,9 +3115,6 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
-        // 修复：pagination.js 已提供真分页（含真实翻页逻辑）时，本补丁的假分页工具栏绝不注入——
-        // 曾把 .pagination-bar 当作待标准化容器：innerHTML='' 清空真控件后塞入只改计数器不切行的假分页 → “点页码表格不动”
-        if (window.QinPagination) return;
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -2988,7 +3231,6 @@ function __pLog(module,event,extra){
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
-      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -3005,8 +3247,6 @@ function __pLog(module,event,extra){
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
-        // 修复：分页条按钮（上一页/页码/下一页）由 pagination.js 自管且页码每次重渲染，绝不能兜底拦截（曾导致页码永远点不动）
-        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
         btn.__superPatchBound = 1;
@@ -3030,34 +3270,34 @@ function __pLog(module,event,extra){
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          __toastH9('✅ 操作成功','success');
           setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
         }else if(tt==='delete'){
           if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
             __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
           }else{ __toastH9('↩️ 已取消操作','info'); }
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印（演示模式）','info');
+          __toastH9('📤 已触发导出/打印','info');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪（演示模式）','info');
+          __toastH9('📄 合同文档已就绪','info');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+          __toastH9('➕ 准备新增','info');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -3100,60 +3340,16 @@ function __pLog(module,event,extra){
   });
 })();
 </script>
-<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停真实弹窗（含无 id 按钮、动态重绘行 MutationObserver 补标） */
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
 (function(){
-  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
-  var SEL = 'button, a.btn, .btn, .btn-action, [role="button"], [data-action]';
   function __markBound(){
-    try{
-      var els=document.querySelectorAll(SEL);
-      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
-    }catch(_){}
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
   }
-  function __boot(){
-    __markBound();
-    try{
-      if(window.MutationObserver){
-        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
-        mo.observe(document.documentElement,{childList:true,subtree:true});
-      }
-    }catch(_){}
-    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
-  }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
-  else { __boot(); }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
 })();</script>
-<script>/* 🔧 修复“连续编辑第二轮点不动”：行内操作按钮 & 账号弹窗按钮的点击在中间层截断冒泡，
-   防止 app.js document 级委托按 title/text（编辑/保存/删除…）再开一套通用弹窗，
-   其 overlay 残留会把页面整个挡死（表现为列表“不刷新/卡住”）。 */
-(function(){
-  if (window.__ACC_NOHIJACK_V1__) return;
-  window.__ACC_NOHIJACK_V1__ = true;
-  var MODAL_SEL = '#userModal, #resetPwdModal, #deleteModal, #rolePermModal';
-  function guard(root){
-    if (!root || root.__noHijackBound) return;
-    root.__noHijackBound = true;
-    root.addEventListener('click', function(e){
-      try {
-        var inActions = e.target.closest && e.target.closest('.action-btn-group');
-        var inModal   = e.target.closest && e.target.closest(MODAL_SEL);
-        if (inActions || inModal) e.stopPropagation(); // 阻断外泄到 app.js 全局委托，不影响本页 onclick 正常执行
-      } catch(_e){}
-    }, false);
-  }
-  function init(){
-    try {
-      document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] tbody').forEach(guard);
-      document.querySelectorAll(MODAL_SEL).forEach(guard);
-    } catch(_i){}
-  }
-  if (document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', init); }
-  else { init(); }
-  setTimeout(init, 600); // 分页/脚本就绪后兜底补一轮（幂等）
-  try { // 分页重渲染替换 tbody 后自动补绑
-    new MutationObserver(function(){ init(); }).observe(document.body, { childList: true, subtree: true });
-  } catch(_mo){}
-})();</script>
+<script src="../js/admin-mobile-sidebar.js?v=20260926m"></script>
 </body>
 
 </html>

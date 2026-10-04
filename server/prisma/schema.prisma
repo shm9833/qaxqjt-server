@@ -10,7 +10,7 @@ generator client {
 }
 
 datasource db {
-  provider     = "postgresql"
+  provider     = "sqlite"
   url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
@@ -152,6 +152,19 @@ model LoginAttempt {
 
   @@index([ipAddress, attemptedAt], map: "idx_login_ip_ts")
   @@map("login_attempts")
+}
+
+model CaptchaChallenge {
+  id          String    @id
+  answerHash  String    @map("answer_hash")
+  ipAddress   String?   @map("ip_address")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  expiresAt   DateTime  @map("expires_at")
+  consumedAt  DateTime? @map("consumed_at")
+  ts          BigInt    @map("_ts")
+
+  @@index([expiresAt], map: "idx_captcha_exp")
+  @@map("captcha_challenges")
 }
 
 // ==============================================================================
@@ -662,6 +675,8 @@ model ScheduleV2 {
 
   @@index([scheduleDateStart, scheduleDateEnd, status], map: "idx_sched_range")
   @@index([status, scheduleDateStart], map: "idx_sched_status")
+  @@index([orderId], map: "idx_sched_order")
+  @@index([playId], map: "idx_sched_play")
   @@map("schedules_v2")
 }
 

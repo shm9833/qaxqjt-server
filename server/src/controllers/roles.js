@@ -29,7 +29,11 @@ const listRoles = async ctx => {
       skip,
       take,
       orderBy: { level: 'desc' },
-      include: { _count: { select: { userRoles: true, rolePermissions: true } } }
+      // 附带已授权权限（含权限字典明细），供前端角色权限配置弹窗回显勾选
+      include: {
+        _count: { select: { userRoles: true, rolePermissions: true } },
+        rolePermissions: { include: { Permission: true } }
+      }
     }),
     prisma.role.count({ where })
   ]);
@@ -95,7 +99,7 @@ const assignPermissions = async ctx => {
   await audit({ ctx, module: 'iam', action: 'ROLE_ASSIGN_PERM', targetId: ctx.params.id, detail: permissionIds });
   const r = await prisma.role.findUnique({
     where: { id: ctx.params.id },
-    include: { rolePermissions: { include: { permission: true } } }
+    include: { rolePermissions: { include: { Permission: true } } }
   });
   return success(ctx, r);
 };

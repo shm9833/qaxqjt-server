@@ -1,5 +1,5 @@
 /* ============================================================
- * admin-inventory-real.js  v20260922
+ * admin-inventory-real.js  v20260929
  * 库存预警 + 借用归还流水：真实 /v1/inventory 接线
  * 原静态预警卡/流水演示行已在 HTML 中清空，本脚本负责真实渲染。
  * ============================================================ */
@@ -151,7 +151,7 @@
             '<div class="wc-info-item">缺额：<strong>-' + gap + ' ' + unit + '</strong></div>' +
           '</div>' +
           '<span class="wc-reason">⚠ 库存低于安全阈值</span>' +
-          '<div class="wc-action"><button class="wc-btn">📦 立即补货</button></div>' +
+          '<div class="wc-action"><button class="wc-btn" data-restock="' + esc(it.id || '') + '">📦 立即补货</button></div>' +
         '</div>'
       );
     });
@@ -164,13 +164,34 @@
           '</div></div>' +
           '<div class="wc-info"><div class="wc-info-item">状态：<strong>维修中</strong></div></div>' +
           '<span class="wc-reason">🔧 已标记维修，完成后请更新状态</span>' +
-          '<div class="wc-action"><button class="wc-btn">🔧 维修记录</button></div>' +
+          '<div class="wc-action"><button class="wc-btn" data-repair="' + esc(it.id || '') + '">🔧 维修记录</button></div>' +
         '</div>'
       );
     });
     box.innerHTML = cards.length
       ? cards.join('')
       : '<div style="grid-column:1/-1;padding:36px 12px;text-align:center;color:var(--text-light,#888);">✅ 库存充足，暂无预警事项</div>';
+    // 绑定立即补货 / 维修记录按钮（用 onclick + __superPatchBound 避免 SuperPatch 拦截）
+    box.querySelectorAll('[data-restock]').forEach(function (btn) {
+      btn.__superPatchBound = 1; btn.__ts3Done = 1;
+      btn.onclick = function () {
+        var id = btn.getAttribute('data-restock');
+        if (window.__invApi && typeof window.__invApi.openRestock === 'function') {
+          window.__invApi.openRestock(id);
+        } else {
+          try { console.warn('[invReal] __invApi.openRestock 未暴露'); } catch (_) {}
+        }
+      };
+    });
+    box.querySelectorAll('[data-repair]').forEach(function (btn) {
+      btn.__superPatchBound = 1; btn.__ts3Done = 1;
+      btn.onclick = function () {
+        var id = btn.getAttribute('data-repair');
+        if (window.__invApi && typeof window.__invApi.openEdit === 'function') {
+          window.__invApi.openEdit(id);
+        }
+      };
+    });
   }
 
   function loadAll() {

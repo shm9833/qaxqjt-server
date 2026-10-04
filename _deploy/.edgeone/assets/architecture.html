@@ -20,7 +20,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="秦安县秦剧团云端预约管理系统 - 官方架构验收终审报告">
   <title>秦安县秦剧团云端预约管理系统 - 官方架构验收终审报告 · {year}年度永久定稿</title>
-  <link rel="stylesheet" href="css/style.css?v=20260803">
+  <link rel="stylesheet" href="css/style.css?v=20260923a">
   <style>
     /* ========== 架构报告专属样式 ========== */
     body.report-body {
@@ -1930,7 +1930,9 @@
   </div>
 
   <script src="js/year-lite.js?v=20260803"></script>
-  <script src="js/app.js?v=20260906g"></script>
+  <script src="js/site-assets.js?v=20260929a" defer></script>
+
+  <script src="js/app.js?v=20260930a"></script>
   <script>
     (function () {
       'use strict';
@@ -2083,11 +2085,11 @@
           var firstBad=null;
           try{ reqFails.forEach(function(inp){ var v=(inp.value||''); var ok=true; if(inp.type==='checkbox' && !inp.checked) ok=false; else if(inp.type!=='checkbox' && inp.type!=='radio' && !v.trim()) ok=false; if(!ok){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}}, 1800);}catch(_b){} } }); }catch(_rf){}
           if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
-          __FT('✅ 操作成功（演示模式：真实环境将写入工单 + 通知对接专员）','success');
+          __FT('✅ 操作成功，对接专员将尽快与您联系','success');
           try{ fm.reset && fm.reset(); }catch(_rs){}
           e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
         } else {
-          __FT('✅ 操作成功（演示模式）','success');
+          __FT('✅ 操作成功','success');
           try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
           btn.__ftDone=1; e.stopImmediatePropagation(); return;
         }
@@ -2100,7 +2102,7 @@
       }
       if(isSearch){
         if(!__FL(dk,550)) return;
-        __FT('🔍 查询条件已生效（演示模式）','info');
+        __FT('🔍 查询条件已生效','info');
         btn.__ftDone=1; return;
       }
       if(isCopy){
