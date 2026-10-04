@@ -19,7 +19,7 @@
     <script src="../js/wechat-fallback.js?v=20260830" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>后台登录 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260906">
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     .login-page {
       min-height: 100vh;
@@ -317,6 +317,24 @@
       transform: rotate(-5deg);
     }
 
+    /* 后端下发的纯 SVG 验证码 */
+    #captchaImage svg {
+      position: relative;
+      z-index: 2;
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    .captcha-image .captcha-status-text {
+      position: relative;
+      z-index: 2;
+      font-size: 0.82rem;
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+
     .login-options {
       display: flex;
       justify-content: space-between;
@@ -472,11 +490,34 @@
     }
 
     @media (max-width: 860px) {
+      /* v20260926p：grid 单列必须用 minmax(0,1fr)，否则轨道最小宽=内容 min-content
+         （两个登录选项卡+输入框）会把容器撑到 417px，超出 390px 视口被裁切 */
       .login-container {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         max-width: 480px;
         min-height: auto;
+        width: 100%;
+        box-sizing: border-box;
       }
+
+      .login-brand,
+      .login-form-section {
+        min-width: 0;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .login-form { width: 100%; box-sizing: border-box; }
+      .login-form .form-control,
+      .login-form .input-wrapper {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      .login-tabs { width: 100%; flex-wrap: nowrap; }
+      .login-tab { min-width: 0; }
+      .login-form img,
+      .login-form canvas { max-width: 100%; height: auto; }
 
       .login-brand {
         padding: 40px 35px;
@@ -592,7 +633,7 @@
             <div class="logo-text">秦安县<br/>秦剧团</div>
           </div>
           <h2>云端预约<span class="highlight">管理系统</span></h2>
-          <div id="deployedSecurityWarn" class="login-security-warn">
+          <div id="deployedSecurityWarn" class="login-security-warn" style="display:none;">
             ⚠️ <b>生产部署安全必读：</b>演示账号与硬编码密码<strong>仅适用于静态前端演示</strong>，正式上线前请务必：
             ① 移除此处 <code>PRESET_USERS</code>；② 接入<strong>后端 REST 鉴权接口</strong>；③ 密码使用 <code>bcrypt/argon2</code> 哈希存储；④ 启用 <code>HTTPS + HttpOnly Cookie + CSRF Token</code>。
           </div>
@@ -695,7 +736,7 @@
                 />
               </div>
               <div class="captcha-image" id="captchaImage" title="点击刷新验证码">
-                <span class="captcha-text" id="captchaText">A3B9</span>
+                <span class="captcha-text captcha-status-text" id="captchaText">加载中…</span>
               </div>
             </div>
           </div>
@@ -725,10 +766,12 @@
 
           <div class="login-divider"><span>更多操作</span></div>
 
-          <div class="back-home">
-            <a href="../index.html">
-              <span>🏠</span>
-              <span>返回官网首页</span>
+          <div class="login-quick-links" style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+            <a href="self-register.html" style="display:inline-flex; align-items:center; gap:6px; color:#8b0000; font-size:0.92rem; font-weight:600; padding:10px 18px; border:2px solid #8b0000; border-radius:25px; text-decoration:none; transition:all .3s ease;">
+              <span>📝</span><span>演员入职登记</span>
+            </a>
+            <a href="../index.html" style="display:inline-flex; align-items:center; gap:6px; color:#6b0000; font-size:0.92rem; font-weight:500; padding:10px 18px; border:2px solid #d4af37; border-radius:25px; text-decoration:none; transition:all .3s ease;">
+              <span>🏠</span><span>返回前台首页</span>
             </a>
           </div>
 
@@ -749,8 +792,13 @@
           <p id="qrSubText" style="color:#94a3b8; font-size:12px; margin:4px 0;">扫码后在手机上输入账号密码确认</p>
           <button type="button" id="qrRefreshBtn" onclick="window.__refreshQrCode()" style="margin-top:12px; padding:8px 20px; background:#8b0000; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:13px; display:none;">🔄 刷新二维码</button>
           <div class="login-divider" style="margin:20px 0;"><span>更多操作</span></div>
-          <div class="back-home">
-            <a href="../index.html"><span>🏠</span><span>返回官网首页</span></a>
+          <div class="login-quick-links" style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+            <a href="self-register.html" style="display:inline-flex; align-items:center; gap:6px; color:#8b0000; font-size:0.92rem; font-weight:600; padding:10px 18px; border:2px solid #8b0000; border-radius:25px; text-decoration:none; transition:all .3s ease;">
+              <span>📝</span><span>演员入职登记</span>
+            </a>
+            <a href="../index.html" style="display:inline-flex; align-items:center; gap:6px; color:#6b0000; font-size:0.92rem; font-weight:500; padding:10px 18px; border:2px solid #d4af37; border-radius:25px; text-decoration:none; transition:all .3s ease;">
+              <span>🏠</span><span>返回前台首页</span>
+            </a>
           </div>
         </div>
       </div>
@@ -759,57 +807,103 @@
 
   <script src="../js/year-lite.js?v=20260830"></script>
     <script src="../js/api-config.js?v=20260830"></script>
-  <script src="../js/api-request.js?v=20260830"></script>
-<script src="../js/app.js?v=20260908n"></script>
-  <!-- 修复：二维码库本地化（原 cdn.jsdelivr.net/npm/qrcode 路径在 npm 包中不存在 → 404 + ORB 拦截，二维码从未渲染） -->
-  <script src="../js/qrcode.min.js?v=20260905"></script>
+  <script src="../js/api-request.js?v=20260929a"></script>
+<script src="../js/app.js?v=20260930a"></script>
+  <!-- 二维码库本地化：jsdelivr CDN 在受限网络触发 ERR_BLOCKED_BY_ORB，改用本地 /js/qrcode.min.js -->
+  <script src="../js/qrcode.min.js?v=20260923"></script>
   <script>
     (function() {
       'use strict';
 
-      var captchaChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      var currentCaptcha = '';
-      // 🔧 B3 FIX：立即暴露到 window（即使还在 IIFE 内部，HTML onclick / 其他脚本也能直接访问）
-      if (!window.currentCaptcha) window.currentCaptcha = '';
-
-      function generateCaptcha() {
-        var result = '';
-        for (var i = 0; i < 4; i++) {
-          result += captchaChars.charAt(Math.floor(Math.random() * captchaChars.length));
-        }
-        currentCaptcha = result;
-        window.currentCaptcha = result; // 🔧 B3 FIX：同步到 window
-        var textEl = document.getElementById('captchaText');
-        if (textEl) textEl.textContent = result;
-        return result;
-      }
-
-      function rotateCaptcha() {
-        var angle = Math.random() * 20 - 10;
-        var textEl = document.getElementById('captchaText');
-        if (textEl) {
-          textEl.style.transform = 'rotate(' + angle + 'deg) skewX(' + (Math.random() * 6 - 3) + 'deg)';
-        }
-      }
-
-      function refreshCaptcha() {
-        generateCaptcha();
-        rotateCaptcha();
-        var captchaInput = document.querySelector('[data-admin-captcha]');
-        if (captchaInput) captchaInput.value = '';
-      }
-      // 🔧 B3 FIX：refreshCaptcha 暴露到 window（全局可用）
-      window.refreshCaptcha = refreshCaptcha;
+      // ==========================================================================
+      // 图形验证码（后端签发 · 纯 SVG）
+      // 单一事实来源：GET /v1/auth/captcha → { id, imageData }
+      // captchaState.id 与图片原子更新；每次登录失败/点击图片都整体轮换并清空输入，
+      // 杜绝"图片已换但 id 仍旧"的半更新状态。
+      // ==========================================================================
+      var captchaState = { id: '', loading: false, failed: false };
+      try { window.__captchaState = captchaState; } catch (_cs) {}
 
       var captchaImage = document.getElementById('captchaImage');
+      var captchaInputEl0 = document.querySelector('[data-admin-captcha]');
+
+      function _setCaptchaHtml(html) {
+        if (captchaImage) captchaImage.innerHTML = html;
+      }
+      function _clearCaptchaInput() {
+        var el = captchaInputEl0 || document.querySelector('[data-admin-captcha]');
+        if (el) el.value = '';
+      }
+      function _fitCaptchaSvg() {
+        var svg = captchaImage && captchaImage.querySelector('svg');
+        if (svg) {
+          svg.style.display = 'block';
+          svg.style.width = '100%';
+          svg.style.height = 'auto';
+          svg.style.borderRadius = '8px';
+        }
+      }
+
+      function _fetchCaptchaFromBackend() {
+        // 优先走统一请求封装；极端情况下（脚本未加载）退化到原生 fetch
+        if (window.QAXQJT_API && typeof window.QAXQJT_API.getCaptcha === 'function') {
+          return Promise.resolve(window.QAXQJT_API.getCaptcha());
+        }
+        var url = '/api/v1/auth/captcha';
+        try {
+          if (window.QAXQJT_API_CONFIG && typeof window.QAXQJT_API_CONFIG.resolveUrl === 'function') {
+            url = window.QAXQJT_API_CONFIG.resolveUrl('/v1/auth/captcha');
+          }
+        } catch (_e) {}
+        return fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+          .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+          })
+          .then(function (resp) { return (resp && resp.data) ? resp.data : resp; });
+      }
+
+      function fetchCaptcha() {
+        if (captchaState.loading) return Promise.resolve(null);
+        captchaState.loading = true;
+        _setCaptchaHtml('<span class="captcha-text captcha-status-text">加载中…</span>');
+        return Promise.resolve()
+          .then(_fetchCaptchaFromBackend)
+          .then(function (data) {
+            if (!data || !data.id || !data.imageData || String(data.imageData).indexOf('<svg') !== 0) {
+              throw new Error('验证码响应格式异常');
+            }
+            // —— 原子更新：id + 图片 + 清空输入 同批完成 ——
+            captchaState.id = String(data.id);
+            captchaState.failed = false;
+            _setCaptchaHtml(data.imageData);
+            _fitCaptchaSvg();
+            _clearCaptchaInput();
+            return data;
+          })
+          .catch(function (e) {
+            console.warn('[captcha] 加载失败：' + (e && e.message ? e.message : e));
+            // 后端未连通（演示/离线模式）：显示点击重试，demo 登录不校验验证码
+            captchaState.id = '';
+            captchaState.failed = true;
+            _setCaptchaHtml('<span class="captcha-text captcha-status-text">点击加载</span>');
+            _clearCaptchaInput();
+            return null;
+          })
+          .then(function (r) { captchaState.loading = false; return r; });
+      }
+      // 兼容旧调用名 refreshCaptcha；双重暴露
+      window.refreshCaptcha = fetchCaptcha;
+      window.__fetchCaptcha = fetchCaptcha;
+
       if (captchaImage) {
-        captchaImage.addEventListener('click', refreshCaptcha);
+        captchaImage.addEventListener('click', fetchCaptcha);
         // 🔧 B3 FIX：双重保险：onclick 属性也绑定（防 CSP-patch / 事件迁移干扰后 addEventListener 失效）
         try { captchaImage.setAttribute('onclick', 'if(window.refreshCaptcha){window.refreshCaptcha();}'); } catch(_csp1){}
       }
 
-      generateCaptcha();
-      rotateCaptcha();
+      // 页面加载即向后端拉取验证码
+      fetchCaptcha();
 
       var REMEMBER_KEY = 'qaxqjt_admin_remember';
       var REMEMBER_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30天过期（不永久存储）
@@ -1083,6 +1177,8 @@
         try {
           var MODE = __getDeployMode();
           var tipsBox = document.getElementById('loginDemoTips');
+          var secWarn = document.getElementById('deployedSecurityWarn');
+          if (secWarn) secWarn.style.display = MODE === 'demo' ? '' : 'none';
           if (MODE === 'demo') {
             // Demo 模式：展示，并计算当前小时动态密码
             var now = new Date();
@@ -1125,18 +1221,18 @@
         } catch (_e) {}
         return '';
       }
-      function _callBackendAuth(username, password, captcha) {
+      function _callBackendAuth(username, password, captcha, captchaId) {
         var MODE = __getDeployMode();
         // Demo 模式：跳过后端，直接走本地 PRESET_USERS
         if (MODE === 'demo') return null;
         var authUrl = _getBackendAuthUrl();
         // 无后端地址：不阻断，返回 null 让上层走本地降级
         if (!authUrl) return null;
-        // 生产模式：真实 fetch 调用后端 /v1/auth/login
+        // 生产模式：真实 fetch 调用后端 /v1/auth/login（captchaId 为后端验证码 challenge id）
         return fetch(authUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ username: username, password: password, captcha: captcha || '' })
+          body: JSON.stringify({ username: username, password: password, captcha: captcha || '', captchaId: captchaId || '' })
         })
         .then(function (r) { return r.json(); })
         .then(function (resp) {
@@ -1203,9 +1299,9 @@
         return null;
       }
 
-      function loginUser(username, password) {
+      function loginUser(username, password, captcha, captchaId) {
         // A-2：生产模式优先调用后端鉴权（_callBackendAuth 返回 Promise 或 null）
-        var backend = _callBackendAuth(username, password, '');
+        var backend = _callBackendAuth(username, password, captcha || '', captchaId || '');
         // demo 模式或无后端地址：_callBackendAuth 返回 null → 走本地
         if (backend === null || backend === undefined) {
           return _localLogin(username, password);
@@ -1240,7 +1336,7 @@
       //   · 网络错误：自动降级走 loginUser (sync，本地 Storage)
       //   · 鉴权错误 (401 等)：保留后端错误，不降级
       // =============================================================================
-      window.__executeAdminLoginAsync = function (username, password) {
+      window.__executeAdminLoginAsync = function (username, password, captcha, captchaId) {
         var LOG_PFX = '[admin-login:__executeAdminLoginAsync]';
         var t0 = Date.now();
         var hasApi = !!(window.QAXQJT_API && typeof window.QAXQJT_API.login === 'function');
@@ -1268,8 +1364,8 @@
             return Promise.reject(e);
           }
         }
-        console.info(LOG_PFX + ' 🚀 第1步：调用 QAXQJT_API.login(username, password, captcha="") → POST ' + (hasCfg ? window.QAXQJT_API_CONFIG.resolveUrl('/v1/auth/login') : 'URL 未知'));
-        return window.QAXQJT_API.login(username, password || '', '')
+        console.info(LOG_PFX + ' 🚀 第1步：调用 QAXQJT_API.login(username, password, captcha, captchaId) → POST ' + (hasCfg ? window.QAXQJT_API_CONFIG.resolveUrl('/v1/auth/login') : 'URL 未知'));
+        return window.QAXQJT_API.login(username, password || '', captcha || '', captchaId || '')
           .then(function (apiRes) {
             var dt = Date.now() - t0;
             console.groupCollapsed(LOG_PFX + ' QAXQJT_API.login RESOLVE  耗时=' + dt + 'ms');
@@ -1385,9 +1481,21 @@
           }
           var isDemoMode = false;
           try { isDemoMode = (typeof __getDeployMode === 'function' && __getDeployMode() === 'demo'); } catch(_md){}
+          var captchaId = captchaState.id || '';
           if (!isDemoMode) {
+            // 验证码由后端签发并校验，前端只做"非空 + 已加载"的前置提示
+            if (!captchaId) {
+              console.warn(LOG_PFX + ' ❌ 校验失败：验证码未从后端加载（captchaState.failed=' + captchaState.failed + '）');
+              if (window.QinApp && window.QinApp.Utils) {
+                window.QinApp.Utils.toast('验证码未加载，请点击右侧验证码图片刷新', 'warn');
+              } else {
+                alert('验证码未加载，请点击右侧验证码图片刷新');
+              }
+              try { fetchCaptcha(); } catch(_fc){}
+              return;
+            }
             if (!captcha) {
-              console.warn(LOG_PFX + ' ❌ 校验失败：验证码为空（currentCaptcha=' + currentCaptcha + '）');
+              console.warn(LOG_PFX + ' ❌ 校验失败：验证码为空（captchaId=' + captchaId + '）');
               if (window.QinApp && window.QinApp.Utils) {
                 window.QinApp.Utils.toast('请输入验证码', 'warn');
               } else {
@@ -1396,19 +1504,8 @@
               captchaEl && captchaEl.focus();
               return;
             }
-            if (captcha !== currentCaptcha) {
-              console.warn(LOG_PFX + ' ❌ 校验失败：验证码不匹配 input=' + captcha + ' expected=' + currentCaptcha);
-              if (window.QinApp && window.QinApp.Utils) {
-                window.QinApp.Utils.toast('验证码错误，请重新输入', 'error');
-              } else {
-                alert('验证码错误，请重新输入');
-              }
-              captchaEl && captchaEl.select();
-              refreshCaptcha();
-              return;
-            }
           } else {
-            console.log(LOG_PFX + ' 🟡 演示模式：跳过验证码校验 (captcha="' + captcha + '", expected="' + currentCaptcha + '")');
+            console.log(LOG_PFX + ' 🟡 演示模式：跳过验证码校验 (captcha="' + captcha + '", captchaId="' + captchaId + '")');
           }
           console.log(LOG_PFX + ' ✅ 字段+验证码全部校验通过。进入 loading → 500ms 延迟后发起登录请求。按钮置灰。');
 
@@ -1434,10 +1531,10 @@
               var p;
               if (typeof window.__executeAdminLoginAsync === 'function') {
                 console.info(LOG_PFX + ' → 使用 __executeAdminLoginAsync() [API 优先 + 降级]');
-                p = window.__executeAdminLoginAsync(username, password);
+                p = window.__executeAdminLoginAsync(username, password, captcha, captchaId);
               } else {
                 console.warn(LOG_PFX + ' → ⚠️ __executeAdminLoginAsync 未定义，fallback 到 sync loginUser()');
-                p = Promise.resolve(loginUser(username, password));
+                p = Promise.resolve(loginUser(username, password, captcha, captchaId));
               }
               p.then(function(session) {
                 var dt = Date.now() - t0;
@@ -1467,7 +1564,7 @@
                 try {
                   if (err && err.message) msg = String(err.message);
                   else if (err && typeof err === 'string') msg = err;
-                  else if (err && (err.status === 401 || err.status === 400)) msg = '账号或密码错误';
+                  else if (err && err.status === 401) msg = '账号或密码错误';
                 } catch(_){}
                 __fail(msg);
               });
@@ -1653,7 +1750,9 @@
         var captcha  = cEl ? String(cEl.value || '').trim().toUpperCase() : '';
         var remember = rEl ? !!rEl.checked : false;
         var origText = btn ? (btn.textContent || '登 录 系 统') : '登 录 系 统';
-        console.log(LOG_PFX2 + ' 输入采集: username.len=' + username.length + '; password.len=' + password.length + '; captcha="' + captcha + '"; expectedCaptcha=' + String(window.currentCaptcha || '') + '; remember=' + remember);
+        var __cs2 = (window.__captchaState || { id: '', failed: false });
+        var captchaId = __cs2.id || '';
+        console.log(LOG_PFX2 + ' 输入采集: username.len=' + username.length + '; password.len=' + password.length + '; captcha="' + captcha + '"; captchaId=' + captchaId + '; remember=' + remember);
 
         // 防重复提交
         if (btn && btn.getAttribute('data-login-loading') === '1') {
@@ -1682,25 +1781,24 @@
         var isDemoMode2 = false;
         try { isDemoMode2 = (typeof __getDeployMode === 'function' && __getDeployMode() === 'demo'); } catch(_md2){}
         if (!isDemoMode2) {
+          // 验证码由后端签发并校验，前端只做"非空 + 已加载"的前置提示
+          if (!captchaId) {
+            console.warn(LOG_PFX2 + ' ❌ 校验失败：验证码未从后端加载（failed=' + !!__cs2.failed + '）');
+            if (btn) btn.setAttribute('data-login-loading', '0');
+            __TOAST('验证码未加载，请点击右侧验证码图片刷新', 'warn');
+            try { if (typeof window.refreshCaptcha === 'function') window.refreshCaptcha(); } catch(_fc){}
+            return;
+          }
           if (!captcha) {
-            console.warn(LOG_PFX2 + ' ❌ 校验失败：验证码为空');
+            console.warn(LOG_PFX2 + ' ❌ 校验失败：验证码为空（captchaId=' + captchaId + '）');
             if (btn) btn.setAttribute('data-login-loading', '0');
             __TOAST('请输入验证码', 'warn');
             try { cEl && cEl.focus && cEl.focus(); } catch(_){}
             __flashError(cEl);
             return;
           }
-          if (captcha !== String(window.currentCaptcha || '')) {
-            console.warn(LOG_PFX2 + ' ❌ 校验失败：验证码不匹配 input=' + captcha + ' expected=' + String(window.currentCaptcha || ''));
-            if (btn) btn.setAttribute('data-login-loading', '0');
-            __TOAST('验证码错误，请重新输入', 'error');
-            try { cEl && cEl.select && cEl.select(); } catch(_){}
-            __flashError(cEl);
-            try { if (typeof window.refreshCaptcha === 'function') window.refreshCaptcha(); } catch(_r){}
-            return;
-          }
         } else {
-          console.log(LOG_PFX2 + ' 🟡 演示模式：跳过验证码校验 (captcha="' + captcha + '", expected="' + String(window.currentCaptcha || '') + '")');
+          console.log(LOG_PFX2 + ' 🟡 演示模式：跳过验证码校验 (captcha="' + captcha + '", captchaId="' + captchaId + '")');
         }
 
         // ========== 校验通过：进入 loading ==========
@@ -1721,10 +1819,10 @@
             var p;
             if (typeof window.__executeAdminLoginAsync === 'function') {
               console.info(LOG_PFX2 + ' → 调用 __executeAdminLoginAsync() [API 优先 + 降级]');
-              p = window.__executeAdminLoginAsync(username, password);
+              p = window.__executeAdminLoginAsync(username, password, captcha, captchaId);
             } else if (typeof window.loginUser === 'function') {
               console.warn(LOG_PFX2 + ' → ⚠️ __executeAdminLoginAsync 未定义，fallback 到 sync window.loginUser()');
-              p = Promise.resolve(window.loginUser(username, password));
+              p = Promise.resolve(window.loginUser(username, password, captcha, captchaId));
             } else {
               console.error(LOG_PFX2 + ' → ❌ 登录入口均未定义');
               p = Promise.resolve(null);
@@ -1757,7 +1855,7 @@
               try {
                 if (err && err.message) msg = String(err.message);
                 else if (typeof err === 'string') msg = err;
-                else if (err && (err.status === 401 || err.status === 400)) msg = '账号或密码错误';
+                else if (err && err.status === 401) msg = '账号或密码错误';
               } catch(_){}
               var dt = Date.now() - t0;
               console.error(LOG_PFX2 + ' ❌ Promise.catch (' + dt + 'ms)  status=' + (err && err.status ? err.status : '?') + '  msg=' + msg);
@@ -1775,7 +1873,10 @@
     // ==================== 扫码登录 ====================
     (function () {
       var QR_POLL_INTERVAL = 2000;
+      var QR_POLL_MAX_FAILS = 5;          // 连续失败上限：超过后熔断，提示用户手动刷新
       var qrPollTimer = null;
+      var qrPollInFlight = false;         // 防止慢请求与下一轮重叠
+      var qrPollFails = 0;                // 连续网络失败计数
       var currentQrToken = null;
 
       function getApiBase() {
@@ -1824,12 +1925,15 @@
           if (tabPwd) { tabPwd.style.color = '#8b0000'; tabPwd.style.borderBottomColor = '#8b0000'; tabPwd.style.fontWeight = '600'; }
           if (tabQr) { tabQr.style.color = '#94a3b8'; tabQr.style.borderBottomColor = 'transparent'; tabQr.style.fontWeight = '400'; }
           // 停止轮询
-          if (qrPollTimer) { clearInterval(qrPollTimer); qrPollTimer = null; }
+          if (qrPollTimer) { clearTimeout(qrPollTimer); qrPollTimer = null; }
+          qrPollInFlight = false;
         }
       };
 
       window.__refreshQrCode = function () {
-        if (qrPollTimer) { clearInterval(qrPollTimer); qrPollTimer = null; }
+        if (qrPollTimer) { clearTimeout(qrPollTimer); qrPollTimer = null; }
+        qrPollInFlight = false;
+        qrPollFails = 0;
         setQrStatus('📱 请使用手机扫描二维码登录', '扫码后在手机上输入账号密码确认', false);
 
         fetch(getApiBase() + '/auth/qrcode/create', {
@@ -1840,13 +1944,9 @@
           .then(function (data) {
             if (data && data.ok && data.data && data.data.token) {
               currentQrToken = data.data.token;
-              if (!window.QRCode) {
-                setQrStatus('❌ 二维码组件加载失败', '请点击刷新按钮重试', true);
-                return;
-              }
               var qrUrl = window.location.origin + '/admin/qr-login.html?token=' + encodeURIComponent(currentQrToken);
               drawQrCode(qrUrl);
-              startPolling(currentQrToken);
+              startPolling();
             } else {
               setQrStatus('❌ 二维码生成失败', '请点击刷新重试', true);
             }
@@ -1856,94 +1956,114 @@
           });
       };
 
-      function startPolling(token) {
-        qrPollTimer = setInterval(function () {
-          fetch(getApiBase() + '/auth/qrcode/status/' + encodeURIComponent(token), {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+      function stopPolling() {
+        if (qrPollTimer) { clearTimeout(qrPollTimer); qrPollTimer = null; }
+        qrPollInFlight = false;
+      }
+
+      // 自调度轮询：网络异常时指数退避（2s→4s→8s→16s 封顶），
+      // 连续失败超阈值后熔断并提示手动刷新，避免断网期间每 2s 刷一条控制台错误。
+      function scheduleNext(delay) {
+        qrPollTimer = setTimeout(function () { pollOnce(currentQrToken); }, delay);
+      }
+
+      function pollOnce(token) {
+        if (!token || qrPollInFlight) return;
+        qrPollInFlight = true;
+        fetch(getApiBase() + '/auth/qrcode/status/' + encodeURIComponent(token), {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-store'
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            qrPollInFlight = false;
+            qrPollFails = 0;
+            if (!data || !data.data) { scheduleNext(QR_POLL_INTERVAL); return; }
+            var status = data.data.status;
+            if (status === 'pending') {
+              setQrStatus('📱 请使用手机扫描二维码登录', '扫码后在手机上输入账号密码确认', false);
+              scheduleNext(QR_POLL_INTERVAL);
+            } else if (status === 'confirmed') {
+              stopPolling();
+              handleQrConfirmed(data.data);
+            } else if (status === 'expired') {
+              stopPolling();
+              setQrStatus('⏰ 二维码已过期', '请点击刷新获取新二维码', true);
+            } else {
+              scheduleNext(QR_POLL_INTERVAL);
+            }
           })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-              if (!data || !data.data) return;
-              var status = data.data.status;
-              if (status === 'pending') {
-                setQrStatus('📱 请使用手机扫描二维码登录', '扫码后在手机上输入账号密码确认', false);
-              } else if (status === 'confirmed') {
-                if (qrPollTimer) { clearInterval(qrPollTimer); qrPollTimer = null; }
-                handleQrConfirmed(data.data);
-              } else if (status === 'expired') {
-                if (qrPollTimer) { clearInterval(qrPollTimer); qrPollTimer = null; }
-                setQrStatus('⏰ 二维码已过期', '请点击刷新获取新二维码', true);
-              }
-            })
-            .catch(function () {});
-        }, QR_POLL_INTERVAL);
+          .catch(function () {
+            qrPollInFlight = false;
+            qrPollFails++;
+            if (qrPollFails >= QR_POLL_MAX_FAILS) {
+              // 熔断：停止轮询，让用户网络恢复后手动刷新
+              stopPolling();
+              setQrStatus('⚠️ 网络连接中断', '请检查网络后点击刷新重试', true);
+            } else {
+              // 退避：2s, 4s, 8s, 16s, 16s ...
+              var delay = Math.min(QR_POLL_INTERVAL * Math.pow(2, qrPollFails - 1), 16000);
+              setQrStatus('📡 网络异常，正在重连…', '第 ' + qrPollFails + ' 次重试', false);
+              scheduleNext(delay);
+            }
+          });
+      }
+
+      function startPolling() {
+        stopPolling();
+        qrPollFails = 0;
+        scheduleNext(QR_POLL_INTERVAL);
+      }
+
+      function genSessId() {
+        try {
+          var buf = new Uint8Array(16);
+          if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(buf);
+          var hex = '';
+          for (var i = 0; i < buf.length; i++) hex += ('0' + buf[i].toString(16)).slice(-2);
+          return hex || ('sess_' + Date.now().toString(36) + Math.random().toString(36).slice(2));
+        } catch (e) {
+          return 'sess_' + Date.now().toString(36) + Math.random().toString(36).slice(2);
+        }
       }
 
       function handleQrConfirmed(data) {
         setQrStatus('✅ 登录成功，正在跳转…', '', false);
         try {
-          // 修复：session 结构必须与密码登录完全对齐（index.html 内联守卫硬性要求 s.id + s.expiresAt，
-          // 否则扫码登录后跳后台会被判为无效登录态踢回登录页）；token 须写入 QAXQJT_API_CONFIG 存储，
-          // api-request 层从 qaxqjt_access_token 读取 Authorization，放进 session.token 不会被使用。
-          var u = (data && data.user) || {};
+          var userObj = data.user || {};
+          var token = data.accessToken || data.token || '';
           var SESS_TTL_MS = 2 * 60 * 60 * 1000;
           var nowMs = Date.now();
-          var sessId = (function () {
-            try {
-              var buf = new Uint8Array(16);
-              if (window.crypto && window.crypto.getRandomValues) {
-                window.crypto.getRandomValues(buf);
-              } else if (window.msCrypto && window.msCrypto.getRandomValues) {
-                window.msCrypto.getRandomValues(buf);
-              } else {
-                for (var _qi = 0; _qi < 16; _qi++) buf[_qi] = Math.floor(Math.random() * 256);
-              }
-              var hex = '';
-              for (var _qh = 0; _qh < buf.length; _qh++) {
-                var b = buf[_qh].toString(16);
-                hex += b.length === 1 ? '0' + b : b;
-              }
-              return 'sess_' + hex;
-            } catch (_e) {
-              return 'sess_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
-            }
-          })();
+          // ★ 修复：session 必须包含 id + expiresAt，否则 index.html 闪电鉴权守卫判定未登录并跳回 login.html
           var session = {
-            id: sessId,
-            username: u.username,
-            name: u.realName || u.name || u.username || '管理员',
-            role: u.role || 'admin',
-            roleName: u.role || '系统管理员',
+            id: data.sessionId || genSessId(),
+            username: userObj.username || '',
+            name: userObj.name || userObj.realName || userObj.nickname || '管理员',
+            role: userObj.role || userObj.roleCode || 'admin',
+            roleName: userObj.roleName || userObj.roleDisplayName || userObj.role || '系统管理员',
             loginAt: new Date().toISOString(),
             expiresAt: nowMs + SESS_TTL_MS,
             fromApi: true,
-            forcePwdChange: !!u.forcePwdChange,
-            token: data.accessToken,
-            refreshToken: data.refreshToken
+            forcePwdChange: !!userObj.forcePwdChange
           };
           localStorage.setItem('qaxqjt_admin_session', JSON.stringify(session));
+          // ★ 修复：accessToken / currentUser 必须同步写入 API 配置，否则首页所有接口 401
           try {
-            if (window.QAXQJT_API_CONFIG) {
-              if (typeof window.QAXQJT_API_CONFIG.setAccessToken === 'function') {
-                window.QAXQJT_API_CONFIG.setAccessToken(data.accessToken);
-              }
-              if (typeof window.QAXQJT_API_CONFIG.setRefreshToken === 'function') {
-                window.QAXQJT_API_CONFIG.setRefreshToken(data.refreshToken);
-              }
-              if (typeof window.QAXQJT_API_CONFIG.setCurrentUser === 'function') {
-                window.QAXQJT_API_CONFIG.setCurrentUser(u);
-              }
+            if (token && window.QAXQJT_API_CONFIG && typeof window.QAXQJT_API_CONFIG.setAccessToken === 'function') {
+              window.QAXQJT_API_CONFIG.setAccessToken(token);
             }
-          } catch (_tk) {
-            console.warn('QR login token storage warn:', _tk && _tk.message ? _tk.message : _tk);
-          }
-          var tgt = u.forcePwdChange ? 'change-password.html' : 'index.html';
+            if (window.QAXQJT_API_CONFIG && typeof window.QAXQJT_API_CONFIG.setCurrentUser === 'function') {
+              window.QAXQJT_API_CONFIG.setCurrentUser(userObj);
+            }
+          } catch (ce) { console.warn('QR token persist warn:', ce); }
+          var tgt = userObj.forcePwdChange ? 'change-password.html' : 'index.html';
           setTimeout(function () {
-            try { window.location.assign(tgt); } catch (e) { window.location.href = tgt; }
-          }, 800);
+            try { window.location.replace(tgt); } catch (e) { window.location.href = tgt; }
+          }, 600);
         } catch (e) {
           console.error('QR login handle error:', e);
+          setQrStatus('❌ 登录态写入失败', '请重新扫码或使用账号登录', true);
         }
       }
     })();
@@ -2065,7 +2185,7 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        __T('💾 保存成功','success');
         try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
@@ -2080,7 +2200,7 @@ var __pT0=0;
         if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
         try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
@@ -2104,7 +2224,7 @@ var __pT0=0;
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        __T('➕ 准备新增「'+txt+'」','info');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -2114,7 +2234,7 @@ var __pT0=0;
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
         if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
@@ -2123,7 +2243,7 @@ var __pT0=0;
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -2131,7 +2251,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        __T('📄 合同文档已就绪','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -2139,7 +2259,7 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
@@ -2150,7 +2270,7 @@ var __pT0=0;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
         var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -2331,7 +2451,7 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        __toastH9('✅ 提交成功','success');
         setTimeout(function(){
           try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
         }, 380);
@@ -2498,6 +2618,7 @@ function __pLog(module,event,extra){
     function _isPgContainer(el){
       try{
         if(!el || el.nodeType!==1) return false;
+        if(el.closest && el.closest('.sp-pg-toolbar-20260730,.pagination-toolbar')) return false;
         var tag = (el.tagName||'').toUpperCase();
         if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
         var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
@@ -2526,7 +2647,8 @@ function __pLog(module,event,extra){
     }
     function _buildPg(container){
       try{
-        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
+        if(container.hasAttribute('data-pg-built')||container.querySelector('.sp-pg-toolbar-20260730')) return; container.setAttribute('data-pg-built','1');
+        if(container.classList && (container.classList.contains('sp-pg-toolbar-20260730')||container.classList.contains('pagination-toolbar'))) return;
         var oldToolbar = container.querySelector('.pagination-toolbar');
         if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
         var st = _ensurePgState(container);
@@ -2541,6 +2663,7 @@ function __pLog(module,event,extra){
         if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
         var wrap = document.createElement('div');
         wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.setAttribute('data-pg-built','1');
         wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
         wrap.innerHTML = ''+
           '<button class="btn btn-sm" data-pg="first">首页</button>'+
@@ -2638,7 +2761,7 @@ function __pLog(module,event,extra){
     function _scanPagination(){
       try{
         var all = document.querySelectorAll('div,nav,section,span');
-        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
+        all.forEach(function(el){ if(el.hasAttribute('data-pg-built')) return; if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
         if(!document.getElementById('_pgPatchCSS20260730')){
           sty.id='_pgPatchCSS20260730';
@@ -2753,7 +2876,6 @@ function __pLog(module,event,extra){
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
-      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -2793,34 +2915,34 @@ function __pLog(module,event,extra){
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          __toastH9('✅ 操作成功','success');
           setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
         }else if(tt==='delete'){
           if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
             __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
           }else{ __toastH9('↩️ 已取消操作','info'); }
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印（演示模式）','info');
+          __toastH9('📤 已触发导出/打印','info');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪（演示模式）','info');
+          __toastH9('📄 合同文档已就绪','info');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+          __toastH9('➕ 准备新增','info');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }

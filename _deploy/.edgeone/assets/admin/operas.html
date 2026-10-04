@@ -42,7 +42,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>剧目资源管理 - 秦安县秦剧团云端预约系统 | {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -615,7 +615,7 @@
             <span class="menu-icon">👥</span>
             <span>账号权限管理</span>
           </a>
-          <a href="schedule.html" data-role-level="800" class="admin-menu-item">
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
             <span class="menu-badge">8</span>
@@ -656,6 +656,10 @@
             <span class="menu-icon">📝</span>
             <span>官网内容管理</span>
           </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
+          </a>
           <a href="reports.html" data-role-level="700" class="admin-menu-item">
             <span class="menu-icon">📈</span>
             <span>数据统计报表</span>
@@ -687,6 +691,9 @@
           <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
             <span>🏠</span><span>返回前台首页</span>
           </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
+          </a>
           <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
             <span>🚪</span><span>退出登录</span>
           </a>
@@ -701,7 +708,7 @@
           <nav class="admin-breadcrumb">
             <a href="index.html">首页</a>
             <span class="separator">/</span>
-            <a href="#">业务管理</a>
+            <span class="current">剧目资源管理</span>
             <span class="separator">/</span>
             <span class="current">剧目资源管理</span>
           </nav>
@@ -1037,8 +1044,9 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
-  <script src="../js/pagination.js?v=20260803"></script>
+<script src="../js/app.js?v=20260930a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
   <script src="../js/real-action-guard.js?v=20260922b"></script>
   <script>
     (function() {
@@ -1184,15 +1192,18 @@
       });
     });
     if (modalClose) {
+      modalClose.__ub = 1; /* v20260929fix：标记 __ub，跳过 SuperPatch 3/6 对关闭按钮的拦截 */
       modalClose.addEventListener('click', function() {
         modal.classList.remove('active');
+        try { modal.style.setProperty('display','none','important'); } catch(_e1x){} /* v20260929fix：清除 viewDetail 设置的 inline flex!important */
         try { document.body.classList.remove('body-modal-locked'); } catch(_e2){}
-      });
+      }, true); /* v20260929fix：capture 阶段执行，抢在 fixRefreshBug 的 stopPropagation 之前（现代 Chrome 中 target 捕获监听器 stopProp 会跳过同按钮全部冒泡监听） */
     }
     if (modal) {
       modal.addEventListener('click', function(e) {
         if (e.target === modal) {
           modal.classList.remove('active');
+          try { modal.style.setProperty('display','none','important'); } catch(_e3x){} /* v20260929fix */
           try { document.body.classList.remove('body-modal-locked'); } catch(_e3){}
         }
       });
@@ -1761,6 +1772,10 @@ function __pLog(module,event,extra){
           if(txt===closeTexts[i]||(txt.length<=12&&txt.indexOf(closeTexts[i])>=0)){ isClose=true; break; }
         }
         if(!isClose) return;
+        // v20260929fix：若按钮已有 __bindBtn 自定义绑定（__ub=1），跳过 SuperPatch 兜底，
+        // 让按钮自己的 capture handler 处理（避免 stopPropagation 阻断 operas addOperaCloseBtn 等）
+        var _btnEl = el.closest ? el.closest('button, a, [role=button]') : null;
+        if (_btnEl && _btnEl.__ub) return;
         e.preventDefault();
         e.stopPropagation();
         var handled=false;
@@ -1795,6 +1810,7 @@ function __pLog(module,event,extra){
     function _isPgContainer(el){
       try{
         if(!el || el.nodeType!==1) return false;
+        if(el.closest && el.closest('.sp-pg-toolbar-20260730,.pagination-toolbar')) return false;
         var tag = (el.tagName||'').toUpperCase();
         if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
         var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
@@ -1823,7 +1839,8 @@ function __pLog(module,event,extra){
     }
     function _buildPg(container){
       try{
-        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
+        if(container.hasAttribute('data-pg-built')||container.querySelector('.sp-pg-toolbar-20260730')) return; container.setAttribute('data-pg-built','1');
+        if(container.classList && (container.classList.contains('sp-pg-toolbar-20260730')||container.classList.contains('pagination-toolbar'))) return;
         var oldToolbar = container.querySelector('.pagination-toolbar');
         if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
         var st = _ensurePgState(container);
@@ -1838,6 +1855,7 @@ function __pLog(module,event,extra){
         if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
         var wrap = document.createElement('div');
         wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.setAttribute('data-pg-built','1');
         wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
         wrap.innerHTML = ''+
           '<button class="btn btn-sm" data-pg="first">首页</button>'+
@@ -1935,7 +1953,7 @@ function __pLog(module,event,extra){
     function _scanPagination(){
       try{
         var all = document.querySelectorAll('div,nav,section,span');
-        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
+        all.forEach(function(el){ if(el.hasAttribute('data-pg-built')) return; if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
         if(!document.getElementById('_pgPatchCSS20260730')){
           sty.id='_pgPatchCSS20260730';
@@ -2214,8 +2232,9 @@ try{
         e.stopPropagation();
         var modal = document.getElementById('operaDetailModal');
         if (modal){
-          modal.classList.remove('modal-overlay-hide');
+          modal.classList.remove('modal-overlay-hide','csp-hide','s-modal-hide');
           modal.classList.add('active');
+          try { modal.style.setProperty('display','flex','important'); } catch(_e){} /* v20260929fix：与 viewDetail 打开方式对齐，保证 inline flex 被关闭路径正确清除 */
         }
       }, true);
     }
@@ -2303,7 +2322,7 @@ try{
     try{
       var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], .modal-overlay-root, [data-overlay]');
       overlays.forEach(function(o){
-        try{ o.classList.remove('active','show','modal-overlay-show'); o.classList.add('s-overlay-hide','modal-overlay-hide','csp-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
+        try{ o.classList.remove('active','show','modal-overlay-show'); o.classList.add('s-overlay-hide','modal-overlay-hide','csp-hide'); try{ o.style.setProperty('display','none','important'); }catch(_c){} }catch(_){ try{ o.style.display='none'; }catch(_a){} } /* v20260929fix：清除 inline flex!important，保证 Escape/兜底能关掉 viewDetail 详情弹窗 */
       });
       var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, .generic-modal-root, [data-modal], [role="dialog"]');
       modals.forEach(function(m){
@@ -2672,8 +2691,11 @@ try{
             synSec.appendChild(synP);
           }
         }
+        // v20260926 修复：初始化 fixRefreshBug 给所有 overlay 打了 modal-overlay-hide（display:none!important），
+        // 打开详情时必须先移除，否则 active 也无法显示（与 __openAddOperaModal 写法一致）
+        try { modal.classList.remove('modal-overlay-hide','csp-hide','s-modal-hide'); } catch(_){}
         modal.classList.add('active');
-        modal.style.display = 'flex';
+        modal.style.setProperty('display','flex','important');
         try { document.body.classList.add('body-modal-locked'); } catch(_){}
       } catch(e) {
         console.warn('[viewDetail] id=' + id, e);
@@ -2843,6 +2865,7 @@ try{
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",fillSel); else fillSel();
 })();
 </script>
+<script src="../js/admin-mobile-sidebar.js?v=20260926m"></script>
 </body>
 
 </html>

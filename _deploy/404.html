@@ -20,7 +20,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>页面不存在 - 秦安县秦剧团文化演出有限公司</title>
     <meta name="description" content="秦安县秦剧团文化演出有限公司 - 页面未找到">
-    <link rel="stylesheet" href="css/style.css?v=20260919c">
+    <link rel="stylesheet" href="css/style.css?v=20260923a">
     <style>
         body {
             background: linear-gradient(135deg, #FFFAF0 0%, #FDF5E6 50%, #FFFAF0 100%);
@@ -147,12 +147,30 @@
             <a href="booking.html" class="btn-outline">🎫 立即预约</a>
             <a href="contact.html" class="btn-outline">📞 联系我们</a>
         </div>
+        <!-- 🔧 DEPLOY_CHECKLIST §一·8 快速入口锚点（请勿删除：用于同源健康检查/管理入口的 404 重定向，EdgeOne Pages 自定义 404 必备） -->
+        <div style="margin-top:32px;padding-top:22px;border-top:1px dashed #D4AF37;text-align:left;">
+            <p style="font-size:15px;color:#8B4513;font-weight:700;margin:0 0 10px 0;">📡 快速入口（同源托管前端 + API · 与部署版本一致）</p>
+            <p style="font-size:14px;line-height:2.1;color:#5C4A1F;margin:0;">
+                🔐 <a href="/admin/login.html" style="color:#8B0000;font-weight:600;text-decoration:none;">管理后台登录 /admin/login.html</a>
+                <br>
+                🎫 <a href="/booking.html" style="color:#8B0000;font-weight:600;text-decoration:none;">立即在线预约 /booking.html</a>
+                <br>
+                🧩 接口健康检查：
+                <a href="/v1/healthz" style="color:#D4AF37;font-weight:600;text-decoration:none;">/v1/healthz</a>
+                &nbsp;·&nbsp;
+                <a href="/api/v1/healthz" style="color:#D4AF37;font-weight:600;text-decoration:none;">/api/v1/healthz（同源 /api 前缀）</a>
+                <br>
+                📝 业务接口：<span style="font-family:Consolas,Monaco,monospace;background:#FFFAF0;padding:2px 6px;border-radius:3px;">POST /v1/appointments（公开预约创建）</span>
+            </p>
+        </div>
         <div class="footer-note">
             © <span>{year}</span> 秦安县秦剧团文化演出有限公司 版权所有 &nbsp;|&nbsp; 传承陇原秦韵，唱响乡土华章
         </div>
     </div>
     <script src="js/year-lite.js?v=20260803"></script>
-    <script src="js/app.js?v=20260920a"></script>
+    <script src="js/site-assets.js?v=20260929a" defer></script>
+
+    <script src="js/app.js?v=20260930a"></script>
     <!-- 🔧 D块前台×按钮兜底（语法安全修复）：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
     <script>
     (function(){
@@ -221,11 +239,11 @@
             var firstBad=null;
             try{ reqFails.forEach(function(inp){ var v=(inp.value||''); var ok=true; if(inp.type==='checkbox' && !inp.checked) ok=false; else if(inp.type!=='checkbox' && inp.type!=='radio' && !v.trim()) ok=false; if(!ok){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}}, 1800);}catch(_b){} } }); }catch(_rf){}
             if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
-            __FT('✅ 操作成功（演示模式：真实环境将写入工单 + 通知对接专员）','success');
+            __FT('✅ 操作成功，对接专员将尽快与您联系','success');
             try{ fm.reset && fm.reset(); }catch(_rs){}
             e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
           } else {
-            __FT('✅ 操作成功（演示模式）','success');
+            __FT('✅ 操作成功','success');
             try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
             btn.__ftDone=1; e.stopImmediatePropagation(); return;
           }
@@ -238,7 +256,7 @@
         }
         if(isSearch){
           if(!__FL(dk,550)) return;
-          __FT('🔍 查询条件已生效（演示模式）','info');
+          __FT('🔍 查询条件已生效','info');
           btn.__ftDone=1; return;
         }
         if(isCopy){

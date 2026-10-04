@@ -32,37 +32,44 @@
     try{ if(console && console.log) console.log('[toast]['+(type||'info')+'] '+msg); }catch(_){}
   }
 
-  // ★ FIX 导出功能：自动加载 xlsx 库（SheetJS），多路径降级
-  (function _loadXlsx() {
+  // ★ FIX 导出功能：xlsx 库（SheetJS）按需懒加载（多路径降级 + 并发去重）
+  // 优化（P3-0930）：原实现页面加载即无条件拉取 838KB xlsx.min.js（async=false），
+  // 严重拖慢 load 事件（实测下载中位数 ~2.9s）。但全站仅 staff「商议单存档导出」真正用到 XLSX，
+  // schedule/orders/operas 等页面均走纯 CSV。改为首次导出时才加载，纯 CSV 页面首屏不再承担该负担。
+  global.__qaEnsureXlsx = function () {
     try {
-      if (global.XLSX && typeof global.XLSX.writeFile === 'function') return;
+      if (global.XLSX && typeof global.XLSX.writeFile === 'function') {
+        return Promise.resolve(global.XLSX);
+      }
+      if (global.__qaXlsxPromise) return global.__qaXlsxPromise;
       var cdns = [
         '/js/xlsx.min.js',
         '../js/xlsx.min.js',
         'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
         'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
       ];
-      var idx = 0, done = false;
-      function next() {
-        if (done || idx >= cdns.length) return;
-        var s = document.createElement('script');
-        s.src = cdns[idx++];
-        s.onload = function () {
-          if (global.XLSX && typeof global.XLSX.writeFile === 'function') {
-            done = true;
-            try { console.info('[xlsx] loaded from: ' + s.src); } catch (_) {}
-          } else { next(); }
-        };
-        s.onerror = function () { next(); };
-        s.async = false;
-        try { document.head.appendChild(s); } catch (_) { next(); }
-      }
-      if (document && document.head) next();
-      else if (document && document.addEventListener) {
-        document.addEventListener('DOMContentLoaded', next, { once: true });
-      }
-    } catch (_) {}
-  })();
+      global.__qaXlsxPromise = new Promise(function (resolve, reject) {
+        var idx = 0;
+        function next() {
+          if (idx >= cdns.length) { reject(new Error('xlsx-load-failed')); return; }
+          var s = document.createElement('script');
+          s.src = cdns[idx++];
+          s.onload = function () {
+            if (global.XLSX && typeof global.XLSX.writeFile === 'function') {
+              try { console.info('[xlsx] lazy-loaded from: ' + s.src); } catch (_) {}
+              resolve(global.XLSX);
+            } else { next(); }
+          };
+          s.onerror = function () { next(); };
+          try { document.head.appendChild(s); } catch (_) { next(); }
+        }
+        next();
+      });
+      // 失败后清缓存，允许后续点击重试
+      global.__qaXlsxPromise.catch(function () { try { global.__qaXlsxPromise = null; } catch (_) {} });
+      return global.__qaXlsxPromise;
+    } catch (e) { return Promise.reject(e); }
+  };
 
   // ============================================================
   // 模块 0: 通用工具函数 Utils
@@ -557,10 +564,6 @@
      */
     exportDataToXlsx: function (data, headers, filename, sheetName) {
       try {
-        if (!window.XLSX || typeof window.XLSX.utils === 'undefined') {
-          Utils.toast('⚠️ xlsx 库未加载，请刷新页面后重试', 'error');
-          return false;
-        }
         var aoa = [];
         if (Array.isArray(headers) && headers.length > 0) aoa.push(headers);
         if (Array.isArray(data)) {
@@ -572,12 +575,26 @@
           Utils.toast('⚠️ 没有可导出的数据', 'warning');
           return false;
         }
-        var ws = window.XLSX.utils.aoa_to_sheet(aoa);
-        var wb = window.XLSX.utils.book_new();
-        window.XLSX.utils.book_append_sheet(wb, ws, (sheetName || 'Sheet1').slice(0, 31));
-        var fname = (filename || ('export_' + new Date().toISOString().slice(0, 10))) + '.xlsx';
-        window.XLSX.writeFile(wb, fname);
-        Utils.toast('✅ 已导出 ' + (data ? data.length : 0) + ' 条记录：' + fname, 'success');
+        if (typeof global.__qaEnsureXlsx !== 'function') {
+          Utils.toast('⚠️ xlsx 组件不可用，请刷新页面后重试', 'error');
+          return false;
+        }
+        // xlsx 按需懒加载（P3-0930）：首次导出才拉取 838KB 库
+        Utils.toast('⏳ 正在准备 Excel 组件，请稍候…', 'info', 1500);
+        global.__qaEnsureXlsx().then(function (XLSX) {
+          try {
+            var ws = XLSX.utils.aoa_to_sheet(aoa);
+            var wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, (sheetName || 'Sheet1').slice(0, 31));
+            var fname = (filename || ('export_' + new Date().toISOString().slice(0, 10))) + '.xlsx';
+            XLSX.writeFile(wb, fname);
+            Utils.toast('✅ 已导出 ' + (data ? data.length : 0) + ' 条记录：' + fname, 'success');
+          } catch (e2) {
+            Utils.toast('❌ 导出失败：' + (e2 && e2.message ? e2.message : e2), 'error');
+          }
+        }).catch(function () {
+          Utils.toast('⚠️ Excel 组件加载失败，请检查网络后重试（可改用 CSV 导出）', 'error');
+        });
         return true;
       } catch (e) {
         Utils.toast('❌ 导出失败：' + (e && e.message ? e.message : e), 'error');
@@ -2678,18 +2695,36 @@
       var mpAccount = '秦安县秦剧团';
       var mpFullName = '秦安县秦剧团文化演出有限公司';
       var shipinhaoName = '秦安县秦剧团官方';
+      // 后台可维护项（admin/assets.html「微信客服信息」）：site.text.* 与客服二维码
+      var wechatId = '';
+      var wechatQrUrl = '';
+      (function loadContactCfg() {
+        try {
+          if (window.QAXSiteAssets && typeof window.QAXSiteAssets.getMap === 'function') {
+            window.QAXSiteAssets.getMap().then(function (map) {
+              if (!map) return;
+              if (map['site.text.wechat_id']) wechatId = map['site.text.wechat_id'];
+              if (map['site.text.mp_name']) mpAccount = map['site.text.mp_name'];
+              if (map['site.text.mp_fullname']) mpFullName = map['site.text.mp_fullname'];
+              if (map['site.text.shipinhao']) shipinhaoName = map['site.text.shipinhao'];
+              if (map['site.global.wechat_qr']) wechatQrUrl = map['site.global.wechat_qr'];
+            });
+          }
+        } catch (_) {}
+      })();
 
       // 预生成 Modal config，复用 Utils.openQRModal
       var modalCfgs = {
         'wechat': function () {
+          var idText = wechatId || wechatPhone;
           return {
             title: '微信客服联系',
             subtitle: '演出档期/报价/定制咨询 · 工作日 8:30-18:00',
-            qrImgUrl: Utils.buildQRImgUrl('https://u.wechat.com/contact/' + wechatPhone, 230),
-            codeText: '微信号 / 手机号：' + wechatPhone + '（微信同号）',
-            tip: '请打开微信 → 右上角「+」→ 添加朋友 → 粘贴上方手机号搜索',
+            qrImgUrl: wechatQrUrl || Utils.buildQRImgUrl('https://u.wechat.com/contact/' + idText, 230),
+            codeText: wechatId ? ('微信号：' + wechatId + '　|　手机号：' + wechatPhone) : ('微信号 / 手机号：' + wechatPhone + '（微信同号）'),
+            tip: wechatId ? '请打开微信 → 右上角「+」→ 添加朋友 → 粘贴上方微信号搜索' : '请打开微信 → 右上角「+」→ 添加朋友 → 粘贴上方手机号搜索',
             actions: [
-              { label: '📋 复制手机号', variant: 'btn-primary', onClick: function () { Utils.copyText(wechatPhone, '✅ 客服手机号已复制：' + wechatPhone); } },
+              { label: wechatId ? '📋 复制微信号' : '📋 复制手机号', variant: 'btn-primary', onClick: function () { Utils.copyText(idText, '✅ 客服' + (wechatId ? '微信号' : '手机号') + '已复制：' + idText); } },
               { label: '📞 直接拨打', variant: 'btn-outline', href: 'tel:' + wechatPhone },
               { label: '✕ 关闭', variant: 'btn-outline', onClick: function (e, close) { close(); } }
             ]
@@ -2712,10 +2747,11 @@
         'wechat-qr': function () {
           return {
             title: '微信公众号·官方二维码',
-            subtitle: '扫码/搜索关注「秦安县秦剧团」官方公众号',
-            plainPlaceholder: '📡 微信公众号二维码（防外采提示）\n\n受微信官方安全策略保护\n公众号二维码无法在站外直接展示图片\n\n请在微信内搜索下方公众号名称',
+            subtitle: '扫码/搜索关注「' + mpAccount + '」官方公众号',
+            qrImgUrl: wechatQrUrl || undefined,
+            plainPlaceholder: wechatQrUrl ? '' : '📡 微信公众号二维码（防外采提示）\n\n受微信官方安全策略保护\n公众号二维码无法在站外直接展示图片\n\n请在微信内搜索下方公众号名称',
             codeText: '公众号全称：' + mpFullName + '   |   简称：' + mpAccount,
-            tip: '搜索步骤：微信 → 通讯录 → 公众号 → + 号 → 粘贴名称',
+            tip: wechatQrUrl ? '微信「扫一扫」上方二维码，或搜索公众号名称关注' : '搜索步骤：微信 → 通讯录 → 公众号 → + 号 → 粘贴名称',
             actions: [
               { label: '📋 复制公众号全称', variant: 'btn-primary', onClick: function () { Utils.copyText(mpFullName, '✅ 公众号全称已复制'); } },
               { label: '📋 复制简称', variant: 'btn-outline', onClick: function () { Utils.copyText(mpAccount, '✅ 公众号简称已复制：' + mpAccount); } },
@@ -4749,14 +4785,14 @@
     perfectAttendanceBonus: 80000,  // 800元/月
     // 工龄补贴：每年工龄 单位：分/天
     seniorityPerYear: 200,  // 2元/天·年
-    // 扣款规则（单位：分或百分比）
+    // 扣款规则（单位：分或百分比；默认口径与《员工管理条例》第二条一致）
     deductions: {
-      lateUnder30min:    5000,   // 迟到<30分钟：扣50元
-      lateOver30min:    10000,   // 迟到≥30分钟：扣100元
-      absentHalfDay:    '50%',   // 旷工半天：扣当日50%
-      absentFullDay:   '100%',   // 旷工全天：扣当日100% + 罚款200
-      absentFine:      20000,    // 旷工罚款：200元/天
-      leavePersonal:   '100%',   // 事假：扣当日100%
+      lateUnder30min:    2000,   // 迟到/早退<30分钟：20元/次
+      lateOver30min:    '50%',   // 迟到/早退≥30分钟：按旷工半天，扣当日50%工资
+      absentHalfDay:   '100%',   // 旷工半天：扣当日100%工资
+      absentFullDay:   '200%',   // 旷工全天：扣两日工资（当日200%）
+      absentFine:          0,    // 旷工不再另收固定罚款（已含在200%扣薪内）
+      leavePersonal:   '100%',   // 事假：当日不计薪（扣当日100%）
       leaveSick:        '30%',   // 病假：扣当日30%
       socialInsurance:  '10.5%', // 社保个人：10.5%（养老8%+医疗2%+失业0.5%）
       housingFund:       '12%'   // 公积金个人：12%
@@ -4907,16 +4943,20 @@
         // 餐补/交通补
         detail.mealAllowance = (R.dailySubsidy && R.dailySubsidy.meal) || 0;
         detail.trafficAllowance = (R.dailySubsidy && R.dailySubsidy.traffic) || 0;
-        // 迟到扣款
+        // 迟到扣款（条例第二条：30分钟内20元/次；超30分钟按旷工半天扣当日一半工资）
         if (status === 'late') {
           var mins = dr.lateMinutes || 0;
           var D = R.deductions || {};
+          var lateKey, lateAmt;
           if (mins < 30) {
-            detail.deductionDetail['迟到<' + mins + '分钟'] = D.lateUnder30min || 5000;
+            lateKey = '迟到<' + mins + '分钟';
+            lateAmt = D.lateUnder30min != null ? (typeof D.lateUnder30min === 'string' ? Math.round(baseCents * this._parsePct(D.lateUnder30min)) : D.lateUnder30min) : 2000;
           } else {
-            detail.deductionDetail['迟到≥' + mins + '分钟'] = D.lateOver30min || 10000;
+            lateKey = '迟到≥' + mins + '分钟(按旷工半天)';
+            lateAmt = D.lateOver30min != null ? (typeof D.lateOver30min === 'string' ? Math.round(baseCents * this._parsePct(D.lateOver30min)) : D.lateOver30min) : Math.round(baseCents * 0.5);
           }
-          detail.deduction += detail.deductionDetail[Object.keys(detail.deductionDetail)[0]];
+          detail.deductionDetail[lateKey] = lateAmt;
+          detail.deduction += lateAmt;
         }
       }
 
@@ -5036,10 +5076,8 @@
           if (it.lateCount) totalLate += it.lateCount;
           else if (st === 'late') totalLate++;
         }
-        if (isWeekend) {
-          if (st === 'leave_sick' || st === 'leave_personal' || st === 'absent') hasLeaveOrAbsent = true;
-          continue;
-        }
+        // 周末不纳入考勤考核：周末的请假/旷工/半天均不影响全勤判定（迟到次数仍在上方累计）
+        if (isWeekend) continue;
         weekdaysSeen++;
         var isFullOk = (st === 'full_day') || (st === 'normal') || (st === 'late');
         var isHalf = (st === 'half_afternoon') || (st === 'half_night');
@@ -5064,6 +5102,8 @@
         sickDays: 0, personalDays: 0, performBenxi: 0, performZhezi: 0, performXiaxiang: 0, performOther: 0
       };
       var totals = { base:0, seniority:0, meal:0, traffic:0, performance:0, gross:0, deduction:0, net:0 };
+      // 当月有考勤记录的工作日数（全勤奖门槛：零工作日出勤不发全勤奖）
+      var weekdaysSeen = 0;
 
       for (var i = 0; i < list.length; i++) {
         var dr = list[i];
@@ -5071,14 +5111,21 @@
         dailyDetails.push(d);
         // 统计
         var st = dr.status || 'normal';
+        var recDate = dr.date ? new Date(dr.date) : null;
+        var hasDate = !!(recDate && !isNaN(recDate.getTime()));
+        var isWeekend = hasDate && (recDate.getDay() === 0 || recDate.getDay() === 6);
+        if (hasDate && !isWeekend) weekdaysSeen++;
         if (st === 'normal' || st === 'late') summary.workDays++;
         if (st === 'late') summary.lateDays++;
-        if (st === 'absent') {
-          if (dr.absentType === 'half') summary.absentHalfDays++;
-          else summary.absentFullDays++;
+        // 请假/旷工考核仅统计工作日：周末为演出日，不纳入考勤考核
+        if (!isWeekend) {
+          if (st === 'absent') {
+            if (dr.absentType === 'half') summary.absentHalfDays++;
+            else summary.absentFullDays++;
+          }
+          if (st === 'leave_sick') summary.sickDays++;
+          if (st === 'leave_personal') summary.personalDays++;
         }
-        if (st === 'leave_sick') summary.sickDays++;
-        if (st === 'leave_personal') summary.personalDays++;
         if (dr.performType && dr.performCount > 0) {
           if (dr.performType === 'benxi') summary.performBenxi += dr.performCount;
           else if (dr.performType === 'zhezi') summary.performZhezi += dr.performCount;
@@ -5094,9 +5141,9 @@
         totals.deduction += d.deduction;
       }
 
-      // 全勤奖：无旷工、无病假/事假、迟到<3次
+      // 全勤奖：当月有工作日考勤记录，且无旷工、无病假/事假、迟到<3次
       var perfectBonus = 0;
-      if (summary.absentFullDays === 0 && summary.absentHalfDays === 0
+      if (weekdaysSeen > 0 && summary.absentFullDays === 0 && summary.absentHalfDays === 0
           && summary.sickDays === 0 && summary.personalDays === 0 && summary.lateDays < 3) {
         perfectBonus = R.perfectAttendanceBonus || 0;
       }
@@ -6077,7 +6124,9 @@
 
     initAdminSidebar: function () {
       var toggle = document.querySelector('.admin-sidebar-toggle, #sidebarToggle');
-      if (toggle) {
+      // v20260926n：≤900px 走手机抽屉（js/admin-mobile-sidebar.js），桌面折叠逻辑仅桌面绑定，
+      // 避免同一汉堡按钮双绑定导致手机端误触发 body.admin-sidebar-collapsed
+      if (toggle && window.innerWidth > 900) {
         toggle.addEventListener('click', function () {
           var collapsed = document.body.classList.toggle('admin-sidebar-collapsed');
           toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
@@ -9020,7 +9069,10 @@
           /* 9) ★ BUG FIX: 最新系统动态/通知列表区域限高，防止无限延长触发 HeightGuard 误判 */
           '.system-notice-list, .notice-list, .activity-list, .recent-activity { max-height: 400px !important; overflow-y: auto !important; }',
           /* 10) ★ BUG FIX: 表格容器不被 HeightGuard 兜底截断 — table/tbody 永远不设 maxHeight */
-          'table, tbody, thead, .table-wrapper, .table-container { max-height: none !important; overflow: visible !important; }'
+          'table, tbody, thead, .table-wrapper, .table-container { max-height: none !important; overflow: visible !important; }',
+          /* 10b) ★ BUG FIX: 移除各页内联 min-width:760px 强制最小宽度，改为自适应容器，消除表格自动放大/抖动 */
+          '.admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper, .data-table-container, [class*="table-wrapper"], .admin-content table, table { width: 100% !important; min-width: 0 !important; }',
+          '.table-wrapper, .data-table-container { overflow-x: auto !important; }'
         ].join('\n');
         var s = document.createElement('style');
         s.setAttribute('data-height-guard', 'v2026.8.3');

@@ -69,10 +69,54 @@
     return { y: y, m: m };
   }
 
-  /* ---------- 数据拉取 + localStorage 同步 ---------- */
+  /* ---------- OBS-1 修复：筛选器默认当前年月、日期框默认今天、清理 {year} 占位文案 ---------- */
+  function pad2(n) { return String(n).padStart ? String(n).padStart(2, '0') : (n < 10 ? '0' + n : '' + n); }
+  function syncFilterToToday() {
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = now.getMonth() + 1;
+    var sels = document.querySelectorAll('.admin-filter-bar select');
+    if (sels[0]) {
+      var yv = String(sels[0].value);
+      var hasYear = false;
+      Array.prototype.forEach.call(sels[0].options, function (o) { if (o.value === String(y)) hasYear = true; });
+      if (!hasYear) {
+        var op = document.createElement('option');
+        op.value = String(y);
+        op.textContent = y + '年';
+        sels[0].insertBefore(op, sels[0].firstChild);
+      }
+      sels[0].value = String(y);
+    }
+    if (sels[1]) sels[1].value = String(m);
+    // 新增排期弹窗日期默认今天（仅当为空或非法值，如历史 {year}-07-20 占位符）
+    var dEl = document.getElementById('schedDate');
+    if (dEl) {
+      var v = (dEl.value || '').trim();
+      var d = v ? new Date(v + 'T00:00:00') : null;
+      if (!v || !d || isNaN(d.getTime())) dEl.value = y + '-' + pad2(m) + '-' + pad2(now.getDate());
+    }
+    return { y: y, m: m };
+  }
+  function initDefaults() {
+    var ym = syncFilterToToday();
+    // 清理静态标题里的 {year}/7月 占位文案（真实渲染不再覆盖这些节点）
+    [
+      ['calendarTitleText', ym.y + '年 ' + ym.m + '月 演出排期日历'],
+      ['weekTitleText', ym.y + '年 ' + ym.m + '月 本周排期一览'],
+      ['listTitleText', ym.y + '年 ' + ym.m + '月 全量排期清单（按日期升序）']
+    ].forEach(function (pair) {
+      var el = document.getElementById(pair[0]);
+      if (el && (el.textContent || '').indexOf('{year}') >= 0) el.textContent = pair[1];
+    });
+  }
+
+  /* ---------- 数据拉取：按月拉取（替代 pageSize:500 全量拉取） ---------- */
   function refresh() {
     if (!API || typeof API.get !== 'function') return Promise.resolve([]);
-    return API.get('/v1/schedules', { query: { page: 1, pageSize: 500 } })
+    var ym = selectedYM();
+    // 重构：只拉当前选中月份的数据，大幅减少传输量
+    return API.get('/v1/schedules', { query: { year: ym.y, month: ym.m, page: 1, pageSize: 200 } })
       .then(function (resp) {
         ROWS = unwrap(resp).map(norm).filter(function (r) { return !!r.date; });
         try {
@@ -90,9 +134,8 @@
       });
   }
 
-  /* ---------- 月度提示 + 冲突预警 ---------- */
+  /* ---------- 月度提示 + 冲突预警（冲突改走后端 /schedules/conflicts） ---------- */
   function renderAlerts(y, m) {
-    // 信息条：当月真实场次
     var prefix = y + '-' + pad(m);
     var monthRows = ROWS.filter(function (r) { return r.date.slice(0, 7) === prefix; });
     var info = document.getElementById('schedInfoAlert');
@@ -106,30 +149,35 @@
         info.style.display = 'none';
       }
     }
-    // 冲突条：同日 ≥2 场
-    var byDate = {};
-    ROWS.forEach(function (r) {
-      if (r.status === 'cancelled' || r.status === 'canceled') return;
-      (byDate[r.date] = byDate[r.date] || []).push(r);
-    });
-    var conflicts = Object.keys(byDate).filter(function (d) { return byDate[d].length >= 2; }).sort();
-    var exist = document.getElementById('schedConflictAlert');
-    if (exist) exist.parentNode.removeChild(exist);
-    if (conflicts.length && info && info.parentNode) {
-      var div = document.createElement('div');
-      div.className = 'schedule-alert danger';
-      div.id = 'schedConflictAlert';
-      var names = conflicts.slice(0, 5).map(function (d) {
-        return d + '（' + byDate[d].map(function (r) { return r.title; }).join(' / ') + '）';
-      }).join('；');
-      div.innerHTML =
-        '<div class="alert-icon">⚠️</div>' +
-        '<div class="alert-content"><strong>档期冲突预警：</strong>检测到 ' + conflicts.length +
-        ' 个日期存在多场连台排期 —— ' + esc(names) + '，请注意演职人员是否重叠。</div>' +
-        '<div class="alert-actions"><button class="btn btn-sm" style="background:#b91c1c;color:#fff;" type="button" id="schedConflictBtn">🚨 查看清单</button></div>';
-      info.parentNode.insertBefore(div, info);
-      var btn = document.getElementById('schedConflictBtn');
-      if (btn) btn.addEventListener('click', function () { try { window.__switchView && window.__switchView('list'); } catch (_) {} });
+    // 冲突检测：调用后端接口，前端不再全量扫描
+    var dateFrom = y + '-' + pad(m) + '-01';
+    var lastDay = new Date(y, m, 0).getDate();
+    var dateTo = y + '-' + pad(m) + '-' + pad(lastDay);
+    if (API && typeof API.get === 'function') {
+      API.get('/v1/schedules/conflicts', { query: { dateFrom: dateFrom, dateTo: dateTo } })
+        .then(function (resp) {
+          var data = resp && resp.data ? resp.data : resp;
+          var conflicts = (data && data.conflicts) || [];
+          var exist = document.getElementById('schedConflictAlert');
+          if (exist) exist.parentNode.removeChild(exist);
+          if (conflicts.length && info && info.parentNode) {
+            var div = document.createElement('div');
+            div.className = 'schedule-alert danger';
+            div.id = 'schedConflictAlert';
+            var names = conflicts.slice(0, 5).map(function (c) {
+              return c.date + '（' + c.items.map(function (it) { return it.playTitle; }).join(' / ') + '）';
+            }).join('；');
+            div.innerHTML =
+              '<div class="alert-icon">⚠️</div>' +
+              '<div class="alert-content"><strong>档期冲突预警：</strong>检测到 ' + conflicts.length +
+              ' 个日期存在多场连台排期 —— ' + esc(names) + '，请注意演职人员是否重叠。</div>' +
+              '<div class="alert-actions"><button class="btn btn-sm" style="background:#b91c1c;color:#fff;" type="button" id="schedConflictBtn">🚨 查看清单</button></div>';
+            info.parentNode.insertBefore(div, info);
+            var btn = document.getElementById('schedConflictBtn');
+            if (btn) btn.addEventListener('click', function () { try { window.__switchView && window.__switchView('list'); } catch (_) {} });
+          }
+        })
+        .catch(function () { /* 接口不可用时静默降级，不影响页面 */ });
     }
   }
 
@@ -175,11 +223,38 @@
     var sels = document.querySelectorAll('.admin-filter-bar select');
     var typeKw = sels[2] ? (sels[2].value || '') : '';
     var statusKw = sels[3] ? (sels[3].value || '') : '';
+    // 【Fix-20260929 M1】下拉值与后端真实状态枚举对齐：
+    //   pending（待确认）=> draft + scheduled；其余按同组状态匹配。
+    var STATUS_GROUPS = {
+      pending: ['draft', 'scheduled'],
+      confirmed: ['confirmed'],
+      cancelled: ['cancelled', 'canceled']
+    };
+    // 【Fix-20260929 M1】"档期冲突"不是存储状态，而是"同日 ≥2 场未取消排期"的派生结果
+    var conflictDates = {};
+    if (statusKw === 'conflict') {
+      ROWS.forEach(function (r) {
+        if (r.status === 'cancelled' || r.status === 'canceled') return;
+        conflictDates[r.date] = (conflictDates[r.date] || 0) + 1;
+      });
+    }
     var rows = ROWS.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).filter(function (r) {
       if (r.date.slice(0, 4) !== String(ym.y)) return false;
       if (ym.m && r.date.slice(5, 7) !== pad(ym.m)) return false;
-      if (typeKw && (r.type.indexOf(typeKw) < 0)) return false;
-      if (statusKw && r.status !== statusKw) return false;
+      // 【Fix-20260929 M2】类型下拉值(miaohui/huimin/jieqing/shangyan) 经 typeClass
+      //   与真实中文存储（如"庙会 / 节庆专场"或空串）做语义匹配，替代 indexOf 原值比较
+      if (typeKw) {
+        var typeKey = typeClass(r.type).replace('type-', '');
+        if (typeKey !== typeKw) return false;
+      }
+      if (statusKw) {
+        if (statusKw === 'conflict') {
+          if (!(conflictDates[r.date] >= 2)) return false;
+        } else {
+          var group = STATUS_GROUPS[statusKw] || [statusKw];
+          if (group.indexOf(r.status) < 0) return false;
+        }
+      }
       return true;
     });
     var colorMap = {
@@ -187,6 +262,7 @@
     };
     if (!rows.length) {
       box.innerHTML = '<div style="padding:30px 12px;text-align:center;color:var(--text-light,#888);">📭 当前筛选条件下暂无真实排期</div>';
+      try { applyCardSearch(); } catch (_) {}
       return;
     }
     box.innerHTML = rows.map(function (r) {
@@ -209,6 +285,53 @@
         '<div style="display:flex;gap:6px;align-items:center;"><span class="badge ' + b.cls + '">' + b.text + '</span></div>' +
       '</div>';
     }).join('');
+    // 【Fix-20260929 L5】卡片重渲染后重放顶部搜索关键字
+    try { applyCardSearch(); } catch (_) {}
+  }
+
+  /* ---------- 【Fix-20260929 L5】顶部搜索：过滤列表视图卡片（表格行由 pagination.js 过滤） ---------- */
+  function applyCardSearch() {
+    var box = document.getElementById('listCardsReal');
+    if (!box) return;
+    var kw = String(window.__schedSearchKw || '').trim().toLowerCase();
+    var visible = 0;
+    Array.prototype.forEach.call(box.children, function (card) {
+      if (card.id === 'listCardsSearchEmpty') { card.style.display = 'none'; return; }
+      var hit = !kw || (card.textContent || '').toLowerCase().indexOf(kw) >= 0;
+      card.style.display = hit ? '' : 'none';
+      if (hit) visible++;
+    });
+    var note = document.getElementById('listCardsSearchEmpty');
+    if (kw && visible === 0) {
+      if (!note) {
+        note = document.createElement('div');
+        note.id = 'listCardsSearchEmpty';
+        note.style.cssText = 'padding:30px 12px;text-align:center;color:var(--text-light,#888);';
+        box.appendChild(note);
+      }
+      note.textContent = '🔍 没有找到包含「' + kw + '」的档期 / 地点 / 剧目';
+      note.style.display = '';
+    } else if (note) {
+      note.style.display = 'none';
+    }
+  }
+  window.__schedApplyCardSearch = applyCardSearch;
+
+  function bindHeaderSearch() {
+    var input = document.querySelector('.admin-search input[type="text"]');
+    if (!input || input.__schedSearchBound) return;
+    input.__schedSearchBound = true;
+    input.setAttribute('aria-label', '搜索档期、地点、剧目');
+    var t = null;
+    input.addEventListener('input', function () {
+      if (t) clearTimeout(t);
+      t = setTimeout(function () {
+        window.__schedSearchKw = input.value || '';
+        try { applyCardSearch(); } catch (_) {}
+      }, 200);
+    });
+    // 【Fix-20260930】铃铛/消息已由 js/admin-notifications.js 提供真实待办面板
+    // （capture + stopImmediatePropagation 拦截），此处不再绑定占位提示 toast
   }
 
   /* ---------- 素材上传下拉 ---------- */
@@ -267,26 +390,77 @@
         }, 60);
       });
     });
-    // 查询栏按钮：查询/重置/今日后重拉真实数据并刷新列表卡
+    // 查询栏按钮：查询=按所选年月重新拉数；今日=筛选器回到今天并重拉；重置=清空类型/状态+回到今天
     document.querySelectorAll('.admin-filter-bar .btn, .admin-filter-bar button').forEach(function (b) {
       if (b.__schedRealBound2) return;
       var txt = (b.textContent || '').replace(/\s+/g, ' ').trim();
       if (txt.indexOf('查询') >= 0 || txt.indexOf('重置') >= 0 || txt.indexOf('今日') >= 0) {
         b.__schedRealBound2 = true;
         b.addEventListener('click', function () {
-          setTimeout(function () { renderListCards(); var ym = selectedYM(); renderAlerts(ym.y, ym.m); }, 120);
+          if (txt.indexOf('今日') >= 0) {
+            syncFilterToToday();
+            weekOffset = 0;
+          } else if (txt.indexOf('重置') >= 0) {
+            var rs = document.querySelectorAll('.admin-filter-bar select');
+            if (rs[2]) rs[2].value = '';
+            if (rs[3]) rs[3].value = '';
+            syncFilterToToday();
+          }
+          // 查询/重置/今日均需按当前筛选年月重新拉取（原先只本地过滤，切换月份后看不到新月数据）
+          setTimeout(function () {
+            refresh().then(function () {
+              var ym = selectedYM();
+              renderAlerts(ym.y, ym.m);
+              renderWeekGrid(0);
+            });
+          }, 60);
         }, true);
       }
     });
+    // 年/月下拉直接 change 即重新拉数，无需再点查询
+    var ymSels = document.querySelectorAll('.admin-filter-bar select');
+    [ymSels[0], ymSels[1]].forEach(function (sel) {
+      if (!sel || sel.__schedYmBound) return;
+      sel.__schedYmBound = true;
+      sel.addEventListener('change', function () {
+        refresh().then(function () {
+          var ym = selectedYM();
+          renderAlerts(ym.y, ym.m);
+          weekOffset = 0;
+          renderWeekGrid(0);
+        });
+      });
+    });
+    // 月历导航“今天”按钮：真实回到今天（拦截内联脚本的 {year}年7月15日 假 toast）
+    var calToday = document.getElementById('calNavToday');
+    if (calToday && !calToday.__schedTodayBound) {
+      calToday.__schedTodayBound = true;
+      calToday.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        syncFilterToToday();
+        weekOffset = 0;
+        refresh().then(function () {
+          var ym = selectedYM();
+          renderAlerts(ym.y, ym.m);
+          renderWeekGrid(0);
+        });
+      }, true);
+    }
   }
 
   function boot() {
     installHooks();
+    bindHeaderSearch();
+    initDefaults();
     refresh();
     // 内联脚本可能在稍后才挂载 __renderCalendar，再补一次包装
     setTimeout(installHooks, 300);
     setTimeout(installHooks, 1200);
+    setTimeout(bindHeaderSearch, 300);
   }
+  // 【Fix-20260929 L4】对外暴露真实重载入口（新增/删除/改状态后由内联脚本调用，
+  // 替代手工往表格插"临时假行"）；refresh 内部会 renderAll 同步月历/周视图/列表卡片/预警
+  window.__schedRealReload = function () { return refresh(); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();

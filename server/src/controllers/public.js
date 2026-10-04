@@ -88,9 +88,27 @@ const performers = async ctx => {
 };
 
 // ========== 公开演出排期（仅未来已排期/已确认，不含内部财务字段）==========
+// 短 TTL 缓存（5s）+ 写时失效：管理端 create/update/remove 后主动清缓存，
+// 确保公开页数据同步延迟 ≤5s（满足实时同步要求）
+let _pubSchedulesCache = null;
+let _pubSchedulesCacheTs = 0;
+const PUB_SCHEDULES_TTL = 5 * 1000;
+
+/** 失效公开排期缓存（供 schedules 控制器在写操作后调用） */
+function invalidateSchedulesCache() {
+  _pubSchedulesCache = null;
+  _pubSchedulesCacheTs = 0;
+}
+
 const schedules = async ctx => {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const now = Date.now();
+  if (_pubSchedulesCache && now - _pubSchedulesCacheTs < PUB_SCHEDULES_TTL) {
+    ctx.set('X-Cache', 'HIT');
+    return success(ctx, _pubSchedulesCache, { total: _pubSchedulesCache.length });
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const rows = await prisma.scheduleV2.findMany({
     where: {
       status: { in: ['scheduled', 'confirmed'] },
@@ -137,6 +155,10 @@ const schedules = async ctx => {
       venueAddress: r.venueAddress || ''
     };
   });
+
+  _pubSchedulesCache = list;
+  _pubSchedulesCacheTs = now;
+  ctx.set('X-Cache', 'MISS');
   return success(ctx, list, { total: list.length });
 };
 
@@ -231,4 +253,4 @@ const castSheetDetail = async ctx => {
   });
 };
 
-module.exports = { plays, playCategories, performers, schedules, stats, castSheets, castSheetDetail };
+module.exports = { plays, playCategories, performers, schedules, stats, castSheets, castSheetDetail, invalidateSchedulesCache };

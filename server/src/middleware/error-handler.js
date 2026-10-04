@@ -17,6 +17,7 @@ const ERROR_MAP = {
   CONFLICT: { code: 'CONFLICT', status: 409 },
   UNPROCESSABLE: { code: 'UNPROCESSABLE', status: 422 },
   RATE_LIMITED: { code: 'RATE_LIMITED', status: 429 },
+  CAPTCHA_INVALID: { code: 'CAPTCHA_INVALID', status: 400 },
   INTERNAL: { code: 'INTERNAL_ERROR', status: 500 }
 };
 

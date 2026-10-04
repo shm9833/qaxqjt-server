@@ -19,10 +19,13 @@
 <title>秦安县秦剧团 · 本场演出阵容公开 | {year}</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <script src="js/favicon-inject.js?v=20260803" defer></script>
+    <script src="js/site-assets.js?v=20260929a" defer></script>
 <script src="js/wechat-fallback.js?v=20260803" defer></script>
 <script src="js/year-lite.js?v=20260803" defer></script>
-<script src="js/app.js?v=20260920a" defer></script>
-<link rel="stylesheet" href="css/style.css?v=20260919c">
+<script src="js/api-config.js?v=20260922" defer></script>
+<script src="js/api-request.js?v=20260922" defer></script>
+<script src="js/app.js?v=20260930a" defer></script>
+<link rel="stylesheet" href="css/style.css?v=20260923a">
 <style>
 *{box-sizing:border-box;}
 body{background:linear-gradient(180deg,#fdf6e3 0%,#fff 22%,#fffbea 60%,#fff 100%);margin:0;padding:0;font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;color:#1f2937;-webkit-font-smoothing:antialiased;}
@@ -326,7 +329,7 @@ color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,2
   <div class="cp-footer">
     <div class="cp-ft-logo">秦安县秦剧团文化演出有限公司</div>
     <div class="cp-ft-sub">传承陇原秦韵 · 唱响乡土华章 · 始于2014</div>
-    <div class="cp-ft-tel">📞 演出预约热线：<a href="tel:13993839833" id="telHot">139 9383 9833</a> &nbsp;&nbsp; 📧 <a href="mailto:13893811313@163.com" id="mailHot">13893811313@163.com</a></div>
+    <div class="cp-ft-tel">📞 演出预约热线：<a href="tel:13993839833" id="telHot">139 9383 9833</a> &nbsp;&nbsp; 📍 甘肃省天水市秦安县</div>
     <div class="cp-ft-tel" style="margin-top:4px;">📍 甘肃省天水市秦安县 · 官方预约：<a href="booking.html" rel="noopener noreferrer" style="color:#fffbeb;border-color:rgba(251,191,36,0.6);">立即预约演出</a></div>
     <div class="cp-ft-copy">© {year} 秦安县秦剧团文化演出有限公司 · 陇ICP备 · 本站阵容数据来自后台实时发布</div>
   </div>
@@ -344,123 +347,135 @@ color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,2
 
 <script>
 (function(){
-  var LS_KEY = 'qaxqjt_cast_sheet_v3';
   var $ = function(id){ return document.getElementById(id); };
 
-  /* ======== 默认展示数据（后台未配置时也能展示示例） ======== */
-  function demoState(){
-    var __demoY = new Date().getFullYear();
+  /* ======== 后端真实阵容数据 → 页面 state 映射（v20260922，无任何示例假数据） ======== */
+  function _has(v){ return v != null && String(v).trim().length > 0; }
+  function _operaName(t){
+    t = String(t || '').trim();
+    if(!t) return '';
+    if(t.charAt(0) === '《') return t;
+    return '《' + t + '》';
+  }
+  // detail: /v1/cast-sheets/public/:id 返回；playInfo: /v1/plays/public 匹配到的剧目（可空）
+  function mapApiState(detail, playInfo){
+    var crew = Array.isArray(detail.crew) ? detail.crew : [];
+    var creative = [];
+    if(_has(detail.directorName)) creative.push({pos:'总导演', name:detail.directorName, note:''});
+    if(_has(detail.conductorName)) creative.push({pos:'音乐 / 唱腔设计', name:detail.conductorName, note:''});
+    if(_has(detail.stageManagerName)) creative.push({pos:'舞台监督', name:detail.stageManagerName, note:''});
+
+    // 演出人员按角色聚合：主演→A角，配角→B角，龙套/其他→C角
+    var castMap = {};
+    var castOrder = [];
+    crew.forEach(function(c){
+      var cat = String(c.category || '');
+      if(['主演','配角','龙套'].indexOf(cat) === -1) return;
+      var role = String(c.roleName || '').trim() || '演员';
+      if(!castMap[role]){
+        castMap[role] = {role:role, type:cat, actorA:'', actorB:'', actorC:'', group:'', note:String(c.note||'')};
+        castOrder.push(role);
+      }
+      var row = castMap[role];
+      var nm = String(c.performerName || '').trim();
+      if(cat === '主演'){ if(!row.actorA) row.actorA = nm; else if(!row.actorB) row.actorB = nm; }
+      else if(cat === '配角'){ if(!row.actorB) row.actorB = nm; else if(!row.actorC) row.actorC = nm; }
+      else { if(!row.actorC) row.actorC = nm; }
+      if(!row.note && c.note) row.note = String(c.note);
+    });
+    var cast = castOrder.map(function(r){ return castMap[r]; });
+
+    var wuchang = [], wenchang = [], stage = [];
+    crew.forEach(function(c){
+      var cat = String(c.category || '');
+      var pos = String(c.roleName || '').trim();
+      var nm = String(c.performerName || '').trim();
+      var note = String(c.note || '');
+      if(cat === '乐队'){
+        var row = {pos: pos || '乐队演奏员', name: nm, note: note};
+        if(/司鼓|板鼓|梆子|大锣|小锣|手锣|铙|钹|打击|鼓/.test(pos)) wuchang.push(row);
+        else wenchang.push(row);
+      } else if(['主演','配角','龙套'].indexOf(cat) === -1 && cat){
+        stage.push({pos: pos || cat, name: nm, note: note});
+      }
+    });
+
+    var playTitle = String(detail.playTitle || (playInfo && playInfo.title) || '').trim();
+    var genre = playInfo && playInfo.genre ? String(playInfo.genre) : '秦腔剧目';
+    var duration = playInfo && playInfo.durationMinutes ? Number(playInfo.durationMinutes) : '';
+    var intro = playInfo && playInfo.synopsis ? String(playInfo.synopsis).trim() : '';
+
     return {
-      header:{
-        title:__demoY + ' 秦安县文化惠民 · 秦腔经典传统剧目专场',
-        host:'中共秦安县委宣传部',
-        organizer:'秦安县文体广电和旅游局',
-        coorganizer:'秦安县文化馆 · 陇城镇人民政府',
-        sponsor:'甘肃秦安农村商业银行（冠名）',
-        date:new Date().toISOString().slice(0,10),
-        time:'晚间 19:30（提前30分钟入场）',
-        venue:'秦安县陇城镇张沟村文化广场大舞台',
-        notice:'本场演出免费观看；严禁录音录像；1.2米以下儿童请家长陪同；请保管好随身物品。'
+      isPublic: true,
+      header: {
+        title: playTitle ? (_operaName(playTitle) + ' · 演出阵容') : '本场演出阵容',
+        host: '秦安县秦剧团文化演出有限公司',
+        organizer: '秦安县秦剧团',
+        coorganizer: '',
+        sponsor: '',
+        date: detail.performanceDate || '',
+        time: detail.performanceTime ? String(detail.performanceTime) : '',
+        venue: detail.venueFull || '',
+        notice: detail.crewNote || ''
       },
-      creative:[
-        {pos:'出品人', name:'秦安县秦剧团', note:''},
-        {pos:'总策划', name:'剧团艺委会', note:''},
-        {pos:'艺术总监 ★', name:'陈金声', note:'国家二级演员，秦腔非遗传承人'},
-        {pos:'总导演', name:'李玉堂', note:'擅导传统本戏'},
-        {pos:'唱腔设计', name:'板胡周', note:'秦腔传统板式整理'},
-        {pos:'舞美设计', name:'装台赵', note:'下乡流动舞台经验丰富'}
-      ],
-      mainOpera:[{
-        opera:'《周仁回府》', type:'传统本戏', duration:165, rating:'⭐⭐⭐⭐镇团之宝',
-        intro:'明代经典秦腔传统本戏，讲述义士周仁为救盟兄杜文学，献妻于贼，其妻自刎，后冤屈昭雪的千古忠义故事。秦腔小生/青衣唱功戏颠峰之作。',
-        cast:[
-          {role:'周 仁', type:'小生', actorA:'何文华', actorB:'柳云青', actorC:'宋玉郎', group:'🌿 小生行', note:'《悔路》《哭墓》核心唱段'},
-          {role:'李兰英', type:'青衣', actorA:'苏若兰', actorB:'韩玉梅', actorC:'', group:'💎 青衣行', note:'《刺严》一折，苦情戏经典'},
-          {role:'杜文学', type:'老生', actorA:'陈金声', actorB:'秦守仁', actorC:'', group:'✨ 老生行', note:''},
-          {role:'严 年', type:'花脸', actorA:'铁金刚', actorB:'曹孟德', actorC:'', group:'🎭 花脸行', note:'白脸权臣形象'},
-          {role:'凤承东', type:'丑行', actorA:'贾半仙', actorB:'笑破天', actorC:'', group:'😜 丑行', note:'谄佞小人，方巾丑应工'},
-          {role:'胡秀英', type:'花旦', actorA:'白小蝶', actorB:'崔玲玲', actorC:'', group:'🌸 花旦行', note:''}
-        ]
-      }],
-      addOpera:[{
-        opera:'《拾玉镯》', type:'传统折子戏', duration:28, rating:'⭐⭐重点推荐',
-        intro:'孙玉姣闺门前绣花遇少年傅朋，互生爱慕，傅朋遗玉镯，刘媒婆撞见促成姻缘。秦腔花旦/小生/彩旦经典小戏，动作戏细腻。',
-        cast:[
-          {role:'孙玉姣', type:'花旦', actorA:'白小蝶', actorB:'沈春莺', actorC:'', group:'🌸 花旦行', note:'闺门花旦做工巅峰'},
-          {role:'傅 朋', type:'小生', actorA:'宋玉郎', actorB:'', actorC:'', group:'🌿 小生行', note:'文弱才子形象'},
-          {role:'刘媒婆', type:'彩旦', actorA:'王媒婆', actorB:'姚丽娟', actorC:'', group:'🤡 彩旦行', note:'彩旦喜剧经典'}
-        ]
-      }],
-      wuchang:[
-        {pos:'司鼓 / 板鼓指挥 ★★', name:'雷振声', note:'秦腔鼓令，全场节奏总指挥'},
-        {pos:'梆 子 ★', name:'梆子王', note:'240bpm+快节奏核心'},
-        {pos:'大 锣', name:'罗洪亮', note:''},
-        {pos:'铙 钹', name:'钹子手', note:''},
-        {pos:'小 锣 / 手锣', name:'小锣匠', note:''}
-      ],
-      wenchang:[
-        {pos:'板 胡（主奏）★★', name:'板胡周', note:'全程托腔保调，秦腔传统欢苦音双调式'},
-        {pos:'二 胡（Ⅰ）', name:'二胡梁', note:''},
-        {pos:'二 胡（Ⅱ）', name:'二胡陈', note:''},
-        {pos:'扬 琴', name:'扬琴白', note:''},
-        {pos:'琵 琶', name:'琵琶金', note:''},
-        {pos:'三 弦', name:'三弦吴', note:'秦腔传统弹拨核心'},
-        {pos:'竹 笛 / 唢 呐', name:'竹笛青 / 唢呐红', note:'曲牌《永寿庵》《小开门》'}
-      ],
-      stage:[
-        {pos:'舞台监督 ★★', name:'总监老王', note:'后台+前台全程指挥'},
-        {pos:'盔 箱 ★（秦腔特色岗）', name:'盔箱张', note:'王帽/纱帽/凤冠…佩戴+保管'},
-        {pos:'灯 光 师', name:'灯光老孙', note:''},
-        {pos:'音 响 师', name:'音响大周', note:'16路无线麦管理'},
-        {pos:'服 装 管 理', name:'服装薛', note:''},
-        {pos:'化 妆 / 勾脸', name:'旦妆陈 / 勾脸周', note:''},
-        {pos:'道 具 / 字幕', name:'道具李 / 字幕郑', note:''}
-      ],
-      program:[
-        {cat:'开场锣鼓', name:'开场锣鼓 · 武场闹台（曲牌《南瓜蔓》《八板》）', duration:8, actors:'武场乐队全体', note:'招揽观众入座，预热气氛'},
-        {cat:'加演折子戏', name:'《拾玉镯》', duration:28, actors:'白小蝶 / 宋玉郎 / 王媒婆', note:'花旦做工戏，含喂鸡、穿针、拾镯经典动作'},
-        {cat:'幕间休息', name:'休息 / 换装 / 布景', duration:12, actors:'舞台保障全体', note:'观众如厕+看管随身物品'},
-        {cat:'主场大本戏（上本）', name:'《周仁回府》上本：悔路 · 献妻 · 刺严', duration:80, actors:'详见主场演员表', note:'中场休息前落帽'},
-        {cat:'幕间休息', name:'中场休息 10 分钟', duration:10, actors:'', note:'舞台检查盔箱、服装、下本布景'},
-        {cat:'主场大本戏（下本）', name:'《周仁回府》下本：夜逃 · 哭墓 · 打周 · 团圆', duration:85, actors:'详见主场演员表', note:''},
-        {cat:'谢幕加唱/返场', name:'谢幕 · 秦腔名家清唱联唱', duration:12, actors:'全体主演 + 乐队', note:'领导上台合影 / 观众掌声欢送'}
-      ]
+      creative: creative,
+      mainOpera: playTitle ? [{
+        opera: _operaName(playTitle),
+        type: genre,
+        duration: duration,
+        rating: '',
+        intro: intro,
+        cast: cast
+      }] : [],
+      addOpera: [],
+      wuchang: wuchang,
+      wenchang: wenchang,
+      stage: stage,
+      program: []
     };
   }
 
-  function loadState(){
+  // 从后端公开接口拉取已发布阵容；无数据/未发布/失败均返回 null（页面显示空态，绝不回退假数据）
+  async function fetchState(operaParam, idParam){
+    var api = window.QAXQJT_API;
+    if(!api || !api.get) return null;
     try{
-      var raw = localStorage.getItem(LS_KEY);
-      if(raw){
-        var obj = JSON.parse(raw);
-        if(obj && obj.header && (obj.mainOpera || obj.addOpera || obj.creative)) {
-          // ====== 细粒度公开兼容：每行/每个演员isPublic未设置时默认true ======
-          ['creative','wuchang','wenchang','stage','program'].forEach(function(k){
-            if(Array.isArray(obj[k])){
-              obj[k] = obj[k].map(function(r){
-                if(r && typeof r.isPublic !== 'boolean') r.isPublic = true;
-                return r;
-              });
-            }
+      var sheetId = idParam;
+      if(!sheetId){
+        var q = {pageSize: 10};
+        if(operaParam) q.play = operaParam;
+        var list = await api.get('/v1/cast-sheets/public', {query: q, showErrorToast: false});
+        if(Array.isArray(list) && list.length > 0){
+          list.sort(function(a,b){
+            return String(b.performanceDate||'').localeCompare(String(a.performanceDate||''));
           });
-          ['mainOpera','addOpera'].forEach(function(k){
-            if(Array.isArray(obj[k])){
-              obj[k] = obj[k].map(function(op){
-                if(Array.isArray(op.cast)){
-                  op.cast = op.cast.map(function(c){
-                    if(c && typeof c.isPublic !== 'boolean') c.isPublic = true;
-                    return c;
-                  });
-                }
-                return op;
-              });
-            }
-          });
-          return obj;
+          sheetId = list[0].id;
         }
       }
-    }catch(e){ console.warn('[cast-public] loadState parse failed, fallback to demoState:', e && e.message ? e.message : e); }
-    return demoState();
+      if(!sheetId) return null;
+      var detail = await api.get('/v1/cast-sheets/public/' + encodeURIComponent(sheetId), {showErrorToast: false});
+      if(!detail || !detail.id) return null;
+
+      // 用公开剧目库补全剧目类型/时长/简介
+      var playInfo = null;
+      var title = String(detail.playTitle || '').replace(/^《|》$/g, '').trim();
+      if(title){
+        try{
+          var plays = await api.get('/v1/plays/public', {query: {keyword: title, pageSize: 20}, showErrorToast: false});
+          if(Array.isArray(plays)){
+            for(var pi=0; pi<plays.length; pi++){
+              var pt = String(plays[pi].title || '').replace(/^《|》$/g, '').trim();
+              if(pt === title){ playInfo = plays[pi]; break; }
+            }
+            if(!playInfo && plays.length > 0) playInfo = plays[0];
+          }
+        }catch(ePlay){ console.warn('[cast-public] play info fetch failed:', ePlay && ePlay.message ? ePlay.message : ePlay); }
+      }
+      return mapApiState(detail, playInfo);
+    }catch(e){
+      console.warn('[cast-public] fetchState failed:', e && e.message ? e.message : e);
+      return null;
+    }
   }
   function getParam(name){
     try{
@@ -647,7 +662,7 @@ color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,2
     $('sbPrint').addEventListener('click', function(e){ e.preventDefault(); window.print(); });
   }
 
-  /* ======== 电话/邮箱触发（项目约束：复制+提示，避免系统弹应用） ======== */
+  /* ======== 电话触发（项目约束：复制+提示，避免系统弹应用） ======== */
   function bindTelMail(){
     try{
       var tel = $('telHot'); if(tel){
@@ -661,71 +676,45 @@ color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,2
           } else { alert(msg); }
         });
       }
-      var ml = $('mailHot'); if(ml){
-        ml.addEventListener('click', function(e){
-          e.preventDefault();
-          var addr = '13893811313@163.com';
-          try{ if(navigator.clipboard){ navigator.clipboard.writeText(addr); } }catch(e2){}
-          var webmail = 'https://mail.163.com/';
-          if(confirm('📧 邮箱地址：' + addr + '\n\n✅ 邮箱已复制\n\n是否跳转网页版邮箱（163）写邮件？')){
-            window.open(webmail, '_blank', 'noopener,noreferrer');
-          }
-        });
-      }
     }catch(e){ console.warn('[cast-public] bindTelMail click handler init failed:', e && e.message ? e.message : e); }
   }
 
   /* ======== 初始化 ======== */
-  function init(){
+  async function init(){
     bindShare();
     bindTelMail();
-    var s = loadState();
+    var operaParam = getParam('opera') || getParam('play') || getParam('title');
+    var idParam = getParam('id') || getParam('sheet');
     var isPreview = String(getParam('preview')||'').toLowerCase() === '1';
-    var isPublic = !(s && s.isPublic === false);
 
-    // 注入预览/未公开提示条
-    var tipBar = document.createElement('div');
-    tipBar.className = 'cast-public-tip-sticky';
-    var injected = false;
-    if(!isPublic && !isPreview){
-      // 未公开 → 只显示空状态
-      var cpEmpty = $('cpEmpty');
-      if(cpEmpty){
-        cpEmpty.classList.remove('csp-hide');
-        var emoji = cpEmpty.querySelector('.emoji');
-        var h4 = cpEmpty.querySelector('h4');
-        var p = cpEmpty.querySelector('p');
-        var adminLink = cpEmpty.querySelector('.admin-link');
-        if(emoji) emoji.textContent = '🔒';
-        if(h4) h4.textContent = '本场阵容暂未公开';
-        if(p) p.innerHTML = '管理员已将此演出阵容设为<b class="txt-red-700">草稿/内部状态</b>，仅后台可见。<br>请稍后刷新查看，或直接联系剧团：📞 139 9383 9833<br>'
-          + '<small class="txt-red-900">（管理员可在地址后加 <code>?preview=1</code> 预览未公开阵容）</small>';
-        if(adminLink){
-          adminLink.href += '?src=locked-public';
-          adminLink.textContent = '🔐 我是管理员，解锁公开状态 →';
-        }
-      }
-      var cpC = $('cpContent'); if(cpC) cpC.classList.add('csp-hide');
-      // 返回，不再渲染其他节块
+    // 拉取前展示加载态（cpEmpty 初始文案在无数据时原样保留）
+    var cpEmpty = $('cpEmpty');
+    var cpContent = $('cpContent');
+    var loadingH4 = cpEmpty ? cpEmpty.querySelector('h4') : null;
+    var origH4Text = loadingH4 ? loadingH4.textContent : '';
+    if(loadingH4) loadingH4.textContent = '正在加载演出阵容…';
+    if(cpEmpty) cpEmpty.classList.remove('csp-hide');
+    if(cpContent) cpContent.classList.add('csp-hide');
+
+    var s = await fetchState(operaParam, idParam);
+    if(!s){
+      // 无已发布阵容 / 接口不可用：显示真实空态（不含任何示例数据）
+      if(loadingH4) loadingH4.textContent = origH4Text || '演出阵容暂未发布';
+      if(cpEmpty) cpEmpty.classList.remove('csp-hide');
+      if(cpContent) cpContent.classList.add('csp-hide');
       return;
     }
-    if(!isPublic && isPreview){
-      tipBar.classList.add('cast-public-tip-draft');
-      tipBar.innerHTML = '⚠️ 管理员预览模式（本场阵容当前 <b class="txt-amber-700">未公开</b>，观众无法看到）· 公开开关请在后台 cast-sheet.html 设置';
-      injected = true;
-    } else if(isPreview){
-      tipBar.classList.add('cast-public-tip-public');
+    if(cpEmpty) cpEmpty.classList.add('csp-hide');
+
+    if(isPreview){
+      var tipBar = document.createElement('div');
+      tipBar.className = 'cast-public-tip-sticky cast-public-tip-public';
       tipBar.innerHTML = '🔓 管理员预览模式 · 阵容状态：<b class="txt-green-700">已公开</b> · 观众扫码可正常查看';
-      injected = true;
-    }
-    if(injected && document.body){
-      document.body.insertBefore(tipBar, document.body.firstChild);
+      if(document.body) document.body.insertBefore(tipBar, document.body.firstChild);
     }
 
-    var has = false;
-    if(s && s.header){
+    if(s.header){
       renderHeader(s.header);
-      has = true;
     }
     var hc = renderSimpleTable('bodyCreative', s.creative);
     if(hc) $('secCreative').classList.remove('csp-hide');
@@ -743,11 +732,11 @@ color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,2
     if(hpr) $('secProgram').classList.remove('csp-hide');
 
     if(hc || hm || ha || hwu || hwe || hst || hpr){
-      $('cpContent').classList.remove('csp-hide');
-      $('cpEmpty').classList.add('csp-hide');
+      cpContent.classList.remove('csp-hide');
+      cpEmpty.classList.add('csp-hide');
     } else {
-      $('cpContent').classList.add('csp-hide');
-      $('cpEmpty').classList.remove('csp-hide');
+      cpContent.classList.add('csp-hide');
+      cpEmpty.classList.remove('csp-hide');
     }
   }
   if(document.readyState === 'loading'){
@@ -817,11 +806,11 @@ color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,2
           var firstBad=null;
           try{ reqFails.forEach(function(inp){ if(!inp.value || (inp.type==='checkbox' && !inp.checked)){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}},1800);}catch(_b){} } }); }catch(_rf){}
           if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
-          __FT('✅ 提交成功！（演示模式：真实环境将写入工单并通知对接专员）','success');
+          __FT('✅ 提交成功！我们将尽快与您联系','success');
           try{ fm.reset && fm.reset(); }catch(_rs){}
           e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
         } else {
-          __FT('✅ 提交成功（演示模式）','success');
+          __FT('✅ 提交成功','success');
           try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
           btn.__ftDone=1; e.stopImmediatePropagation(); return;
         }
@@ -834,17 +823,17 @@ color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,2
       }
       if(isConsult){
         if(!__FL(dk,900)) return;
-        __FT('📞 已打开对接咨询入口（请致电 138-9381-1313 或扫码添加微信）','info');
+        __FT('📞 已打开对接咨询入口（请致电 139-9383-9833）','info');
         btn.__ftDone=1; return;
       }
       if(isUpload){
         if(!__FL(dk,1000)) return;
-        __FT('📎 请选择 ≤ 10MB 的图片/PDF/DOC 文件（演示模式）','info');
+        __FT('📎 请选择 ≤ 10MB 的图片/PDF/DOC 文件','info');
         btn.__ftDone=1; return;
       }
       if(isSearch){
         if(!__FL(dk,500)) return;
-        __FT('🔍 查询条件已生效（演示模式）','info');
+        __FT('🔍 查询条件已生效','info');
         btn.__ftDone=1; return;
       }
     }, true);

@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
  * js/real-public.js —— 前台公共页真实数据渲染层（v20260922）
  * ----------------------------------------------------------------------------
  * 数据来源：后端公开只读接口（/v1 下各 public 端点，无鉴权）
@@ -25,8 +25,18 @@
     return A.get(path, { query: query || {}, showErrorToast: false, timeoutMs: 12000 });
   }
 
-  // 剧目海报：优先后台 posterUrl，否则用统一文生图接口按剧名生成
+  // 剧目海报：优先用缩略图（images JSON 中 type=posterThumb 项），否则用 posterUrl，否则文生图兜底
   function posterUrl(p) {
+    if (p && p.images) {
+      try {
+        var arr = typeof p.images === 'string' ? JSON.parse(p.images) : p.images;
+        if (Array.isArray(arr)) {
+          for (var i = 0; i < arr.length; i++) {
+            if (arr[i] && arr[i].type === 'posterThumb' && arr[i].url) return arr[i].url;
+          }
+        }
+      } catch (_) {}
+    }
     if (p && p.posterUrl) return p.posterUrl;
     var title = (p && p.title) || '秦腔剧目';
     var prompt = '秦腔传统戏曲《' + title + '》舞台演出剧照，演员身着华丽戏服、戏曲脸谱，中国古戏台，红色宫灯，专业舞台灯光，写实摄影风格，高清';
@@ -114,16 +124,18 @@
         '</div>';
         return;
       }
-      grid.innerHTML = rows.slice(0, 4).map(function (r) {
+      grid.innerHTML = rows.slice(0, 4).map(function (r, i) {
         var d = fmtDate(r.publishDate || r.createdAt);
         var summary = String(r.summary || (r.contentBody || '')).slice(0, 110);
-        return '<a href="news.html" class="service-card" style="text-decoration:none;color:inherit;display:block;position:relative;">' +
+        return '<a href="news.html" class="service-card" data-home-idx="' + i + '" style="text-decoration:none;color:inherit;display:block;position:relative;cursor:pointer;">' +
           '<div style="position:absolute;top:16px;right:16px;padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:0.78rem;font-weight:600;">📰 ' + esc(d) + '</div>' +
           '<div class="service-icon">📰</div>' +
           '<h4>' + esc(r.title || '剧团动态') + '</h4>' +
           '<p>' + esc(summary) + '</p>' +
         '</a>';
       }).join('');
+      // 存行数据供首页详情弹窗使用（js/news-detail.js）
+      global.__homeNewsRows = rows.slice(0, 4);
     }).catch(function () { /* 保留静态兜底 */ });
   }
 

@@ -41,7 +41,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>官网内容发布管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -805,7 +805,7 @@
             <span class="menu-icon">👥</span>
             <span>账号权限管理</span>
           </a>
-          <a href="schedule.html" data-role-level="800" class="admin-menu-item">
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
             <span class="menu-badge">8</span>
@@ -846,6 +846,10 @@
             <span class="menu-icon">📝</span>
             <span>官网内容管理</span>
           </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
+          </a>
           <a href="reports.html" data-role-level="700" class="admin-menu-item">
             <span class="menu-icon">📈</span>
             <span>数据统计报表</span>
@@ -877,6 +881,9 @@
           <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
             <span>🏠</span><span>返回前台首页</span>
           </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
+          </a>
           <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
             <span>🚪</span><span>退出登录</span>
           </a>
@@ -901,7 +908,7 @@
         <div class="admin-header-right">
           <div class="admin-search">
             <span class="search-icon">🔍</span>
-            <input type="text" placeholder="搜索文章、剧目、Banner..." />
+            <input type="text" placeholder="搜索文章、剧目、横幅..." />
           </div>
           <button class="admin-header-btn" title="通知">
             <span>🔔</span>
@@ -927,7 +934,7 @@
         <div class="admin-page-header">
           <div class="admin-page-title">
             <h1>📝 官网内容发布管理</h1>
-            <p class="page-desc">统一管理官网 Banner、新闻资讯、剧目展示、页面文案与联系信息等内容</p>
+            <p class="page-desc">统一管理官网横幅、新闻资讯、剧目展示、页面文案与联系信息等内容</p>
           </div>
           <div class="admin-page-actions">
             <button class="btn btn-outline-dark" onclick="window.open('../index.html','_blank')">
@@ -950,7 +957,7 @@
 
         <div class="tabs">
           <div class="tab-item active" data-tab="banner">
-            🖼️ Banner管理
+            🖼️ 横幅管理
           </div>
           <div class="tab-item" data-tab="news">
             📰 新闻资讯管理
@@ -971,27 +978,27 @@
           <!-- 📸 新增/编辑 Banner：图片上传表单（前端校验预览层，部署后对接对象存储/后端上传接口） -->
           <div class="admin-card" style="margin-bottom:20px;border:2px solid #f59e0b;background:linear-gradient(135deg,#fffbeb,#fef3c7);">
             <div class="admin-card-header">
-              <h3>📤 宣传图片上传 · Banner 管理（前端校验+预览层）</h3>
+              <h3>📤 宣传图片上传 · 横幅管理（前端校验+预览层）</h3>
               <span class="badge badge-warning" style="font-size:0.78rem;">🔧 EdgeOne Pages 环境下需另行对接后端上传 API</span>
             </div>
             <div class="admin-card-body">
               <form id="adminBannerUploadForm" autocomplete="off" data-upload-wrap="1" novalidate>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;">
                   <div>
-                    <label style="font-weight:700;color:#78350f;margin-bottom:8px;display:block;">Banner 名称 *</label>
+                    <label style="font-weight:700;color:#78350f;margin-bottom:8px;display:block;">横幅名称 *</label>
                     <input type="text" name="bannerName" placeholder="例：{year}春节演出季主视觉" required style="width:100%;padding:10px 14px;border:1.5px solid #d97706;border-radius:10px;background:#fff;">
                   </div>
                   <div>
                     <label style="font-weight:700;color:#78350f;margin-bottom:8px;display:block;">投放位置 *</label>
                     <select name="bannerPosition" required style="width:100%;padding:10px 14px;border:1.5px solid #d97706;border-radius:10px;background:#fff;">
                       <option value="">请选择投放位置</option>
-                      <option value="home-1">🏠 首页 Banner #1（主视觉）</option>
-                      <option value="home-2">🏠 首页 Banner #2（惠民下乡）</option>
-                      <option value="home-3">🏠 首页 Banner #3（活动专場）</option>
-                      <option value="home-4">🏠 首页 Banner #4（剧目推荐）</option>
-                      <option value="inner-news">📰 内页 Banner · 新闻资讯</option>
-                      <option value="inner-operas">🎭 内页 Banner · 剧目展示</option>
-                      <option value="inner-booking">🎫 内页 Banner · 预约流程</option>
+                      <option value="home-1">🏠 首页横幅 #1（主视觉）</option>
+                      <option value="home-2">🏠 首页横幅 #2（惠民下乡）</option>
+                      <option value="home-3">🏠 首页横幅 #3（活动专場）</option>
+                      <option value="home-4">🏠 首页横幅 #4（剧目推荐）</option>
+                      <option value="inner-news">📰 内页横幅 · 新闻资讯</option>
+                      <option value="inner-operas">🎭 内页横幅 · 剧目展示</option>
+                      <option value="inner-booking">🎫 内页横幅 · 预约流程</option>
                     </select>
                   </div>
                   <div>
@@ -999,12 +1006,12 @@
                     <input type="url" name="bannerLink" placeholder="https://... 例：booking.html 或外部链接" style="width:100%;padding:10px 14px;border:1.5px solid #d97706;border-radius:10px;background:#fff;">
                   </div>
                   <div>
-                    <label style="font-weight:700;color:#78350f;margin-bottom:8px;display:block;">宣传 Banner 图片上传 *（≤10MB，JPG/PNG/WebP）</label>
-                    <input type="file" name="bannerImg" accept="image/png,image/jpeg,image/webp,image/*" required style="width:100%;padding:8px;border:2px dashed #d97706;border-radius:10px;background:#fff;cursor:pointer;" title="选择本地 Banner 宣传图">
+                    <label style="font-weight:700;color:#78350f;margin-bottom:8px;display:block;">宣传横幅图片上传 *（≤10MB，JPG/PNG/WebP）</label>
+                    <input type="file" name="bannerImg" accept="image/png,image/jpeg,image/webp,image/*" required style="width:100%;padding:8px;border:2px dashed #d97706;border-radius:10px;background:#fff;cursor:pointer;" title="选择本地横幅宣传图">
                   </div>
                 </div>
                 <div style="margin-top:18px;display:flex;gap:14px;flex-wrap:wrap;">
-                  <button type="submit" class="btn btn-primary">✅ 提交并保存 Banner（前端校验）</button>
+                  <button type="submit" class="btn btn-primary">✅ 提交并保存横幅（前端校验）</button>
                   <button type="reset" class="btn btn-outline">🔄 清空重选</button>
                   <small style="margin-top:10px;color:#78350f;">💡 上传前会自动进行尺寸/格式/大小校验，并在下方显示预览图；点击提交后仅保存到浏览器 Storage，正式发布请对接后端对象存储 API。</small>
                 </div>
@@ -1014,15 +1021,15 @@
 
           <div class="admin-card">
             <div class="admin-card-header">
-              <h3>🖼️ Banner列表管理</h3>
+              <h3>🖼️ 横幅列表管理</h3>
               <div style="display:flex;gap:10px;align-items:center;">
-                <span class="badge badge-info" id="bannerCountBadge">暂无 Banner</span>
-                <button class="btn btn-primary btn-sm">➕ 新增Banner</button>
+                <span class="badge badge-info" id="bannerCountBadge">暂无横幅</span>
+                <button class="btn btn-primary btn-sm">➕ 新增横幅</button>
               </div>
             </div>
             <div class="admin-card-body">
               <div class="banner-list" data-paginate="list" data-page-size="12">
-                <div style="grid-column:1/-1;padding:40px 16px;text-align:center;color:var(--text-light,#888);">📭 暂无 Banner 配置，点击右上角「➕ 新增Banner」创建</div>
+                <div style="grid-column:1/-1;padding:40px 16px;text-align:center;color:var(--text-light,#888);">📭 暂无横幅配置，点击右上角「➕ 新增横幅」创建</div>
 </div>
             </div>
           </div>
@@ -1086,8 +1093,8 @@
                       <th>操作</th>
                     </tr>
                   </thead>
-                  <tbody id="contentPlaysTbody" data-paginate="list" data-page-size="10">
-<tr><td colspan="10" style="text-align:center;padding:30px 14px;color:var(--text-light,#999);">正在加载真实剧目…</td></tr>
+                  <tbody id="contentNewsTbody" data-paginate="list" data-paginate-keep="1" data-page-size="10">
+<tr><td colspan="10" style="text-align:center;padding:30px 14px;color:var(--text-light,#999);">正在加载真实文章…</td></tr>
 </tbody>
                 </table>
               </div>
@@ -1126,8 +1133,25 @@
                   <input type="text" class="form-control" id="contentNewsAuthor" placeholder="作者名" />
                 </div>
                 <div class="form-group">
-                  <label>封面图URL</label>
-                  <input type="text" class="form-control" id="contentNewsCover" placeholder="https://..." />
+                  <label>封面图URL（可直接上传文件，自动回填地址）</label>
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <input type="text" class="form-control" id="contentNewsCover" placeholder="https://... 或上传后自动填充 /uploads/..." style="flex:1;min-width:220px;" />
+                    <button type="button" class="btn btn-outline" id="contentNewsCoverUploadBtn" data-type-fixed="1" style="white-space:nowrap;">📤 上传图片</button>
+                    <input type="file" id="contentNewsCoverFile" accept=".jpg,.jpeg,.png,.gif,.webp,.svg" style="display:none;" />
+                  </div>
+                  <div id="contentNewsCoverHint" style="display:none;margin-top:6px;font-size:0.78rem;color:#64748b;"></div>
+                  <div id="contentNewsCoverPreviewWrap" style="display:none;margin-top:8px;">
+                    <img id="contentNewsCoverPreview" alt="封面预览" style="max-width:240px;max-height:140px;border-radius:10px;border:1px solid #e2e8f0;" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>图集图片（可一次多选批量上传，最多 9 张；点缩略图右上角 ✕ 会同时删除服务器文件）</label>
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <button type="button" class="btn btn-outline" id="contentGalleryAddBtn" data-type-fixed="1" style="white-space:nowrap;">🖼️ 多选并批量上传</button>
+                    <input type="file" id="contentGalleryFile" accept=".jpg,.jpeg,.png,.gif,.webp,.svg" multiple style="display:none;" />
+                    <span id="contentGalleryHint" style="font-size:0.78rem;color:#64748b;"></span>
+                  </div>
+                  <div id="contentGalleryList" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
                 </div>
                 <div class="form-group">
                   <label>摘要</label>
@@ -1146,17 +1170,30 @@
                   <input type="number" class="form-control" id="contentNewsSort" value="0" />
                 </div>
                 <div class="form-group">
-                  <label>状态</label>
+                  <label>状态（「保存并发布」会自动切为已发布；「保存草稿」可随时下线）</label>
                   <select class="form-control" id="contentNewsStatus">
                     <option value="draft">草稿</option>
                     <option value="published">已发布</option>
                   </select>
                 </div>
-                <div style="display:flex;gap:10px;margin-top:18px;">
-                  <button type="submit" class="btn btn-primary" id="contentNewsSubmitBtn" data-type-fixed="1">✅ 保存</button>
+                <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+                  <button type="button" class="btn btn-outline" id="contentNewsDraftBtn" data-type-fixed="1">💾 保存草稿</button>
+                  <button type="button" class="btn btn-success" id="contentNewsPublishBtn" data-type-fixed="1">🚀 保存并发布</button>
+                  <button type="button" class="btn btn-secondary" id="contentNewsPreviewBtn" data-type-fixed="1">👁 预览效果</button>
                   <button type="button" class="btn btn-outline" id="contentNewsCancelBtn" data-type-fixed="1">取消</button>
                 </div>
               </form>
+            </div>
+          </div>
+
+          <!-- 文章预览遮罩（v20260927）：按前台文章样式渲染当前表单内容，无需先保存 -->
+          <div id="contentPreviewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1100;overflow-y:auto;padding:24px 12px;">
+            <div style="max-width:760px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);">
+              <div style="position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:linear-gradient(135deg,#8b0000,#6b0000);color:#ffe8b0;z-index:2;">
+                <strong>👁 文章预览（与官网展示一致）</strong>
+                <button type="button" id="contentPreviewCloseBtn" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;">✕ 关闭预览</button>
+              </div>
+              <div id="contentPreviewBody" style="padding:28px 24px 40px;color:#1f2937;"></div>
             </div>
           </div>
 
@@ -1470,7 +1507,7 @@
                 <div class="block-number">2</div>
                 <div class="block-body">
                   <div class="block-header">
-                    <div class="block-name">📢 首页Banner宣传文案 <span class="hint">配合Banner图展示</span></div>
+                    <div class="block-name">📢 首页横幅宣传文案 <span class="hint">配合横幅图展示</span></div>
                     <div class="block-actions">
                       <button class="btn btn-primary btn-sm">✏️ 编辑</button>
                       <button class="btn btn-success btn-sm">💾 保存</button>
@@ -1697,7 +1734,7 @@
 
               <div class="config-note">
                 <strong>📋 配置说明：</strong>
-                以上联系信息为全局配置，修改后会同步显示在官网的「联系我们」页面、页脚、预约页面侧边栏、Banner客服按钮等多个位置。
+                以上联系信息为全局配置，修改后会同步显示在官网的「联系我们」页面、页脚、预约页面侧边栏、横幅客服按钮等多个位置。
                 建议优先确保「联系电话」「办公地址」「地图代码」「备案信息」四项信息准确无误。
                 版权声明中建议使用 <code style="background:rgba(212,175,55,0.2);padding:1px 6px;border-radius:4px;">{year}</code> 占位符，系统会在页面加载时自动替换为当年实际年份，无需跨年手动修改。
               </div>
@@ -1722,8 +1759,9 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
-  <script src="../js/pagination.js?v=20260803"></script>
+<script src="../js/app.js?v=20260930a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
   <script>
     (function() {
       'use strict';
@@ -2418,6 +2456,8 @@ function __pLog(module,event,extra){
     document.addEventListener('click', function(e){
       try{
         var el = e.target;
+        // 内容管理：编辑弹窗/预览弹窗自带完整事件处理（保存草稿/发布/预览/关闭），跳过全局关闭拦截
+        if(el && el.closest && el.closest('#contentPreviewModal,#contentNewsModal')) return;
         var txt = (el.textContent||'').trim();
         if(!txt&&el.closest){ txt = (el.closest('button,a,[role=button],span,div')||{}).textContent||''; txt=txt.trim(); }
         var isClose = false;
@@ -2460,6 +2500,7 @@ function __pLog(module,event,extra){
     function _isPgContainer(el){
       try{
         if(!el || el.nodeType!==1) return false;
+        if(el.closest && el.closest('.sp-pg-toolbar-20260730,.pagination-toolbar')) return false;
         var tag = (el.tagName||'').toUpperCase();
         if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
         var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
@@ -2488,7 +2529,8 @@ function __pLog(module,event,extra){
     }
     function _buildPg(container){
       try{
-        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
+        if(container.hasAttribute('data-pg-built')||container.querySelector('.sp-pg-toolbar-20260730')) return; container.setAttribute('data-pg-built','1');
+        if(container.classList && (container.classList.contains('sp-pg-toolbar-20260730')||container.classList.contains('pagination-toolbar'))) return;
         var oldToolbar = container.querySelector('.pagination-toolbar');
         if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
         var st = _ensurePgState(container);
@@ -2503,6 +2545,7 @@ function __pLog(module,event,extra){
         if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
         var wrap = document.createElement('div');
         wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.setAttribute('data-pg-built','1');
         wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
         wrap.innerHTML = ''+
           '<button class="btn btn-sm" data-pg="first">首页</button>'+
@@ -2600,7 +2643,7 @@ function __pLog(module,event,extra){
     function _scanPagination(){
       try{
         var all = document.querySelectorAll('div,nav,section,span');
-        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
+        all.forEach(function(el){ if(el.hasAttribute('data-pg-built')) return; if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
         if(!document.getElementById('_pgPatchCSS20260730')){
           sty.id='_pgPatchCSS20260730';
@@ -2729,7 +2772,7 @@ function __pLog(module,event,extra){
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
-        if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
+        if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"], #contentPreviewModal, #contentNewsModal')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
@@ -2881,7 +2924,7 @@ function __pLog(module,event,extra){
   function _showModal(id, show){ var el = document.getElementById(id); if (el) el.style.display = show ? 'flex' : 'none'; }
 
   window.__contentApi = {
-    state: { items: [], filter: { type: '', publishStatus: '', keyword: '' }, editingId: null, loaded: false },
+    state: { items: [], filter: { type: '', publishStatus: '', keyword: '' }, editingId: null, loaded: false, gallery: [] },
 
     load: async function(){
       try {
@@ -2956,6 +2999,12 @@ function __pLog(module,event,extra){
       _setVal('contentNewsType', '剧团动态');
       _setVal('contentNewsAuthor', '');
       _setVal('contentNewsCover', '');
+      var _hint = document.getElementById('contentNewsCoverHint');
+      if (_hint) _hint.style.display = 'none';
+      var _pv = document.getElementById('contentNewsCoverPreviewWrap');
+      if (_pv) _pv.style.display = 'none';
+      this.state.gallery = [];
+      this.renderGallery();
       _setVal('contentNewsSummary', '');
       _setVal('contentNewsBody', '');
       _setVal('contentNewsPubDate', new Date().toISOString().slice(0,10));
@@ -2984,11 +3033,26 @@ function __pLog(module,event,extra){
         } catch(_) {}
         _setVal('contentNewsAuthor', r.authorName || '');
         _setVal('contentNewsCover', r.coverImage || '');
-        _setVal('contentNewsSummary', r.summary || '');
+        var _hint2 = document.getElementById('contentNewsCoverHint');
+        if (_hint2) _hint2.style.display = 'none';
+        // 程序赋值不触发 input 事件，手动刷新封面预览
+        var _ci = document.getElementById('contentNewsCover');
+        if (_ci) { try { _ci.dispatchEvent(new Event('input')); } catch(_e){} }
+        _setVal('contentNewsSummary', '');
         _setVal('contentNewsBody', r.contentBody || '');
         _setVal('contentNewsPubDate', r.publishDate ? String(r.publishDate).slice(0,10) : '');
         _setVal('contentNewsSort', String(r.sortWeight || 0));
         _setVal('contentNewsStatus', r.publishStatus || 'draft');
+        // 回填图集（extraJson.gallery）
+        var gallery = [];
+        try {
+          if (r.extraJson) {
+            var ej = typeof r.extraJson === 'string' ? JSON.parse(r.extraJson) : r.extraJson;
+            if (ej && Array.isArray(ej.gallery)) gallery = ej.gallery.filter(function(x){ return typeof x === 'string' && x; });
+          }
+        } catch(_) {}
+        this.state.gallery = gallery;
+        this.renderGallery();
         var titleEl = document.getElementById('contentNewsModalTitle');
         if (titleEl) titleEl.textContent = '✏️ 编辑文章：' + (r.title || id);
         _showModal('contentNewsModal', true);
@@ -2997,15 +3061,96 @@ function __pLog(module,event,extra){
       }
     },
 
-    submit: async function(e){
-      if (e && e.preventDefault) e.preventDefault();
-      var id = _val('contentNewsId');
+    // ===== 图集：渲染缩略图 / 批量上传 / 删除（与 DELETE /v1/upload 联动）=====
+    renderGallery: function(){
+      var box = document.getElementById('contentGalleryList');
+      if (!box) return;
+      var list = Array.isArray(this.state.gallery) ? this.state.gallery : [];
+      if (!list.length) { box.innerHTML = ''; box.style.display = 'none'; return; }
+      box.style.display = 'flex';
+      box.innerHTML = list.map(function(u, i){
+        return '<div data-gallery-item="' + i + '" style="position:relative;width:110px;height:110px;">' +
+          '<img src="' + _escape(u) + '" alt="图集' + (i+1) + '" style="width:110px;height:110px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0;display:block;" onerror="this.style.opacity=0.3" />' +
+          '<button type="button" data-gallery-del="' + i + '" title="删除该图片（同时删除服务器文件）" ' +
+            'style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;border:none;background:#dc2626;color:#fff;font-size:13px;line-height:1;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.3);padding:0;">✕</button>' +
+          '<span style="position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;border-radius:6px;padding:0 6px;">' + (i+1) + '</span>' +
+        '</div>';
+      }).join('');
+      // 动态 ✕ 按钮打防劫持标记，绕过 DBF / SuperPatch 6/6 全局 capture 拦截
+      var delBtns = box.querySelectorAll('button[data-gallery-del]');
+      for (var dbi = 0; dbi < delBtns.length; dbi++) {
+        delBtns[dbi].__superPatchBound = 1;
+        delBtns[dbi].__ts3Done = 1;
+        delBtns[dbi].__bindDone = 1;
+      }
+    },
+
+    addGalleryFiles: async function(fileList){
+      var self = this;
+      var files = Array.prototype.slice.call(fileList || []);
+      if (!files.length) return;
+      var allowExts = ['jpg','jpeg','png','gif','webp','svg'];
+      var valid = [];
+      for (var i = 0; i < files.length; i++) {
+        var f = files[i];
+        var ext = (f.name.split('.').pop() || '').toLowerCase();
+        if (allowExts.indexOf(ext) < 0) { _toast('⚠️ 已跳过不支持的文件：' + f.name, 'warn'); continue; }
+        if (f.size > 50 * 1024 * 1024) { _toast('⚠️ 已跳过超过 50MB 的文件：' + f.name, 'warn'); continue; }
+        valid.push(f);
+      }
+      var cur = Array.isArray(self.state.gallery) ? self.state.gallery.length : 0;
+      if (cur + valid.length > 9) {
+        _toast('⚠️ 图集最多 9 张，当前已有 ' + cur + ' 张，本次仅取前 ' + (9 - cur) + ' 张', 'warn');
+        valid = valid.slice(0, 9 - cur);
+      }
+      if (!valid.length) return;
+
+      var hint = document.getElementById('contentGalleryHint');
+      if (hint) { hint.textContent = '⏳ 正在批量上传 ' + valid.length + ' 张...'; hint.style.color = '#1d4ed8'; }
+      try {
+        var fd = new FormData();
+        valid.forEach(function(f){ fd.append('files', f, f.name); });
+        var res = await API.post('/v1/upload/multi', fd, { timeoutMs: 120000 });
+        var saved = (res && res.files) || [];
+        if (saved.length) {
+          self.state.gallery = (Array.isArray(self.state.gallery) ? self.state.gallery : []).concat(saved.map(function(x){ return x.url; }));
+          self.renderGallery();
+        }
+        if (res && res.failed && res.failed.length) {
+          _toast('⚠️ ' + res.failed.length + ' 张上传失败：' + res.failed.map(function(x){ return x.reason; }).join('；'), 'warn');
+        }
+        if (hint) { hint.textContent = saved.length ? ('✅ 已上传 ' + saved.length + ' 张，共 ' + self.state.gallery.length + ' 张') : '❌ 全部上传失败'; hint.style.color = saved.length ? '#15803d' : '#b91c1c'; }
+      } catch (e) {
+        if (hint) { hint.textContent = '❌ 批量上传失败：' + (e && e.message ? e.message : e); hint.style.color = '#b91c1c'; }
+      }
+    },
+
+    removeGallery: async function(index){
+      var self = this;
+      var list = Array.isArray(self.state.gallery) ? self.state.gallery : [];
+      var url = list[index];
+      if (!url) return;
+      if (!window.confirm('确定删除这张图片吗？将同时删除服务器上的文件，且不可恢复。')) return;
+      try {
+        // DELETE 用 query 传 url，Edge Function/网关对 query 透传最稳
+        await API.del('/v1/upload', { query: { url: url }, timeoutMs: 30000 });
+        list.splice(index, 1);
+        self.state.gallery = list;
+        self.renderGallery();
+        _toast('🗑️ 图片已删除', 'success');
+      } catch (e) {
+        // 服务器删除失败则保留缩略图，避免出现“界面没了但文件还在”的孤儿
+        _toast('❌ 删除失败：' + (e && e.message ? e.message : e) + '（图片保留）', 'error');
+      }
+    },
+
+    // 从表单收集文章数据；forceStatus 可强制 draft/published（保存草稿/保存并发布）
+    _collect: function(forceStatus){
       var title = _val('contentNewsTitle');
       var category = _val('contentNewsType');
-      if (!title) { _toast('⚠️ 标题必填', 'error'); return; }
-      if (!category) { _toast('⚠️ 分类必填', 'error'); return; }
-      // 后端 type 字段是 enum('news','article','notice',...)，news tab 统一用 'news'，中文分类存 tagsJson
-      var body = {
+      if (!title) { _toast('⚠️ 标题必填', 'error'); return null; }
+      if (!category) { _toast('⚠️ 分类必填', 'error'); return null; }
+      return {
         type: 'news',
         title: title,
         subtitle: _val('contentNewsSubtitle'),
@@ -3015,16 +3160,68 @@ function __pLog(module,event,extra){
         authorName: _val('contentNewsAuthor'),
         publishDate: _val('contentNewsPubDate') || undefined,
         sortWeight: Number(_val('contentNewsSort') || 0),
-        publishStatus: _val('contentNewsStatus') || 'draft',
-        tagsJson: JSON.stringify({ category: category })
+        publishStatus: forceStatus || _val('contentNewsStatus') || 'draft',
+        tagsJson: JSON.stringify({ category: category }),
+        extraJson: JSON.stringify({ gallery: Array.isArray(this.state.gallery) ? this.state.gallery : [] })
       };
+    },
+
+    // 按官网文章样式渲染预览（纯本地渲染，不保存、不请求）
+    preview: function(){
+      var body = this._collect();
+      if (!body) return;
+      // 同步状态下拉，方便用户直观看到
+      _setVal('contentNewsStatus', body.publishStatus);
+      var box = document.getElementById('contentPreviewBody');
+      if (!box) return;
+      var cat = body.tagsJson ? (function(){ try { return JSON.parse(body.tagsJson).category || ''; } catch(_) { return ''; } })() : '';
+      var dateStr = body.publishDate ? String(body.publishDate).slice(0, 10) : new Date().toISOString().slice(0, 10);
+      var statusTag = body.publishStatus === 'published'
+        ? '<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;">已发布</span>'
+        : '<span style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;">草稿（仅预览，前台不可见）</span>';
+      // 正文：允许受信任的 HTML（管理员输入），非 HTML 时按段落转换
+      var html = body.contentBody
+        ? (/^\s*</.test(body.contentBody) ? body.contentBody : body.contentBody.split(/\r?\n+/).filter(Boolean).map(function(p){ return '<p>' + p.replace(/</g,'&lt;') + '</p>'; }).join(''))
+        : '<p style="color:#9ca3af;">（暂无正文）</p>';
+      box.innerHTML =
+        '<div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">' +
+          '<span style="background:linear-gradient(135deg,#8b0000,#b91c1c);color:#fff;border-radius:999px;padding:3px 12px;font-size:13px;">' + _escape(cat || '剧团动态') + '</span>' +
+          statusTag +
+        '</div>' +
+        '<h1 style="font-size:26px;line-height:1.4;margin:0 0 10px;color:#111827;">' + _escape(body.title) + '</h1>' +
+        (body.subtitle ? '<p style="font-size:15px;color:#6b7280;margin:0 0 14px;">' + _escape(body.subtitle) + '</p>' : '') +
+        '<div style="display:flex;gap:14px;align-items:center;color:#9ca3af;font-size:13px;border-bottom:1px solid #f0f0f0;padding-bottom:14px;margin-bottom:20px;flex-wrap:wrap;">' +
+          '<span>✍️ ' + _escape(body.authorName || '秦安县秦剧团') + '</span>' +
+          '<span>📅 ' + _escape(dateStr) + '</span>' +
+        '</div>' +
+        (body.coverImage ? '<img src="' + _escape(body.coverImage) + '" alt="封面" style="width:100%;border-radius:12px;margin-bottom:20px;display:block;" onerror="this.style.display=\'none\'" />' : '') +
+        (function(){
+          var g = [];
+          try { var ej = JSON.parse(body.extraJson || '{}'); if (Array.isArray(ej.gallery)) g = ej.gallery; } catch(_) {}
+          if (!g.length) return '';
+          return '<div style="margin-bottom:20px;"><div style="font-size:14px;color:#6b7280;margin-bottom:8px;">🖼️ 图集（' + g.length + '）</div><div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+            g.map(function(u){ return '<img src="' + _escape(u) + '" alt="图集" style="width:150px;height:100px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;" onerror="this.style.display=\'none\'" />'; }).join('') +
+            '</div></div>';
+        })() +
+        (body.summary ? '<div style="background:#fef9e7;border-left:4px solid #d4af37;padding:12px 14px;border-radius:6px;color:#5b4a1a;font-size:14px;line-height:1.8;margin-bottom:20px;">' + _escape(body.summary) + '</div>' : '') +
+        '<div class="content-preview-html" style="font-size:16px;line-height:1.9;color:#374151;">' + html + '</div>';
+      var m = document.getElementById('contentPreviewModal');
+      m.style.display = 'block';
+      m.scrollTop = 0;
+    },
+
+    submit: async function(forceStatus){
+      var id = _val('contentNewsId');
+      var body = this._collect(forceStatus);
+      if (!body) return;
+      var isPublish = body.publishStatus === 'published';
       try {
         if (id) {
           await API.patch('/v1/contents/' + id, body);
-          _toast('✅ 文章已更新', 'success');
+          _toast(isPublish ? '🚀 文章已更新并发布' : '💾 文章草稿已保存', 'success');
         } else {
           await API.post('/v1/contents', body);
-          _toast('✅ 文章已创建', 'success');
+          _toast(isPublish ? '🚀 文章已创建并发布' : '💾 文章草稿已创建', 'success');
         }
         _showModal('contentNewsModal', false);
         await this.load();
@@ -3049,7 +3246,9 @@ function __pLog(module,event,extra){
       var self = this;
       // 标记所有 content-news 相关按钮，绕过 DeadButtonFallback / SuperPatch 死按钮兜底
       function _markBound(el){ if (el) { el.__superPatchBound = 1; el.__ts3Done = 1; } }
-      ['contentNewsAddBtn','contentNewsSearchBtn','contentNewsResetBtn','contentNewsSelectAll','contentNewsSubmitBtn','contentNewsCancelBtn'].forEach(function(id){
+      ['contentNewsAddBtn','contentNewsSearchBtn','contentNewsResetBtn','contentNewsSelectAll',
+       'contentNewsDraftBtn','contentNewsPublishBtn','contentNewsPreviewBtn','contentNewsCancelBtn',
+       'contentPreviewCloseBtn','contentNewsCoverUploadBtn','contentGalleryAddBtn'].forEach(function(id){
         _markBound(document.getElementById(id));
       });
 
@@ -3093,19 +3292,123 @@ function __pLog(module,event,extra){
         var cbs = document.querySelectorAll('#contentNewsTbody input[type=checkbox].batch-row-check');
         for (var i = 0; i < cbs.length; i++) cbs[i].checked = selAll.checked;
       });
-      // 模态框保存按钮（用 click 而非 form submit，避免 SuperPatch 1/6 表单 submit 劫持）
-      var submitBtn = document.getElementById('contentNewsSubmitBtn');
-      if (submitBtn) submitBtn.addEventListener('click', function(ev){
-        ev.preventDefault();
-        ev.stopPropagation();
-        self.submit();
+      // 保存草稿 / 保存并发布 / 预览（capture 阶段绑定，防 SuperPatch 劫持）
+      var draftBtn = document.getElementById('contentNewsDraftBtn');
+      if (draftBtn) draftBtn.addEventListener('click', function(ev){
+        ev.preventDefault(); ev.stopPropagation(); self.submit('draft');
       }, true);
+      var publishBtn = document.getElementById('contentNewsPublishBtn');
+      if (publishBtn) publishBtn.addEventListener('click', function(ev){
+        ev.preventDefault(); ev.stopPropagation(); self.submit('published');
+      }, true);
+      var previewBtn = document.getElementById('contentNewsPreviewBtn');
+      if (previewBtn) previewBtn.addEventListener('click', function(ev){
+        ev.preventDefault(); ev.stopPropagation(); self.preview();
+      }, true);
+      var previewCloseBtn = document.getElementById('contentPreviewCloseBtn');
+      if (previewCloseBtn) previewCloseBtn.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        var m = document.getElementById('contentPreviewModal');
+        if (m) m.style.display = 'none';
+      }, true);
+      var previewModal = document.getElementById('contentPreviewModal');
+      if (previewModal) previewModal.addEventListener('click', function(e){
+        if (e.target === previewModal) previewModal.style.display = 'none';
+      });
       // 取消按钮
       var cancelBtn = document.getElementById('contentNewsCancelBtn');
       if (cancelBtn) cancelBtn.addEventListener('click', function(ev){ ev.stopPropagation(); _showModal('contentNewsModal', false); });
       // 模态框背景点击关闭
       var modal = document.getElementById('contentNewsModal');
       if (modal) modal.addEventListener('click', function(e){ if (e.target === modal) _showModal('contentNewsModal', false); });
+
+      // ===== 封面图上传（v20260927：对接 POST /v1/upload，multipart → 自动回填 URL）=====
+      var coverInput = document.getElementById('contentNewsCover');
+      var coverHint = document.getElementById('contentNewsCoverHint');
+      var coverPreviewWrap = document.getElementById('contentNewsCoverPreviewWrap');
+      var coverPreviewImg = document.getElementById('contentNewsCoverPreview');
+
+      function _coverHint(text, color) {
+        if (!coverHint) return;
+        coverHint.textContent = text;
+        coverHint.style.color = color || '#64748b';
+        coverHint.style.display = text ? 'block' : 'none';
+      }
+      function _refreshCoverPreview() {
+        var url = (coverInput && coverInput.value || '').trim();
+        if (coverPreviewWrap && coverPreviewImg) {
+          if (url) {
+            coverPreviewImg.src = url;
+            coverPreviewWrap.style.display = 'block';
+            coverPreviewImg.onerror = function(){ coverPreviewWrap.style.display = 'none'; };
+          } else {
+            coverPreviewWrap.style.display = 'none';
+            coverPreviewImg.src = '';
+          }
+        }
+      }
+      if (coverInput) coverInput.addEventListener('change', _refreshCoverPreview);
+      if (coverInput) coverInput.addEventListener('input', _refreshCoverPreview);
+
+      var coverUploadBtn = document.getElementById('contentNewsCoverUploadBtn');
+      var coverFileInput = document.getElementById('contentNewsCoverFile');
+      if (coverUploadBtn && coverFileInput) {
+        coverUploadBtn.addEventListener('click', function(ev){
+          ev.preventDefault(); ev.stopPropagation();
+          coverFileInput.value = '';
+          coverFileInput.click();
+        }, true);
+        coverFileInput.addEventListener('change', async function(){
+          var f = coverFileInput.files && coverFileInput.files[0];
+          if (!f) return;
+          var allowExts = ['jpg','jpeg','png','gif','webp','svg'];
+          var ext = (f.name.split('.').pop() || '').toLowerCase();
+          if (allowExts.indexOf(ext) < 0) { _coverHint('❌ 不支持的文件类型 .' + ext + '，仅允许 ' + allowExts.join('/'), '#b91c1c'); return; }
+          if (f.size > 50 * 1024 * 1024) { _coverHint('❌ 文件超过 50MB 限制', '#b91c1c'); return; }
+          _coverHint('⏳ 正在上传 ' + f.name + '（' + Math.round(f.size/1024) + 'KB）...', '#1d4ed8');
+          try {
+            var fd = new FormData();
+            fd.append('file', f, f.name);
+            var url = await API.post('/v1/upload', fd, { timeoutMs: 60000 });
+            if (url && url.url) {
+              coverInput.value = url.url;
+              _refreshCoverPreview();
+              _coverHint('✅ 上传成功：' + url.originalName + ' → ' + url.url, '#15803d');
+            } else {
+              _coverHint('❌ 上传返回异常：' + JSON.stringify(url).slice(0, 120), '#b91c1c');
+            }
+          } catch (e) {
+            _coverHint('❌ 上传失败：' + (e && e.message ? e.message : e), '#b91c1c');
+          }
+        });
+      }
+
+      // ===== 图集多图选择器：多选批量上传 + 缩略图 ✕ 删除联动 =====
+      var galleryAddBtn = document.getElementById('contentGalleryAddBtn');
+      var galleryFile = document.getElementById('contentGalleryFile');
+      var galleryList = document.getElementById('contentGalleryList');
+      if (galleryAddBtn && galleryFile) {
+        galleryAddBtn.addEventListener('click', function(ev){
+          ev.preventDefault(); ev.stopPropagation();
+          galleryFile.value = '';
+          galleryFile.click();
+        }, true);
+        galleryFile.addEventListener('change', function(){
+          var fl = galleryFile.files;
+          if (fl && fl.length) self.addGalleryFiles(fl);
+          galleryFile.value = '';
+        });
+      }
+      // 缩略图删除按钮：事件委托（按钮随 renderGallery 动态重建）
+      if (galleryList) {
+        galleryList.addEventListener('click', function(ev){
+          var delBtn = ev.target && ev.target.closest ? ev.target.closest('[data-gallery-del]') : null;
+          if (!delBtn) return;
+          ev.preventDefault(); ev.stopPropagation();
+          var idx = parseInt(delBtn.getAttribute('data-gallery-del'), 10);
+          if (!isNaN(idx)) self.removeGallery(idx);
+        }, true);
+      }
 
       // MutationObserver：动态行按钮自动打标记，防 DBF 兜底
       if (tb && typeof MutationObserver !== 'undefined') {

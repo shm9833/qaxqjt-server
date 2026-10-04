@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <base href="/admin/">
   <meta charset="UTF-8" />
   <!-- =========================================================== -->
   <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
@@ -19,11 +18,15 @@
     }
     if(bad){
       ["qaxqjt_admin_session","admin_session","qaxqjt_admin_sess_v2","admin_sess_v2","qaxqjt_admin_remember","qaxqjt_admin_token","qaxqjt_admin_info","qaxqjt_admin_permissions","qaxqjt_auth_permissions_v1"].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
-      location.replace(L);
+      var u=location.href, i=u.lastIndexOf("/");
+      var base= (i>=0)? u.substring(0,i+1) : "./";
+      location.replace(base + L);
     }
     // ★ FIX M-14: 首次登录强制改密码 —— forcePwdChange=true 时跳转改密页
     if(s && s.forcePwdChange){
-      location.replace("change-password.html");
+      var u2=location.href, i2=u2.lastIndexOf("/");
+      var base2=(i2>=0)? u2.substring(0,i2+1) : "./";
+      location.replace(base2 + "change-password.html");
     }
   })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
 
@@ -44,7 +47,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>数据看板 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260919c">
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -331,6 +334,18 @@
       display: block;
     }
 
+    /* v20260926o 低权限账号菜单提示条（全局，手机+桌面都生效） */
+    .role-menu-tip {
+      margin: 8px 10px 4px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      color: #FFE082;
+      font-size: 0.72rem;
+      line-height: 1.5;
+    }
+
     @media (max-width: 900px) {
       .admin-sidebar {
         transform: translateX(-100%);
@@ -416,12 +431,16 @@
 
     .calendar-weekday {
       text-align: center;
-      padding: 8px 0;
-      font-size: 0.8rem;
+      padding: 10px 0;
+      font-size: 0.78rem;
       font-weight: 600;
       color: var(--gold-dark);
       background: rgba(212, 175, 55, 0.08);
       border-radius: 6px;
+      aspect-ratio: 7 / 4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .calendar-weekday.weekend {
@@ -432,12 +451,14 @@
       aspect-ratio: 1;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 6px 8px;
       border-radius: 8px;
-      font-size: 0.85rem;
+      font-size: 0.92rem;
       cursor: pointer;
-      transition: var(--transition);
+      /* v20260923c：仅过渡非布局属性，防止 hover scale 触发尺寸动画被误判为自动放大 */
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
       background: var(--bg-light);
       border: 1px solid transparent;
       position: relative;
@@ -447,6 +468,11 @@
     .calendar-day:hover {
       border-color: var(--gold);
       transform: scale(1.05);
+    }
+
+    /* 日历全族守卫：任何日历单元格都不得对 width/height/padding 等布局属性做过渡 */
+    .calendar-day, .calendar-day.empty, .calendar-day.today, .calendar-day.has-event, .calendar-day.has-event-heavy {
+      transition-property: background-color, color, border-color, box-shadow, opacity, transform;
     }
 
     .calendar-day.empty {
@@ -473,14 +499,24 @@
       font-weight: 600;
     }
 
-    .calendar-day.has-event::after {
-      content: '';
+    /* 场次计数 badge：右下角胶囊，替代原 ::after 圆点（圆点与计数同时显示冗余） */
+    .calendar-day.has-event::after { display: none; }
+    .calendar-day .cal-event-cnt {
       position: absolute;
       bottom: 5px;
-      width: 6px;
-      height: 6px;
-      background: var(--primary);
-      border-radius: 50%;
+      right: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: rgba(212, 175, 55, 0.22);
+      padding: 2px 5px;
+      border-radius: 8px;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+    .calendar-day.today .cal-event-cnt {
+      color: var(--gold-light);
+      background: rgba(255, 255, 255, 0.18);
     }
 
     .calendar-day.has-event-heavy {
@@ -569,7 +605,8 @@
       background: linear-gradient(90deg, var(--primary), var(--primary-light));
       border-radius: 13px;
       position: relative;
-      transition: width 1s ease;
+      /* v20260923c：移除 width 过渡动画，避免数据加载时条形从 0 自动增长被误判为卡片自动放大 */
+      transition: opacity 0.3s ease;
     }
 
     .bar-chart-fill.gold {
@@ -757,23 +794,73 @@
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(15,76,129,0.15);
 }
-/* 后台表格最小宽度（768px以上 → 760px；480~767 →720px；<480 →680px） */
+/* 后台表格：宽度自适应容器，内容超出时横向滚动（移除固定 min-width 避免表格溢出/抖动） */
 .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
 .data-table-container, [class*="table-wrapper"], .admin-content table {
-  min-width: 760px !important;
+  width: 100% !important;
+  min-width: 0 !important;
   overflow-x: auto !important;
+  table-layout: auto;
 }
-@media (max-width: 768px) {
-  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
-  .data-table-container, [class*="table-wrapper"], .admin-content table {
-    min-width: 720px !important;
-  }
+/* 看板「近期预约订单」专属：8 列固定布局，任何宽度下列全可见、不被裁剪（v20260923b） */
+.table-wrapper > table.dash-orders-table {
+  table-layout: fixed !important;
+  width: 100% !important;
+  min-width: 0 !important;
 }
-@media (max-width: 480px) {
-  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
-  .data-table-container, [class*="table-wrapper"], .admin-content table {
-    min-width: 680px !important;
-  }
+.table-wrapper > table.dash-orders-table th,
+.table-wrapper > table.dash-orders-table td {
+  white-space: normal !important;
+  padding: 10px 8px !important;
+  font-size: 0.82rem;
+  vertical-align: middle;
+  overflow: hidden;
+  position: static !important;
+  box-shadow: none !important;
+}
+.table-wrapper > table.dash-orders-table th {
+  padding: 11px 8px !important;
+  font-size: 0.8rem;
+  text-align: center;
+}
+/* 前 4 列（文本列）表头与数据统一左对齐，消除“表头居中、内容靠左”的视觉错位（v20260923i） */
+.table-wrapper > table.dash-orders-table th.dash-th-l { text-align: left; }
+.table-wrapper > table.dash-orders-table .dash-cell-oid,
+.table-wrapper > table.dash-orders-table .dash-cell-name,
+.table-wrapper > table.dash-orders-table .dash-cell-phone,
+.table-wrapper > table.dash-orders-table .dash-cell-play { text-align: left; }
+.table-wrapper > table.dash-orders-table .dash-c { text-align: center; }
+.table-wrapper > table.dash-orders-table .badge {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+.table-wrapper > table.dash-orders-table .dash-cell-oid,
+.table-wrapper > table.dash-orders-table .dash-cell-name,
+.table-wrapper > table.dash-orders-table .dash-cell-phone {
+  white-space: nowrap !important;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.table-wrapper > table.dash-orders-table .dash-cell-oid {
+  font-size: 0.74rem;
+  letter-spacing: -0.2px;
+}
+.table-wrapper > table.dash-orders-table .dash-cell-play {
+  line-height: 1.35;
+  word-break: break-all;
+}
+.table-wrapper > table.dash-orders-table .admin-table-actions {
+  display: flex;
+  justify-content: center;
+}
+.table-wrapper > table.dash-orders-table .admin-table-actions .btn {
+  padding: 4px 10px;
+  font-size: 0.78rem;
+}
+@media (max-width: 640px) {
+  .table-wrapper > table.dash-orders-table { min-width: 600px !important; }
 }
 .s-modal-hide { display: none !important; }
 .s-overlay-hide { display: none !important; }
@@ -890,10 +977,10 @@
             <span class="menu-icon">👥</span>
             <span>账号权限管理</span>
           </a>
-          <a href="schedule.html" data-role-level="800" class="admin-menu-item" >
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item" >
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
-            
+            <span class="menu-badge">8</span>
           </a>
           <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item" >
             <span class="menu-icon">🎭</span>
@@ -903,7 +990,7 @@
           <a href="orders.html" data-role-level="800" class="admin-menu-item" >
             <span class="menu-icon">📋</span>
             <span>订单预约管理</span>
-            
+            <span class="menu-badge">5</span>
           </a>
           <a href="operas.html" data-role-level="800" class="admin-menu-item" >
             <span class="menu-icon">🎭</span>
@@ -921,7 +1008,7 @@
           <a href="inventory.html" data-role-level="800" class="admin-menu-item" >
             <span class="menu-icon">📦</span>
             <span>道具服装库存</span>
-            
+            <span class="menu-badge">!</span>
           </a>
           <a href="finance.html" data-role-level="500" class="admin-menu-item" >
             <span class="menu-icon">💰</span>
@@ -930,6 +1017,10 @@
           <a href="content.html" data-role-level="800" class="admin-menu-item" >
             <span class="menu-icon">📝</span>
             <span>官网内容管理</span>
+          </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
           </a>
           <a href="reports.html" data-role-level="700" class="admin-menu-item" >
             <span class="menu-icon">📈</span>
@@ -961,6 +1052,9 @@
         <div style="display:flex;flex-direction:column;gap:8px;">
           <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
             <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
           </a>
           <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
             <span>🚪</span><span>退出登录</span>
@@ -1037,33 +1131,31 @@
             <div class="welcome-text">
               <h2>👋 欢迎回来，<span class="gold" id="welcomeUserName">管理员</span>！</h2>
               <div class="date-info" id="welcomeDate">今天是 {year}年{m}月{d}日 星期{w}</div>
-              <div class="tip" id="welcomePendingTip">今日有 <strong style="color:var(--gold)">0</strong> 个待确认档期 · <strong style="color:var(--gold)">0</strong> 条新预约订单等待处理</div>
+              <div class="tip">真实待办数据加载中…</div>
             </div>
             <div class="welcome-actions">
               <a href="orders.html" data-role-level="800" class="welcome-btn welcome-btn-gold">
                 <span>📋</span><span>处理新订单</span>
               </a>
-              <a href="schedule.html" data-role-level="800" class="welcome-btn welcome-btn-outline">
+              <a href="schedule.html" data-role-level=" 100" class="welcome-btn welcome-btn-outline">
                 <span>📅</span><span>查看档期</span>
               </a>
             </div>
           </div>
         </div>
 
-        <div class="stats-grid" data-paginate="list" data-page-size="12">
+        <div class="stats-grid">
           <div class="stat-card stat-card--primary">
             <div class="stat-card-header">
               <div class="stat-card-icon">🎬</div>
               <div class="stat-card-trend up">
-                <span>↑</span><span>12%</span>
+                <span>●</span><span>实时</span>
               </div>
             </div>
             <div class="stat-card-title">{year}年度演出场次</div>
-            <div class="stat-card-value">0<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">场</span></div>
+            <div class="stat-card-value">—<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">场</span></div>
             <div class="stat-card-sub">
-              <span>同比去年</span>
-              <span class="divider"></span>
-              <span style="color:var(--text-light);">—</span>
+              <span>本年已公布排期</span>
             </div>
           </div>
 
@@ -1071,15 +1163,13 @@
             <div class="stat-card-header">
               <div class="stat-card-icon">📦</div>
               <div class="stat-card-trend up">
-                <span>↑</span><span>8%</span>
+                <span>●</span><span>实时</span>
               </div>
             </div>
             <div class="stat-card-title">本月预约订单</div>
-            <div class="stat-card-value">0<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">单</span></div>
+            <div class="stat-card-value">—<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">单</span></div>
             <div class="stat-card-sub">
-              <span>较上月</span>
-              <span class="divider"></span>
-              <span style="color:var(--text-light);">—</span>
+              <span>本月新增</span>
             </div>
           </div>
 
@@ -1087,15 +1177,13 @@
             <div class="stat-card-header">
               <div class="stat-card-icon">⏰</div>
               <div class="stat-card-trend down">
-                <span>↓</span><span>3%</span>
+                <span>●</span><span>实时</span>
               </div>
             </div>
             <div class="stat-card-title">待确认档期</div>
-            <div class="stat-card-value">0<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">个</span></div>
+            <div class="stat-card-value">—<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">个</span></div>
             <div class="stat-card-sub">
-              <span>较上周</span>
-              <span class="divider"></span>
-              <span style="color:var(--text-light);">—</span>
+              <span>待确认排期总数</span>
             </div>
           </div>
 
@@ -1103,15 +1191,13 @@
             <div class="stat-card-header">
               <div class="stat-card-icon">💵</div>
               <div class="stat-card-trend up">
-                <span>↑</span><span>18%</span>
+                <span>●</span><span>实时</span>
               </div>
             </div>
             <div class="stat-card-title">当月营收</div>
-            <div class="stat-card-value">¥0</div>
+            <div class="stat-card-value">—</div>
             <div class="stat-card-sub">
-              <span>较上月</span>
-              <span class="divider"></span>
-              <span style="color:var(--text-light);">—</span>
+              <span>本月订单金额合计</span>
             </div>
           </div>
 
@@ -1119,15 +1205,13 @@
             <div class="stat-card-header">
               <div class="stat-card-icon">👨‍🎤</div>
               <div class="stat-card-trend" style="background:rgba(139,0,0,0.08);color:var(--text-light);">
-                <span>—</span><span>持平</span>
+                <span>●</span><span>实时</span>
               </div>
             </div>
             <div class="stat-card-title">在演职人员</div>
-            <div class="stat-card-value">0<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">人</span></div>
+            <div class="stat-card-value">—<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">人</span></div>
             <div class="stat-card-sub">
-              <span>演员0人</span>
-              <span class="divider"></span>
-              <span>后勤0人</span>
+              <span>在册人员实时统计</span>
             </div>
           </div>
 
@@ -1135,13 +1219,13 @@
             <div class="stat-card-header">
               <div class="stat-card-icon">⚠️</div>
               <div class="stat-card-trend up">
-                <span>↑</span><span>1项</span>
+                <span>●</span><span>实时</span>
               </div>
             </div>
             <div class="stat-card-title">库存预警</div>
-            <div class="stat-card-value">0<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">项</span></div>
+            <div class="stat-card-value">—<span style="font-size:1rem;margin-left:4px;color:var(--text-light);">项</span></div>
             <div class="stat-card-sub">
-              <span>暂无预警</span>
+              <span>加载中…</span>
             </div>
           </div>
         </div>
@@ -1155,28 +1239,33 @@
           </div>
           <div class="admin-card-body" style="padding:0;">
             <div class="table-wrapper" style="border:none;box-shadow:none;border-radius:0;">
-              <table>
+              <table class="dash-orders-table">
+                <colgroup>
+                  <col style="width:18%"><col style="width:10%"><col style="width:13%">
+                  <col style="width:17%"><col style="width:11%"><col style="width:11%">
+                  <col style="width:10%"><col style="width:10%">
+                </colgroup>
                 <thead>
                   <tr>
-                    <th>订单编号</th>
-                    <th>客户/单位</th>
-                    <th>联系电话</th>
-                    <th>剧目/场次</th>
+                    <th class="dash-th-l">订单编号</th>
+                    <th class="dash-th-l">客户/单位</th>
+                    <th class="dash-th-l">联系电话</th>
+                    <th class="dash-th-l">剧目/场次</th>
                     <th>演出日期</th>
                     <th>金额</th>
                     <th>状态</th>
                     <th>操作</th>
                   </tr>
                 </thead>
-                <tbody data-paginate="list" data-page-size="10">
-                  <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-light);">暂无预约订单数据</td></tr>
+                <tbody id="dashRecentOrdersTbody">
+                  <tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实订单…</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
         </div>
 
-        <div class="dashboard-grid-2col" data-paginate="list" data-page-size="12">
+        <div class="dashboard-grid-2col">
           <div class="admin-card">
             <div class="admin-card-header">
               <h3>📅 本月档期日历</h3>
@@ -1191,7 +1280,7 @@
                 <div class="calendar-header">
                   <h4 id="calMonthTitle">{year}年{m}月</h4>
                 </div>
-                <div class="calendar-grid" id="calendarGrid" data-paginate="list" data-page-size="12"></div>
+                <div class="calendar-grid" id="calendarGrid"></div>
                 <div class="calendar-legend">
                   <div class="legend-item"><div class="legend-dot normal"></div><span>无安排</span></div>
                   <div class="legend-item"><div class="legend-dot today"></div><span>今天</span></div>
@@ -1209,7 +1298,7 @@
             </div>
             <div class="admin-card-body">
               <div class="system-notice-list">
-                <div style="text-align:center;padding:40px;color:var(--text-light);">暂无系统动态</div>
+                <div class="notice-item" id="dashNoticesLoading"><div class="notice-icon info">⏳</div><div class="notice-content"><div class="notice-title">正在加载最新动态…</div></div></div>
               </div>
             </div>
           </div>
@@ -1222,11 +1311,11 @@
           </div>
           <div class="admin-card-body">
             <div class="bar-chart">
-              <div style="text-align:center;padding:40px;color:var(--text-light);">暂无剧目演出频次统计数据</div>
+                <div id="dashBarChartLoading" style="text-align:center;padding:30px 0;color:#94a3b8;">正在统计真实演出频次…</div>
             </div>
             <div class="bar-chart-footer">
-              <div>统计周期：<strong>{year}年1月 - {year}年6月</strong></div>
-              <div>累计演出场次：<strong>0场</strong> · 覆盖剧目：<strong>0部</strong></div>
+                <span>统计周期：<strong id="dashBarPeriod">近6个月真实排期</strong></span>
+                <span id="dashBarFooterTotal">数据加载中…</span>
             </div>
           </div>
         </div>
@@ -1239,20 +1328,12 @@
   </div>
 
   <script src="../js/year-lite.js?v=20260803"></script>
-    <script src="../js/api-config.js?v=20260803"></script>
-  <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260920a"></script>
-<script>/* 生产空白态守卫配置 */
-window.__ADMIN_BLANK_CFG__ = [
-  { title: /近期预约订单/, tbody: '暂无预约订单，真实预约提交后在此显示', cols: 8 },
-  { title: /最新系统动态/, body: '暂无系统动态，真实业务操作（审核 / 派工 / 财务）将在此提示' },
-  { title: /剧目演出频次/, body: '暂无演出数据，真实排期完成后自动统计剧目演出频次' },
-  { zeroStats: true }
-];
-</script>
-<script src="../js/admin-blank.js?v=20260919a"></script>
-
-  <script src="../js/pagination.js?v=20260908p"></script>
+    <script src="../js/api-config.js?v=20260922"></script>
+  <script src="../js/api-request.js?v=20260922"></script>
+<script src="../js/app.js?v=20260930a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
+  <script src="../js/admin-dashboard-real.js?v=20260923j"></script>
   <script>
     (function() {
       'use strict';
@@ -1357,6 +1438,27 @@ window.__ADMIN_BLANK_CFG__ = [
 
       var currentSession = checkAuth();
       __applyRoleMenuFilter(currentSession);
+      // —— v20260926o：低权限账号菜单过滤后加提示，避免"侧边栏几乎空白像坏了"的困惑 ——
+      (function() {
+        try {
+          var menu = document.querySelector('.admin-sidebar-menu');
+          if (!menu) return;
+          var items = menu.querySelectorAll('.admin-menu-item');
+          var n = 0;
+          for (var i = 0; i < items.length; i++) {
+            if (getComputedStyle(items[i]).display !== 'none') n++;
+          }
+          if (n > 4) return; // 高权限账号菜单齐全，不打扰
+          var sess = null;
+          try { sess = JSON.parse(localStorage.getItem('qaxqjt_admin_session') || 'null'); } catch (_e) {}
+          var name = (sess && (sess.name || sess.username)) || '当前账号';
+          var roleName = (sess && sess.roleName) || '受限权限';
+          var tip = document.createElement('div');
+          tip.className = 'role-menu-tip';
+          tip.textContent = '👤 ' + name + '（' + roleName + '）权限受限，仅显示有权限的菜单';
+          menu.insertBefore(tip, menu.firstChild);
+        } catch (_e) {}
+      })();
       // —— 页面级权限拦截：直接访问 URL 时检查角色，不足则跳首页 ——
       (function() {
         if (!currentSession) return;
@@ -1487,11 +1589,6 @@ window.__ADMIN_BLANK_CFG__ = [
       var viewYear = new Date().getFullYear();
       var viewMonth = new Date().getMonth();
 
-      var sampleSchedules = {
-        '7-5': 1, '7-8': 1, '7-12': 2, '7-15': 1, '7-18': 1,
-        '7-20': 2, '7-22': 1, '7-25': 1, '7-28': 2, '7-30': 1
-      };
-
       window.changeMonth = function(delta) {
         viewMonth += delta;
         if (viewMonth > 11) { viewMonth = 0; viewYear++; }
@@ -1533,6 +1630,10 @@ window.__ADMIN_BLANK_CFG__ = [
           grid.appendChild(empty);
         }
 
+        // ★ 修复：真实排期数据是异步到达的（window.__realSchedMap），
+        //   必须在 renderCalendar 内实时读取，不能在外层闭包捕获（否则永远是空对象）。
+        var schedMap = window.__realSchedMap || {};
+
         for (var day = 1; day <= daysInMonth; day++) {
           var cell = document.createElement('div');
           cell.className = 'calendar-day';
@@ -1543,13 +1644,19 @@ window.__ADMIN_BLANK_CFG__ = [
           }
 
           var key = (viewMonth + 1) + '-' + day;
-          if (sampleSchedules[key]) {
-            if (sampleSchedules[key] >= 2) {
+          var cnt = schedMap[key];
+          if (cnt) {
+            if (cnt >= 2) {
               cell.classList.add('has-event-heavy');
             } else {
               cell.classList.add('has-event');
             }
-            cell.title = sampleSchedules[key] + '场演出安排';
+            cell.title = cnt + '场演出安排';
+            // 右下角显示场次计数
+            var badge = document.createElement('span');
+            badge.className = 'cal-event-cnt';
+            badge.textContent = cnt + '场';
+            cell.appendChild(badge);
           }
 
           grid.appendChild(cell);
@@ -1706,7 +1813,7 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 演示模式：保存成功（真实环境将提交到后端 + 审计日志）','success');
+        __T('💾 保存成功','success');
         try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
@@ -1721,7 +1828,7 @@ var __pT0=0;
         if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
         try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ 演示模式：'+(trKey||'记录')+' 已删除（真实环境写入审计日志）','success');
+        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
@@ -1745,7 +1852,7 @@ var __pT0=0;
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 演示模式：准备新增「'+txt+'」（真实环境弹出新增表单）','info');
+        __T('➕ 准备新增「'+txt+'」','info');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -1755,7 +1862,7 @@ var __pT0=0;
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
         if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'（演示模式，真实环境更新状态+审计日志）','success');
+        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
@@ -1764,7 +1871,7 @@ var __pT0=0;
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'（演示模式，真实环境生成合同PDF+写入财务台账）','success');
+        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -1772,7 +1879,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪（演示模式，真实环境生成 PDF 供下载或预览）','info');
+        __T('📄 合同文档已就绪','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -1780,7 +1887,7 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'（演示模式，真实环境跳转 schedule.html 并自动填充订单信息）','info');
+        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
@@ -1791,7 +1898,7 @@ var __pT0=0;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
         var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'（演示模式，真实环境更新状态+审计日志）', txt.indexOf('取消')>=0?'warning':'success');
+        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -1972,7 +2079,7 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 演示模式：提交成功，数据已写入 localStorage（真实环境写后端+审计）','success');
+        __toastH9('✅ 提交成功','success');
         setTimeout(function(){
           try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
         }, 380);
@@ -2278,7 +2385,6 @@ function __pLog(module,event,extra){
     }
     function _scanPagination(){
       try{
-        if (window.QinPagination) return; // 真分页器已接管，跳过假分页注入（orders/finance 同款修复范式）
         var all = document.querySelectorAll('div,nav,section,span');
         all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
@@ -2395,7 +2501,6 @@ function __pLog(module,event,extra){
       var hr = btn.getAttribute('href');
       if(oc && oc.length > 3) return true;
       if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
-      if(typeof btn.onclick === 'function') return true; // 修复：JS property 绑定的 onclick 也算已绑定，禁止 SuperPatch 兜底拦截（曾导致行按钮第一次点击被吞）
       if(btn.__deadBtnChecked) return true;
       if(btn.__superPatchBound) return true;
       return false;
@@ -2409,7 +2514,6 @@ function __pLog(module,event,extra){
         // 修复：选择器扩大，包含a标签和[data-action]标识元素
         var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
         if(!btn) return;
-        if(btn.closest && btn.closest('.pagination-bar, .pagination')) return; // 分页条按钮放行（orders/finance 同款修复）
                 // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
         if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
@@ -2436,34 +2540,34 @@ function __pLog(module,event,extra){
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功（演示模式：真实环境将写入后端 + 审计日志）','success');
+          __toastH9('✅ 操作成功','success');
           setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
         }else if(tt==='delete'){
           if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
             __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'（演示模式）', _txtMatch(txt,['取消','驳回'])?'warning':'success');
+            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
           }else{ __toastH9('↩️ 已取消操作','info'); }
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑（演示模式）','info');
+          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印（演示模式）','info');
+          __toastH9('📤 已触发导出/打印','info');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'（演示模式）','info');
+          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'（演示模式）','success');
+          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪（演示模式）','info');
+          __toastH9('📄 合同文档已就绪','info');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增（演示模式，真实环境弹出新增表单）','info');
+          __toastH9('➕ 准备新增','info');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应（演示模式）','info');
+          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -2534,75 +2638,15 @@ function __pLog(module,event,extra){
   });
 })();
 </script>
-<script>/* 按钮防拦截 v20260907j：为真实功能按钮预设 __superPatchBound，避免 DBF/SuperPatch 6/6 演示 toast 在 capture 阶段 stopPropagation 拦停真实弹窗（含无 id 按钮、动态重绘行 MutationObserver 补标） */
+<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
 (function(){
-  if(window.__BTN_GUARD_V2__) return; window.__BTN_GUARD_V2__=1;
-  var SEL = 'button, a.btn, .btn, .btn-action, [role="button"], [data-action]';
   function __markBound(){
-    try{
-      var els=document.querySelectorAll(SEL);
-      for(var i=0;i<els.length;i++){ var el=els[i]; try{ if(!el.__superPatchBound){ el.__superPatchBound=1; } }catch(_){} }
-    }catch(_){}
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
   }
-  function __boot(){
-    __markBound();
-    try{
-      if(window.MutationObserver){
-        var mo=new MutationObserver(function(){ try{ __markBound(); }catch(_){} });
-        mo.observe(document.documentElement,{childList:true,subtree:true});
-      }
-    }catch(_){}
-    setTimeout(__markBound,400); setTimeout(__markBound,1200); setTimeout(__markBound,3000);
-  }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__boot); }
-  else { __boot(); }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
 })();</script>
-<script>/* 首页统计卡接真实 API（v20260907k）：替代硬编码演示数字 */
-(function(){
-  function _loadDashboardStats() {
-    if (!window.API || typeof API.get !== 'function') return;
-    var cards = document.querySelectorAll('.stats-grid .stat-card');
-    if (!cards.length) return;
-    var fmtY = function(n) { return '¥' + Number(n || 0).toLocaleString('zh-CN'); };
-    function _fill(card, val, subHtml) {
-      if (!card) return;
-      var v = card.querySelector('.stat-card-value');
-      if (v) { var u = v.querySelector('span, small'); v.textContent = String(val); if (u) v.appendChild(u); }
-      var sub = card.querySelector('.stat-card-sub');
-      if (sub) sub.innerHTML = subHtml;
-      var trend = card.querySelector('.stat-card-trend');
-      if (trend) trend.style.setProperty('visibility', 'hidden');
-      try { card.__adminBlankZeroed = true; } catch (_) {}
-    }
-    API.get('/v1/orders/stats', { showErrorToast: false, timeoutMs: 8000, fallbackRead: function() { return null; } })
-      .then(function(d) {
-        d = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
-        if (cards[1]) _fill(cards[1], d.total || 0, '<span>累计金额 ' + fmtY(d.finalAmount) + '</span>');
-        if (cards[3]) _fill(cards[3], fmtY(d.finalAmount), '<span>已回款 ' + fmtY(d.paidAmount) + '</span>');
-      }).catch(function(){});
-    API.get('/v1/appointments/stats', { showErrorToast: false, timeoutMs: 8000, fallbackRead: function() { return null; } })
-      .then(function(d) {
-        d = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
-        if (cards[0]) _fill(cards[0], d.total || 0, '<span>今日新增 ' + (d.todayNew || 0) + ' 单</span>');
-        if (cards[2]) _fill(cards[2], d.pendingCount || 0, '<span>待审核确认</span>');
-        var tip = document.getElementById('welcomePendingTip');
-        if (tip) tip.innerHTML = '今日有 <strong style="color:var(--gold)">' + (d.pendingCount || 0) + '</strong> 个待确认档期 · <strong style="color:var(--gold)">' + (d.todayNew || 0) + '</strong> 条新预约订单等待处理';
-      }).catch(function(){});
-    API.get('/v1/performers', { query: { page: 1, pageSize: 500 }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function() { return null; } })
-      .then(function(res) {
-        var total = 0;
-        if (Array.isArray(res)) total = res.length;
-        else if (res && typeof res === 'object') total = res.total || (res.data ? res.data.length : 0) || 0;
-        if (cards[4]) _fill(cards[4], total, '<span>在册演职人员</span>');
-      }).catch(function(){});
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() { setTimeout(_loadDashboardStats, 300); });
-  } else {
-    setTimeout(_loadDashboardStats, 300);
-  }
-})();
-</script>
 </body>
 
 </html>

@@ -14,11 +14,14 @@ require('dotenv').config({ override: true });
 const app = require('./app');
 const { env, nowMs } = require('./config');
 const logger = require('./utils/logger');
+const securityConfig = require('./services/security-config');
+const captchaService = require('./services/captcha-service');
 
 const PORT = Number(process.env.APP_PORT || env.APP_PORT || 3001);
 
 const shutdown = async signal => {
   logger.warn({ signal }, '开始优雅关闭...');
+  securityConfig.stopSecurityConfigPoller();
   const prisma = require('./utils/prisma');
   try {
     await prisma.$disconnect();
@@ -33,7 +36,10 @@ const shutdown = async signal => {
   }, 9000).unref?.();
 };
 
-const server = app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', async () => {
+  // 启动安全配置热加载 + 清理过期验证码
+  securityConfig.startSecurityConfigPoller();
+  captchaService.cleanupExpired().catch(() => {});
   logger.info(
     {
       port: PORT,

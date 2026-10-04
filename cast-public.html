@@ -19,12 +19,13 @@
 <title>秦安县秦剧团 · 本场演出阵容公开 | {year}</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <script src="js/favicon-inject.js?v=20260803" defer></script>
+    <script src="js/site-assets.js?v=20260929a" defer></script>
 <script src="js/wechat-fallback.js?v=20260803" defer></script>
 <script src="js/year-lite.js?v=20260803" defer></script>
 <script src="js/api-config.js?v=20260922" defer></script>
 <script src="js/api-request.js?v=20260922" defer></script>
-<script src="js/app.js?v=20260922" defer></script>
-<link rel="stylesheet" href="css/style.css?v=20260803">
+<script src="js/app.js?v=20260930a" defer></script>
+<link rel="stylesheet" href="css/style.css?v=20260923a">
 <style>
 *{box-sizing:border-box;}
 body{background:linear-gradient(180deg,#fdf6e3 0%,#fff 22%,#fffbea 60%,#fff 100%);margin:0;padding:0;font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;color:#1f2937;-webkit-font-smoothing:antialiased;}
@@ -493,8 +494,18 @@ color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,2
   function nonEmpty(v){ return v != null && String(v).trim().length > 0; }
   function tagForType(t){
     var map = {
-      '老生':'t-laosheng','红生':'t-hongsheng','小生':'t-xiaosheng','武生':'t-wusheng',
-      '青衣':'t-qingyi','花旦':'t-huadan','老旦':'t-laodan','彩旦':'t-caidan',
+      /* 行当口径（20261003 修订）：6大类23角色 */
+      '文须生':'t-laosheng','武须生':'t-hongsheng','小生':'t-xiaosheng',
+      '丑角':'t-chouxing',
+      '大花脸':'t-hualian','二花脸':'t-hualian',
+      '正旦':'t-qingyi','小旦':'t-huadan','彩旦':'t-caidan','二架旦':'t-laodan',
+      '门官':'t-laosheng','家院':'t-laosheng',
+      '龙套':'t-wusheng','校尉':'t-wusheng','刀斧手':'t-wusheng',
+      '丫鬟':'t-huadan','彩女':'t-caidan','长随官':'t-wusheng',
+      '电工':'t-qita','前场':'t-qita','衣箱':'t-qita','帽箱':'t-qita','剧务':'t-qita',
+      /* 旧存档兼容 */
+      '老生':'t-laosheng','红生':'t-hongsheng','武生':'t-wusheng',
+      '青衣':'t-qingyi','花旦':'t-huadan','老旦':'t-laodan',
       '花脸':'t-hualian','丑行':'t-chouxing'
     };
     var cls = map[t] || 't-qita';
@@ -805,11 +816,13 @@ color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,2
           var firstBad=null;
           try{ reqFails.forEach(function(inp){ if(!inp.value || (inp.type==='checkbox' && !inp.checked)){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}},1800);}catch(_b){} } }); }catch(_rf){}
           if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
-          __FT('✅ 提交成功！我们将尽快与您联系','success');
-          try{ fm.reset && fm.reset(); }catch(_rs){}
+          /* P1修复:假受理已改诚实暂存：数据仅存本设备localStorage，不伪造受理、不自动重置 */
+          var __dft={};try{for(var __ei=0;__ei<fm.elements.length;__ei++){var __el=fm.elements[__ei];if(!__el||!__el.name||__el.type==='file')continue;if(__el.type==='checkbox'){if(__el.checked)__dft[__el.name]=(__dft[__el.name]?__dft[__el.name]+'、':'')+(__el.value||'✓');continue;}var __vv=String(__el.value||'').trim();if(__vv)__dft[__el.name]=__vv.slice(0,500);}}catch(_se){}
+          try{var __dk='qaxqjt_public_form_draft_cast-public';var __arr=null;try{__arr=JSON.parse(localStorage.getItem(__dk)||'[]');}catch(_pe){__arr=null;}if(!Array.isArray(__arr))__arr=[];__arr.push({form:(fm.id||''),data:__dft,savedAt:new Date().toISOString()});localStorage.setItem(__dk,JSON.stringify(__arr.slice(-50)));}catch(_le){}
+          __FT('ℹ️ 本站暂未开通在线自动受理：信息已暂存在您的设备本地，不会自动提交给剧团，请通过页面下方的电话/微信联系我们（13993839833）','warning');
           e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
         } else {
-          __FT('✅ 提交成功','success');
+          /* P1修复:假受理已改诚实提示 */ __FT('ℹ️ 本站暂未开通在线自动受理：请拨打 13993839833 或通过页面下方的电话/微信与我们联系','info');
           try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
           btn.__ftDone=1; e.stopImmediatePropagation(); return;
         }

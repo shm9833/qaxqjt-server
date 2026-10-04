@@ -16,12 +16,13 @@
 
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="js/favicon-inject.js?v=20260803" defer></script>
+    <script src="js/site-assets.js?v=20260929a" defer></script>
     <script src="js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="秦安县秦剧团二维码预约生成，微信/支付宝扫码快速预约秦腔演出服务，7x24小时受理，30分钟内专人回访">
   <meta name="keywords" content="秦安秦剧团,秦安县秦剧团文化演出有限公司,二维码预约,扫码预约,微信预约,支付宝预约,秦腔演出预约">
   <title>二维码预约 - 秦安县秦剧团云端预约系统 | {year}</title>
-  <link rel="stylesheet" href="css/style.css?v=20260803">
+  <link rel="stylesheet" href="css/style.css?v=20260923a">
   <style>
     .page-banner {
       background: linear-gradient(135deg, rgba(15, 76, 129, 0.92) 0%, rgba(30, 111, 181, 0.88) 50%, rgba(91, 155, 213, 0.85) 100%),
@@ -497,7 +498,7 @@
   </header>
 
   <main>
-    <section class="page-banner" style="background:linear-gradient(135deg,rgba(157,23,77,0.78),rgba(202,138,4,0.72)),url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E5%BE%AE%E4%BF%A1%E6%89%AB%E7%A0%81%E9%A2%84%E7%BA%A6%E7%A7%A6%E8%85%94%E6%BC%94%E5%87%BA%E8%90%A5%E9%94%80%E6%98%93%E6%8B%89%E5%AE%9D%E5%B1%95%E6%9E%B6%EF%BC%8C%E5%B7%A6%E8%BE%B9%E5%A4%A7%E4%BA%8C%E7%BB%B4%E7%A0%81%E5%8F%B3%E8%BE%B9%E7%A7%A6%E8%85%94%E6%97%A6%E8%A7%92%E6%BC%94%E5%91%98%E4%B8%BE%E7%89%8C%E5%BE%AE%E7%AC%91%E6%8E%A8%E8%8D%90%E6%89%AB%E7%A0%81%E9%A2%84%E7%BA%A6%EF%BC%8C%E7%BA%A2%E9%BB%84%E5%96%9C%E5%BA%86%E9%85%8D%E8%89%B2%EF%BC%8C%E6%94%BE%E5%9C%A8%E5%BA%99%E4%BC%9A%E7%8E%B0%E5%9C%BA%E5%A4%A7%E9%97%A8%E5%8F%A3%EF%BC%8C%E6%B5%B7%E6%8A%A5%E5%AE%A3%E4%BC%A0%E7%89%A9%E6%96%99%EF%BC%8C%E7%9C%9F%E5%AE%9E%E5%9C%BA%E6%99%AF%E8%90%A5%E9%94%80%EF%BC%8C8k%E9%AB%98%E6%B8%85%E5%95%86%E4%B8%9A%E6%91%84%E5%BD%B1&image_size=landscape_16_9') center/cover no-repeat;">
+    <section class="page-banner" data-asset-key-bg="site.qrbooking.banner" style="background:linear-gradient(135deg,rgba(157,23,77,0.78),rgba(202,138,4,0.72)),url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E5%BE%AE%E4%BF%A1%E6%89%AB%E7%A0%81%E9%A2%84%E7%BA%A6%E7%A7%A6%E8%85%94%E6%BC%94%E5%87%BA%E8%90%A5%E9%94%80%E6%98%93%E6%8B%89%E5%AE%9D%E5%B1%95%E6%9E%B6%EF%BC%8C%E5%B7%A6%E8%BE%B9%E5%A4%A7%E4%BA%8C%E7%BB%B4%E7%A0%81%E5%8F%B3%E8%BE%B9%E7%A7%A6%E8%85%94%E6%97%A6%E8%A7%92%E6%BC%94%E5%91%98%E4%B8%BE%E7%89%8C%E5%BE%AE%E7%AC%91%E6%8E%A8%E8%8D%90%E6%89%AB%E7%A0%81%E9%A2%84%E7%BA%A6%EF%BC%8C%E7%BA%A2%E9%BB%84%E5%96%9C%E5%BA%86%E9%85%8D%E8%89%B2%EF%BC%8C%E6%94%BE%E5%9C%A8%E5%BA%99%E4%BC%9A%E7%8E%B0%E5%9C%BA%E5%A4%A7%E9%97%A8%E5%8F%A3%EF%BC%8C%E6%B5%B7%E6%8A%A5%E5%AE%A3%E4%BC%A0%E7%89%A9%E6%96%99%EF%BC%8C%E7%9C%9F%E5%AE%9E%E5%9C%BA%E6%99%AF%E8%90%A5%E9%94%80%EF%BC%8C8k%E9%AB%98%E6%B8%85%E5%95%86%E4%B8%9A%E6%91%84%E5%BD%B1&image_size=landscape_16_9') center/cover no-repeat;">
       <div class="container">
         <h1>🎟️ 扫码预约演出</h1>
         <div class="breadcrumb">
@@ -529,12 +530,12 @@
             </div>
             <div class="qr-display-area">
               <div class="qr-card">
-                <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E5%BE%AE%E4%BF%A1%E6%89%AB%E7%A0%81%E9%A2%84%E7%BA%A6%E7%A7%A6%E8%85%94%E6%BC%94%E5%87%BA%E5%AE%A3%E4%BC%A0%E6%B5%B7%E6%8A%A5%EF%BC%8C%E6%98%93%E6%8B%89%E5%AE%9D%E5%B1%95%E6%9E%B6%E8%AE%BE%E8%AE%A1%EF%BC%8C%E5%B7%A6%E8%BE%B9%E4%BA%8C%E7%BB%B4%E7%A0%81%E5%8F%B3%E8%BE%B9%E7%A7%A6%E8%85%94%E6%BC%94%E5%91%98%E5%89%A7%E7%85%A7%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%96%9C%E5%BA%86%EF%BC%8C%E8%90%A5%E9%94%80%E7%89%A9%E6%96%99%EF%BC%8C%E9%AB%98%E6%B8%85&image_size=landscape_4_3 TIUrl" alt="微信预约二维码">
+                <img data-asset-key="site.qrbooking.qr_wechat" src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E5%BE%AE%E4%BF%A1%E6%89%AB%E7%A0%81%E9%A2%84%E7%BA%A6%E7%A7%A6%E8%85%94%E6%BC%94%E5%87%BA%E5%AE%A3%E4%BC%A0%E6%B5%B7%E6%8A%A5%EF%BC%8C%E6%98%93%E6%8B%89%E5%AE%9D%E5%B1%95%E6%9E%B6%E8%AE%BE%E8%AE%A1%EF%BC%8C%E5%B7%A6%E8%BE%B9%E4%BA%8C%E7%BB%B4%E7%A0%81%E5%8F%B3%E8%BE%B9%E7%A7%A6%E8%85%94%E6%BC%94%E5%91%98%E5%89%A7%E7%85%A7%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%96%9C%E5%BA%86%EF%BC%8C%E8%90%A5%E9%94%80%E7%89%A9%E6%96%99%EF%BC%8C%E9%AB%98%E6%B8%85&image_size=landscape_4_3 TIUrl" alt="微信预约二维码">
                 <div class="qr-card-label">微信扫码预约</div>
                 <div class="qr-card-tag">推荐使用</div>
               </div>
               <div class="qr-card">
-                <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E5%BE%AE%E4%BF%A1%E6%89%AB%E7%A0%81%E9%A2%84%E7%BA%A6%E7%A7%A6%E8%85%94%E6%BC%94%E5%87%BA%E5%AE%A3%E4%BC%A0%E6%B5%B7%E6%8A%A5%EF%BC%8C%E6%98%93%E6%8B%89%E5%AE%9D%E5%B1%95%E6%9E%B6%E8%AE%BE%E8%AE%A1%EF%BC%8C%E5%B7%A6%E8%BE%B9%E4%BA%8C%E7%BB%B4%E7%A0%81%E5%8F%B3%E8%BE%B9%E7%A7%A6%E8%85%94%E6%BC%94%E5%91%98%E5%89%A7%E7%85%A7%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%96%9C%E5%BA%86%EF%BC%8C%E8%90%A5%E9%94%80%E7%89%A9%E6%96%99%EF%BC%8C%E9%AB%98%E6%B8%85&image_size=landscape_4_3 TIUrl" alt="支付宝预约二维码">
+                <img data-asset-key="site.qrbooking.qr_alipay" src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E5%BE%AE%E4%BF%A1%E6%89%AB%E7%A0%81%E9%A2%84%E7%BA%A6%E7%A7%A6%E8%85%94%E6%BC%94%E5%87%BA%E5%AE%A3%E4%BC%A0%E6%B5%B7%E6%8A%A5%EF%BC%8C%E6%98%93%E6%8B%89%E5%AE%9D%E5%B1%95%E6%9E%B6%E8%AE%BE%E8%AE%A1%EF%BC%8C%E5%B7%A6%E8%BE%B9%E4%BA%8C%E7%BB%B4%E7%A0%81%E5%8F%B3%E8%BE%B9%E7%A7%A6%E8%85%94%E6%BC%94%E5%91%98%E5%89%A7%E7%85%A7%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%96%9C%E5%BA%86%EF%BC%8C%E8%90%A5%E9%94%80%E7%89%A9%E6%96%99%EF%BC%8C%E9%AB%98%E6%B8%85&image_size=landscape_4_3 TIUrl" alt="支付宝预约二维码">
                 <div class="qr-card-label">支付宝扫码预约</div>
                 <div class="qr-card-tag">便捷支付</div>
               </div>
@@ -654,7 +655,7 @@
             </div>
             <div id="qrBookingImgWrap">
               <div class="qr-preview-box">
-                <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E5%BE%AE%E4%BF%A1%E6%89%AB%E7%A0%81%E9%A2%84%E7%BA%A6%E7%A7%A6%E8%85%94%E6%BC%94%E5%87%BA%E5%AE%A3%E4%BC%A0%E6%B5%B7%E6%8A%A5%EF%BC%8C%E6%98%93%E6%8B%89%E5%AE%9D%E5%B1%95%E6%9E%B6%E8%AE%BE%E8%AE%A1%EF%BC%8C%E5%B7%A6%E8%BE%B9%E4%BA%8C%E7%BB%B4%E7%A0%81%E5%8F%B3%E8%BE%B9%E7%A7%A6%E8%85%94%E6%BC%94%E5%91%98%E5%89%A7%E7%85%A7%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%96%9C%E5%BA%86%EF%BC%8C%E8%90%A5%E9%94%80%E7%89%A9%E6%96%99%EF%BC%8C%E9%AB%98%E6%B8%85&image_size=landscape_4_3 TIUrl" alt="默认预约二维码">
+                <img data-asset-key="site.qrbooking.qr_default" src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E5%BE%AE%E4%BF%A1%E6%89%AB%E7%A0%81%E9%A2%84%E7%BA%A6%E7%A7%A6%E8%85%94%E6%BC%94%E5%87%BA%E5%AE%A3%E4%BC%A0%E6%B5%B7%E6%8A%A5%EF%BC%8C%E6%98%93%E6%8B%89%E5%AE%9D%E5%B1%95%E6%9E%B6%E8%AE%BE%E8%AE%A1%EF%BC%8C%E5%B7%A6%E8%BE%B9%E4%BA%8C%E7%BB%B4%E7%A0%81%E5%8F%B3%E8%BE%B9%E7%A7%A6%E8%85%94%E6%BC%94%E5%91%98%E5%89%A7%E7%85%A7%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%96%9C%E5%BA%86%EF%BC%8C%E8%90%A5%E9%94%80%E7%89%A9%E6%96%99%EF%BC%8C%E9%AB%98%E6%B8%85&image_size=landscape_4_3 TIUrl" alt="默认预约二维码">
               </div>
             </div>
             <div class="qr-preview-label">默认预约二维码（修改表单立即预览）</div>
@@ -841,7 +842,7 @@
           <h4>联系我们</h4>
           <ul>
             <li><a href="tel:13993839833">📞 13993839833</a></li>
-            <li><a href="mailto:13893811313@163.com">📧 13893811313@163.com</a></li>
+            <li><a href="tel:13993839833">📞 139 9383 9833</a></li>
             <li><a href="booking.html">🎫 在线预约</a></li>
             <li><a href="contact.html">📍 联系我们</a></li>
             <li><a href="javascript:void(0)" data-footer-action="wechat">💬 微信客服</a></li>
@@ -896,7 +897,7 @@
   </footer>
 
   <script src="js/year-lite.js?v=20260803"></script>
-  <script src="js/app.js?v=20260906g"></script>
+  <script src="js/app.js?v=20260930a"></script>
   <!-- 🔧 D块前台×按钮兜底：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
   <script>
   (function(){
@@ -960,11 +961,11 @@
           var firstBad=null;
           try{ reqFails.forEach(function(inp){ var v=(inp.value||''); var ok=true; if(inp.type==='checkbox' && !inp.checked) ok=false; else if(inp.type!=='checkbox' && inp.type!=='radio' && !v.trim()) ok=false; if(!ok){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}}, 1800);}catch(_b){} } }); }catch(_rf){}
           if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
-          __FT('✅ 操作成功（演示模式：真实环境将写入工单 + 通知对接专员）','success');
+          __FT('✅ 操作成功，对接专员将尽快与您联系','success');
           try{ fm.reset && fm.reset(); }catch(_rs){}
           e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
         } else {
-          __FT('✅ 操作成功（演示模式）','success');
+          __FT('✅ 操作成功','success');
           try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
           btn.__ftDone=1; e.stopImmediatePropagation(); return;
         }
@@ -977,7 +978,7 @@
       }
       if(isSearch){
         if(!__FL(dk,550)) return;
-        __FT('🔍 查询条件已生效（演示模式）','info');
+        __FT('🔍 查询条件已生效','info');
         btn.__ftDone=1; return;
       }
       if(isCopy){

@@ -31,7 +31,18 @@ const list = async ctx => {
     ];
   }
   if (ctx.query.role) where.role = String(ctx.query.role);
-  if (ctx.query.status) where.status = String(ctx.query.status);
+  // 软删账号默认从列表排除（纵深防御：即使前端漏过滤也不泄漏）；
+  // 仅审计用途显式传 status=deleted 查软删、status=all 查全部状态
+  const statusQ = ctx.query.status ? String(ctx.query.status) : '';
+  if (statusQ === 'all') {
+    // 不加状态条件：全部状态（含 deleted）
+  } else if (statusQ === 'deleted') {
+    where.status = 'deleted';
+  } else if (statusQ) {
+    where.status = statusQ;
+  } else {
+    where.status = { not: 'deleted' };
+  }
   const [rows, count] = await Promise.all([
     prisma.accountsV2.findMany({
       where,

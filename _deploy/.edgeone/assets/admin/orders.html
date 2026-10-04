@@ -42,7 +42,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>订单预约与客户管理 - 秦安县秦剧团云端预约系统 | {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -510,7 +510,7 @@
             <span class="menu-icon">👥</span>
             <span>账号权限管理</span>
           </a>
-          <a href="schedule.html" data-role-level="800" class="admin-menu-item">
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
             <span class="menu-badge">8</span>
@@ -551,6 +551,10 @@
             <span class="menu-icon">📝</span>
             <span>官网内容管理</span>
           </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
+          </a>
           <a href="reports.html" data-role-level="700" class="admin-menu-item">
             <span class="menu-icon">📈</span>
             <span>数据统计报表</span>
@@ -582,6 +586,9 @@
           <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
             <span>🏠</span><span>返回前台首页</span>
           </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
+          </a>
           <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
             <span>🚪</span><span>退出登录</span>
           </a>
@@ -596,7 +603,7 @@
           <nav class="admin-breadcrumb">
             <a href="index.html">首页</a>
             <span class="separator">/</span>
-            <a href="#">业务管理</a>
+            <span class="current">订单预约管理</span>
             <span class="separator">/</span>
             <span class="current">订单预约与客户管理</span>
           </nav>
@@ -804,7 +811,7 @@
                       <th>操作</th>
                     </tr>
                   </thead>
-                  <tbody id="ordersMainTbody" data-paginate="list" data-page-size="10"><tr><td colspan="13" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实订单数据…</td></tr></tbody>
+                  <tbody id="ordersMainTbody" data-paginate="list" data-paginate-keep="1" data-page-size="10"><tr><td colspan="13" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实订单数据…</td></tr></tbody>
                 </table>
               </div>
 
@@ -899,8 +906,9 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260803"></script>
-  <script src="../js/pagination.js?v=20260803"></script>
+<script src="../js/app.js?v=20260930a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
   <script src="../js/real-action-guard.js?v=20260922b"></script>
   <script>
     'use strict';
@@ -1197,6 +1205,7 @@
       <div style="grid-column:1 / span 2;">
         <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">内部备注</label>
         <textarea id="editInternalRemark" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;resize:vertical;"></textarea>
+        <div id="editRemarkHint" style="display:none;margin-top:4px;font-size:.75rem;color:#92400e;line-height:1.5;"></div>
       </div>
       <div style="grid-column:1 / span 2;display:flex;justify-content:flex-end;gap:12px;">
         <button type="button" id="orderEditCancel" class="btn btn-secondary">取消</button>
@@ -1259,36 +1268,106 @@
     </div>
   </div>
 
+  <!-- v20261003 P3-8：收款登记弹窗（真实收款流水+台账收入凭证，替代只能改 paidAmount 的粗糙方式） -->
+  <div class="modal-overlay csp-hide" id="paymentOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="paymentModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:520px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#b45309,#d97706);color:#fff;">
+      <h3 style="margin:0;font-size:1.1rem;font-weight:600;">💰 登记收款</h3>
+      <button id="paymentClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+    </div>
+    <div style="padding:24px 28px;">
+      <p id="payInfo" style="margin:0 0 16px 0;font-size:.85rem;color:var(--text-light);background:#f8fafc;border-radius:8px;padding:10px 12px;line-height:1.7;"></p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;">
+        <div style="grid-column:1 / span 2;">
+          <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">收款金额 (¥) *</label>
+          <input type="number" id="payAmount" min="0.01" step="0.01" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">收款渠道</label>
+          <select id="payChannel" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+            <option value="cash">现金</option>
+            <option value="transfer" selected>银行转账</option>
+            <option value="wechat">微信</option>
+            <option value="alipay">支付宝</option>
+            <option value="cheque">支票</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">收款日期</label>
+          <input type="date" id="payDate" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+        </div>
+        <div style="grid-column:1 / span 2;">
+          <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">备注</label>
+          <input type="text" id="payRemark" maxlength="300" placeholder="如：庙会现场收取/转账尾号1234" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
+        <button id="paymentCancel" type="button" class="btn btn-secondary">取消</button>
+        <button id="paymentSave" type="button" class="btn" data-real-bound="1" style="background:#d97706;color:#fff;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:.9rem;">✅ 确认收款</button>
+      </div>
+    </div>
+  </div>
+
   <script>
   (function(){
-    // 订单派工模块：11行当(含龙套) + 多选 + 每人备注
+    // 订单派工模块：行当口径（20261003 修订）6 大行 + 角子 + 后勤 + 武场/文场，与 cast-sheet / 花名册一致
     // 20260922 真实化：派工候选名单来自 /v1/performers（在册真实演职人员），不再内置假名
     var ORD_GROUPS = [
-      { k:'ls', n:'老生', ppl:[] },
-      { k:'xs', n:'须生', ppl:[] },
-      { k:'xiaos', n:'小生', ppl:[] },
-      { k:'qy', n:'青衣', ppl:[] },
-      { k:'hd', n:'花旦', ppl:[] },
-      { k:'ld', n:'老旦', ppl:[] },
-      { k:'hl', n:'花脸', ppl:[] },
-      { k:'cj', n:'丑角', ppl:[] },
-      { k:'lt', n:'龙套', ppl:[] },
-      { k:'bd', n:'乐队（司鼓·板胡等）', ppl:[] },
-      { k:'wm', n:'舞美（灯光·音响等）', ppl:[] }
+      { k:'sheng',    n:'生行（文须生·武须生·小生）', ppl:[] },
+      { k:'chou',     n:'丑行（丑角）', ppl:[] },
+      { k:'jing',     n:'净行（大花脸·二花脸）', ppl:[] },
+      { k:'dan',      n:'旦行（正旦·小旦·彩旦·二架旦）', ppl:[] },
+      { k:'erjia',    n:'二架（门官·家院）', ppl:[] },
+      { k:'juezi',    n:'角子（龙套·校尉·刀斧手·丫鬟·彩女·长随官）', ppl:[] },
+      { k:'wuchang',  n:'武场（司鼓·梆子·打击乐）', ppl:[] },
+      { k:'wenchang', n:'文场（板胡·二胡·扬琴等）', ppl:[] },
+      { k:'houqin',   n:'后勤（衣箱·帽箱·电工·前场·剧务·舞台保障）', ppl:[] }
     ];
-    function _ordBucket(role){
+    // 25 分类（23 角色 + 武场 + 文场），规则与 cast-sheet.html _bucketOf 完全一致
+    var ORD_ROLE_RULES = [
+      ['武场', /武场|司鼓|板鼓|梆子|大锣|小锣|马锣|铙|钹|镲|堂鼓|战鼓|木鱼|打击|鼓师|武二手|鼓/],
+      ['文场', /文场|板胡|二胡|高胡|椰胡|扬琴|琵琶|三弦|古筝|竹笛|梅管|唢呐|海笛|笙|大提琴|贝司|提琴|电子琴|文二手|琴/],
+      ['帽箱', /帽箱|盔箱|盔头|盔|戏帽|帽倌|王帽|纱帽|扎巾|额子|凤冠|驸马套/],
+      ['衣箱', /衣箱|箱倌|行头|服装|跟包|化妆|大头|勾脸|脸谱|道具/],
+      ['电工', /电工|灯光|音响|话筒|耳麦|麦|配电|设备/],
+      ['剧务', /剧务|舞台监督|监督|催场|场记|字幕|装台|布景|拆台/],
+      ['前场', /前场|前台|检票|引导|后勤/],
+      ['大花脸', /大花脸|大净|铜锤|包公|包拯|徐延昭|尉迟恭/],
+      ['二花脸', /二花脸|架子花|武花|副净|武净|花脸|净|张飞|李逵|曹操/],
+      ['丑角', /丑/],
+      ['武须生', /武须生|靠把|红生|武老生|武生|关羽|关公|赵匡胤/],
+      ['文须生', /须生|老生|安工|衰派/],
+      ['小生', /小生/],
+      ['正旦', /正旦|青衣|老旦/],
+      ['小旦', /小旦|花旦|闺门旦|武旦|刀马旦/],
+      ['彩旦', /彩旦|丑婆|丑旦/],
+      ['二架旦', /二架旦|二路旦|二架女/],
+      ['门官', /门官|二架男/],
+      ['家院', /家院|老管家|老仆/],
+      ['校尉', /校尉/],
+      ['刀斧手', /刀斧手|刽子手/],
+      ['丫鬟', /丫鬟|丫环|使女/],
+      ['彩女', /彩女|宫娥/],
+      ['长随官', /长随官|长随/],
+      ['龙套', /龙套|青袍|文堂|流行/]
+    ];
+    function _ordStdRole(role){
       var s = String(role||'');
-      if(/司鼓|板鼓|梆子|大锣|小锣|马锣|铙|钹|镲|堂鼓|战鼓|木鱼|打击|鼓|板胡|二胡|高胡|椰胡|扬琴|琵琶|三弦|古筝|竹笛|梅管|唢呐|海笛|笙|大提琴|贝司|提琴|电子琴|琴/.test(s)) return 'bd';
-      if(/舞台监督|监督|剧务|催场|场记|灯光|音响|话筒|耳麦|麦|服装|跟包|盔箱|化妆|大头|勾脸|脸谱|道具|装台|布景|拆台|字幕|电工|后勤|设备|配电/.test(s)) return 'wm';
-      if(/红生|老生|须生/.test(s)) return 'ls';
-      if(/小生|武生/.test(s)) return 'xiaos';
-      if(/青衣|正旦/.test(s)) return 'qy';
-      if(/花旦|闺门旦|武旦/.test(s)) return 'hd';
-      if(/老旦/.test(s)) return 'ld';
-      if(/花脸|铜锤|架子花|净/.test(s)) return 'hl';
-      if(/彩旦|丑婆|丑/.test(s)) return 'cj';
-      if(/龙套/.test(s)) return 'lt';
-      return 'wm';
+      for (var i=0;i<ORD_ROLE_RULES.length;i++){ if (ORD_ROLE_RULES[i][1].test(s)) return ORD_ROLE_RULES[i][0]; }
+      return '前场';
+    }
+    var ORD_GROUP_OF = {
+      '文须生':'sheng', '武须生':'sheng', '小生':'sheng',
+      '丑角':'chou',
+      '大花脸':'jing', '二花脸':'jing',
+      '正旦':'dan', '小旦':'dan', '彩旦':'dan', '二架旦':'dan',
+      '门官':'erjia', '家院':'erjia',
+      '龙套':'juezi', '校尉':'juezi', '刀斧手':'juezi', '丫鬟':'juezi', '彩女':'juezi', '长随官':'juezi',
+      '帽箱':'houqin', '电工':'houqin', '前场':'houqin', '衣箱':'houqin', '剧务':'houqin',
+      '武场':'wuchang', '文场':'wenchang'
+    };
+    function _ordBucket(role){
+      return ORD_GROUP_OF[_ordStdRole(role)] || 'houqin';
     }
     var box = document.getElementById('dpCastBox');
     function _hx_ord(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
@@ -1306,9 +1385,11 @@
         var items = grp.ppl.map(function(p, idx){
           var sid = 'dp_'+grp.k+'_'+idx;
           var pName = String(p.name||'').replace(/（/g,'(').replace(/）/g,')');
-          var label = p.role ? (_hx_ord(p.name)+'<small style="color:#94a3b8;margin-left:6px;">'+_hx_ord(p.role)+'</small>') : _hx_ord(p.name);
+          // 演员6行显示标准角色；武场/文场保留原始乐器工种
+          var dispRole = (grp.k==='wuchang'||grp.k==='wenchang') ? (p.role||'') : (p.stdRole||p.role||'');
+          var label = dispRole ? (_hx_ord(p.name)+'<small style="color:#94a3b8;margin-left:6px;">'+_hx_ord(dispRole)+'</small>') : _hx_ord(p.name);
           return '<div class="dispatch-item">'
-            + '<input type="checkbox" class="dp-cb dispatch-cb" id="'+_hx_ord(sid)+'" name="dpCast['+_hx_ord(grp.k)+'][]" value="'+_hx_ord(pName)+'" data-dp-group="'+_hx_ord(grp.k)+'">'
+            + '<input type="checkbox" class="dp-cb dispatch-cb" id="'+_hx_ord(sid)+'" name="dpCast['+_hx_ord(grp.k)+'][]" value="'+_hx_ord(pName)+'" data-dp-group="'+_hx_ord(grp.k)+'" data-cast-group="'+_hx_ord(grp.n)+'" data-cast-role="'+_hx_ord(dispRole)+'">'
             + '<label for="'+_hx_ord(sid)+'" class="dispatch-label">'+label+'</label>'
             + '<input type="text" class="dispatch-note" placeholder="饰演/角色/备注（如：艾千/黄桂英/前场）" data-dp-note="'+_hx_ord(grp.k)+'|'+idx+'">'
             + '</div>';
@@ -1318,29 +1399,51 @@
         box.appendChild(card);
       });
       var allCb = document.querySelectorAll('#dpCastBox .dp-cb');
+      // 常用上场班底 = 演员 6 大行（不含武场/文场）；以结构化 data-dp-group 为唯一判定来源
+      var COMMON_GROUPS = ['sheng','chou','jing','dan','erjia','juezi'];
+      function isCommonCb(cb){ return COMMON_GROUPS.indexOf(cb.getAttribute('data-dp-group')) >= 0; }
+      function syncCommonBtn(){
+        var btn = document.getElementById('dpSelCommon');
+        if (!btn) return false;
+        var cbs = Array.prototype.slice.call(document.querySelectorAll('#dpCastBox .dp-cb')).filter(isCommonCb);
+        var allOn = cbs.length > 0 && cbs.every(function(cb){ return cb.checked; });
+        // 文案禁用「取消/关闭/派工」等词：会被站内 SuperPatch3/死按钮兜底按关键词截停
+        btn.textContent = allOn ? '↩️ 撤下常用班底' : '⚡ 一键派常用班底';
+        return allOn;
+      }
+      window.__dpSyncCommonBtn = syncCommonBtn;
       function recount(){
         var n = document.querySelectorAll('#dpCastBox .dp-cb:checked').length;
         var el = document.getElementById('dpSelCount');
         if (el) { el.textContent = '已选 '+n+' 人'; }
+        syncCommonBtn();
       }
       allCb.forEach(function(cb){ cb.addEventListener('change', recount); });
       if (!window.__dpCommonBound) {
         window.__dpCommonBound = 1;
         var btnCommon = document.getElementById('dpSelCommon');
-        if (btnCommon) btnCommon.addEventListener('click', function(){
-          document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){
-            var id = cb.id || '';
-            if (id.indexOf('dp_ls_')===0 || id.indexOf('dp_qy_')===0 || id.indexOf('dp_hl_')===0 || id.indexOf('dp_lt_')===0 || id.indexOf('dp_bd_')===0 || id.indexOf('dp_wm_')===0) cb.checked = true;
+        // 标记为「已真实绑定」，让站内死按钮兜底委托跳过，避免按文案关键词截停（20261002）
+        if (btnCommon) {
+          btnCommon.__bindDone = 1;
+          btnCommon.addEventListener('click', function(){
+            // 演员 6 组已全选→再次点击撤下常用班底；否则补齐 6 组（武场/文场保持手动勾选）
+            var turnOff = syncCommonBtn();
+            document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){
+              if (isCommonCb(cb)) cb.checked = !turnOff;
+            });
+            recount();
           });
-          recount();
-        });
+        }
         var btnClear = document.getElementById('dpClearAll');
-        if (btnClear) btnClear.addEventListener('click', function(){
+        if (btnClear) {
+          btnClear.__bindDone = 1;
+          btnClear.addEventListener('click', function(){
           document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){ cb.checked = false; });
           document.querySelectorAll('#dpCastBox input[data-dp-note]').forEach(function(i){ i.value=''; });
           var rmk = document.getElementById('dpRemark'); if (rmk) rmk.value='';
           recount();
-        });
+          });
+        }
       }
     }
     _renderDispatch();
@@ -1350,12 +1453,15 @@
         var seen = {};
         items.forEach(function(p){
           var name = p.name || p.performerName || '';
+          // 仅在岗人员可派工：停用/待审核/离职不进入候选（与花名册 isOn 同口径，20261002）
           if (!name || seen[name]) return;
+          if (p.status && p.status !== 'active') return;
           seen[name] = 1;
           var role = p.primaryRole || p.roleCategory || p.role || '';
-          var k = _ordBucket(role);
+          var std = _ordStdRole(role);
+          var k = ORD_GROUP_OF[std] || 'houqin';
           var g = ORD_GROUPS.filter(function(x){ return x.k===k; })[0];
-          if (g) g.ppl.push({ name:name, role:role });
+          if (g) g.ppl.push({ name:name, role:role, stdRole:std });
         });
         _renderDispatch();
       }).catch(function(){ /* 未登录时保持空态，不造假数据 */ });
@@ -2227,6 +2333,7 @@ function __pLog(module,event,extra){
     function _isPgContainer(el){
       try{
         if(!el || el.nodeType!==1) return false;
+        if(el.closest && el.closest('.sp-pg-toolbar-20260730,.pagination-toolbar')) return false;
         var tag = (el.tagName||'').toUpperCase();
         if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
         var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
@@ -2255,7 +2362,8 @@ function __pLog(module,event,extra){
     }
     function _buildPg(container){
       try{
-        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
+        if(container.hasAttribute('data-pg-built')||container.querySelector('.sp-pg-toolbar-20260730')) return; container.setAttribute('data-pg-built','1');
+        if(container.classList && (container.classList.contains('sp-pg-toolbar-20260730')||container.classList.contains('pagination-toolbar'))) return;
         var oldToolbar = container.querySelector('.pagination-toolbar');
         if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
         var st = _ensurePgState(container);
@@ -2270,6 +2378,7 @@ function __pLog(module,event,extra){
         if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
         var wrap = document.createElement('div');
         wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.setAttribute('data-pg-built','1');
         wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
         wrap.innerHTML = ''+
           '<button class="btn btn-sm" data-pg="first">首页</button>'+
@@ -2367,7 +2476,7 @@ function __pLog(module,event,extra){
     function _scanPagination(){
       try{
         var all = document.querySelectorAll('div,nav,section,span');
-        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
+        all.forEach(function(el){ if(el.hasAttribute('data-pg-built')) return; if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
         if(!document.getElementById('_pgPatchCSS20260730')){
           sty.id='_pgPatchCSS20260730';
@@ -2956,38 +3065,47 @@ try{
       rows.forEach(function(o){
         if (o.status === 'deleted' || o.status === 'refunded' && o.deletedAt) return;
         idx++;
-        var oid = String(o.id || o.orderNo || '');
+        var oid = String(o.orderNo || o.id || '');
+        var iid = String(o.id || oid);
         var status = o.status || 'draft';
         var statusBadge = self._statusBadge(status);
         var tr = document.createElement('tr');
-        tr.setAttribute('data-order-id', oid);
+        tr.setAttribute('data-order-id', iid);
         tr.setAttribute('data-status', status);
         var totalAmount = (o.totalAmount || 0).toLocaleString('zh-CN');
         var finalAmount = (o.finalAmount || o.totalAmount || 0).toLocaleString('zh-CN');
         var orderDate = o.orderDate ? String(o.orderDate).slice(0,10) : (o.createdAt ? String(o.createdAt).slice(0,10) : '—');
         var performanceStart = o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—';
+        // 演出日期倒计时提醒（提前10天）
+        var countdownHtml = '';
+        if (o.performanceStartDate) {
+          var perfDate = new Date(o.performanceStartDate);
+          var today = new Date(); today.setHours(0,0,0,0);
+          var diffDays = Math.ceil((perfDate - today) / (1000*60*60*24));
+          if (diffDays < 0) {
+            countdownHtml = '<span style="color:#94a3b8;font-size:.78rem;">已过期</span>';
+          } else if (diffDays === 0) {
+            countdownHtml = '<span style="color:#dc2626;font-weight:700;font-size:.78rem;">⏰ 今天演出</span>';
+          } else if (diffDays <= 3) {
+            countdownHtml = '<span style="color:#dc2626;font-weight:700;font-size:.78rem;">⏰ ' + diffDays + '天</span>';
+          } else if (diffDays <= 10) {
+            countdownHtml = '<span style="color:#ea580c;font-weight:600;font-size:.78rem;">⏰ ' + diffDays + '天</span>';
+          }
+        }
         tr.innerHTML =
           '<td><strong style="color:var(--primary);">' + self._escape(oid) + '</strong></td>' +
           '<td>' + self._escape(o.customerName || o.organization || '—') + '</td>' +
           '<td>' + self._escape(o.phone || '—') + '</td>' +
           '<td>' + self._escape(o.orderType || '—') + '</td>' +
           '<td>' + (o.performanceCount || 1) + ' 场</td>' +
-          '<td>' + self._escape(performanceStart) + '</td>' +
+          '<td>' + self._escape(performanceStart) + (countdownHtml ? '<br>' + countdownHtml : '') + '</td>' +
           '<td>' + self._escape(o.venueFullAddress || '—') + '</td>' +
           '<td>—</td>' +
           '<td>¥' + self._escape(totalAmount) + '</td>' +
           '<td><strong style="color:var(--primary-dark);">¥' + self._escape(finalAmount) + '</strong></td>' +
           '<td><span class="badge ' + statusBadge.cls + '">' + self._escape(statusBadge.text) + '</span></td>' +
           '<td>' + (o.createdAt ? String(o.createdAt).slice(0,16).replace('T',' ') : '—') + '</td>' +
-          '<td><div class="admin-table-actions" data-order-row="' + oid + '">' +
-            '<button class="btn btn-secondary btn-sm" data-act="view" title="详情">👁 详情</button>' +
-            '<button class="btn btn-primary btn-sm" data-act="edit" title="编辑">✏️ 编辑</button>' +
-            '<button class="btn btn-gold btn-sm" data-act="dispatch" title="派工">📋 派工</button>' +
-            '<button class="btn btn-success btn-sm" data-act="confirm" title="确认">✅ 确认</button>' +
-            '<button class="btn btn-info btn-sm" data-act="to-show" title="转演出">🎬 转演出</button>' +
-            '<button class="btn btn-danger btn-sm" data-act="cancel" title="取消">❌ 取消</button>' +
-            '<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" data-act="del" title="删除">🗑️</button>' +
-          '</div></td>';
+          '<td><div class="admin-table-actions" data-order-row="' + iid + '">' + self._rowActionBtns(o) + '</div></td>';
         tbody.appendChild(tr);
       });
       try {
@@ -2998,6 +3116,31 @@ try{
       if (!idx) {
         tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:30px;color:#999;">暂无订单数据（可在「新增订单」中创建第一条）</td></tr>';
       }
+    },
+
+    // v20261003 P3-6：操作按钮严格按订单状态（对齐后端 STATUS_FLOW）+ 角色生成，杜绝死入口/必失败操作
+    _rowActionBtns: function(o){
+      var role = '';
+      try { role = (JSON.parse(localStorage.getItem('qaxqjt_admin_session')) || {}).role || ''; } catch(_){}
+      var st = o.status, btns = [];
+      function add(act, label, style, title){ btns.push('<button class="' + style + '" data-act="' + act + '" title="' + (title||label) + '">' + label + '</button>'); }
+      add('view', '👁 详情', 'btn btn-secondary btn-sm');
+      if (st === 'draft' || st === 'confirmed' || st === 'partial_paid') {
+        add('edit', '✏️ 编辑', 'btn btn-primary btn-sm');
+        add('pay', '💰 收款', 'btn btn-sm', '登记收款（流水+台账）');
+      }
+      if (st === 'paid' || st === 'confirmed' || st === 'partial_paid' || st === 'performance') {
+        add('dispatch', '📋 派工', 'btn btn-gold btn-sm');
+      }
+      if (st === 'draft') add('confirm', '✅ 确认', 'btn btn-success btn-sm');
+      if (st === 'confirmed' || st === 'partial_paid' || st === 'paid') add('to-show', '🎬 转演出', 'btn btn-info btn-sm');
+      if (st === 'draft' || st === 'confirmed' || st === 'partial_paid' || st === 'performance') add('cancel', '❌ 取消', 'btn btn-danger btn-sm');
+      // 删除仅 super_admin（后端 DELETE 仅 super_admin）；仅 draft/cancelled 状态
+      if (role === 'super_admin' && (st === 'draft' || st === 'cancelled')) {
+        btns.push('<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" data-act="del" title="删除">🗑️</button>');
+      }
+      // 收款按钮橙色样式（最后统一替换 class，避免 btn-warning 不存在）
+      return btns.join('').split('class="btn btn-sm" data-act="pay"').join('class="btn btn-sm" style="background:#f59e0b;color:#fff;border:none;padding:6px 10px;" data-act="pay"');
     },
 
     _statusBadge: function(status){
@@ -3020,11 +3163,11 @@ try{
         var resp = await QAXQJT_API.get('/v1/orders', { query: { page: 1, pageSize: 500 } });
         var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
         if (!rows.length) { this._toast('⚠️ 没有可导出的订单', 'warning'); return; }
-        var csv = ['订单ID,客户名称,联系电话,演出类型,场次,演出开始,演出地点,订单金额,实付金额,状态,下单时间'];
+        var csv = ['订单号,客户名称,联系电话,演出类型,场次,演出开始,演出地点,订单金额,实付金额,状态,下单时间'];
         var self = this;
         rows.forEach(function(o){
           var cells = [
-            String(o.id || o.orderNo || ''),
+            String(o.orderNo || o.id || ''),
             String(o.customerName || o.organization || ''),
             String(o.phone || ''),
             String(o.orderType || ''),
@@ -3078,6 +3221,8 @@ try{
         document.getElementById('editVenueFullAddress').value = '';
         document.getElementById('editSpecialRequirements').value = '';
         document.getElementById('editInternalRemark').value = '';
+        // v20261003 P2-2：新建模式清空派工 JSON 暂存与提示
+        try { document.getElementById('orderEditForm').dataset.dispatchJson = ''; var __h0 = document.getElementById('editRemarkHint'); if (__h0) { __h0.style.display = 'none'; __h0.textContent = ''; } } catch(_){}
       } catch(_){}
       // 切换标题为"新建订单"
       try {
@@ -3086,8 +3231,8 @@ try{
         var submitBtn = modal.querySelector('button[type="submit"]');
         if (submitBtn) submitBtn.innerHTML = '➕ 创建订单';
       } catch(_){}
-      overlay.classList.remove('csp-hide');
-      modal.classList.remove('csp-hide');
+      overlay.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); overlay.style.display='';
+      modal.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); modal.style.display='';
       try { document.body.classList.add('body-modal-locked'); } catch(_){}
       try { document.getElementById('editCustomerName').focus(); } catch(_){}
     },
@@ -3146,8 +3291,8 @@ try{
         var h3 = modal.querySelector('.modal-header h3, .modal-header h2');
         if (h3) h3.textContent = '📋 订单详情：' + (o.id || id);
         // 显示
-        overlay.classList.remove('csp-hide');
-        modal.classList.remove('csp-hide');
+        overlay.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); overlay.style.display='';
+        modal.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); modal.style.display='';
         try { document.body.classList.add('body-modal-locked'); } catch(_){}
       } catch(e) {
         console.warn('[viewDetail] id=' + id, e);
@@ -3176,7 +3321,20 @@ try{
         if (o.performanceEndDate) document.getElementById('editPerformanceEndDate').value = String(o.performanceEndDate).slice(0,10);
         document.getElementById('editVenueFullAddress').value = o.venueFullAddress || '';
         document.getElementById('editSpecialRequirements').value = o.specialRequirements || '';
-        document.getElementById('editInternalRemark').value = o.internalRemark || '';
+        // v20261003 P2-2：派工 JSON 与普通备注分离——已派工订单仅回填派工备注，原始 JSON 暂存 form.dataset，保存时合并回写，防止互相覆盖
+        var __dispObj = null, __dispRaw = '';
+        try { var __tmp = JSON.parse(o.internalRemark || ''); if (__tmp && __tmp.type === 'dispatch') { __dispObj = __tmp; __dispRaw = o.internalRemark; } } catch(_){}
+        try { document.getElementById('orderEditForm').dataset.dispatchJson = __dispRaw; } catch(_){}
+        document.getElementById('editInternalRemark').value = __dispObj ? (__dispObj.remark || '') : (o.internalRemark || '');
+        try {
+          var __hint = document.getElementById('editRemarkHint');
+          if (__hint) {
+            if (__dispObj) {
+              __hint.style.display = '';
+              __hint.textContent = '🎬 该订单已派工（' + (__dispObj.count || (__dispObj.people || []).length) + ' 人），此处编辑派工备注' + (__dispObj.prevRemark ? '；派工前备注：' + __dispObj.prevRemark : '');
+            } else { __hint.style.display = 'none'; __hint.textContent = ''; }
+          }
+        } catch(_){}
         // 切换标题为"编辑订单"
         try {
           var titleEl = modal.querySelector('h3');
@@ -3184,8 +3342,8 @@ try{
           var submitBtn = modal.querySelector('button[type="submit"]');
           if (submitBtn) submitBtn.innerHTML = '💾 保存修改';
         } catch(_){}
-        overlay.classList.remove('csp-hide');
-        modal.classList.remove('csp-hide');
+        overlay.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); overlay.style.display='';
+        modal.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); modal.style.display='';
         try { document.body.classList.add('body-modal-locked'); } catch(_){}
       } catch(e) {
         this._toast('⚠️ 加载订单失败：' + (e && e.message ? e.message : e), 'error');
@@ -3212,6 +3370,23 @@ try{
       if (sd) body.performanceStartDate = sd;
       if (ed) body.performanceEndDate = ed;
       body.finalAmount = body.totalAmount - body.discountAmount;
+      // v20261003 P3-9：金额勾稽前端预校验，给出即时可读提示（后端仍有最终校验）
+      if (!(body.totalAmount >= 0)) { this._toast('⚠️ 订单金额无效，请输入 ≥0 的数字', 'warning'); return; }
+      if (body.discountAmount > body.totalAmount) { this._toast('⚠️ 折扣金额 ¥' + body.discountAmount + ' 不能大于订单总额 ¥' + body.totalAmount, 'warning'); return; }
+      if (body.finalAmount < 0) { this._toast('⚠️ 应付金额不能为负数（总额-折扣）', 'warning'); return; }
+      if (body.paidAmount < 0) { this._toast('⚠️ 已付金额不能为负数', 'warning'); return; }
+      if (body.paidAmount - body.finalAmount > 0.001) { this._toast('⚠️ 已付金额 ¥' + body.paidAmount + ' 不能大于应付金额 ¥' + body.finalAmount, 'warning'); return; }
+      // v20261003 P2-2：已派工订单——文本框内容合并回派工 JSON 的 remark 字段，不覆盖派工名单
+      try {
+        var __dj = (document.getElementById('orderEditForm').dataset || {}).dispatchJson || '';
+        if (__dj) {
+          var __dd = JSON.parse(__dj);
+          if (__dd && __dd.type === 'dispatch') {
+            __dd.remark = document.getElementById('editInternalRemark').value.trim();
+            body.internalRemark = JSON.stringify(__dd);
+          }
+        }
+      } catch(_){}
       try {
         if (id) {
           // 编辑模式
@@ -3219,8 +3394,7 @@ try{
           this._toast('✅ 订单已更新', 'success');
         } else {
           // 新建模式
-          body.orderDate = new Date().toISOString().slice(0,10);
-          body.status = 'draft';
+          // v20261003 P3-10：不再传 UTC 日期串（东八区凌晨会差一天），orderDate 由后端按服务器当前时刻默认
           var resp = await QAXQJT_API.post('/v1/orders', body);
           this._toast('✅ 订单已创建' + (resp && resp.id ? '（ID: ' + resp.id + '）' : ''), 'success');
         }
@@ -3263,15 +3437,71 @@ try{
               } catch(_) { rmk.value = String(o.internalRemark).slice(0, 500); }
             }
           }
-          // 重置勾选
+          // v20261003 P2-2：暂存派工前的普通备注，saveDispatch 时收进派工 JSON，防止被覆盖丢失
+          try {
+            var __rawRmk = String(o.internalRemark || '').trim();
+            var __prev = '';
+            if (__rawRmk) {
+              try {
+                var __ej = JSON.parse(__rawRmk);
+                __prev = (__ej && __ej.type === 'dispatch') ? (__ej.prevRemark || '') : __rawRmk;
+              } catch(_) { __prev = __rawRmk; }
+            }
+            modal.dataset.prevRemark = __prev;
+          } catch(_){}
+          // 重置勾选与每人备注
           document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){ cb.checked = false; });
+          document.querySelectorAll('#dpCastBox input[data-dp-note]').forEach(function(i){ i.value = ''; });
           var sc = document.getElementById('dpSelCount'); if (sc) sc.textContent = '已选 0 人';
+          // 回显上次已保存的派工名单（internalRemark JSON；兼容旧版 localStorage 双写 qaxqjt_dispatch_data_v1）
+          var savedPeople = [];
+          if (o.internalRemark) {
+            try {
+              var parsed = JSON.parse(o.internalRemark);
+              if (parsed && Array.isArray(parsed.people)) savedPeople = parsed.people;
+            } catch(_) {}
+          }
+          if (!savedPeople.length) {
+            try {
+              var legacyDb = JSON.parse(localStorage.getItem('qaxqjt_dispatch_data_v1') || '{}');
+              var lv = legacyDb[no] || legacyDb[String(o.id || id)];
+              if (lv && Array.isArray(lv.people)) savedPeople = lv.people;
+            } catch(_) {}
+          }
+          if (savedPeople.length) {
+            // 候选名单异步加载，必要时等其渲染（最多 5 秒）
+            for (var w = 0; w < 25 && !document.querySelector('#dpCastBox .dp-cb'); w++) {
+              await new Promise(function(res){ setTimeout(res, 200); });
+            }
+            var missing = [];
+            savedPeople.forEach(function(sp){
+              var nm = String(sp.name || '').trim();
+              if (!nm) return;
+              var matched = null;
+              document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){
+                if (matched) return;
+                if (String(cb.value || '').trim() !== nm) return;
+                // 保存了组键时按组精确匹配，避免同名串组
+                if (sp.group && cb.getAttribute('data-dp-group') !== sp.group) return;
+                matched = cb;
+              });
+              if (!matched) { missing.push(nm); return; }
+              matched.checked = true;
+              var wrap = matched.closest ? matched.closest('.dispatch-item') : null;
+              var noteInp = wrap ? wrap.querySelector('input[data-dp-note]') : null;
+              if (noteInp && sp.note) noteInp.value = sp.note;
+            });
+            var pickedN = document.querySelectorAll('#dpCastBox .dp-cb:checked').length;
+            if (sc) sc.textContent = '已选 ' + pickedN + ' 人';
+            if (typeof window.__dpSyncCommonBtn === 'function') window.__dpSyncCommonBtn();
+            if (missing.length) this._toast('⚠️ 已保存名单中 '+missing.length+' 人因停用/调离/删除未在候选：' + missing.join('、'), 'warning', 4200);
+          }
         } catch(_){}
       } catch(e) {
         this._toast('⚠️ 加载订单失败：' + (e && e.message ? e.message : e), 'error');
       }
-      overlay.classList.add('active'); overlay.classList.remove('csp-hide','modal-overlay-hide'); overlay.style.display='';
-      modal.classList.add('active'); modal.classList.remove('csp-hide','modal-wrap-hide'); modal.style.display='';
+      overlay.classList.add('active'); overlay.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); overlay.style.display='';
+      modal.classList.add('active'); modal.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); modal.style.display='';
       try { document.body.classList.add('body-modal-locked'); } catch(_){}
     },
 
@@ -3293,15 +3523,13 @@ try{
           var cb = nodes[i];
           var nm = (cb.value || '').trim();
           var grp = cb.getAttribute('data-dp-group') || '';
-          var noteInput = document.querySelector('#dpCastBox input[data-dp-note="'+grp+'|'+i+'"]');
-          // 通过 cb 的 id 找到对应的备注输入框：dp_<grp>_<idx>
-          var sid = cb.id || '';
-          var mIdx = sid.match(/_(\d+)$/);
-          if (!noteInput && mIdx) {
-            noteInput = document.querySelector('#dpCastBox input[data-dp-note="'+grp+'|'+mIdx[1]+'"]');
-          }
+          // 备注框与复选框同处一个 .dispatch-item，直接按行定位，避免全局选中序号与组内序号错位
+          var itemWrap = cb.closest ? cb.closest('.dispatch-item') : null;
+          var noteInput = itemWrap ? itemWrap.querySelector('input[data-dp-note]') : null;
           var note = noteInput ? (noteInput.value || '').trim() : '';
-          if (nm) people.push({ name: nm, group: grp, note: note });
+          var stdRoleName = cb.getAttribute('data-cast-role') || '';
+          var groupName = cb.getAttribute('data-cast-group') || '';
+          if (nm) people.push({ name: nm, group: grp, groupName: groupName, role: stdRoleName, note: note });
         }
       } catch(_) {}
       if (people.length < 4) {
@@ -3319,6 +3547,8 @@ try{
         people: people,
         savedBy: 'admin'
       };
+      // v20261003 P2-2：保留派工前的普通备注，避免被派工 JSON 覆盖丢失
+      try { var __pr = (modal.dataset && modal.dataset.prevRemark) || ''; if (__pr) dispatchData.prevRemark = __pr; } catch(_){}
       this._dpSaveLock = true;
       try {
         await QAXQJT_API.patch('/v1/orders/' + encodeURIComponent(id), {
@@ -3358,7 +3588,14 @@ try{
 
     deleteOrder: async function(id){
       if (!id) return;
-      if (!confirm('确认删除订单 ' + id + '？\n此操作不可撤销（仅删除订单，不删除支付流水）。')) return;
+      var no = id;
+      try {
+        var rows = (this.state && this.state.list) || [];
+        for (var i = 0; i < rows.length; i++) {
+          if (String((rows[i] || {}).id || '') === String(id)) { no = rows[i].orderNo || id; break; }
+        }
+      } catch(_) {}
+      if (!confirm('确认删除订单 ' + no + '？\n此操作不可撤销（仅删除订单，不删除支付流水）。')) return;
       try {
         await QAXQJT_API.del('/v1/orders/' + encodeURIComponent(id));
         this._toast('✅ 订单已删除', 'success');
@@ -3367,6 +3604,68 @@ try{
         console.warn('[deleteOrder] id=' + id, e);
         this._toast('⚠️ 删除失败：' + (e && e.message ? e.message : e), 'error');
       }
+    },
+
+    // ====== v20261003 P3-8：收款登记弹窗（替代只能改 paidAmount 的粗糙方式） ======
+    openPayment: async function(id){
+      if (!id) return;
+      var modal = document.getElementById('paymentModal');
+      var overlay = document.getElementById('paymentOverlay');
+      if (!modal || !overlay) { this._toast('⚠️ 收款弹窗未找到', 'warning'); return; }
+      try {
+        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
+        if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
+        modal.dataset.orderId = o.id || id;
+        var paid = Number(o.paidAmount || 0), finalV = Number(o.finalAmount || 0);
+        var remain = Math.round((finalV - paid) * 100) / 100;
+        document.getElementById('payInfo').innerHTML =
+          '订单 <b>' + this._escape(o.orderNo || id) + '</b>｜客户：' + this._escape(o.customerName || '')
+          + '<br>应付 <b>¥' + finalV.toFixed(2) + '</b> 已收 ¥' + paid.toFixed(2) + ' 尾款 <b style="color:#b45309;">¥' + remain.toFixed(2) + '</b>';
+        var amt = document.getElementById('payAmount');
+        amt.value = remain > 0 ? remain : '';
+        document.getElementById('payChannel').value = 'transfer';
+        document.getElementById('payDate').value = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+        document.getElementById('payRemark').value = '';
+        overlay.classList.remove('csp-hide', 'modal-overlay-hide', 's-overlay-hide'); overlay.style.display = '';
+        modal.classList.remove('csp-hide', 'modal-wrap-hide', 's-modal-hide'); modal.style.display = '';
+        document.body.classList.add('body-modal-locked');
+        setTimeout(function(){ try { amt.focus(); } catch(_){} }, 200);
+      } catch(e) {
+        this._toast('⚠️ 加载订单失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    closePayment: function(){
+      try {
+        document.getElementById('paymentOverlay').classList.add('csp-hide');
+        document.getElementById('paymentModal').classList.add('csp-hide');
+        document.body.classList.remove('body-modal-locked');
+      } catch(_){}
+    },
+
+    savePayment: async function(){
+      var modal = document.getElementById('paymentModal');
+      var id = modal.dataset.orderId || '';
+      if (!id) { this._toast('⚠️ 未绑定订单', 'warning'); return; }
+      var amount = parseFloat(document.getElementById('payAmount').value);
+      if (!(amount > 0)) { this._toast('⚠️ 请输入大于 0 的收款金额', 'warning'); return; }
+      if (this._payLock) { this._toast('⏳ 收款提交中，请勿重复点击', 'warning'); return; }
+      var body = {
+        amount: Math.round(amount * 100) / 100,
+        payChannel: document.getElementById('payChannel').value,
+        payDate: document.getElementById('payDate').value,
+        remark: document.getElementById('payRemark').value.trim()
+      };
+      if (!body.payDate) delete body.payDate;
+      this._payLock = true;
+      try {
+        await QAXQJT_API.post('/v1/orders/' + encodeURIComponent(id) + '/payments', body);
+        this._toast('✅ 收款 ¥' + amount.toFixed(2) + ' 已登记（流水+台账凭证已生成）', 'success');
+        this.closePayment();
+        await this.load();
+      } catch(e) {
+        this._toast('⚠️ 收款失败：' + (e && e.message ? e.message : e), 'error');
+      } finally { this._payLock = false; }
     },
 
     _bindRowDelegation: function(){
@@ -3385,6 +3684,7 @@ try{
           try { e.stopImmediatePropagation(); e.stopPropagation(); } catch(_){}
           if (act === 'view') { self.viewDetail(id); }
           else if (act === 'edit') { self.editOrder(id); }
+          else if (act === 'pay') { self.openPayment(id); }
           else if (act === 'dispatch') { self.openDispatch(id); }
           else if (act === 'confirm') { self.transition(id, 'confirmed', ''); }
           else if (act === 'to-show') { self.transition(id, 'performance', ''); }
@@ -3416,6 +3716,29 @@ try{
           api.saveDispatch();
         }, true);
       }
+    } catch(_){}
+    // v20261003 P3-8：收款弹窗按钮绑定（保存走真实接口；关闭/取消收弹窗）
+    try {
+      var paySaveBtn = document.getElementById('paymentSave');
+      if (paySaveBtn && !paySaveBtn.__ordersApiBound) {
+        paySaveBtn.__ordersApiBound = 1;
+        paySaveBtn.__superPatchBound = 1; paySaveBtn.__ts3Done = 1;
+        paySaveBtn.addEventListener('click', function(e){
+          e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation();
+          api.savePayment();
+        }, true);
+      }
+      ['paymentClose', 'paymentCancel'].forEach(function(bid){
+        var b = document.getElementById(bid);
+        if (b && !b.__ordersApiBound) {
+          b.__ordersApiBound = 1;
+          b.__superPatchBound = 1; b.__ts3Done = 1;
+          b.addEventListener('click', function(e){
+            e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation();
+            api.closePayment();
+          }, true);
+        }
+      });
     } catch(_){}
     /* 真实统计卡片：GET /v1/orders/stats */
     (async function(){
@@ -3510,5 +3833,6 @@ try{
   }
 })();
 </script>
+<script src="../js/admin-mobile-sidebar.js?v=20260926m"></script>
 </body>
 </html>

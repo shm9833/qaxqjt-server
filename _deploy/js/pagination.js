@@ -123,18 +123,18 @@
     };
 
     var bar = this._renderBar(state);
-    // tbody 容器的分页条必须插到 <table> 外部：div 塞进 table 会被浏览器折叠成匿名单元格，
-    // 宽度只剩一列（如花名册复选框列 46px），分页条被挤成竖条不可用 → 插到 table 的后面
-    var refParent = container.parentNode;
-    var refNext = container.nextSibling;
-    if (container.tagName === 'TBODY' && refParent && refParent.tagName === 'TABLE' && refParent.parentNode) {
-      refParent = refParent.parentNode;
-      refNext = container.parentNode.nextSibling;
+    // 修复：container 是 tbody 时，bar 直接插入 table 内部会被表格布局算法压缩宽度，
+    // 需提升到 table 之后插入（保证分页栏获得完整块级宽度）
+    var insertAfter = container;
+    var insertParent = container.parentNode;
+    if (insertParent && insertParent.tagName === 'TABLE') {
+      insertAfter = insertParent;
+      insertParent = insertParent.parentNode;
     }
-    if (refNext) {
-      refParent.insertBefore(bar, refNext);
+    if (insertAfter.nextSibling) {
+      insertParent.insertBefore(bar, insertAfter.nextSibling);
     } else {
-      refParent.appendChild(bar);
+      insertParent.appendChild(bar);
     }
     state.bar = bar;
 
@@ -186,6 +186,16 @@
         '</div>' +
         '<div class="page-info" data-page-info></div>' +
       '</div>';
+
+    /* v20260926b 防首次点击被页面兜底脚本（SuperPatch 6/6 等 document 捕获监听）劫持：
+       bar 内静态按钮（上一页/下一页）立即打早退标记，_hasAction/__btnHasBound 均认 */
+    try {
+      var __bb = bar.querySelectorAll('button');
+      for (var __bi = 0; __bi < __bb.length; __bi++) {
+        if (!__bb[__bi].__superPatchBound) __bb[__bi].__superPatchBound = 1;
+        if (!__bb[__bi].__deadBtnChecked) __bb[__bi].__deadBtnChecked = 1;
+      }
+    } catch (_bm) {}
 
     var self = this;
     function getTotalPages(st) {
@@ -467,6 +477,8 @@
       } else {
         var btn = document.createElement('button');
         btn.type = 'button';
+        /* v20260926b 防首次点击被兜底脚本劫持：立即打早退标记 */
+        btn.__superPatchBound = 1; btn.__deadBtnChecked = 1;
         btn.className = 'page-btn' + (p === cur ? ' active' : '');
         btn.setAttribute('data-page-num', String(p));
         btn.textContent = String(p);
@@ -530,15 +542,4 @@
   } else {
     setTimeout(function () { instance.initAll(); }, 0);
   }
-
-  // bfcache 恢复时重置分页到第1页（防止后退/返回残留分页状态导致空白页）
-  window.addEventListener('pageshow', function (event) {
-    if (event.persisted && instance._instances.length) {
-      for (var i = 0; i < instance._instances.length; i++) {
-        instance._instances[i].currentPage = 1;
-        instance._instances[i].searchKeyword = '';
-      }
-      instance.refreshAll();
-    }
-  });
 })(typeof window !== 'undefined' ? window : this);

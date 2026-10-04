@@ -7,6 +7,8 @@
  *   2. OPTIONS 请求在 onRequest 内通过 method 判断处理
  *   3. request.body 不能直接透传，需 await request.arrayBuffer() 读取
  *   4. 响应体用 await resp.text() 而非 resp.body stream
+ *   5. multipart/form-data 文件上传支持：透传 Content-Type（含 boundary）
+ *   6. 二进制响应（/uploads/* 文件下载）用 arrayBuffer() 而非 text()
  */
 const DEFAULT_BACKEND_URL = 'http://1.14.106.173:3001';
 
@@ -18,8 +20,16 @@ const FORWARD_REQUEST_HEADERS = [
 
 const FORWARD_RESPONSE_HEADERS = [
   'content-type', 'cache-control', 'etag', 'last-modified',
-  'x-trace-id', 'x-total-count', 'x-request-id', 'set-cookie', 'vary'
+  'x-trace-id', 'x-total-count', 'x-request-id', 'set-cookie', 'vary',
+  'content-length', 'content-disposition'
 ];
+
+// 二进制响应路径（文件下载）
+const BINARY_PATHS = ['/uploads/'];
+
+function _isBinaryPath(pathname) {
+  return BINARY_PATHS.some(p => pathname.startsWith(p));
+}
 
 export const onRequest = async (context) => {
   const { request, env } = context;
@@ -57,7 +67,7 @@ export const onRequest = async (context) => {
 
   const backendUrl = backendOrigin + backendPath + search;
 
-  // 构造转发请求头
+  // 构造转发请求头（multipart/form-data 必须透传 boundary）
   const reqHeaders = new Headers();
   FORWARD_REQUEST_HEADERS.forEach((h) => {
     const v = request.headers.get(h);
@@ -74,6 +84,7 @@ export const onRequest = async (context) => {
   };
   if (hasBody) {
     // EdgeOne V8 isolate 中 request.body 不能直接透传，需先读取为 ArrayBuffer
+    // multipart/form-data 的 boundary 在 Content-Type header 中已透传
     init.body = await request.arrayBuffer();
   }
 
@@ -106,8 +117,13 @@ export const onRequest = async (context) => {
   respHeaders.set('x-edge-proxy', 'qaxqjt-api');
   respHeaders.set('x-edge-backend', backendOrigin);
 
-  // 用 text() 而非 body stream，避免 V8 isolate 中流消费超时
-  const respBody = await backendResp.text();
+  // 文件下载路径用 arrayBuffer 保持二进制，其他用 text
+  let respBody;
+  if (_isBinaryPath(backendPath)) {
+    respBody = await backendResp.arrayBuffer();
+  } else {
+    respBody = await backendResp.text();
+  }
 
   return new Response(respBody, {
     status: backendResp.status,

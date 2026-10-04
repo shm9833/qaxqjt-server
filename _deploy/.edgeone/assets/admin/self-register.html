@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="format-detection" content="telephone=no" />
   <title>演职人员入职登记 - 秦安县秦剧团</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260919c">
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <script src="../js/api-config.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -154,11 +154,24 @@
       <p>演职人员入职登记表</p>
     </div>
 
+    <!-- Tab 切换 -->
+    <div class="tabs" style="display:flex;gap:0;margin-bottom:0;border-radius:10px 10px 0 0;overflow:hidden;">
+      <button id="tabRegister" class="tab-btn active" style="flex:1;padding:14px;border:none;background:#8b0000;color:#fff;font-size:15px;font-weight:600;cursor:pointer;">📝 入职登记</button>
+      <button id="tabStatus" class="tab-btn" style="flex:1;padding:14px;border:none;background:#f5f0e8;color:#8b0000;font-size:15px;font-weight:600;cursor:pointer;">🔍 审核查询</button>
+    </div>
+
     <!-- 表单 -->
-    <div id="formCard" class="card">
+    <div id="formCard" class="card" style="border-radius:0 0 10px 10px;">
+      <div id="formError" style="display:none;background:#ffebee;color:#c62828;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:14px;line-height:1.5;border:1px solid #ffcdd2;"></div>
       <div class="field">
         <label>姓名 <span class="req">*</span></label>
         <input type="text" id="name" placeholder="请输入真实姓名" maxlength="20" />
+      </div>
+
+      <div class="field">
+        <label>身份证号 <span class="req">*</span></label>
+        <input type="text" id="idCardNo" placeholder="请输入18位身份证号" maxlength="18" style="letter-spacing:1px;" />
+        <small style="display:block;margin-top:4px;font-size:12px;color:#8a6d3b;">用于身份核验与工资发放，系统将自动查重，同一身份证不可重复登记</small>
       </div>
 
       <div class="row">
@@ -180,17 +193,27 @@
         <label>行当 / 岗位</label>
         <select id="primaryRole">
           <option value="">请选择（选填）</option>
-          <optgroup label="演员行当">
-            <option>花脸</option><option>二花脸</option><option>青衣</option><option>正旦</option>
-            <option>小旦</option><option>须生</option><option>小生</option><option>丑</option>
-            <option>二架男</option><option>二架女</option><option>彩女</option><option>龙套</option>
+          <optgroup label="生行"><option>文须生</option><option>武须生</option><option>小生</option></optgroup>
+          <optgroup label="丑行"><option>丑角</option></optgroup>
+          <optgroup label="净行"><option>大花脸</option><option>二花脸</option></optgroup>
+          <optgroup label="旦行"><option>正旦</option><option>小旦</option><option>彩旦</option><option>二架旦</option></optgroup>
+          <optgroup label="二架"><option>门官</option><option>家院</option></optgroup>
+          <optgroup label="角子">
+            <option>龙套</option><option>校尉</option><option>刀斧手</option>
+            <option>丫鬟</option><option>彩女</option><option>长随官</option>
           </optgroup>
-          <optgroup label="乐队">
-            <option>板胡</option><option>司鼓</option><option>二胡</option>
-            <option>文二手</option><option>武二手</option>
+          <optgroup label="后勤">
+            <option>帽箱</option><option>电工</option><option>前场</option>
+            <option>衣箱</option><option>剧务</option>
           </optgroup>
-          <optgroup label="舞美">
-            <option>电工</option><option>服装</option><option>化妆</option><option>道具</option>
+          <optgroup label="武场（打击乐）">
+            <option>司鼓</option><option>梆子</option><option>大锣</option>
+            <option>铙钹</option><option>武二手</option><option>打击乐</option>
+          </optgroup>
+          <optgroup label="文场（管弦）">
+            <option>板胡</option><option>二胡</option><option>扬琴</option>
+            <option>琵琶</option><option>三弦</option><option>笛子</option>
+            <option>唢呐</option><option>文二手</option>
           </optgroup>
           <option value="其他">其他</option>
         </select>
@@ -221,18 +244,32 @@
         <summary>📋 《秦安县秦剧团员工管理条例》（点击展开阅读）</summary>
         <div class="content">
           <p><strong>第一条 总则</strong></p>
-          <p>本条例适用于秦安县秦剧团全体演职人员。所有人员应遵守国家法律法规，恪守职业道德，维护剧团声誉。</p>
-          <p><strong>第二条 考勤与演出</strong></p>
-          <p>演职人员须按时参加排练、演出，不得无故迟到、早退、旷工。因故不能参加须提前请假并获批准。</p>
+          <p>本条例适用于秦安县秦剧团全体演职人员，包括正式职工、聘用人员及临时参演人员。演职人员必须严格遵守国家法律法规、行业规章及剧团各项规章制度，恪守职业道德，自觉维护剧团声誉与利益。凡违反本条例者，一律依规依纪严肃追究，绝不姑息。</p>
+          <p><strong>第二条 考勤与演出纪律</strong></p>
+          <p>（一）演职人员必须严格遵守考勤纪律，按剧团通知准时参加排练、合成、彩排、演出及各项集体活动。迟到或早退30分钟以内的，每次罚款20元，当月罚款从本人工资或演出补贴中直接扣除；迟到或早退超过30分钟的，按旷工半天论处，扣减当日一半工资。</p>
+          <p>（二）每人每月事假不得超过2次、累计不得超过2天，且必须事先按规定提交书面请假申请，经批准后方可休假；确因重病、婚丧等特殊情况超出限额的，须报经团长特批。凡未请假、请假未获批准或超假不归的，一律按旷工处理。</p>
+          <p>（三）旷工半天的扣减当日全部工资并给予警告；旷工1天的扣减两日工资并通报批评；当月累计旷工2天或全年累计旷工3次以上的，剧团有权予以解聘，已安排的演出补贴不予发放。严禁以任何形式顶替考勤、代签代打卡，违者对当事双方一并严肃处理。</p>
           <p><strong>第三条 薪酬与补贴</strong></p>
-          <p>薪酬按协议约定执行，演出补贴、路费等按团内规定标准发放。协议工资以双方确认为准。</p>
+          <p>薪酬严格按双方书面协议约定及剧团薪酬制度执行，演出补贴、交通补贴等一律按团内核定标准发放，任何人不得虚报冒领、重复领取。考勤及演出任务完成情况作为薪酬核算的唯一依据；弄虚作假者，除全额追缴违规所得外，依规严肃处理。</p>
           <p><strong>第四条 行为规范</strong></p>
-          <p>演职人员应团结协作、服从安排，认真完成各项演出任务。严禁饮酒后演出、罢演、闹场等行为。</p>
+          <p>（一）演职人员必须服从剧团统一管理和导演、舞台监督、剧务的现场调度，按通知准时参加排练、合成、彩排和演出，不得挑拣角色、推诿任务或拒不接受角色及岗位安排。</p>
+          <p>（二）演出当日必须提前到场，按规定完成化妆、着装、道具检查和候场准备；叫场必到、候场不离岗，严禁因个人原因延误开场或造成空场、误场。演出结束须统一参加谢幕，未经允许不得提前卸妆离场。</p>
+          <p>（三）演出期间手机必须关机或调至静音，严禁在舞台、侧台、后台接打电话、玩手机；严禁在演出和候场区域饮食、吸烟、饮酒、会客、带无关人员进入后台，或做与演出无关的事情。</p>
+          <p>（四）必须严肃台风、尊重观众，严格按排练要求完成唱念做打和调度配合，不得临场随意改词、加戏、笑场、懈场，不得在台上做出打哈欠、看手表、交头接耳等损害演出质量的行为。</p>
+          <p>（五）妥善使用和保管配发的戏装、头饰、道具、乐器及设备，因保管不善或违规使用造成损坏、丢失的，照价赔偿；严禁私自外借、挪用、私藏剧团财物。</p>
+          <p>（六）严禁罢演、闹场、临阵退出、酒后或服用影响演出安全的药物后登台，严禁顶撞、辱骂管理人员，严禁在台前幕后打架斗殴、寻衅滋事或煽动他人集体对抗剧团管理。违反者立即停止演出任务，扣减本人当月全部演出补贴并予以通报批评；造成演出事故、经济损失或恶劣影响的，责令赔偿并予以解聘；构成违法犯罪的，移交司法机关处理。</p>
           <p><strong>第五条 保密义务</strong></p>
-          <p>不得泄露剧团内部经营信息、演出合同、客户资料等商业秘密。</p>
-          <p><strong>第六条 离职交接</strong></p>
-          <p>离职须提前告知并办妥交接手续，归还团内财物。</p>
-          <p style="color:#8b0000;margin-top:8px;">本条例最终解释权归秦安县秦剧团所有。</p>
+          <p>演职人员对剧团经营信息、财务数据、演出合同、客户资料、未公开剧目及内部文件等负有严格保密义务，不得以任何方式泄露、传播、私自留存或用于个人牟利。保密义务在聘用期间及离职后持续有效；违反者除赔偿全部损失外，剧团保留依法追究其法律责任的权利。</p>
+          <p><strong>第六条 安全责任</strong></p>
+          <p>（一）演职人员必须牢固树立"安全第一、预防为主"意识，严格执行舞台演出、用电消防、交通出行等安全管理制度和操作规程，对本岗位安全负直接责任；剧团组织的安全培训和应急演练必须参加，不得拒绝。</p>
+          <p>（二）必须规范使用舞台机械、灯光音响、道具布景、幕布吊杆等设备设施，严禁私拉乱接电源、违规使用明火、在禁烟区域吸烟、堵塞消防通道。装台、彩排、演出、拆台期间发现安全隐患，必须立即报告现场负责人并处置，严禁设备带病运行、人员冒险作业。</p>
+          <p>（三）参加武打、特技、高空、升降台、焰火等高风险演出环节，必须按规定佩戴防护装备、落实防护措施，并无条件服从舞台监督统一指挥。严禁酒后、带病、疲劳或服用影响安全药物的人员参加演出及相关作业，现场负责人有权立即予以撤换。</p>
+          <p>（四）赴外地、下乡演出往返及物资运输，必须乘坐剧团统一安排的交通工具并遵守交通安全规定，严禁擅自驾驶、私自改乘无营运资质车辆、超速超载及疲劳驾驶。因个人违规导致事故的，责任自负。</p>
+          <p>（五）发生人身伤害、火灾、设备、交通等安全事故或险情，现场人员必须立即组织施救、保护现场，并第一时间向剧团负责人报告。严禁隐瞒不报、谎报、迟报或破坏现场，必须如实配合事故调查处理。</p>
+          <p>（六）因违反安全管理规定引发事故，或造成自身、他人人身伤害及剧团财产损失的，一律承担赔偿责任并给予纪律处分；构成违法犯罪的，移交司法机关依法追究刑事责任。</p>
+          <p><strong>第七条 离职交接</strong></p>
+          <p>演职人员离职必须提前书面告知剧团（临时聘用按协议约定期限执行），经批准后方可办理离职手续。离职前必须完成工作、剧目、财物、证件、资料等全部交接，归还借用的服装、道具、设备及其他团产；未办妥交接或给剧团造成损失的，剧团有权暂缓办理离职手续并追偿，其保密、安全等义务不因离职而免除。</p>
+          <p style="color:#8b0000;margin-top:8px;">本条例自发布之日起施行，最终解释权归秦安县秦剧团所有。</p>
         </div>
       </details>
 
@@ -249,7 +286,23 @@
       <div class="icon" id="resultIcon">✅</div>
       <h2 id="resultTitle">提交成功</h2>
       <p id="resultMsg">您的入职登记已提交，等待管理员审核。<br>审核通过后将正式入职，审核不通过会退回并告知原因。</p>
-      <p class="tip">请保持手机畅通，以便接收审核通知。</p>
+      <p class="tip">可切换到"🔍 审核查询"标签，输入手机号或身份证号查询审核结果。</p>
+    </div>
+
+    <!-- 审核查询卡片 -->
+    <div id="statusCard" class="card hidden" style="border-radius:0 0 10px 10px;">
+      <h3 style="color:#8b0000;margin:0 0 16px;font-size:17px;">🔍 查询审核结果</h3>
+      <p style="color:#666;font-size:13px;margin:0 0 16px;line-height:1.6;">输入您登记时填写的手机号或身份证号，即可查询审核进度和结果。</p>
+      <div class="field">
+        <label>手机号</label>
+        <input type="tel" id="qPhone" placeholder="登记时填写的手机号" maxlength="11" />
+      </div>
+      <div class="field">
+        <label>身份证号</label>
+        <input type="text" id="qIdCard" placeholder="或输入身份证号" maxlength="18" />
+      </div>
+      <button class="submit-btn" id="queryBtn" style="background:#8b0000;">查询审核结果</button>
+      <div id="queryResult" style="margin-top:20px;"></div>
     </div>
   </div>
 
@@ -270,20 +323,34 @@
         var t = $('toast');
         t.textContent = msg;
         t.className = 'toast ' + (type || 'success');
-        setTimeout(function () { t.className = 'toast'; }, 2500);
+        setTimeout(function () { t.className = 'toast'; }, 4000);
+      }
+      function showFormError(msg) {
+        var e = $('formError');
+        if (e) { e.textContent = msg; e.style.display = 'block'; }
+      }
+      function hideFormError() {
+        var e = $('formError');
+        if (e) { e.style.display = 'none'; }
       }
 
       btn.addEventListener('click', function () {
         var name = $('name').value.trim();
+        var idCardNo = ($('idCardNo').value || '').trim().toUpperCase();
         if (!name) { showToast('请填写姓名', 'error'); return; }
+        // 身份证号校验：18位，前17位数字，最后一位数字或X
+        if (!idCardNo) { showToast('请填写身份证号', 'error'); return; }
+        if (!/^\d{17}[\dX]$/.test(idCardNo)) { showToast('身份证号格式不正确（应为18位）', 'error'); return; }
         if (!cb.checked) { showToast('请先确认已阅读管理条例', 'error'); return; }
 
+        hideFormError();
         btn.disabled = true;
         btn.textContent = '提交中...';
 
         var dailyRateRaw = ($('dailyRate').value || '').trim();
         var payload = {
           name: name,
+          idCardNo: idCardNo,
           gender: $('gender').value || '',
           phone: $('phone').value.trim() || '',
           primaryRole: $('primaryRole').value || '',
@@ -293,27 +360,135 @@
           regulationsConfirmed: true
         };
 
-        var url = window.QAXQJT_API_CONFIG.resolveUrl('/v1/performers/self-register');
-        fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }).then(function (res) {
-          return res.json().then(function (data) { return { ok: res.ok, data: data }; });
-        }).then(function (r) {
-          if (r.ok && r.data && r.data.ok) {
+        var url = window.QAXQJT_API_CONFIG.resolveUrl('/v1/performers/self-register') + '?_=' + Date.now();
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Cache-Control', 'no-cache');
+        xhr.timeout = 20000;
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState !== 4) return;
+          var data = null;
+          try { data = JSON.parse(xhr.responseText); } catch (e) {}
+          var ok = xhr.status >= 200 && xhr.status < 300;
+          if (ok && data && data.ok) {
+            var isResubmit = data.data && data.data.resubmit;
+            $('resultTitle').textContent = isResubmit ? '重新提交成功' : '提交成功';
+            $('resultMsg').innerHTML = isResubmit
+              ? '您已修改资料并重新提交，等待管理员再次审核。'
+              : '您的入职登记已提交，等待管理员审核。<br>审核通过后将正式入职，审核不通过会退回并告知原因。';
             $('formCard').classList.add('hidden');
+            $('statusCard').classList.add('hidden');
             $('resultCard').classList.remove('hidden');
           } else {
-            var msg = (r.data && r.data.error && r.data.error.message) || '提交失败，请稍后重试';
+            var msg = '提交失败，请稍后重试';
+            if (xhr.status === 409) {
+              msg = (data && data.error && data.error.message) || '该身份证号已登记，不可重复提交';
+            } else if (xhr.status === 400) {
+              msg = (data && data.error && data.error.message) || '提交信息有误，请检查后重试';
+            } else if (data && data.error && data.error.message) {
+              msg = data.error.message;
+            } else if (xhr.status === 0) {
+              msg = '网络错误，请检查网络后重试';
+            }
+            showFormError(msg);
             showToast(msg, 'error');
             btn.disabled = false;
             btn.textContent = '提交登记';
           }
-        }).catch(function () {
-          showToast('网络错误，请检查网络后重试', 'error');
+        };
+        xhr.ontimeout = function () {
+          var msg = '请求超时，请稍后重试';
+          showFormError(msg);
+          showToast(msg, 'error');
           btn.disabled = false;
           btn.textContent = '提交登记';
+        };
+        xhr.onerror = function () {
+          var msg = '网络错误，请检查网络后重试';
+          showFormError(msg);
+          showToast(msg, 'error');
+          btn.disabled = false;
+          btn.textContent = '提交登记';
+        };
+        // 兜底：25秒后强制恢复按钮（防止任何意外导致卡死）
+        var watchdog = setTimeout(function () {
+          if (btn.textContent === '提交中...') {
+            btn.disabled = false;
+            btn.textContent = '提交登记';
+            showFormError('请求超时，请稍后重试');
+          }
+        }, 25000);
+        xhr.addEventListener('loadend', function () { clearTimeout(watchdog); });
+        xhr.send(JSON.stringify(payload));
+      });
+
+      // ===== Tab 切换 =====
+      var tabReg = $('tabRegister'), tabSts = $('tabStatus');
+      function switchTab(which) {
+        if (which === 'register') {
+          tabReg.style.background = '#8b0000'; tabReg.style.color = '#fff';
+          tabSts.style.background = '#f5f0e8'; tabSts.style.color = '#8b0000';
+          $('formCard').classList.remove('hidden');
+          $('resultCard').classList.add('hidden');
+          $('statusCard').classList.add('hidden');
+          // 切回登记页时恢复按钮状态
+          if (btn.textContent === '提交中...') { btn.textContent = '提交登记'; }
+          btn.disabled = !cb.checked;
+        } else {
+          tabSts.style.background = '#8b0000'; tabSts.style.color = '#fff';
+          tabReg.style.background = '#f5f0e8'; tabReg.style.color = '#8b0000';
+          $('formCard').classList.add('hidden');
+          $('resultCard').classList.add('hidden');
+          $('statusCard').classList.remove('hidden');
+        }
+      }
+      tabReg.addEventListener('click', function () { switchTab('register'); });
+      tabSts.addEventListener('click', function () { switchTab('status'); });
+
+      // ===== 审核结果查询 =====
+      $('queryBtn').addEventListener('click', function () {
+        var phone = $('qPhone').value.trim();
+        var idc = $('qIdCard').value.trim().toUpperCase();
+        if (!phone && !idc) { showToast('请输入手机号或身份证号', 'error'); return; }
+        var params = [];
+        if (phone) params.push('phone=' + encodeURIComponent(phone));
+        if (idc) params.push('idCardNo=' + encodeURIComponent(idc));
+        var url = window.QAXQJT_API_CONFIG.resolveUrl('/v1/performers/self-register/status?' + params.join('&'));
+        var qr = $('queryResult');
+        qr.innerHTML = '<p style="text-align:center;color:#8a6d3b;">查询中...</p>';
+        fetch(url).then(function (res) { return res.json(); }).then(function (d) {
+          if (!d || !d.ok) { qr.innerHTML = '<p style="color:#c62828;">查询失败：' + ((d && d.error && d.error.message) || '未知错误') + '</p>'; return; }
+          if (!d.data || !d.data.found) {
+            qr.innerHTML = '<div style="text-align:center;padding:20px;background:#fff8e1;border-radius:8px;"><p style="font-size:40px;margin:0;">🔍</p><p style="color:#8a6d3b;margin-top:8px;">未找到登记记录<br>请确认手机号或身份证号无误</p></div>';
+            return;
+          }
+          var list = d.data.list || [];
+          var html = '';
+          list.forEach(function (r) {
+            var badge, color, desc;
+            if (r.status === 'active' && r.reviewStatus === 'approved') {
+              badge = '✅ 审核通过'; color = '#2e7d32';
+              desc = '已正式入职，工号：<strong style="color:#8b0000;">' + (r.staffNo || '—') + '</strong>';
+            } else if (r.reviewStatus === 'rejected') {
+              badge = '❌ 已退回'; color = '#c62828';
+              desc = '退回原因：<span style="color:#c62828;">' + (r.reviewFeedback || '资料不完整') + '</span><br><small style="color:#888;">请修改资料后重新扫码提交登记</small>';
+            } else {
+              badge = '⏳ 审核中'; color = '#f57c00';
+              desc = '管理员正在审核，请耐心等待';
+            }
+            html += '<div style="background:#fff;border:1px solid #e8d5b7;border-radius:10px;padding:16px;margin-bottom:12px;">';
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">';
+            html += '<strong style="font-size:16px;color:#8b0000;">' + r.name + '</strong>';
+            html += '<span style="background:' + color + ';color:#fff;padding:3px 10px;border-radius:12px;font-size:12px;">' + badge + '</span>';
+            html += '</div>';
+            if (r.primaryRole) html += '<div style="font-size:13px;color:#666;">行当：' + r.primaryRole + '</div>';
+            html += '<div style="font-size:14px;color:#333;margin-top:8px;">' + desc + '</div>';
+            html += '</div>';
+          });
+          qr.innerHTML = html;
+        }).catch(function () {
+          qr.innerHTML = '<p style="color:#c62828;">网络错误，请检查网络后重试</p>';
         });
       });
     })();

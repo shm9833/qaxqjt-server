@@ -17,6 +17,9 @@
   function esc(s) {
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
+  function escAttr(s) {
+    return esc(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
   function api() { return window.QAXQJT_API || null; }
   function ym(d) {
     var t = d ? new Date(d) : new Date();
@@ -68,27 +71,30 @@
       }
     }
     if (!cardBody) return;
-    var tbody = cardBody.querySelector('tbody[data-paginate="list"]') || cardBody.querySelector('tbody');
+    var tbody = document.getElementById('dashRecentOrdersTbody') || cardBody.querySelector('tbody[data-paginate="list"]') || cardBody.querySelector('tbody');
     if (!tbody) return;
     if (!rows.length) {
       tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8;">📭 暂无预约订单（可在订单管理中创建第一条）</td></tr>';
       return;
     }
     tbody.innerHTML = rows.slice(0, 10).map(function (o) {
-      var oid = esc(o.id || o.orderNo || '');
+      var oid = esc(o.orderNo || o.id || '');
       var st = STATUS_BADGE[o.status] || ['badge-secondary', esc(o.status || '草稿')];
       var date = o.performanceStartDate ? ymd(o.performanceStartDate) : '—';
       var play = esc(o.playTitles || o.orderType || '演出');
+      var name = esc(o.customerName || o.organization || '—');
+      var phone = esc(o.phone || '—');
       var cnt = o.performanceCount || 1;
+      var playText = (o.playTitles || o.orderType || '演出') + ' ' + cnt + '场';
       return '<tr>'
-        + '<td style="font-weight:600;color:var(--primary-dark);font-family:monospace;">' + oid + '</td>'
-        + '<td>' + esc(o.customerName || o.organization || '—') + '</td>'
-        + '<td>' + esc(o.phone || '—') + '</td>'
-        + '<td>' + play + ' ' + cnt + '场</td>'
-        + '<td>' + date + '</td>'
-        + '<td style="font-weight:600;color:var(--primary);">' + money(o.finalAmount || o.totalAmount || 0) + '</td>'
-        + '<td><span class="badge ' + st[0] + '">' + st[1] + '</span></td>'
-        + '<td><div class="admin-table-actions"><a class="btn btn-sm btn-secondary" href="orders.html">详情</a></div></td>'
+        + '<td class="dash-cell-oid" title="' + escAttr(o.orderNo || o.id || '') + '" style="font-weight:600;color:var(--primary-dark);font-family:monospace;">' + oid + '</td>'
+        + '<td class="dash-cell-name" title="' + escAttr(o.customerName || o.organization || '—') + '">' + name + '</td>'
+        + '<td class="dash-cell-phone" title="' + escAttr(o.phone || '—') + '">' + phone + '</td>'
+        + '<td class="dash-cell-play" title="' + escAttr(playText) + '">' + play + ' ' + cnt + '场</td>'
+        + '<td class="dash-c dash-cell-date">' + date + '</td>'
+        + '<td class="dash-c" style="font-weight:600;color:var(--primary);white-space:nowrap;">' + money(o.finalAmount || o.totalAmount || 0) + '</td>'
+        + '<td class="dash-c"><span class="badge ' + st[0] + '">' + st[1] + '</span></td>'
+        + '<td class="dash-c"><div class="admin-table-actions"><a class="btn btn-sm btn-secondary" href="orders.html">详情</a></div></td>'
         + '</tr>';
     }).join('');
   }
@@ -123,7 +129,7 @@
       A.get('/v1/orders', { query: { page: 1, pageSize: 200 } }).catch(function () { return []; }),
       A.get('/v1/schedules', { query: { page: 1, pageSize: 200 } }).catch(function () { return []; }),
       A.get('/v1/performers', { query: { page: 1, pageSize: 500 } }).catch(function () { return []; }),
-      A.get('/v1/inventory', { query: { page: 1, pageSize: 500 } }).catch(function () { return []; })
+      A.get('/v1/inventory/items', { query: { page: 1, pageSize: 500 } }).catch(function () { return []; })
     ]).then(function (res) {
       var orders = unwrap(res[0]);
       var schedules = unwrap(res[1]);

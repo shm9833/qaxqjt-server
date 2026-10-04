@@ -21,8 +21,8 @@
     "db:seed": "node -r dotenv/config prisma/seed.js",
     "lint": "eslint \"src/**/*.js\" --max-warnings 0",
     "lint:fix": "eslint \"src/**/*.js\" --fix",
-    "test": "jest --passWithNoTests --silent",
-    "test:cov": "jest --coverage --passWithNoTests",
+    "test": "node --test --test-force-exit",
+    "test:cov": "node --test --test-force-exit --experimental-test-coverage",
     "healthz": "node -e \"require('http').get('http://127.0.0.1:' + (process.env.PORT||3001) + '/v1/healthz', r => { process.exit(r.statusCode===200?0:1) })\""
   },
   "dependencies": {

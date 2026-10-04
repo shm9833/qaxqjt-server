@@ -145,7 +145,7 @@
       <div class="success-box">
         <div class="success-icon">✓</div>
         <h2>登录成功</h2>
-        <p>您已成功确认登录<br/>请回到电脑端查看</p>
+        <p id="successDesc">您已成功确认登录<br/>页面将在 <span id="cdNum" style="color:#065f46;font-weight:700;">3</span> 秒后自动关闭</p>
       </div>
     </div>
 
@@ -175,6 +175,47 @@
       el.className = 'msg ' + type;
     }
 
+    // 成功后自动关闭：微信/支付宝内置浏览器走 JSBridge 关闭，普通浏览器尝试 window.close()，
+    // 均失败（浏览器安全策略）时降级为提示用户手动关闭。
+    function closeWebview() {
+      var ua = navigator.userAgent || '';
+      try {
+        if (/MicroMessenger/i.test(ua) && window.WeixinJSBridge) {
+          WeixinJSBridge.call('closeWindow');
+          return true;
+        }
+      } catch (e1) {}
+      try {
+        if (/AlipayClient/i.test(ua) && window.AlipayJSBridge) {
+          AlipayJSBridge.call('closeWebview');
+          return true;
+        }
+      } catch (e2) {}
+      try { window.close(); } catch (e3) {}
+      return false;
+    }
+
+    function scheduleAutoClose() {
+      var n = 3;
+      var cd = document.getElementById('cdNum');
+      var t = setInterval(function () {
+        n--;
+        if (cd) cd.textContent = n > 0 ? n : 0;
+        if (n <= 0) {
+          clearInterval(t);
+          var closed = closeWebview();
+          var desc = document.getElementById('successDesc');
+          if (!closed && desc) {
+            desc.innerHTML = '请手动关闭本页面<br/><span style="color:#94a3b8;font-size:13px;">回到电脑端即可看到已登录的后台</span>';
+          }
+        }
+      }, 1000);
+      // 微信 JSBridge 可能延迟就绪，监听就绪事件后立即尝试一次关闭（倒计时结束前保持页面可见）
+      if (/MicroMessenger/i.test(navigator.userAgent || '')) {
+        document.addEventListener('WeixinJSBridgeReady', function () {}, false);
+      }
+    }
+
     function confirmLogin() {
       var username = document.getElementById('username').value.trim();
       var password = document.getElementById('password').value;
@@ -197,6 +238,7 @@
           if (data && data.ok) {
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('successBox').style.display = 'block';
+            scheduleAutoClose();
           } else {
             var msg = (data && data.error && data.error.message) ? data.error.message : '登录失败，请重试';
             showMsg(msg, 'error');

@@ -41,7 +41,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>财务收支台账管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
-  <link rel="stylesheet" href="../css/style.css?v=20260803">
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     /* ============================================================
        FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
@@ -631,7 +631,7 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
             <span class="menu-icon">👥</span>
             <span>账号权限管理</span>
           </a>
-          <a href="schedule.html" data-role-level="800" class="admin-menu-item">
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
             <span class="menu-icon">📅</span>
             <span>演出档期排班</span>
             <span class="menu-badge">8</span>
@@ -672,6 +672,10 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
             <span class="menu-icon">📝</span>
             <span>官网内容管理</span>
           </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
+          </a>
           <a href="reports.html" data-role-level="700" class="admin-menu-item">
             <span class="menu-icon">📈</span>
             <span>数据统计报表</span>
@@ -702,6 +706,9 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
         <div style="display:flex;flex-direction:column;gap:8px;">
           <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
             <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
           </a>
           <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
             <span>🚪</span><span>退出登录</span>
@@ -923,7 +930,7 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
                 </div>
                 <div class="form-group">
                   <label>结束日期</label>
-                  <input type="date" class="form-control" value="{year}-07-27" />
+                  <input type="date" class="form-control" value="{year}-12-31" />
                 </div>
                 <div class="form-group">
                   <label>收支类型</label>
@@ -977,7 +984,7 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
                       <th>操作</th>
                     </tr>
                   </thead>
-                  <tbody data-paginate="list" data-page-size="10">
+                  <tbody id="finLedgerTbody" data-paginate="list" data-paginate-keep="1" data-page-size="10">
                     <tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text-light);">正在加载真实年度汇总…</td></tr>
                   </tbody>
                 </table>
@@ -1051,7 +1058,7 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
                       <th>备注</th>
                     </tr>
                   </thead>
-                  <tbody data-paginate="list" data-page-size="10">
+                  <tbody id="finSummaryTbody" data-paginate="list" data-paginate-keep="1" data-page-size="10">
                     <tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text-light);">正在加载真实年度汇总…</td></tr>
                   </tbody>
                 </table>
@@ -1070,8 +1077,10 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260922"></script>
   <script src="../js/api-request.js?v=20260922"></script>
-<script src="../js/app.js?v=20260922"></script>
-  <script src="../js/pagination.js?v=20260803"></script>
+<script src="../js/app.js?v=20260930a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
+  <script src="/js/xlsx-js-style.min.js?v=20260925"></script>
   <script>
     (function() {
       'use strict';
@@ -1813,6 +1822,7 @@ function __pLog(module,event,extra){
     function _isPgContainer(el){
       try{
         if(!el || el.nodeType!==1) return false;
+        if(el.closest && el.closest('.sp-pg-toolbar-20260730,.pagination-toolbar')) return false;
         var tag = (el.tagName||'').toUpperCase();
         if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
         var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
@@ -1841,7 +1851,8 @@ function __pLog(module,event,extra){
     }
     function _buildPg(container){
       try{
-        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
+        if(container.hasAttribute('data-pg-built')||container.querySelector('.sp-pg-toolbar-20260730')) return; container.setAttribute('data-pg-built','1');
+        if(container.classList && (container.classList.contains('sp-pg-toolbar-20260730')||container.classList.contains('pagination-toolbar'))) return;
         var oldToolbar = container.querySelector('.pagination-toolbar');
         if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
         var st = _ensurePgState(container);
@@ -1856,6 +1867,7 @@ function __pLog(module,event,extra){
         if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
         var wrap = document.createElement('div');
         wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.setAttribute('data-pg-built','1');
         wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
         wrap.innerHTML = ''+
           '<button class="btn btn-sm" data-pg="first">首页</button>'+
@@ -1953,7 +1965,7 @@ function __pLog(module,event,extra){
     function _scanPagination(){
       try{
         var all = document.querySelectorAll('div,nav,section,span');
-        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
+        all.forEach(function(el){ if(el.hasAttribute('data-pg-built')) return; if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
         if(!document.getElementById('_pgPatchCSS20260730')){
           sty.id='_pgPatchCSS20260730';
@@ -2227,7 +2239,7 @@ window.__finApi = (function(){
   var API = window.QAXQJT_API;
   var T = function(m,t){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(m,t||'info',3000); }catch(_){} };
 
-  function _tbody(){ var tbs = document.querySelectorAll('.table-wrapper tbody'); return tbs[0]; }
+  function _tbody(){ return document.getElementById('finLedgerTbody') || document.querySelectorAll('.table-wrapper tbody')[0] || null; }
   // 弹窗按钮接线：window 捕获阶段早于页面 SuperPatch 3/6（其在 document 捕获拦截含“取消”文本的点击，
   // 仅加隐藏类、不移除节点），在此抢先处理，确保取消真实移除节点、保存真实提交，避免重复弹窗 id 冲突。
   function _wireModal(m, cancelSel, saveSel, onSave){
@@ -2242,8 +2254,10 @@ window.__finApi = (function(){
       else { m.remove(); window.removeEventListener('click', handler, true); }
     }
     window.addEventListener('click', handler, true);
+    /* v20260929fix：点击遮罩空白处关闭弹窗（target 为根遮罩本身，不影响内容区点击），与全站弹窗交互一致 */
+    m.addEventListener('click', function(ev){ if(ev.target === m){ m.remove(); try{ window.removeEventListener(handler, true); }catch(_){} } });
   }
-  function _esc(s){ return (s==null?'':String(s)).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
+  function _esc(s){ return (s==null?'':String(s)).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});}
   function _fmtMoney(n){ var v = Number(n)||0; return (v>=0?'+':'')+'¥'+v.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
   function _fmtDate(d){ if(!d) return '—'; try{ return new Date(d).toISOString().slice(0,10); }catch(_){ return '—'; } }
   function _statusBadge(s){
@@ -2277,7 +2291,7 @@ window.__finApi = (function(){
           + '<td>'+_esc(r.summary||'—')+'</td>'
           + '<td><span class="type-badge '+(isIncome?'income':'expense')+'">● '+(isIncome?'收入':'支出')+'</span></td>'
           + '<td>'+_esc(r.voucherCategory||'—')+'</td>'
-          + '<td>'+(r.orderId?'<a href="#" style="color:var(--primary);font-family:monospace;">'+_esc(r.orderId)+'</a>':'—')+'</td>'
+          + '<td>'+(r.orderId?'<span style="color:var(--primary);font-family:monospace;">'+_esc(r.orderId)+'</span>':'—')+'</td>'
           + '<td class="'+(isIncome?'amount-income':'amount-expense')+'">'+_fmtMoney(amt)+'</td>'
           + '<td>'+_esc(r.offsetAccount||'—')+'</td>'
           + '<td>'+_statusBadge(r.status)+'</td>'
@@ -2323,7 +2337,7 @@ window.__finApi = (function(){
     var isIncome = kind==='income';
     var __oldFin = document.querySelectorAll('#__finModal');
     for(var __fi=0;__fi<__oldFin.length;__fi++){ __oldFin[__fi].remove(); }
-    var html = '<div id="__finModal" role="dialog" class="generic-modal-root" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
+    var html = '<div id="__finModal" role="dialog" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
       + '<div style="background:#fff;border-radius:12px;padding:24px;width:520px;max-width:92vw;max-height:88vh;overflow-y:auto;">'
       + '<h3 style="margin:0 0 16px;color:var(--primary,#0F4C81);">'+(d.id?'编辑凭证':(isIncome?'新增收入':'新增支出'))+'</h3>'
       + '<div style="display:grid;gap:12px;">'
@@ -2444,7 +2458,7 @@ window.__finApi = (function(){
     }).join("");
   }
   function _renderFinSummary(monthly, shows, year){
-    var tb=document.querySelectorAll(".table-wrapper tbody")[1]; if(!tb) return;
+    var tb=document.getElementById('finSummaryTbody') || document.querySelectorAll(".table-wrapper tbody")[1]; if(!tb) return;
     var yms=Object.keys(monthly).filter(function(ym){ return ym.indexOf(year+"-")===0; }).sort();
     if(!yms.length){ tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text-light);">本年暂无台账记录</td></tr>'; return; }
     var T={in:0,out:0,person:0,equip:0,other:0,shows:0};
@@ -2512,11 +2526,264 @@ window.__finApi = (function(){
     }).join("");
   }
   function year0(){ return new Date().getFullYear(); }
+
+  /* ===== 20260925：月度对账弹窗 + 年度财务汇总 Excel（真实台账/订单/排期） ===== */
+  var _FIN_VTT={receipt:'收款',payment:'付款'};
+  var _FIN_VST={draft:'草稿',checked:'已复核',reconciled:'已对账',void:'已作废'};
+  var _FIN_OST={draft:'草稿',confirmed:'已确认',partial_paid:'部分付款',paid:'已付款',performance:'演出中',completed:'已完成',cancelled:'已取消',refunded:'已退款'};
+  function _finPd(v){ if(!v) return null; var d=new Date(v); if(!isNaN(d.getTime())) return d; var m=String(v).match(/^(\d{4})-(\d{2})(?:-(\d{2}))?/); return m?new Date(+m[1],+m[2]-1,+(m[3]||1)):null; }
+  function _finD2(d){ return d? (d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')) :''; }
+  function _finN2(n){ return Math.round(Number(n||0)*100)/100; }
+  function _finMF(n){ return '¥'+Number(_finN2(n)).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  // 聚合指定年度：12个月桶 + 年度合计 + 订单待收
+  async function _finGather(year){
+    var rs=await Promise.all([
+      API.get('/v1/fin/ledger',{query:{page:1,pageSize:500}}).then(_finRows),
+      API.get('/v1/orders',{query:{page:1,pageSize:500}}).then(_finRows).catch(function(){return [];}),
+      API.get('/v1/schedules',{query:{page:1,pageSize:500}}).then(_finRows).catch(function(){return [];})
+    ]);
+    var all=rs[0], orders=rs[1], sch=rs[2], months=[];
+    for(var i=0;i<12;i++){ months.push({label:(i+1)+'月',in:0,out:0,rCnt:0,pCnt:0,cnt:0,rec:0,shows:0}); }
+    var yLed=[];
+    all.forEach(function(r){
+      var d=_finPd(r.voucherDate); if(!d||d.getFullYear()!==year) return;
+      yLed.push({r:r,d:d});
+      var b=months[d.getMonth()], c=Number(r.creditAmount)||0, e=Number(r.debitAmount)||0;
+      b.cnt++; b.in+=c; b.out+=e; if(c>0)b.rCnt++; if(e>0)b.pCnt++; if(r.isReconciled)b.rec++;
+    });
+    yLed.sort(function(a,b){ return a.d.getTime()-b.d.getTime() || String(a.r.voucherNo).localeCompare(String(b.r.voucherNo)); });
+    sch.forEach(function(s){ var d=_finPd(s.date); if(d&&d.getFullYear()===year) months[d.getMonth()].shows++; });
+    var T={in:0,out:0,rCnt:0,pCnt:0,cnt:yLed.length,rec:0,shows:0};
+    months.forEach(function(b){ T.in+=b.in; T.out+=b.out; T.rCnt+=b.rCnt; T.pCnt+=b.pCnt; T.rec+=b.rec; T.shows+=b.shows; });
+    T.net=T.in-T.out;
+    var pending=0,pendCnt=0;
+    orders.forEach(function(o){
+      if(['cancelled','refunded'].indexOf(o.status)>=0) return;
+      var total=Number(o.totalAmount!=null?o.totalAmount:o.finalAmount)||0, paid=Number(o.paidAmount)||0, rest=_finN2(total-paid);
+      if(rest>0 && ['paid','completed'].indexOf(o.status)<0){ pending+=rest; pendCnt++; }
+    });
+    T.pending=_finN2(pending); T.pendCnt=pendCnt;
+    return {year:year, months:months, ledger:yLed, orders:orders, totals:T};
+  }
+  function _finReconStat(b){
+    if(!b.cnt) return {t:'无发生', st:{fill:{fgColor:{rgb:'FFF2F2F2'}},font:{color:{rgb:'FF8A8A8A'}},alignment:{horizontal:'center'}}};
+    if(b.rec===b.cnt) return {t:'已对账', st:{fill:{fgColor:{rgb:'FFE2EFDA'}},font:{color:{rgb:'FF1E6B2E'},bold:true},alignment:{horizontal:'center'}}};
+    if(b.rec>0) return {t:'部分 '+b.rec+'/'+b.cnt, st:{fill:{fgColor:{rgb:'FFFFF2CC'}},font:{color:{rgb:'FF7A5C00'},bold:true},alignment:{horizontal:'center'}}};
+    return {t:'未对账', st:{fill:{fgColor:{rgb:'FFFFC7CE'}},font:{color:{rgb:'FF9C0006'},bold:true},alignment:{horizontal:'center'}}};
+  }
+  function _finMarkBtn(el){ if(!el)return; ['__superPatchBound','__ts3Done','__bindDone','__deadBtnChecked'].forEach(function(k){ try{el[k]=1;}catch(_){} }); }
+
+  /* ---- 月度对账弹窗 ---- */
+  async function openMonthlyRecon(){
+    var year=new Date().getFullYear();
+    var olds=document.querySelectorAll('#__frModal'); for(var i=0;i<olds.length;i++) olds[i].remove();
+    var yOpts='';
+    for(var y=year-1;y<=year+1;y++){ yOpts+='<option value="'+y+'"'+(y===year?' selected':'')+'>'+y+'年度</option>'; }
+    var html='<div id="__frModal" role="dialog" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
+      +'<div style="background:#fff;border-radius:12px;padding:22px 24px;width:980px;max-width:95vw;max-height:90vh;overflow-y:auto;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">'
+      +'<h3 style="margin:0;color:#0F4C81;">📊 月度对账</h3>'
+      +'<div style="display:flex;gap:8px;align-items:center;">'
+      +'<select id="__fr_year" class="form-control" style="width:auto;padding:6px 10px;">'+yOpts+'</select>'
+      +'<button id="__fr_export" class="btn" style="background:#1e7a34;color:#fff;border:none;padding:7px 14px;">📥 导出年度Excel</button>'
+      +'<button id="__fr_close" class="btn btn-secondary">关闭</button>'
+      +'</div></div>'
+      +'<div id="__fr_head" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;"></div>'
+      +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.86rem;min-width:760px;">'
+      +'<thead><tr style="background:#0F4C81;color:#fff;">'
+      +['月份','凭证笔数','收款笔数','付款笔数','收入合计','支出合计','净额','已对账','对账状态'].map(function(h){return '<th style="padding:9px 8px;text-align:center;white-space:nowrap;">'+h+'</th>';}).join('')
+      +'</tr></thead><tbody id="__fr_body"><tr><td colspan="9" style="text-align:center;padding:28px;color:#888;">正在汇总真实台账数据…</td></tr></tbody>'
+      +'<tfoot id="__fr_foot"></tfoot></table></div>'
+      +'<div style="margin-top:10px;font-size:0.78rem;color:#888;">说明：数据来自财务台账（/v1/fin/ledger）+ 订单 + 演出排期；"已对账"按凭证核销标记统计，未核销凭证请在流水列表中核对后核销。</div>'
+      +'</div></div>';
+    var wrap=document.createElement('div'); wrap.innerHTML=html; document.body.appendChild(wrap.firstChild);
+    var m=document.getElementById('__frModal');
+    var close=document.getElementById('__fr_close'), exp=document.getElementById('__fr_export'), sel=document.getElementById('__fr_year');
+    _finMarkBtn(close); _finMarkBtn(exp);
+    close.onclick=function(){ m.remove(); };
+    exp.onclick=function(){ exportFinanceXlsx(Number(sel.value)); };
+    sel.onchange=function(){ _finFillRecon(Number(sel.value)); };
+    m.addEventListener('click',function(e){ if(e.target===m) m.remove(); });
+    _finFillRecon(year);
+  }
+  function _finHeadCard(title,val,sub,color,bg){
+    return '<div style="border:1px solid #e3e3e3;border-radius:10px;padding:10px 14px;background:'+(bg||'#fafafa')+';">'
+      +'<div style="font-size:0.78rem;color:#777;">'+title+'</div>'
+      +'<div style="font-size:1.25rem;font-weight:800;color:'+(color||'#222')+';margin:2px 0;">'+val+'</div>'
+      +'<div style="font-size:0.74rem;color:#999;">'+(sub||'')+'</div></div>';
+  }
+  async function _finFillRecon(year){
+    var body=document.getElementById('__fr_body'), foot=document.getElementById('__fr_foot'), head=document.getElementById('__fr_head');
+    if(!body) return;
+    body.innerHTML='<tr><td colspan="9" style="text-align:center;padding:28px;color:#888;">正在汇总 '+year+' 年度真实台账…</td></tr>';
+    foot.innerHTML=''; head.innerHTML='';
+    var g; try{ g=await _finGather(year); }catch(e){ body.innerHTML='<tr><td colspan="9" style="text-align:center;padding:28px;color:#c00;">加载失败：'+_esc(e.message||e)+'</td></tr>'; return; }
+    var T=g.totals;
+    head.innerHTML=_finHeadCard('年度总收入',_finMF(T.in),T.rCnt+' 笔收款','#1e7a34','#f0fbf3')
+      +_finHeadCard('年度总支出',_finMF(T.out),T.pCnt+' 笔付款','#b3261e','#fdf3f2')
+      +_finHeadCard('年度净额',(T.net<0?'-':'')+_finMF(Math.abs(T.net)),'收入 − 支出',T.net>=0?'#1e7a34':'#b3261e',T.net>=0?'#f0fbf3':'#fdf3f2')
+      +_finHeadCard('订单待收',_finMF(T.pending),T.pendCnt+' 笔未结订单','#9a6b00','#fdf8e8');
+    body.innerHTML=g.months.map(function(b){
+      var net=b.in-b.out, st=_finReconStat(b);
+      function td(v,cls,style){ return '<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;'+(style||'')+'" class="'+(cls||'')+'">'+v+'</td>'; }
+      return '<tr>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;font-weight:700;text-align:center;">'+b.label+'</td>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">'+(b.cnt||'—')+'</td>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">'+(b.rCnt||'—')+'</td>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">'+(b.pCnt||'—')+'</td>'
+        +td(_finMF(b.in),'', b.in?'color:#1e7a34;font-weight:600;':'color:#aaa;')
+        +td(_finMF(b.out),'', b.out?'color:#b3261e;font-weight:600;':'color:#aaa;')
+        +td((net<0?'-':'')+_finMF(Math.abs(net)),'', 'font-weight:700;color:'+(net>=0?'#1e7a34':'#b3261e')+';')
+        +'<td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">'+(b.rec?b.rec+'/'+b.cnt:'—')+'</td>'
+        +'<td style="padding:8px;border-bottom:1px solid #eee;"><span style="display:inline-block;padding:3px 10px;border-radius:10px;font-size:0.78rem;white-space:nowrap;">'+st.t+'</span></td>'
+        +'</tr>';
+    }).join('');
+    // 状态徽标上色（span 无类名，按文字匹配不好处理，改为直接给最后一格 td 的 span 注入样式）
+    var rows=body.querySelectorAll('tr');
+    g.months.forEach(function(b,i){ var sp=rows[i]&&rows[i].querySelector('td:last-child span'); var st=_finReconStat(b); if(sp){ sp.style.cssText='display:inline-block;padding:3px 10px;border-radius:10px;font-size:0.78rem;white-space:nowrap;background:'+((st.st.fill&&st.st.fill.fgColor.rgb.replace(/^FF/,'#'))||'#f2f2f2')+';color:'+(st.st.font&&st.st.font.color.rgb.replace(/^FF/,'#')||'#888')+';'+(st.st.font&&st.st.font.bold?'font-weight:700;':''); } });
+    foot.innerHTML='<tr style="background:#eef3fa;font-weight:800;color:#0F4C81;">'
+      +'<td style="padding:9px;text-align:center;">年度合计</td><td style="padding:9px;text-align:center;">'+T.cnt+'</td>'
+      +'<td style="padding:9px;text-align:center;">'+T.rCnt+'</td><td style="padding:9px;text-align:center;">'+T.pCnt+'</td>'
+      +'<td style="padding:9px;text-align:right;color:#1e7a34;">'+_finMF(T.in)+'</td>'
+      +'<td style="padding:9px;text-align:right;color:#b3261e;">'+_finMF(T.out)+'</td>'
+      +'<td style="padding:9px;text-align:right;color:'+(T.net>=0?'#1e7a34':'#b3261e')+';">'+(T.net<0?'-':'')+_finMF(Math.abs(T.net))+'</td>'
+      +'<td style="padding:9px;text-align:center;">'+T.rec+'/'+T.cnt+'</td><td></td></tr>';
+  }
+
+  /* ---- 导出年度财务 Excel（3 个工作表：年度汇总 / 月度对账 / 流水明细） ---- */
+  async function exportFinanceXlsx(year){
+    year=year||new Date().getFullYear();
+    if(typeof XLSX==='undefined' || !XLSX.utils || typeof XLSX.write!=='function'){
+      T('⚠️ Excel 组件未加载，已改用 CSV 导出流水明细','warning',3500); _finExportCsv(year); return;
+    }
+    var g; try{ g=await _finGather(year); }catch(e){ T('❌ 数据加载失败：'+(e.message||e),'error'); return; }
+    var X=XLSX.utils, BD={top:{style:'thin',color:{rgb:'FFCCCCCC'}},bottom:{style:'thin',color:{rgb:'FFCCCCCC'}},left:{style:'thin',color:{rgb:'FFCCCCCC'}},right:{style:'thin',color:{rgb:'FFCCCCCC'}}};
+    function mk(o){ return Object.assign({border:BD,font:{sz:10}},o||{}); }
+    var S_TTL=mk({fill:{fgColor:{rgb:'FF0F4C81'}},font:{color:{rgb:'FFFFFFFF'},bold:true,sz:14},alignment:{horizontal:'center',vertical:'center'}});
+    var S_BAND=mk({fill:{fgColor:{rgb:'FFD9E2F3'}},font:{bold:true,color:{rgb:'FF0F4C81'},sz:11}});
+    var S_META=mk({font:{sz:9,color:{rgb:'FF777777'}}});
+    var S_LBL=mk({fill:{fgColor:{rgb:'FFF3E9DA'}},font:{bold:true,sz:10},alignment:{horizontal:'center'}});
+    var S_HEAD=mk({fill:{fgColor:{rgb:'FF0F4C81'}},font:{color:{rgb:'FFFFFFFF'},bold:true,sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true}});
+    var S_TOT=mk({fill:{fgColor:{rgb:'FFEEF3FA'}},font:{bold:true,sz:10}});
+    var S_CTR=mk({alignment:{horizontal:'center'}});
+    var S_IN=mk({font:{color:{rgb:'FF1E7A34'},bold:true},alignment:{horizontal:'right'}});
+    var S_OUT=mk({font:{color:{rgb:'FFB3261E'},bold:true},alignment:{horizontal:'right'}});
+    var S_MONEY=mk({alignment:{horizontal:'right'},numFmt:'#,##0.00'});
+    var S_NOTE=mk({font:{sz:9,color:{rgb:'FF999999'}}});
+    function money(n){ return {t:'n',v:_finN2(n),z:'#,##0.00'}; }
+    function paint(ws,aoa,sg,merges,cols){
+      ws=X.aoa_to_sheet(aoa);
+      for(var r=0;r<aoa.length;r++) for(var c=0;c<aoa[r].length;c++){
+        var addr=X.encode_cell?X.encode_cell({r:r,c:c}):String.fromCharCode(65+c)+(r+1);
+        if(ws[addr] && sg[r] && sg[r][c]) ws[addr].s=sg[r][c];
+      }
+      ws['!merges']=merges; ws['!cols']=cols; ws['!rows']=[{hpt:26}]; return ws;
+    }
+    var nowTxt=new Date().toLocaleString('zh-CN');
+
+    // —— Sheet1 年度汇总（7列 A-G） ——
+    var a1=[], s1=[];
+    a1.push(['秦安县秦剧团 '+year+'年度财务汇总','','','','','','']); s1.push([S_TTL,S_TTL,S_TTL,S_TTL,S_TTL,S_TTL,S_TTL]);
+    a1.push(['导出时间：'+nowTxt,'','','','','','']); s1.push([S_META,null,null,null,null,null,null]);
+    a1.push(['数据来源：财务台账 / 订单 / 演出排期（仅统计已录入凭证，未制单数据不在内）','','','','','','']); s1.push([S_NOTE,null,null,null,null,null,null]);
+    a1.push(['']); s1.push([null]);
+    a1.push(['一、年度总览','','','','','','']); s1.push([S_BAND,S_BAND,S_BAND,S_BAND,S_BAND,S_BAND,S_BAND]);
+    var TT=g.totals;
+    a1.push(['年度总收入',money(TT.in),'年度总支出',money(TT.out),'年度净额',money(TT.net),'']);
+    s1.push([S_LBL,S_MONEY,S_LBL,S_MONEY,S_LBL,mk({alignment:{horizontal:'right'},numFmt:'#,##0.00',font:{bold:true,color:{rgb:TT.net>=0?'FF1E7A34':'FFB3261E'}}}),null]);
+    a1.push(['收款笔数',TT.rCnt+' 笔','付款笔数',TT.pCnt+' 笔','订单待收',money(TT.pending),'（'+TT.pendCnt+' 笔未结订单）']);
+    s1.push([S_LBL,S_CTR,S_LBL,S_CTR,S_LBL,S_MONEY,S_NOTE]);
+    a1.push(['']); s1.push([null]);
+    a1.push(['二、月度收支汇总','','','','','','']); s1.push([S_BAND,S_BAND,S_BAND,S_BAND,S_BAND,S_BAND,S_BAND]);
+    a1.push(['月份','演出场次','收入(元)','支出(元)','净额(元)','收款笔数','付款笔数']); s1.push([S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD]);
+    g.months.forEach(function(b){
+      var net=b.in-b.out;
+      a1.push([b.label,b.shows||'',money(b.in),money(b.out),money(net),b.rCnt||'',b.pCnt||'']);
+      s1.push([S_CTR,S_CTR,b.in?S_IN:S_MONEY,b.out?S_OUT:S_MONEY,mk({alignment:{horizontal:'right'},numFmt:'#,##0.00',font:{bold:true,color:{rgb:net>=0?'FF1E7A34':'FFB3261E'}}}),S_CTR,S_CTR]);
+    });
+    a1.push(['年度合计',TT.shows||'',money(TT.in),money(TT.out),money(TT.net),TT.rCnt,TT.pCnt]);
+    s1.push([S_TOT,S_CTR,mk(Object.assign({},S_IN,{font:{bold:true,color:{rgb:'FF1E7A34'}}})),mk(Object.assign({},S_OUT,{font:{bold:true,color:{rgb:'FFB3261E'}}})),mk(Object.assign({},S_TOT,{alignment:{horizontal:'right'},numFmt:'#,##0.00',font:{bold:true,color:{rgb:TT.net>=0?'FF1E7A34':'FFB3261E'}}})),S_TOT,S_TOT]);
+    a1.push(['']); s1.push([null]);
+    a1.push(['三、订单应收明细','','','','','','']); s1.push([S_BAND,S_BAND,S_BAND,S_BAND,S_BAND,S_BAND,S_BAND]);
+    a1.push(['订单号','客户','演出日期','订单总额(元)','已收(元)','待收(元)','状态']); s1.push([S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD]);
+    var oCnt=0,oRest=0;
+    g.orders.filter(function(o){ return ['cancelled','refunded'].indexOf(o.status)<0 && (Number(o.totalAmount!=null?o.totalAmount:o.finalAmount)||0)>0; }).forEach(function(o){
+      var total=_finN2(o.totalAmount!=null?o.totalAmount:o.finalAmount), paid=_finN2(o.paidAmount), rest=Math.max(0,_finN2(total-paid));
+      oCnt++; oRest+=rest;
+      a1.push([o.orderNo||o.id,o.customerName||o.organization||'—',o.performanceStartDate?String(o.performanceStartDate).slice(0,10):'待定',money(total),money(paid),money(rest),_FIN_OST[o.status]||o.status||'草稿']);
+      s1.push([mk({}),mk({}),S_CTR,S_MONEY,S_MONEY,rest>0?mk(Object.assign({},S_MONEY,{font:{color:{rgb:'FF9A6B00'},bold:true}})):S_MONEY,S_CTR]);
+    });
+    if(!oCnt){ a1.push(['（本年度暂无订单）','','','','','','']); s1.push([S_NOTE,null,null,null,null,null,null]); }
+    else { a1.push(['待收合计','','','','',money(oRest),'']); s1.push([S_TOT,null,null,null,null,S_MONEY,null]); }
+    var ws1=paint({},a1,s1,
+      [{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}},{s:{r:2,c:0},e:{r:2,c:6}},
+       {s:{r:4,c:0},e:{r:4,c:6}},{s:{r:8,c:0},e:{r:8,c:6}},{s:{r:24,c:0},e:{r:24,c:6}}],
+      [{wch:22},{wch:14},{wch:13},{wch:13},{wch:13},{wch:13},{wch:12}]);
+
+    // —— Sheet2 月度对账（9列 A-I） ——
+    var a2=[], s2=[];
+    a2.push([year+'年度 月度对账表','','','','','','','','']); for(var k2=0;k2<9;k2++) (s2[0]=s2[0]||[]).push(S_TTL);
+    a2.push(['导出时间：'+nowTxt+'　｜　数据来源：财务台账','','','','','','','','']); s2.push([S_META,null,null,null,null,null,null,null,null]);
+    a2.push(['月份','凭证笔数','收款笔数','付款笔数','收入(元)','支出(元)','净额(元)','已对账笔数','对账状态']); s2.push([S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD,S_HEAD]);
+    g.months.forEach(function(b){
+      var net=b.in-b.out, st=_finReconStat(b);
+      a2.push([b.label,b.cnt,b.rCnt,b.pCnt,money(b.in),money(b.out),money(net),b.rec?b.rec+'/'+b.cnt:'—',st.t]);
+      s2.push([S_CTR,S_CTR,S_CTR,S_CTR,b.in?S_IN:S_MONEY,b.out?S_OUT:S_MONEY,mk({alignment:{horizontal:'right'},numFmt:'#,##0.00',font:{bold:true,color:{rgb:net>=0?'FF1E7A34':'FFB3261E'}}}),S_CTR,mk(st.st)]);
+    });
+    a2.push(['年度合计',TT.cnt,TT.rCnt,TT.pCnt,money(TT.in),money(TT.out),money(TT.net),TT.rec+'/'+TT.cnt,TT.rec===TT.cnt&&TT.cnt?'全部已对账':(TT.rec?'部分对账':'未对账')]);
+    s2.push([S_TOT,S_TOT,S_TOT,S_TOT,mk(Object.assign({},S_IN,{font:{bold:true,color:{rgb:'FF1E7A34'}}})),mk(Object.assign({},S_OUT,{font:{bold:true,color:{rgb:'FFB3261E'}}})),mk(Object.assign({},S_TOT,{alignment:{horizontal:'right'},numFmt:'#,##0.00',font:{bold:true,color:{rgb:TT.net>=0?'FF1E7A34':'FFB3261E'}}})),S_TOT,mk({alignment:{horizontal:'center'},font:{bold:true,color:{rgb:'FF0F4C81'}}})]);
+    a2.push(['']); s2.push([null]);
+    a2.push(['说明：绿色=当月凭证全部已对账；黄色=部分对账（已对账/总笔数）；红色=未对账；灰色=当月无发生额。','','','','','','','','']); s2.push([S_NOTE,null,null,null,null,null,null,null,null]);
+    var ws2=paint({},a2,s2,
+      [{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}},{s:{r:17,c:0},e:{r:17,c:8}}],
+      [{wch:10},{wch:10},{wch:10},{wch:10},{wch:14},{wch:14},{wch:14},{wch:11},{wch:12}]);
+
+    // —— Sheet3 流水明细（11列 A-K，按时间正序） ——
+    var a3=[], s3=[];
+    a3.push([year+'年度 收支流水明细（全部凭证 · 按日期排序）','','','','','','','','','','']); for(var k3=0;k3<11;k3++) (s3[0]=s3[0]||[]).push(S_TTL);
+    a3.push(['导出时间：'+nowTxt+'　｜　共 '+g.ledger.length+' 笔凭证','','','','','','','','','','']); s3.push([S_META,null,null,null,null,null,null,null,null,null,null]);
+    a3.push(['日期','凭证号','类型','分类','摘要','关联订单','收入(元)','支出(元)','对方账户/方式','凭证状态','对账']); s3.push(Array(11).fill(S_HEAD));
+    var tIn=0,tOut=0;
+    g.ledger.forEach(function(it){
+      var r=it.r, c=Number(r.creditAmount)||0, e=Number(r.debitAmount)||0; tIn+=c; tOut+=e;
+      a3.push([_finD2(it.d),r.voucherNo||'—',_FIN_VTT[r.voucherType]||r.voucherType||'—',r.voucherCategory||'—',r.summary||'—',r.orderId||'—',
+        c?money(c):'',e?money(e):'',r.offsetAccount||'—',_FIN_VST[r.status]||r.status||'—',r.isReconciled?'已对账':'未对账']);
+      s3.push([S_CTR,mk({}),S_CTR,S_CTR,mk({}),mk({}),c?S_IN:'',e?S_OUT:'',mk({}),S_CTR,mk({alignment:{horizontal:'center'},font:{color:{rgb:r.isReconciled?'FF1E7A34':'FF9C0006'}}})]);
+    });
+    if(!g.ledger.length){ a3.push(['（本年度暂无台账凭证）','','','','','','','','','','']); s3.push([S_NOTE,null,null,null,null,null,null,null,null,null,null]); }
+    a3.push(['合计','','','','','',money(tIn),money(tOut),'净额 '+(tIn-tOut<0?'-':'')+_finMF(Math.abs(tIn-tOut)),'','']);
+    s3.push([S_TOT,null,null,null,null,null,mk(Object.assign({},S_IN,{font:{bold:true,color:{rgb:'FF1E7A34'}}})),mk(Object.assign({},S_OUT,{font:{bold:true,color:{rgb:'FFB3261E'}}})),mk({font:{bold:true,color:{rgb:'FF0F4C81'},alignment:{horizontal:'left'}}}),null,null]);
+    var ws3=paint({},a3,s3,
+      [{s:{r:0,c:0},e:{r:0,c:10}},{s:{r:1,c:0},e:{r:1,c:10}}],
+      [{wch:12},{wch:20},{wch:7},{wch:11},{wch:34},{wch:20},{wch:12},{wch:12},{wch:16},{wch:9},{wch:9}]);
+
+    var wb={ SheetNames:['年度汇总','月度对账','流水明细'], Sheets:{ '年度汇总':ws1, '月度对账':ws2, '流水明细':ws3 } };
+    try{
+      XLSX.writeFile(wb,'秦安秦剧团_财务年度汇总_'+year+'.xlsx',{cellStyles:true});
+      T('✅ 已导出 '+year+'年度财务汇总（年度汇总/月度对账/流水明细 3 个工作表）','success',3500);
+    }catch(err){ console.warn('[fin.export]',err); T('❌ Excel 生成失败，改用 CSV 导出','error',3500); _finExportCsv(year); }
+  }
+  // CSV 兜底：流水明细（BOM，Excel 直接打开不乱码）
+  async function _finExportCsv(year){
+    try{
+      var g=await _finGather(year);
+      var head=['日期','凭证号','类型','分类','摘要','关联订单','收入(元)','支出(元)','对方账户/方式','凭证状态','对账'];
+      var lines=[head.join(',')];
+      g.ledger.forEach(function(it){
+        var r=it.r,row=[_finD2(it.d),r.voucherNo||'',_FIN_VTT[r.voucherType]||'',r.voucherCategory||'',r.summary||'',r.orderId||'',Number(r.creditAmount)||'',Number(r.debitAmount)||'',r.offsetAccount||'',_FIN_VST[r.status]||r.status||'',r.isReconciled?'已对账':'未对账'];
+        lines.push(row.map(function(v){ v=String(v==null?'':v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }).join(','));
+      });
+      var blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+      var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='秦安秦剧团_财务流水明细_'+year+'.csv'; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },2000);
+    }catch(e){ T('❌ 导出失败：'+(e.message||e),'error'); }
+  }
+
   function bind(){
     var btns = document.querySelectorAll('.admin-page-actions .btn');
     if(btns[0]){ btns[0].__superPatchBound=1; btns[0].onclick=function(){ openAdd('income'); }; }
     if(btns[1]){ btns[1].__superPatchBound=1; btns[1].onclick=function(){ openAdd('expense'); }; }
-    if(btns[2]){ btns[2].__superPatchBound=1; btns[2].onclick=function(){ T('📊 月度对账：请选择日期范围后查看汇总','info'); }; }
+    if(btns[2]){ _finMarkBtn(btns[2]); btns[2].onclick=function(){ openMonthlyRecon(); }; }
+    if(btns[3]){ _finMarkBtn(btns[3]); btns[3].onclick=function(){ exportFinanceXlsx(); }; }
     var qBtn = document.querySelector('.btn-primary.btn-sm');
     if(qBtn && qBtn.textContent.indexOf('查询')>=0){ qBtn.__superPatchBound=1; qBtn.onclick=function(){ load(); }; }
   }
