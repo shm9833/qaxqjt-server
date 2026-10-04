@@ -69,6 +69,48 @@
     return { y: y, m: m };
   }
 
+  /* ---------- OBS-1 修复：筛选器默认当前年月、日期框默认今天、清理 {year} 占位文案 ---------- */
+  function pad2(n) { return String(n).padStart ? String(n).padStart(2, '0') : (n < 10 ? '0' + n : '' + n); }
+  function syncFilterToToday() {
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = now.getMonth() + 1;
+    var sels = document.querySelectorAll('.admin-filter-bar select');
+    if (sels[0]) {
+      var yv = String(sels[0].value);
+      var hasYear = false;
+      Array.prototype.forEach.call(sels[0].options, function (o) { if (o.value === String(y)) hasYear = true; });
+      if (!hasYear) {
+        var op = document.createElement('option');
+        op.value = String(y);
+        op.textContent = y + '年';
+        sels[0].insertBefore(op, sels[0].firstChild);
+      }
+      sels[0].value = String(y);
+    }
+    if (sels[1]) sels[1].value = String(m);
+    // 新增排期弹窗日期默认今天（仅当为空或非法值，如历史 {year}-07-20 占位符）
+    var dEl = document.getElementById('schedDate');
+    if (dEl) {
+      var v = (dEl.value || '').trim();
+      var d = v ? new Date(v + 'T00:00:00') : null;
+      if (!v || !d || isNaN(d.getTime())) dEl.value = y + '-' + pad2(m) + '-' + pad2(now.getDate());
+    }
+    return { y: y, m: m };
+  }
+  function initDefaults() {
+    var ym = syncFilterToToday();
+    // 清理静态标题里的 {year}/7月 占位文案（真实渲染不再覆盖这些节点）
+    [
+      ['calendarTitleText', ym.y + '年 ' + ym.m + '月 演出排期日历'],
+      ['weekTitleText', ym.y + '年 ' + ym.m + '月 本周排期一览'],
+      ['listTitleText', ym.y + '年 ' + ym.m + '月 全量排期清单（按日期升序）']
+    ].forEach(function (pair) {
+      var el = document.getElementById(pair[0]);
+      if (el && (el.textContent || '').indexOf('{year}') >= 0) el.textContent = pair[1];
+    });
+  }
+
   /* ---------- 数据拉取：按月拉取（替代 pageSize:500 全量拉取） ---------- */
   function refresh() {
     if (!API || typeof API.get !== 'function') return Promise.resolve([]);
@@ -348,22 +390,68 @@
         }, 60);
       });
     });
-    // 查询栏按钮：查询/重置/今日后重拉真实数据并刷新列表卡
+    // 查询栏按钮：查询=按所选年月重新拉数；今日=筛选器回到今天并重拉；重置=清空类型/状态+回到今天
     document.querySelectorAll('.admin-filter-bar .btn, .admin-filter-bar button').forEach(function (b) {
       if (b.__schedRealBound2) return;
       var txt = (b.textContent || '').replace(/\s+/g, ' ').trim();
       if (txt.indexOf('查询') >= 0 || txt.indexOf('重置') >= 0 || txt.indexOf('今日') >= 0) {
         b.__schedRealBound2 = true;
         b.addEventListener('click', function () {
-          setTimeout(function () { renderListCards(); var ym = selectedYM(); renderAlerts(ym.y, ym.m); }, 120);
+          if (txt.indexOf('今日') >= 0) {
+            syncFilterToToday();
+            weekOffset = 0;
+          } else if (txt.indexOf('重置') >= 0) {
+            var rs = document.querySelectorAll('.admin-filter-bar select');
+            if (rs[2]) rs[2].value = '';
+            if (rs[3]) rs[3].value = '';
+            syncFilterToToday();
+          }
+          // 查询/重置/今日均需按当前筛选年月重新拉取（原先只本地过滤，切换月份后看不到新月数据）
+          setTimeout(function () {
+            refresh().then(function () {
+              var ym = selectedYM();
+              renderAlerts(ym.y, ym.m);
+              renderWeekGrid(0);
+            });
+          }, 60);
         }, true);
       }
     });
+    // 年/月下拉直接 change 即重新拉数，无需再点查询
+    var ymSels = document.querySelectorAll('.admin-filter-bar select');
+    [ymSels[0], ymSels[1]].forEach(function (sel) {
+      if (!sel || sel.__schedYmBound) return;
+      sel.__schedYmBound = true;
+      sel.addEventListener('change', function () {
+        refresh().then(function () {
+          var ym = selectedYM();
+          renderAlerts(ym.y, ym.m);
+          weekOffset = 0;
+          renderWeekGrid(0);
+        });
+      });
+    });
+    // 月历导航“今天”按钮：真实回到今天（拦截内联脚本的 {year}年7月15日 假 toast）
+    var calToday = document.getElementById('calNavToday');
+    if (calToday && !calToday.__schedTodayBound) {
+      calToday.__schedTodayBound = true;
+      calToday.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        syncFilterToToday();
+        weekOffset = 0;
+        refresh().then(function () {
+          var ym = selectedYM();
+          renderAlerts(ym.y, ym.m);
+          renderWeekGrid(0);
+        });
+      }, true);
+    }
   }
 
   function boot() {
     installHooks();
     bindHeaderSearch();
+    initDefaults();
     refresh();
     // 内联脚本可能在稍后才挂载 __renderCalendar，再补一次包装
     setTimeout(installHooks, 300);

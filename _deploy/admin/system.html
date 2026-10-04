@@ -72,7 +72,7 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260930a"></script>
+<script src="../js/app.js?v=20261004b"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
   <script src="../js/pagination.js?v=20261002a"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -1666,46 +1666,50 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 保存成功','success');
-        try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isEdit){
         if(!__L(doneKey,700)) return;
         __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
-        __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isDel){
         if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-        if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
-        try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
+        /* P1修复:假成功已移除（原为假确认+假删行+假成功toast；经查该分支无真实UI切换） */
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
         if(!__L(doneKey,500)) return;
         __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
-        __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isVerify){
         if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
         __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
-        __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isExport){
         if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
         __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
-        __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 准备新增「'+txt+'」','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -1713,18 +1717,18 @@ var __pT0=0;
       if(isAudit){
         if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
-        if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
       var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
       if(isSign){
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -1732,7 +1736,8 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -1740,18 +1745,18 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
       var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
       if(isCancelOrHandle && !isDel && !isSave){
         if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if((txt.indexOf('取消')>=0) && !confirm('确认取消：'+(trKey||'当前记录')+'？')) return;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
-        var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -1762,39 +1767,26 @@ var __pT0=0;
 } /* end of 防重复注入保护 if */
 
 /* ========== 🔧 系统维护操作函数 ========== */
+/* P1修复:假成功已移除 —— 早期stub无真实后端实现（页面后部已有真实API实现覆盖本组函数），统一提示未接入 */
 window.runHealthCheck = function(){
   var toast = window.QinApp && QinApp.Utils && QinApp.Utils.toast;
-  toast && toast('🩺 正在执行系统健康检查…','warning');
-  setTimeout(function(){
-    toast && toast('✅ 系统健康检查通过：CPU 12% | 内存 58% | 磁盘 34% | API 响应正常','success');
-  }, 1200);
+  toast && toast('该功能暂未接入后端','warning');
 };
 window.batchMarkResolved = function(){
   var toast = window.QinApp && QinApp.Utils && QinApp.Utils.toast;
-  if(!confirm('确认将所有未解决的告警标记为已解决？')) return;
-  toast && toast('✅ 已批量标记告警为已解决','success');
+  toast && toast('该功能暂未接入后端','warning');
 };
 window.batchExportLogs = function(){
   var toast = window.QinApp && QinApp.Utils && QinApp.Utils.toast;
-  toast && toast('📤 正在导出系统日志…','warning');
-  setTimeout(function(){
-    toast && toast('✅ 日志导出完成：CSV/Excel 文件已就绪','success');
-  }, 1500);
+  toast && toast('该功能暂未接入后端','warning');
 };
 window.batchCleanupExpired = function(){
   var toast = window.QinApp && QinApp.Utils && QinApp.Utils.toast;
-  if(!confirm('确认清理所有过期数据（含过期预约、临时文件）？此操作不可撤销！')) return;
-  toast && toast('🗑️ 正在清理过期数据…','warning');
-  setTimeout(function(){
-    toast && toast('✅ 过期数据清理完成','success');
-  }, 1200);
+  toast && toast('该功能暂未接入后端','warning');
 };
 window.triggerBackup = function(){
   var toast = window.QinApp && QinApp.Utils && QinApp.Utils.toast;
-  toast && toast('💾 正在触发数据备份…','warning');
-  setTimeout(function(){
-    toast && toast('✅ 数据备份完成：备份包已生成','success');
-  }, 1800);
+  toast && toast('该功能暂未接入后端','warning');
 };
 /* ========== 🖥️ 全屏切换函数 ========== */
 window.toggleFullscreen = function() {
@@ -1976,10 +1968,8 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 提交成功','success');
-        setTimeout(function(){
-          try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
-        }, 380);
+        /* P1修复:假成功已移除 */
+        __toastH9('该功能暂未接入后端','warning');
         return false;
       }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
     }, true);
@@ -2143,6 +2133,7 @@ function __pLog(module,event,extra){
     function _isPgContainer(el){
       try{
         if(!el || el.nodeType!==1) return false;
+        if(el.closest && el.closest('.sp-pg-toolbar-20260730,.pagination-toolbar')) return false;
         var tag = (el.tagName||'').toUpperCase();
         if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
         var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
@@ -2171,7 +2162,8 @@ function __pLog(module,event,extra){
     }
     function _buildPg(container){
       try{
-        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
+        if(container.hasAttribute('data-pg-built')||container.querySelector('.sp-pg-toolbar-20260730')) return; container.setAttribute('data-pg-built','1');
+        if(container.classList && (container.classList.contains('sp-pg-toolbar-20260730')||container.classList.contains('pagination-toolbar'))) return;
         var oldToolbar = container.querySelector('.pagination-toolbar');
         if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
         var st = _ensurePgState(container);
@@ -2186,6 +2178,7 @@ function __pLog(module,event,extra){
         if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
         var wrap = document.createElement('div');
         wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.setAttribute('data-pg-built','1');
         wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
         wrap.innerHTML = ''+
           '<button class="btn btn-sm" data-pg="first">首页</button>'+
@@ -2283,7 +2276,7 @@ function __pLog(module,event,extra){
     function _scanPagination(){
       try{
         var all = document.querySelectorAll('div,nav,section,span');
-        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
+        all.forEach(function(el){ if(el.hasAttribute('data-pg-built')) return; if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
         if(!document.getElementById('_pgPatchCSS20260730')){
           sty.id='_pgPatchCSS20260730';
@@ -2435,36 +2428,34 @@ function __pLog(module,event,extra){
         var trKey = '';
         if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
         __spT0 = Date.now();
+        /* P1修复:假成功已移除（死按钮兜底，无真实实现） */
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功','success');
-          setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='delete'){
-          if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
-            __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
-          }else{ __toastH9('↩️ 已取消操作','info'); }
+          __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印','info');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪','info');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增','info');
+          __toastH9('该功能暂未接入后端','warning');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
+          console.warn('[P1] 未接线按钮:', txt || '未分类按钮');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }

@@ -527,7 +527,7 @@
     })();
   </script>
   <script src="js/year-lite.js?v=20260803"></script>
-  <script src="js/app.js?v=20260930a"></script>
+  <script src="js/app.js?v=20261004b"></script>
   <!-- 🔧 D块前台×按钮兜底（语法安全修复）：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
   <script>
   (function(){
@@ -596,11 +596,13 @@
           var firstBad=null;
           try{ reqFails.forEach(function(inp){ var v=(inp.value||''); var ok=true; if(inp.type==='checkbox' && !inp.checked) ok=false; else if(inp.type!=='checkbox' && inp.type!=='radio' && !v.trim()) ok=false; if(!ok){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}}, 1800);}catch(_b){} } }); }catch(_rf){}
           if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
-          __FT('✅ 操作成功，对接专员将尽快与您联系','success');
-          try{ fm.reset && fm.reset(); }catch(_rs){}
+          /* P1修复:假受理已改诚实暂存：数据仅存本设备localStorage，不伪造受理、不自动重置 */
+          var __dft={};try{for(var __ei=0;__ei<fm.elements.length;__ei++){var __el=fm.elements[__ei];if(!__el||!__el.name||__el.type==='file')continue;if(__el.type==='checkbox'){if(__el.checked)__dft[__el.name]=(__dft[__el.name]?__dft[__el.name]+'、':'')+(__el.value||'✓');continue;}var __vv=String(__el.value||'').trim();if(__vv)__dft[__el.name]=__vv.slice(0,500);}}catch(_se){}
+          try{var __dk='qaxqjt_public_form_draft_delivery';var __arr=null;try{__arr=JSON.parse(localStorage.getItem(__dk)||'[]');}catch(_pe){__arr=null;}if(!Array.isArray(__arr))__arr=[];__arr.push({form:(fm.id||''),data:__dft,savedAt:new Date().toISOString()});localStorage.setItem(__dk,JSON.stringify(__arr.slice(-50)));}catch(_le){}
+          __FT('ℹ️ 本站暂未开通在线自动受理：信息已暂存在您的设备本地，不会自动提交给剧团，请通过页面下方的电话/微信联系我们（13993839833）','warning');
           e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
         } else {
-          __FT('✅ 操作成功','success');
+          /* P1修复:假受理已改诚实提示 */ __FT('ℹ️ 本站暂未开通在线自动受理：请拨打 13993839833 或通过页面下方的电话/微信与我们联系','info');
           try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
           btn.__ftDone=1; e.stopImmediatePropagation(); return;
         }
