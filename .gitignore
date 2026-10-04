@@ -59,3 +59,29 @@ ELK部署工具包.zip
   
 .vercel
 .env*
+
+# ========== 敏感凭据/密钥/密码工具（严禁入库） ==========
+# 服务器/WinRM/RDP 凭据与探测脚本
+cred*.txt
+keyinfo*.txt
+*keyinfo*
+gethash*.js
+*hash_out*
+readkey*.ps1
+readreset*.ps1
+reset*.js
+reset*.txt
+run-reset*.ps1
+resetcheck*
+resetinfo*
+test_hash*.js
+test_winrm*.py
+winrm-test*
+unlock_out.txt
+*.rdp
+admin_hash.txt
+auth_b64.txt
+index_b64.txt
+
+# 内部技能/部署凭据（含活密码，永不入库）
+.trae/
