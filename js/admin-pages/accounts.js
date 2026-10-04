@@ -1,0 +1,2399 @@
+/* accounts.js — 从 admin/accounts.html 抽取的内联脚本（第 2/2 段，保持原执行位置） */
+
+/* ===== accounts.html inline block (run 2, #1/6) ===== */
+(function() {
+      var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
+      var LOGOUT_BLACKLIST_KEY = 'qaxqjt_logout_blacklist';
+      // BLOCKER B8 FIX：退出登录时，一并清理历史遗留/辅助登录态 keys（v2/token/remember/permissions/info 等），防残留鉴权绕过
+      var __ADMIN_LEGACY_KEYS = ['qaxqjt_admin_session','admin_session','qaxqjt_admin_sess_v2','admin_sess_v2','qaxqjt_admin_remember','qaxqjt_admin_token','qaxqjt_admin_info','qaxqjt_admin_permissions','qaxqjt_auth_permissions_v1'];
+      function __clearAdminLegacyKeys(excludeKey) { for (var __k=0; __k<__ADMIN_LEGACY_KEYS.length; __k++) { var __kk=__ADMIN_LEGACY_KEYS[__k]; if (excludeKey && __kk===excludeKey) continue; try { localStorage.removeItem(__kk); } catch(_){} } }
+
+      function __isBlacklistedSess(sessId) {
+        if (!sessId) return false;
+        try {
+          var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
+          if (!raw) return false;
+          var list = JSON.parse(raw) || [];
+          for (var bi = 0; bi < list.length; bi++) {
+            if (list[bi].id === sessId) return true;
+          }
+        } catch (_) {}
+        return false;
+      }
+
+      function __pruneBlacklist() {
+        try {
+          var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
+          if (!raw) return;
+          var list = JSON.parse(raw) || [];
+          var cutoff = Date.now() - 24 * 60 * 60 * 1000;
+          var newList = list.filter(function (x) { return (x.ts || 0) > cutoff; });
+          if (newList.length !== list.length) localStorage.setItem(LOGOUT_BLACKLIST_KEY, JSON.stringify(newList));
+        } catch (_) {}
+      }
+
+      function checkAuth() {
+        var session = null;
+        try {
+          var raw = localStorage.getItem(ADMIN_STORAGE_KEY);
+          if (raw) session = JSON.parse(raw);
+        } catch (e) { session = null; }
+        if (!session) {
+          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
+          window.location.replace('login.html');
+          return null;
+        }
+        if (session.expiresAt && Date.now() > parseInt(session.expiresAt, 10)) {
+          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
+          __pruneBlacklist();
+          window.location.replace('login.html');
+          return null;
+        }
+        if (__isBlacklistedSess(session.id)) {
+          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
+          window.location.replace('login.html');
+          return null;
+        }
+        return session;
+      }
+
+      try {
+        window.addEventListener('storage', function (evt) {
+          if (!evt) return;
+          if (evt.key === ADMIN_STORAGE_KEY && !evt.newValue) {
+            try { window.location.replace('login.html'); } catch (_) {}
+          }
+          if (evt.key === LOGOUT_BLACKLIST_KEY) {
+            try {
+              var cur = localStorage.getItem(ADMIN_STORAGE_KEY);
+              if (cur) {
+                var curSess = JSON.parse(cur);
+                if (__isBlacklistedSess(curSess && curSess.id)) window.location.replace('login.html');
+              }
+            } catch (_) {}
+          }
+        }, false);
+      } catch (_evt) {}
+
+      // —— 角色级别映射（与后端 ROLE_LEVEL 对齐，前端 admin→super_admin, finance→finance_admin）——
+      var __ROLE_LEVEL = { super_admin:999, admin:999, ops:800, director:700, finance_checker:600, finance_cashier:520, finance_maker:550, finance_view:510, finance_admin:500, finance:500, staff:100 };
+      function __getRoleLevel(role) {
+        if (!role) return 0;
+        return __ROLE_LEVEL[role] || 0;
+      }
+      // —— 基于角色过滤侧边栏菜单（隐藏无权限菜单项）——
+      function __applyRoleMenuFilter(session) {
+        if (!session) return;
+        var userLevel = __getRoleLevel(session.role);
+        var items = document.querySelectorAll('.admin-sidebar-menu .admin-menu-item[data-role-level]');
+        items.forEach(function(item) {
+          var need = parseInt(item.getAttribute('data-role-level'), 10) || 0;
+          if (userLevel < need) {
+            item.style.display = 'none';
+          }
+        });
+      }
+
+      var currentSession = checkAuth();
+      __applyRoleMenuFilter(currentSession);
+      // —— 页面级权限拦截：直接访问 URL 时检查角色，不足则跳首页 ——
+      (function() {
+        if (!currentSession) return;
+        var userLvl = __getRoleLevel(currentSession.role);
+        if (userLvl < 999) {
+          location.replace('index.html');
+        }
+      })();
+      var tabBtns = document.querySelectorAll('[data-tab-btn]');
+      var tabPanels = document.querySelectorAll('[data-tab-panel]');
+      tabBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var key = btn.getAttribute('data-tab-btn');
+          tabBtns.forEach(function(b) {
+            b.classList.toggle('active', b === btn);
+          });
+          tabPanels.forEach(function(p) {
+            p.classList.toggle('active', p.getAttribute('data-tab-panel') === key);
+          });
+        });
+      });
+
+      var checkAll = document.getElementById('checkAll');
+      if (checkAll) {
+        checkAll.addEventListener('change', function() {
+          var boxes = document.querySelectorAll('.admin-table-checkbox');
+          boxes.forEach(function(b) {
+            if (b !== checkAll) b.checked = checkAll.checked;
+          });
+        });
+      }
+
+      function logout() {
+        if (window.confirm('确定要退出登录吗？')) {
+          try {
+            var curSessId = (currentSession && currentSession.id) ? currentSession.id : null;
+            if (curSessId) {
+              var blackList = [];
+              try {
+                var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
+                if (raw) blackList = JSON.parse(raw) || [];
+              } catch (_) {}
+              blackList.push({ id: curSessId, ts: Date.now() });
+              if (blackList.length > 100) blackList = blackList.slice(-100);
+              try { localStorage.setItem(LOGOUT_BLACKLIST_KEY, JSON.stringify(blackList)); } catch (_) {}
+            }
+          } catch (_blk) {}
+          localStorage.removeItem(ADMIN_STORAGE_KEY);
+          __clearAdminLegacyKeys(ADMIN_STORAGE_KEY);
+          if (window.QinApp && window.QinApp.Admin) {
+            try { window.QinApp.Admin.logout(); } catch (_a) {}
+          }
+          try { window.location.replace('login.html'); } catch (_loc) { window.location.href = 'login.html'; }
+        }
+      }
+      var logoutBtnSidebar = document.getElementById('logoutBtnSidebar');
+      var logoutBtnDropdown = document.getElementById('logoutBtnDropdown');
+      if (logoutBtnSidebar) logoutBtnSidebar.addEventListener('click', logout);
+      if (logoutBtnDropdown) logoutBtnDropdown.addEventListener('click', logout);
+
+      // ========== 🛠️ 操作窗口 Bug 修复：12 个操作函数 + 自动事件绑定（原 69 按钮无 onclick 卡死） ==========
+      var __STORAGE_KEYS = {
+        USERS: 'qaxqjt_admin_users_v1',
+        ROLE_PERMS: 'qaxqjt_admin_role_perms_v1'
+      };
+      var __ROLE_LABELS = { admin: '超级管理员', finance: '财务人员', scheduler: '演出调度', staff: '普通员工' };
+      var __ALL_PERMS = [
+        { key: 'accounts.manage', label: '账号权限管理' },
+        { key: 'finance.manage', label: '财务收支管理' },
+        { key: 'schedule.manage', label: '档期排期管理' },
+        { key: 'orders.audit', label: '预约单审核确认' },
+        { key: 'operas.manage', label: '剧目曲目维护' },
+        { key: 'staff.manage', label: '人员档案管理' },
+        { key: 'attendance.manage', label: '考勤薪资管理' },
+        { key: 'reports.view', label: '统计报表查看' },
+        { key: 'inventory.manage', label: '道具设备管理' },
+        { key: 'content.manage', label: '内容图文维护' },
+        { key: 'system.config', label: '系统配置管理' },
+        { key: 'logs.audit', label: '操作日志审计' }
+      ];
+      var __editCtx = { mode: 'add', username: '', accountId: '' };
+      var __resetCtx = { accountId: '', username: '', label: '' };
+      var __deleteCtx = { accountId: '', username: '', label: '' };
+      var __roleCtx = { role: '', label: '', roleId: '', permIds: [], perms: [] };
+
+      // ========== 真实 API 映射常量 ==========
+      var __ROLE_KEY_TO_BACK = { admin: 'super_admin', finance: 'finance_view', scheduler: 'ops', staff: 'staff' };
+      var __ROLE_BACK_TO_KEY = (function(){ var m={}; m['super_admin']='admin'; ['finance_view','finance_admin','finance_checker','finance_maker','finance_cashier'].forEach(function(k){ m[k]='finance'; }); ['ops','director'].forEach(function(k){ m[k]='scheduler'; }); m['staff']='staff'; return m; })();
+      var __STATUS_FRONT_TO_BACK = { '1': 'active', '0': 'disabled' };
+      var __STATUS_BACK_TO_FRONT = { active: '1', disabled: '0', deleted: '0' };
+
+      function __fmtDate(d) {
+        if (!d) return '—';
+        try {
+          var dt = (typeof d === 'string') ? new Date(d) : d;
+          if (isNaN(dt.getTime())) return String(d);
+          var pad = function(n){ n=String(n); return n.length<2?'0'+n:n; };
+          return dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+' '+pad(dt.getHours())+':'+pad(dt.getMinutes());
+        } catch(_) { return String(d); }
+      }
+      function __fmtDateShort(d) {
+        if (!d) return '—';
+        try {
+          var dt = (typeof d === 'string') ? new Date(d) : d;
+          if (isNaN(dt.getTime())) return String(d);
+          var pad = function(n){ n=String(n); return n.length<2?'0'+n:n; };
+          return dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate());
+        } catch(_) { return String(d); }
+      }
+
+      // ========== 启动时拉取真实账号列表 ==========
+      async function loadAccountsFromApi(query) {
+        var tbody = document.getElementById('accountsMainTbody') || document.querySelector('.tab-panel[data-tab-panel="accounts"] tbody[data-paginate="list"]');
+        if (!tbody) { console.warn('[loadAccountsFromApi] tbody not found'); return; }
+        try {
+          // 筛选条件
+          var panel = document.querySelector('.tab-panel[data-tab-panel="accounts"]');
+          var keywordInput = panel && panel.querySelector('.admin-filter-bar input[type=text]');
+          var roleSel = panel && panel.querySelectorAll('.admin-filter-bar select')[0];
+          var statusSel = panel && panel.querySelectorAll('.admin-filter-bar select')[1];
+          var q = { page: 1, pageSize: 100 };
+          if (query && query.keyword) q.keyword = query.keyword;
+          else if (keywordInput && keywordInput.value) q.keyword = keywordInput.value;
+          if (query && query.role) q.role = query.role;
+          else if (roleSel && roleSel.value) q.role = __ROLE_KEY_TO_BACK[roleSel.value] || roleSel.value;
+          if (query && query.status) q.status = query.status;
+          else if (statusSel && statusSel.value) q.status = __STATUS_FRONT_TO_BACK[statusSel.value] || '';
+          var rows = await QAXQJT_API.get('/v1/accounts', { query: q });
+          rows = Array.isArray(rows) ? rows : (rows && rows.items) || (rows && rows.list) || [];
+          tbody.innerHTML = '';
+          var idx = 0;
+          rows.forEach(function(r) {
+            if (r.status === 'deleted') return; // 软删的不在列表显示
+            idx++;
+            var roleKey = __ROLE_BACK_TO_KEY[r.role] || 'staff';
+            var roleLabel = __ROLE_LABELS[roleKey] || r.role || '普通员工';
+            var roleBadgeCls = __roleBadgeClassMap[roleKey] || 'badge badge-secondary';
+            var statusFront = __STATUS_BACK_TO_FRONT[r.status] || '1';
+            var enabled = statusFront === '1';
+            var statusBadgeCls = enabled ? 'badge badge-success' : 'badge badge-warning';
+            var statusText = enabled ? '✓ 启用' : '⏸ 禁用';
+            var btnStatusCls = enabled ? 'btn-warning' : 'btn-success';
+            var btnStatusText = enabled ? '禁用' : '启用';
+            var isAdmin = String(r.username) === 'admin';
+            var tr = document.createElement('tr');
+            tr.setAttribute('data-account-id', String(r.id || ''));
+            tr.innerHTML =
+              '<td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>' +
+              '<td>'+idx+'</td>' +
+              '<td><strong>'+__escapeHtml(r.username||'')+'</strong></td>' +
+              '<td>'+__escapeHtml(r.realName||'')+'</td>' +
+              '<td><span class="'+roleBadgeCls+'">'+__escapeHtml(roleLabel)+'</span></td>' +
+              '<td>'+__escapeHtml(r.phone||'—')+'</td>' +
+              '<td>'+__escapeHtml(r.email||'—')+'</td>' +
+              '<td><span class="'+statusBadgeCls+'">'+statusText+'</span></td>' +
+              '<td>'+__escapeHtml(r.lastLoginAt?__fmtDate(r.lastLoginAt):'—')+'</td>' +
+              '<td>'+__escapeHtml(r.createdAt?__fmtDateShort(r.createdAt):'—')+'</td>' +
+              '<td><div class="action-btn-group">' +
+                '<button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>' +
+                '<button class="btn btn-gold btn-sm">🔑 重置</button>' +
+                '<button class="btn '+btnStatusCls+' btn-sm"'+(isAdmin?' disabled':'')+'>'+btnStatusText+'</button>' +
+                '<button class="btn btn-danger btn-sm"'+(isAdmin?' disabled':'')+'>删除</button>' +
+              '</div></td>';
+            tbody.appendChild(tr);
+          });
+          if (!idx) {
+            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:#999;">暂无账号数据</td></tr>';
+          }
+          // 重新绑定按钮
+          try { __bindAllActionButtons(); } catch(_ba){ console.warn('[__bindAllActionButtons 异常]', _ba); }
+        } catch (e) {
+          console.warn('[loadAccountsFromApi 失败]', e);
+          __toast('⚠️ 加载账号列表失败：' + (e && e.message ? e.message : e), 'error');
+        }
+      }
+
+      // ========== 启动时拉取真实审计日志列表 ==========
+      // ====== 审计日志：服务端真分页（v20260926，替代写死 100 条的假分页栏）======
+      var __auditPg = { page: 1, pageSize: 10, total: 0, filter: null };
+
+      // QAXQJT_API.get 会剥掉信封只回 data，这里需要 meta.total，故直接走信封级 fetch
+      async function __auditFetchEnvelope(path) {
+        var CFG = window.QAXQJT_API_CONFIG || {};
+        var url = (CFG.resolveUrl ? CFG.resolveUrl(path) : path);
+        var headers = { 'Accept': 'application/json' };
+        var t = CFG.getAccessToken && CFG.getAccessToken();
+        if (t) headers['Authorization'] = 'Bearer ' + t;
+        var res = await fetch(url, { headers: headers, credentials: CFG.BASE ? 'include' : 'same-origin' });
+        var j = await res.json();
+        if (!res.ok || j.ok === false) throw new Error((j.error && j.error.message) || ('HTTP ' + res.status));
+        return j;
+      }
+
+      function __auditDetailText(r) {
+        var d = r.detailJson != null ? r.detailJson : r.detail;
+        if (d == null || d === '') return r.action || '';
+        if (typeof d === 'string') return d;
+        try { return JSON.stringify(d); } catch (_) { return String(d); }
+      }
+      function __auditDateTime(ts) {
+        if (!ts) return '—';
+        var d = new Date(ts);
+        if (isNaN(d.getTime())) return String(ts);
+        function p(n){ return n < 10 ? '0' + n : '' + n; }
+        return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+      }
+
+      function __renderAuditPager() {
+        var wrap = document.getElementById('auditPager');
+        if (!wrap) return;
+        var page = __auditPg.page, pageCount = Math.max(1, Math.ceil(__auditPg.total / __auditPg.pageSize));
+        function btn(label, pg, opts) {
+          opts = opts || {};
+          var b = document.createElement('button');
+          b.type = 'button';
+          /* v20260926b 防首次点击被兜底脚本劫持：立即打早退标记（_hasAction/DBF 均认） */
+          b.__superPatchBound = 1; b.__deadBtnChecked = 1;
+          b.className = 'btn btn-sm' + (opts.active ? ' btn-primary' : ' btn-outline-dark');
+          b.style.cssText = 'border-radius:999px;padding:4px 12px;';
+          b.textContent = label;
+          if (opts.disabled) { b.disabled = true; b.style.opacity = '0.45'; b.style.cursor = 'not-allowed'; }
+          else if (!opts.active) { b.addEventListener('click', function () { __auditPg.page = pg; loadAuditLogsFromApi(Object.assign({}, __auditPg.filter, { __keepPage: true })); }); }
+          return b;
+        }
+        wrap.innerHTML = '';
+        var info = document.createElement('span');
+        info.style.cssText = 'margin-right:auto;color:var(--text-light,#888);';
+        info.textContent = '共 ' + __auditPg.total + ' 条 · 第 ' + page + '/' + pageCount + ' 页';
+        wrap.appendChild(info);
+        wrap.appendChild(btn('首页', 1, { disabled: page <= 1 }));
+        wrap.appendChild(btn('‹ 上一页', page - 1, { disabled: page <= 1 }));
+        var start = Math.max(1, page - 2), end = Math.min(pageCount, start + 4);
+        start = Math.max(1, end - 4);
+        for (var p = start; p <= end; p++) wrap.appendChild(btn(String(p), p, { active: p === page }));
+        wrap.appendChild(btn('下一页 ›', page + 1, { disabled: page >= pageCount }));
+        wrap.appendChild(btn('末页', pageCount, { disabled: page >= pageCount }));
+        var sel = document.createElement('select');
+        sel.className = 'form-control form-control-sm';
+        sel.style.cssText = 'width:auto;padding:4px 8px;margin-left:6px;';
+        [10, 20, 50, 100].forEach(function (sz) {
+          var o = document.createElement('option');
+          o.value = String(sz); o.textContent = sz + ' 条/页';
+          if (sz === __auditPg.pageSize) o.selected = true;
+          sel.appendChild(o);
+        });
+        sel.addEventListener('change', function () {
+          __auditPg.pageSize = parseInt(sel.value, 10) || 10;
+          __auditPg.page = 1;
+          loadAuditLogsFromApi(Object.assign({}, __auditPg.filter, { __keepPage: true }));
+        });
+        wrap.appendChild(sel);
+      }
+
+      async function loadAuditLogsFromApi(query) {
+        var panel = document.querySelector('.tab-panel[data-tab-panel="logs"]');
+        if (!panel) return;
+        var tbody = document.getElementById('auditLogsMainTbody');
+        if (!tbody) return;
+        if (query && query.__keepPage) { /* 翻页/切页大小：保留 __auditPg.page */ }
+        else if (query && query.__page) __auditPg.page = query.__page;
+        else if (query && (query.username !== undefined || query.action !== undefined || query.from !== undefined)) __auditPg.page = 1; // 新查询回到第 1 页
+        __auditPg.filter = query || null;
+        try {
+          var inputs = panel.querySelectorAll('.admin-filter-bar input[type=text]');
+          var selects = panel.querySelectorAll('.admin-filter-bar select');
+          var dateInputs = panel.querySelectorAll('.admin-filter-bar input[type=date]');
+          var q = { page: __auditPg.page, pageSize: __auditPg.pageSize };
+          if (query && query.username) q.username = query.username;
+          else if (inputs && inputs[0] && inputs[0].value) q.username = inputs[0].value;
+          if (query && query.action) q.action = query.action;
+          else if (selects && selects[0] && selects[0].value) q.action = selects[0].value;
+          // 单日期筛选按整天处理：from=当天 00:00:00，to=当天 23:59:59（后端 to 是 <=）
+          var day = (query && query.from) || (dateInputs && dateInputs[0] && dateInputs[0].value) || '';
+          if (day) { q.from = day + ' 00:00:00'; q.to = day + ' 23:59:59'; }
+          if (query && query.to && !day) q.to = query.to;
+          var qs = Object.keys(q).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(q[k]); }).join('&');
+          var env = await __auditFetchEnvelope('/v1/audit-logs?' + qs);
+          var rows = Array.isArray(env.data) ? env.data : [];
+          __auditPg.total = (env.meta && env.meta.total) || rows.length;
+          var pageCount = Math.max(1, Math.ceil(__auditPg.total / __auditPg.pageSize));
+          if (__auditPg.page > pageCount) { __auditPg.page = pageCount; return loadAuditLogsFromApi(query); }
+          tbody.innerHTML = '';
+          var base = (__auditPg.page - 1) * __auditPg.pageSize;
+          rows.forEach(function (r, i) {
+            var tr = document.createElement('tr');
+            var fail = String(r.action || '').indexOf('FAIL') >= 0;
+            tr.innerHTML =
+              '<td>' + (base + i + 1) + '</td>' +
+              '<td><strong>' + __escapeHtml(r.username || r.accountId || '—') + '</strong></td>' +
+              '<td>' + __escapeHtml(r.module || '—') + '</td>' +
+              '<td><span class="badge ' + (fail ? 'badge-warning' : 'badge-info') + '">' + __escapeHtml(r.action || '') + '</span></td>' +
+              '<td>' + __escapeHtml(__auditDetailText(r)) + '</td>' +
+              '<td>' + __escapeHtml(r.ipAddress || '—') + '</td>' +
+              '<td>' + __escapeHtml(__auditDateTime(r.actionTs)) + '</td>';
+            tbody.appendChild(tr);
+          });
+          if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#999;">暂无审计日志</td></tr>';
+          }
+          __renderAuditPager();
+        } catch (e) {
+          console.warn('[loadAuditLogsFromApi 失败]', e);
+          __toast('⚠️ 加载审计日志失败：' + (e && e.message ? e.message : e), 'error');
+        }
+      }
+
+      function __toast(msg, type) { try { if (window.Utils && Utils.toast) Utils.toast(msg, type || 'success', 2600); else alert(msg); } catch(_e) { try { alert(msg); } catch(_){} } }
+      function __getCellText(tr, idx) { var tds = tr.querySelectorAll('td'); if (!tds[idx]) return ''; var s = tds[idx].innerText || tds[idx].textContent || ''; return s.trim(); }
+      function __getBadgeStatus(tr, idx) { var tds = tr.querySelectorAll('td'); if (!tds[idx]) return '1'; var s = tds[idx].innerText || ''; if (s.indexOf('禁用') >= 0 || s.indexOf('✕') >= 0) return '0'; return '1'; }
+      function __getRoleValue(tr, idx) { var label = __getCellText(tr, idx); for (var k in __ROLE_LABELS) { if (__ROLE_LABELS[k] === label) return k; } return 'staff'; }
+
+      function openModal(id) { try { var el = document.getElementById(id); if (el) { el.classList.add('show'); document.body.style.overflow = 'hidden'; } } catch(e){} }
+      function closeModal(id) { try { var el = document.getElementById(id); if (el) { el.classList.remove('show'); document.body.style.overflow = ''; } } catch(e){} }
+      function closeUserModal() { closeModal('userModal'); }
+      function closeResetPwdModal() { closeModal('resetPwdModal'); }
+      function closeDeleteModal() { closeModal('deleteModal'); }
+      function closeRolePermModal() { closeModal('rolePermModal'); }
+
+      function showPermConfig() {
+        if (!confirm('权限配置将打开角色权限批量编辑入口（所有角色权限集中管理），是否跳转？')) return;
+        var btns = document.querySelectorAll('[data-tab-btn="roles"]');
+        if (btns && btns.length) { btns[0].click(); }
+        __toast('✅ 已跳转到「🎭 角色管理」选项卡（请点角色卡片的「🛡️ 编辑权限」按钮配置）', 'success');
+      }
+
+      function showAddUserModal() {
+        __editCtx = { mode: 'add', username: '', accountId: '' };
+        document.getElementById('userModalTitle').innerText = '➕ 新增账号';
+        document.getElementById('box_pwd').style.display = '';
+        try {
+          var unInput = document.getElementById('inp_username');
+          unInput.value = '';
+          unInput.readOnly = false;
+          document.getElementById('inp_realname').value = '';
+          document.getElementById('inp_role').value = 'staff';
+          document.getElementById('inp_phone').value = '';
+          document.getElementById('inp_email').value = '';
+          document.getElementById('inp_password').value = 'Qaxqjt@2026';
+          document.getElementById('inp_status').value = '1';
+        } catch(_){}
+        openModal('userModal');
+      }
+
+      function showEditUserModal(accountId, username, realname, role, phone, email, status) {
+        if (!accountId) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
+        __editCtx = { mode: 'edit', username: String(username||''), accountId: String(accountId) };
+        document.getElementById('userModalTitle').innerText = '✏️ 编辑账号（' + String(username || accountId) + '）';
+        document.getElementById('box_pwd').style.display = 'none';
+        try {
+          document.getElementById('inp_username').value = String(username || '');
+          document.getElementById('inp_username').readOnly = true;
+          document.getElementById('inp_realname').value = String(realname || '');
+          var roleKey = __ROLE_BACK_TO_KEY[String(role||'')] || String(role||'staff');
+          if (__ROLE_KEY_TO_BACK[roleKey]) roleKey = roleKey; // 已是合法前端 key
+          document.getElementById('inp_role').value = (Object.keys(__ROLE_KEY_TO_BACK).indexOf(roleKey) >= 0) ? roleKey : 'staff';
+          document.getElementById('inp_phone').value = String(phone || '');
+          document.getElementById('inp_email').value = String(email || '');
+          document.getElementById('inp_status').value = String(status === 0 ? '0' : (status === '0' ? '0' : '1'));
+        } catch(_){}
+        openModal('userModal');
+      }
+
+      function saveUser() {
+        // 🔧 S6-A FIX：防抖锁，防止快速双击重复提交
+        if (window.__OP_LOCKS && window.__OP_LOCKS.saveUser) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.saveUser = true; setTimeout(function () { try { delete window.__OP_LOCKS.saveUser; } catch (_) { } }, 800); } catch (_lo) { }
+        var uname = (document.getElementById('inp_username') || {}).value || '';
+        var rname = (document.getElementById('inp_realname') || {}).value || '';
+        if (!uname || !rname) { __toast('❌ 账号和姓名不能为空', 'error'); return; }
+        var unameRe = /^[A-Za-z0-9_\-\u4e00-\u9fa5]{3,32}$/;
+        if (!unameRe.test(String(uname))) { __toast('❌ 账号名不合法：仅允许字母、数字、下划线、短横、中文，长度 3-32 位', 'error'); return; }
+        var role = (document.getElementById('inp_role') || {}).value || 'staff';
+        var phone = (document.getElementById('inp_phone') || {}).value || '';
+        var email = (document.getElementById('inp_email') || {}).value || '';
+        var status = (document.getElementById('inp_status') || {}).value || '1';
+        if (phone) {
+          var phoneRe = /^1[3-9]\d{9}$/;
+          if (!phoneRe.test(String(phone))) { __toast('❌ 手机号格式不正确：请输入 11 位中国大陆手机号（如 13800000000）', 'error'); return; }
+        }
+        if (email) {
+          var emailRe = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/;
+          if (!emailRe.test(String(email))) { __toast('❌ 邮箱格式不正确：请输入合法邮箱地址（如 name@example.com）', 'error'); return; }
+        }
+        var roleBack = __ROLE_KEY_TO_BACK[role] || role;
+        var statusBack = __STATUS_FRONT_TO_BACK[status] || 'active';
+        if (__editCtx.mode === 'add') {
+          var rawPwd = (document.getElementById('inp_password') || {}).value || '';
+          var initialPwd = rawPwd || 'Qaxqjt@2026';
+          if (!initialPwd || initialPwd.length < 8) { __toast('❌ 初始密码长度至少 8 位', 'error'); return; }
+          (async function(){
+            try {
+              __toast('⏳ 正在创建账号…', 'success');
+              await QAXQJT_API.post('/v1/accounts', {
+                username: String(uname),
+                password: String(initialPwd),
+                realName: String(rname),
+                role: roleBack,
+                phone: String(phone),
+                email: String(email),
+                status: statusBack,
+                forcePwdChange: true
+              });
+              __toast('✅ 新增账号成功：' + uname + '（' + rname + '）· 初始密码：' + initialPwd + '（已写入后端）', 'success');
+              closeUserModal();
+              await loadAccountsFromApi();
+            } catch(e) {
+              __toast('❌ 新增失败：' + (e && e.message ? e.message : e), 'error');
+            }
+          })();
+        } else {
+          var accId = __editCtx.accountId;
+          if (!accId) { __toast('❌ 编辑模式缺少 accountId，请关闭后重试', 'error'); return; }
+          (async function(){
+            try {
+              __toast('⏳ 正在保存修改…', 'success');
+              await QAXQJT_API.patch('/v1/accounts/' + encodeURIComponent(accId), {
+                realName: String(rname),
+                role: roleBack,
+                phone: String(phone),
+                email: String(email),
+                status: statusBack
+              });
+              __toast('✅ 账号资料更新成功：' + uname + '（' + (__ROLE_LABELS[role] || role) + '）', 'success');
+              closeUserModal();
+              await loadAccountsFromApi();
+            } catch(e) {
+              __toast('❌ 保存失败：' + (e && e.message ? e.message : e), 'error');
+            }
+          })();
+        }
+      }
+
+      function showResetPwdModal(accountId, username, label) {
+        if (!accountId) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
+        __resetCtx = { accountId: String(accountId), username: String(username||''), label: String(label || username) };
+        document.getElementById('resetUserLabel').innerText = String(__resetCtx.label) + '（账号：' + String(__resetCtx.username) + '）';
+        document.getElementById('inp_new_pwd').value = 'Qaxqjt@2026';
+        openModal('resetPwdModal');
+      }
+      function doResetPwd() {
+        // 🔧 S6 FIX：防抖锁
+        if (window.__OP_LOCKS && window.__OP_LOCKS.doResetPwd) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.doResetPwd = true; setTimeout(function () { try { delete window.__OP_LOCKS.doResetPwd; } catch (_) { } }, 800); } catch (_lo) { }
+        var newPwd = (document.getElementById('inp_new_pwd') || {}).value || '';
+        if (!newPwd || newPwd.length < 8) { __toast('❌ 新密码长度至少 8 位', 'error'); return; }
+        var accId = __resetCtx.accountId;
+        if (!accId) { __toast('❌ 缺少 accountId', 'error'); return; }
+        (async function(){
+          try {
+            __toast('⏳ 正在重置密码…', 'success');
+            await QAXQJT_API.post('/v1/accounts/' + encodeURIComponent(accId) + '/reset-password', {
+              password: String(newPwd)
+            });
+            __toast('🔑 密码重置成功（账号：' + __resetCtx.username + '，新密码：' + newPwd + '，已吊销其全部会话）', 'success');
+            closeResetPwdModal();
+          } catch(e) {
+            __toast('❌ 重置失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
+      }
+
+      function confirmDeleteUser(accountId, username, label) {
+        if (!accountId) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
+        if (username === 'admin') { __toast('❌ 超级管理员账号不允许删除', 'error'); return; }
+        __deleteCtx = { accountId: String(accountId), username: String(username), label: String(label || username) };
+        document.getElementById('deleteUserLabel').innerText = String(__deleteCtx.label) + '（账号：' + String(__deleteCtx.username) + '）';
+        openModal('deleteModal');
+      }
+      function doDeleteUser() {
+        // 🔧 S6-B FIX：防抖锁
+        if (window.__OP_LOCKS && window.__OP_LOCKS.doDeleteUser) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.doDeleteUser = true; setTimeout(function () { try { delete window.__OP_LOCKS.doDeleteUser; } catch (_) { } }, 800); } catch (_lo) { }
+        var accId = __deleteCtx.accountId;
+        if (!accId) { __toast('❌ 缺少 accountId', 'error'); return; }
+        (async function(){
+          try {
+            __toast('⏳ 正在删除账号…', 'success');
+            await QAXQJT_API.del('/v1/accounts/' + encodeURIComponent(accId));
+            __toast('🗑️ 账号删除成功（已软删：' + (__deleteCtx.username || '') + '，审计日志保留）', 'success');
+            closeDeleteModal();
+            await loadAccountsFromApi();
+          } catch(e) {
+            __toast('❌ 删除失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
+      }
+
+      function toggleUserStatus(accountId, username, label, curStatusInt) {
+        if (!accountId) { __toast('⚠️ 账号参数缺失', 'warning'); return; }
+        // 🔧 S6-A FIX：防抖锁
+        var lockKey = 'toggle_' + String(accountId);
+        if (window.__OP_LOCKS && window.__OP_LOCKS[lockKey]) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS[lockKey] = true; setTimeout(function () { try { delete window.__OP_LOCKS[lockKey]; } catch (_) { } }, 800); } catch (_lo) { }
+        var isDisable = String(curStatusInt) === '1';
+        if (isDisable) {
+          if (!confirm('确定要禁用账号 ' + (label || username) + ' 吗？禁用后该账号将无法登录。')) return;
+        }
+        var newStatusBack = isDisable ? 'disabled' : 'active';
+        (async function(){
+          try {
+            __toast('⏳ 正在' + (isDisable ? '禁用' : '启用') + '账号…', 'success');
+            await QAXQJT_API.patch('/v1/accounts/' + encodeURIComponent(accountId), { status: newStatusBack });
+            __toast((isDisable ? '✕ 账号已禁用：' : '✓ 账号已启用：') + (label || username), isDisable ? 'warning' : 'success');
+            await loadAccountsFromApi();
+          } catch(e) {
+            __toast('❌ ' + (isDisable ? '禁用' : '启用') + '失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
+      }
+
+      // ============ 🛠️ 辅助函数：账号行 DOM 实时同步（Bug Fix B1：状态/编辑/删除后 UI 不更新） ============
+      function __findRowByUsername(username) {
+        try {
+          var rows = document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] tbody tr');
+          for (var i=0;i<rows.length;i++) {
+            var u = __getCellText(rows[i], 2);
+            if (u === String(username)) return rows[i];
+          }
+        } catch(_){}
+        return null;
+      }
+
+      function __syncRowStatusBadge(tr, newStatusInt) {
+        try {
+          var tds = tr.querySelectorAll('td');
+          if (!tds[7]) return;
+          var cell = tds[7];
+          var enabled = String(newStatusInt) !== '0';
+          // 🔧 B6 FIX：与原始 HTML 样式严格对齐（515 行 badge-success + ✓ 启用 / 575 行 badge-warning + ⏸ 禁用）
+          var badgeClass = enabled ? 'badge badge-success' : 'badge badge-warning';
+          var text = enabled ? '✓ 启用' : '⏸ 禁用';
+          var b = cell.querySelector('.badge, span[class*=badge]');
+          if (b) {
+            b.className = badgeClass;
+            var spanText = b.querySelectorAll('span');
+            if (spanText && spanText.length) spanText[spanText.length-1].innerText = text;
+            else b.innerText = text;
+          } else {
+            cell.innerHTML = '<span class="'+badgeClass+'">'+text+'</span>';
+          }
+        } catch(_){}
+      }
+
+      function __syncToggleButtonText(tr, newStatusInt) {
+        try {
+          var btns = tr.querySelectorAll('.action-btn-group .btn');
+          if (!btns || btns.length < 3) return;
+          var btnToggle = btns[2]; // index 2 = 启用/禁用按钮
+          var enabled = String(newStatusInt) !== '0';
+          // 🔧 B6 FIX：与原始 HTML 对齐（542 行 btn-warning+「禁用」 / 582 行 btn-success+「启用」，无 ✕ ✓ 符号）
+          btnToggle.innerText = enabled ? '禁用' : '启用';
+          // 🔧 B6 FIX：移除所有可能的 btn-* class，然后添加正确的（避免 btn-outline-warning / btn-success / btn-warning 冲突）
+          ['btn-outline-warning','btn-success','btn-warning'].forEach(function(c){ btnToggle.classList.remove(c); });
+          if (enabled) {
+            btnToggle.classList.add('btn-warning');
+          } else {
+            btnToggle.classList.add('btn-success');
+          }
+        } catch(_){}
+      }
+
+      function __updateRowAfterEdit(username, newData) {
+        try {
+          var tr = __findRowByUsername(String(username));
+          if (!tr) return;
+          var tds = tr.querySelectorAll('td');
+          if (newData && tds[3]) tds[3].innerText = String(newData.realname || tds[3].innerText); // 姓名
+          if (newData && tds[4]) tds[4].innerText = String((__ROLE_LABELS[newData.role] || newData.role) || tds[4].innerText); // 角色
+          if (newData && tds[5]) tds[5].innerText = String(newData.phone || tds[5].innerText); // 手机
+          if (newData && tds[6]) tds[6].innerText = String(newData.email || tds[6].innerText); // 邮箱
+          if (newData && typeof newData.status !== 'undefined') {
+            __syncRowStatusBadge(tr, String(newData.status));
+            __syncToggleButtonText(tr, String(newData.status));
+          }
+          __rebindAllButtonsSingleRow(tr);
+        } catch(_){}
+      }
+
+      function __deleteRowByUsername(username) {
+        try {
+          var tr = __findRowByUsername(username);
+          if (tr) {
+            tr.style.transition = 'opacity .3s';
+            tr.style.opacity = '0';
+            setTimeout(function(){
+              try { tr.remove && tr.remove(); } catch(_r){ try { tr.parentNode && tr.parentNode.removeChild(tr); } catch(_rr){} }
+              // 🔧 B6 FIX：删除后重排序号，避免序号不连续
+              try { __renumberAllRows(); } catch(_rn){}
+            }, 280);
+          }
+        } catch(_){}
+      }
+
+      function __rebindAllButtonsSingleRow(tr) {
+        // 重新绑定单行的 4 个操作按钮 onclick（参数用最新 DOM text），避免参数陈旧
+        try {
+          var uname = __getCellText(tr, 2);
+          var real = __getCellText(tr, 3);
+          var role = __getRoleValue(tr, 4);
+          var phone = __getCellText(tr, 5);
+          var email = __getCellText(tr, 6);
+          var statusInt = __getBadgeStatus(tr, 7);
+          var btns = tr.querySelectorAll('.action-btn-group .btn');
+          if (!btns || !btns.length) return;
+          if (btns[0]) btns[0].onclick = function(){ showEditUserModal(uname, real, role, phone, email, statusInt); };
+          if (btns[1]) btns[1].onclick = function(){ showResetPwdModal(uname, real); };
+          if (btns[2]) btns[2].onclick = function(){ toggleUserStatus(uname, real, statusInt); };
+          if (btns[3]) btns[3].onclick = function(){ confirmDeleteUser(uname, real); };
+        } catch(_){}
+      }
+
+      // ============ 🔧 B6 FIX：新增账号 → 插入 DOM 新行（否则用户保存后列表看不到） ============
+      var __roleBadgeClassMap = { admin: 'badge badge-danger', finance: 'badge badge-gold', scheduler: 'badge badge-info', staff: 'badge badge-secondary' };
+      function __escapeHtml(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      }
+      function __renumberAllRows() {
+        try {
+          var rows = document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] tbody tr');
+          for (var i = 0; i < rows.length; i++) {
+            var tds = rows[i].querySelectorAll('td');
+            if (tds[1]) tds[1].innerText = String(i + 1);
+          }
+        } catch(_r){}
+      }
+      function __insertNewUserRow(data) {
+        try {
+          var tbody = document.getElementById('accountsMainTbody') || document.querySelector('.tab-panel[data-tab-panel="accounts"] tbody[data-paginate="list"]');
+          if (!tbody || !data || !data.username) return;
+          var roleKey = String(data.role || 'staff');
+          var roleLabel = __ROLE_LABELS[roleKey] || '普通员工';
+          var roleBadgeCls = __roleBadgeClassMap[roleKey] || 'badge badge-secondary';
+          var enabled = String(data.status) !== '0';
+          var statusBadgeCls = enabled ? 'badge badge-success' : 'badge badge-warning';
+          var statusText = enabled ? '✓ 启用' : '⏸ 禁用';
+          var btnStatusCls = enabled ? 'btn-warning' : 'btn-success';
+          var btnStatusText = enabled ? '禁用' : '启用';
+          var d = new Date();
+          var pad2 = function(n){ n = String(n); return n.length < 2 ? '0' + n : n; };
+          var todayStr = d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+          var unameSafe = __escapeHtml(data.username || '');
+          var realSafe  = __escapeHtml(data.realname || '');
+          var phoneSafe = __escapeHtml(data.phone || '');
+          var emailSafe = __escapeHtml(data.email || '');
+          var tr = document.createElement('tr');
+          tr.style.transition = 'opacity .4s';
+          tr.style.opacity = '0';
+          tr.innerHTML =
+            '<td class="checkbox-cell"><input type="checkbox" class="admin-table-checkbox"></td>' +
+            '<td>0</td>' +
+            '<td><strong>' + unameSafe + '</strong></td>' +
+            '<td>' + realSafe + '</td>' +
+            '<td><span class="' + roleBadgeCls + '">' + __escapeHtml(roleLabel) + '</span></td>' +
+            '<td>' + phoneSafe + '</td>' +
+            '<td>' + emailSafe + '</td>' +
+            '<td><span class="' + statusBadgeCls + '">' + statusText + '</span></td>' +
+            '<td>—</td>' +
+            '<td>' + todayStr + '</td>' +
+            '<td>' +
+              '<div class="action-btn-group">' +
+                '<button class="btn btn-outline-dark btn-sm">✏️ 编辑</button>' +
+                '<button class="btn btn-gold btn-sm">🔑 重置</button>' +
+                '<button class="btn ' + btnStatusCls + ' btn-sm">' + btnStatusText + '</button>' +
+                '<button class="btn btn-danger btn-sm">删除</button>' +
+              '</div>' +
+            '</td>';
+          var firstRow = tbody.querySelector('tr');
+          if (firstRow) tbody.insertBefore(tr, firstRow); else tbody.appendChild(tr);
+          try { __renumberAllRows(); } catch(_rn){}
+          try { __rebindAllButtonsSingleRow(tr); } catch(_rb){}
+          setTimeout(function(){ try { tr.style.opacity = '1'; } catch(_o){} }, 40);
+        } catch(_ie){ console.warn('[__insertNewUserRow 异常]', _ie); }
+      }
+
+      // ============ 🔧 B8 FIX：账号变更 localStorage 持久化（刷新不丢失）============
+      var __ACCOUNTS_PATCH_KEY = 'qaxqjt_admin_accounts_patch_v1';
+      function __patchRead() {
+        try {
+          var raw = localStorage.getItem(__ACCOUNTS_PATCH_KEY);
+          if (!raw) return {};
+          var o = JSON.parse(raw);
+          return (o && typeof o === 'object') ? o : {};
+        } catch (e) { return {}; }
+      }
+      function __patchWrite(obj) {
+        try { localStorage.setItem(__ACCOUNTS_PATCH_KEY, JSON.stringify(obj || {})); } catch (e) { console.warn('[__patchWrite 失败]', e); }
+      }
+      // ============ 🔧 S3 FIX：patch 垃圾回收（防无限增长）============
+      // 规则：1) 单账号最多 500 条，超出删最旧；2) _deleted=true 超过 30 天 / 其他记录超过 90 天 自动清除
+      var __PATCH_MAX_RECORDS = 500;
+      var __PATCH_EXPIRE_DELETED_MS = 30 * 24 * 3600 * 1000;
+      var __PATCH_EXPIRE_OTHERS_MS = 90 * 24 * 3600 * 1000;
+      function __patchGc(p) {
+        try {
+          p = p || __patchRead();
+          var keys = Object.keys(p);
+          if (!keys.length) return p;
+          var now = Date.now();
+          var changed = 0;
+          // 1) 过期清理
+          for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            var r = p[k];
+            if (!r) continue;
+            var age = now - (Number(r._updatedAt) || 0);
+            if ((r._deleted && age > __PATCH_EXPIRE_DELETED_MS) || (age > __PATCH_EXPIRE_OTHERS_MS)) {
+              delete p[k]; changed++;
+            }
+          }
+          // 2) 超量清理（按 _updatedAt 升序删最旧的，保留最新 N-1）
+          keys = Object.keys(p);
+          if (keys.length > __PATCH_MAX_RECORDS) {
+            var arr = [];
+            for (var j = 0; j < keys.length; j++) arr.push({ k: keys[j], t: Number(p[keys[j]]._updatedAt || 0) });
+            arr.sort(function (a, b) { return a.t - b.t; });
+            var toDel = arr.slice(0, arr.length - __PATCH_MAX_RECORDS);
+            for (var m = 0; m < toDel.length; m++) { delete p[toDel[m].k]; changed++; }
+          }
+          if (changed > 0) try { if (window.console && console.info) console.info('[patchGc 清理=' + changed + ' 条]'); } catch (_) { }
+          return p;
+        } catch (e) { return p || {}; }
+      }
+      function __patchUpsert(userObj) {
+        if (!userObj || !userObj.username) return;
+        var p = __patchRead();
+        var key = String(userObj.username);
+        var prev = p[key] || {};
+        // 🔧 S1-A FIX：如果本次不是显式 _deleted=true，则强制清除删除标记（避免原生账号打删标后正常upsert仍保留删标）
+        var forceClearDeleted = !userObj._deleted; // _deleted 未传/假值时，说明是「非删除操作」
+        p[key] = {
+          username: key,
+          realname: String(userObj.realname != null ? userObj.realname : (prev.realname || '')),
+          role: String(userObj.role != null ? userObj.role : (prev.role || 'staff')),
+          phone: String(userObj.phone != null ? userObj.phone : (prev.phone || '')),
+          email: String(userObj.email != null ? userObj.email : (prev.email || '')),
+          status: String(userObj.status != null ? userObj.status : (typeof prev.status !== 'undefined' ? prev.status : '1')),
+          _deleted: !!userObj._deleted ? true : false,
+          _isNew: !!userObj._isNew ? true : (!!prev._isNew),
+          _updatedAt: Date.now()
+        };
+        p = __patchGc(p);
+        __patchWrite(p);
+      }
+      function __patchDelete(username) {
+        if (!username) return;
+        var p = __patchRead();
+        var key = String(username);
+        if (p[key] && p[key]._isNew) {
+          // 新增的账号：直接从 patch 里删除（下次加载不插入）
+          delete p[key];
+        } else {
+          // 原生内置账号：打删除标记（下次加载时 tr.remove）
+          p[key] = p[key] || { username: key, realname: '', role: 'staff', phone: '', email: '', status: '1' };
+          p[key]._deleted = true;
+          p[key]._updatedAt = Date.now();
+        }
+        p = __patchGc(p);
+        __patchWrite(p);
+      }
+      function __patchApplyOnLoad() {
+        try {
+          var p = __patchRead();
+          // 🔧 S3 FIX：加载前先执行一次 GC，保证 patch 体积可控
+          try { p = __patchGc(p); __patchWrite(p); } catch (_gc) { }
+          var keys = Object.keys(p);
+          if (!keys.length) return;
+          var applied = 0;
+          var inserted = 0;
+          var removed = 0;
+          for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            var rec = p[k];
+            if (!rec) continue;
+            var tr = __findRowByUsername(k);
+            // 情况 A：标记删除
+            if (rec._deleted) {
+              if (tr) { try { tr.remove && tr.remove(); } catch(_r){ try { tr.parentNode && tr.parentNode.removeChild(tr); } catch(_rr){} } removed++; }
+              continue;
+            }
+            // 情况 B：是新增账号 → 插入新行
+            if (rec._isNew && !tr) {
+              __insertNewUserRow({
+                username: String(rec.username || k),
+                realname: String(rec.realname || ''),
+                role: String(rec.role || 'staff'),
+                phone: String(rec.phone || ''),
+                email: String(rec.email || ''),
+                status: String(typeof rec.status !== 'undefined' ? rec.status : '1')
+              });
+              inserted++;
+              continue;
+            }
+            // 情况 C：行已存在（原生账号/之前已插入的新增账号）→ 用 patch 覆盖单行 DOM 字段
+            if (tr) {
+              try {
+                var tds = tr.querySelectorAll('td');
+                var roleKeyC = String(rec.role || 'staff');
+                var roleLabelC = __ROLE_LABELS[roleKeyC] || '普通员工';
+                var roleBadgeC = __roleBadgeClassMap[roleKeyC] || 'badge badge-secondary';
+                if (tds[3]) tds[3].innerText = String(rec.realname != null ? rec.realname : tds[3].innerText); // 姓名
+                if (tds[4]) tds[4].innerHTML = '<span class="' + roleBadgeC + '">' + __escapeHtml(roleLabelC) + '</span>'; // 角色
+                if (tds[5]) tds[5].innerText = String(rec.phone != null ? rec.phone : tds[5].innerText); // 手机
+                if (tds[6]) tds[6].innerText = String(rec.email != null ? rec.email : tds[6].innerText); // 邮箱
+                if (typeof rec.status !== 'undefined') {
+                  __syncRowStatusBadge(tr, String(rec.status));
+                  __syncToggleButtonText(tr, String(rec.status));
+                }
+                try { __rebindAllButtonsSingleRow(tr); } catch(_rb){}
+                applied++;
+              } catch(_applyErr){ console.warn('[patchApply 单行覆盖异常]', _applyErr); }
+            }
+          }
+          try { __renumberAllRows(); } catch(_rn){}
+          if (applied || inserted || removed) {
+            try { if (window.console && console.info) console.info('[accounts patch 加载] 覆盖='+applied+' 插入='+inserted+' 删除='+removed); } catch(_lg){}
+          }
+        } catch (e) { console.warn('[__patchApplyOnLoad 致命错误]', e); }
+      }
+
+      function editRolePerm(roleKey, roleLabel) {
+        if (!roleKey) { __toast('⚠️ 角色参数缺失', 'warning'); return; }
+        __roleCtx = { role: String(roleKey), label: String(roleLabel || roleKey), roleId: '', permIds: [], perms: [] };
+        document.getElementById('roleLabel').innerText = String(__roleCtx.label) + '（key：' + String(__roleCtx.role) + '）';
+        // 异步拉取：角色列表（按名称匹配取 id+已授权权限）+ 权限字典
+        (async function(){
+          try {
+            var API = window.QAXQJT_API;
+            // 1. 拉取权限字典
+            var allPerms = await API.get('/v1/permissions', { query: { pageSize: 500 } });
+            allPerms = Array.isArray(allPerms) ? allPerms : (allPerms && allPerms.data) || [];
+            // 2. 拉取角色列表，按名称匹配
+            var roles = await API.get('/v1/roles', { query: { pageSize: 200 } });
+            roles = Array.isArray(roles) ? roles : (roles && roles.data) || [];
+            // 用中文 roleLabel 直接匹配后端角色名（production 角色名就是中文）
+            var matched = roles.filter(function(r){ return String(r.name) === roleLabel || String(r.name) === roleKey; })[0];
+            if (matched) {
+              __roleCtx.roleId = matched.id;
+              // listRoles 已 include rolePermissions（后端 V2026.9.30+），直接取回显
+              __roleCtx.permIds = (matched.rolePermissions || []).map(function(rp){ return String(rp.permissionId || (rp.permission && rp.permission.id) || ''); }).filter(Boolean);
+            }
+            // 3. 渲染复选框（优先用后端权限字典；空时回退内置 __ALL_PERMS）
+            var box = document.getElementById('permCheckboxes');
+            if (box) {
+              box.innerHTML = '';
+              var permsToShow = allPerms.length ? allPerms.map(function(p){ return { id: String(p.id), code: p.code || p.name, label: p.name || p.code }; }) : __ALL_PERMS.map(function(p){ return { id: p.key, code: p.key, label: p.label }; });
+              __roleCtx.perms = permsToShow;
+              for (var i=0;i<permsToShow.length;i++) {
+                var p = permsToShow[i];
+                var chk = __roleCtx.permIds.indexOf(p.id) >= 0 ? 'checked' : '';
+                var div = document.createElement('label');
+                div.style.cssText = 'display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--border-light);border-radius:8px;cursor:pointer;transition:.15s;';
+                div.onmouseenter = function(){ this.style.borderColor='var(--primary)'; };
+                div.onmouseleave = function(){ this.style.borderColor='var(--border-light)'; };
+                div.innerHTML = '<input type="checkbox" data-perm-id="'+p.id+'" '+chk+' style="accent-color:var(--primary);width:16px;height:16px;flex:0 0 16px;"> <span style="font-size:0.9rem;color:#333;">'+p.label+(p.code && p.code!==p.label?' <span style="color:#999;font-size:.75rem;">('+p.code+')</span>':'')+'</span>';
+                box.appendChild(div);
+              }
+              // 当后端权限字典为空时，在复选框上方插入警告
+              if (!allPerms.length) {
+                var warn = document.createElement('div');
+                warn.style.cssText = 'background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 12px;margin-bottom:12px;color:#856404;font-size:.88rem;';
+                warn.innerHTML = '⚠️ 后端权限字典未初始化（permissions 表为空）。当前显示的是前端内置默认权限列表，保存时将清空该角色的后端权限。建议先初始化权限字典后再配置。';
+                box.insertBefore(warn, box.firstChild);
+              }
+            }
+            if (!matched) { __toast('❌ 后端未找到角色「'+roleLabel+'」，无法保存', 'error'); __roleCtx.roleId = ''; }
+          } catch(e) {
+            __toast('⚠️ 拉取权限字典失败：'+(e&&e.message?e.message:e)+'，使用内置默认权限','warning');
+            // 回退：使用内置 __ALL_PERMS
+            var box = document.getElementById('permCheckboxes');
+            if (box) {
+              box.innerHTML = '';
+              for (var i=0;i<__ALL_PERMS.length;i++) {
+                var p = __ALL_PERMS[i];
+                var div = document.createElement('label');
+                div.style.cssText = 'display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--border-light);border-radius:8px;cursor:pointer;';
+                div.innerHTML = '<input type="checkbox" data-perm-id="'+p.key+'" style="accent-color:var(--primary);width:16px;height:16px;flex:0 0 16px;"> <span style="font-size:0.9rem;color:#333;">'+p.label+'</span>';
+                box.appendChild(div);
+              }
+            }
+          }
+        })();
+        openModal('rolePermModal');
+      }
+      function saveRolePerm() {
+        if (!__roleCtx.roleId) { __toast('⚠️ 未匹配到后端角色 ID，无法保存','error'); return; }
+        var ids = [];
+        try {
+          var inputs = document.querySelectorAll('#permCheckboxes input[type=checkbox]');
+          for (var i=0;i<inputs.length;i++) if (inputs[i].checked) ids.push(String(inputs[i].getAttribute('data-perm-id')));
+        } catch(_){}
+        var API = window.QAXQJT_API;
+        if (!API) { __toast('⚠️ 接口未就绪','error'); return; }
+        (async function(){
+          try {
+            await API.put('/v1/roles/' + encodeURIComponent(__roleCtx.roleId) + '/permissions', { permissionIds: ids });
+            __toast('✅ 已保存「'+__roleCtx.label+'」的权限配置（共 '+ids.length+' 项）','success');
+            closeRolePermModal();
+          } catch(e) {
+            __toast('❌ 保存失败：'+(e&&e.message?e.message:e),'error');
+          }
+        })();
+      }
+
+      function queryUsers() {
+        var panel = document.querySelector('.tab-panel[data-tab-panel="accounts"]');
+        var kwInput = panel && panel.querySelector('.admin-filter-bar input[type=text]');
+        var k = (kwInput && kwInput.value) || '';
+        (async function(){
+          try {
+            __toast('🔍 正在查询账号列表…', 'success');
+            await loadAccountsFromApi({ keyword: k });
+            __toast('✅ 查询完成（关键词：' + (k || '全部') + '）', 'success');
+          } catch(e) {
+            __toast('❌ 查询失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
+      }
+      function resetQuery() {
+        var panel = document.querySelector('.tab-panel[data-tab-panel="accounts"]');
+        var bar = panel && panel.querySelector('.admin-filter-bar');
+        if (bar) {
+          var inputs = bar.querySelectorAll('input');
+          for (var i=0;i<inputs.length;i++) if (inputs[i].type !== 'checkbox') inputs[i].value='';
+          var selects = bar.querySelectorAll('select');
+          for (var j=0;j<selects.length;j++) selects[j].selectedIndex = 0;
+        }
+        (async function(){
+          try {
+            __toast('↻ 正在重置并刷新…', 'success');
+            await loadAccountsFromApi({ keyword: '', role: '', status: '' });
+            __toast('✅ 筛选条件已重置', 'success');
+          } catch(e) {
+            __toast('❌ 重置失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
+      }
+      function __getCheckedUsernames() {
+        var arr = [];
+        try {
+          var rows = document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] tbody tr');
+          for (var i=0;i<rows.length;i++) {
+            var tr = rows[i];
+            var cb = tr.querySelector('input[type=checkbox]');
+            if (cb && cb.checked) {
+              var name = __getCellText(tr, 2);
+              var accId = tr.getAttribute('data-account-id') || '';
+              if (name && name !== 'admin' && accId) arr.push({ accountId: accId, username: name, label: __getCellText(tr, 3) });
+            }
+          }
+        } catch(_){}
+        return arr;
+      }
+      function batchEnableUsers() {
+        var arr = __getCheckedUsernames();
+        if (!arr.length) { __toast('⚠️ 请先勾选需要启用的账号（至少 1 个）', 'warning'); return; }
+        if (window.__OP_LOCKS && window.__OP_LOCKS.batchEnable) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.batchEnable = true; setTimeout(function () { try { delete window.__OP_LOCKS.batchEnable; } catch (_) { } }, 1200); } catch (_lo) { }
+        (async function(){
+          var ok = 0, fail = 0;
+          __toast('⏳ 正在批量启用 ' + arr.length + ' 个账号…', 'success');
+          for (var i=0;i<arr.length;i++) {
+            try {
+              var it = arr[i];
+              if (!it.accountId) continue;
+              await QAXQJT_API.patch('/v1/accounts/' + encodeURIComponent(it.accountId), { status: 'active' });
+              ok++;
+            } catch(_bi){ fail++; }
+          }
+          __toast((ok>0?'✓ 批量启用成功 ' + ok + ' 个':'') + (fail>0?'（失败 ' + fail + ' 个）':''), ok>0?'success':'error');
+          await loadAccountsFromApi();
+        })();
+      }
+      function batchDisableUsers() {
+        var arr = __getCheckedUsernames();
+        if (!arr.length) { __toast('⚠️ 请先勾选需要禁用的账号（至少 1 个）', 'warning'); return; }
+        if (window.__OP_LOCKS && window.__OP_LOCKS.batchDisable) { __toast('⚠️ 正在处理，请稍候…', 'warning'); return; }
+        if (arr.length > 0 && !confirm('确定禁用选中的 ' + arr.length + ' 个账号？')) return;
+        try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS.batchDisable = true; setTimeout(function () { try { delete window.__OP_LOCKS.batchDisable; } catch (_) { } }, 1200); } catch (_lo) { }
+        (async function(){
+          var ok = 0, fail = 0;
+          __toast('⏳ 正在批量禁用 ' + arr.length + ' 个账号…', 'warning');
+          for (var i=0;i<arr.length;i++) {
+            try {
+              var it = arr[i];
+              if (!it.accountId) continue;
+              await QAXQJT_API.patch('/v1/accounts/' + encodeURIComponent(it.accountId), { status: 'disabled' });
+              ok++;
+            } catch(_bi){ fail++; }
+          }
+          __toast((ok>0?'✕ 批量禁用成功 ' + ok + ' 个':'') + (fail>0?'（失败 ' + fail + ' 个）':''), ok>0?'warning':'error');
+          await loadAccountsFromApi();
+        })();
+      }
+      function exportUsers() {
+        // ★ FIX：从后端拉全量账号 → XLSX 导出真数据
+        (async function(){
+          try {
+            __toast('⬇ 正在拉取账号数据…', 'success');
+            var rows = await QAXQJT_API.get('/v1/accounts', { query: { page: 1, pageSize: 500 } });
+            rows = Array.isArray(rows) ? rows : (rows && rows.items) || (rows && rows.list) || [];
+            rows = rows.filter(function(r){ return r.status !== 'deleted'; });
+            if (!rows.length) { __toast('⚠️ 暂无可导出的账号数据', 'warning'); return; }
+            var data = [ ['账号','姓名','角色','手机号','邮箱','状态','最后登录','创建时间'] ];
+            rows.forEach(function(r){
+              var roleKey = __ROLE_BACK_TO_KEY[r.role] || 'staff';
+              var roleLabel = __ROLE_LABELS[roleKey] || r.role || '普通员工';
+              var statusText = r.status === 'active' ? '启用' : (r.status === 'disabled' ? '禁用' : r.status);
+              data.push([
+                r.username||'', r.realName||'', roleLabel,
+                r.phone||'', r.email||'', statusText,
+                r.lastLoginAt?__fmtDate(r.lastLoginAt):'—',
+                r.createdAt?__fmtDateShort(r.createdAt):'—'
+              ]);
+            });
+            if (typeof window.__qaEnsureXlsx === 'function') { try { await window.__qaEnsureXlsx(); } catch (_) {} }
+            if (window.XLSX) {
+              var ws = window.XLSX.utils.aoa_to_sheet(data);
+              var wb = window.XLSX.utils.book_new();
+              window.XLSX.utils.book_append_sheet(wb, ws, '账号列表');
+              var fname = 'accounts_export_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.xlsx';
+              window.XLSX.writeFile(wb, fname);
+              __toast('✅ 导出成功：' + rows.length + ' 条账号 → ' + fname, 'success');
+            } else {
+              __toast('⚠️ xlsx 库未加载，请刷新后重试', 'error');
+            }
+          } catch (e) {
+            __toast('❌ 导出失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
+      }
+      function queryLogs() {
+        var panel = document.querySelector('.tab-panel[data-tab-panel="logs"]');
+        var inputs = panel && panel.querySelectorAll('.admin-filter-bar input[type=text]');
+        var selects = panel && panel.querySelectorAll('.admin-filter-bar select');
+        var dateInputs = panel && panel.querySelectorAll('.admin-filter-bar input[type=date]');
+        var q = {};
+        if (inputs && inputs[0] && inputs[0].value) q.username = inputs[0].value;
+        if (selects && selects[0] && selects[0].value) q.action = selects[0].value;
+        if (dateInputs && dateInputs[0] && dateInputs[0].value) q.from = dateInputs[0].value;
+        if (dateInputs && dateInputs[1] && dateInputs[1].value) q.to = dateInputs[1].value;
+        (async function(){
+          try {
+            __toast('🔍 正在查询审计日志…', 'success');
+            await loadAuditLogsFromApi(q);
+            __toast('✅ 审计日志查询完成', 'success');
+          } catch(e) {
+            __toast('❌ 查询失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
+      }
+      function exportLogs() {
+        (async function(){
+          try {
+            __toast('⬇ 正在拉取审计日志…', 'success');
+            var rows = await QAXQJT_API.get('/v1/audit-logs', { query: { page: 1, pageSize: 500 } });
+            rows = Array.isArray(rows) ? rows : (rows && rows.items) || (rows && rows.list) || [];
+            if (!rows.length) { __toast('⚠️ 暂无可导出的审计日志', 'warning'); return; }
+            var data = [ ['序号','操作人','模块','操作类型','操作内容','IP地址','操作时间'] ];
+            rows.forEach(function(r, i){
+              var detail = r.detailJson != null ? r.detailJson : r.detail;
+              data.push([
+                String(i+1),
+                r.username||r.accountId||'—',
+                r.module||'—',
+                r.action||'',
+                detail ? (typeof detail==='string'?detail:JSON.stringify(detail)) : (r.action||''),
+                r.ipAddress||'—',
+                r.actionTs ? __auditDateTime(r.actionTs) : '—'
+              ]);
+            });
+            if (typeof window.__qaEnsureXlsx === 'function') { try { await window.__qaEnsureXlsx(); } catch (_) {} }
+            if (window.XLSX) {
+              var ws = window.XLSX.utils.aoa_to_sheet(data);
+              var wb = window.XLSX.utils.book_new();
+              window.XLSX.utils.book_append_sheet(wb, ws, '审计日志');
+              var fname = 'audit_logs_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.xlsx';
+              window.XLSX.writeFile(wb, fname);
+              __toast('✅ 导出成功：' + rows.length + ' 条审计日志 → ' + fname, 'success');
+            } else {
+              __toast('⚠️ xlsx 库未加载，请刷新后重试', 'error');
+            }
+          } catch (e) {
+            __toast('❌ 导出失败：' + (e && e.message ? e.message : e), 'error');
+          }
+        })();
+      }
+
+      // 暴露到 window（让 onclick 也能调到，同时保留本 IIFE 内的引用）
+      window.showPermConfig = showPermConfig;
+      window.showAddUserModal = showAddUserModal;
+      window.showEditUserModal = showEditUserModal;
+      window.saveUser = saveUser;
+      window.closeUserModal = closeUserModal;
+      window.showResetPwdModal = showResetPwdModal;
+      window.doResetPwd = doResetPwd;
+      window.closeResetPwdModal = closeResetPwdModal;
+      window.confirmDeleteUser = confirmDeleteUser;
+      window.doDeleteUser = doDeleteUser;
+      window.closeDeleteModal = closeDeleteModal;
+      window.editRolePerm = editRolePerm;
+      window.saveRolePerm = saveRolePerm;
+      window.closeRolePermModal = closeRolePermModal;
+      window.queryUsers = queryUsers;
+      window.resetQuery = resetQuery;
+      window.batchEnableUsers = batchEnableUsers;
+      window.batchDisableUsers = batchDisableUsers;
+      window.exportUsers = exportUsers;
+      window.queryLogs = queryLogs;
+      window.exportLogs = exportLogs;
+      window.toggleUserStatus = toggleUserStatus;
+      // 🔧 B7c FIX：补上 accounts.html 自己的 window.toggleFullscreen（393 行 HTML onclick 调用，之前无定义导致全屏按钮无响应）
+      if (!window.toggleFullscreen) {
+        window.toggleFullscreen = function() {
+          if (!document.fullscreenElement) { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
+          else { document.exitFullscreen && document.exitFullscreen(); }
+        };
+      }
+
+      // ========== 🎯 自动事件绑定：给 69 个按钮加 click（不再依赖 HTML 写 onclick，避免漏绑卡死） ==========
+      function __bindAllActionButtons() {
+        // 1. 顶栏：权限配置 + 新增账号（admin-page-actions 下 2 个）
+        try {
+          var actionBtns = document.querySelectorAll('.admin-page-actions .btn');
+          if (actionBtns && actionBtns[0]) actionBtns[0].onclick = showPermConfig;
+          if (actionBtns && actionBtns[1]) actionBtns[1].onclick = showAddUserModal;
+        } catch(_){}
+        // 2. 查询 + 重置 + 批量 启用/禁用/导出（用户选项卡）
+        try {
+          var qBtns = document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] .admin-filter-bar .btn');
+          if (qBtns && qBtns[0]) qBtns[0].onclick = queryUsers;
+          if (qBtns && qBtns[1]) qBtns[1].onclick = resetQuery;
+          var bBtns = document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] .admin-table-actions .btn');
+          if (bBtns && bBtns[0]) bBtns[0].onclick = batchEnableUsers;
+          if (bBtns && bBtns[1]) bBtns[1].onclick = batchDisableUsers;
+          if (bBtns && bBtns[2]) bBtns[2].onclick = exportUsers;
+        } catch(_){}
+        // 3. 角色管理 4 个卡片的「🛡️ 编辑权限」
+        try {
+          var roleCardFooters = document.querySelectorAll('.role-card-footer');
+          var roleKeyMap = ['admin','finance','scheduler','staff'];
+          var roleLabelMap = ['超级管理员','财务主管','运营调度','普通员工'];
+          for (var r=0;r<roleCardFooters.length;r++) {
+            var b = roleCardFooters[r].querySelector('.btn');
+            if (b) {
+              (function(k, lab){ b.onclick = function(){ editRolePerm(k, lab); }; })(roleKeyMap[r] || 'staff', roleLabelMap[r] || '未知角色');
+            }
+          }
+        } catch(_){}
+        // 4. 日志查询 + 导出（logs 选项卡）
+        try {
+          var lBtns = document.querySelectorAll('.tab-panel[data-tab-panel="logs"] .admin-filter-bar .btn');
+          if (lBtns && lBtns[0]) lBtns[0].onclick = queryLogs;
+          if (lBtns && lBtns[1]) lBtns[1].onclick = exportLogs;
+        } catch(_){}
+        // 5. 每行操作按钮：编辑/重置/禁用或启用/删除（10 行 × 4 = 40 个）
+        try {
+          var rows = document.querySelectorAll('.tab-panel[data-tab-panel="accounts"] tbody tr');
+          for (var i=0;i<rows.length;i++) {
+            var tr = rows[i];
+            var accId = tr.getAttribute('data-account-id') || '';
+            var uname = __getCellText(tr, 2);           // 列=账号（<td index 2>，0=checkbox 1=序号）
+            var real = __getCellText(tr, 3);            // 列=姓名（3）
+            var role = __getRoleValue(tr, 4);           // 列=角色（4）根据 label 取 key
+            var phone = __getCellText(tr, 5);           // 列=手机（5）
+            var email = __getCellText(tr, 6);           // 列=邮箱（6）
+            var statusInt = __getBadgeStatus(tr, 7);    // 列=状态（7）
+            var btns = tr.querySelectorAll('.action-btn-group .btn');
+            if (btns && btns.length) {
+              // 0 = 编辑
+              (function(id, u, rl, ro, ph, em, st){ if (btns[0]) btns[0].onclick = function(){ showEditUserModal(id,u,rl,ro,ph,em,st); }; })(accId, uname, real, role, phone, email, statusInt);
+              // 1 = 重置密码
+              (function(id, u, rl){ if (btns[1]) btns[1].onclick = function(){ showResetPwdModal(id,u, rl); }; })(accId, uname, real);
+              // 2 = 启用/禁用（admin 账号 button.disabled=true 不会响应 onclick，无副作用）
+              (function(id, u, rl, st){ if (btns[2]) btns[2].onclick = function(){ toggleUserStatus(id,u, rl, st); }; })(accId, uname, real, statusInt);
+              // 3 = 删除
+              (function(id, u, rl){ if (btns[3]) btns[3].onclick = function(){ confirmDeleteUser(id,u, rl); }; })(accId, uname, real);
+            }
+          }
+        } catch(e){ if (window.console && console.warn) console.warn('[accounts.html 按钮绑定异常]', e); }
+      }
+      // DOMContentLoaded 后执行：从后端拉取真实账号列表 + 绑定按钮
+      function __onAccountsDomReady() {
+        // 演示模式 localStorage patch 已废弃，改为从后端拉真实数据
+        try { __bindAllActionButtons(); } catch(_ba){ console.warn('[__bindAllActionButtons 异常]', _ba); }
+        try { loadAccountsFromApi(); } catch(_la){ console.warn('[loadAccountsFromApi 启动异常]', _la); }
+        try { loadAuditLogsFromApi(); } catch(_ll){ console.warn('[loadAuditLogsFromApi 启动异常]', _ll); }
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', __onAccountsDomReady);
+      } else {
+        setTimeout(__onAccountsDomReady, 60);
+      }
+      // 点击遮罩关闭所有 modal（点背景关闭更友好）
+      try {
+        ['userModal','resetPwdModal','deleteModal','rolePermModal'].forEach(function(id){
+          var m = document.getElementById(id);
+          if (m) m.addEventListener('click', function(e){ if (e.target === m) { closeModal(id); document.body.style.overflow=''; } });
+        });
+      } catch(_){}
+      // —— 🔴 关键 Bug Fix：HTML onclick 属性里调用的函数必须挂 window（IIFE 内部函数全局作用域不可见！）
+      // 现象：新增按钮能弹出是因为 onclick 是 JS 绑定的（闭包内可见），但 modal 里的 × / 取消按钮写在 HTML onclick 属性里就找不到
+      window.openModal = openModal;
+      window.closeModal = closeModal;
+      window.closeUserModal = closeUserModal;
+      window.closeResetPwdModal = closeResetPwdModal;
+      window.closeDeleteModal = closeDeleteModal;
+      window.closeRolePermModal = closeRolePermModal;
+      window.showPermConfig = showPermConfig;
+      window.showAddUserModal = showAddUserModal;
+      window.showEditUserModal = showEditUserModal;
+      window.saveUser = saveUser;
+      window.showResetPwdModal = showResetPwdModal;
+      window.doResetPwd = doResetPwd;
+      window.confirmDeleteUser = confirmDeleteUser;
+      window.doDeleteUser = doDeleteUser;
+      window.toggleUserStatus = toggleUserStatus;
+      window.editRolePerm = editRolePerm;
+      window.saveRolePerm = saveRolePerm;
+      window.queryUsers = queryUsers;
+      window.resetQuery = resetQuery;
+      window.batchEnableUsers = batchEnableUsers;
+      window.batchDisableUsers = batchDisableUsers;
+      window.exportUsers = exportUsers;
+      window.queryLogs = queryLogs;
+      window.exportLogs = exportLogs;
+      // 🔧 B7c FIX：第 2 处兜底挂载，确保无论哪个 IIFE 先执行，toggleFullscreen 都存在
+      if (!window.toggleFullscreen) {
+        window.toggleFullscreen = function() {
+          if (!document.fullscreenElement) { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
+          else { document.exitFullscreen && document.exitFullscreen(); }
+        };
+      }
+    })();
+
+  // =============================================================================
+  // 🔧 E3 FIX：账号权限 全按钮自动化事件绑定 + 去抖锁
+  // =============================================================================
+
+/* ===== accounts.html inline block (run 2, #2/6) ===== */
+(function __adminCommonPatchV20260730(){
+    var __toastC = function(msg,type){
+      try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){}
+      try{ (type==='error'?alert:console.log)('[adminCommon] '+msg); }catch(_f){}
+    };
+    // 1) 全局写操作防重入锁（与 schedule.html 同源：window.__OP_LOCKS）
+    window.__acqCommon = function(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{
+        if(!window.__OP_LOCKS) window.__OP_LOCKS = {};
+        window.__OP_LOCKS[key] = true;
+        setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}}, ttl||650);
+      }catch(_lk){}
+      return true;
+    };
+    // 2) 通用 __closeAnyModal：扫描所有 .modal/.overlay 并关闭
+    window.__closeAnyModal = function(){
+      try{
+        var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], .modal-overlay-root, [data-overlay]');
+        overlays.forEach(function(o){
+          try{ o.classList.remove('active','show','modal-overlay-show'); o.classList.add('s-overlay-hide','modal-overlay-hide','csp-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
+        });
+        var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, .generic-modal-root, [data-modal], [role="dialog"]');
+        modals.forEach(function(m){
+          try{ m.classList.remove('active','show','modal-show'); m.classList.add('s-modal-hide','modal-wrap-hide','csp-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
+        });
+        try{ document.body.classList.remove('body-modal-locked','modal-open','nav-locked'); }catch(_b){}
+      }catch(err){ console.warn('[__closeAnyModal] err:', err); }
+    };
+    // 3) ESC 键 → 关所有弹窗 + 触发页面级 closeAddModal/closeEditModal/closeDispatchModal 若存在
+    try{
+      document.addEventListener('keydown', function(e){
+        if(e.key==='Escape'){
+          var fns = ['closeAddModal','closeEditModal','closeDispatchModal','closeOrderViewModal','closeDeleteConfirm'];
+          for(var i=0;i<fns.length;i++){ try{ if(typeof window[fns[i]]==='function') window[fns[i]](); }catch(_){} }
+          window.__closeAnyModal();
+        }
+      }, true);
+    }catch(_escErr){}
+    // 4) 查询栏 ↻重置 按钮：真正把同级 select/input 清空回默认
+    function __resetFilterBar(root){
+      if(!root) root = document.querySelector('.admin-filter-bar, [class*="filter-bar"]');
+      if(!root) return 0;
+      var sels = root.querySelectorAll('select');
+      var inputs = root.querySelectorAll('input[type=text],input:not([type]),input[type=search],input[type=date],input[type=number]');
+      var n = 0;
+      try{
+        sels.forEach(function(s){ try{ s.selectedIndex = 0; }catch(_){} n++; });
+        inputs.forEach(function(inp){ try{ inp.value=''; inp.checked=false; }catch(_){} n++; });
+      }catch(_r){}
+      return n;
+    }
+    // 5) 绑定「重置」按钮 + 空 a[href=#] 阻止跳转 + 侧边栏菜单 href=# 死链兜底
+    function __bindButtonsOnce(){
+      try{
+        var rbtns = document.querySelectorAll('button, .btn, a.btn, a.action-link');
+        rbtns.forEach(function(b){
+          if(b.__sBound) return;
+          var txt = (b.textContent||'').replace(/\s+/g,' ').trim();
+          if(txt.indexOf('重置')>=0 && txt.indexOf('今日')<0 && txt.indexOf('密码')<0){
+            b.addEventListener('click', function(){
+              if(!window.__acqCommon('c_reset_'+Math.random().toString(36).slice(2,6),450)) return;
+              var n = __resetFilterBar();
+              __toastC('↺ 查询条件已重置（'+n+' 项恢复默认）','success');
+            }, true);
+            b.__sBound = 1;
+          }
+          if(txt.indexOf('取消')>=0 || txt.indexOf('关闭')>=0){
+            b.addEventListener('click', function(ev){
+              // 若按钮本身已有 onclick 事件（非 # href），交给原始 onclick；仅兜底关弹窗
+              try{ if(ev && ev.stopPropagation) ev.stopPropagation(); }catch(_s){}
+              setTimeout(function(){ window.__closeAnyModal(); }, 220);
+            }, true);
+          }
+        });
+        // 所有 a[href="#"] → preventDefault 避免跳到页面顶部
+        var hs = document.querySelectorAll('a[href="#"]');
+        hs.forEach(function(a){
+          if(a.__sBound2) return;
+          a.addEventListener('click', function(ev){
+            var ex = (a.getAttribute('onclick')||'') + (a.getAttribute('data-toggle')||'');
+            if(ex.length < 2 && !a.classList.contains('action-link')){
+              // 没有 onclick 也非 action-link → 死链，提示并阻止跳
+              if(ev && ev.preventDefault) ev.preventDefault();
+              __toastC('⚠️ 该链接暂未绑定功能（href="#")','warning');
+              return false;
+            }
+          }, true);
+          a.__sBound2 = 1;
+        });
+        // 6) 侧边栏 admin-sidebar-menu 菜单项链接正确性兜底
+        try{
+          var menuMap = [
+            {kw:'账号权限管理', target:'accounts.html'},
+            {kw:'订单预约管理', target:'orders.html'},
+            {kw:'官网内容管理', target:'content.html'},
+            {kw:'系统日志备份', target:'system.html'},
+            {kw:'数据大屏', target:'index.html'},
+            {kw:'员工人事', target:'staff.html'},
+            {kw:'演出剧目', target:'operas.html'},
+            {kw:'演出排期', target:'schedule.html'},
+            {kw:'阵容管理', target:'cast-sheet.html'},
+            {kw:'道具库存', target:'inventory.html'},
+            {kw:'薪酬财务', target:'finance.html'},
+            {kw:'考勤报表', target:'reports.html'}
+          ];
+          var lis = document.querySelectorAll('.admin-sidebar-menu li, .sidebar-nav li, .menu-nav li, .sider-list li');
+          lis.forEach(function(li){
+            var t = (li.textContent||'').replace(/\s+/g,' ').trim();
+            var a = li.querySelector('a');
+            if(!a || !t) return;
+            for(var j=0;j<menuMap.length;j++){
+              if(t.indexOf(menuMap[j].kw)>=0 && a.getAttribute('href') !== menuMap[j].target){
+                try{ a.setAttribute('href', menuMap[j].target); a.removeAttribute('onclick'); a.__sBound=1; }catch(_s){}
+                break;
+              }
+            }
+          });
+        }catch(_mErr){}
+      }catch(_bErr){ console.warn('[bindButtonsOnce err]:', _bErr); }
+    }
+    if(document.readyState==='complete' || document.readyState==='interactive'){ setTimeout(__bindButtonsOnce, 150); }
+    else document.addEventListener('DOMContentLoaded', function(){ setTimeout(__bindButtonsOnce, 150); });
+    console.info('[adminCommonPatchV20260730 已应用：去抖锁 + __closeAnyModal + 重置真重置 + ESC关弹窗 + 侧边栏死链修复 + 页码圆角CSS]');
+  })();
+
+/* ===== accounts.html inline block (run 2, #3/6) ===== */
+/* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
+if (window.__DBF_V20260804_INJECTED__ !== true) {
+  window.__DBF_V20260804_INJECTED__ = true;
+
+/* ========== 📊 JSON 性能日志（默认关闭，开启后输出NDJSON便于ELK采集） ========== */
+function __pEna(){try{return window.localStorage&&localStorage.getItem('__ENABLE_PERF_LOG__')==='true'}catch(e){return false}}
+function __pFmt(){try{return(window.localStorage&&localStorage.getItem('__PERF_FORMAT__')||'json').toLowerCase()}catch(e){return'json'}}
+function __pTid(){if(!window.__pCur){window.__pCur='tr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}return window.__pCur}
+function __pUA(){try{return navigator.userAgent||''}catch(e){return''}}
+function __pURL(){try{return location.href||''}catch(e){return''}}
+function __pLog(module,event,extra){
+  if(!__pEna())return;
+  try{
+    var now=new Date();
+    var duration_ms = (window.__pT0 ? (Date.now()-window.__pT0) : 0);
+    var payload = {
+      '@timestamp': now.toISOString(),
+      'level': 'INFO',
+      'service': 'qaxqjt-admin',
+      'trace_id': __pTid(),
+      'span_id': 'sp_'+now.getTime().toString(36),
+      'module': module,            // 'DBF' 或 'SP'
+      'event': event,              // 'save_click' / 'audit_pass' 等
+      'branch': (extra && extra.branch) ? extra.branch : null,
+      'btn_text': (extra && extra.txt) ? extra.txt : null,
+      'bound':    (extra && typeof extra.bound==='boolean') ? extra.bound : null,
+      'lock_wait_ms': (extra && typeof extra.lockWait==='number') ? extra.lockWait : 0,
+      'duration_ms': duration_ms,
+      'page_url': __pURL(),
+      'user_agent': __pUA(),
+      'extra': extra || {}
+    };
+    // 删除已经提出来的重复字段，避免冗余
+    if(payload.extra){
+      ['branch','txt','bound','lockWait'].forEach(function(k){if(payload.extra[k]!==undefined)delete payload.extra[k]});
+    }
+    // 输出 NDJSON（一行一条），便于 Filebeat / Logstash 直接采集
+    console.log(JSON.stringify(payload));
+  }catch(_){}
+}
+var __pT0=0;
+
+
+  (function(){
+    function __T(msg,type){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(msg,type||'info',3000); }catch(_e){ try{(type==='error'?alert:console.log)('[deadhook] '+msg);}catch(_f){} } }
+    function __L(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||600); }catch(_){}
+      return true;
+    }
+    // 只在 capture 阶段处理，便于在页面原有 handlers 之前运行：若按钮已存在 onclick / 已绑过事件，直接跳过
+    document.addEventListener('click', function(e){
+    __pT0 = Date.now();
+    var __pEvt = {target: e.target && e.target.tagName, btn: null, txt: null, branch: null, bound: null, lockWait: 0};
+    window.__pCur = 'tr_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+    var t = e.target;
+      if(!t) return;
+      // 向上找最近的按钮元素/可点击锚点 - 扩大匹配范围，包含a标签和所有含btn/action类的元素
+      var btn = (t.tagName||'').toLowerCase() === 'button' ? t :
+                (t.closest ? t.closest('button, a, [role="button"], .btn, .btn-action, .btn-sm, .action-link, [data-action]') : null);
+      if(!btn) return;
+      // 跳过已有 onclick / 正常href跳转 / 已在脚本中手动绑定过（__bindDone=1 或 __ctE2Done=1）的按钮
+      // 注意：data-action仅作为标识，不代表已绑定事件；父元素检查仅对onclick生效
+      try{
+  function __btnHasBound(btn){
+    if(!btn) return false;
+    if(btn.__superPatchBound) return true;
+    var oc = btn.getAttribute && btn.getAttribute('onclick');
+    var hr = btn.getAttribute && btn.getAttribute('href');
+    if(oc && oc.length > 3) return true;
+    // 仅当href不是占位符且不是javascript伪协议时才算有效跳转
+    if(hr && hr !== '#' && hr !== 'javascript:;' && hr !== 'javascript:void(0);' && hr !== 'javascript:void(0)' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+    var p = btn.parentElement, lvl = 0;
+    while(p && lvl < 4){
+      try {
+        var pOc = p.getAttribute && p.getAttribute('onclick');
+        // 父级onclick长度>3才算有效绑定
+        if(pOc && pOc.length > 3) return true;
+      }catch(_){}
+      p = p.parentElement; lvl++;
+    }
+    // 移除：匹配业务关键词=已绑定的错误逻辑。这些恰恰是需要兜底的按钮！
+    return false;
+  }
+  var __pBnd = __btnHasBound(btn);
+    __pEvt.bound = __pBnd;
+    __pLog('DBF','hasBound_result', {bound:__pBnd, check_ms:Date.now()-__pT0});
+    if(__pBnd) return;
+    var __pDrp = (btn.__bindDone || btn.__ctE2Done);
+    if(__pDrp){__pLog('DBF','dedup_skip', {reason: btn.__bindDone?'bindDone':'ctE2Done'}); return;}
+}catch(_a){}
+      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
+      // 放宽文本长度限制：从20字符放宽到50字符，覆盖"确认订单""取消订单""派工安排"等复合文本
+      __pEvt.txt = txt;
+    __pLog('DBF','txt_resolved', {txt:txt, len:txt.length});
+    if(!txt || txt.length > 50) return;
+      var tr = btn.closest ? btn.closest('tr') : null;
+      var trKey = '';
+      if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
+      // 各按钮分发行文
+      var isSave = (txt.indexOf('保存')>=0 || txt.indexOf('提交')>=0 || txt.indexOf('确认')>=0);
+      var isEdit = (txt.indexOf('编辑')>=0);
+      var isDel  = (txt.indexOf('删除')>=0 && txt.length <= 10);
+      var isView = (txt.indexOf('查看')>=0 || (txt==='👁') || (txt.indexOf('👁')>=0 && txt.length<=6) || txt.indexOf('详情')>=0 || txt.indexOf('预览')>=0);
+      var isVerify = (txt.indexOf('核销')>=0);
+      var isExport = (txt.indexOf('导出')>=0);
+      var isAdd = (txt.indexOf('新增')>=0);
+      var doneKey = 'e2_'+(isSave?'s':isEdit?'e':isDel?'d':isView?'v':isVerify?'y':isExport?'x':isAdd?'a':'k')+'_'+(trKey||Math.random().toString(36).slice(2,6));
+      if(isSave){
+    __pEvt.branch='save';
+    var __pLk = __L(doneKey,900);
+    if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
+    __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+      }
+      if(isEdit){
+        if(!__L(doneKey,700)) return;
+        __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isDel){
+        if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
+        /* P1修复:假成功已移除（原为假确认+假删行+假成功toast） */
+        __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+      }
+      if(isView){
+        if(!__L(doneKey,500)) return;
+        __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isVerify){
+        if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
+        __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isExport){
+        if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
+        __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; return;
+      }
+      if(isAdd){
+        if(!__L(doneKey,900)) return;
+        __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; return;
+      }
+      // ---- 新增：审核/审批/驳回/通过 ----
+      var isAudit = txt.indexOf('审核')>=0 || txt.indexOf('审批')>=0 || txt.indexOf('驳回')>=0 || txt.indexOf('通过')>=0;
+      if(isAudit){
+        if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
+        __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+      }
+      // ---- 新增：签约/签订 ----
+      var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
+      if(isSign){
+        if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+      }
+      // ---- 新增：合同/生成合同 ----
+      var isContract = txt.indexOf('合同')>=0 && !isSign;
+      if(isContract){
+        if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
+        __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; return;
+      }
+      // ---- 新增：排期/排班/安排档期 ----
+      var isScheduleBtn = txt.indexOf('排期')>=0 || txt.indexOf('排班')>=0 || (txt.indexOf('安排')>=0 && (txt.length<=8 || txt.indexOf('档期')>=0));
+      if(isScheduleBtn){
+        if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
+        __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; return;
+      }
+      // ---- 新增：取消/处理/确认接单 ----
+      var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
+      if(isCancelOrHandle && !isDel && !isSave){
+        if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
+        __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+      }
+
+    }, true);
+    console.info('[DeadButtonFallback 已加载：×兜底 + 保存/编辑/删除/查看/核销/导出/新增 死按钮兜底委托]');
+  })();
+  
+} /* end of 防重复注入保护 if */
+
+/* ===== accounts.html inline block (run 2, #4/6) ===== */
+/* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
+if (window.__SP_V20260804_INJECTED__ !== true) {
+  window.__SP_V20260804_INJECTED__ = true;
+
+/* ========== 📊 JSON 性能日志（默认关闭，开启后输出NDJSON便于ELK采集） ========== */
+function __pEna(){try{return window.localStorage&&localStorage.getItem('__ENABLE_PERF_LOG__')==='true'}catch(e){return false}}
+function __pFmt(){try{return(window.localStorage&&localStorage.getItem('__PERF_FORMAT__')||'json').toLowerCase()}catch(e){return'json'}}
+function __pTid(){if(!window.__pCur){window.__pCur='tr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}return window.__pCur}
+function __pUA(){try{return navigator.userAgent||''}catch(e){return''}}
+function __pURL(){try{return location.href||''}catch(e){return''}}
+var __spT0=0;
+var __spEvt={};
+function __pLog(module,event,extra){
+  if(!__pEna())return;
+  try{
+    var now=new Date();
+    var duration_ms = (__spT0 ? (Date.now()-__spT0) : 0);
+    var payload = {
+      '@timestamp': now.toISOString(),
+      'level': 'INFO',
+      'service': 'qaxqjt-admin',
+      'trace_id': __pTid(),
+      'span_id': 'sp_'+now.getTime().toString(36),
+      'module': module,
+      'event': event,
+      'branch': (extra && extra.branch) ? extra.branch : null,
+      'btn_text': (extra && extra.txt) ? extra.txt : null,
+      'btn_selector': (extra && extra.btn) ? extra.btn : null,
+      'bound': (extra && typeof extra.bound==='boolean') ? extra.bound : null,
+      'lock_wait_ms': (extra && typeof extra.lockWait==='number') ? extra.lockWait : 0,
+      'duration_ms': duration_ms,
+      'page_url': __pURL(),
+      'user_agent': __pUA(),
+      'extra': extra || {}
+    };
+    if(payload.extra){
+      ['branch','txt','bound','lockWait','btn'].forEach(function(k){if(payload.extra[k]!==undefined)delete payload.extra[k]});
+    }
+    console.log(JSON.stringify(payload));
+  }catch(_){}
+}
+
+
+(function(){
+  'use strict';
+  var PATCH_ID = 'adminSuperPatchV20260730';
+
+  function _genId(prefix){
+    var d = new Date();
+    var pad = function(n){ return n<10?'0'+n:''+n; };
+    var ymd = d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());
+    var hms = pad(d.getHours())+pad(d.getMinutes())+pad(d.getSeconds());
+    var rnd = Math.floor(Math.random()*90+10);
+    return prefix + ymd + hms + rnd;
+  }
+
+  function _pad2(n){ return n<10?'0'+n:''+n; }
+
+  if(!window.__toastH9){
+    window.__toastH9 = function(msg, type){
+      try{
+        if(window.QinApp && QinApp.Utils && typeof QinApp.Utils.toast==='function'){
+          QinApp.Utils.toast(msg, type||'info');
+          return;
+        }
+        var ts = document.querySelector('.toast-stack');
+        if(!ts){
+          ts = document.createElement('div');
+          ts.className = 'toast-stack';
+          ts.setAttribute('aria-live','polite');
+          ts.style.cssText='position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+          document.body.appendChild(ts);
+        }
+        var el = document.createElement('div');
+        var bg = 'linear-gradient(135deg,#475569,#334155)';
+        if(type==='success') bg='linear-gradient(135deg,#16a34a,#15803d)';
+        if(type==='error') bg='linear-gradient(135deg,#dc2626,#b91c1c)';
+        if(type==='warning') bg='linear-gradient(135deg,#f59e0b,#d97706)';
+        if(type==='info') bg='linear-gradient(135deg,#0284c7,#0369a1)';
+        el.style.cssText='background:'+bg+';color:#fff;padding:10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.18);font-size:0.85rem;max-width:360px;pointer-events:auto;animation:toastInH9 .25s ease;';
+        el.textContent = msg;
+        ts.appendChild(el);
+        var st = document.createElement('style');
+        if(!document.getElementById('_toastH9Anim')){
+          st.id='_toastH9Anim';
+          st.textContent='@keyframes toastInH9{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}';
+          document.head.appendChild(st);
+        }
+        setTimeout(function(){ el.style.transition='opacity .3s,transform .3s'; el.style.opacity='0'; el.style.transform='translateY(-8px)'; setTimeout(function(){ el.remove(); },320); }, 2600);
+      }catch(e){ console.warn('[toastH9]',e); }
+    };
+  }
+
+  if(!window.__acqH9){
+    window.__acqH9 = function(btn, txtType){
+      var lockKey = '__acqLock_'+(btn&&btn.dataset?btn.dataset.acqKey:'global');
+      var now = Date.now();
+      var last = parseInt(btn&&btn.dataset?btn.dataset.__acqLast:'0',10)||0;
+      var expire = 400;
+      if(txtType==='save'||txtType==='submit'||txtType==='confirm') expire=900;
+      if(txtType==='delete'||txtType==='cancel'||txtType==='disable') expire=1200;
+      if(now-last<expire){ return false; }
+      if(btn&&btn.dataset){ btn.dataset.__acqLast = now; }
+      return true;
+    };
+  }
+
+  try{
+    console.info('[SuperPatch 1/6] FORM SUBMIT/RESET 防刷新 + 必填校验 初始化...');
+    document.addEventListener('submit', function(e){
+      try{
+        var form = e.target;
+        if(!form||form.tagName!=='FORM') return;
+        e.preventDefault();
+        e.stopPropagation();
+        var fields = form.querySelectorAll('input,select,textarea');
+        var ok = true;
+        var firstErr = null;
+        fields.forEach(function(f){
+          if(f.disabled||f.type==='file'||f.type==='hidden'||f.type==='button'||f.type==='submit'||f.type==='reset') return;
+          var isRequired = f.hasAttribute('required')||(f.classList&&f.classList.contains('required'));
+          var lbl = '';
+          var labelEl = form.querySelector('label[for="'+f.id+'"]')||f.closest('label');
+          if(labelEl) lbl = labelEl.textContent.trim();
+          if(!lbl){
+            var ph = f.getAttribute('placeholder')||'';
+            if(ph&&ph.slice(-1)==='*'){ isRequired=true; lbl=ph.slice(0,-1).trim(); }
+          }
+          if(labelEl&&labelEl.textContent.indexOf('*')>=0){ isRequired=true; lbl=labelEl.textContent.replace(/\*/g,'').trim(); }
+          if(!lbl){
+            var nm = f.getAttribute('name')||f.id||'';
+            lbl = '「'+nm+'」';
+          }
+          var val = (f.value||'').trim();
+          f.classList.remove('input-error');
+          if(isRequired&&!val){
+            f.classList.add('input-error');
+            f.style.borderColor='#dc2626'; f.style.boxShadow='0 0 0 3px rgba(220,38,38,0.1)';
+            __toastH9('⚠️ 请完整填写'+lbl+'后再提交','error');
+            ok=false; if(!firstErr) firstErr=f;
+            return;
+          }
+          if(val){
+            var t = f.type||'';
+            var n = (f.getAttribute('name')||'').toLowerCase();
+            var telReg = /^1[3-9]\d{9}$/;
+            var mailReg = /^[\w.+-]+@[\w-]+\.[\w.-]+$/;
+            var dateReg = /^\d{4}-\d{2}-\d{2}$/;
+            if(t==='tel'||n.indexOf('phone')>=0||n.indexOf('mobile')>=0){
+              if(!telReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'格式不正确（11位手机号）','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='email'||n.indexOf('mail')>=0){
+              if(!mailReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'邮箱格式不正确','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(n.indexOf('amount')>=0||n.indexOf('price')>=0||n.indexOf('money')>=0){
+              var nv = Number(val);
+              if(isNaN(nv)||nv<0){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'金额必须≥0','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='number'){
+              var nv2 = +val;
+              if(!Number.isInteger(nv2)||nv2<0){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'必须是非负整数','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+            if(t==='date'){
+              if(!dateReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'日期格式应为YYYY-MM-DD','error'); ok=false; if(!firstErr)firstErr=f; return; }
+            }
+          }
+        });
+        if(firstErr){ try{ firstErr.focus(); }catch(_){} }
+        if(!ok) return false;
+        /* P1修复:假成功已移除 */
+        __toastH9('该功能暂未接入后端','warning');
+        return false;
+      }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
+    }, true);
+
+    document.addEventListener('reset', function(e){
+      try{
+        var form = e.target;
+        if(!form||form.tagName!=='FORM') return;
+        e.preventDefault();
+        e.stopPropagation();
+        form.querySelectorAll('input,select,textarea').forEach(function(f){
+          if(f.type==='file'){ try{f.value='';}catch(_){} }
+          else if(f.type==='checkbox'||f.type==='radio'){ f.checked=false; }
+          else{ f.value=''; }
+          f.classList.remove('input-error');
+          try{ f.style.borderColor=''; f.style.boxShadow=''; }catch(_){}
+        });
+        __toastH9('🔄 已重置','info');
+        return false;
+      }catch(e2){ console.warn('[SuperPatch 1/6 reset err]',e2); return false; }
+    }, true);
+
+    var cssErr = document.createElement('style');
+    cssErr.textContent = '.input-error{border-color:#dc2626 !important;box-shadow:0 0 0 3px rgba(220,38,38,0.12) !important;transition:all .2s;}';
+    document.head.appendChild(cssErr);
+    console.info('[SuperPatch 1/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 1/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 2/6] 编号自动生成（只读、不可手改）初始化...');
+    var idRules = [
+      {keys:['订单编号','orderNo','orderId'], prefix:'QAX'},
+      {keys:['收款编号','收款单','receiptId'], prefix:'SK'},
+      {keys:['票据编号','凭证编号','voucherId'], prefix:'PZ'},
+      {keys:['工资条编号','wageId'], prefix:'GZ'},
+      {keys:['派工编号','dispatchId'], prefix:'PG'},
+      {keys:['档期编号','scheduleId'], prefix:'DQ'},
+      {keys:['合同编号','HT','contractId'], prefix:'HT'}
+    ];
+    function _matchIdRule(inp){
+      var hay = [inp.id||'', inp.name||'', inp.getAttribute('aria-label')||'', inp.getAttribute('placeholder')||''];
+      try{
+        var lbl = document.querySelector('label[for="'+inp.id+'"]');
+        if(lbl) hay.push(lbl.textContent||'');
+        var par = inp.closest('[class*="form-group"],[class*="form-item"],td,th,div');
+        if(par) hay.push(par.textContent||'');
+      }catch(_){}
+      var s = hay.join(' ');
+      for(var i=0;i<idRules.length;i++){
+        var r = idRules[i];
+        for(var j=0;j<r.keys.length;j++){
+          if(s.indexOf(r.keys[j])>=0) return r;
+        }
+      }
+      return null;
+    }
+    function _fillIds(scope){
+      try{
+        var inputs = (scope||document).querySelectorAll('input[type=text],input:not([type])');
+        inputs.forEach(function(inp){
+          if(inp.readOnly||inp.disabled) return;
+          var rule = _matchIdRule(inp);
+          if(!rule) return;
+          if((inp.value||'').trim()!=='') return;
+          inp.value = _genId(rule.prefix);
+          inp.setAttribute('readonly','readonly');
+          inp.style.cursor='not-allowed';
+          inp.style.background='#f8fafc';
+        });
+      }catch(e){ console.warn('[SuperPatch 2/6 fillIds err]',e); }
+    }
+    function _refreshIdsOnNew(scope){
+      try{
+        var inputs = (scope||document).querySelectorAll('input[readonly]');
+        inputs.forEach(function(inp){
+          var rule = _matchIdRule(inp);
+          if(!rule) return;
+          inp.value = _genId(rule.prefix);
+        });
+      }catch(e){ console.warn('[SuperPatch 2/6 refreshIds err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', function(){ _fillIds(); }, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _fillIds(); }
+    else{ setTimeout(_fillIds, 50); }
+    if(typeof MutationObserver!=='undefined'){
+      var mo = new MutationObserver(function(muts){
+        muts.forEach(function(m){
+          if(m.addedNodes&&m.addedNodes.length){
+            m.addedNodes.forEach(function(n){
+              if(n.nodeType===1) _fillIds(n);
+            });
+          }
+        });
+      });
+      mo.observe(document.body, {childList:true, subtree:true});
+    }
+    document.addEventListener('click', function(e){
+      try{
+        var btn = e.target.closest('button,a,[role=button]');
+        if(!btn) return;
+    __spT0 = Date.now();
+    __spEvt={target: (btn.tagName||'?') + '.' + (btn.className||'').slice(0,40), txt: (btn.textContent||'').trim()};
+    __pLog('SP','click_match', {btn:__spEvt.target, txt:__spEvt.txt, ms:Date.now()-__spT0});
+    var txt = (btn.textContent||'').trim().toLowerCase();
+        var html = (btn.innerHTML||'').toLowerCase();
+        var idCls = (btn.id||'').toLowerCase()+' '+(btn.className||'').toLowerCase();
+        if(txt.indexOf('新建')>=0||txt.indexOf('➕')>=0||txt.indexOf('+new')>=0||html.indexOf('➕')>=0||idCls.indexOf('btnadd')>=0||idCls.indexOf('-new')>=0||idCls.indexOf('new')>=0){
+          setTimeout(function(){ _refreshIdsOnNew(); }, 80);
+        }
+      }catch(_){}
+    }, true);
+    console.info('[SuperPatch 2/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 2/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 3/6] 取消/关闭/我知道了/× 关弹窗不刷新 初始化...');
+    var closeTexts = ['取消','关闭','我知道了','我明白了','知道了','确定取消'];
+    var closeChs = ['×','✕','✖','✘','❌','⨯'];
+    document.addEventListener('click', function(e){
+      try{
+        var el = e.target;
+        var txt = (el.textContent||'').trim();
+        if(!txt&&el.closest){ txt = (el.closest('button,a,[role=button],span,div')||{}).textContent||''; txt=txt.trim(); }
+        var isClose = false;
+        if(closeChs.indexOf(txt)>=0) isClose=true;
+        for(var i=0;i<closeTexts.length;i++){
+          if(txt===closeTexts[i]||(txt.length<=12&&txt.indexOf(closeTexts[i])>=0)){ isClose=true; break; }
+        }
+        if(!isClose) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var handled=false;
+        try{ if(typeof window.__closeAnyModal==='function'){ window.__closeAnyModal(); handled=true; } }catch(_){}
+        if(!handled){
+          var sels = [
+            'div[class*="modal-"]','div[class*="Modal"]','div[class*="overlay"]',
+            'div[id*="Modal"]','div[id*="modal"]','div[class*="popup"]','div[class*="Popup"]',
+            'div[class*="dialog"]','div[class*="Dialog"]'
+          ];
+          sels.forEach(function(sel){
+            try{
+              var arr = document.querySelectorAll(sel);
+              arr.forEach(function(n){
+                if(n&&n.style){
+                  n.style.display='none';
+                  try{ n.classList.add('csp-hide'); }catch(_){}
+                }
+              });
+            }catch(_){}
+          });
+        }
+        __toastH9('↩️ 已关闭弹窗','info');
+      }catch(e3){ console.warn('[SuperPatch 3/6 click err]',e3); }
+    }, true);
+    console.info('[SuperPatch 3/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 3/6 init err]',e); }
+
+  try{
+    /* v20260926 停用：原 SuperPatch 4/6 伪造分页栏（条数写死 100、翻页不切数据，
+       且 MutationObserver 会把分页栏无限自嵌套）。真实分页：账号列表走 QinPagination，审计日志走服务端真分页 */
+    (function(){
+      try{
+        document.querySelectorAll('.sp-pg-toolbar-20260730').forEach(function(b){ try{ b.remove(); }catch(_){} });
+        document.querySelectorAll('div.pagination').forEach(function(d){
+          if(!d.querySelector('.pagination-bar')){ try{ d.remove(); }catch(_){} }
+        });
+        if(window.QinPagination && QinPagination.refresh){ setTimeout(function(){ try{ QinPagination.refresh(); }catch(_){} }, 60); }
+      }catch(_){}
+    })();
+    throw new Error('SP4/6 disabled v20260926: real pagination only');
+    // eslint-disable-next-line no-unreachable
+    console.info('[SuperPatch 4/6] 分页器标准化 (pagination.js结构) 初始化...');
+    var pgStateMap = new WeakMap();
+    function _isPgContainer(el){
+      try{
+        if(!el || el.nodeType!==1) return false;
+        if(el.closest && el.closest('.sp-pg-toolbar-20260730,.pagination-toolbar')) return false;
+        var tag = (el.tagName||'').toUpperCase();
+        if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
+        var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
+        if(c.search(/pagination|pager|pagebar|pageBar|paginate|page-number-item|pagerbar|pagebar/i)<0) return false;
+        var exclude = /admin[-_]?main|admin[-_]?content|main[-_]?content|stats[-_]?grid|list[-_]?grid|card[-_]?grid|table[-_]?wrap|table[-_]?container|data[-_]?wrap|content[-_]?wrap|page[-_]?content|admin[-_]?wrap|app[-_]?main/i;
+        if(exclude.test(c)) return false;
+        if(el.querySelector('[data-pg]')||el.querySelector('.page-number-item')||el.querySelector('button[data-pg]')) return true;
+        return true;
+      }catch(_){ return false; }
+    }
+    function _ensurePgState(container){
+      if(!pgStateMap.has(container)){
+        var total = 100;
+        var tbody = document.querySelector('tbody[data-paginate=list]');
+        if(tbody){
+          var sz = parseInt(tbody.getAttribute('data-page-size')||'10',10);
+          var rows = tbody.querySelectorAll('tr:not([style*=none]):not(.csp-hide)').length;
+          total = Math.max(100, rows*sz);
+        }
+        var size = 10;
+        var existing = container.querySelector('select[data-pg=size]');
+        if(existing){ try{ size = parseInt(existing.value||'10',10)||10; }catch(_){} }
+        pgStateMap.set(container, {total:total, pages:Math.ceil(total/size), current:1, size:size});
+      }
+      return pgStateMap.get(container);
+    }
+    function _buildPg(container){
+      try{
+        if(container.hasAttribute('data-pg-built')||container.querySelector('.sp-pg-toolbar-20260730')) return; container.setAttribute('data-pg-built','1');
+        if(container.classList && (container.classList.contains('sp-pg-toolbar-20260730')||container.classList.contains('pagination-toolbar'))) return;
+        var oldToolbar = container.querySelector('.pagination-toolbar');
+        if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
+        var st = _ensurePgState(container);
+        var children = container.children, nonPg = 0, i;
+        for(i=0;i<children.length;i++){
+          var c = children[i]; if(!c) continue;
+          var cn = (c.className||'').toString(); var id = (c.id||'').toString(); var tag = (c.tagName||'').toString().toUpperCase();
+          if(tag==='BUTTON'||tag==='SELECT'||tag==='SPAN'||tag==='INPUT') continue;
+          if(cn.indexOf('pagination')>=0 || cn.indexOf('pager')>=0 || cn.indexOf('pagebar')>=0 || cn.indexOf('page-')>=0 || id.indexOf('page')>=0) continue;
+          nonPg++;
+        }
+        if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
+        var wrap = document.createElement('div');
+        wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.setAttribute('data-pg-built','1');
+        wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
+        wrap.innerHTML = ''+
+          '<button class="btn btn-sm" data-pg="first">首页</button>'+
+          '<button class="btn btn-sm" data-pg="prev">上一页</button>'+
+          '<div class="page-number-wrap" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;"></div>'+
+          '<button class="btn btn-sm" data-pg="next">下一页</button>'+
+          '<button class="btn btn-sm" data-pg="last">末页</button>'+
+          '<span style="margin-left:6px;">跳 <input type="number" data-pg="jump" min="1" style="width:60px;padding:4px 6px;border:1.5px solid var(--border-light,#cbd5e1);border-radius:6px;"> 页</span>'+
+          '<select data-pg="size" style="padding:4px 8px;border:1.5px solid var(--border-light,#cbd5e1);border-radius:6px;">'+
+            '<option value="10">10条/页</option><option value="20">20条/页</option><option value="50">50条/页</option><option value="100">100条/页</option>'+
+          '</select>'+
+          '<span data-pg="info" style="margin-left:auto;color:var(--text-light,#64748b);">共 0 条 / 第 1 页</span>';
+        container.appendChild(wrap);
+        wrap.querySelectorAll('button').forEach(function(b){ b.style.borderRadius='999px'; });
+        var sel = wrap.querySelector('select[data-pg=size]'); if(sel&&st.size!=10){ sel.value=String(st.size); }
+        _updatePgUI(container);
+        wrap.addEventListener('click', function(ev){
+          try{
+            var t = ev.target.closest('[data-pg]');
+            if(!t) return;
+            var act = t.getAttribute('data-pg');
+            var s = _ensurePgState(container);
+            if(act==='first') s.current=1;
+            else if(act==='prev') s.current=Math.max(1,s.current-1);
+            else if(act==='next') s.current=Math.min(s.pages,s.current+1);
+            else if(act==='last') s.current=s.pages;
+            else return;
+            _updatePgUI(container);
+          }catch(_){}
+        });
+        var jp = wrap.querySelector('input[data-pg=jump]');
+        if(jp){
+          jp.addEventListener('change', function(){
+            try{
+              var s = _ensurePgState(container);
+              var v = parseInt(jp.value||'1',10);
+              if(isNaN(v)||v<1) v=1;
+              if(v>s.pages) v=s.pages;
+              s.current=v; jp.value=v;
+              _updatePgUI(container);
+            }catch(_){}
+          });
+          jp.addEventListener('keydown', function(ev){
+            if(ev.key==='Enter'){ ev.preventDefault(); jp.dispatchEvent(new Event('change')); }
+          });
+        }
+        var sz = wrap.querySelector('select[data-pg=size]');
+        if(sz){
+          sz.addEventListener('change', function(){
+            try{
+              var s = _ensurePgState(container);
+              s.size = parseInt(sz.value||'10',10)||10;
+              s.pages = Math.ceil(s.total/s.size);
+              s.current = 1;
+              _updatePgUI(container);
+            }catch(_){}
+          });
+        }
+      }catch(e){ console.warn('[SuperPatch 4/6 buildPg err]',e); }
+    }
+    function _updatePgUI(container){
+      try{
+        var wrap = container.querySelector('.sp-pg-toolbar-20260730') || container.querySelector('.pagination-toolbar');
+        if(!wrap) return;
+        var s = _ensurePgState(container);
+        var pnWrap = wrap.querySelector('.page-number-wrap');
+        var info = wrap.querySelector('[data-pg=info]');
+        if(!pnWrap && !info){ return; }
+        if(pnWrap){
+          pnWrap.innerHTML='';
+          var maxBtns = 7;
+          var cur = s.current, totalPages=s.pages;
+          var start = Math.max(1, cur - Math.floor(maxBtns/2));
+          var end = Math.min(totalPages, start+maxBtns-1);
+          start = Math.max(1, end-maxBtns+1);
+          for(var p=start;p<=end;p++){
+            var bb = document.createElement('button');
+            bb.className='btn btn-sm';
+            bb.setAttribute('data-pg','num');
+            bb.style.borderRadius='999px';
+            if(p===cur){ bb.style.background='linear-gradient(135deg,var(--primary,#0F4C81),var(--primary-dark,#0a3a63))'; bb.style.color='#fff'; bb.style.borderColor='var(--gold,#D4AF37)'; }
+            bb.textContent = String(p);
+            (function(pg){ bb.addEventListener('click', function(){ var st=_ensurePgState(container); st.current=pg; _updatePgUI(container); }); })(p);
+            pnWrap.appendChild(bb);
+          }
+        }
+        var info = wrap.querySelector('[data-pg=info]');
+        if(info){ info.textContent = '共 '+s.total+' 条 / 第 '+s.current+' 页 / 共 '+s.pages+' 页'; }
+        var firstB = wrap.querySelector('[data-pg=first]'), prevB=wrap.querySelector('[data-pg=prev]'), nxtB=wrap.querySelector('[data-pg=next]'), lastB=wrap.querySelector('[data-pg=last]');
+        var atFirst = s.current<=1, atLast=s.current>=s.pages;
+        [firstB,prevB].forEach(function(b){ if(b){ b.disabled=atFirst; b.style.opacity=atFirst?'0.45':'1'; b.style.cursor=atFirst?'not-allowed':'pointer'; } });
+        [nxtB,lastB].forEach(function(b){ if(b){ b.disabled=atLast; b.style.opacity=atLast?'0.45':'1'; b.style.cursor=atLast?'not-allowed':'pointer'; } });
+      }catch(e){ console.warn('[SuperPatch 4/6 updateUI err]',e); }
+    }
+    function _scanPagination(){
+      try{
+        var all = document.querySelectorAll('div,nav,section,span');
+        all.forEach(function(el){ if(el.hasAttribute('data-pg-built')) return; if(_isPgContainer(el)) _buildPg(el); });
+        var sty = document.createElement('style');
+        if(!document.getElementById('_pgPatchCSS20260730')){
+          sty.id='_pgPatchCSS20260730';
+          sty.textContent='.pagination-toolbar button{border-radius:999px !important;}';
+          document.head.appendChild(sty);
+        }
+      }catch(e){ console.warn('[SuperPatch 4/6 scan err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', _scanPagination, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _scanPagination(); }
+    else{ setTimeout(_scanPagination, 100); }
+    if(typeof MutationObserver!=='undefined'){
+      var mo2 = new MutationObserver(function(){ clearTimeout(window.__pgTimer); window.__pgTimer=setTimeout(_scanPagination, 200); });
+      mo2.observe(document.body, {childList:true, subtree:true});
+    }
+    console.info('[SuperPatch 4/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 4/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 5/6] 左侧栏 9 大主菜单 + 当前页高亮 初始化...');
+    var main9 = [
+      {title:'首页', href:'index.html', icon:'🏠'},
+      {title:'订单预约与客户管理', href:'orders.html', icon:'📋'},
+      {title:'剧目管理中心', href:'operas.html', icon:'🎭'},
+      {title:'演出档期排班', href:'schedule.html', icon:'📅'},
+      {title:'演员阵容与派工', href:'cast-sheet.html', icon:'👥'},
+      {title:'内容与资讯管理', href:'content.html', icon:'📰'},
+      {title:'财务与收款管理', href:'finance.html', icon:'💰'},
+      {title:'员工与人事档案', href:'staff.html', icon:'👤'},
+      {title:'系统设置', href:'system.html', icon:'⚙️'}
+    ];
+    function _getSidebarParent(){
+      return document.getElementById('adminSidebar')||document.querySelector('.admin-sidebar')||document.querySelector('.admin-sidebar-wrap')||document.querySelector('.admin-sidebar-menu-wrap')||document.querySelector('nav .admin-menu-item, nav .admin-sidebar-menu, nav')||document.querySelector('nav');
+    }
+    function _getMenuContainer(){
+      return document.querySelector('.admin-sidebar-menu')||document.querySelector('#adminSidebar nav')||document.querySelector('#adminSidebar');
+    }
+    function _standardizeMenu(){
+      try{
+        var sidebar = _getSidebarParent();
+        if(!sidebar) return;
+        var deployLinks = sidebar.querySelectorAll('a[href*="../deploy.html"],a[href*="deploy.html"]');
+        deployLinks.forEach(function(a){ try{ a.classList.add('csp-hide'); }catch(_){} });
+        var menuBox = _getMenuContainer();
+        if(!menuBox) return;
+        var existing = {};
+        menuBox.querySelectorAll('a.admin-menu-item,a[href$=".html"]').forEach(function(a){
+          var h = (a.getAttribute('href')||'').split('/').pop().toLowerCase();
+          if(h) existing[h]=a;
+        });
+        var firstGroup = menuBox.querySelector('.admin-menu-group');
+        var insertTarget = firstGroup||menuBox;
+        var logoutAnchor = null;
+        try{
+          var tmp = sidebar.querySelector('#logoutBtnSidebar, a[href*="logout"], a:contains(退出)');
+          if(tmp){
+            logoutAnchor = tmp;
+            while(logoutAnchor&&logoutAnchor.parentNode!==menuBox) logoutAnchor = logoutAnchor.parentNode;
+          }
+        }catch(_){ logoutAnchor=null; }
+        var lastInGroup = insertTarget.lastElementChild;
+        main9.forEach(function(m){
+          var href = m.href.toLowerCase();
+          if(existing[href]) return;
+          var a = document.createElement('a');
+          a.href = m.href;
+          a.className = 'admin-menu-item';
+          a.innerHTML = '<span class="menu-icon">'+m.icon+'</span><span>'+m.title+'</span>';
+          if(logoutAnchor&&logoutAnchor.parentNode===insertTarget){
+            insertTarget.insertBefore(a, logoutAnchor);
+          }else if(lastInGroup){
+            insertTarget.insertBefore(a, lastInGroup.nextSibling||null);
+          }else{
+            insertTarget.appendChild(a);
+          }
+        });
+        var curPage = (location.pathname||'').split('/').pop().toLowerCase();
+        if(!curPage){ try{ curPage = (location.href||'').split('/').pop().split('?')[0].toLowerCase(); }catch(_){} }
+        menuBox.querySelectorAll('a.admin-menu-item,a[href$=".html"]').forEach(function(a){
+          var href = (a.getAttribute('href')||'').split('/').pop().toLowerCase();
+          a.classList.remove('active');
+          try{ a.style.background=''; a.style.color=''; a.style.border=''; a.style.borderRadius=''; a.style.margin=''; }catch(_){}
+          if(href===curPage){
+            a.classList.add('active');
+            try{
+              var cs = getComputedStyle(a);
+              var hasActiveStyle = (cs.backgroundImage&&cs.backgroundImage.indexOf('gradient')>=0)||(cs.color&&cs.color!=='');
+              if(!hasActiveStyle||cs.background==='rgba(0,0,0,0)'){
+                a.style.background='linear-gradient(135deg, rgba(212,175,55,0.25), rgba(139,0,0,0.18))';
+                a.style.color='#fef3c7';
+                a.style.border='1px solid rgba(212,175,55,0.45)';
+                a.style.borderRadius='8px';
+                a.style.margin='2px 0';
+              }
+            }catch(_){}
+          }
+        });
+      }catch(e){ console.warn('[SuperPatch 5/6 standardize err]',e); }
+    }
+    document.addEventListener('DOMContentLoaded', _standardizeMenu, {once:true});
+    if(document.readyState==='complete'||document.readyState==='interactive'){ _standardizeMenu(); }
+    else{ setTimeout(_standardizeMenu, 50); }
+    console.info('[SuperPatch 5/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 5/6 init err]',e); }
+
+  try{
+    console.info('[SuperPatch 6/6] 死按钮兜底 + toast通道 初始化...');
+    function _hasAction(btn){
+      if(!btn) return false;
+      // 仅onclick算真正绑定；data-action只是业务标识，不算；href需为真实跳转链接
+      var oc = btn.getAttribute('onclick');
+      var hr = btn.getAttribute('href');
+      if(oc && oc.length > 3) return true;
+      if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
+      if(btn.__deadBtnChecked) return true;
+      if(btn.__superPatchBound) return true;
+      return false;
+    }
+    function _txtMatch(txt, list){
+      for(var i=0;i<list.length;i++){ if(txt.indexOf(list[i])>=0) return true; }
+      return false;
+    }
+    document.addEventListener('click', function(e){
+      try{
+        // 修复：选择器扩大，包含a标签和[data-action]标识元素
+        var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
+        if(!btn) return;
+                // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
+        if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
+        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
+        if(_hasAction(btn)) return;
+        if(btn.__superPatchBound) return;
+        btn.__superPatchBound = 1;
+        var txt = (btn.textContent||'').trim();
+        var tt = 'other';
+        // 修复：扩充业务分支，覆盖派工/审核/通过/驳回/签约/排期/确认接单等
+        if(_txtMatch(txt,['保存','提交','确认','通过','签约','签订','确认接单','核销'])) tt='save';
+        else if(_txtMatch(txt,['删除','作废','禁用','取消','驳回'])) tt='delete';
+        else if(_txtMatch(txt,['编辑','查看','详情','预览'])) tt='view';
+        else if(_txtMatch(txt,['导出','打印'])) tt='export';
+        else if(_txtMatch(txt,['排期','排班','安排','派工','调度'])) tt='schedule';
+        else if(_txtMatch(txt,['审核','审批'])) tt='audit';
+        else if(_txtMatch(txt,['合同'])) tt='contract';
+        else if(_txtMatch(txt,['新增','新建','添加'])) tt='add';
+        if(!__acqH9(btn, tt)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var tr = btn.closest ? btn.closest('tr') : null;
+        var trKey = '';
+        if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
+        __spT0 = Date.now();
+        /* P1修复:假成功已移除（死按钮兜底，无真实实现） */
+        if(tt==='save'){
+          __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='delete'){
+          __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='view'){
+          __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='export'){
+          __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='schedule'){
+          __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='audit'){
+          __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='contract'){
+          __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
+          __toastH9('该功能暂未接入后端','warning');
+        }else if(tt==='add'){
+          __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
+          __toastH9('该功能暂未接入后端','warning');
+        }else{
+          __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
+          console.warn('[P1] 未接线按钮:', txt || '未分类按钮');
+        }
+        return false;
+      }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
+    }, true);
+    console.info('[SuperPatch 6/6] 已激活 ✓');
+  }catch(e){ console.warn('[SuperPatch 6/6 init err]',e); }
+
+  console.info('['+PATCH_ID+'] 6合1超级补丁全部加载完毕 ✓');
+})();
+
+} /* end of 防重复注入保护 if */
+
+/* ===== accounts.html inline block (run 2, #5/6) ===== */
+/* ========== 🔽 下拉菜单 Click 切换（兼容移动端） ========== */
+(function(){
+  if(window.__DD_CLICK_INJECTED__) return;
+  window.__DD_CLICK_INJECTED__ = true;
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('.action-dropdown-btn') : null;
+    var menu = e.target.closest ? e.target.closest('.action-dropdown-menu') : null;
+    // 关闭所有下拉菜单
+    document.querySelectorAll('.action-dropdown-menu').forEach(function(m){
+      if(m !== menu) m.style.display = 'none';
+    });
+    // 切换当前下拉菜单
+    if(btn){
+      var dd = btn.closest('.action-dropdown');
+      if(dd){
+        var m = dd.querySelector('.action-dropdown-menu');
+        if(m){
+          e.preventDefault();
+          e.stopPropagation();
+          m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+        }
+      }
+    }
+  });
+})();
+
+/* ===== accounts.html inline block (run 2, #6/6) ===== */
+/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
+(function(){
+  function __markBound(){
+    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
+    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
+  else { __markBound(); setTimeout(__markBound,500); }
+})();
