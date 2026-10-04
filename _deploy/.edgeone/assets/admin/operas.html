@@ -898,6 +898,43 @@
     </div>
   </div>
 
+  <!-- P2修复:分类管理弹窗 —— 接通 GET/POST/PATCH/DELETE /v1/play-categories -->
+  <div class="modal-overlay modal-overlay-hide" id="catManageModal" style="display:none;">
+    <div class="modal-box" style="max-width:680px;">
+      <div class="modal-header">
+        <h3>⚙️ 剧目分类管理</h3>
+        <button class="modal-close" id="catManageCloseBtn">✕</button>
+      </div>
+      <div class="modal-body" style="padding:20px 24px;">
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+          <input id="catNewName" type="text" class="form-control" placeholder="新分类名称（最长 30 字）" maxlength="30" style="flex:1;min-width:180px;box-sizing:border-box;">
+          <input id="catNewSort" type="number" class="form-control" placeholder="排序" min="1" style="width:92px;box-sizing:border-box;">
+          <button class="btn btn-primary" id="catAddBtn" type="button">＋ 新增分类</button>
+        </div>
+        <div class="table-wrapper" style="max-height:340px;overflow-y:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>分类名称</th>
+                <th>排序</th>
+                <th>状态</th>
+                <th>剧目数</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="catManageTbody">
+              <tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">正在加载分类…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin:12px 0 0;font-size:0.82rem;color:#999;">💡 重命名分类会同步迁移其下剧目；分类下仍有剧目时删除会被拒绝（可先停用）。</p>
+      </div>
+      <div class="modal-footer" style="padding:14px 24px;border-top:1px solid var(--border-light);display:flex;justify-content:flex-end;">
+        <button class="btn btn-secondary" id="catManageCancelBtn" type="button">关闭</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="operaDetailModal">
     <div class="modal-box">
       <div class="modal-header">
@@ -1043,6 +1080,7 @@
 
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
+    <script>/* P3修复: 全局 PATHS 常量（带回退） */ window.QAXQJT_PATHS = (window.QAXQJT_API_CONFIG && window.QAXQJT_API_CONFIG.PATHS) || {};</script>
   <script src="../js/api-request.js?v=20260803"></script>
 <script src="../js/app.js?v=20260930a"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
@@ -1359,6 +1397,10 @@ var __pT0=0;
       var trKey = '';
       if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
       // 各按钮分发行文
+      /* P1修复:假成功已移除 —— DBF 死按钮兜底不再伪造「保存成功/已删除/已核销/导出完成/签约成功/派工成功」
+         等提示，也不再模拟删行/弹确认框。能走到这里的均为未接线死按钮（真实按钮已被上方
+         __btnHasBound/__bindDone 检查放行），统一弹 warning「该功能暂未接入后端」并 preventDefault
+         防原生提交刷新，同时 console.warn 记录接线缺口。 */
       var isSave = (txt.indexOf('保存')>=0 || txt.indexOf('提交')>=0 || txt.indexOf('确认')>=0);
       var isEdit = (txt.indexOf('编辑')>=0);
       var isDel  = (txt.indexOf('删除')>=0 && txt.length <= 10);
@@ -1367,98 +1409,72 @@ var __pT0=0;
       var isExport = (txt.indexOf('导出')>=0);
       var isAdd = (txt.indexOf('新增')>=0);
       var doneKey = 'e2_'+(isSave?'s':isEdit?'e':isDel?'d':isView?'v':isVerify?'y':isExport?'x':isAdd?'a':'k')+'_'+(trKey||Math.random().toString(36).slice(2,6));
+      function __pDeadTip(branch){
+        __pLog('DBF', branch+'_unwired', Object.assign({},__pEvt,{row:trKey, branch:branch}));
+        try { e.preventDefault(); } catch(_p1){}
+        console.warn('[P1] 未接线按钮:', txt||branch, trKey?('（行：'+trKey+'）'):'');
+        __T('⚠️ 该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1;
+      }
       if(isSave){
     __pEvt.branch='save';
     var __pLk = __L(doneKey,900);
-    if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-    __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 保存成功','success');
-        try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
-        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+    if(!__pLk) { try { e.stopPropagation(); } catch(_a){} return; }
+        __pDeadTip('save'); try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isEdit){
         if(!__L(doneKey,700)) return;
-        __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
-        __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info');
-        btn.__ctE2Done = 1; return;
+        __pDeadTip('edit'); return;
       }
       if(isDel){
-        if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-        if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
-        try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
-        __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
-        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+        if(!__L(doneKey,850)) { try { e.stopPropagation(); } catch(_a){} return; }
+        __pDeadTip('delete'); try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
         if(!__L(doneKey,500)) return;
-        __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
-        __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info');
-        btn.__ctE2Done = 1; return;
+        __pDeadTip('view'); return;
       }
       if(isVerify){
-        if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
-        __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
-        __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success');
-        btn.__ctE2Done = 1; return;
+        if(!__L(doneKey,900)) return;
+        __pDeadTip('verify'); return;
       }
       if(isExport){
-        if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
-        __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
-        __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success');
-        btn.__ctE2Done = 1; return;
+        if(!__L(doneKey,1200)) return;
+        __pDeadTip('export'); return;
       }
       if(isAdd){
         if(!__L(doneKey,900)) return;
-        __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 准备新增「'+txt+'」','info');
-        btn.__ctE2Done = 1; return;
+        __pDeadTip('add'); return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
       var isAudit = txt.indexOf('审核')>=0 || txt.indexOf('审批')>=0 || txt.indexOf('驳回')>=0 || txt.indexOf('通过')>=0;
       if(isAudit){
-        if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
-        if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
-        __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+        if(!__L(doneKey,850)){ try{e.stopPropagation();}catch(_a){} return; }
+        __pDeadTip('audit'); try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
       var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
       if(isSign){
-        if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
-        __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+        if(!__L(doneKey,900)){ try{e.stopPropagation();}catch(_a){} return; }
+        __pDeadTip('sign'); try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
       var isContract = txt.indexOf('合同')>=0 && !isSign;
       if(isContract){
-        if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
-        __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪','info');
-        btn.__ctE2Done=1; return;
+        if(!__L(doneKey,1000)) return;
+        __pDeadTip('contract'); return;
       }
       // ---- 新增：排期/排班/安排档期 ----
       var isScheduleBtn = txt.indexOf('排期')>=0 || txt.indexOf('排班')>=0 || (txt.indexOf('安排')>=0 && (txt.length<=8 || txt.indexOf('档期')>=0));
       if(isScheduleBtn){
-        if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
-        __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
-        btn.__ctE2Done=1; return;
+        if(!__L(doneKey,800)) return;
+        __pDeadTip('schedule'); return;
       }
       // ---- 新增：取消/处理/确认接单 ----
       var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
       if(isCancelOrHandle && !isDel && !isSave){
-        if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if((txt.indexOf('取消')>=0) && !confirm('确认取消：'+(trKey||'当前记录')+'？')) return;
-        var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
-        var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
-        __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+        if(!__L(doneKey,800)){ try{e.stopPropagation();}catch(_a){} return; }
+        __pDeadTip('status'); try{e.stopPropagation();}catch(_b){} return;
       }
 
     }, true);
@@ -1639,10 +1655,11 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 提交成功','success');
-        setTimeout(function(){
-          try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
-        }, 380);
+        /* P1修复:假成功已移除 —— 必填/格式校验为真实助手（保留），但校验通过后原「✅ 提交成功」
+           为假提交分支：该表单无真实提交实现时不再伪造成功、不再自动关弹窗，
+           保留 preventDefault（上方已执行，防原生提交刷新），改为 warning 提示未接入。 */
+        console.warn('[P1] 未接线表单:', form.id||form.name||'(anonymous)');
+        __toastH9('⚠️ 该功能暂未接入后端','warning');
         return false;
       }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
     }, true);
@@ -2063,7 +2080,84 @@ function __pLog(module,event,extra){
   // 功能按钮绑定（上传/新建/导出）
   try{
     function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; try{ el.__superPatchBound=1; }catch(_){} el.addEventListener("click", fn, true); } }
-    __bindBtn('openOperasUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（剧照）","info"); }; inp.click(); });
+    /* P1修复:假成功已移除 —— 头部「选择剧照」原为一次性临时 input（选择结果无处落地），
+       改为打开表单内真实文件选择器 #operasAttachFiles，让选择结果进入下方真实上传流程 */
+    __bindBtn('openOperasUploadBtn', function(){ var inp=document.getElementById("operasAttachFiles"); if(inp&&typeof inp.click==="function"){ inp.click(); } else { __T("⚠️ 未找到图片选择控件","error"); } });
+
+    /* P1修复:假成功已移除 —— 剧目海报/剧照上传接通真实接口（原表单提交落入 SuperPatch 1/6 假提交分支，弹「✅ 提交成功」）：
+       POST /v1/upload（单文件，multipart 字段 file）/ POST /v1/upload/multi（多文件，字段 file+files），
+       返回 data:{url,...}；成功后若已选关联剧目，则 PATCH /v1/plays/{id} 写入 posterUrl
+       （对照 server/src/controllers/plays.js 的 b.posterUrl）；未选剧目时保存到 window.__operasLastPosterUrl。 */
+    (function(){
+      var form = document.getElementById('operasAttachForm');
+      var fileInput = document.getElementById('operasAttachFiles');
+      if(!form || form.__realUploadWired) return;
+      form.__realUploadWired = 1;
+      function T(m,t){ try{ window.__T(m,t); }catch(_){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(m,t||'info',3000); }catch(_2){} } }
+      var __uploading = false;
+      function doUpload(){
+        if(__uploading) return;
+        try{
+          var files = fileInput && fileInput.files ? fileInput.files : null;
+          if(!files || !files.length){ T('⚠️ 请先选择要上传的剧照/海报','error'); return; }
+          var okFiles = [];
+          for(var i=0;i<files.length;i++){
+            var f = files[i];
+            if(!/^image\/(jpeg|png|webp)$/i.test(f.type||'')){ T('⚠️ 仅支持 JPG/PNG/WebP：'+f.name,'error'); return; }
+            if(f.size > 10*1024*1024){ T('⚠️ 文件超过10MB：'+f.name,'error'); return; }
+            okFiles.push(f);
+          }
+          __uploading = true;
+          var fd = new FormData();
+          okFiles.forEach(function(f){ fd.append('file', f); });
+          if(okFiles.length > 1){ okFiles.forEach(function(f){ fd.append('files', f); }); }
+          var path = okFiles.length > 1 ? (QAXQJT_PATHS.UPLOAD_MULTI || '/v1/upload/multi') : (QAXQJT_PATHS.UPLOAD || '/v1/upload');
+          T('📤 正在上传 '+okFiles.length+' 张图片…','info');
+          window.QAXQJT_API.post(path, fd).then(function(data){
+            var urls = [];
+            if(data && Array.isArray(data.files)){ data.files.forEach(function(d){ if(d&&d.url) urls.push(d.url); }); }
+            else if(Array.isArray(data)){ data.forEach(function(d){ if(d&&d.url) urls.push(d.url); }); }
+            else if(data && data.url){ urls.push(data.url); }
+            if(!urls.length){ T('❌ 上传响应未返回 url','error'); return; }
+            var sel = document.getElementById('operasAttachPlaySelect');
+            var playId = sel ? (sel.value||'').trim() : '';
+            if(playId){
+              var playLabel = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : playId;
+              window.QAXQJT_API.patch((QAXQJT_PATHS.PLAYS_BY_ID || function (i) { return '/v1/plays/' + i; })(encodeURIComponent(playId)), { posterUrl: urls[0] }).then(function(){
+                window.__operasLastPosterUrl = urls[0];
+                T('✅ 已上传 '+urls.length+' 张图片，封面已更新到《'+playLabel.replace(/^《|》$/g,'')+'》','success');
+                try { if(window.__operasApi && window.__operasApi.load) window.__operasApi.load(); } catch(_rl){}
+              }).catch(function(err){
+                console.warn('[P1 upload] posterUrl 更新失败', err);
+                T('❌ 图片已上传但封面更新失败：'+((err&&err.message)||err),'error');
+              });
+            } else {
+              window.__operasLastPosterUrl = urls[0];
+              console.info('[P1 upload] 已上传 URL：', urls.join(', '), '（未选关联剧目，可重新上传时选择）');
+              T('✅ 已上传 '+urls.length+' 张图片（未选关联剧目，URL 已暂存）','success');
+            }
+          }).catch(function(err){
+            console.warn('[P1 upload] 失败', err);
+            T('❌ 上传失败：'+((err&&err.message)||err),'error');
+          }).finally(function(){ __uploading = false; });
+        }catch(_e){ __uploading = false; console.warn('[P1 upload err]', _e); T('❌ 上传失败：'+((_e&&_e.message)||_e),'error'); }
+      }
+      // window 捕获阶段先于 SuperPatch 1/6 的 document 捕获 submit 拦截，抢先把本表单导向真实上传
+      window.addEventListener('submit', function(ev){
+        if(ev.target !== form) return;
+        try{ ev.preventDefault(); ev.stopPropagation(); try{ ev.stopImmediatePropagation(); }catch(_si){} }catch(_){}
+        doUpload();
+      }, true);
+      // 「刷新bug+弹窗修复20260825」会把 submit 按钮改为 type=button（不触发 submit 事件），
+      // 故同时在 window 捕获阶段接表单内按钮点击（排除 reset），双保险且互不重复（__uploading 防重入）
+      window.addEventListener('click', function(ev){
+        var b = ev.target && ev.target.closest ? ev.target.closest('button') : null;
+        if(!b || !form.contains(b)) return;
+        if((b.getAttribute('type')||'').toLowerCase() === 'reset') return;
+        try{ ev.preventDefault(); ev.stopPropagation(); }catch(_){}
+        doUpload();
+      }, true);
+    })();
 
     // 新增剧目：打开模态框
     function __openAddOperaModal(){
@@ -2140,37 +2234,13 @@ try{
         var trKey = '';
         if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
         __spT0 = Date.now();
-        if(tt==='save'){
-          __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功','success');
-          setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
-        }else if(tt==='delete'){
-          if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
-            __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
-          }else{ __toastH9('↩️ 已取消操作','info'); }
-        }else if(tt==='view'){
-          __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
-        }else if(tt==='export'){
-          __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印','info');
-        }else if(tt==='schedule'){
-          __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
-        }else if(tt==='audit'){
-          __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
-        }else if(tt==='contract'){
-          __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪','info');
-        }else if(tt==='add'){
-          __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增','info');
-        }else{
-          __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
-        }
+        /* P1修复:假成功已移除 —— SuperPatch 6/6 死按钮兜底不再伪造「操作成功/已执行/已触发导出/
+           审核处理完成」等提示，也不再弹 confirm 假确认。能走到这里的均为未接线死按钮
+           （真实按钮已被 _hasAction/__superPatchBound 检查放行），统一弹 warning
+           「该功能暂未接入后端」并 console.warn 记录接线缺口。preventDefault/stopPropagation 保留。 */
+        __pLog('SP','fallback_unwired', {branch:tt, txt:txt, row:trKey});
+        console.warn('[P1] 未接线按钮:', txt||tt, trKey?('（行：'+trKey+'）'):'');
+        __toastH9('⚠️ 该功能暂未接入后端','warning');
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
     }, true);
@@ -2362,7 +2432,7 @@ try{
   'use strict';
   if (window.__operasApi) return;
   window.__operasApi = {
-    state: { plays: [], filter: { genre: '', keyword: '' }, editingId: null, loaded: false },
+    state: { plays: [], filter: { genre: '', keyword: '' }, editingId: null, loaded: false, categories: [] },
     _toast: function(msg, type){ try { if (typeof __T === 'function') return __T(msg, type||'info'); } catch(_){} try { console.log('[operasApi]', type, msg); } catch(_){} },
     _escape: function(s){ if (s === null || s === undefined) return ''; return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); },
 
@@ -2371,7 +2441,7 @@ try{
         var q = { page: 1, pageSize: 200 };
         if (this.state.filter.genre) q.genre = this.state.filter.genre;
         if (this.state.filter.keyword) q.keyword = this.state.filter.keyword;
-        var resp = await QAXQJT_API.get('/v1/plays', { query: q });
+        var resp = await QAXQJT_API.get((QAXQJT_PATHS.PLAYS || '/v1/plays'), { query: q });
         var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
         this.state.plays = rows;
         this._renderTable(rows);
@@ -2507,6 +2577,200 @@ try{
       }
     },
 
+    /* P2修复:分类管理接通 /v1/play-categories（列表GET/新增POST/改名·排序·停启用PATCH/删除DELETE） */
+    _pcListPath: function(){
+      try { var P = window.QAXQJT_API_CONFIG && window.QAXQJT_API_CONFIG.PATHS; if (P && P.PLAY_CATEGORIES) return P.PLAY_CATEGORIES; } catch(_){}
+      return '/v1/play-categories';
+    },
+    _pcByIdPath: function(id){
+      try { var P = window.QAXQJT_API_CONFIG && window.QAXQJT_API_CONFIG.PATHS; if (P && P.PLAY_CATEGORIES_BY_ID) return P.PLAY_CATEGORIES_BY_ID(id); } catch(_){}
+      return '/v1/play-categories/' + encodeURIComponent(id);
+    },
+    _fetchCategories: async function(){
+      var resp = await QAXQJT_API.get(this._pcListPath());
+      var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
+      this.state.categories = rows;
+      return rows;
+    },
+
+    openCatManage: function(){
+      var m = document.getElementById('catManageModal');
+      if (m) {
+        m.classList.remove('modal-overlay-hide','csp-hide','s-modal-hide');
+        m.style.setProperty('display','flex','important');
+      }
+      this.loadCatList();
+      this.syncCategorySources();
+    },
+
+    closeCatManage: function(){
+      var m = document.getElementById('catManageModal');
+      if (m) { m.classList.add('modal-overlay-hide'); m.style.setProperty('display','none','important'); }
+    },
+
+    loadCatList: async function(){
+      var tbody = document.getElementById('catManageTbody');
+      if (!tbody) return;
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">正在加载分类…</td></tr>';
+      try {
+        var rows = await this._fetchCategories();
+        if (!rows.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">暂无分类，请在上方新增</td></tr>';
+          return;
+        }
+        var self = this;
+        tbody.innerHTML = '';
+        rows.forEach(function(c){
+          var st = String(c.status || 'active');
+          var dis = st === 'disabled';
+          var tr = document.createElement('tr');
+          tr.setAttribute('data-cat-id', String(c.id || ''));
+          tr.innerHTML =
+            '<td><strong>' + self._escape(c.name) + '</strong></td>' +
+            '<td>' + self._escape(c.sortOrder) + '</td>' +
+            '<td>' + (dis ? '<span class="badge" style="background:#ececec;color:#888;">已停用</span>' : '<span class="badge badge-success">启用中</span>') + '</td>' +
+            '<td>' + self._escape(c.playCount || 0) + '</td>' +
+            '<td><div class="admin-table-actions">' +
+              '<button class="btn btn-primary btn-sm" type="button" data-cat-act="rename" title="重命名（其下剧目同步迁移）">✏️</button>' +
+              '<button class="btn btn-secondary btn-sm" type="button" data-cat-act="sort" title="修改排序">🔢</button>' +
+              '<button class="btn btn-outline-dark btn-sm" type="button" data-cat-act="toggle" title="' + (dis ? '启用' : '停用') + '">' + (dis ? '▶️' : '⏸') + '</button>' +
+              '<button class="btn btn-sm" type="button" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" data-cat-act="del" title="删除">🗑️</button>' +
+            '</div></td>';
+          tbody.appendChild(tr);
+        });
+      } catch(e) {
+        console.warn('[loadCatList] 失败', e);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#dc3545;">加载失败：' + this._escape(e && e.message ? e.message : e) + '</td></tr>';
+      }
+    },
+
+    _syncFormSelect: function(){
+      var sel = document.getElementById('addOperaCategory');
+      if (!sel) return;
+      var cats = this.state.categories || [];
+      if (!cats.length) return;
+      /* P2修复:剧目分类下拉由写死 option 改为 GET /v1/play-categories */
+      var act = cats.filter(function(c){ return String(c.status || 'active') !== 'disabled'; });
+      var use = act.length ? act : cats;
+      var cur = sel.value;
+      var self = this;
+      sel.innerHTML = use.map(function(c){ var n = self._escape(c.name); return '<option value="' + n + '">' + n + '</option>'; }).join('');
+      var has = Array.prototype.some.call(sel.options, function(o){ return o.value === cur; });
+      if (cur && has) sel.value = cur;
+    },
+
+    _syncCatTabs: function(){
+      var cats = this.state.categories || [];
+      var act = cats.filter(function(c){ return String(c.status || 'active') !== 'disabled'; });
+      if (!act.length) return; /* 拉取失败或为空时保留默认写死 tab 兜底 */
+      var bar = document.querySelector('.category-tabs');
+      if (!bar) return;
+      var allTab = bar.querySelector('.category-tab[data-cat="all"]');
+      var manageBtn = bar.querySelector('.opera-cat-manage');
+      if (!allTab) return;
+      /* P2修复:筛选 tab 由写死改为按真实分类重建（除「全部」与管理按钮外） */
+      Array.from(bar.querySelectorAll('.category-tab')).forEach(function(t){
+        if (t !== allTab) { try { t.remove(); } catch(_){ if (t.parentNode) t.parentNode.removeChild(t); } }
+      });
+      var self = this;
+      act.forEach(function(c){
+        var d = document.createElement('div');
+        d.className = 'category-tab';
+        d.setAttribute('data-genre', c.name);
+        d.textContent = c.name + ' (' + (c.playCount || 0) + ')';
+        d.addEventListener('click', function(){
+          Array.from(bar.querySelectorAll('.category-tab')).forEach(function(t){ t.classList.remove('active'); });
+          d.classList.add('active');
+          self.state.filter.genre = c.name;
+          self.load();
+        });
+        if (self.state.filter.genre === c.name) d.classList.add('active');
+        bar.insertBefore(d, manageBtn || null);
+      });
+      if (!self.state.filter.genre) allTab.classList.add('active');
+    },
+
+    syncCategorySources: async function(){
+      try { await this._fetchCategories(); } catch(e) { console.warn('[syncCategorySources] 拉取分类失败', e); return; }
+      this._syncCatTabs();
+      this._syncFormSelect();
+    },
+
+    catCreate: async function(){
+      var nameEl = document.getElementById('catNewName');
+      var sortEl = document.getElementById('catNewSort');
+      var name = nameEl ? (nameEl.value || '').trim() : '';
+      if (!name) { this._toast('⚠️ 请输入分类名称', 'error'); return; }
+      if (name.length > 30) { this._toast('⚠️ 分类名称最长 30 字', 'error'); return; }
+      var body = { name: name };
+      var sv = parseInt((sortEl && sortEl.value) || '', 10);
+      if (Number.isInteger(sv) && sv > 0) body.sortOrder = sv;
+      try {
+        await QAXQJT_API.post(this._pcListPath(), body);
+        this._toast('✅ 分类「' + name + '」已新增', 'success');
+        if (nameEl) nameEl.value = '';
+        if (sortEl) sortEl.value = '';
+        await this._afterCatChange();
+      } catch(e) {
+        console.warn('[catCreate] 失败', e);
+        this._toast('⚠️ 新增分类失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    _bindCatActions: function(){
+      if (this._catActBound) return;
+      var tbody = document.getElementById('catManageTbody');
+      if (!tbody) return;
+      this._catActBound = true;
+      var self = this;
+      tbody.addEventListener('click', async function(e){
+        var btn = e.target.closest && e.target.closest('button[data-cat-act]');
+        if (!btn) return;
+        var tr = btn.closest('tr');
+        var id = tr ? (tr.getAttribute('data-cat-id') || '') : '';
+        if (!id) return;
+        var act = btn.getAttribute('data-cat-act');
+        try { e.stopImmediatePropagation(); e.stopPropagation(); } catch(_){}
+        var cat = (self.state.categories || []).filter(function(c){ return String(c.id) === id; })[0] || {};
+        try {
+          if (act === 'rename') {
+            var nn = (prompt('修改分类名称（其下剧目将同步迁移）：', cat.name || '') || '').trim();
+            if (!nn || nn === cat.name) return;
+            if (nn.length > 30) { self._toast('⚠️ 分类名称最长 30 字', 'error'); return; }
+            await QAXQJT_API.patch(self._pcByIdPath(id), { name: nn });
+            self._toast('✅ 已重命名为「' + nn + '」', 'success');
+          } else if (act === 'sort') {
+            var ns = parseInt(prompt('修改排序（正整数，数字越小越靠前）：', (cat.sortOrder || 1) + ''), 10);
+            if (!Number.isInteger(ns) || ns <= 0) { self._toast('⚠️ 请输入正整数排序', 'error'); return; }
+            await QAXQJT_API.patch(self._pcByIdPath(id), { sortOrder: ns });
+            self._toast('✅ 排序已更新为 ' + ns, 'success');
+          } else if (act === 'toggle') {
+            var to = String(cat.status || 'active') === 'disabled' ? 'active' : 'disabled';
+            await QAXQJT_API.patch(self._pcByIdPath(id), { status: to });
+            self._toast(to === 'disabled' ? '⏸ 分类「' + (cat.name || '') + '」已停用' : '▶️ 分类「' + (cat.name || '') + '」已启用', 'success');
+          } else if (act === 'del') {
+            var cnt = cat.playCount || 0;
+            var msg = cnt > 0
+              ? '分类「' + (cat.name || id) + '」下还有 ' + cnt + ' 个剧目，删除会被拒绝（可先重命名迁移或停用）。\n\n仍要尝试删除吗？'
+              : '确认删除分类「' + (cat.name || id) + '」？\n此操作不可撤销。';
+            if (!confirm(msg)) return;
+            await QAXQJT_API.del(self._pcByIdPath(id));
+            self._toast('✅ 分类「' + (cat.name || id) + '」已删除', 'success');
+          } else { return; }
+          await self._afterCatChange();
+        } catch(err) {
+          console.warn('[catManage] ' + act + ' 失败', err);
+          self._toast('⚠️ 操作失败：' + (err && err.message ? err.message : err), 'error');
+        }
+      }, true);
+    },
+
+    _afterCatChange: async function(){
+      await this.loadCatList();
+      await this.syncCategorySources();
+      try { await this.load(); } catch(_){}
+    },
+
     submitCreate: async function(){
       var nameInput = document.getElementById('addOperaName');
       if (!nameInput) { this._toast('⚠️ 表单未就绪', 'error'); return; }
@@ -2529,10 +2793,10 @@ try{
       var editId = this.state.editingId;
       try {
         if (editId) {
-          await QAXQJT_API.patch('/v1/plays/' + encodeURIComponent(editId), body);
+          await QAXQJT_API.patch((QAXQJT_PATHS.PLAYS_BY_ID || function (i) { return '/v1/plays/' + i; })(encodeURIComponent(editId)), body);
           this._toast('✅ 剧目《' + name + '》已更新', 'success');
         } else {
-          var created = await QAXQJT_API.post('/v1/plays', body);
+          var created = await QAXQJT_API.post((QAXQJT_PATHS.PLAYS || '/v1/plays'), body);
           var newId = created && (created.id || created.playCode);
           if (newId) {
             try {
@@ -2584,7 +2848,7 @@ try{
       var okCnt = 0, failCnt = 0;
       for (var i = 0; i < ids.length; i++) {
         try {
-          await QAXQJT_API.patch('/v1/plays/' + encodeURIComponent(ids[i]), { is_hot: true });
+          await QAXQJT_API.patch((QAXQJT_PATHS.PLAYS_BY_ID || function (i) { return '/v1/plays/' + i; })(encodeURIComponent(ids[i])), { is_hot: true });
           okCnt++;
         } catch(e) { failCnt++; console.warn('[batchHot] id=' + ids[i], e); }
       }
@@ -2595,7 +2859,7 @@ try{
     exportCsv: async function(){
       try {
         this._toast('📊 正在拉取剧目列表…', 'info');
-        var resp = await QAXQJT_API.get('/v1/plays', { query: { page: 1, pageSize: 500 } });
+        var resp = await QAXQJT_API.get((QAXQJT_PATHS.PLAYS || '/v1/plays'), { query: { page: 1, pageSize: 500 } });
         var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
         if (!rows.length) { this._toast('⚠️ 没有可导出的剧目', 'warning'); return; }
         var csv = ['剧目ID,剧目名称,分类,时长(分钟),适配场景,主要演员,热门,创建时间'];
@@ -2632,7 +2896,7 @@ try{
     toggleHot: async function(id, current){
       if (!id) return;
       try {
-        await QAXQJT_API.patch('/v1/plays/' + encodeURIComponent(id), { is_hot: !current });
+        await QAXQJT_API.patch((QAXQJT_PATHS.PLAYS_BY_ID || function (i) { return '/v1/plays/' + i; })(encodeURIComponent(id)), { is_hot: !current });
         this._toast(current ? '✅ 已取消热门' : '✅ 已设置为热门', 'success');
         await this.load();
       } catch(e) {
@@ -2645,7 +2909,7 @@ try{
       if (!id) return;
       if (!confirm('确认删除剧目《' + (title || id) + '》？\n此操作不可撤销。')) return;
       try {
-        await QAXQJT_API.del('/v1/plays/' + encodeURIComponent(id));
+        await QAXQJT_API.del((QAXQJT_PATHS.PLAYS_BY_ID || function (i) { return '/v1/plays/' + i; })(encodeURIComponent(id)));
         this._toast('✅ 剧目《' + (title || id) + '》已删除', 'success');
         await this.load();
       } catch(e) {
@@ -2659,7 +2923,7 @@ try{
       var modal = document.getElementById('operaDetailModal');
       if (!modal) { this._toast('⚠️ 详情弹窗未就绪', 'error'); return; }
       try {
-        var p = await QAXQJT_API.get('/v1/plays/' + encodeURIComponent(id));
+        var p = await QAXQJT_API.get((QAXQJT_PATHS.PLAYS_BY_ID || function (i) { return '/v1/plays/' + i; })(encodeURIComponent(id)));
         if (!p) { this._toast('⚠️ 未找到该剧目', 'warning'); return; }
         var headerH3 = modal.querySelector('.modal-header h3');
         if (headerH3) headerH3.textContent = '🎭 剧目详情：' + (p.title || p.name || id);
@@ -2785,7 +3049,7 @@ try{
 
     _editByLoad: async function(id, titleHint){
       try {
-        var p = await QAXQJT_API.get('/v1/plays/' + encodeURIComponent(id));
+        var p = await QAXQJT_API.get((QAXQJT_PATHS.PLAYS_BY_ID || function (i) { return '/v1/plays/' + i; })(encodeURIComponent(id)));
         if (!p) { this._toast('⚠️ 未找到剧目', 'warning'); return; }
         this.editPlay(id, p);
       } catch(e) {
@@ -2821,6 +3085,43 @@ try{
   function _bootStrap(){
     var api = window.__operasApi;
     if (!api) return;
+    /* P2修复:分类管理按钮/弹窗绑定（.__superPatchBound 标记避免死按钮兜底拦截） */
+    var catBtn = document.querySelector('.opera-cat-manage');
+    if (catBtn) {
+      catBtn.addEventListener('click', function(){ api.openCatManage(); }, true);
+      try { catBtn.__superPatchBound = 1; catBtn.__deadBtnChecked = 1; } catch(_){}
+    }
+    var catClose1 = document.getElementById('catManageCloseBtn');
+    if (catClose1) {
+      catClose1.__ub = 1;
+      catClose1.__superPatchBound = 1;
+      catClose1.addEventListener('click', function(){ api.closeCatManage(); }, true);
+    }
+    var catClose2 = document.getElementById('catManageCancelBtn');
+    if (catClose2) {
+      catClose2.__ub = 1;
+      catClose2.__superPatchBound = 1;
+      catClose2.addEventListener('click', function(){ api.closeCatManage(); }, true);
+    }
+    var catModalEl = document.getElementById('catManageModal');
+    if (catModalEl) {
+      catModalEl.addEventListener('click', function(e){
+        if (e.target === catModalEl) api.closeCatManage();
+      });
+    }
+    var catAddBtn = document.getElementById('catAddBtn');
+    if (catAddBtn) {
+      catAddBtn.__superPatchBound = 1;
+      catAddBtn.addEventListener('click', function(){ api.catCreate(); }, true);
+    }
+    var catNewName = document.getElementById('catNewName');
+    if (catNewName) {
+      catNewName.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') { try { e.preventDefault(); } catch(_){} api.catCreate(); }
+      });
+    }
+    api._bindCatActions();
+    api.syncCategorySources();
     var CAT_TO_GENRE = { 'all':'', 'traditional':'传统本戏', 'excerpt':'传统折子戏', 'folk':'民俗专场', 'modern':'现代戏' };
     document.querySelectorAll('.category-tab:not(.opera-cat-manage)').forEach(function(tab){
       tab.addEventListener('click', function(){
@@ -2855,10 +3156,12 @@ try{
 (function(){
   function fillSel(){
     var sel=document.getElementById("operasAttachPlaySelect"); if(!sel||!window.QAXQJT_API) return;
-    QAXQJT_API.get("/v1/plays",{query:{page:1,pageSize:500}}).then(function(resp){
+    QAXQJT_API.get((QAXQJT_PATHS.PLAYS || '/v1/plays'),{query:{page:1,pageSize:500}}).then(function(resp){
       var rows=Array.isArray(resp)?resp:(resp&&(resp.items||resp.list||resp.rows))||[];
+      /* P1修复:假成功已移除 —— 选项 value 由剧目标题改为真实剧目ID，
+         供「上传剧照」成功后 PATCH /v1/plays/{id} 写入 posterUrl（对照 plays.js 的 b.posterUrl） */
       var html='<option value="">请选择关联剧目</option>';
-      rows.forEach(function(p){ html+='<option value="《'+(p.title||"")+'》">《'+(p.title||"")+'》- '+(p.genre||"未分类")+'</option>'; });
+      rows.forEach(function(p){ var pid=String(p.id||p.playCode||""); html+='<option value="'+pid+'">《'+(p.title||"")+'》- '+(p.genre||"未分类")+'</option>'; });
       sel.innerHTML=html;
     }).catch(function(){});
   }

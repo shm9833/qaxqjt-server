@@ -917,6 +917,8 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
                   <button type="reset" class="btn btn-outline">🔄 清空</button>
                   <small style="color:#166534;">💡 图片自动预览，多张连续发票可打包上传；正式发布对接财务系统接口。</small>
                 </div>
+                <!-- P1修复:新增上传结果真实回显区（/v1/upload 返回的 url 展示） -->
+                <div id="__finUploadResult" style="display:none;margin-top:10px;padding:10px 12px;border-radius:8px;background:#fff;border:1px dashed #16a34a;color:#14532d;font-size:0.8rem;word-break:break-all;"></div>
               </form>
             </div>
           </div>
@@ -1076,6 +1078,7 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
 
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260922"></script>
+    <script>/* P3修复: 全局 PATHS 常量（带回退） */ window.QAXQJT_PATHS = (window.QAXQJT_API_CONFIG && window.QAXQJT_API_CONFIG.PATHS) || {};</script>
   <script src="../js/api-request.js?v=20260922"></script>
 <script src="../js/app.js?v=20260930a"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
@@ -1384,97 +1387,110 @@ var __pT0=0;
       var isAdd = (txt.indexOf('新增')>=0);
       var doneKey = 'e2_'+(isSave?'s':isEdit?'e':isDel?'d':isView?'v':isVerify?'y':isExport?'x':isAdd?'a':'k')+'_'+(trKey||Math.random().toString(36).slice(2,6));
       if(isSave){
-    __pEvt.branch='save';
-    var __pLk = __L(doneKey,900);
-    if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-    __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 保存成功','success');
-        try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
-        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+    /* P1修复:假成功已移除——死按钮无真实保存实现，诚实提示并阻止原生提交刷新 */
+    __pLog('DBF','save_unwired', Object.assign({},__pEvt,{row:trKey}));
+    try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_a){}
+    console.warn('[P1] 未接线按钮:', txt||'保存');
+    __T('该功能暂未接入后端','warning');
+    btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
       }
       if(isEdit){
-        if(!__L(doneKey,700)) return;
-        __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
-        __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info');
-        btn.__ctE2Done = 1; return;
+        /* P1修复:假成功已移除——无真实编辑实现，诚实提示 */
+        __pLog('DBF','edit_unwired', Object.assign({},__pEvt,{row:trKey}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'编辑');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
       }
       if(isDel){
-        if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-        if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
-        try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
-        __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
-        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+        /* P1修复:假成功已移除——原分支假确认+假移除行+假删除toast，改为诚实提示（真实删除走行内🗑按钮 API.del） */
+        __pLog('DBF','delete_unwired', Object.assign({},__pEvt,{row:trKey}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'删除');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
       }
       if(isView){
-        if(!__L(doneKey,500)) return;
-        __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
-        __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info');
-        btn.__ctE2Done = 1; return;
+        /* P1修复:假成功已移除——无真实查看实现，诚实提示（真实查看走行内👁按钮） */
+        __pLog('DBF','view_unwired', Object.assign({},__pEvt,{row:trKey}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'查看');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
       }
       if(isVerify){
-        if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
-        __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
-        __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success');
-        btn.__ctE2Done = 1; return;
+        /* P1修复:假成功已移除——后端无核销端点，诚实提示 */
+        __pLog('DBF','verify_unwired', Object.assign({},__pEvt,{row:trKey}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'核销');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
       }
       if(isExport){
-        if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
-        __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
-        __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success');
-        btn.__ctE2Done = 1; return;
+        /* P1修复:假成功已移除——无真实导出实现，诚实提示（真实导出走工具栏📥导出Excel按钮） */
+        __pLog('DBF','export_unwired', Object.assign({},__pEvt,{row:trKey}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'导出');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
       }
       if(isAdd){
-        if(!__L(doneKey,900)) return;
-        __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 准备新增「'+txt+'」','info');
-        btn.__ctE2Done = 1; return;
+        /* P1修复:假成功已移除——无真实新增实现，诚实提示（真实新增走工具栏➕按钮） */
+        __pLog('DBF','add_unwired', Object.assign({},__pEvt,{branch:'add'}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'新增');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1; btn.__superPatchBound = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
       var isAudit = txt.indexOf('审核')>=0 || txt.indexOf('审批')>=0 || txt.indexOf('驳回')>=0 || txt.indexOf('通过')>=0;
       if(isAudit){
-        if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
-        if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
-        __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+        /* P1修复:假成功已移除——无真实审核实现，诚实提示 */
+        __pLog('DBF','audit_unwired', Object.assign({},__pEvt,{row:trKey, branch:'audit'}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'审核');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; btn.__superPatchBound = 1; return;
       }
       // ---- 新增：签约/签订 ----
       var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
       if(isSign){
-        if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
-        __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+        /* P1修复:假成功已移除——无真实签约实现，诚实提示 */
+        __pLog('DBF','sign_unwired', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'签约');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; btn.__superPatchBound = 1; return;
       }
       // ---- 新增：合同/生成合同 ----
       var isContract = txt.indexOf('合同')>=0 && !isSign;
       if(isContract){
-        if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
-        __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪','info');
-        btn.__ctE2Done=1; return;
+        /* P1修复:假成功已移除——无真实合同生成实现，诚实提示 */
+        __pLog('DBF','contract_unwired', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'合同');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; btn.__superPatchBound = 1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
       var isScheduleBtn = txt.indexOf('排期')>=0 || txt.indexOf('排班')>=0 || (txt.indexOf('安排')>=0 && (txt.length<=8 || txt.indexOf('档期')>=0));
       if(isScheduleBtn){
-        if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
-        __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
-        btn.__ctE2Done=1; return;
+        /* P1修复:假成功已移除——无真实排期实现，诚实提示 */
+        __pLog('DBF','schedule_unwired', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'排期');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; btn.__superPatchBound = 1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
       var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
       if(isCancelOrHandle && !isDel && !isSave){
-        if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if((txt.indexOf('取消')>=0) && !confirm('确认取消：'+(trKey||'当前记录')+'？')) return;
-        var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
-        var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
-        __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+        /* P1修复:假成功已移除——无真实取消/派工/接单实现，诚实提示 */
+        __pLog('DBF','status_unwired', Object.assign({},__pEvt,{row:trKey}));
+        try { e.stopImmediatePropagation(); } catch(_a){}
+        console.warn('[P1] 未接线按钮:', txt||'处理');
+        __T('该功能暂未接入后端','warning');
+        btn.__ctE2Done=1; btn.__superPatchBound = 1; return;
       }
 
     }, true);
@@ -1655,10 +1671,13 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 提交成功','success');
-        setTimeout(function(){
-          try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
-        }, 380);
+        /* P1修复:假成功已移除——财务凭证上传表单走真实 /v1/upload；其余表单无真实提交实现，诚实提示（必填校验为真实助手保留） */
+        if(form.id==='financeAttachForm' && typeof window.__finUploadSubmit==='function'){
+          try{ window.__finUploadSubmit(form); }catch(_up){ console.warn('[SuperPatch 1/6 upload err]',_up); __toastH9('❌ 凭证上传失败','error'); }
+          return false;
+        }
+        console.warn('[P1] 未接线表单:', (form.id||form.name||'(未命名)'));
+        __toastH9('该功能暂未接入后端','warning');
         return false;
       }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
     }, true);
@@ -2075,7 +2094,7 @@ function __pLog(module,event,extra){
   // 功能按钮绑定（上传/新建/导出）
   try{
     function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
-    __bindBtn('openFinanceUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（财务凭证）","info"); }; inp.click(); });
+    __bindBtn('openFinanceUploadBtn', function(){ /* P1修复:假成功已移除——原为临时input+假"已选择"toast，改为打开真实上传表单的文件选择框 */ var inp=document.getElementById("financeAttachFiles"); if(inp){ inp.click(); } else { __T("未找到凭证文件选择框","error"); } });
   }catch(_e){ console.warn("[upload-bind err]",_e); }
 
 try{
@@ -2125,35 +2144,50 @@ try{
         if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
         __spT0 = Date.now();
         if(tt==='save'){
+          /* P1修复:假成功已移除——无真实保存实现，诚实提示 */
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功','success');
-          setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
+          console.warn('[P1] 未接线按钮:', txt||'保存');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='delete'){
-          if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
-            __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
-          }else{ __toastH9('↩️ 已取消操作','info'); }
+          /* P1修复:假成功已移除——原分支假确认框+假执行toast，改为诚实提示 */
+          __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey});
+          console.warn('[P1] 未接线按钮:', txt||'删除');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='view'){
+          /* P1修复:假成功已移除——无真实查看实现，诚实提示 */
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
+          console.warn('[P1] 未接线按钮:', txt||'查看');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='export'){
+          /* P1修复:假成功已移除——无真实导出实现，诚实提示 */
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印','info');
+          console.warn('[P1] 未接线按钮:', txt||'导出');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='schedule'){
+          /* P1修复:假成功已移除——无真实排期实现，诚实提示 */
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
+          console.warn('[P1] 未接线按钮:', txt||'排期');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='audit'){
+          /* P1修复:假成功已移除——无真实审核实现，诚实提示 */
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
+          console.warn('[P1] 未接线按钮:', txt||'审核');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='contract'){
+          /* P1修复:假成功已移除——无真实合同实现，诚实提示 */
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪','info');
+          console.warn('[P1] 未接线按钮:', txt||'合同');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='add'){
+          /* P1修复:假成功已移除——无真实新增实现，诚实提示 */
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增','info');
+          console.warn('[P1] 未接线按钮:', txt||'新增');
+          __toastH9('该功能暂未接入后端','warning');
         }else{
+          /* P1修复:假成功已移除——未分类死按钮统一诚实提示 */
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
+          console.warn('[P1] 未接线按钮:', txt);
+          __toastH9('该功能暂未接入后端','warning');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -2273,7 +2307,7 @@ window.__finApi = (function(){
       var inputs = document.querySelectorAll('.admin-content input[type=date]');
       if(inputs[0] && inputs[0].value) q.fromDate = inputs[0].value;
       if(inputs[1] && inputs[1].value) q.toDate = inputs[1].value;
-      var rows = await API.get('/v1/fin/ledger', { query:q });
+      var rows = await API.get((QAXQJT_PATHS.FIN_LEDGER || '/v1/fin/ledger'), { query:q });
       rows = rows || [];
       tb.innerHTML = '';
       if(!rows.length){
@@ -2329,8 +2363,8 @@ window.__finApi = (function(){
   }
 
   function openAdd(kind){ _openForm(null, kind||'income'); }
-  function openEdit(id){ API.get('/v1/fin/ledger/'+id).then(function(d){ _openForm(d, Number(d.creditAmount)>0?'income':'expense'); }).catch(function(){ T('❌ 加载详情失败','error'); }); }
-  function openView(id){ API.get('/v1/fin/ledger/'+id).then(function(d){ alert('凭证号：'+(d.voucherNo||'—')+'\n摘要：'+(d.summary||'—')+'\n收入：¥'+(d.creditAmount||0)+'\n支出：¥'+(d.debitAmount||0)+'\n状态：'+(d.status||'—')); }).catch(function(){ T('❌ 加载失败','error'); }); }
+  function openEdit(id){ API.get((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(id)).then(function(d){ _openForm(d, Number(d.creditAmount)>0?'income':'expense'); }).catch(function(){ T('❌ 加载详情失败','error'); }); }
+  function openView(id){ API.get((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(id)).then(function(d){ alert('凭证号：'+(d.voucherNo||'—')+'\n摘要：'+(d.summary||'—')+'\n收入：¥'+(d.creditAmount||0)+'\n支出：¥'+(d.debitAmount||0)+'\n状态：'+(d.status||'—')); }).catch(function(){ T('❌ 加载失败','error'); }); }
 
   function _openForm(d, kind){
     d = d||{};
@@ -2380,8 +2414,8 @@ window.__finApi = (function(){
     if(isIncome){ body.creditAmount = amount; body.debitAmount = 0; body.voucherType = 'receipt'; }
     else { body.debitAmount = amount; body.creditAmount = 0; body.voucherType = 'payment'; }
     try{
-      if(id){ await API.patch('/v1/fin/ledger/'+id, body); T('✅ 凭证已更新','success'); }
-      else { await API.post('/v1/fin/ledger', body); T('✅ 凭证已创建','success'); }
+      if(id){ await API.patch((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(id), body); T('✅ 凭证已更新','success'); }
+      else { await API.post((QAXQJT_PATHS.FIN_LEDGER || '/v1/fin/ledger'), body); T('✅ 凭证已创建','success'); }
       document.getElementById('__finModal').remove();
       await load();
     }catch(e){ T('❌ 保存失败：'+(e.message||e),'error'); }
@@ -2389,12 +2423,12 @@ window.__finApi = (function(){
 
   async function remove(id){
     if(!confirm('确认删除该凭证？')) return;
-    try{ await API.del('/v1/fin/ledger/'+id); T('🗑 已删除','success'); await load(); }
+    try{ await API.del((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(id)); T('🗑 已删除','success'); await load(); }
     catch(e){ T('❌ 删除失败：'+(e.message||e),'error'); }
   }
 
   async function doCheck(id){
-    try{ await API.patch('/v1/fin/ledger/'+id, { status:'checked' }); T('✓ 已复核','success'); await load(); }
+    try{ await API.patch((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(id), { status:'checked' }); T('✓ 已复核','success'); await load(); }
     catch(e){ T('❌ 复核失败：'+(e.message||e),'error'); }
   }
 
@@ -2405,7 +2439,7 @@ window.__finApi = (function(){
   function _finSet(sel,val){ var el=document.querySelector(sel); if(el) el.innerHTML=val; }
   async function renderExtras(){
     try{
-      var all=_finRows(await API.get("/v1/fin/ledger",{query:{page:1,pageSize:500}}));
+      var all=_finRows(await API.get((QAXQJT_PATHS.FIN_LEDGER || '/v1/fin/ledger'),{query:{page:1,pageSize:500}}));
       var year=new Date().getFullYear();
       var thisYM=year+"-"+String(new Date().getMonth()+1).padStart(2,"0");
       var yIn=0,yOut=0,mIn=0,mOut=0,mInCnt=0,mOutCnt=0, monthly={};
@@ -2427,11 +2461,11 @@ window.__finApi = (function(){
       var mProfit=mIn-mOut, mRate=mIn>0?Math.round(mProfit/mIn*1000)/10:0;
       _finSet(".finance-stat-card.profit .fsc-value", (mProfit<0?"-":"")+_finM0(Math.abs(mProfit)));
       _finSet(".finance-stat-card.profit .fsc-sub", "利润率 <strong>"+mRate.toFixed(1)+"%</strong>");
-      var sch=_finRows(await API.get("/v1/schedules",{query:{page:1,pageSize:500}}).catch(function(){return [];}));
+      var sch=_finRows(await API.get((QAXQJT_PATHS.SCHEDULES || '/v1/schedules'),{query:{page:1,pageSize:500}}).catch(function(){return [];}));
       var shows={}; sch.forEach(function(s){ var ym=_finYM(s.date); if(ym) shows[ym]=(shows[ym]||0)+1; });
       _renderFinMonthChart(monthly, year);
       _renderFinSummary(monthly, shows, year);
-      var orders=_finRows(await API.get("/v1/orders",{query:{page:1,pageSize:500}}).catch(function(){return [];}));
+      var orders=_finRows(await API.get((QAXQJT_PATHS.ORDERS || '/v1/orders'),{query:{page:1,pageSize:500}}).catch(function(){return [];}));
       _renderFinProjects(orders, all);
       var pending=0, pendCnt=0;
       orders.forEach(function(o){
@@ -2538,9 +2572,9 @@ window.__finApi = (function(){
   // 聚合指定年度：12个月桶 + 年度合计 + 订单待收
   async function _finGather(year){
     var rs=await Promise.all([
-      API.get('/v1/fin/ledger',{query:{page:1,pageSize:500}}).then(_finRows),
-      API.get('/v1/orders',{query:{page:1,pageSize:500}}).then(_finRows).catch(function(){return [];}),
-      API.get('/v1/schedules',{query:{page:1,pageSize:500}}).then(_finRows).catch(function(){return [];})
+      API.get((QAXQJT_PATHS.FIN_LEDGER || '/v1/fin/ledger'),{query:{page:1,pageSize:500}}).then(_finRows),
+      API.get((QAXQJT_PATHS.ORDERS || '/v1/orders'),{query:{page:1,pageSize:500}}).then(_finRows).catch(function(){return [];}),
+      API.get((QAXQJT_PATHS.SCHEDULES || '/v1/schedules'),{query:{page:1,pageSize:500}}).then(_finRows).catch(function(){return [];})
     ]);
     var all=rs[0], orders=rs[1], sch=rs[2], months=[];
     for(var i=0;i<12;i++){ months.push({label:(i+1)+'月',in:0,out:0,rCnt:0,pCnt:0,cnt:0,rec:0,shows:0}); }
@@ -2784,9 +2818,62 @@ window.__finApi = (function(){
     if(btns[1]){ btns[1].__superPatchBound=1; btns[1].onclick=function(){ openAdd('expense'); }; }
     if(btns[2]){ _finMarkBtn(btns[2]); btns[2].onclick=function(){ openMonthlyRecon(); }; }
     if(btns[3]){ _finMarkBtn(btns[3]); btns[3].onclick=function(){ exportFinanceXlsx(); }; }
+    /* P1修复:批量核销无后端端点→诚实提示（台账状态机仅 draft/checked，无核销接口）；批量删除走真实 DELETE /v1/fin/ledger/:id */
+    if(btns[4]){ _finMarkBtn(btns[4]); btns[4].title='该功能暂未接入后端'; btns[4].onclick=function(){ T('该功能暂未接入后端：台账状态机仅支持 草稿/已复核 流转，暂无批量核销接口（如需批量复核请逐行点击 ✓）','warning',4500); }; }
+    if(btns[5]){ _finMarkBtn(btns[5]); btns[5].onclick=function(){ batchRemove(); }; }
     var qBtn = document.querySelector('.btn-primary.btn-sm');
     if(qBtn && qBtn.textContent.indexOf('查询')>=0){ qBtn.__superPatchBound=1; qBtn.onclick=function(){ load(); }; }
   }
+
+  /* ===== P1修复:批量删除 真实接入 DELETE /v1/fin/ledger/:id（仅草稿可删，逐笔执行，成功后刷新列表） ===== */
+  async function batchRemove(){
+    var tb=_tbody(); if(!tb) return;
+    var ids=[];
+    tb.querySelectorAll('input.batch-row-check:checked').forEach(function(cb){
+      var tr=cb.closest('tr'); var id=tr?tr.getAttribute('data-id'):null; if(id) ids.push(id);
+    });
+    if(!ids.length){ T('⚠️ 请先在列表中勾选要删除的凭证','warning'); return; }
+    if(!confirm('确认删除选中的 '+ids.length+' 笔凭证？仅草稿状态凭证可删除（已复核/已对账将被服务端拒绝），操作不可撤销！')) return;
+    var okCnt=0, failCnt=0, lastErr='';
+    for(var i=0;i<ids.length;i++){
+      try{ await API.del((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(ids[i])); okCnt++; }
+      catch(e){ failCnt++; lastErr=(e&&(e.message||e))?String(e.message||e):'未知错误'; }
+    }
+    if(!failCnt){ T('🗑 已删除 '+okCnt+' 笔凭证','success'); }
+    else if(okCnt){ T('⚠️ 已删除 '+okCnt+' 笔，'+failCnt+' 笔失败：'+lastErr,'warning',4500); }
+    else { T('❌ 删除失败：'+lastErr,'error'); }
+    await load();
+  }
+
+  /* ===== P1修复:财务凭证上传 真实接入 POST /v1/upload（multipart 字段 file，返回 data:{url,...}，地址回显至 __finUploadResult） ===== */
+  async function finUploadSubmit(form){
+    var inp = form.querySelector('#financeAttachFiles');
+    if(!inp || !inp.files || !inp.files.length){ T('⚠️ 请先选择要上传的凭证票据文件','error'); return; }
+    var fs = Array.prototype.slice.call(inp.files, 0);
+    var okUrls = [], failNames = [];
+    T('⏳ 正在上传 '+fs.length+' 个凭证文件…','info');
+    for(var i=0;i<fs.length;i++){
+      var f = fs[i];
+      if(f.size > 10*1024*1024){ failNames.push(f.name+'（超过10MB）'); continue; }
+      try{
+        var fd = new FormData();
+        fd.append('file', f);
+        var d = await API.post((QAXQJT_PATHS.UPLOAD || '/v1/upload'), fd);
+        if(d && d.url) okUrls.push(d.url);
+        else failNames.push(f.name+'（返回异常）');
+      }catch(e){ failNames.push(f.name+'（'+((e&&e.message)||'上传失败')+'）'); console.warn('[fin.upload]', f.name, e); }
+    }
+    var box = document.getElementById('__finUploadResult');
+    if(box){
+      box.style.display='block';
+      if(okUrls.length){ box.textContent = '✅ 已上传 '+okUrls.length+'/'+fs.length+' 个文件，地址：'+okUrls.join(' ｜ ')+(failNames.length?('；失败：'+failNames.join('、')):''); }
+      else { box.textContent = '❌ 上传失败：'+failNames.join('、'); }
+    }
+    if(okUrls.length && !failNames.length){ T('✅ 已上传 '+okUrls.length+' 个凭证文件（地址已回显在表单下方）','success',4000); try{ inp.value=''; }catch(_){} }
+    else if(okUrls.length){ T('⚠️ 部分凭证上传成功：'+okUrls.length+' 成功 / '+failNames.length+' 失败','warning',4200); }
+    else { T('❌ 凭证上传失败：'+(failNames[0]||'请检查网络与登录状态'),'error',4200); }
+  }
+  window.__finUploadSubmit = finUploadSubmit;
 
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ bind(); load(); renderExtras(); }); }
   else { bind(); load(); renderExtras(); }

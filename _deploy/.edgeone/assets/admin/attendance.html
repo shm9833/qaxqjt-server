@@ -71,6 +71,7 @@
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
+    <script>/* P3修复: 全局 PATHS 常量（带回退） */ window.QAXQJT_PATHS = (window.QAXQJT_API_CONFIG && window.QAXQJT_API_CONFIG.PATHS) || {};</script>
   <script src="../js/api-request.js?v=20260803"></script>
 <script src="../js/app.js?v=20260930a"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
@@ -1012,29 +1013,28 @@
         <!-- ========================== Tab 2: 考勤导入 ========================== -->
         <div class="att-tab-content" id="tabUpload">
           <div style="display:grid;grid-template-columns:1fr;gap:18px;">
-            <!-- 上传区域 -->
-            <div class="upload-zone no-print" id="uploadZone">
+            <!-- 上传区域（v20261004a：真实接入 POST /v1/attendance/import，点击打开导入面板） -->
+            <div class="upload-zone no-print" id="uploadZone" style="cursor:pointer;" title="点击打开批量导入面板">
               <span class="uz-icon">📂</span>
-              <h3>点击选择 或 拖拽 CSV 考勤表到此处</h3>
-              <p>支持 PapaParse 原生 CSV 解析 · 自动识别表头 · 自动匹配员工姓名</p>
+              <h3>点击打开考勤批量导入面板（粘贴 CSV/制表符文本 或 选择 .csv 文件）</h3>
+              <p>解析后预览前 20 条 · 确认后批量入库 · 同人同日已有记录自动跳过</p>
               <div class="uz-tips">
-                <strong>📌 标准 CSV 列名参考（任意顺序均可，系统模糊匹配）：</strong>
+                <strong>📌 CSV 列（任意顺序，表头模糊匹配）：</strong>
                 <div style="margin-top:8px;">
-                  <code>姓名</code> <code>工号</code> <code>岗位</code> <code>出勤天数</code> <code>夜场场次</code>
-                  <code>请假天数(事假)</code> <code>旷工天数</code> <code>部门</code> <code>备注</code>
+                  <code>工号</code> <code>姓名</code> <code>日期</code> <code>状态</code> <code>工时</code> <code>备注</code>
                 </div>
-                <div style="margin-top:8px;color:var(--text-light);">💡 先点击「下载示例 CSV」查看标准格式</div>
+                <div style="margin-top:8px;">状态可用中文（出勤/夜班/双班/半天班/公休/事假/病假/年假/婚假/丧假/迟到/早退/旷工/请假/雨休/外出/学习/出差/工伤）或编码（full/PL/SL/late…）；日期 YYYY-MM-DD；单次上限 500 条。</div>
               </div>
-              <input type="file" id="csvFileInput" accept=".csv,text/csv" />
+              <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none;" />
             </div>
 
             <!-- 预览区域 -->
             <div class="preview-card" id="previewCard" style="display:none;">
               <div class="preview-header no-print">
-                <h4>✅ 考勤表解析预览（共 <span id="previewCount">0</span> 条记录 · <span id="previewMonth">—</span>）</h4>
+                <h4>✅ 考勤表解析预览（共 <span id="previewCount">0</span> 条记录 · <span id="previewMonth">—</span>，仅展示前 20 条）</h4>
                 <div class="page-actions">
                   <button class="btn btn-outline btn-sm" id="previewCancelBtn">✕ 取消</button>
-                  <button class="btn btn-success btn-sm" id="previewConfirmBtn">💾 确认入库并核算</button>
+                  <button class="btn btn-success btn-sm" id="previewConfirmBtn">💾 确认导入入库</button>
                 </div>
               </div>
               <div class="preview-body">
@@ -1042,15 +1042,14 @@
                   <table class="wage-table" id="previewTable" style="min-width:760px;">
                   <thead>
                     <tr>
-                      <th>姓名</th>
+                      <th>#</th>
                       <th>工号</th>
-                      <th>岗位</th>
-                      <th class="num">出勤天</th>
-                      <th class="num">夜场数</th>
-                      <th class="num">事假天</th>
-                      <th class="num">旷工天</th>
-                      <th>部门</th>
-                      <th>解析状态</th>
+                      <th>姓名</th>
+                      <th>日期</th>
+                      <th>状态</th>
+                      <th class="num">工时</th>
+                      <th>备注</th>
+                      <th>校验</th>
                     </tr>
                   </thead>
                   <tbody id="previewTbody"></tbody>
@@ -1523,93 +1522,86 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 保存成功','success');
-        try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
-        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+        /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __T('该功能暂未接入后端','warning');
+        try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_b){} return;
       }
       if(isEdit){
         if(!__L(doneKey,700)) return;
         __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
-        __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info');
-        btn.__ctE2Done = 1; return;
+        /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __T('该功能暂未接入后端','warning');
+        try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_b){} return;
       }
       if(isDel){
         if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-        if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
-        try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
-        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+        /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __T('该功能暂未接入后端','warning');
+        try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_b){} return;
       }
       if(isView){
         if(!__L(doneKey,500)) return;
         __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
-        __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info');
-        btn.__ctE2Done = 1; return;
+        /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __T('该功能暂未接入后端','warning');
+        try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_b){} return;
       }
       if(isVerify){
         if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
         __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
-        __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success');
-        btn.__ctE2Done = 1; return;
+        /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __T('该功能暂未接入后端','warning');
+        try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_b){} return;
       }
       if(isExport){
         if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
         __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
-        __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success');
-        btn.__ctE2Done = 1; return;
+        /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __T('该功能暂未接入后端','warning');
+        try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_b){} return;
       }
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 准备新增「'+txt+'」','info');
-        btn.__ctE2Done = 1; return;
+        /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __T('该功能暂未接入后端','warning');
+        try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_b){} return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
       var isAudit = txt.indexOf('审核')>=0 || txt.indexOf('审批')>=0 || txt.indexOf('驳回')>=0 || txt.indexOf('通过')>=0;
       if(isAudit){
         if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
-        if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+        /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __T('该功能暂未接入后端','warning');
+        try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
       var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
       if(isSign){
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+        /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __T('该功能暂未接入后端','warning');
+        try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
       var isContract = txt.indexOf('合同')>=0 && !isSign;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪','info');
-        btn.__ctE2Done=1; return;
+        /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __T('该功能暂未接入后端','warning');
+        try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_b){} return;
       }
       // ---- 新增：排期/排班/安排档期 ----
       var isScheduleBtn = txt.indexOf('排期')>=0 || txt.indexOf('排班')>=0 || (txt.indexOf('安排')>=0 && (txt.length<=8 || txt.indexOf('档期')>=0));
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
-        btn.__ctE2Done=1; return;
+        /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __T('该功能暂未接入后端','warning');
+        try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_b){} return;
       }
       // ---- 新增：取消/处理/确认接单 ----
       var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
       if(isCancelOrHandle && !isDel && !isSave){
         if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if((txt.indexOf('取消')>=0) && !confirm('确认取消：'+(trKey||'当前记录')+'？')) return;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
-        var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+        /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __T('该功能暂未接入后端','warning');
+        try { e.preventDefault(); e.stopImmediatePropagation(); } catch(_b){} return;
       }
 
     }, true);
@@ -1799,10 +1791,9 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 提交成功','success');
-        setTimeout(function(){
-          try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
-        }, 380);
+        /* P1修复:假成功已移除（保留 preventDefault 防原生提交刷新，必填校验仍生效） */
+        console.warn('[P1] 未接线表单提交:', (form && (form.id||form.name)) || 'form');
+        __toastH9('该功能暂未接入后端','warning');
         return false;
       }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
     }, true);
@@ -2238,7 +2229,7 @@ function __pLog(module,event,extra){
     var API = window.QAXQJT_API;
     if(!API || typeof API.get !== 'function'){ __perfDeptMap = {}; return; }
     try{
-      var prows = await API.get('/v1/performers?pageSize=500');
+      var prows = await API.get((QAXQJT_PATHS.PERFORMERS || '/v1/performers')+'?pageSize=500');
       if(!Array.isArray(prows)) prows = (prows && prows.data) || [];
       __perfDeptMap = {};
       prows.forEach(function(p){ if(p && p.id) __perfDeptMap[p.id] = p.employmentType || ''; });
@@ -2324,7 +2315,7 @@ function __pLog(module,event,extra){
       var API = window.QAXQJT_API;
       if(!API || typeof API.get !== 'function'){ loading = false; return; }
       try {
-        var rows = await API.get('/v1/wages?month=' + encodeURIComponent(month) + '&pageSize=500');
+        var rows = await API.get((QAXQJT_PATHS.WAGES || '/v1/wages')+'?month=' + encodeURIComponent(month) + '&pageSize=500');
         if(!Array.isArray(rows)) rows = (rows && rows.data) || [];
         window.__lastWageItemsRaw = rows;
         await __ensureDeptMap(); // P3-10：部门筛选需要人员→部门映射
@@ -2360,7 +2351,7 @@ function __pLog(module,event,extra){
         var MODE_NAMES = {daily_pure:'按天·纯日结',daily_prorated:'按天·月薪折算',monthly:'按月结算'};
         var ovCount = Object.keys(body.settleModes).length;
         __T('🧮 正在核算 '+month+'（默认：'+(MODE_NAMES[body.defaultMode]||'按天·纯日结')+(ovCount?'，'+ovCount+' 人单独设置模式':'')+'）...','info',3000);
-        var data = await API.post('/v1/wages/generate', body);
+        var data = await API.post((QAXQJT_PATHS.WAGES_GENERATE || '/v1/wages/generate'), body);
         data = data || {};
         var s = data.summary || {};
         var cnt = s.totalPerformers || (data.items ? data.items.length : 0);
@@ -2386,7 +2377,7 @@ function __pLog(module,event,extra){
       var API = window.QAXQJT_API;
       if(!API) return [];
       try {
-        var rows = await API.get('/v1/wage-batches?month=' + encodeURIComponent(month) + '&pageSize=100');
+        var rows = await API.get((QAXQJT_PATHS.WAGE_BATCHES || '/v1/wage-batches')+'?month=' + encodeURIComponent(month) + '&pageSize=100');
         if(!Array.isArray(rows)) rows = (rows && rows.data) || [];
         return rows;
       } catch(e){ return []; }
@@ -2404,7 +2395,7 @@ function __pLog(module,event,extra){
       var ok = 0, fail = 0;
       for(var i=0;i<draft.length;i++){
         try {
-          await API.post('/v1/wage-batches/' + draft[i].id + '/confirm', {});
+          await API.post((QAXQJT_PATHS.WAGE_BATCH_CONFIRM || function (i) { return '/v1/wage-batches/' + i + '/confirm'; })(draft[i].id), {});
           ok++;
         } catch(e){ fail++; }
       }
@@ -2424,7 +2415,7 @@ function __pLog(module,event,extra){
       var ok = 0, fail = 0;
       for(var i=0;i<confirmed.length;i++){
         try {
-          await API.post('/v1/wage-batches/' + confirmed[i].id + '/post', {});
+          await API.post((QAXQJT_PATHS.WAGE_BATCH_POST || function (i) { return '/v1/wage-batches/' + i + '/post'; })(confirmed[i].id), {});
           ok++;
         } catch(e){ fail++; }
       }
@@ -2492,7 +2483,7 @@ function __pLog(module,event,extra){
       if(_loading) return; _loading=true;
       var ml=el('attRecMonthLabel'); if(ml) ml.textContent=month;
       try{
-        var rows=await api.get('/v1/attendance?month='+encodeURIComponent(month)+'&pageSize=500');
+        var rows=await api.get((QAXQJT_PATHS.ATTENDANCE || '/v1/attendance')+'?month='+encodeURIComponent(month)+'&pageSize=500');
         if(!Array.isArray(rows)) rows=(rows&&rows.data)||[];
         _rows=rows; render();
         setHint('共 '+rows.length+' 条记录；勾选后可批量修改类型或删除（批量删除仅超级管理员可用）');
@@ -2510,7 +2501,7 @@ function __pLog(module,event,extra){
       var api=API(); if(!api){ __T('⚠️ 接口未就绪','error'); return; }
       var ok=0,fail=0,lastErr='';
       for(var i=0;i<ids.length;i++){
-        try{ await api.patch('/v1/attendance/'+ids[i],{ type:nt }); ok++; }
+        try{ await api.patch((QAXQJT_PATHS.ATTENDANCE_BY_ID || function (i) { return '/v1/attendance/' + i; })(ids[i]),{ type:nt }); ok++; }
         catch(e){ fail++; lastErr=(e&&e.message)||String(e); }
       }
       __T((fail?('⚠️ 部分修改失败（'+fail+' 条）'):'✅ 批量修改完成')+'：成功 '+ok+' 条'+(lastErr?('；最后错误：'+lastErr):''),fail?'error':'success',6000);
@@ -2524,7 +2515,7 @@ function __pLog(module,event,extra){
       var api=API(); if(!api){ __T('⚠️ 接口未就绪','error'); return; }
       var ok=0,fail=0,lastErr='';
       for(var i=0;i<ids.length;i++){
-        try{ await api.del('/v1/attendance/'+ids[i]); ok++; }
+        try{ await api.del((QAXQJT_PATHS.ATTENDANCE_BY_ID || function (i) { return '/v1/attendance/' + i; })(ids[i])); ok++; }
         catch(e){ fail++; lastErr=(e&&e.message)||String(e); }
       }
       __T((fail?('⚠️ 部分删除失败（'+fail+' 条）'):'🗑️ 批量删除完成')+'：成功 '+ok+' 条'+(fail&&lastErr?('；'+lastErr):''),fail?'error':'success',6000);
@@ -2551,7 +2542,7 @@ function __pLog(module,event,extra){
           var months={}; months[from.substring(0,7)]=1; months[to.substring(0,7)]=1;
           for(var mk in months){
             if(!months.hasOwnProperty(mk)) continue;
-            var er=await api.get('/v1/attendance?staffId='+encodeURIComponent(sid)+'&month='+encodeURIComponent(mk)+'&pageSize=500');
+            var er=await api.get((QAXQJT_PATHS.ATTENDANCE || '/v1/attendance')+'?staffId='+encodeURIComponent(sid)+'&month='+encodeURIComponent(mk)+'&pageSize=500');
             if(!Array.isArray(er)) er=(er&&er.data)||[];
             er.forEach(function(r){ if(r&&r.date) exist[r.date]=1; });
           }
@@ -2563,7 +2554,7 @@ function __pLog(module,event,extra){
         var ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
         if(skipExist&&exist[ds]){ skip++; continue; }
         try{
-          await api.post('/v1/attendance',{ staffId:sid, staffName:sname, month:ds.substring(0,7), date:ds, type:type, approveStatus:'approved' });
+          await api.post((QAXQJT_PATHS.ATTENDANCE || '/v1/attendance'),{ staffId:sid, staffName:sname, month:ds.substring(0,7), date:ds, type:type, approveStatus:'approved' });
           ok++;
         }catch(e){ fail++; lastErr=(e&&e.message)||String(e); }
       }
@@ -2574,7 +2565,7 @@ function __pLog(module,event,extra){
       var api=API(); var sel=el('baStaff');
       if(!api||!sel) return;
       try{
-        var rows=await api.get('/v1/performers?pageSize=500');
+        var rows=await api.get((QAXQJT_PATHS.PERFORMERS || '/v1/performers')+'?pageSize=500');
         if(!Array.isArray(rows)) rows=(rows&&rows.data)||[];
         rows=(rows||[]).filter(function(p){ return p&&p.status!=='deleted'; });
         rows.sort(function(a,b){ return String(a.staffNo||'').localeCompare(String(b.staffNo||''),'zh-CN')||String(a.name||'').localeCompare(String(b.name||''),'zh-CN'); });
@@ -2721,7 +2712,7 @@ function __pLog(module,event,extra){
         return;
       }
       try{
-        var rows=await API.get('/v1/performers?pageSize=500');
+        var rows=await API.get((QAXQJT_PATHS.PERFORMERS || '/v1/performers')+'?pageSize=500');
         if(!Array.isArray(rows)) rows=(rows&&rows.data)||[];
         rows=rows.filter(function(p){ return p && p.status!=='deleted'; });
         rows.sort(function(a,b){
@@ -3059,15 +3050,13 @@ function __pLog(module,event,extra){
       __T('↺ 已重置筛选条件', 'info');
     });
     __attBind('attBtnDemoCsv', function(){
-      var csv='姓名,工号,日期,上班时间,下班时间,加班小时,请假类型,备注\n';
+      var csv='工号,姓名,日期,状态,工时,备注\nPF001,张三,2026-10-01,出勤,8,\nPF002,李四,2026-10-01,事假,0,家中有事\nPF001,张三,2026-10-02,夜班,8,\n';
       var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
       var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='考勤示例.csv'; a.click();
       __T('📥 示例 CSV 已下载', 'success');
     });
     __attBind('attBtnUploadCsv', function(){
-      var inp=document.createElement('input'); inp.type='file'; inp.accept='.csv';
-      inp.onchange=function(){ __T('📤 已选择：'+(inp.files[0]?inp.files[0].name:'')+'','info',2500); };
-      inp.click();
+      if(window.__attImportNs && window.__attImportNs.open) window.__attImportNs.open();
     });
     __attBind('attBtnCalcAll', function(){ window.__wageNs.generate(); });
     __attBind('attBtnBatchConfirm', function(){ window.__wageNs.confirmBatch(); });
@@ -3084,16 +3073,230 @@ function __pLog(module,event,extra){
       var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='工资表_'+new Date().toISOString().slice(0,7)+'.csv'; a.click();
       __T('📊 工资表 CSV 已导出（'+items.length+' 条）','success');
     });
-    __attBind('attBtnFinanceAll', function(){ __T('💼 整月工资已推送至财务台账','success',2500); });
+    /* P1修复:假成功已移除 —— 后端无「推送财务台账/财务待发」端点（wage-batches/:id/post 需批次ID，
+       已由上方 attBtnBatchPost → __wageNs.postBatch 真实承接），此处改为诚实提示 */
+    __attBind('attBtnFinanceAll', function(){ console.warn('[P1] 未接线按钮: 整月工资推送财务台账'); __T('该功能暂未接入后端','warning'); });
     __attBind('attBtnFinanceSel', function(){
       var sel=document.querySelectorAll('.admin-table tbody input[type="checkbox"]:checked').length;
-      __T('💼 已推送 '+sel+' 条记录至财务待发', sel>0?'success':'warning');
+      if(!sel){ __T('⚠️ 请先勾选要推送的记录','warning'); return; }
+      console.warn('[P1] 未接线按钮: 选中记录推送财务待发（'+sel+' 条）'); __T('该功能暂未接入后端','warning');
     });
-    __attBind('previewCancelBtn', function(){ __closeAnyModal&&__closeAnyModal(); });
-    __attBind('previewConfirmBtn', function(){ __T('✅ 已确认预览','success'); __closeAnyModal&&__closeAnyModal(); });
-    __attBind('manualAddBtn', function(){ __T('➕ 手动添加入口','info'); });
+    // v20261004a：考勤批量导入已真实接入 POST /v1/attendance/import（原 P1 诚实下线解除，实现见下方 __attImportNs 模块）
+    __attBind('previewCancelBtn', function(){ if(window.__attImportNs&&window.__attImportNs.clear) window.__attImportNs.clear(); });
+    __attBind('previewConfirmBtn', function(){ if(window.__attImportNs&&window.__attImportNs.submit) window.__attImportNs.submit(); });
+    __attBind('manualAddBtn', function(){ console.warn('[P1] 未接线按钮: 人工补录考勤'); __T('该功能暂未接入后端','warning'); });
+    // 导入按钮补齐全量防拦截标记（既有契约：__bindDone/__superPatchBound/__ts3Done/__deadBtnChecked）
+    ['attBtnUploadCsv','previewCancelBtn','previewConfirmBtn'].forEach(function(id){
+      var b=document.getElementById(id);
+      if(b){ b.__bindDone=1; b.__superPatchBound=1; b.__ts3Done=1; b.__deadBtnChecked=1; }
+    });
     // 注：薪资参数 / 扣款规则引擎 / 打印历史相关按钮已由上方真实持久化模块绑定，此处不再占位
   }catch(_e){ console.warn('[att-bind err]',_e); }
+
+  // ====== 考勤批量导入（v20261004a：真实接入 POST /v1/attendance/import）======
+  // 流程：打开弹窗（粘贴 CSV/制表符 或 选择 .csv）→ 解析预览前 20 条 → 确认导入 → toast 真实结果并刷新列表
+  window.__attImportNs = (function(){
+    var TYPE_ALIAS = { '出勤':'full','全天班':'full','全天':'full','正常':'full','夜班':'night','双班':'double','半天班':'half','半天':'half','公休':'rest','休息':'rest','雨休':'rainout','事假':'PL','病假':'SL','丧假':'BL','婚假':'ML','年假':'AL','迟到':'late','迟到超30分钟':'late_over','早退':'early','早退超30分钟':'early_over','旷工':'absent','缺勤':'absent','请假':'leave','外出':'outing','学习':'study','出差':'business','工伤':'injury' };
+    var TYPE_NAMES = { full:'全天班', night:'夜班', double:'双班', half:'半天班', rest:'公休', SL:'病假', PL:'事假', BL:'丧假', ML:'婚假', AL:'年假', absent:'旷工', rainout:'雨休', leave:'请假', late:'迟到', late_over:'迟到超30分钟', early:'早退', early_over:'早退超30分钟', outing:'外出', study:'学习', business:'出差', injury:'工伤' };
+    var HEAD = {
+      no: ['工号','编号','工牌','演员编号','工牌号'],
+      name: ['姓名','名字'],
+      date: ['日期','考勤日期'],
+      status: ['状态','考勤状态','类型','考勤类型','请假类型'],
+      hours: ['工时','小时','工作时长'],
+      remark: ['备注','说明']
+    };
+    var _parsed = [];
+    var _submitting = false;
+    function el(id){ return document.getElementById(id); }
+    function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    // 引号感知的 CSV/制表符分列
+    function splitLine(line, delim){
+      var out=[], cur='', q=false;
+      for(var i=0;i<line.length;i++){
+        var ch=line.charAt(i);
+        if(q){
+          if(ch==='"'){ if(line.charAt(i+1)==='"'){ cur+='"'; i++; } else q=false; }
+          else cur+=ch;
+        }else if(ch==='"'){ q=true; }
+        else if(ch===delim){ out.push(cur); cur=''; }
+        else cur+=ch;
+      }
+      out.push(cur);
+      return out.map(function(s){ return s.trim(); });
+    }
+    // 表头模糊匹配：前 3 行内找到「日期 + (工号|姓名|状态)」即认定表头行
+    function detectMap(cells){
+      var m={};
+      Object.keys(HEAD).forEach(function(k){
+        for(var i=0;i<cells.length;i++){
+          for(var j=0;j<HEAD[k].length;j++){
+            if(cells[i].indexOf(HEAD[k][j])>=0){ if(m[k]===undefined) m[k]=i; break; }
+          }
+          if(m[k]!==undefined) break;
+        }
+      });
+      return (m.date!==undefined && (m.no!==undefined || m.name!==undefined || m.status!==undefined)) ? m : null;
+    }
+    function parseText(text){
+      var lines=String(text||'').replace(/^\uFEFF/,'').split(/\r?\n/).filter(function(l){ return l.trim().length; });
+      if(!lines.length) return [];
+      var delim = lines[0].indexOf('\t')>=0 ? '\t' : ',';
+      var headerIdx=-1, map=null;
+      for(var h=0; h<Math.min(lines.length,3); h++){
+        var dm=detectMap(splitLine(lines[h], delim));
+        if(dm){ headerIdx=h; map=dm; break; }
+      }
+      if(!map){ map={ no:0, name:1, date:2, status:3, hours:4, remark:5 }; headerIdx=-1; } // 无表头按列序兜底：工号,姓名,日期,状态,工时,备注
+      var items=[];
+      for(var i=headerIdx+1; i<lines.length; i++){
+        var c=splitLine(lines[i], delim);
+        var g=function(k){ return map[k]!==undefined && c[map[k]]!==undefined ? String(c[map[k]]).trim() : ''; };
+        var no=g('no'), name=g('name'), date=g('date'), st=g('status'), hs=g('hours'), rk=g('remark');
+        if(!no && !name && !date) continue; // 空行
+        var t = TYPE_ALIAS[st] || st;
+        var ok=true, why='';
+        if(!no && !name){ ok=false; why='缺工号/姓名'; }
+        else if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){ ok=false; why='日期需 YYYY-MM-DD'; }
+        else if(!t){ ok=false; why='缺状态'; }
+        else if(!TYPE_NAMES[t]){ ok=false; why='未知状态: '+st; }
+        var hours='';
+        if(hs!==''){ var n=Number(hs); if(!isFinite(n)||n<0||n>24){ ok=false; why='工时非法(0-24): '+hs; } else hours=n; }
+        var it={ workDate: date, status: t, remark: rk, hours: hours, __ok: ok, __why: why, __no: no, __name: name, __typeText: TYPE_NAMES[t]||st };
+        if(no) it.performerNo=no;
+        if(name) it.performerName=name;
+        items.push(it);
+      }
+      return items;
+    }
+    function modalBody(){
+      return '<div class="param-item"><label>① 粘贴 CSV / 制表符文本（首行为表头；也可直接粘贴数据行，按 工号,姓名,日期,状态,工时,备注 列序解析）</label>'+
+        '<textarea id="attImportPaste" class="form-control" rows="7" placeholder="工号,姓名,日期,状态,工时,备注&#10;PF001,张三,2026-10-01,出勤,8,&#10;PF002,李四,2026-10-01,事假,0,家中有事"></textarea></div>'+
+        '<div class="param-item" style="margin-top:10px;"><label>② 或选择 .csv 文件（读取后自动填入上方文本框）</label>'+
+        '<input type="file" id="attImportFile" accept=".csv,text/csv" class="form-control" /></div>'+
+        '<div style="margin-top:8px;font-size:.78rem;color:var(--text-light);">表头模糊匹配列：工号/编号、姓名、日期、状态、工时、备注；日期 YYYY-MM-DD；状态可用中文（出勤/夜班/公休/事假/病假/迟到/早退/旷工/请假…）或编码（full/PL/SL/late…）。单次上限 500 条；同人同日已有记录自动跳过（不覆盖）。</div>';
+    }
+    function bindFileInput(){
+      var f=el('attImportFile');
+      if(!f||f.__attImportBound) return;
+      f.__attImportBound=1;
+      f.addEventListener('change', function(){
+        var file=f.files&&f.files[0];
+        if(!file) return;
+        var fr=new FileReader();
+        fr.onload=function(){
+          var ta=el('attImportPaste');
+          if(ta) ta.value=String(fr.result||'').replace(/^\uFEFF/,'');
+          __T('📄 已读取 '+file.name+'，点击「解析预览」继续','info');
+        };
+        fr.onerror=function(){ __T('❌ 文件读取失败','error'); };
+        fr.readAsText(file,'utf-8');
+      });
+    }
+    function open(){
+      var U=window.QinApp&&window.QinApp.Utils;
+      if(!U||typeof U.injectOrReuseModal!=='function'){ __T('⚠️ 页面弹窗组件未就绪，请刷新重试','error'); return; }
+      U.injectOrReuseModal({
+        id: 'attImport',
+        title: '考勤批量导入',
+        icon: '📥',
+        width: 880,
+        showConfirm: true, confirmText: '🔍 解析预览',
+        showCancel: true, cancelText: '关闭',
+        body: modalBody(),
+        onConfirm: function(){
+          var ta=el('attImportPaste');
+          var items=parseText(ta?ta.value:'');
+          if(!items.length){ __T('⚠️ 未解析到有效数据行（请检查表头/分隔符）','warning'); return false; }
+          renderPreview(items);
+          return true; // 解析成功后关闭弹窗，进入预览
+        },
+        onCancel: function(){}
+      });
+      bindFileInput();
+    }
+    function renderPreview(items){
+      _parsed=items;
+      var card=el('previewCard'), tbody=el('previewTbody');
+      if(!card||!tbody){ __T('⚠️ 预览区缺失，请刷新页面','error'); return; }
+      var cnt=el('previewCount'), mon=el('previewMonth');
+      if(cnt) cnt.textContent=String(items.length);
+      var months={};
+      items.forEach(function(it){ if(/^\d{4}-\d{2}/.test(it.workDate||'')) months[(it.workDate||'').substring(0,7)]=1; });
+      if(mon) mon.textContent=Object.keys(months).sort().join(', ')||'—';
+      tbody.innerHTML='';
+      items.slice(0,20).forEach(function(it,i){
+        var tr=document.createElement('tr');
+        tr.innerHTML=
+          '<td>'+(i+1)+'</td>'+
+          '<td>'+esc(it.__no)+'</td>'+
+          '<td>'+esc(it.__name)+'</td>'+
+          '<td>'+esc(it.workDate)+'</td>'+
+          '<td>'+esc(it.__typeText)+'</td>'+
+          '<td class="num">'+(it.hours===''?'—':esc(it.hours))+'</td>'+
+          '<td>'+esc(it.remark||'')+'</td>'+
+          '<td>'+(it.__ok?'<span style="color:#198754;font-weight:600;">✓</span>':'<span style="color:#dc3545;">✗ '+esc(it.__why)+'</span>')+'</td>';
+        tbody.appendChild(tr);
+      });
+      card.style.display='';
+      var bad=items.filter(function(it){ return !it.__ok; }).length;
+      __T(bad ? ('⚠️ 解析完成：共 '+items.length+' 条，其中 '+bad+' 条有问题（导入时将计入失败）') : ('✅ 解析完成：共 '+items.length+' 条，点击「确认导入入库」提交'), bad ? 'warning' : 'success', 6000);
+      try{ card.scrollIntoView({ behavior:'smooth', block:'nearest' }); }catch(_){}
+    }
+    function clearAll(){
+      _parsed=[];
+      var card=el('previewCard'), tbody=el('previewTbody'), ta=el('attImportPaste');
+      if(tbody) tbody.innerHTML='';
+      if(card) card.style.display='none';
+      var cnt=el('previewCount'); if(cnt) cnt.textContent='0';
+      var mon=el('previewMonth'); if(mon) mon.textContent='—';
+      if(ta) ta.value='';
+    }
+    async function submit(){
+      if(_submitting) return;
+      if(!_parsed.length){ __T('⚠️ 请先解析预览 CSV 数据','warning'); return; }
+      var api=window.QAXQJT_API;
+      if(!api||typeof api.post!=='function'){ __T('⚠️ 接口未就绪','error'); return; }
+      if(_parsed.length>500){ __T('⚠️ 单次最多导入 500 条（当前 '+_parsed.length+' 条），请分批提交','warning'); return; }
+      var items=_parsed.map(function(it){
+        var o={ workDate: it.workDate, status: it.status };
+        if(it.performerNo) o.performerNo=it.performerNo;
+        if(it.performerName) o.performerName=it.performerName;
+        if(it.hours!==''&&it.hours!==undefined) o.hours=it.hours;
+        if(it.remark) o.remark=it.remark;
+        return o;
+      });
+      var btn=el('previewConfirmBtn');
+      _submitting=true;
+      if(btn){ btn.disabled=true; btn.textContent='⏳ 导入中…'; }
+      try{
+        var res=await api.post((QAXQJT_PATHS.ATTENDANCE_IMPORT || '/v1/attendance/import'),{ items: items });
+        var r=(res&&res.data)?res.data:(res||{});
+        var created=r.created||0, skipped=r.skipped||0;
+        var failed=Array.isArray(r.failed)?r.failed:[];
+        __T('📥 导入完成：成功 '+created+' 条，跳过 '+skipped+' 条，失败 '+failed.length+' 条', failed.length?'warning':'success', 7000);
+        failed.forEach(function(f){ console.warn('[attImport] 失败 #'+(f.index!==undefined?f.index:'?')+': '+(f.reason||'')); });
+        if(skipped) console.info('[attImport] 跳过 '+skipped+' 条（同人同日已有记录）');
+        clearAll();
+        if(window.__attRecNs&&typeof window.__attRecNs.load==='function'){ try{ window.__attRecNs.load(); }catch(_e){} }
+      }catch(e){
+        __T('❌ 导入失败：'+((e&&e.message)||e), 'error', 6000);
+      }finally{
+        _submitting=false;
+        if(btn){ btn.disabled=false; btn.textContent='💾 确认导入入库'; }
+      }
+    }
+    return { open: open, submit: submit, clear: clearAll };
+  })();
+  // 上传区点击 = 打开导入面板（补防拦截标记）
+  (function(){
+    var zone=document.getElementById('uploadZone');
+    if(zone&&!zone.__attImportBound){
+      zone.__attImportBound=1; zone.__bindDone=1; zone.__superPatchBound=1; zone.__ts3Done=1; zone.__deadBtnChecked=1;
+      zone.addEventListener('click', function(e){ e.preventDefault(); if(window.__attImportNs) window.__attImportNs.open(); });
+    }
+  })();
 
   try{
     console.info('[SuperPatch 6/6] 死按钮兜底 + toast通道 初始化...');
@@ -3122,7 +3325,7 @@ function __pLog(module,event,extra){
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
-        btn.__superPatchBound = 1;
+        /* P1修复:假成功已移除（不再一次性打标，重复点击仍给出诚实提示） */
         var txt = (btn.textContent||'').trim();
         var tt = 'other';
         // 修复：扩充业务分支，覆盖派工/审核/通过/驳回/签约/排期/确认接单等
@@ -3143,34 +3346,31 @@ function __pLog(module,event,extra){
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功','success');
-          setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
+          /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='delete'){
-          if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
-            __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
-          }else{ __toastH9('↩️ 已取消操作','info'); }
+          __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey});
+          /* P1修复:假成功已移除 */ console.warn('[P1] 未接线按钮:', txt); __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
+          /* P1修复:假成功已移除 */ __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印','info');
+          /* P1修复:假成功已移除 */ __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
+          /* P1修复:假成功已移除 */ __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
+          /* P1修复:假成功已移除 */ __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪','info');
+          /* P1修复:假成功已移除 */ __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增','info');
+          /* P1修复:假成功已移除 */ __toastH9('该功能暂未接入后端','warning');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
+          /* P1修复:假成功已移除 */ __toastH9('该功能暂未接入后端','warning');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
