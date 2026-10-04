@@ -6,7 +6,7 @@
  */
 const { nanoid } = require('nanoid');
 const prisma = require('../../utils/prisma');
-const { success, created, pageMeta } = require('../../utils/response');
+const { success, created } = require('../../utils/response');
 const { idByCtx, nowMs } = require('../../config');
 const { BusinessError } = require('../../middleware/error-handler');
 const { audit } = require('../../services/audit-service');
