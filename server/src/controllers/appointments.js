@@ -10,7 +10,7 @@
  */
 const { nanoid } = require('nanoid');
 const prisma = require('../utils/prisma');
-const { success, created, pageMeta, noContent } = require('../utils/response');
+const { success, created, noContent, parsePage, pagedSuccess } = require('../utils/response');
 const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
@@ -61,7 +61,7 @@ const _genOrderNo = () => {
 };
 
 const list = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   const kw = (ctx.query.keyword || '').trim();
   if (kw) {
@@ -93,7 +93,7 @@ const list = async ctx => {
     }),
     prisma.appointment.count({ where })
   ]);
-  return success(ctx, rows, { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows, total, page, pageSize);
 };
 
 // dashboard 统计

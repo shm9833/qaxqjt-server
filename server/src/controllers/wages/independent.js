@@ -22,14 +22,14 @@
  */
 const { nanoid } = require('nanoid');
 const prisma = require('../../utils/prisma');
-const { success, created, pageMeta, noContent } = require('../../utils/response');
+const { success, created, noContent, parsePage, pagedSuccess } = require('../../utils/response');
 const { idByCtx, nowMs } = require('../../config');
 const { BusinessError } = require('../../middleware/error-handler');
 const { audit } = require('../../services/audit-service');
 const { toApi, _batchToApi, _ruleToApi } = require('./helpers');
 
 const list = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   if (ctx.query.batchId) where.batchId = ctx.query.batchId;
   if (ctx.query.performerId) where.performerId = ctx.query.performerId;
@@ -51,7 +51,7 @@ const list = async ctx => {
     }),
     prisma.wageItemsV1.count({ where })
   ]);
-  return success(ctx, rows.map(r => toApi(r, r.batch)), { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows.map(r => toApi(r, r.batch)), total, page, pageSize);
 };
 
 
@@ -66,7 +66,7 @@ const detail = async ctx => {
 
 
 const batchList = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   if (ctx.query.month) where.wageMonth = ctx.query.month;
   if (ctx.query.status) where.status = ctx.query.status;
@@ -74,19 +74,19 @@ const batchList = async ctx => {
     prisma.wageBatchesV1.findMany({ where, skip, take, orderBy: { createdAt: 'desc' } }),
     prisma.wageBatchesV1.count({ where })
   ]);
-  return success(ctx, rows.map(_batchToApi), { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows.map(_batchToApi), total, page, pageSize);
 };
 
 
 const rulesList = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   if (ctx.query.status) where.status = ctx.query.status;
   const [rows, total] = await Promise.all([
     prisma.wageRulesV1.findMany({ where, skip, take, orderBy: { rankGrade: 'asc' } }),
     prisma.wageRulesV1.count({ where })
   ]);
-  return success(ctx, rows.map(_ruleToApi), { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows.map(_ruleToApi), total, page, pageSize);
 };
 
 

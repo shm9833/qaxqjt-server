@@ -5,13 +5,13 @@
  */
 const { nanoid } = require('nanoid');
 const prisma = require('../utils/prisma');
-const { success, created, pageMeta, noContent } = require('../utils/response');
+const { success, created, noContent, parsePage, pagedSuccess } = require('../utils/response');
 const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
 
 const list = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   const kw = (ctx.query.keyword || '').trim();
   if (kw) where.OR = [{ title: { contains: kw } }, { subtitle: { contains: kw } }];
@@ -25,12 +25,12 @@ const list = async ctx => {
     }),
     prisma.contentV2.count({ where })
   ]);
-  return success(ctx, rows, { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows, total, page, pageSize);
 };
 
 // 公开列表（无鉴权）：仅返回 publishStatus=published，强制按 sortWeight+publishDate 倒序
 const publicList = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = { publishStatus: 'published' };
   const kw = (ctx.query.keyword || '').trim();
   if (kw) where.OR = [{ title: { contains: kw } }, { subtitle: { contains: kw } }];
@@ -45,7 +45,7 @@ const publicList = async ctx => {
     }),
     prisma.contentV2.count({ where })
   ]);
-  return success(ctx, rows, { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows, total, page, pageSize);
 };
 
 const create = async ctx => {

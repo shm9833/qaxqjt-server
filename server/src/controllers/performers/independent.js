@@ -6,7 +6,7 @@
  */
 const { nanoid } = require('nanoid');
 const prisma = require('../../utils/prisma');
-const { success, created, pageMeta } = require('../../utils/response');
+const { success, created, parsePage, pagedSuccess } = require('../../utils/response');
 const { idByCtx, nowMs } = require('../../config');
 const { BusinessError } = require('../../middleware/error-handler');
 const { audit } = require('../../services/audit-service');
@@ -15,7 +15,7 @@ const { computeAttendancePenalty } = require('../wages');
 const { DATE_FIELDS, toDailyRate, syncPerformerToWageItems, classifyCrew, PRESENT_TYPES } = require('./helpers');
 
 const list = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   const kw = (ctx.query.keyword || '').trim();
   if (kw) {
@@ -42,7 +42,7 @@ const list = async ctx => {
     }),
     prisma.performersDbV1.count({ where })
   ]);
-  return success(ctx, rows, { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows, total, page, pageSize);
 };
 
 // 协议天工资：空串/非法值 -> null；合法数值保留两位小数

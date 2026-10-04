@@ -14,7 +14,7 @@
  */
 const { nanoid } = require('nanoid');
 const prisma = require('../utils/prisma');
-const { success, created, pageMeta, noContent } = require('../utils/response');
+const { success, created, pageMeta, noContent, parsePage, pagedSuccess } = require('../utils/response');
 const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
@@ -130,7 +130,7 @@ function _crewCreateData(items, castSheetId) {
 
 // ========== 列表 ==========
 const list = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   if (ctx.query.scheduleId) where.scheduleId = ctx.query.scheduleId;
   if (ctx.query.playId) where.playId = ctx.query.playId;
@@ -145,14 +145,14 @@ const list = async ctx => {
     }),
     prisma.castSheetsV1.count({ where })
   ]);
-  return success(
+  return pagedSuccess(
     ctx,
     rows.map(function (r) {
       var api = toApi(r);
       api.crewCount = r._count ? r._count.crew : 0;
       return api;
     }),
-    { ...pageMeta(page, pageSize, total), total }
+    total, page, pageSize
   );
 };
 

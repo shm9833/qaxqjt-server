@@ -11,13 +11,13 @@
  */
 const { nanoid } = require('nanoid');
 const prisma = require('../utils/prisma');
-const { success, created, pageMeta } = require('../utils/response');
+const { success, created, parsePage, pagedSuccess } = require('../utils/response');
 const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
 
 const listRoles = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   if (ctx.query.keyword) {
     where.OR = [{ name: { contains: ctx.query.keyword } }, { description: { contains: ctx.query.keyword } }];
@@ -37,7 +37,7 @@ const listRoles = async ctx => {
     }),
     prisma.role.count({ where })
   ]);
-  return success(ctx, rows, { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows, total, page, pageSize);
 };
 
 const createRole = async ctx => {
@@ -105,7 +105,7 @@ const assignPermissions = async ctx => {
 };
 
 const listPermissions = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   if (ctx.query.module) where.module = String(ctx.query.module);
   if (ctx.query.keyword) {
@@ -115,7 +115,7 @@ const listPermissions = async ctx => {
     prisma.permission.findMany({ where, skip, take, orderBy: { module: 'asc' } }),
     prisma.permission.count({ where })
   ]);
-  return success(ctx, rows, { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows, total, page, pageSize);
 };
 
 module.exports = {

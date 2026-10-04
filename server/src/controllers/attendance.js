@@ -6,7 +6,7 @@
  */
 const { nanoid } = require('nanoid');
 const prisma = require('../utils/prisma');
-const { success, created, pageMeta, noContent } = require('../utils/response');
+const { success, created, noContent, parsePage, pagedSuccess } = require('../utils/response');
 const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
@@ -75,7 +75,7 @@ function _leaveToApi(row) {
 
 // ========== 考勤记录 ==========
 const list = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   const kw = (ctx.query.keyword || '').trim();
   if (kw) where.staffName = { contains: kw };
@@ -86,7 +86,7 @@ const list = async ctx => {
     prisma.attendanceV1.findMany({ where, skip, take, orderBy: { attendanceDate: 'desc' } }),
     prisma.attendanceV1.count({ where })
   ]);
-  return success(ctx, rows.map(toApi), { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows.map(toApi), total, page, pageSize);
 };
 
 const detail = async ctx => {
@@ -171,7 +171,7 @@ const remove = async ctx => {
 
 // ========== 请假申请 ==========
 const leaveList = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   const kw = (ctx.query.keyword || '').trim();
   if (kw) where.staffName = { contains: kw };
@@ -181,7 +181,7 @@ const leaveList = async ctx => {
     prisma.leaveApplication.findMany({ where, skip, take, orderBy: { createdAt: 'desc' } }),
     prisma.leaveApplication.count({ where })
   ]);
-  return success(ctx, rows.map(_leaveToApi), { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows.map(_leaveToApi), total, page, pageSize);
 };
 
 const leaveCreate = async ctx => {
