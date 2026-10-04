@@ -11,7 +11,7 @@
 const { nanoid } = require('nanoid');
 const prisma = require('../utils/prisma');
 const { hashPassword, verifyPassword, signAccess, signRefresh, verifyRefresh, nowMs } = require('../utils/crypto');
-const { success, fail, pageMeta } = require('../utils/response');
+const { success, fail } = require('../utils/response');
 const { idByCtx, nowMs: now } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
