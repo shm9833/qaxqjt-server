@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="js/favicon-inject.js?v=20260803" defer></script>
+    <script src="js/wechat-fallback.js?v=20260803" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="秦安县秦剧团文化演出有限公司，秦安本土老牌专业秦腔演出团体，承接乡村庙会、惠民下乡、节庆专场、企业庆典等各类戏曲演出，电话：13993839833">
+  <meta name="keywords" content="秦安秦剧团,秦安县秦剧团文化演出有限公司,秦腔演出,乡村庙会,文化惠民,天水戏曲,秦安县秦剧团">
+  <title>秦安县秦剧团文化演出有限公司 - 传承陇原秦韵，唱响乡土华章 | {year}</title>
+  <link rel="stylesheet" href="css/style.css?v=20260803">
+  <style>
+    /* 🔧 前台通用补丁：分页/按钮圆角（原方形→10px） + 伪链接视觉提示 + 弹窗隐藏辅助类 */
+    .pagination .page-btn, button.page-btn, .page-btn,
+    .pagination button, .page-number-item button, .pager button,
+    .btn-pagination, [class*="pagination"] button,
+    .btn, button.btn {
+      border-radius: 10px !important;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+    .pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+    }
+    .s-modal-hide { display: none !important; }
+    .s-overlay-hide { display: none !important; }
+    a[href="#"]:not(.action-link):not([data-toggle]):not(.schedule-opera-link)::after { content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .7; }
+    .btn-ghost { color: #64748b; }
+  </style>
+</head>
+<body>
+  <header data-header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+          <div class="logo-text">
+            <h1>秦安县秦剧团</h1>
+            <p>文化演出有限公司 · 始于2014</p>
+          </div>
+        </div>
+        <button class="menu-toggle" data-nav-toggle aria-label="菜单" aria-expanded="false">
+          <span>☰</span>
+        </button>
+        <nav data-nav-menu>
+          <ul>
+            <li><a href="index.html" class="active">首页</a></li>
+            <li><a href="about.html">剧团简介</a></li>
+            <li><a href="operas.html">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html">新闻动态</a></li>
+            <li><a href="booking.html">在线预约</a></li>
+            <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
+            <li><a href="contact.html">联系我们</a></li>
+            <li><a href="admin/login.html" class="admin-link">后台管理</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="home" class="banner">
+      <div class="container">
+        <div class="banner-content">
+          <div class="slogan">传承陇原秦韵，唱响乡土华章——扎根秦安、服务乡村的专业秦腔演出团体</div>
+          <h2>匠心演绎每一场好戏<br>真情服务每一位乡亲</h2>
+          <p class="banner-desc">
+            数十年乡土坚守，深耕秦腔传统艺术。秦安县秦剧团文化演出有限公司立足陇城、辐射全县，专注乡村惠民巡演、庙会民俗演出、节庆文艺汇演、企业庆典专场，以地道秦腔、经典戏曲剧目，丰富县域群众精神文化生活，传承西北非遗戏曲文化。匠心演绎每一场好戏，真情服务每一位乡亲。
+          </p>
+          <div class="banner-buttons">
+            <a href="booking.html" class="btn btn-primary">立即预约演出</a>
+            <a href="live-api.html" class="btn btn-secondary" style="background:linear-gradient(135deg,var(--gold),#B8860B);color:#fff;border-color:transparent;">📡 观看官方直播</a>
+            <a href="cast-public.html" class="btn btn-secondary" style="background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;border-color:transparent;">🎭 本月演出阵容</a>
+            <a href="about.html" class="btn btn-secondary">了解剧团详情</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="about-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">剧团简介</h2>
+          <p class="section-subtitle">扎根秦安本土，深耕戏曲文化十余载</p>
+        </div>
+        <div class="about-grid">
+          <div class="about-image">
+            <img src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E4%B8%AD%E5%9B%BD%E8%A5%BF%E5%8C%97%E7%A7%A6%E8%85%94%E6%88%8F%E6%9B%B2%E8%88%9E%E5%8F%B0%E5%85%A8%E6%99%AF%EF%BC%8C%E5%8F%A4%E8%89%B2%E5%8F%A4%E9%A6%99%E7%9A%84%E6%88%8F%E5%8F%B0%EF%BC%8C%E7%BA%A2%E8%89%B2%E5%AE%AB%E7%81%AF%E9%AB%98%E6%8C%82%EF%BC%8C%E8%BA%AB%E7%A9%BF%E5%87%A4%E5%86%A0%E9%9C%9E%E5%B8%94%E7%9A%84%E6%97%A6%E8%A7%92%E6%BC%94%E5%91%98%E4%B8%8E%E5%A4%A7%E8%8A%B1%E8%84%B8%E5%87%80%E8%A7%92%E6%AD%A3%E5%9C%A8%E8%A1%A8%E6%BC%94%E4%BC%A0%E7%BB%9F%E7%A7%A6%E8%85%94%EF%BC%8C%E8%84%B8%E8%B0%B1%E5%8D%8E%E4%B8%BD%EF%BC%8C%E6%B0%B4%E8%A2%96%E7%BF%BB%E9%A3%9E%EF%BC%8C%E8%83%8C%E6%99%AF%E6%98%AF%E7%94%98%E8%82%83%E5%A4%A9%E6%B0%B4%E4%B9%A1%E6%9D%91%E5%BA%99%E4%BC%9A%E7%9C%8B%E6%88%8F%E7%9A%84%E4%BA%BA%E7%BE%A4%EF%BC%8C%E5%8F%A4%E6%88%8F%E5%8F%B0%E9%87%91%E7%A2%A7%E8%BE%89%E7%85%8C%EF%BC%8C%E5%86%99%E5%AE%9E%E6%91%84%E5%BD%B1%E9%A3%8E%E6%A0%BC%EF%BC%8C%E7%94%B5%E5%BD%B1%E7%BA%A7%E5%85%89%E5%BD%B1%EF%BC%8C8k%E9%AB%98%E6%B8%85&image_size=landscape_16_9" alt="秦安县秦剧团演职团队合影">
+          </div>
+          <div class="about-content">
+            <h3>秦安县秦剧团文化演出有限公司</h3>
+            <p>
+              秦安县秦剧团文化演出有限公司，前身为陇城青年秦剧团，是秦安县本土老牌民营专业秦腔演出团体，注册成立于2014年，{year}年服务全县，扎根秦安陇城镇，常年深耕天水本地乡村文化演出市场。剧团拥有成熟的演职团队、专业戏曲伴奏乐队、全套舞美灯光音响及戏曲行头道具，擅长演绎传统秦腔本戏、经典折子戏、民俗戏曲专场，适配乡村庙会、新春节庆、惠民下乡、集市汇演、企业公益演出等各类场景。
+            </p>
+            <p>
+              多年来，剧团始终坚守"传承秦腔文脉、服务基层群众"的初心，走遍秦安各乡镇、村落，常态化开展文化惠民演出，用接地气的戏曲表演丰富乡村文化生活，弘扬传统民俗文化与西北戏曲艺术，凭借扎实的演技、严谨的演出作风、地道的唱腔韵味，赢得了广大群众的一致认可与良好口碑。
+            </p>
+            <div class="about-stats">
+              <div class="stat-item">
+                <div class="stat-number">10+</div>
+                <div class="stat-label">年专业经验</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number">1000+</div>
+                <div class="stat-label">场演出场次</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number">50+</div>
+                <div class="stat-label">经典剧目</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="services" class="services-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">核心业务板块</h2>
+          <p class="section-subtitle">四大演出服务，覆盖各类文化活动场景</p>
+        </div>
+        <div class="services-grid">
+          <a href="services.html#miaohui" class="service-card" style="text-decoration:none;color:inherit;display:block;">
+            <div class="service-icon">🏮</div>
+            <h4>乡村庙会戏曲演出</h4>
+            <p>承接各乡镇、村落传统庙会、民俗祭祀、村落庆典秦腔专场演出</p>
+          </a>
+          <a href="services.html#huimin" class="service-card" style="text-decoration:none;color:inherit;display:block;">
+            <div class="service-icon">🎪</div>
+            <h4>政府惠民下乡巡演</h4>
+            <p>配合文旅部门、乡镇政府开展文化下乡、乡村振兴惠民演出</p>
+          </a>
+          <a href="services.html#jieqing" class="service-card" style="text-decoration:none;color:inherit;display:block;">
+            <div class="service-icon">🎉</div>
+            <h4>节庆专场文艺演出</h4>
+            <p>承接春节、端午、中秋、丰收节等各类节日戏曲专场</p>
+          </a>
+          <a href="services.html#qiye" class="service-card" style="text-decoration:none;color:inherit;display:block;">
+            <div class="service-icon">🎊</div>
+            <h4>企业商户庆典演出</h4>
+            <p>承接商铺开业、企业庆典、寿宴婚庆等商业及私人定制</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="repertoire" class="repertoire-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">经典剧目精选</h2>
+          <p class="section-subtitle">传统本戏 · 经典折子戏 · 地道秦腔韵味</p>
+        </div>
+        <div class="repertoire-grid">
+          <a href="cast-public.html?opera=%E7%81%AB%E7%84%B0%E9%A9%B9" class="repertoire-card" style="text-decoration:none;color:inherit;display:block;">
+            <div class="repertoire-image">
+              <img src="img/opera_%E7%81%AB%E7%84%B0%E9%A9%B9.svg" alt="火焰驹" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 450%22><rect width=%22800%22 height=%22450%22 fill=%22%23fdf2e9%22/><text x=%22400%22 y=%22225%22 text-anchor=%22middle%22 font-size=%2248%22 fill=%22%237f1d1d%22 font-family=%22KaiTi,serif%22>🎭 火焰驹</text></svg>'">
+            </div>
+            <div class="repertoire-info">
+              <h4>《火焰驹》</h4>
+              <p>秦腔经典传统本戏，讲述侠义故事，唱腔激昂慷慨</p>
+              <p style="margin-top:10px;"><span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;">🎭 查看本剧演出阵容 →</span></p>
+            </div>
+          </a>
+          <a href="cast-public.html?opera=%E7%AA%A6%E5%A8%A5%E5%86%A4" class="repertoire-card" style="text-decoration:none;color:inherit;display:block;">
+            <div class="repertoire-image">
+              <img src="img/opera_%E7%AA%A6%E5%A8%A5%E5%86%A4.svg" alt="窦娥冤" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 450%22><rect width=%22800%22 height=%22450%22 fill=%22%23fdf2e9%22/><text x=%22400%22 y=%22225%22 text-anchor=%22middle%22 font-size=%2248%22 fill=%22%237f1d1d%22 font-family=%22KaiTi,serif%22>🎭 窦娥冤</text></svg>'">
+            </div>
+            <div class="repertoire-info">
+              <h4>《窦娥冤》</h4>
+              <p>元杂剧经典改编，感天动地悲剧，唱功考验代表作</p>
+              <p style="margin-top:10px;"><span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;">🎭 查看本剧演出阵容 →</span></p>
+            </div>
+          </a>
+          <a href="cast-public.html?opera=%E5%A4%A7%E5%8D%87%E5%AE%98" class="repertoire-card" style="text-decoration:none;color:inherit;display:block;">
+            <div class="repertoire-image">
+              <img src="img/opera_%E5%A4%A7%E5%8D%87%E5%AE%98.svg" alt="大升官" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 450%22><rect width=%22800%22 height=%22450%22 fill=%22%23fdf2e9%22/><text x=%22400%22 y=%22225%22 text-anchor=%22middle%22 font-size=%2248%22 fill=%22%237f1d1d%22 font-family=%22KaiTi,serif%22>🎭 大升官</text></svg>'">
+            </div>
+            <div class="repertoire-info">
+              <h4>《大升官》</h4>
+              <p>秦腔宫廷大戏，二进宫经典选段，生旦净丑行当齐全</p>
+              <p style="margin-top:10px;"><span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;">🎭 查看本剧演出阵容 →</span></p>
+            </div>
+          </a>
+          <a href="cast-public.html?opera=%E4%B8%89%E6%BB%B4%E8%A1%80" class="repertoire-card" style="text-decoration:none;color:inherit;display:block;">
+            <div class="repertoire-image">
+              <img src="img/opera_%E4%B8%89%E6%BB%B4%E8%A1%80.svg" alt="三滴血" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 450%22><rect width=%22800%22 height=%22450%22 fill=%22%23fdf2e9%22/><text x=%22400%22 y=%22225%22 text-anchor=%22middle%22 font-size=%2248%22 fill=%22%237f1d1d%22 font-family=%22KaiTi,serif%22>🎭 三滴血</text></svg>'">
+            </div>
+            <div class="repertoire-info">
+              <h4>《三滴血》</h4>
+              <p>秦腔喜剧经典，啼笑因缘故事，家喻户晓的传世名剧</p>
+              <p style="margin-top:10px;"><span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;">🎭 查看本剧演出阵容 →</span></p>
+            </div>
+          </a>
+          <a href="cast-public.html?opera=%E4%BA%94%E5%85%B8%E5%9D%A1" class="repertoire-card" style="text-decoration:none;color:inherit;display:block;">
+            <div class="repertoire-image">
+              <img src="img/opera_%E4%BA%94%E5%85%B8%E5%9D%A1.svg" alt="五典坡" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 450%22><rect width=%22800%22 height=%22450%22 fill=%22%23fdf2e9%22/><text x=%22400%22 y=%22225%22 text-anchor=%22middle%22 font-size=%2248%22 fill=%22%237f1d1d%22 font-family=%22KaiTi,serif%22>🎭 五典坡</text></svg>'">
+            </div>
+            <div class="repertoire-info">
+              <h4>《五典坡》</h4>
+              <p>薛平贵与王宝钏爱情传奇，算粮登殿经典折子戏</p>
+              <p style="margin-top:10px;"><span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;">🎭 查看本剧演出阵容 →</span></p>
+            </div>
+          </a>
+          <a href="cast-public.html?opera=%E9%93%A1%E7%BE%8E%E6%A1%88" class="repertoire-card" style="text-decoration:none;color:inherit;display:block;">
+            <div class="repertoire-image">
+              <img src="img/opera_%E9%93%A1%E7%BE%8E%E6%A1%88.svg" alt="铡美案" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 450%22><rect width=%22800%22 height=%22450%22 fill=%22%23fdf2e9%22/><text x=%22400%22 y=%22225%22 text-anchor=%22middle%22 font-size=%2248%22 fill=%22%237f1d1d%22 font-family=%22KaiTi,serif%22>🎭 铡美案</text></svg>'">
+            </div>
+            <div class="repertoire-info">
+              <h4>《铡美案》</h4>
+              <p>包公铁面无私铡美案，花脸唱功重头戏，正义之唱</p>
+              <p style="margin-top:10px;"><span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;">🎭 查看本剧演出阵容 →</span></p>
+            </div>
+          </a>
+          <a href="cast-public.html?opera=%E9%87%91%E6%B2%99%E6%BB%A9" class="repertoire-card" style="text-decoration:none;color:inherit;display:block;">
+            <div class="repertoire-image">
+              <img src="img/opera_%E9%87%91%E6%B2%99%E6%BB%A9.svg" alt="金沙滩" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 450%22><rect width=%22800%22 height=%22450%22 fill=%22%23fdf2e9%22/><text x=%22400%22 y=%22225%22 text-anchor=%22middle%22 font-size=%2248%22 fill=%22%237f1d1d%22 font-family=%22KaiTi,serif%22>🎭 金沙滩</text></svg>'">
+            </div>
+            <div class="repertoire-info">
+              <h4>《金沙滩》</h4>
+              <p>杨家将忠义故事，金沙滩双龙会，武生重头戏</p>
+              <p style="margin-top:10px;"><span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;">🎭 查看本剧演出阵容 →</span></p>
+            </div>
+          </a>
+          <a href="operas.html" class="repertoire-card" style="text-decoration:none;color:inherit;display:block;">
+            <div class="repertoire-image">
+              <img src="img/opera_%E6%9B%B4%E5%A4%9A.svg" alt="更多经典剧目" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 450%22><rect width=%22800%22 height=%22450%22 fill=%22%23fdf2e9%22/><text x=%22400%22 y=%22225%22 text-anchor=%22middle%22 font-size=%2248%22 fill=%22%237f1d1d%22 font-family=%22KaiTi,serif%22>📜 更多剧目</text></svg>'">
+            </div>
+            <div class="repertoire-info">
+              <h4>更多经典剧目</h4>
+              <p>50余部传统本戏、折子戏，详见剧目中心完整列表</p>
+              <p style="margin-top:10px;"><span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;">🎭 查看完整剧目单 →</span></p>
+            </div>
+          </a>
+        </div>
+        <div class="repertoire-more">
+          <a href="operas.html" class="btn btn-primary">查看完整剧目单</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="advantages" class="advantages-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">服务优势</h2>
+          <p class="section-subtitle">选择秦安县秦剧团的四大理由</p>
+        </div>
+        <div class="advantages-grid">
+          <div class="advantage-item">
+            <div class="advantage-icon">🏡</div>
+            <h4>本土深耕</h4>
+            <p>扎根秦安本地，熟悉县域民俗风情，了解乡亲们的喜好与需求</p>
+          </div>
+          <div class="advantage-item">
+            <div class="advantage-icon">⭐</div>
+            <h4>专业靠谱</h4>
+            <p>资深戏曲演员、专业伴奏乐队，全套舞美灯光音响设备齐全</p>
+          </div>
+          <div class="advantage-item">
+            <div class="advantage-icon">💰</div>
+            <h4>性价比高</h4>
+            <p>本土剧团无中间差价，收费透明合理，花更少的钱看更好的戏</p>
+          </div>
+          <div class="advantage-item">
+            <div class="advantage-icon">🏆</div>
+            <h4>口碑过硬</h4>
+            <p>千余场演出经验，群众认可度高，各乡镇乡亲口碑相传</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="news" class="services-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">新闻动态</h2>
+          <p class="section-subtitle">剧团近期演出资讯与文化活动报道</p>
+        </div>
+        <div class="services-grid">
+          <a href="news.html?category=huimin" class="service-card" style="text-decoration:none;color:inherit;display:block;position:relative;">
+            <div style="position:absolute;top:16px;right:16px;padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:0.78rem;font-weight:600;box-shadow:0 4px 12px rgba(217,119,6,0.25);">📰 点击查看详情 →</div>
+            <div class="service-icon">📅</div>
+            <h4>{year}年春节惠民巡演</h4>
+            <p>新春走基层，文化进万家。剧团正月期间奔赴秦安15个乡镇开展春节惠民演出20余场，为乡亲们送上戏曲文化大餐。</p>
+            <p style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;">
+              <span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;">🎭 本场演出阵容 →</span>
+              <span style="display:inline-block;padding:6px 14px;border-radius:999px;border:1px solid rgba(15,76,129,0.25);color:#0f4c81;font-size:0.82rem;font-weight:600;">📰 惠民资讯详情 →</span>
+            </p>
+          </a>
+          <a href="news.html?category=jumu" class="service-card" style="text-decoration:none;color:inherit;display:block;position:relative;">
+            <div style="position:absolute;top:16px;right:16px;padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:0.78rem;font-weight:600;box-shadow:0 4px 12px rgba(217,119,6,0.25);">📰 点击查看详情 →</div>
+            <div class="service-icon">🎭</div>
+            <h4>陇城庙会专场演出</h4>
+            <p>陇城镇传统民俗庙会盛大举办，剧团连唱三天大戏，《火焰驹》《大升官》等经典剧目轮番上演，观众反响热烈。</p>
+            <p style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;">
+              <span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;">🎭 本场演出阵容 →</span>
+              <span style="display:inline-block;padding:6px 14px;border-radius:999px;border:1px solid rgba(15,76,129,0.25);color:#0f4c81;font-size:0.82rem;font-weight:600;">📰 庙会演出资讯 →</span>
+            </p>
+          </a>
+          <a href="news.html?category=huimin" class="service-card" style="text-decoration:none;color:inherit;display:block;position:relative;">
+            <div style="position:absolute;top:16px;right:16px;padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:0.78rem;font-weight:600;box-shadow:0 4px 12px rgba(217,119,6,0.25);">📰 点击查看详情 →</div>
+            <div class="service-icon">🎪</div>
+            <h4>乡村振兴文化下乡</h4>
+            <p>配合县文旅局开展"戏曲进乡村"文化惠民工程，全年计划完成80场下乡演出任务，助力乡村文化振兴。</p>
+            <p style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;">
+              <span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;">🎭 惠民演出阵容 →</span>
+              <span style="display:inline-block;padding:6px 14px;border-radius:999px;border:1px solid rgba(15,76,129,0.25);color:#0f4c81;font-size:0.82rem;font-weight:600;">📰 文化下乡详情 →</span>
+            </p>
+          </a>
+          <a href="news.html?category=jumu" class="service-card" style="text-decoration:none;color:inherit;display:block;position:relative;">
+            <div style="position:absolute;top:16px;right:16px;padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:0.78rem;font-weight:600;box-shadow:0 4px 12px rgba(217,119,6,0.25);">📰 点击查看详情 →</div>
+            <div class="service-icon">🌟</div>
+            <h4>新排剧目预告</h4>
+            <p>剧团正在精心排演《周仁回府》《下河东》等经典大戏，预计下季度正式与广大戏迷观众见面，敬请期待！</p>
+            <p style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;">
+              <span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#7f1d1d,#b91c1c);color:#fffbeb;font-size:0.82rem;font-weight:600;">🎭 现有阵容浏览 →</span>
+              <span style="display:inline-block;padding:6px 14px;border-radius:999px;border:1px solid rgba(15,76,129,0.25);color:#0f4c81;font-size:0.82rem;font-weight:600;">📰 新排资讯跟进 →</span>
+            </p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="contact-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">联系预约</h2>
+          <p class="section-subtitle">专业秦腔演出，一通电话，好戏到家</p>
+        </div>
+        <div class="contact-grid">
+          <div class="contact-info-card">
+            <div class="contact-item">
+              <div class="contact-icon">💬</div>
+              <div class="contact-details">
+                <h4>微信咨询洽谈（剧团官方微信）</h4>
+                <div style="margin-top:12px;display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap;">
+                  <div style="flex-shrink:0;width:150px;height:160px;border-radius:12px;padding:8px;background:#fff;border:2px solid #e5e7eb;box-shadow:0 4px 14px rgba(0,0,0,0.08);">
+                    <img src="img/wechat_qr_troupe.svg" alt="秦安县秦剧团官方微信二维码" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.innerHTML='<div style=&quot;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#07c160,#06ad56);color:#fff;border-radius:8px;font-size:12px;text-align:center;padding:8px;&quot;><div style=&quot;font-size:28px;margin-bottom:4px;&quot;>💚</div><div>秦安县秦剧团<br>官方微信二维码</div></div>'">
+                  </div>
+                  <div style="flex:1;min-width:180px;">
+                    <p style="margin:0 0 10px 0;"><a href="tel:13993839833" style="font-size:1.1rem;font-weight:700;color:#0f4c81;text-decoration:none;">📞 139-9383-9833</a> <span style="font-size:0.82rem;color:var(--text-light);">（微信同号）</span></p>
+                    <p style="margin:0 0 8px 0;font-size:0.88rem;"><span style="display:inline-block;background:#e0f2fe;color:#075985;padding:3px 10px;border-radius:999px;font-weight:600;">⏰ 营业时间</span> <span style="color:var(--text-light);">8:00 - 21:00（全年无休）</span></p>
+                    <p style="margin:0 0 8px 0;font-size:0.88rem;"><span style="display:inline-block;background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:999px;font-weight:600;">📍 剧团地址</span> <span style="color:var(--text-light);">甘肃省天水市秦安县陇城镇张沟村</span></p>
+                    <p style="margin:0 0 8px 0;font-size:0.88rem;"><span style="display:inline-block;background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-weight:600;">🗺️ 服务范围</span> <span style="color:var(--text-light);">秦安县全域 · 清水 · 张家川 · 麦积等天水周边乡镇</span></p>
+                    <p style="margin:0;font-size:0.82rem;color:var(--text-light);line-height:1.8;">💡 长按识别二维码 → 添加剧团微信 → 咨询演出方案、报价、档期<br>🎫 也可点击右侧「在线快速预约」，我们第一时间与您联系</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-icon">🎬</div>
+              <div class="contact-details">
+                <h4>服务内容</h4>
+                <p>传统本戏 · 经典折子戏 · 民俗专场</p>
+                <p>庙会演出 · 惠民下乡 · 节庆庆典 · 私人定制</p>
+                <p style="margin-top:10px;"><a href="services.html" style="display:inline-block;padding:5px 12px;border-radius:999px;background:linear-gradient(135deg,#0f4c81,#1d4ed8);color:#fff;font-size:0.82rem;font-weight:600;text-decoration:none;">🔍 查看 8 大服务板块 →</a></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-form-card">
+            <h3>🎫 在线快速预约</h3>
+            <form id="quickBookForm" novalidate>
+              <div class="form-group">
+                <label for="name">您的姓名 <span style="color:#dc2626;">*</span></label>
+                <input type="text" id="name" name="name" placeholder="请输入您的姓名" maxlength="30" required autocomplete="name">
+                <span class="qb-field-tip" data-tip-for="name" style="display:none;color:#dc2626;font-size:0.8rem;margin-top:4px;"></span>
+              </div>
+              <div class="form-group">
+                <label for="phone">联系电话 <span style="color:#dc2626;">*</span></label>
+                <input type="tel" id="phone" name="phone" placeholder="请输入 11 位手机号码" maxlength="11" required autocomplete="tel" inputmode="numeric">
+                <span class="qb-field-tip" data-tip-for="phone" style="display:none;color:#dc2626;font-size:0.8rem;margin-top:4px;"></span>
+              </div>
+              <div class="form-group">
+                <label for="serviceType">演出类型</label>
+                <select id="serviceType" name="serviceType">
+                  <option value="">请选择演出类型（可选）</option>
+                  <option value="乡村庙会戏曲演出">🏮 乡村庙会戏曲演出</option>
+                  <option value="政府惠民下乡巡演">🎪 政府惠民下乡巡演</option>
+                  <option value="节庆专场文艺演出">🎉 节庆专场文艺演出</option>
+                  <option value="企业商户庆典演出">🎊 企业商户庆典演出</option>
+                  <option value="天水文旅合作演出">🏞️ 天水文旅合作演出</option>
+                  <option value="校园戏曲研学">🎓 校园戏曲研学</option>
+                  <option value="网络直播与数字演出">📡 网络直播与数字演出</option>
+                  <option value="定制剧创作与专项排演">🎨 定制剧创作与专项排演</option>
+                  <option value="其他类型">📋 其他类型</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="eventDate">预计演出日期</label>
+                <input type="date" id="eventDate" name="eventDate">
+                <span style="font-size:0.78rem;color:var(--text-light);margin-top:4px;display:block;">💡 可选填，帮助剧团提前预留档期</span>
+              </div>
+              <div class="form-group">
+                <label for="message">备注说明</label>
+                <textarea id="message" name="message" rows="4" maxlength="500" placeholder="请填写演出地点、剧目需求、预算范围等信息，方便我们为您定制方案（选填）"></textarea>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                  <span style="font-size:0.78rem;color:var(--text-light);">💡 填写越详细，方案越精准</span>
+                  <span class="qb-char-count" style="font-size:0.78rem;color:var(--text-light);">0 / 500</span>
+                </div>
+              </div>
+              <button type="submit" class="form-btn">立即预约</button>
+              <p style="text-align:center;margin-top:10px;font-size:0.78rem;color:var(--text-light);">
+                🔒 您的信息仅用于预约对接，绝不外泄 · 提交后可在
+                <a href="booking.html#myRecords" style="color:#0f4c81;font-weight:600;text-decoration:underline;">预约记录</a>
+                中查看
+              </p>
+            </form>
+            <div id="quickBookSuccess" class="qb-success-card" style="display:none;padding:24px;border-radius:12px;background:linear-gradient(135deg,#d1fae5,#a7f3d0);border:2px solid #6ee7b7;margin-top:16px;text-align:center;">
+              <div style="font-size:3rem;line-height:1;margin-bottom:12px;">✅</div>
+              <h4 style="font-size:1.2rem;color:#065f46;margin-bottom:8px;">预约提交成功！</h4>
+              <p style="color:#047857;margin-bottom:6px;">您的预约编号：</p>
+              <p id="qbBookingId" style="font-size:1.3rem;font-weight:700;color:#064e3b;letter-spacing:2px;margin-bottom:12px;"></p>
+              <p style="color:#065f46;font-size:0.88rem;line-height:1.8;margin-bottom:16px;">
+                我们将在 <strong>24 小时内</strong> 主动与您联系确认。<br>
+                紧急事项请直接拨打 <a href="tel:13993839833" style="color:#047857;font-weight:700;text-decoration:underline;">13993839833</a>
+              </p>
+              <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                <a href="booking.html#myRecords" style="display:inline-block;padding:8px 18px;border-radius:999px;background:#059669;color:#fff;font-size:0.85rem;font-weight:600;text-decoration:none;">📋 查看预约记录 →</a>
+                <button type="button" id="qbResetBtn" style="display:inline-block;padding:8px 18px;border-radius:999px;background:#fff;color:#059669;border:2px solid #059669;font-size:0.85rem;font-weight:600;cursor:pointer;">🔄 再提交一条</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>🎭 秦安县秦剧团文化演出有限公司</h3>
+          <p>传承陇原秦韵，唱响乡土华章。扎根秦安、服务乡村的专业秦腔演出团体，{year}年初心不改，致力传承西北非遗戏曲文化。</p>
+          <p>电话：13993839833<br>地址：甘肃省天水市秦安县陇城镇张沟村</p>
+        </div>
+        <div class="footer-col">
+          <h4>快速导航</h4>
+          <ul>
+            <li><a href="index.html">网站首页</a></li>
+            <li><a href="about.html">剧团简介</a></li>
+            <li><a href="operas.html">剧目中心</a></li>
+            <li><a href="services.html">演出业务</a></li>
+            <li><a href="news.html">新闻动态</a></li>
+            <li><a href="booking.html">在线预约</a></li>
+            <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
+            <li><a href="contact.html">联系我们</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>演出服务</h4>
+          <ul>
+            <li><a href="services.html#miaohui">乡村庙会演出</a></li>
+            <li><a href="services.html#huimin">惠民下乡巡演</a></li>
+            <li><a href="services.html#jieqing">节庆专场演出</a></li>
+            <li><a href="services.html#qiye">企业庆典定制</a></li>
+            <li><a href="cast-public.html" style="color:#7f1d1d;font-weight:600;">🎭 演出阵容查询</a></li>
+            <li style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(15,76,129,0.2);"><a href="services.html" style="color:var(--gold-dark);font-weight:600;">🔍 查看全部 8 大业务 →</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>联系我们</h4>
+          <ul>
+            <li><a href="tel:13993839833">📞 13993839833</a></li>
+            <li><a href="mailto:13893811313@163.com">📧 13893811313@163.com</a></li>
+            <li><a href="booking.html">🎫 在线预约</a></li>
+            <li><a href="contact.html">📍 联系我们</a></li>
+            <li><a href="javascript:void(0)" data-footer-action="wechat">💬 微信客服</a></li>
+            <li><a href="javascript:void(0)" data-footer-action="mp">📱 官方公众号</a></li>
+            <li><a href="admin/login.html">🔐 后台管理</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>关注我们</h4>
+          <div class="footer-social">
+            <a href="https://live.douyin.com/qaxqjt" target="_blank" rel="noopener noreferrer" class="social-btn social-douyin" aria-label="抖音官方账号">
+              <span class="social-icon">🎵</span>
+              <span class="social-name">抖音@秦安县秦剧团</span>
+            </a>
+            <a href="https://live.kuaishou.com/u/qaxqjt" target="_blank" rel="noopener noreferrer" class="social-btn social-kuaishou" aria-label="快手官方账号">
+              <span class="social-icon">🎥</span>
+              <span class="social-name">快手@qaxqjt</span>
+            </a>
+            <a href="javascript:void(0)" data-footer-action="wechat-qr" class="social-btn social-wechat" aria-label="微信公众号二维码">
+              <span class="social-icon">💚</span>
+              <span class="social-name">微信公众号 · 扫码关注</span>
+            </a>
+            <a href="javascript:void(0)" data-footer-action="shipinhao" class="social-btn social-shipinhao" aria-label="微信视频号">
+              <span class="social-icon">📺</span>
+              <span class="social-name">视频号 · 秦安县秦剧团</span>
+            </a>
+          </div>
+          <p style="margin-top:14px;font-size:0.85rem;color:var(--text-light);line-height:1.7;">
+            关注官方账号<br>获取剧目排期 · 惠民演出 · 幕后花絮
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© {year} 秦安县秦剧团文化演出有限公司 版权所有 | 陇ICP备（秦安戏曲文化号）</p>
+        <div class="footer-bottom-links">
+          <a href="qualifications.html">企业资质</a>
+          <span>|</span>
+          <a href="copyright.html">版权声明</a>
+          <span>|</span>
+          <a href="minor-policy.html">未成年预约</a>
+          <span>|</span>
+          <a href="breach-liability.html">违约民事责任</a>
+          <span>|</span>
+          <a href="qr-booking.html">二维码预约</a>
+          <span>|</span>
+          <a href="live-api.html">直播接口</a>
+          <span>|</span>
+          <a href="admin/login.html">管理入口</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/year-lite.js?v=20260803"></script>
+  <script src="js/app.js?v=20260803"></script>
+  <!-- 🔧 D块前台×按钮兜底：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
+  <script>
+  (function(){
+    document.addEventListener('click', function(e){
+      var t = e.target; if(!t) return;
+      var tn = (t.tagName||'').toLowerCase();
+      var tc = (t.textContent||'').replace(/\s+/g,'');
+      if(tc === '×' || tc === '✕' || tc === 'x' || tc === 'X' || (t.getAttribute && (t.getAttribute('aria-label')||'').toLowerCase().indexOf('close')>=0)){
+        if(tn==='button'||tn==='a'||tn==='span'||tn==='i'||tn==='div'||(t.closest && t.closest('[class*="modal-"],[class*="Modal"],[id*="Modal_Header"],[class*="-close"],[class*="popup-"],[class*="dialog-"]'))){
+          try{ if(typeof window.__closeAnyModal === 'function') { window.__closeAnyModal(); return; } }catch(_){}
+          try{
+            var m = t.closest ? t.closest('.modal, [id$="Modal"], [id$="modal"], .modal-wrap, [data-modal], [class*="-popup"], [class*="dialog"], [class*="-panel"]') : null;
+            if(m){ try{ m.classList.remove('active','show','open','is-open'); m.classList.add('s-modal-hide','modal-wrap-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} } }
+            var o = document.querySelector('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="-mask"], [class*="-backdrop"]');
+            if(o){ try{ o.classList.remove('active','show','open','is-open'); o.classList.add('s-overlay-hide','modal-overlay-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} } }
+          }catch(_f){}
+        }
+      }
+    }, true);
+  })();
+  </script>
+  <!-- 🔧 E块前台死按钮兜底：无onclick无action的"提交/重置/立即预约/我要咨询/提交申请/上传预览" → toast+基础交互 -->
+  <script>
+  (function(){
+    function __FT(msg,type){
+      try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){}
+      try{ (type==='error'?alert:console.log)('[frontpatch] '+msg); }catch(_f){}
+    }
+    function __FL(key,ttl){
+      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
+      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||700); }catch(_){}
+      return true;
+    }
+    try{ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ try{ if(typeof window.__closeAnyModal==='function')window.__closeAnyModal(); }catch(_){} try { var all=document.querySelectorAll('.modal,.modal-wrap,[data-modal],[class*="-popup"],[class*="dialog"]'); all.forEach(function(x){ x.classList.remove('active','show','open'); x.classList.add('s-modal-hide'); }); var m2=document.querySelectorAll('.modal-overlay,.overlay,[class*="-mask"],[class*="-backdrop"]'); m2.forEach(function(x){x.classList.add('s-overlay-hide');}); }catch(_x){} } }, true); }catch(_escErr){}
+    document.addEventListener('reset', function(e){
+      try{ if(!e.target || e.target.tagName!=='FORM') return; setTimeout(function(){ __FT('↺ 表单已重置（所有字段恢复默认）','success'); }, 120); }catch(_){}
+    }, true);
+    document.addEventListener('click', function(e){
+      var t=e.target; if(!t) return;
+      var btn = (t.tagName||'').toLowerCase()==='button'? t : (t.closest ? t.closest('button,a.btn,[role="button"],.btn,.btn-primary,.btn-secondary,.btn-gold,.btn-danger,.btn-outline') : null);
+      if(!btn) return;
+      try{ if(btn.getAttribute && btn.getAttribute('onclick') && btn.getAttribute('onclick').length>3) return; if(btn.__bindDone || btn.__ftDone) return; if(btn.getAttribute && btn.getAttribute('type') && btn.getAttribute('type').toLowerCase()==='submit'){ return; } }catch(_a){}
+      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
+      if(!txt || txt.length>28) return;
+      var isSubmit   = txt.indexOf('提交')>=0 || txt.indexOf('立即预约')>=0 || txt.indexOf('立即申请')>=0;
+      var isReset    = txt.indexOf('重置')>=0;
+      var isConsult  = txt.indexOf('咨询')>=0 || txt.indexOf('联系对接')>=0 || txt.indexOf('对接专员')>=0;
+      var isUpload   = txt.indexOf('上传')>=0 || txt.indexOf('预览')>=0 || txt.indexOf('选择文件')>=0;
+      var isSearch   = txt.indexOf('搜索')>=0 || txt.indexOf('查询')>=0 || txt==='🔍';
+      var dk = 'ft_'+(isSubmit?'s':isReset?'r':isConsult?'c':isUpload?'u':isSearch?'q':'k')+'_'+Math.random().toString(36).slice(2,6);
+      if(isSubmit){
+        if(!__FL(dk,1400)){ __FT('⏳ 提交处理中，请稍候…','warning'); e.stopImmediatePropagation(); return; }
+        var fm = btn.closest ? btn.closest('form') : null;
+        if(fm){
+          var agree = fm.querySelector('[data-agree-checkbox]');
+          if(agree && !agree.checked){ __FT('⚠️ 请先勾选「同意协议/须知」后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); return; }
+          var reqFails = fm.querySelectorAll('[required]');
+          var firstBad=null;
+          try{ reqFails.forEach(function(inp){ if(!inp.value || (inp.type==='checkbox' && !inp.checked)){ if(!firstBad)firstBad=inp; try{ inp.style.borderColor='#dc2626'; setTimeout(function(){try{inp.style.removeProperty('border-color');}catch(_rp){}},1800);}catch(_b){} } }); }catch(_rf){}
+          if(firstBad){ __FT('⚠️ 请完整填写必填项后再提交','error'); e.preventDefault(); e.stopImmediatePropagation(); if(firstBad.focus) firstBad.focus(); return; }
+          __FT('✅ 提交成功！（演示模式：真实环境将写入工单并通知对接专员）','success');
+          try{ fm.reset && fm.reset(); }catch(_rs){}
+          e.preventDefault(); e.stopImmediatePropagation(); btn.__ftDone=1; return;
+        } else {
+          __FT('✅ 提交成功（演示模式）','success');
+          try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,400); }catch(_){}
+          btn.__ftDone=1; e.stopImmediatePropagation(); return;
+        }
+      }
+      if(isReset){
+        if(!__FL(dk,500)) return;
+        var fm2 = btn.closest ? btn.closest('form') : null;
+        try{ if(fm2){ fm2.reset && fm2.reset(); __FT('↺ 表单已重置（所有字段恢复默认）','success'); } else { __FT('↺ 已重置','info'); } }catch(_r){}
+        btn.__ftDone=1; return;
+      }
+      if(isConsult){
+        if(!__FL(dk,900)) return;
+        __FT('📞 已打开对接咨询入口（请致电 138-9381-1313 或扫码添加微信）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isUpload){
+        if(!__FL(dk,1000)) return;
+        __FT('📎 请选择 ≤ 10MB 的图片/PDF/DOC 文件（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+      if(isSearch){
+        if(!__FL(dk,500)) return;
+        __FT('🔍 查询条件已生效（演示模式）','info');
+        btn.__ftDone=1; return;
+      }
+    }, true);
+    console.info('[FrontCommonPatch 已加载：CSS圆角+×兜底+死按钮+重置+ESC关弹窗+同意协议二次校验]');
+  })();
+  </script>
+</body>
+</html>
