@@ -13,7 +13,7 @@
  */
 const { nanoid } = require('nanoid');
 const prisma = require('../utils/prisma');
-const { success, created, pageMeta, noContent } = require('../utils/response');
+const { success, created, noContent, parsePage, pagedSuccess } = require('../utils/response');
 const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
@@ -182,7 +182,7 @@ function buildListWhere(query) {
 
 // ========== 列表 ==========
 const list = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = buildListWhere(ctx.query);
 
   const [rows, total] = await Promise.all([
@@ -195,7 +195,7 @@ const list = async ctx => {
     }),
     prisma.scheduleV2.count({ where })
   ]);
-  return success(ctx, rows.map(toApi), { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows.map(toApi), total, page, pageSize);
 };
 
 // ========== 日历视图（月历/周视图专用，轻量）==========

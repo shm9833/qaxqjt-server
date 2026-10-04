@@ -5,10 +5,10 @@
  * GET /v1/audit-logs  分页列表：模块、操作人、时间范围、关键字
  */
 const prisma = require('../utils/prisma');
-const { success, pageMeta } = require('../utils/response');
+const { success, parsePage, pagedSuccess } = require('../utils/response');
 
 const listAuditLogs = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   if (ctx.query.module) where.module = String(ctx.query.module);
   if (ctx.query.action) where.action = String(ctx.query.action);
@@ -23,7 +23,7 @@ const listAuditLogs = async ctx => {
     prisma.auditLog.findMany({ where, skip, take, orderBy: { actionTs: 'desc' } }),
     prisma.auditLog.count({ where })
   ]);
-  return success(ctx, rows, { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows, total, page, pageSize);
 };
 
 module.exports = { listAuditLogs };

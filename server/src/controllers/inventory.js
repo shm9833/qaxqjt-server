@@ -12,7 +12,7 @@
  */
 const { nanoid } = require('nanoid');
 const prisma = require('../utils/prisma');
-const { success, created, pageMeta, noContent } = require('../utils/response');
+const { success, created, noContent, parsePage, pagedSuccess } = require('../utils/response');
 const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
@@ -36,7 +36,7 @@ function withInventoryWrite(fn) {
 }
 
 const listItems = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   const kw = (ctx.query.keyword || '').trim();
   if (kw) {
@@ -53,7 +53,7 @@ const listItems = async ctx => {
     }),
     prisma.inventoryItem.count({ where })
   ]);
-  return success(ctx, rows, { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows, total, page, pageSize);
 };
 
 const createItem = async ctx => {
@@ -202,7 +202,7 @@ const removeItem = async ctx => {
 };
 
 const listRecords = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   if (ctx.query.itemId) where.itemId = ctx.query.itemId;
   if (ctx.query.opType) where.opType = ctx.query.opType;
@@ -229,7 +229,7 @@ const listRecords = async ctx => {
     : [];
   const itemMap = Object.fromEntries(items.map(i => [i.id, i]));
   const rows = rawRows.map(r => ({ ...r, item: itemMap[r.itemId] || null }));
-  return success(ctx, rows, { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows, total, page, pageSize);
 };
 
 /**

@@ -53,10 +53,22 @@ const pageMeta = (page, pageSize, total) => {
   };
 };
 
+// 解析请求分页参数：const { page, pageSize, skip, take } = parsePage(ctx.query);
+const parsePage = (query = {}) => {
+  const { page, pageSize, skip, take } = pageMeta(query.page, query.pageSize, 0);
+  return { page, pageSize, skip, take };
+};
+
+// 分页列表统一返回：pagedSuccess(ctx, rows, total, page, pageSize)
+const pagedSuccess = (ctx, rows, total, page, pageSize) =>
+  success(ctx, rows, { ...pageMeta(page, pageSize, total), total });
+
 module.exports = {
   success,
   fail,
   created,
   noContent,
-  pageMeta
+  pageMeta,
+  parsePage,
+  pagedSuccess
 };

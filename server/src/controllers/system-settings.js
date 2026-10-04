@@ -6,7 +6,7 @@
  */
 const { nanoid } = require('nanoid');
 const prisma = require('../utils/prisma');
-const { success, created, pageMeta, noContent } = require('../utils/response');
+const { success, created, noContent, parsePage, pagedSuccess } = require('../utils/response');
 const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
@@ -27,7 +27,7 @@ function toApi(row) {
 }
 
 const list = async ctx => {
-  const { skip, take, page, pageSize } = pageMeta(ctx.query.page, ctx.query.pageSize, 0);
+  const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   if (ctx.query.group) where.group = ctx.query.group;
   if (ctx.query.keyword) {
@@ -45,7 +45,7 @@ const list = async ctx => {
     prisma.setting.findMany({ where, skip, take, orderBy: { group: 'asc' } }),
     prisma.setting.count({ where })
   ]);
-  return success(ctx, rows.map(toApi), { ...pageMeta(page, pageSize, total), total });
+  return pagedSuccess(ctx, rows.map(toApi), total, page, pageSize);
 };
 
 const detail = async ctx => {
