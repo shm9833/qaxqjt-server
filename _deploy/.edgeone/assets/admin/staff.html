@@ -1571,6 +1571,7 @@
 
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
+    <script>/* P3修复: 全局 PATHS 常量（带回退） */ window.QAXQJT_PATHS = (window.QAXQJT_API_CONFIG && window.QAXQJT_API_CONFIG.PATHS) || {};</script>
   <script src="../js/api-request.js?v=20260803"></script>
   <script src="../js/qrcode.min.js?v=20260923"></script>
   <script src="/js/xlsx-js-style.min.js?v=20260925"></script>
@@ -1941,11 +1942,11 @@
         var staffId = stfSel ? stfSel.value : '';
         var query = { month: mk, page: 1, pageSize: 500 };
         if (staffId) query.staffId = staffId;
-        var p1 = API.get('/v1/attendance', { query: query, showErrorToast: false, timeoutMs: 8000, fallbackRead: function(){ return null; } })
+        var p1 = API.get((QAXQJT_PATHS.ATTENDANCE || '/v1/attendance'), { query: query, showErrorToast: false, timeoutMs: 8000, fallbackRead: function(){ return null; } })
           .then(function(res){
             attMonthCache = Array.isArray(res) ? res : (res && res.items) || [];
           }).catch(function(){ attMonthCache = []; });
-        var p2 = API.get('/v1/attendance/stats', { query: { month: mk }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function(){ return null; } })
+        var p2 = API.get((QAXQJT_PATHS.ATTENDANCE_STATS || '/v1/attendance/stats'), { query: { month: mk }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function(){ return null; } })
           .then(function(res){ renderAttStats(res || {}); })
           .catch(function(){ renderAttStats({}); });
         p1.then(function(){ renderAttCal(); renderAttList(); renderAttWarnings(); });
@@ -2163,7 +2164,7 @@
         var btn = document.getElementById('attEntrySave');
         btn.disabled = true;
         try {
-          await API.post('/v1/attendance', { body: body, timeoutMs: 10000 });
+          await API.post((QAXQJT_PATHS.ATTENDANCE || '/v1/attendance'), { body: body, timeoutMs: 10000 });
           toast('✅ 考勤登记成功','success');
           closeAttEntryModal();
           await loadAttendance();
@@ -2378,7 +2379,7 @@
             var API = window.QAXQJT_API;
             if (API) {
               var year = new Date().getFullYear();
-              var res = await API.get('/v1/attendance', { query: { staffId: staffId, page: 1, pageSize: 500 }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function(){ return null; } });
+              var res = await API.get((QAXQJT_PATHS.ATTENDANCE || '/v1/attendance'), { query: { staffId: staffId, page: 1, pageSize: 500 }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function(){ return null; } });
               var all = Array.isArray(res) ? res : (res && res.items) || [];
               var yearAbsent = all.filter(function(r){ return r.type === 'absent' && String(r.date || '').indexOf(String(year)) === 0; }).length;
               if (yearAbsent >= 3) {
@@ -2401,7 +2402,7 @@
           var yearAbsentMap = {};
           try {
             if (API) {
-              var resY = await API.get('/v1/attendance', { query: { type: 'absent', page: 1, pageSize: 500 }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function(){ return null; } });
+              var resY = await API.get((QAXQJT_PATHS.ATTENDANCE || '/v1/attendance'), { query: { type: 'absent', page: 1, pageSize: 500 }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function(){ return null; } });
               var allY = Array.isArray(resY) ? resY : (resY && resY.items) || [];
               allY.forEach(function(r){
                 if (String(r.date || '').indexOf(String(year)) === 0) {
@@ -3138,7 +3139,7 @@
           if (API && API.get) {
             var attCount = 0;
             try {
-              var res = await API.get('/v1/attendance', { query: { month: m, page: 1, pageSize: 1 }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function () { return null; } });
+              var res = await API.get((QAXQJT_PATHS.ATTENDANCE || '/v1/attendance'), { query: { month: m, page: 1, pageSize: 1 }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function () { return null; } });
               if (Array.isArray(res)) attCount = res.length;
               else if (res && Array.isArray(res.items)) attCount = res.items.length;
               else if (res && typeof res.total === 'number') attCount = res.total;
@@ -3724,7 +3725,7 @@
         };
         if (window.__PF_ROWS__ && window.__PF_ROWS__.length) { apply(window.__PF_ROWS__); return Promise.resolve(); }
         if (!API) { apply([]); return Promise.resolve(); }
-        return API.get('/v1/performers', { query: { page: 1, pageSize: 500 }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function () { return null; } })
+        return API.get((QAXQJT_PATHS.PERFORMERS || '/v1/performers'), { query: { page: 1, pageSize: 500 }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function () { return null; } })
           .then(function (res) {
             var rows = Array.isArray(res) ? res : (res && res.items) || [];
             window.__PF_ROWS__ = rows;
@@ -4265,46 +4266,50 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 保存成功','success');
-        try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning'); console.warn('[P1] 未接线按钮:', txt||'保存');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isEdit){
         if(!__L(doneKey,700)) return;
         __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
-        __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning'); console.warn('[P1] 未接线按钮:', txt||'编辑');
         btn.__ctE2Done = 1; return;
       }
       if(isDel){
         if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-        if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
-        try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
+        /* P1修复:假成功已移除（假confirm与假删除DOM行一并移除） */
+        __T('该功能暂未接入后端','warning'); console.warn('[P1] 未接线按钮:', txt||'删除');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
         if(!__L(doneKey,500)) return;
         __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
-        __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning'); console.warn('[P1] 未接线按钮:', txt||'查看');
         btn.__ctE2Done = 1; return;
       }
       if(isVerify){
         if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
         __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
-        __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning'); console.warn('[P1] 未接线按钮:', txt||'核销');
         btn.__ctE2Done = 1; return;
       }
       if(isExport){
         if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
         __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
-        __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning'); console.warn('[P1] 未接线按钮:', txt||'导出');
         btn.__ctE2Done = 1; return;
       }
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 准备新增「'+txt+'」','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning'); console.warn('[P1] 未接线按钮:', txt||'新增');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -4312,18 +4317,18 @@ var __pT0=0;
       if(isAudit){
         if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
-        if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
+        /* P1修复:假成功已移除（假confirm一并移除） */
+        __T('该功能暂未接入后端','warning'); console.warn('[P1] 未接线按钮:', txt||'审核');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
       var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
       if(isSign){
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
+        /* P1修复:假成功已移除（假confirm一并移除） */
+        __T('该功能暂未接入后端','warning'); console.warn('[P1] 未接线按钮:', txt||'签约');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -4331,7 +4336,8 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning'); console.warn('[P1] 未接线按钮:', txt||'合同');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -4339,18 +4345,18 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning'); console.warn('[P1] 未接线按钮:', txt||'排期');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
       var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
       if(isCancelOrHandle && !isDel && !isSave){
         if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if((txt.indexOf('取消')>=0) && !confirm('确认取消：'+(trKey||'当前记录')+'？')) return;
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
-        var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
+        /* P1修复:假成功已移除（假confirm一并移除） */
+        __T('该功能暂未接入后端','warning'); console.warn('[P1] 未接线按钮:', txt||'处理');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -4476,6 +4482,8 @@ function __pLog(module,event,extra){
       try{
         var form = e.target;
         if(!form||form.tagName!=='FORM') return;
+        /* P1修复:假成功已移除 —— 档案附件上传表单已接真实上传（见下方上传接线块），跳过本兜底拦截 */
+        if(form.id === 'staffAttachForm') return;
         e.preventDefault();
         e.stopPropagation();
         var fields = form.querySelectorAll('input,select,textarea');
@@ -4532,10 +4540,9 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 提交成功','success');
-        setTimeout(function(){
-          try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
-        }, 380);
+        /* P1修复:假成功已移除 —— 校验通过但该表单无真实提交实现，仅如实提示 */
+        __toastH9('该功能暂未接入后端','warning');
+        console.warn('[P1] 未接线表单:', form.id || form.name || '未命名表单');
         return false;
       }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
     }, true);
@@ -4959,8 +4966,92 @@ function __pLog(module,event,extra){
   
   // 功能按钮绑定（上传/新建/导出）
   try{
-    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
-    __bindBtn('openStaffUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（员工头像）","info"); }; inp.click(); });
+    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.__superPatchBound=1; el.__deadBtnChecked=1; el.addEventListener("click", fn, true); } }
+    /* P1修复:假成功已移除 —— 「选择档案」改为打开真实档案表单的文件选择框（不再假弹"已选择"） */
+    __bindBtn('openStaffUploadBtn', function(){
+      var inp = document.getElementById('staffAttachFiles');
+      var wrap = inp && inp.closest ? inp.closest('[data-upload-wrap]') : null;
+      if (wrap && wrap.scrollIntoView) { try{ wrap.scrollIntoView({behavior:'smooth', block:'center'}); }catch(_sc){} }
+      if (inp) inp.click();
+      else console.warn('[P1] 未找到 staffAttachFiles 输入框');
+    });
+    /* P1上传接线 v20261004：档案附件表单接入真实上传 POST /v1/upload（multipart 字段 file）
+       与 /v1/upload/multi（多文件字段 files），证件照成功后 PATCH /v1/performers/:id 写入 avatarUrl
+       （schema: performers_db_v1.avatar_url，performers.js 更新白名单含 avatarUrl）。失败弹真实错误。 */
+    var __stfForm = document.getElementById('staffAttachForm');
+    if (__stfForm && !__stfForm.__realUploadBound) {
+      __stfForm.__realUploadBound = 1;
+      var __fbtns = __stfForm.querySelectorAll('button');
+      for (var __fbi=0; __fbi<__fbtns.length; __fbi++){ __fbtns[__fbi].__superPatchBound=1; __fbtns[__fbi].__deadBtnChecked=1; __fbtns[__fbi].__bindDone=1; }
+      __stfForm.addEventListener('submit', function(ev){
+        ev.preventDefault();
+        var API = window.QAXQJT_API;
+        var fileInput = document.getElementById('staffAttachFiles');
+        var staffSel = __stfForm.querySelector('select[name="staffId"]');
+        var typeSel = __stfForm.querySelector('select[name="staffDocType"]');
+        var files = (fileInput && fileInput.files) ? Array.prototype.slice.call(fileInput.files) : [];
+        var toast = function(msg, type){ if (typeof __toastH9 === 'function') { __toastH9(msg, type||'info'); } else if (typeof window.__T === 'function') { window.__T(msg, type||'info'); } else { console.log('[upload]', msg); } };
+        if (!API || typeof API.post !== 'function') { toast('上传服务不可用：API 未就绪','error'); return false; }
+        if (!staffSel || !staffSel.value) { toast('请先选择关联人员','error'); if (staffSel) staffSel.focus(); return false; }
+        if (!files.length) { toast('请先选择要上传的附件文件','error'); if (fileInput) fileInput.focus(); return false; }
+        for (var __fi=0; __fi<files.length; __fi++){ if (files[__fi].size > 10*1024*1024) { toast('文件超过10MB限制：'+files[__fi].name,'error'); return false; } }
+        var docType = typeSel ? typeSel.value : 'id_photo';
+        var isPhoto = (docType === 'id_photo');
+        toast('⏳ 正在上传 '+files.length+' 个附件…','info');
+        var upPromise;
+        if (files.length === 1) {
+          var fd = new FormData(); fd.append('file', files[0]);
+          upPromise = API.post((QAXQJT_PATHS.UPLOAD || '/v1/upload'), fd, { showErrorToast:false }).then(function(d){ return [d]; });
+        } else {
+          var fdm = new FormData();
+          for (var __mi=0; __mi<files.length; __mi++){ fdm.append('files', files[__mi]); }
+          upPromise = API.post((QAXQJT_PATHS.UPLOAD_MULTI || '/v1/upload/multi'), fdm, { showErrorToast:false }).then(function(d){
+            return (d && d.files) ? d.files : (Array.isArray(d) ? d : [d]);
+          });
+        }
+        upPromise.then(function(list){
+          var first = (list && list[0]) || {};
+          if (isPhoto && first.url && staffSel.value) {
+            return API.patch((QAXQJT_PATHS.PERFORMERS_BY_ID || function (i) { return '/v1/performers/' + i; })(encodeURIComponent(staffSel.value)), { avatarUrl: first.url }, { showErrorToast:false }).then(function(){
+              toast('✅ 证件照已上传并写入人员档案（avatarUrl）','success');
+              fileInput.value = '';
+            }).catch(function(err){
+              console.warn('[staffAttachForm] 写回 avatarUrl 失败:', err);
+              toast('文件已上传（'+(first.url||'')+'），但写回人员档案失败：'+(err && err.message ? err.message : '网络错误'),'warning');
+              fileInput.value = '';
+            });
+          }
+          toast('✅ 已上传 '+list.length+' 个附件到服务器'+(first.url ? '：'+first.url : ''),'success');
+          fileInput.value = '';
+        }).catch(function(err){
+          console.warn('[staffAttachForm] upload fail:', err);
+          toast('❌ 上传失败：'+(err && err.message ? err.message : '网络错误'),'error');
+        });
+        return false;
+      });
+      // 填充「关联人员」下拉（真实 /v1/performers 数据，含 staffNo·姓名）
+      var __fillStaffOpts = function(){
+        var A = window.QAXQJT_API;
+        var sel = __stfForm.querySelector('select[name="staffId"]');
+        if (!A || typeof A.get !== 'function' || !sel) return;
+        A.get((QAXQJT_PATHS.PERFORMERS || '/v1/performers'), { query:{page:1,pageSize:500}, showErrorToast:false, fallbackRead:function(){ return null; } }).then(function(res){
+          var rows = Array.isArray(res) ? res : (res && res.items) || [];
+          if (!rows.length) return;
+          var cur = sel.value;
+          var html = '<option value="">请选择要补充档案的演职人员</option>';
+          for (var __ri=0; __ri<rows.length; __ri++){
+            var p = rows[__ri];
+            var v = String(p.id==null?'':p.id).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+            var label = String((p.staffNo || p.id) + ' · ' + (p.name || '')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            html += '<option value="' + v + '">' + label + '</option>';
+          }
+          sel.innerHTML = html;
+          if (cur) sel.value = cur;
+        }).catch(function(e){ console.warn('[staffAttachForm] 人员列表加载失败', e); });
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', __fillStaffOpts);
+      else __fillStaffOpts();
+    }
   }catch(_e){ console.warn("[upload-bind err]",_e); }
 
 try{
@@ -5012,36 +5103,43 @@ try{
         var trKey = '';
         if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
         __spT0 = Date.now();
+        /* P1修复:假成功已移除 —— 兜底命中的均为未接线按钮，统一如实提示 */
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功','success');
-          setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
+          __toastH9('该功能暂未接入后端','warning');
+          console.warn('[P1] 未接线按钮:', txt||'保存');
         }else if(tt==='delete'){
-          if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
-            __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
-          }else{ __toastH9('↩️ 已取消操作','info'); }
+          __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey});
+          __toastH9('该功能暂未接入后端','warning');
+          console.warn('[P1] 未接线按钮:', txt||'删除');
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
+          __toastH9('该功能暂未接入后端','warning');
+          console.warn('[P1] 未接线按钮:', txt||'查看');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印','info');
+          __toastH9('该功能暂未接入后端','warning');
+          console.warn('[P1] 未接线按钮:', txt||'导出');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
+          __toastH9('该功能暂未接入后端','warning');
+          console.warn('[P1] 未接线按钮:', txt||'排期');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
+          __toastH9('该功能暂未接入后端','warning');
+          console.warn('[P1] 未接线按钮:', txt||'审核');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪','info');
+          __toastH9('该功能暂未接入后端','warning');
+          console.warn('[P1] 未接线按钮:', txt||'合同');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增','info');
+          __toastH9('该功能暂未接入后端','warning');
+          console.warn('[P1] 未接线按钮:', txt||'新增');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
+          __toastH9('该功能暂未接入后端','warning');
+          console.warn('[P1] 未接线按钮:', txt);
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -5339,7 +5437,7 @@ try{
     var isNewPerformer = editCtx.isNew || false;
     var apiMethod = isNewPerformer ? 'POST' : 'PATCH';
     var performerId = editCtx.performerId || (window.__PF_EDIT__ && window.__PF_EDIT__.id) || editCtx.gh;
-    var apiUrl = isNewPerformer ? '/v1/performers' : ('/v1/performers/' + encodeURIComponent(performerId));
+    var apiUrl = isNewPerformer ? (QAXQJT_PATHS.PERFORMERS || (QAXQJT_PATHS.PERFORMERS || '/v1/performers')) : ((QAXQJT_PATHS.PERFORMERS_BY_ID || function (i) { return '/v1/performers/' + i; })(encodeURIComponent(performerId)));
     if (!QinFetch || typeof QinFetch.request !== 'function') {
       // 降级：localStorage
       try { patchUpsert(editCtx.gh, persisted); } catch(_){}
@@ -5517,7 +5615,7 @@ try{
   window.__STF_RENDER__ = render;
   window.__STF_ROW_HTML__ = rowHtml;
   function load(){
-    return API.get('/v1/performers', { query:{page:1,pageSize:500}, showErrorToast:false, timeoutMs:8000, fallbackRead:function(){return null;} })
+    return API.get((QAXQJT_PATHS.PERFORMERS || '/v1/performers'), { query:{page:1,pageSize:500}, showErrorToast:false, timeoutMs:8000, fallbackRead:function(){return null;} })
       .then(function(res){
         var rows = Array.isArray(res) ? res : (res && res.items) || [];
         MAP = {}; window.__PF_MAP__ = MAP;
@@ -5537,7 +5635,7 @@ try{
   /* ---- 加载统计卡片真实数据 ---- */
   function setText(id, val){ var el=document.getElementById(id); if(el) el.textContent = val; }
   function loadStats(){
-    return API.get('/v1/performers/stats', { showErrorToast:false, timeoutMs:8000, fallbackRead:function(){return null;} })
+    return API.get((QAXQJT_PATHS.PERFORMERS_STATS || '/v1/performers/stats'), { showErrorToast:false, timeoutMs:8000, fallbackRead:function(){return null;} })
       .then(function(res){
         var d = res || {};
         var db = d.deptBreakdown || {};
@@ -5636,9 +5734,9 @@ try{
     var fail = function(err){ toast('❌ 保存失败：'+((err&&err.message)||'网络/服务异常'),'error'); };
     if (ed && ed.mode==='new'){
       // 工号由后端统一分配（全表含停用记录取号，避免与已占用/已删除号冲突）
-      API.post('/v1/performers', body, { showErrorToast:false }).then(done).catch(fail);
+      API.post((QAXQJT_PATHS.PERFORMERS || (QAXQJT_PATHS.PERFORMERS || '/v1/performers')), body, { showErrorToast:false }).then(done).catch(fail);
     } else if (ed && ed.id){
-      API.patch('/v1/performers/'+ed.id, body, { showErrorToast:false }).then(done).catch(fail);
+      API.patch((QAXQJT_PATHS.PERFORMERS_BY_ID || function (i) { return '/v1/performers/' + i; })(ed.id), body, { showErrorToast:false }).then(done).catch(fail);
     } else if (_origSave){
       _origSave();
     }
@@ -5659,7 +5757,7 @@ try{
       e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
       var on = isOn(p);
       if(on && !confirm('确定要停用 '+p.name+'（'+(p.staffNo||'')+'）吗？停用后该员工将无法接单/排班。')) return;
-      API.patch('/v1/performers/'+p.id, { status: on?'inactive':'active' }, { showErrorToast:false })
+      API.patch((QAXQJT_PATHS.PERFORMERS_BY_ID || function (i) { return '/v1/performers/' + i; })(p.id), { status: on?'inactive':'active' }, { showErrorToast:false })
         .then(function(){ toast(on?('✕ 已停用：'+p.name):('✓ 已启用：'+p.name), on?'warning':'success'); load(); loadStats(); })
         .catch(function(err){ toast('❌ 操作失败：'+((err&&err.message)||'网络/服务异常'),'error'); });
     }, true);
@@ -5823,7 +5921,7 @@ try{
     toast('⏳ 正在批量'+(enable?'启用':'停用')+' '+ids.length+' 人...','info');
     var ok = 0, fail = 0, done = 0, total = ids.length;
     ids.forEach(function(it){
-      API.patch('/v1/performers/'+it.id, { status: enable ? 'active' : 'inactive' }, { showErrorToast: false })
+      API.patch((QAXQJT_PATHS.PERFORMERS_BY_ID || function (i) { return '/v1/performers/' + i; })(it.id), { status: enable ? 'active' : 'inactive' }, { showErrorToast: false })
         .then(function(){ ok++; })
         .catch(function(){ fail++; })
         .then(function(){
@@ -6017,7 +6115,7 @@ try{
 
   function loadPending(){
     if(!API) return;
-    API.get('/v1/performers', { query: { page:1, pageSize:500, status:'pending' }, showErrorToast:false, timeoutMs:8000 })
+    API.get((QAXQJT_PATHS.PERFORMERS || '/v1/performers'), { query: { page:1, pageSize:500, status:'pending' }, showErrorToast:false, timeoutMs:8000 })
       .then(function(res){
         // 兼容多种返回结构：直接数组 / {data:[]} / {items:[]} / {data:{items:[]}}
         var rows = [];
@@ -6071,7 +6169,7 @@ try{
         if (rank && rank.value) payload.rankGrade = rank.value;
         if (transport && transport.value) payload.transportType = transport.value;
         if (sno && sno.value.trim()) payload.staffNo = sno.value.trim();
-        API.patch('/v1/performers/' + id + '/review', payload)
+        API.patch((QAXQJT_PATHS.PERFORMERS_REVIEW || function (i) { return '/v1/performers/' + i + '/review'; })(id), payload)
           .then(function(r){
             var sn = r && (r.staffNo || (r.data && r.data.staffNo));
             var rateStr = payload.dailyRate ? ('，日工资 ¥' + payload.dailyRate) : '';
@@ -6095,7 +6193,7 @@ try{
       '</div>',
       function(fb){
         if(fb === null || fb === '') return;
-        API.patch('/v1/performers/' + id + '/review', { action:'reject', feedback: fb })
+        API.patch((QAXQJT_PATHS.PERFORMERS_REVIEW || function (i) { return '/v1/performers/' + i + '/review'; })(id), { action:'reject', feedback: fb })
           .then(function(){
             toast('已退回，等待本人重新填写', 'success');
             loadPending();

@@ -986,6 +986,7 @@
 
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
+    <script>/* P3修复: 全局 PATHS 常量（带回退） */ window.QAXQJT_PATHS = (window.QAXQJT_API_CONFIG && window.QAXQJT_API_CONFIG.PATHS) || {};</script>
   <script src="../js/api-request.js?v=20260803"></script>
 <script src="../js/app.js?v=20260930a"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
@@ -1289,6 +1290,10 @@ var __pT0=0;
       var trKey = '';
       if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
       // 各按钮分发行文
+      /* P1修复:假成功已移除 —— DBF 死按钮兜底不再伪造「保存成功/已删除/已核销/导出完成/签约成功/派工成功」
+         等提示，也不再模拟删行/弹确认框。能走到这里的均为未接线死按钮（真实按钮已被上方
+         __btnHasBound/__bindDone 检查放行），统一弹 warning「该功能暂未接入后端」并 preventDefault
+         防原生提交刷新，同时 console.warn 记录接线缺口。 */
       var isSave = (txt.indexOf('保存')>=0 || txt.indexOf('提交')>=0 || txt.indexOf('确认')>=0);
       var isEdit = (txt.indexOf('编辑')>=0);
       var isDel  = (txt.indexOf('删除')>=0 && txt.length <= 10);
@@ -1297,98 +1302,72 @@ var __pT0=0;
       var isExport = (txt.indexOf('导出')>=0);
       var isAdd = (txt.indexOf('新增')>=0);
       var doneKey = 'e2_'+(isSave?'s':isEdit?'e':isDel?'d':isView?'v':isVerify?'y':isExport?'x':isAdd?'a':'k')+'_'+(trKey||Math.random().toString(36).slice(2,6));
+      function __pDeadTip(branch){
+        __pLog('DBF', branch+'_unwired', Object.assign({},__pEvt,{row:trKey, branch:branch}));
+        try { e.preventDefault(); } catch(_p1){}
+        console.warn('[P1] 未接线按钮:', txt||branch, trKey?('（行：'+trKey+'）'):'');
+        __T('⚠️ 该功能暂未接入后端','warning');
+        btn.__ctE2Done = 1;
+      }
       if(isSave){
     __pEvt.branch='save';
     var __pLk = __L(doneKey,900);
-    if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-    __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 保存成功','success');
-        try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
-        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+    if(!__pLk) { try { e.stopPropagation(); } catch(_a){} return; }
+        __pDeadTip('save'); try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isEdit){
         if(!__L(doneKey,700)) return;
-        __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
-        __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info');
-        btn.__ctE2Done = 1; return;
+        __pDeadTip('edit'); return;
       }
       if(isDel){
-        if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-        if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
-        try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
-        __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
-        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
+        if(!__L(doneKey,850)) { try { e.stopPropagation(); } catch(_a){} return; }
+        __pDeadTip('delete'); try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
         if(!__L(doneKey,500)) return;
-        __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
-        __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info');
-        btn.__ctE2Done = 1; return;
+        __pDeadTip('view'); return;
       }
       if(isVerify){
-        if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
-        __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
-        __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success');
-        btn.__ctE2Done = 1; return;
+        if(!__L(doneKey,900)) return;
+        __pDeadTip('verify'); return;
       }
       if(isExport){
-        if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
-        __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
-        __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success');
-        btn.__ctE2Done = 1; return;
+        if(!__L(doneKey,1200)) return;
+        __pDeadTip('export'); return;
       }
       if(isAdd){
         if(!__L(doneKey,900)) return;
-        __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 准备新增「'+txt+'」','info');
-        btn.__ctE2Done = 1; return;
+        __pDeadTip('add'); return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
       var isAudit = txt.indexOf('审核')>=0 || txt.indexOf('审批')>=0 || txt.indexOf('驳回')>=0 || txt.indexOf('通过')>=0;
       if(isAudit){
-        if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
-        if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
-        __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+        if(!__L(doneKey,850)){ try{e.stopPropagation();}catch(_a){} return; }
+        __pDeadTip('audit'); try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
       var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
       if(isSign){
-        if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
-        __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+        if(!__L(doneKey,900)){ try{e.stopPropagation();}catch(_a){} return; }
+        __pDeadTip('sign'); try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
       var isContract = txt.indexOf('合同')>=0 && !isSign;
       if(isContract){
-        if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
-        __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪','info');
-        btn.__ctE2Done=1; return;
+        if(!__L(doneKey,1000)) return;
+        __pDeadTip('contract'); return;
       }
       // ---- 新增：排期/排班/安排档期 ----
       var isScheduleBtn = txt.indexOf('排期')>=0 || txt.indexOf('排班')>=0 || (txt.indexOf('安排')>=0 && (txt.length<=8 || txt.indexOf('档期')>=0));
       if(isScheduleBtn){
-        if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
-        __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
-        btn.__ctE2Done=1; return;
+        if(!__L(doneKey,800)) return;
+        __pDeadTip('schedule'); return;
       }
       // ---- 新增：取消/处理/确认接单 ----
       var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
       if(isCancelOrHandle && !isDel && !isSave){
-        if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if((txt.indexOf('取消')>=0) && !confirm('确认取消：'+(trKey||'当前记录')+'？')) return;
-        var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
-        var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
-        __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
+        if(!__L(doneKey,800)){ try{e.stopPropagation();}catch(_a){} return; }
+        __pDeadTip('status'); try{e.stopPropagation();}catch(_b){} return;
       }
 
     }, true);
@@ -1569,10 +1548,11 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 提交成功','success');
-        setTimeout(function(){
-          try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
-        }, 380);
+        /* P1修复:假成功已移除 —— 必填/格式校验为真实助手（保留），但校验通过后原「✅ 提交成功」
+           为假提交分支：该表单无真实提交实现时不再伪造成功、不再自动关弹窗，
+           保留 preventDefault（上方已执行，防原生提交刷新），改为 warning 提示未接入。 */
+        console.warn('[P1] 未接线表单:', form.id||form.name||'(anonymous)');
+        __toastH9('⚠️ 该功能暂未接入后端','warning');
         return false;
       }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
     }, true);
@@ -2002,7 +1982,70 @@ function __pLog(module,event,extra){
   // 功能按钮绑定（上传/新建/导出）
   try{
     function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
-    __bindBtn('openInvUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（物品图片）","info"); }; inp.click(); });
+    /* P1修复:假成功已移除 —— 头部「选择图片」原为一次性临时 input（选择结果无处落地），
+       改为打开表单内真实文件选择器 #invAttachFiles，让选择结果进入下方真实上传流程 */
+    __bindBtn('openInvUploadBtn', function(){ var inp=document.getElementById("invAttachFiles"); if(inp&&typeof inp.click==="function"){ inp.click(); } else { __T("⚠️ 未找到图片选择控件","error"); } });
+
+    /* P1修复:假成功已移除 —— 资产图片上传接通真实接口（原表单提交落入 SuperPatch 1/6 假提交分支，弹「✅ 提交成功」）：
+       POST /v1/upload（单文件，multipart 字段 file）/ POST /v1/upload/multi（多文件，字段 file+files），
+       返回 data:{url,...}；成功后 URL 写入物品表单「图片URL」字段（__inv_imageUrl），
+       物品保存时随 body.imageUrl 提交（对照 server/src/controllers/inventory.js createItem 的 b.imageUrl）。 */
+    (function(){
+      var form = document.getElementById('invAttachForm');
+      var fileInput = document.getElementById('invAttachFiles');
+      if(!form || form.__realUploadWired) return;
+      form.__realUploadWired = 1;
+      function T(m,t){ try{ window.__T(m,t); }catch(_){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(m,t||'info',3000); }catch(_2){} } }
+      var __uploading = false;
+      function doUpload(){
+        if(__uploading) return;
+        try{
+          var files = fileInput && fileInput.files ? fileInput.files : null;
+          if(!files || !files.length){ T('⚠️ 请先选择要上传的图片','error'); return; }
+          var okFiles = [];
+          for(var i=0;i<files.length;i++){
+            var f = files[i];
+            if(!/^image\/(jpeg|png|webp)$/i.test(f.type||'')){ T('⚠️ 仅支持 JPG/PNG/WebP：'+f.name,'error'); return; }
+            if(f.size > 10*1024*1024){ T('⚠️ 文件超过10MB：'+f.name,'error'); return; }
+            okFiles.push(f);
+          }
+          __uploading = true;
+          var fd = new FormData();
+          okFiles.forEach(function(f){ fd.append('file', f); });
+          if(okFiles.length > 1){ okFiles.forEach(function(f){ fd.append('files', f); }); }
+          var path = okFiles.length > 1 ? (QAXQJT_PATHS.UPLOAD_MULTI || '/v1/upload/multi') : (QAXQJT_PATHS.UPLOAD || '/v1/upload');
+          T('📤 正在上传 '+okFiles.length+' 张图片…','info');
+          window.QAXQJT_API.post(path, fd).then(function(data){
+            var urls = [];
+            if(data && Array.isArray(data.files)){ data.files.forEach(function(d){ if(d&&d.url) urls.push(d.url); }); }
+            else if(Array.isArray(data)){ data.forEach(function(d){ if(d&&d.url) urls.push(d.url); }); }
+            else if(data && data.url){ urls.push(data.url); }
+            if(!urls.length){ T('❌ 上传响应未返回 url','error'); return; }
+            window.__invLastImageUrl = urls[0];
+            var urlInput = document.getElementById('__inv_imageUrl');
+            if(urlInput) urlInput.value = urls[0];
+            T('✅ 已上传 '+urls.length+' 张图片，URL 已填入物品表单「图片URL」','success');
+          }).catch(function(err){
+            console.warn('[P1 upload] 失败', err);
+            T('❌ 上传失败：'+((err&&err.message)||err),'error');
+          }).finally(function(){ __uploading = false; });
+        }catch(_e){ __uploading = false; console.warn('[P1 upload err]', _e); T('❌ 上传失败：'+((_e&&_e.message)||_e),'error'); }
+      }
+      // window 捕获阶段先于 SuperPatch 1/6 的 document 捕获 submit 拦截，抢先把本表单导向真实上传
+      window.addEventListener('submit', function(ev){
+        if(ev.target !== form) return;
+        try{ ev.preventDefault(); ev.stopPropagation(); try{ ev.stopImmediatePropagation(); }catch(_si){} }catch(_){}
+        doUpload();
+      }, true);
+      // 兼容「刷新bug修复」脚本把 submit 按钮改为 type=button 的场景：在 window 捕获阶段接按钮点击
+      window.addEventListener('click', function(ev){
+        var b = ev.target && ev.target.closest ? ev.target.closest('button') : null;
+        if(!b || !form.contains(b)) return;
+        if((b.getAttribute('type')||'').toLowerCase() === 'reset') return;
+        try{ ev.preventDefault(); ev.stopPropagation(); }catch(_){}
+        doUpload();
+      }, true);
+    })();
   }catch(_e){ console.warn("[upload-bind err]",_e); }
 
 try{
@@ -2051,37 +2094,13 @@ try{
         var trKey = '';
         if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
         __spT0 = Date.now();
-        if(tt==='save'){
-          __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功','success');
-          setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
-        }else if(tt==='delete'){
-          if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
-            __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
-          }else{ __toastH9('↩️ 已取消操作','info'); }
-        }else if(tt==='view'){
-          __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
-        }else if(tt==='export'){
-          __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印','info');
-        }else if(tt==='schedule'){
-          __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
-        }else if(tt==='audit'){
-          __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
-        }else if(tt==='contract'){
-          __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪','info');
-        }else if(tt==='add'){
-          __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增','info');
-        }else{
-          __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
-        }
+        /* P1修复:假成功已移除 —— SuperPatch 6/6 死按钮兜底不再伪造「操作成功/已执行/已触发导出/
+           审核处理完成」等提示，也不再弹 confirm 假确认。能走到这里的均为未接线死按钮
+           （真实按钮已被 _hasAction/__superPatchBound 检查放行），统一弹 warning
+           「该功能暂未接入后端」并 console.warn 记录接线缺口。preventDefault/stopPropagation 保留。 */
+        __pLog('SP','fallback_unwired', {branch:tt, txt:txt, row:trKey});
+        console.warn('[P1] 未接线按钮:', txt||tt, trKey?('（行：'+trKey+'）'):'');
+        __toastH9('⚠️ 该功能暂未接入后端','warning');
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
     }, true);
@@ -2213,7 +2232,7 @@ window.__invApi = (function(){
     var tb = _tbody();
     if(!tb){ return; }
     try{
-      var rows = await API.get('/v1/inventory/items', { query:{ page:1, pageSize:500 } });
+      var rows = await API.get((QAXQJT_PATHS.INVENTORY_ITEMS || '/v1/inventory/items'), { query:{ page:1, pageSize:500 } });
       rows = Array.isArray(rows) ? rows : (rows && (rows.items||rows.list)) || [];
       __ALL_ITEMS = rows;
       _refreshCategoryOptions();
@@ -2375,8 +2394,8 @@ window.__invApi = (function(){
   }
 
   function openAdd(){ _openForm(null); }
-  function openEdit(id){ API.get('/v1/inventory/items/'+id).then(function(d){ _openForm(d); }).catch(function(e){ T('❌ 加载详情失败','error'); }); }
-  function openView(id){ API.get('/v1/inventory/items/'+id).then(function(d){ alert('物品：'+d.name+'\n编号：'+(d.sku||'—')+'\n分类：'+(d.category||'—')+'\n数量：'+(d.quantity||0)+' '+(d.unit||'')+'\n状态：'+(d.status||'—')); }).catch(function(){ T('❌ 加载失败','error'); }); }
+  function openEdit(id){ API.get((QAXQJT_PATHS.INVENTORY_ITEMS_BY_ID || function (i) { return '/v1/inventory/items/' + i; })(id)).then(function(d){ _openForm(d); }).catch(function(e){ T('❌ 加载详情失败','error'); }); }
+  function openView(id){ API.get((QAXQJT_PATHS.INVENTORY_ITEMS_BY_ID || function (i) { return '/v1/inventory/items/' + i; })(id)).then(function(d){ alert('物品：'+d.name+'\n编号：'+(d.sku||'—')+'\n分类：'+(d.category||'—')+'\n数量：'+(d.quantity||0)+' '+(d.unit||'')+'\n状态：'+(d.status||'—')); }).catch(function(){ T('❌ 加载失败','error'); }); }
 
   function _openForm(d){
     d = d||{};
@@ -2400,6 +2419,7 @@ window.__invApi = (function(){
       + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">单价(元)</label><input id="__inv_price" type="number" step="0.01" class="form-control" value="'+(d.unitPrice!=null?d.unitPrice:'')+'"></div>'
       + '</div>'
       + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">存放位置</label><input id="__inv_loc" class="form-control" value="'+_esc(d.location||'')+'"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">图片URL（可经上方「资产图片上传」自动填充）</label><input id="__inv_imageUrl" class="form-control" value="'+_esc(d.imageUrl||window.__invLastImageUrl||'')+'"></div>'
       + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">备注</label><textarea id="__inv_remark" class="form-control" rows="2">'+_esc(d.remark||'')+'</textarea></div>'
       + '</div>'
       + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">'
@@ -2440,10 +2460,12 @@ window.__invApi = (function(){
     v = document.getElementById('__inv_safe').value; if(v!=='') body.safetyStock = Number(v);
     v = document.getElementById('__inv_price').value; if(v!=='') body.unitPrice = Number(v);
     v = document.getElementById('__inv_loc').value.trim(); if(v) body.location = v;
+    /* P1修复:上传URL随物品提交（对照 server/src/controllers/inventory.js createItem/updateItem 的 b.imageUrl） */
+    v = document.getElementById('__inv_imageUrl').value.trim(); if(v) body.imageUrl = v;
     v = document.getElementById('__inv_remark').value.trim(); if(v) body.remark = v;
     try{
-      if(id){ await API.patch('/v1/inventory/items/'+id, body); T('✅ 物品已更新','success'); }
-      else { await API.post('/v1/inventory/items', body); T('✅ 物品已入库','success'); }
+      if(id){ await API.patch((QAXQJT_PATHS.INVENTORY_ITEMS_BY_ID || function (i) { return '/v1/inventory/items/' + i; })(id), body); T('✅ 物品已更新','success'); }
+      else { await API.post((QAXQJT_PATHS.INVENTORY_ITEMS || '/v1/inventory/items'), body); T('✅ 物品已入库','success'); }
       document.getElementById('__invModal').remove();
       await load();
     }catch(e){ T('❌ 保存失败：'+(e.message||e),'error'); }
@@ -2451,7 +2473,7 @@ window.__invApi = (function(){
 
   async function remove(id){
     if(!confirm('确认删除该物品？此操作不可撤销！')) return;
-    try{ await API.del('/v1/inventory/items/'+id); T('🗑 已删除','success'); await load(); }
+    try{ await API.del((QAXQJT_PATHS.INVENTORY_ITEMS_BY_ID || function (i) { return '/v1/inventory/items/' + i; })(id)); T('🗑 已删除','success'); await load(); }
     catch(e){ T('❌ 删除失败：'+(e.message||e),'error'); }
   }
 
@@ -2483,25 +2505,25 @@ window.__invApi = (function(){
     var borrower = document.getElementById('__br_borrower').value.trim();
     if(!borrower){ T('⚠️ 借用人必填','error'); return; }
     try{
-      await API.post('/v1/inventory/records', { itemId:id, opType:'borrow', quantity:Number(document.getElementById('__br_qty').value)||1, borrower:borrower, expectedReturnDate:document.getElementById('__br_return').value||'', usage:document.getElementById('__br_purpose').value.trim()||'' });
+      await API.post((QAXQJT_PATHS.INVENTORY_RECORDS || '/v1/inventory/records'), { itemId:id, opType:'borrow', quantity:Number(document.getElementById('__br_qty').value)||1, borrower:borrower, expectedReturnDate:document.getElementById('__br_return').value||'', usage:document.getElementById('__br_purpose').value.trim()||'' });
       T('✅ 借用登记成功','success'); document.getElementById('__invBorrowModal').remove(); await load();
     }catch(e){ T('❌ 借用失败：'+(e.message||e),'error'); }
   }
 
   async function doReturn(id){
     if(!confirm('确认归还该物品？')) return;
-    try{ await API.post('/v1/inventory/records', { itemId:id, opType:'return', quantity:1 }); T('✅ 归还成功','success'); await load(); }
+    try{ await API.post((QAXQJT_PATHS.INVENTORY_RECORDS || '/v1/inventory/records'), { itemId:id, opType:'return', quantity:1 }); T('✅ 归还成功','success'); await load(); }
     catch(e){ T('❌ 归还失败：'+(e.message||e),'error'); }
   }
 
   async function doRepair(id){
-    try{ await API.patch('/v1/inventory/items/'+id, { status:'repair' }); T('🔧 已标记维修中','success'); await load(); }
+    try{ await API.patch((QAXQJT_PATHS.INVENTORY_ITEMS_BY_ID || function (i) { return '/v1/inventory/items/' + i; })(id), { status:'repair' }); T('🔧 已标记维修中','success'); await load(); }
     catch(e){ T('❌ 操作失败：'+(e.message||e),'error'); }
   }
 
   async function doScrap(id){
     if(!confirm('确认报废该物品？')) return;
-    try{ await API.patch('/v1/inventory/items/'+id, { status:'scrapped' }); T('♻️ 已报废','success'); await load(); }
+    try{ await API.patch((QAXQJT_PATHS.INVENTORY_ITEMS_BY_ID || function (i) { return '/v1/inventory/items/' + i; })(id), { status:'scrapped' }); T('♻️ 已报废','success'); await load(); }
     catch(e){ T('❌ 操作失败：'+(e.message||e),'error'); }
   }
 
@@ -2533,7 +2555,7 @@ window.__invApi = (function(){
     if(!confirm('确认将选中的 '+ids.length+' 件物品批量「'+label+'」？')) return;
     var ok = 0, fail = 0;
     for(var i=0;i<ids.length;i++){
-      try{ await API.patch('/v1/inventory/items/'+ids[i], { status: status }); ok++; }
+      try{ await API.patch((QAXQJT_PATHS.INVENTORY_ITEMS_BY_ID || function (i) { return '/v1/inventory/items/' + i; })(ids[i]), { status: status }); ok++; }
       catch(e){ fail++; console.warn('[inv.batch] '+ids[i], e); }
     }
     T('✅ 批量'+label+'完成：成功 '+ok+' 件'+(fail?'/失败 '+fail+' 件':''), fail?'error':'success', 4000);
@@ -2663,7 +2685,7 @@ window.__invApi = (function(){
     var ok = 0, fail = 0;
     for(var i=0;i<changed.length;i++){
       try{
-        await API.patch('/v1/inventory/items/'+changed[i].id, {
+        await API.patch((QAXQJT_PATHS.INVENTORY_ITEMS_BY_ID || function (i) { return '/v1/inventory/items/' + i; })(changed[i].id), {
           quantity: changed[i].qty,
           adjustReason: '库存盘点调整（'+date+'）：'+(changed[i].qty>0?'盘盈':'盘亏'),
           lastCheckDate: date
@@ -2711,7 +2733,7 @@ window.__invApi = (function(){
       if(!(qty>0)){ T('⚠️ 补货数量必须大于 0','error'); return; }
       var reason = document.getElementById('__rs_reason').value.trim() || '库存补货';
       try{
-        await API.patch('/v1/inventory/items/'+id, {
+        await API.patch((QAXQJT_PATHS.INVENTORY_ITEMS_BY_ID || function (i) { return '/v1/inventory/items/' + i; })(id), {
           quantity: cur + qty,
           adjustReason: reason
         });
@@ -2729,6 +2751,6 @@ window.__invApi = (function(){
 })();
 </script>
 
-<script src="../js/admin-inventory-real.js?v=20260929"></script>
+<script src="../js/admin-inventory-real.js?v=20261004a"></script>
 </body>
 </html>

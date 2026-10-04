@@ -701,6 +701,9 @@
           <div class="tab-item" data-tab="customers">
             👥 客户档案
           </div>
+          <div class="tab-item" data-tab="appointments">
+            🗓️ 预约管理
+          </div>
         </div>
 
         <div class="tab-content active" id="tab-orders">
@@ -761,11 +764,7 @@
                       <div>
                         <label style="display:block;font-weight:700;color:#1e3a8a;margin-bottom:6px;">关联订单编号</label>
                         <select name="attachOrderId" style="width:100%;padding:10px 14px;border:1.5px solid #3b82f6;border-radius:10px;background:#fff;">
-                          <option value="">请选择要补充附件的订单</option>
-                          <option>APPT-{year}0208-000128</option><option>APPT-{year}0305-000130</option><option>APPT-{year}0418-000137</option>
-                          <option>APPT-{year}0520-000143</option><option>APPT-{year}0608-000149</option><option>APPT-{year}0715-000153</option>
-                          <option>APPT-{year}0822-000160</option><option>APPT-{year}0903-000167</option><option>APPT-{year}1001-000173</option>
-                          <option>APPT-{year}1111-000181</option><option>APPT-{year}1225-000188</option>
+                          <option value="">加载真实订单中…</option>
                         </select>
                       </div>
                       <div>
@@ -811,19 +810,12 @@
                       <th>操作</th>
                     </tr>
                   </thead>
-                  <tbody id="ordersMainTbody" data-paginate="list" data-paginate-keep="1" data-page-size="10"><tr><td colspan="13" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实订单数据…</td></tr></tbody>
+                  <tbody id="ordersMainTbody"><tr><td colspan="13" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实订单数据…</td></tr></tbody>
                 </table>
               </div>
 
-              <div class="pagination">
-                <button class="page-btn" disabled>« 上一页</button>
-                <button class="page-btn active">1</button>
-                <button class="page-btn">2</button>
-                <button class="page-btn">3</button>
-                <button class="page-btn">4</button>
-                <span class="page-info">共 128 条 / 13 页</span>
-                <button class="page-btn">下一页 »</button>
-              </div>
+              <!-- v20261004 P2-4：服务端分页（meta 驱动），替换原写死「共 128 条 / 13 页」的假分页条 -->
+              <div class="pagination" id="ordersPager"><span class="page-info">加载中…</span></div>
             </div>
           </div>
         </div>
@@ -833,6 +825,7 @@
             <div class="admin-card-header">
               <h3>👥 客户档案管理</h3>
               <div style="display:flex;gap:15px;align-items:center;">
+                <button class="btn btn-primary btn-sm" id="custAddBtn" type="button">➕ 新增客户</button>
                 <div class="view-toggle">
                   <button class="active" id="viewCardBtn" data-real-bound="1">🗂️ 卡片</button>
                   <button id="viewTableBtn" data-real-bound="1">📊 表格</button>
@@ -896,7 +889,72 @@
                   </table>
                 </div>
               </div>
+
+              <!-- v20261004 P2-4：客户列表服务端分页（meta 驱动） -->
+              <div class="pagination" id="customersPager"><span class="page-info">加载中…</span></div>
 </div>
+          </div>
+        </div>
+
+        <!-- v20261004 P2-1：预约管理 tab（接通 GET /v1/appointments 列表 + POST /v1/appointments/:id/transition 状态流转） -->
+        <div class="tab-content" id="tab-appointments">
+          <div class="admin-card">
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group">
+                  <label>搜索预约</label>
+                  <input type="text" class="form-control" id="apptFilterKeyword" placeholder="预约编号/客户名称/电话">
+                </div>
+                <div class="form-group">
+                  <label>预约状态</label>
+                  <select class="form-control" id="apptFilterStatus">
+                    <option value="">全部状态</option>
+                    <option value="pending">待确认</option>
+                    <option value="confirmed">已确认</option>
+                    <option value="rejected">已驳回</option>
+                    <option value="cancelled">已取消</option>
+                    <option value="converted">已转订单</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>套餐类型</label>
+                  <select class="form-control" id="apptFilterType">
+                    <option value="">全部类型</option>
+                    <option value="temple_fair">庙会包场</option>
+                    <option value="cultural_tourism">文旅演出</option>
+                    <option value="campus_tour">校园巡演</option>
+                    <option value="custom">定制场次</option>
+                  </select>
+                </div>
+                <div class="form-group" style="display:flex;gap:8px;align-items:flex-end;">
+                  <button class="btn btn-primary btn-sm" id="apptFilterApplyBtn" type="button">🔍 查询</button>
+                  <button class="btn btn-secondary btn-sm" id="apptFilterResetBtn" type="button">↺ 重置</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>预约编号</th>
+                      <th>客户名称</th>
+                      <th>联系电话</th>
+                      <th>套餐类型</th>
+                      <th>期望开始</th>
+                      <th>场次</th>
+                      <th>预算/报价</th>
+                      <th>状态</th>
+                      <th>提交时间</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="apptsMainTbody"><tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实预约数据…</td></tr></tbody>
+                </table>
+              </div>
+
+              <!-- v20261004 P2-4：预约列表服务端分页（meta 驱动） -->
+              <div class="pagination" id="apptsPager"><span class="page-info">加载中…</span></div>
+            </div>
           </div>
         </div>
       </main>
@@ -905,6 +963,7 @@
 
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
+    <script>/* P3修复: 全局 PATHS 常量（带回退） */ window.QAXQJT_PATHS = (window.QAXQJT_API_CONFIG && window.QAXQJT_API_CONFIG.PATHS) || {};</script>
   <script src="../js/api-request.js?v=20260803"></script>
 <script src="../js/app.js?v=20260930a"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
@@ -1107,39 +1166,13 @@
   </script>
 
   <div class="modal-overlay csp-hide" id="orderDetailOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
-  <div class="modal csp-hide" id="orderDetailModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:90%;max-width:680px;z-index:9999;padding:0;overflow:hidden;">
-    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,var(--primary),#1e5ba8);color:#fff;">
-      <h3 style="margin:0;font-size:1.1rem;font-weight:600;">📋 订单详情</h3>
+  <div class="modal csp-hide" id="orderDetailModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:760px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,var(--primary),#1e5ba8);color:#fff;position:sticky;top:0;">
+      <h3 id="orderDetailTitle" style="margin:0;font-size:1.1rem;font-weight:600;">📋 订单详情</h3>
       <button id="orderDetailClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
     </div>
-    <div style="padding:28px 28px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 28px;">
-        <div>
-          <div style="font-size:0.82rem;color:var(--text-light);margin-bottom:6px;">订单编号</div>
-          <div id="modalOrderNo" style="font-size:1rem;font-weight:600;color:var(--primary-dark);">—</div>
-        </div>
-        <div>
-          <div style="font-size:0.82rem;color:var(--text-light);margin-bottom:6px;">订单状态</div>
-          <div id="modalStatus" style="font-size:1rem;font-weight:600;">—</div>
-        </div>
-        <div>
-          <div style="font-size:0.82rem;color:var(--text-light);margin-bottom:6px;">客户名称</div>
-          <div id="modalCustomer" style="font-size:1rem;">—</div>
-        </div>
-        <div>
-          <div style="font-size:0.82rem;color:var(--text-light);margin-bottom:6px;">联系电话</div>
-          <div id="modalPhone" style="font-size:1rem;">—</div>
-        </div>
-        <div>
-          <div style="font-size:0.82rem;color:var(--text-light);margin-bottom:6px;">订单金额</div>
-          <div id="modalAmount" style="font-size:1.2rem;font-weight:700;color:#c0923a;">—</div>
-        </div>
-        <div>
-          <div style="font-size:0.82rem;color:var(--text-light);margin-bottom:6px;">创建时间</div>
-          <div id="modalDate" style="font-size:1rem;">—</div>
-        </div>
-      </div>
-    </div>
+    <!-- v20261004 P2-2：详情内容全部由 viewDetail() 用 GET /v1/orders/:id 真实数据渲染（items/payments/refunds/schedules/customer/appointment + contractUrl） -->
+    <div id="orderDetailBody" style="padding:22px 26px;"><div style="text-align:center;padding:30px;color:#94a3b8;">正在加载订单详情…</div></div>
     <div style="padding:16px 28px;border-top:1.5px solid var(--border-light);display:flex;justify-content:flex-end;gap:12px;background:var(--bg-light);">
       <button id="orderDetailCancel" type="button" class="btn btn-secondary">关闭</button>
     </div>
@@ -1308,6 +1341,68 @@
     </div>
   </div>
 
+  <!-- v20261004 P2-3：客户新增/编辑弹窗（POST /v1/customers、PATCH /v1/customers/:id） -->
+  <div class="modal-overlay csp-hide" id="custEditOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="custEditModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:92%;max-width:560px;z-index:9999;padding:0;overflow:hidden;max-height:90vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff;">
+      <h3 id="custEditTitle" style="margin:0;font-size:1.1rem;font-weight:600;">➕ 新增客户</h3>
+      <button id="custEditClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+    </div>
+    <form id="custEditForm" style="padding:22px 26px;display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;">
+      <input type="hidden" id="custEditId">
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">客户名称 *</label>
+        <input type="text" id="custEditName" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">联系电话 *</label>
+        <input type="text" id="custEditPhone" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">客户类型</label>
+        <select id="custEditType" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+          <option value="personal">个人</option>
+          <option value="organization">单位/组织</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">客户等级</label>
+        <select id="custEditLevel" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+          <option value="">未评级</option>
+          <option value="VIP">VIP</option>
+          <option value="A">A 级</option>
+          <option value="B">B 级</option>
+          <option value="C">C 级</option>
+        </select>
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">单位/组织</label>
+        <input type="text" id="custEditOrganization" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">备注</label>
+        <textarea id="custEditRemark" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
+      </div>
+      <div style="grid-column:1 / span 2;display:flex;justify-content:flex-end;gap:12px;">
+        <button type="button" id="custEditCancel" class="btn btn-secondary">取消</button>
+        <button type="submit" class="btn btn-primary" style="background:#0d9488;color:#fff;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:0.9rem;">💾 保存</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- v20261004 P2-3：客户详情弹窗（GET /v1/customers/:id，含近期订单/预约） -->
+  <div class="modal-overlay csp-hide" id="custDetailOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="custDetailModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:720px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff;">
+      <h3 id="custDetailTitle" style="margin:0;font-size:1.1rem;font-weight:600;">👤 客户详情</h3>
+      <button id="custDetailClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+    </div>
+    <div id="custDetailBody" style="padding:22px 26px;"><div style="text-align:center;padding:30px;color:#94a3b8;">正在加载客户详情…</div></div>
+    <div style="padding:16px 28px;border-top:1.5px solid var(--border-light);display:flex;justify-content:flex-end;gap:12px;background:var(--bg-light);">
+      <button id="custDetailCancel" type="button" class="btn btn-secondary">关闭</button>
+    </div>
+  </div>
+
   <script>
   (function(){
     // 订单派工模块：行当口径（20261003 修订）6 大行 + 角子 + 后勤 + 武场/文场，与 cast-sheet / 花名册一致
@@ -1448,7 +1543,7 @@
     }
     _renderDispatch();
     if (window.QAXQJT_API) {
-      QAXQJT_API.get('/v1/performers', { query:{ pageSize:500 } }).then(function(d){
+      QAXQJT_API.get((QAXQJT_PATHS.PERFORMERS || '/v1/performers'), { query:{ pageSize:500 } }).then(function(d){
         var items = Array.isArray(d) ? d : ((d && d.items) || []);
         var seen = {};
         items.forEach(function(p){
@@ -1897,94 +1992,109 @@ var __pT0=0;
       if(isSave){
     __pEvt.branch='save';
     var __pLk = __L(doneKey,900);
-    if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-    __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 保存成功','success');
-        try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
+    if(!__pLk) { try { e.stopPropagation(); } catch(_a){} return; }
+    __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk}));
+        /* P1修复:假成功已移除 — 未接线保存按钮统一提示未接入，保留 preventDefault 防原生提交 */
+        try { e.preventDefault(); } catch(_pa){}
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isEdit){
         if(!__L(doneKey,700)) return;
         __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
-        __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info');
+        /* P1修复:假成功已移除 */
+        try { e.preventDefault(); } catch(_pe){}
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isDel){
-        if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-        if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
-        try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
+        if(!__L(doneKey,850)) { try { e.stopPropagation(); } catch(_a){} return; }
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
+        /* P1修复:假成功已移除 — 不再伪造 confirm+移除DOM行，仅提示未接入 */
+        try { e.preventDefault(); } catch(_pd){}
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
         if(!__L(doneKey,500)) return;
         __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
-        __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info');
+        /* P1修复:假成功已移除 */
+        try { e.preventDefault(); } catch(_pv){}
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isVerify){
-        if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
+        if(!__L(doneKey,900)) return;
         __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
-        __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success');
+        /* P1修复:假成功已移除 */
+        try { e.preventDefault(); } catch(_py){}
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isExport){
-        if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
+        if(!__L(doneKey,1200)) return;
         __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
-        __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success');
+        /* P1修复:假成功已移除 */
+        try { e.preventDefault(); } catch(_px){}
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 准备新增「'+txt+'」','info');
+        /* P1修复:假成功已移除 */
+        try { e.preventDefault(); } catch(_pn){}
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
       var isAudit = txt.indexOf('审核')>=0 || txt.indexOf('审批')>=0 || txt.indexOf('驳回')>=0 || txt.indexOf('通过')>=0;
       if(isAudit){
-        if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
-        if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
-        __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
+        if(!__L(doneKey,850)){ try{e.stopPropagation();}catch(_a){} return; }
+        __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit'}));
+        /* P1修复:假成功已移除 — 不再伪造审核结果 */
+        try { e.preventDefault(); } catch(_au){}
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
       var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
       if(isSign){
-        if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
+        if(!__L(doneKey,900)){ try{e.stopPropagation();}catch(_a){} return; }
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
+        /* P1修复:假成功已移除 — 不再伪造签约结果 */
+        try { e.preventDefault(); } catch(_sg){}
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
       var isContract = txt.indexOf('合同')>=0 && !isSign;
       if(isContract){
-        if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
+        if(!__L(doneKey,1000)) return;
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪','info');
+        /* P1修复:假成功已移除 */
+        try { e.preventDefault(); } catch(_ct){}
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
       var isScheduleBtn = txt.indexOf('排期')>=0 || txt.indexOf('排班')>=0 || (txt.indexOf('安排')>=0 && (txt.length<=8 || txt.indexOf('档期')>=0));
       if(isScheduleBtn){
-        if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
+        if(!__L(doneKey,800)) return;
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
+        /* P1修复:假成功已移除 */
+        try { e.preventDefault(); } catch(_sc){}
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
       var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
       if(isCancelOrHandle && !isDel && !isSave){
-        if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if((txt.indexOf('取消')>=0) && !confirm('确认取消：'+(trKey||'当前记录')+'？')) return;
-        var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
-        var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
-        __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
+        /* P1修复:假成功已移除 — 「取消」交由 SuperPatch3 真实关弹窗通道处理，其余提示未接入 */
+        if(txt.indexOf('取消')>=0) return;
+        if(!__L(doneKey,800)){ try{e.stopPropagation();}catch(_a){} return; }
+        try { e.preventDefault(); } catch(_cc){}
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -2110,6 +2220,8 @@ function __pLog(module,event,extra){
       try{
         var form = e.target;
         if(!form||form.tagName!=='FORM') return;
+        /* P1修复:已绑定真实提交处理的表单放行（如订单附件上传表单），不拦截 */
+        if(form.__realSubmitBound) return;
         e.preventDefault();
         e.stopPropagation();
         var fields = form.querySelectorAll('input,select,textarea');
@@ -2166,10 +2278,8 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 提交成功','success');
-        setTimeout(function(){
-          try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
-        }, 380);
+        /* P1修复:假成功已移除 — 必填校验通过但表单未接入真实提交，仅提示未接入，不再伪造「提交成功」/自动关弹窗 */
+        __toastH9('该功能暂未接入后端','warning');
         return false;
       }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
     }, true);
@@ -2602,10 +2712,107 @@ function __pLog(module,event,extra){
         }, true);
       }
     }
-    __bindBtn('openOrdersUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（订单附件）","info"); }; inp.click(); });
+    /* P1修复:假上传已接通 — 头部「选择附件」按钮直接打开下方附件表单的真实文件选择框（不再伪造已选择提示） */
+    __bindBtn('openOrdersUploadBtn', function(){
+      var inp = document.getElementById('ordersAttachFiles');
+      if (inp) { inp.click(); } else { __T('未找到附件上传控件','error'); }
+    });
     __bindBtn('spNewOrderBtn', function(){ try { window.__ordersApi && window.__ordersApi.openCreateModal && window.__ordersApi.openCreateModal(); } catch(e){ __T('⚠️ 新增订单失败：'+(e&&e.message?e.message:e),'error'); } });
     __bindBtn('spExportOrdersBtn', function(){ try { window.__ordersApi && window.__ordersApi.exportCsv && window.__ordersApi.exportCsv(); } catch(e){ __T('⚠️ 导出失败：'+(e&&e.message?e.message:e),'error'); } });
   }catch(_e){ console.warn("[upload-bind err]",_e); }
+
+  /* P1修复:假成功已移除 — 订单附件上传接通真实接口：POST /v1/upload(/multi) → PATCH /v1/orders/:id { contractUrl }
+     字段对齐：server/src/controllers/orders.js create(L447)/update 允许列表(L528) 均为 contractUrl */
+  try{
+    var __attachForm = document.getElementById('ordersAttachForm');
+    var __attachFile = document.getElementById('ordersAttachFiles');
+    var __attachOrderSel = __attachForm ? __attachForm.querySelector('select[name="attachOrderId"]') : null;
+    if (__attachForm && !__attachForm.__attachWired) {
+      __attachForm.__attachWired = 1;
+      __attachForm.__realSubmitBound = 1; /* 让 SuperPatch 1/6 submit 拦截放行 */
+      var _esc = function(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+      // 用真实订单填充「关联订单编号」下拉（替换静态演示项）
+      (function __fillAttachOrders(){
+        var rows = (window.__ordersApi && window.__ordersApi.state && window.__ordersApi.state.loaded && Array.isArray(window.__ordersApi.state.list)) ? window.__ordersApi.state.list : null;
+        var build = function(list){
+          if (!__attachOrderSel || !list || !list.length) return;
+          var keep = __attachOrderSel.value;
+          var html = '<option value="">请选择要补充附件的订单</option>';
+          for (var i=0;i<list.length;i++){
+            var o = list[i];
+            if (!o || o.status === 'deleted') continue;
+            html += '<option value="'+_esc(o.id||'')+'">'+_esc((o.orderNo||o.id||'')+' · '+(o.customerName||''))+'</option>';
+          }
+          __attachOrderSel.innerHTML = html;
+          if (keep) { try { __attachOrderSel.value = keep; } catch(_k){} }
+        };
+        if (rows) { build(rows); return; }
+        if (window.QAXQJT_API) {
+          QAXQJT_API.get((QAXQJT_PATHS.ORDERS || '/v1/orders'), { query:{ page:1, pageSize:200 }, showErrorToast:false })
+            .then(function(resp){
+              var list = [];
+              if (Array.isArray(resp)) list = resp;
+              else if (resp && Array.isArray(resp.data)) list = resp.data;
+              else if (resp && Array.isArray(resp.items)) list = resp.items;
+              else if (resp && resp.data && Array.isArray(resp.data.items)) list = resp.data.items;
+              build(list);
+            })
+            .catch(function(e){ console.warn('[P1] 附件订单下拉填充失败:', e); });
+        }
+      })();
+      var __attachSubmitting = false;
+      var __ordersAttachSubmit = async function(){
+        if (__attachSubmitting) return;
+        var files = __attachFile && __attachFile.files ? __attachFile.files : [];
+        var orderId = __attachOrderSel ? (__attachOrderSel.value||'').trim() : '';
+        if (!orderId) { __toastH9('请先选择要补充附件的订单','warning'); return; }
+        if (!files.length) { __toastH9('请先选择要上传的附件文件','warning'); return; }
+        __attachSubmitting = true;
+        try {
+          var urls = [];
+          if (files.length === 1) {
+            var fd = new FormData(); fd.append('file', files[0]);
+            var one = await QAXQJT_API.post((QAXQJT_PATHS.UPLOAD || '/v1/upload'), fd);
+            urls.push(one && one.url);
+          } else {
+            var fdm = new FormData();
+            for (var fi=0; fi<files.length; fi++) fdm.append('files', files[fi]);
+            var multi = await QAXQJT_API.post((QAXQJT_PATHS.UPLOAD_MULTI || '/v1/upload/multi'), fdm);
+            var mfiles = (multi && multi.files) || [];
+            for (var mi=0; mi<mfiles.length; mi++) urls.push(mfiles[mi] && mfiles[mi].url);
+            if (multi && multi.failed && multi.failed.length) {
+              __toastH9('有 '+multi.failed.length+' 个文件上传失败：'+(multi.failed[0] && multi.failed[0].name || ''), 'warning');
+            }
+          }
+          urls = urls.filter(function(u){ return !!u; });
+          if (!urls.length) throw new Error('上传失败：未获得文件地址');
+          await QAXQJT_API.patch((QAXQJT_PATHS.ORDERS_BY_ID || function (i) { return '/v1/orders/' + i; })(encodeURIComponent(orderId)), { contractUrl: urls.join(',') });
+          __toastH9('✅ 已上传 '+urls.length+' 个附件并写入订单（contractUrl）', 'success');
+          try { __attachFile.value = ''; } catch(_cv){}
+        } catch (err) {
+          console.warn('[P1] 附件上传失败:', err);
+          __toastH9('附件上传失败：' + (err && err.message ? err.message : err), 'error');
+        } finally {
+          __attachSubmitting = false;
+        }
+      };
+      // 提交按钮：fixRefreshBug 会把 type=submit 改为 type=button，故直接绑 capture click（双保险再绑 form submit）
+      var __attachBtn = __attachForm.querySelector('button[type="submit"]') || __attachForm.querySelector('button.btn-primary');
+      if (__attachBtn && !__attachBtn.__attachWired) {
+        __attachBtn.__attachWired = 1;
+        try { __attachBtn.setAttribute('data-real-bound','1'); } catch(_ab){}
+        __attachBtn.__superPatchBound = 1; __attachBtn.__ts3Done = 1; __attachBtn.__bindDone = 1; __attachBtn.__ctE2Done = 1; __attachBtn.__deadBtnChecked = 1;
+        __attachBtn.addEventListener('click', function(ev){
+          ev.preventDefault(); ev.stopImmediatePropagation(); ev.stopPropagation();
+          __ordersAttachSubmit();
+        }, true);
+      }
+      __attachForm.addEventListener('submit', function(ev){
+        ev.preventDefault(); ev.stopImmediatePropagation(); ev.stopPropagation();
+        __ordersAttachSubmit();
+      }, true);
+    }
+  }catch(_aw){ console.warn('[attach-wire err]',_aw); }
 
 try{
     console.info('[SuperPatch 6/6] 死按钮兜底 + toast通道 初始化...');
@@ -2634,6 +2841,8 @@ try{
         if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
         if(_hasAction(btn)) return;
         if(btn.__superPatchBound) return;
+        /* P1修复:DBF 兜底已处理过（__ctE2Done）的按钮跳过，避免重复弹提示 */
+        if(btn.__ctE2Done) return;
         btn.__superPatchBound = 1;
         var txt = (btn.textContent||'').trim();
         var tt = 'other';
@@ -2655,34 +2864,40 @@ try{
         __spT0 = Date.now();
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功','success');
-          setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
+          /* P1修复:假成功已移除 — 不再伪造「操作成功」/自动关弹窗 */
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='delete'){
-          if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
-            __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
-          }else{ __toastH9('↩️ 已取消操作','info'); }
+          __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey});
+          /* P1修复:假成功已移除 — 不再伪造删除/取消结果 */
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
+          /* P1修复:假成功已移除 */
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印','info');
+          /* P1修复:假成功已移除 */
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
+          /* P1修复:假成功已移除 */
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
+          /* P1修复:假成功已移除 */
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪','info');
+          /* P1修复:假成功已移除 */
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增','info');
+          /* P1修复:假成功已移除 */
+          __toastH9('该功能暂未接入后端','warning');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
+          /* P1修复:假成功已移除 */
+          __toastH9('该功能暂未接入后端','warning');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -2840,10 +3055,115 @@ try{
   'use strict';
   if (window.__ordersApi) return;
   window.__ordersApi = {
-    state: { list: [], filter: { keyword: '', status: '', fromDate: '', toDate: '' }, loaded: false },
+    // v20261004 P2-4：page/pageSize/total 由服务端 meta 驱动（列表页服务端分页）
+    state: { list: [], filter: { keyword: '', status: '', fromDate: '', toDate: '' }, loaded: false, page: 1, pageSize: 10, total: 0, custPage: 1, custPageSize: 10, custTotal: 0, apptPage: 1, apptPageSize: 10, apptTotal: 0 },
 
     _toast: function(msg, type){ try { if (typeof __T === 'function') return __T(msg, type||'info'); } catch(_){} try { console.log('[ordersApi]', type, msg); } catch(_){} },
     _escape: function(s){ if (s === null || s === undefined) return ''; return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); },
+
+    // v20261004 P2-4：query 对象 → querystring（与 api-request._qs 同规则）
+    _qs: function(obj){
+      if (!obj) return '';
+      var parts = [];
+      Object.keys(obj).forEach(function(k){
+        var v = obj[k];
+        if (v === undefined || v === null || v === '') return;
+        parts.push(encodeURIComponent(k) + '=' + encodeURIComponent(String(v)));
+      });
+      return parts.length ? '?' + parts.join('&') : '';
+    },
+    // v20261004 P2-4：信封级 GET（QAXQJT_API.get 只回 data 会丢 meta，分页需要 total，改走原始 fetch；
+    // 实现与 admin/accounts.html __auditFetchEnvelope 同款）
+    _envFetch: async function(path){
+      var CFG = window.QAXQJT_API_CONFIG || {};
+      var url = (CFG.resolveUrl ? CFG.resolveUrl(path) : path);
+      var headers = { 'Accept': 'application/json' };
+      var t = CFG.getAccessToken && CFG.getAccessToken();
+      if (t) headers['Authorization'] = 'Bearer ' + t;
+      var res = await fetch(url, { headers: headers, credentials: (CFG.BASE ? 'include' : 'same-origin') });
+      var j = null;
+      try { j = await res.json(); } catch(_pj){ j = null; }
+      if (!res.ok || (j && j.ok === false)) throw new Error((j && j.error && j.error.message) || ('HTTP ' + res.status));
+      return j || {};
+    },
+    _fmtMoney: function(n){ try { return Number(n||0).toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); } catch(_) { return String(n||0); } },
+    _fmtDateTime: function(d){
+      if (!d) return '—';
+      try {
+        var dt = new Date(d); if (isNaN(dt.getTime())) return String(d).slice(0,16).replace('T',' ');
+        var p = function(x){ return x < 10 ? '0'+x : ''+x; };
+        return dt.getFullYear()+'-'+p(dt.getMonth()+1)+'-'+p(dt.getDate())+' '+p(dt.getHours())+':'+p(dt.getMinutes());
+      } catch(_) { return '—'; }
+    },
+
+    // v20261004 P2-4：通用 meta 分页条（prev/页码/next/信息/每页条数），容器 id + 翻页回调
+    _renderPager: function(boxId, page, pageSize, total, cbs){
+      var box = document.getElementById(boxId);
+      if (!box) return;
+      box.innerHTML = '';
+      var pageCount = Math.max(1, Math.ceil((Number(total)||0) / (pageSize||10)));
+      function mkBtn(label, attrs, dis){
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'page-btn'; b.innerHTML = label;
+        for (var k in attrs) b.setAttribute(k, attrs[k]);
+        if (dis) b.disabled = true;
+        b.__superPatchBound = 1; b.__deadBtnChecked = 1;
+        box.appendChild(b);
+        return b;
+      }
+      mkBtn('« 上一页', { 'data-pg': String(Math.max(1, page-1)) }, page <= 1);
+      var nums = [];
+      if (pageCount <= 7) { for (var i=1; i<=pageCount; i++) nums.push(i); }
+      else {
+        nums.push(1);
+        var s = Math.max(2, page-2), e = Math.min(pageCount-1, page+2);
+        if (s > 2) nums.push('...');
+        for (var jj=s; jj<=e; jj++) nums.push(jj);
+        if (e < pageCount-1) nums.push('...');
+        nums.push(pageCount);
+      }
+      nums.forEach(function(p){
+        if (p === '...') {
+          var sp = document.createElement('span');
+          sp.className = 'page-btn'; sp.style.border = 'none'; sp.style.background = 'transparent'; sp.style.cursor = 'default';
+          sp.textContent = '…'; sp.__superPatchBound = 1; sp.__deadBtnChecked = 1;
+          box.appendChild(sp);
+        } else {
+          var b = mkBtn(String(p), { 'data-pg': String(p) }, false);
+          if (p === page) b.classList.add('active');
+        }
+      });
+      mkBtn('下一页 »', { 'data-pg': String(Math.min(pageCount, page+1)) }, page >= pageCount);
+      var info = document.createElement('span');
+      info.className = 'page-info';
+      info.textContent = total > 0 ? ('共 ' + total + ' 条 · 第 ' + page + '/' + pageCount + ' 页') : '暂无数据';
+      box.appendChild(info);
+      var sel = document.createElement('select');
+      sel.className = 'page-btn'; sel.setAttribute('data-ps', '1');
+      sel.style.padding = '4px 8px'; sel.style.marginLeft = '8px';
+      [10, 20, 50].forEach(function(n){
+        var o = document.createElement('option');
+        o.value = String(n); o.textContent = n + ' 条/页';
+        if (n === pageSize) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.__superPatchBound = 1; sel.__deadBtnChecked = 1;
+      box.appendChild(sel);
+      sel.addEventListener('change', function(){
+        if (cbs && typeof cbs.onSize === 'function') cbs.onSize(parseInt(sel.value, 10) || 10);
+      });
+      if (!box.__pgDelegBound) {
+        box.__pgDelegBound = 1;
+        box.addEventListener('click', function(ev){
+          var b = ev.target.closest ? ev.target.closest('button[data-pg]') : null;
+          if (!b || b.disabled) return;
+          ev.preventDefault(); ev.stopPropagation();
+          var cbsNow = box.__pgCbs || cbs;
+          if (cbsNow && typeof cbsNow.onPage === 'function') cbsNow.onPage(parseInt(b.getAttribute('data-pg'), 10) || 1);
+        });
+      }
+      box.__pgCbs = cbs;
+    },
 
     _findTbody: function(){
       // 优先固定 id（HeightGuard 会在 t=0 剥离 data-paginate 属性，不能依赖它定位）
@@ -2869,6 +3189,7 @@ try{
         self.state.filter.orderType = el('ordFilterType') ? el('ordFilterType').value : '';
         self.state.filter.fromDate = el('ordFilterFrom') ? el('ordFilterFrom').value : '';
         self.state.filter.toDate = el('ordFilterTo') ? el('ordFilterTo').value : '';
+        self.state.page = 1; // v20261004 P2-4：新筛选回到第 1 页
         self.load();
       };
       var b = el('ordFilterApplyBtn');
@@ -2908,6 +3229,7 @@ try{
           customerType: el('custFilterType') ? el('custFilterType').value : '',
           level: el('custFilterLevel') ? el('custFilterLevel').value : ''
         };
+        self.state.custPage = 1; // v20261004 P2-4：新筛选回到第 1 页
         self.loadCustomers();
       };
       var b = el('custFilterApplyBtn');
@@ -2936,25 +3258,30 @@ try{
       if (cardsTbody) cardsTbody.innerHTML = loadingHtml;
       if (tableTbody) tableTbody.innerHTML = loadingTr;
       try {
-        var q = { page: 1, pageSize: 200 };
-        if (this.state.custFilter) {
-          if (this.state.custFilter.keyword) q.keyword = this.state.custFilter.keyword;
-          if (this.state.custFilter.customerType) q.customerType = this.state.custFilter.customerType;
-          if (this.state.custFilter.level) q.level = this.state.custFilter.level;
+        // v20261004 P2-3/4：服务端分页 + 搜索（keyword/customerType/level 直传 /v1/customers，meta 驱动翻页）
+        var st = this.state;
+        var q = { page: st.custPage || 1, pageSize: st.custPageSize || 10, status: 'active' };
+        if (st.custFilter) {
+          if (st.custFilter.keyword) q.keyword = st.custFilter.keyword;
+          if (st.custFilter.customerType) q.customerType = st.custFilter.customerType;
+          if (st.custFilter.level) q.level = st.custFilter.level;
         }
-        var resp = await QAXQJT_API.get('/v1/customers', { query: q });
-        var rows = [];
-        if (Array.isArray(resp)) rows = resp;
-        else if (resp && Array.isArray(resp.data)) rows = resp.data;
-        else if (resp && Array.isArray(resp.items)) rows = resp.items;
-        else if (resp && Array.isArray(resp.list)) rows = resp.list;
-        else if (resp && Array.isArray(resp.rows)) rows = resp.rows;
-        else if (resp && resp.data && Array.isArray(resp.data.items)) rows = resp.data.items;
-        // 过滤掉已删除
+        var self = this;
+        var env = await this._envFetch((QAXQJT_PATHS.CUSTOMERS || '/v1/customers') + this._qs(q));
+        var rows = Array.isArray(env.data) ? env.data : [];
+        var meta = env.meta || {};
+        st.custPage = meta.page || q.page;
+        st.custPageSize = meta.pageSize || q.pageSize;
+        st.custTotal = meta.total != null ? meta.total : rows.length;
+        // 双保险：仍过滤软删（正常情况下 status=active 已由服务端过滤）
         rows = rows.filter(function(c){ return c && c.status !== 'deleted'; });
         this.state.custList = rows;
         this._renderCustomerCards(rows, cardsTbody);
         this._renderCustomerTable(rows, tableTbody);
+        this._renderPager('customersPager', st.custPage, st.custPageSize, st.custTotal, {
+          onPage: function(p){ st.custPage = p; self.loadCustomers(); },
+          onSize: function(n){ st.custPageSize = n; st.custPage = 1; self.loadCustomers(); }
+        });
       } catch(e) {
         console.warn('[__ordersApi.loadCustomers] 失败', e);
         var errHtml = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#dc2626;">⚠️ 加载客户失败：' + (e && e.message ? e.message : e) + '</div>';
@@ -2962,6 +3289,142 @@ try{
         if (cardsTbody) cardsTbody.innerHTML = errHtml;
         if (tableTbody) tableTbody.innerHTML = errTr;
       }
+    },
+
+    // ====== v20261004 P2-3：客户 CRUD（对齐后端 customers.js：POST/PATCH/DELETE /v1/customers/:id）======
+    _role: function(){ try { return (JSON.parse(localStorage.getItem('qaxqjt_admin_session')) || {}).role || ''; } catch(_) { return ''; } },
+    _showModal: function(mId, oId){
+      var m = document.getElementById(mId), o = document.getElementById(oId);
+      if (!m || !o) return;
+      o.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); o.style.display = '';
+      m.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); m.style.display = '';
+      try { document.body.classList.add('body-modal-locked'); } catch(_){}
+    },
+    _hideModal: function(mId, oId){
+      var m = document.getElementById(mId), o = document.getElementById(oId);
+      try { if (m) m.classList.add('csp-hide'); } catch(_){}
+      try { if (o) o.classList.add('csp-hide'); } catch(_){}
+      try { document.body.classList.remove('body-modal-locked'); } catch(_){}
+    },
+    openCustomerModal: function(id){
+      var self = this;
+      var isEdit = !!id;
+      var src = null;
+      if (isEdit) {
+        var list = this.state.custList || [];
+        for (var i=0; i<list.length; i++) { if (String(list[i].id) === String(id)) { src = list[i]; break; } }
+        if (!src) { this._toast('⚠️ 未找到该客户，请刷新列表', 'warning'); return; }
+      }
+      try {
+        document.getElementById('custEditId').value = isEdit ? (src.id || '') : '';
+        document.getElementById('custEditName').value = isEdit ? (src.customerName || '') : '';
+        document.getElementById('custEditPhone').value = isEdit ? (src.phone || '') : '';
+        document.getElementById('custEditType').value = isEdit ? (src.customerType || 'personal') : 'personal';
+        document.getElementById('custEditLevel').value = isEdit ? (src.level || '') : '';
+        document.getElementById('custEditOrganization').value = isEdit ? (src.organization || '') : '';
+        document.getElementById('custEditRemark').value = isEdit ? (src.remark || '') : '';
+        document.getElementById('custEditTitle').textContent = isEdit ? '✏️ 编辑客户' : '➕ 新增客户';
+      } catch(_){}
+      this._showModal('custEditModal', 'custEditOverlay');
+    },
+    saveCustomer: async function(){
+      var id = '';
+      try { id = document.getElementById('custEditId').value; } catch(_){}
+      var body = {
+        customerName: (document.getElementById('custEditName').value || '').trim(),
+        phone: (document.getElementById('custEditPhone').value || '').trim(),
+        customerType: document.getElementById('custEditType').value || 'personal',
+        level: document.getElementById('custEditLevel').value || null,
+        organization: (document.getElementById('custEditOrganization').value || '').trim() || null,
+        remark: (document.getElementById('custEditRemark').value || '').trim() || null
+      };
+      if (!body.customerName || body.customerName.length < 2) { this._toast('⚠️ 请输入客户名称（≥2 字）', 'warning'); return; }
+      if (!body.phone || body.phone.length < 7) { this._toast('⚠️ 请输入有效联系电话（≥7 位）', 'warning'); return; }
+      try {
+        if (id) {
+          await QAXQJT_API.patch((QAXQJT_PATHS.CUSTOMERS_BY_ID || function (i) { return '/v1/customers/' + i; })(encodeURIComponent(id)), body);
+          this._toast('✅ 客户已更新', 'success');
+        } else {
+          await QAXQJT_API.post((QAXQJT_PATHS.CUSTOMERS || '/v1/customers'), body);
+          this._toast('✅ 客户已创建', 'success');
+        }
+        this._hideModal('custEditModal', 'custEditOverlay');
+        await this.loadCustomers();
+      } catch(e) {
+        this._toast('⚠️ 保存客户失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+    deleteCustomer: async function(id){
+      if (!id) return;
+      var c = null, list = this.state.custList || [];
+      for (var i=0; i<list.length; i++) { if (String(list[i].id) === String(id)) { c = list[i]; break; } }
+      var name = c ? (c.customerName || c.organization || id) : id;
+      if (!confirm('确认删除客户「' + name + '」？\n（有订单/预约记录时后端将做软删除）')) return;
+      try {
+        await QAXQJT_API.del((QAXQJT_PATHS.CUSTOMERS_BY_ID || function (i) { return '/v1/customers/' + i; })(encodeURIComponent(id)));
+        this._toast('✅ 客户已删除', 'success');
+        await this.loadCustomers();
+      } catch(e) {
+        // super_admin 以外角色后端 403：提示前往账号权限
+        this._toast('⚠️ 删除失败：' + (e && e.message ? e.message : e) + '（仅超级管理员可删除客户）', 'error');
+      }
+    },
+    viewCustomer: async function(id){
+      if (!id) return;
+      var self = this;
+      this._showModal('custDetailModal', 'custDetailOverlay');
+      try {
+        var c = await QAXQJT_API.get((QAXQJT_PATHS.CUSTOMERS_BY_ID || function (i) { return '/v1/customers/' + i; })(encodeURIComponent(id)));
+        if (!c) throw new Error('客户不存在');
+        var body = document.getElementById('custDetailBody');
+        var ordersCount = (c._count && c._count.orders) || c.totalOrdersCount || (Array.isArray(c.orders) ? c.orders.length : 0);
+        var apptsCount = (c._count && c._count.appointments) || (Array.isArray(c.appointments) ? c.appointments.length : 0);
+        var fmt = this._fmtMoney, esc = this._escape;
+        var recentRows = function(arr, isOrder){
+          if (!Array.isArray(arr) || !arr.length) return '<tr><td colspan="4" style="text-align:center;padding:14px;color:#94a3b8;">暂无记录</td></tr>';
+          return arr.map(function(r){
+            if (isOrder) {
+              return '<tr>' +
+                '<td>' + esc(r.orderNo || r.id || '') + '</td>' +
+                '<td>¥' + fmt(r.totalAmount || 0) + '</td>' +
+                '<td>' + esc(self._orderStatusText(r.status)) + '</td>' +
+                '<td>' + (r.createdAt ? self._fmtDateTime(r.createdAt) : '—') + '</td>' +
+              '</tr>';
+            }
+            return '<tr>' +
+              '<td>' + esc(r.appointmentNo || r.id || '') + '</td>' +
+              '<td>' + esc(self._apptTypeText(r.packageType)) + '</td>' +
+              '<td>' + esc(self._apptStatusText(r.status)) + '</td>' +
+              '<td>' + (r.createdAt ? self._fmtDateTime(r.createdAt) : '—') + '</td>' +
+            '</tr>';
+          }).join('');
+        };
+        var sec = function(title, inner){
+          return '<div style="margin-top:18px;"><h4 style="margin:0 0 8px 0;color:var(--primary-dark);font-size:.95rem;">' + title + '</h4>' +
+            '<div class="table-wrapper"><table style="width:100%;font-size:.85rem;"><tbody>' + inner + '</tbody></table></div></div>';
+        };
+        body.innerHTML =
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;font-size:.9rem;">' +
+            '<div><strong>名称：</strong>' + esc(c.customerName || c.organization || '—') + '</div>' +
+            '<div><strong>电话：</strong>' + esc(c.phone || '—') + '</div>' +
+            '<div><strong>类型：</strong>' + this._custTypeText(c.customerType) + '</div>' +
+            '<div><strong>等级：</strong>' + this._custLevelBadge(c.level) + '</div>' +
+            '<div><strong>合作次数：</strong>' + ordersCount + '</div>' +
+            '<div><strong>累计消费：</strong>¥' + fmt(c.totalOrdersAmount || 0) + '</div>' +
+            '<div><strong>首次合作：</strong>' + (c.firstContactDate ? this._fmtDateTime(c.firstContactDate) : '—') + '</div>' +
+            '<div><strong>备注：</strong>' + esc(c.remark || '—') + '</div>' +
+          '</div>' +
+          sec('🧾 近期订单（最新 10 条）', recentRows(c.orders, true)) +
+          sec('🗓️ 近期预约（最新 10 条）', recentRows(c.appointments, false));
+        document.getElementById('custDetailTitle').textContent = '👤 客户详情：' + (c.customerName || c.organization || id);
+      } catch(e) {
+        var bd = document.getElementById('custDetailBody');
+        if (bd) bd.innerHTML = '<div style="text-align:center;padding:30px;color:#dc2626;">⚠️ 加载客户详情失败：' + (e && e.message ? e.message : e) + '</div>';
+      }
+    },
+    _orderStatusText: function(s){
+      var m = { draft:'草稿/待确认', confirmed:'已确认', partial_paid:'部分付款', paid:'已付款', performance:'演出中', completed:'已完成', cancelled:'已取消', refunded:'已退款' };
+      return m[s] || (s || '—');
     },
 
     _renderCustomerCards: function(rows, tbody){
@@ -2995,9 +3458,22 @@ try{
             '<span>合作 ' + fmt(ordersCount) + ' 次</span>' +
             '<span>累计 ¥' + fmt(totalAmount) + '</span>' +
           '</div>' +
-          '<div style="font-size:0.8rem;color:var(--text-light);">首次合作：' + fmtDate(c.firstContactDate || c.createdAt) + '</div>';
+          '<div style="font-size:0.8rem;color:var(--text-light);">首次合作：' + fmtDate(c.firstContactDate || c.createdAt) + '</div>' +
+          '<div style="display:flex;gap:8px;border-top:1px dashed var(--border-light);padding-top:8px;">' + self._custActionBtns(c) + '</div>';
         tbody.appendChild(card);
       });
+    },
+
+    // v20261004 P2-3：客户行操作按钮（删除仅 super_admin，对齐后端 requireRole('super_admin')）
+    _custActionBtns: function(c){
+      var id = String(c.id || '');
+      var btns =
+        '<button class="btn btn-sm btn-default" data-cust-act="view" data-cust-id="' + this._escape(id) + '">查看</button>' +
+        '<button class="btn btn-sm btn-primary" data-cust-act="edit" data-cust-id="' + this._escape(id) + '">编辑</button>';
+      if (this._role() === 'super_admin') {
+        btns += '<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;" data-cust-act="del" data-cust-id="' + this._escape(id) + '">删除</button>';
+      }
+      return btns;
     },
 
     _renderCustomerTable: function(rows, tbody){
@@ -3024,7 +3500,7 @@ try{
           '<td>' + fmtDate(c.firstContactDate) + '</td>' +
           '<td>' + fmtDate(c.updatedAt || c.createdAt) + '</td>' +
           '<td>' + self._custLevelBadge(c.level) + '</td>' +
-          '<td><button class="btn btn-sm btn-default" data-cust-id="' + self._escape(c.id || '') + '" data-real-bound="1">查看</button></td>';
+          '<td><div style="display:flex;gap:6px;flex-wrap:wrap;">' + self._custActionBtns(c) + '</div></td>';
         tbody.appendChild(tr);
       });
     },
@@ -3033,25 +3509,28 @@ try{
       var tbody = this._findTbody();
       if (!tbody) { console.warn('[ordersApi] tbody not found'); return; }
       try {
-        var q = { page: 1, pageSize: 200 };
-        if (this.state.filter.keyword) q.keyword = this.state.filter.keyword;
-        if (this.state.filter.status) q.status = this.state.filter.status;
-        if (this.state.filter.orderType) q.orderType = this.state.filter.orderType;
-        if (this.state.filter.fromDate) q.fromDate = this.state.filter.fromDate;
-        if (this.state.filter.toDate) q.toDate = this.state.filter.toDate;
-        var resp = await QAXQJT_API.get('/v1/orders', { query: q });
-        var rows = [];
-        if (Array.isArray(resp)) rows = resp;
-        else if (resp && Array.isArray(resp.data)) rows = resp.data;
-        else if (resp && Array.isArray(resp.items)) rows = resp.items;
-        else if (resp && Array.isArray(resp.list)) rows = resp.list;
-        else if (resp && Array.isArray(resp.rows)) rows = resp.rows;
-        else if (resp && resp.data && Array.isArray(resp.data.items)) rows = resp.data.items;
-        else if (resp && resp.data && Array.isArray(resp.data.list)) rows = resp.data.list;
+        // v20261004 P2-4：服务端分页（page/pageSize 直传 /v1/orders，翻页用 meta.total 驱动）
+        var st = this.state;
+        var q = { page: st.page || 1, pageSize: st.pageSize || 10 };
+        if (st.filter.keyword) q.keyword = st.filter.keyword;
+        if (st.filter.status) q.status = st.filter.status;
+        if (st.filter.orderType) q.orderType = st.filter.orderType;
+        if (st.filter.fromDate) q.fromDate = st.filter.fromDate;
+        if (st.filter.toDate) q.toDate = st.filter.toDate;
+        var self = this;
+        var env = await this._envFetch((QAXQJT_PATHS.ORDERS || '/v1/orders') + this._qs(q));
+        var rows = Array.isArray(env.data) ? env.data : [];
+        var meta = env.meta || {};
+        st.page = meta.page || q.page;
+        st.pageSize = meta.pageSize || q.pageSize;
+        st.total = meta.total != null ? meta.total : rows.length;
         this.state.list = rows;
         this._renderTbody(rows, tbody);
         this.state.loaded = true;
-        try { if (window.QinPagination && typeof QinPagination.init === 'function') QinPagination.init(); } catch(_){}
+        this._renderPager('ordersPager', st.page, st.pageSize, st.total, {
+          onPage: function(p){ st.page = p; self.load(); },
+          onSize: function(n){ st.pageSize = n; st.page = 1; self.load(); }
+        });
       } catch(e) {
         console.warn('[__ordersApi.load] 失败', e);
         this._toast('⚠️ 加载订单列表失败：' + (e && e.message ? e.message : e), 'error');
@@ -3160,7 +3639,7 @@ try{
     exportCsv: async function(){
       try {
         this._toast('📊 正在拉取订单列表…', 'info');
-        var resp = await QAXQJT_API.get('/v1/orders', { query: { page: 1, pageSize: 500 } });
+        var resp = await QAXQJT_API.get((QAXQJT_PATHS.ORDERS || '/v1/orders'), { query: { page: 1, pageSize: 500 } });
         var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
         if (!rows.length) { this._toast('⚠️ 没有可导出的订单', 'warning'); return; }
         var csv = ['订单号,客户名称,联系电话,演出类型,场次,演出开始,演出地点,订单金额,实付金额,状态,下单时间'];
@@ -3237,65 +3716,139 @@ try{
       try { document.getElementById('editCustomerName').focus(); } catch(_){}
     },
 
+    // ====== v20261004 P2-2：订单详情重写 —— GET /v1/orders/:id 全量真实渲染 ======
+    // （后端 detail include：items/payments/refunds/schedules/customer/appointment；含 contractUrl）
     viewDetail: async function(id){
       if (!id) return;
       var modal = document.getElementById('orderDetailModal');
       var overlay = document.getElementById('orderDetailOverlay');
-      if (!modal || !overlay) { // 兜底：用 alert
-        try {
-          var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
-          if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
-          var lines = [
-            '订单ID：' + (o.id || id),
-            '客户：' + (o.customerName || o.organization || '—'),
-            '电话：' + (o.phone || '—'),
-            '类型：' + (o.orderType || '—'),
-            '金额：¥' + (o.totalAmount || 0),
-            '实付：¥' + (o.finalAmount || o.totalAmount || 0),
-            '状态：' + (o.status || 'draft'),
-            '演出开始：' + (o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—'),
-            '地点：' + (o.venueFullAddress || '—')
-          ];
-          alert(lines.join('\n'));
-        } catch(e) {
-          this._toast('⚠️ 加载详情失败：' + (e && e.message ? e.message : e), 'error');
-        }
-        return;
-      }
+      if (!modal || !overlay) { this._toast('⚠️ 订单详情弹窗未找到', 'warning'); return; }
+      var body = document.getElementById('orderDetailBody');
+      if (body) body.innerHTML = '<div style="text-align:center;padding:30px;color:#94a3b8;">正在加载订单详情…</div>';
+      var title = document.getElementById('orderDetailTitle');
+      if (title) title.textContent = '📋 订单详情';
+      this._showModal('orderDetailModal', 'orderDetailOverlay');
       try {
-        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
-        if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
-        // 填充 modal-body
-        var body = modal.querySelector('.modal-body, .order-detail-body, .detail-body');
-        if (!body) body = modal.querySelector('div:not(.modal-header):not(.modal-footer)');
-        if (body) {
-          body.innerHTML =
-            '<div style="padding:20px 24px;">' +
-              '<h4 style="margin:0 0 12px 0;color:var(--primary-dark);">订单 ' + this._escape(o.id || id) + '</h4>' +
-              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:0.9rem;">' +
-                '<div><strong>客户：</strong>' + this._escape(o.customerName || o.organization || '—') + '</div>' +
-                '<div><strong>电话：</strong>' + this._escape(o.phone || '—') + '</div>' +
-                '<div><strong>类型：</strong>' + this._escape(o.orderType || '—') + '</div>' +
-                '<div><strong>场次：</strong>' + (o.performanceCount || 1) + ' 场</div>' +
-                '<div><strong>订单金额：</strong>¥' + (o.totalAmount || 0) + '</div>' +
-                '<div><strong>实付金额：</strong>¥' + (o.finalAmount || o.totalAmount || 0) + '</div>' +
-                '<div><strong>状态：</strong>' + this._escape(o.status || 'draft') + '</div>' +
-                '<div><strong>演出开始：</strong>' + (o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—') + '</div>' +
-                '<div style="grid-column:1 / span 2;"><strong>演出地点：</strong>' + this._escape(o.venueFullAddress || '—') + '</div>' +
-                '<div style="grid-column:1 / span 2;"><strong>特殊要求：</strong>' + this._escape(o.specialRequirements || '—') + '</div>' +
-                '<div style="grid-column:1 / span 2;"><strong>内部备注：</strong>' + this._escape(o.internalRemark || '—') + '</div>' +
-              '</div>' +
-            '</div>';
+        var o = await QAXQJT_API.get((QAXQJT_PATHS.ORDERS_BY_ID || function (i) { return '/v1/orders/' + i; })(encodeURIComponent(id)));
+        if (!o) { if (body) body.innerHTML = '<div style="text-align:center;padding:30px;color:#dc2626;">⚠️ 未找到该订单</div>'; return; }
+        var esc = this._escape, fmt = this._fmtMoney, fdt = this._fmtDateTime;
+        var self = this;
+        var paid = Number(o.paidAmount || 0), finalV = Number(o.finalAmount || o.totalAmount || 0);
+        var remain = Math.round((finalV - paid) * 100) / 100;
+        var kv = function(k, v, style){
+          return '<div><div style="font-size:0.78rem;color:var(--text-light);margin-bottom:2px;">' + k + '</div>' +
+            '<div style="font-size:0.92rem;' + (style || '') + '">' + v + '</div></div>';
+        };
+        // —— 基本信息区 ——
+        var html =
+          '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 20px;">' +
+            kv('订单编号', '<b style="color:var(--primary-dark);">' + esc(o.orderNo || o.id || id) + '</b>') +
+            kv('订单状态', '<span class="badge ' + this._statusBadge(o.status || 'draft').cls + '">' + esc(this._statusBadge(o.status || 'draft').text) + '</span>') +
+            kv('客户名称', esc(o.customerName || '—')) +
+            kv('联系电话', esc(o.phone || '—')) +
+            kv('甲方单位', esc(o.organization || '—')) +
+            kv('演出类型', esc(o.orderType || '—')) +
+            kv('场次', (o.performanceCount || 1) + ' 场') +
+            kv('演出日期', esc(o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—') + (o.performanceEndDate ? ' ~ ' + esc(String(o.performanceEndDate).slice(0,10)) : '')) +
+            kv('订单金额', '¥' + fmt(o.totalAmount || 0)) +
+            kv('折扣优惠', '¥' + fmt(o.discountAmount || 0)) +
+            kv('应付金额', '<b>¥' + fmt(finalV) + '</b>') +
+            kv('已收金额', '<b style="color:#059669;">¥' + fmt(paid) + '</b>' + (remain > 0 ? ' <span style="color:#b45309;">（尾款 ¥' + fmt(remain) + '）</span>' : '')) +
+            kv('下单时间', fdt(o.orderDate || o.createdAt)) +
+            kv('业务员', esc(o.salesmanName || '—')) +
+          '</div>';
+        if (o.venueFullAddress) {
+          html += '<div style="margin-top:10px;font-size:0.9rem;"><strong>演出地点：</strong>' + esc(o.venueFullAddress) + '</div>';
         }
-        // 标题
-        var h3 = modal.querySelector('.modal-header h3, .modal-header h2');
-        if (h3) h3.textContent = '📋 订单详情：' + (o.id || id);
-        // 显示
-        overlay.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); overlay.style.display='';
-        modal.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); modal.style.display='';
-        try { document.body.classList.add('body-modal-locked'); } catch(_){}
+        if (o.specialRequirements) {
+          html += '<div style="margin-top:6px;font-size:0.9rem;"><strong>特殊要求：</strong>' + esc(o.specialRequirements) + '</div>';
+        }
+        // —— 剧目明细 items ——
+        var items = Array.isArray(o.items) ? o.items : [];
+        html += '<div style="margin-top:18px;"><h4 style="margin:0 0 8px 0;color:var(--primary-dark);font-size:.95rem;">🎭 剧目/服务明细（' + items.length + ' 项）</h4>';
+        if (!items.length) {
+          html += '<div style="padding:12px;color:#94a3b8;font-size:.85rem;background:#f8fafc;border-radius:8px;">暂无明细项</div>';
+        } else {
+          html += '<div class="table-wrapper"><table style="width:100%;font-size:.85rem;"><thead><tr><th>项目</th><th>数量</th><th>单价</th><th>小计</th><th>演出日期</th><th>备注</th></tr></thead><tbody>' +
+            items.map(function(it){
+              return '<tr>' +
+                '<td>' + esc(it.itemName || '—') + '</td>' +
+                '<td>' + (it.quantity || 1) + '</td>' +
+                '<td>¥' + fmt(it.unitPrice || 0) + '</td>' +
+                '<td>¥' + fmt(it.subtotal || 0) + '</td>' +
+                '<td>' + (it.performanceDate ? esc(String(it.performanceDate).slice(0,10)) : '—') + '</td>' +
+                '<td>' + esc(it.remark || '—') + '</td>' +
+              '</tr>';
+            }).join('') + '</tbody></table></div>';
+        }
+        html += '</div>';
+        // —— 收款流水 payments ——
+        var pays = Array.isArray(o.payments) ? o.payments : [];
+        html += '<div style="margin-top:18px;"><h4 style="margin:0 0 8px 0;color:var(--primary-dark);font-size:.95rem;">💰 收款流水（' + pays.length + ' 笔）</h4>';
+        if (!pays.length) {
+          html += '<div style="padding:12px;color:#94a3b8;font-size:.85rem;background:#f8fafc;border-radius:8px;">暂无收款记录（可在列表「💰 收款」中登记）</div>';
+        } else {
+          var chMap = { cash:'现金', transfer:'银行转账', wechat:'微信', alipay:'支付宝', cheque:'支票' };
+          html += '<div class="table-wrapper"><table style="width:100%;font-size:.85rem;"><thead><tr><th>流水号</th><th>金额</th><th>渠道</th><th>日期</th><th>备注</th></tr></thead><tbody>' +
+            pays.map(function(p){
+              return '<tr>' +
+                '<td>' + esc(p.payNo || p.id || '—') + '</td>' +
+                '<td>¥' + fmt(p.amount || 0) + '</td>' +
+                '<td>' + esc(chMap[p.payChannel] || p.payChannel || '—') + '</td>' +
+                '<td>' + (p.payDate ? esc(String(p.payDate).slice(0,10)) : '—') + '</td>' +
+                '<td>' + esc(p.remark || '—') + '</td>' +
+              '</tr>';
+            }).join('') + '</tbody></table></div>';
+        }
+        html += '</div>';
+        // —— 演出排期 schedules ——
+        var scheds = Array.isArray(o.schedules) ? o.schedules : [];
+        html += '<div style="margin-top:18px;"><h4 style="margin:0 0 8px 0;color:var(--primary-dark);font-size:.95rem;">📅 演出排期（' + scheds.length + ' 场）</h4>';
+        if (!scheds.length) {
+          html += '<div style="padding:12px;color:#94a3b8;font-size:.85rem;background:#f8fafc;border-radius:8px;">暂无排期记录</div>';
+        } else {
+          var schMap = { scheduled:'已排期', confirmed:'已确认', completed:'已完成', cancelled:'已取消' };
+          html += '<div class="table-wrapper"><table style="width:100%;font-size:.85rem;"><thead><tr><th>排期号</th><th>剧目</th><th>日期</th><th>时段</th><th>地点</th><th>状态</th></tr></thead><tbody>' +
+            scheds.map(function(s){
+              return '<tr>' +
+                '<td>' + esc(s.scheduleNo || s.id || '—') + '</td>' +
+                '<td>' + esc(s.playTitle || '—') + '</td>' +
+                '<td>' + (s.scheduleDateStart ? esc(String(s.scheduleDateStart).slice(0,10)) : '—') + '</td>' +
+                '<td>' + esc(s.performanceTime || '—') + '</td>' +
+                '<td>' + esc([s.venueDistrict, s.venueAddress].filter(Boolean).join('') || s.venueCity || '—') + '</td>' +
+                '<td>' + esc(schMap[s.status] || s.status || '—') + '</td>' +
+              '</tr>';
+            }).join('') + '</tbody></table></div>';
+        }
+        html += '</div>';
+        // —— 附件 contractUrl（P1 修复上传链路的落点字段）——
+        var urls = [];
+        if (o.contractUrl) {
+          String(o.contractUrl).split(',').forEach(function(u){ u = String(u||'').trim(); if (u) urls.push(u); });
+        }
+        html += '<div style="margin-top:18px;"><h4 style="margin:0 0 8px 0;color:var(--primary-dark);font-size:.95rem;">📎 附件 / 合同扫描件（' + urls.length + ' 个）</h4>';
+        if (!urls.length) {
+          html += '<div style="padding:12px;color:#94a3b8;font-size:.85rem;background:#f8fafc;border-radius:8px;">暂无附件（可在列表页附件上传面板为该订单补充合同/现场照/发票）</div>';
+        } else {
+          html += '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
+          urls.forEach(function(u, i){
+            var isImg = /\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(u);
+            if (isImg) {
+              html += '<a href="' + esc(u) + '" target="_blank" rel="noopener" style="display:block;border:1px solid var(--border-light);border-radius:8px;overflow:hidden;">' +
+                '<img src="' + esc(u) + '" alt="附件' + (i+1) + '" style="max-width:180px;max-height:120px;display:block;">' +
+                '<div style="font-size:.72rem;color:var(--text-light);padding:4px 8px;">附件' + (i+1) + '（点击放大）</div></a>';
+            } else {
+              html += '<a class="btn btn-sm btn-secondary" href="' + esc(u) + '" target="_blank" rel="noopener">📄 附件' + (i+1) + '（' + esc(u.split('/').pop().split('?')[0].slice(0, 24) || '文件') + '）</a>';
+            }
+          });
+          html += '</div>';
+        }
+        html += '</div>';
+        if (body) body.innerHTML = html;
+        if (title) title.textContent = '📋 订单详情：' + (o.orderNo || o.id || id);
       } catch(e) {
         console.warn('[viewDetail] id=' + id, e);
+        if (body) body.innerHTML = '<div style="text-align:center;padding:30px;color:#dc2626;">⚠️ 加载详情失败：' + esc(e && e.message ? e.message : e) + '</div>';
         this._toast('⚠️ 加载详情失败：' + (e && e.message ? e.message : e), 'error');
       }
     },
@@ -3306,7 +3859,7 @@ try{
       var overlay = document.getElementById('orderEditOverlay');
       if (!modal || !overlay) { this._toast('⚠️ 编辑弹窗未找到', 'warning'); return; }
       try {
-        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
+        var o = await QAXQJT_API.get((QAXQJT_PATHS.ORDERS_BY_ID || function (i) { return '/v1/orders/' + i; })(encodeURIComponent(id)));
         if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
         document.getElementById('editOrderId').value = o.id || id;
         document.getElementById('editCustomerName').value = o.customerName || '';
@@ -3390,12 +3943,12 @@ try{
       try {
         if (id) {
           // 编辑模式
-          await QAXQJT_API.patch('/v1/orders/' + encodeURIComponent(id), body);
+          await QAXQJT_API.patch((QAXQJT_PATHS.ORDERS_BY_ID || function (i) { return '/v1/orders/' + i; })(encodeURIComponent(id)), body);
           this._toast('✅ 订单已更新', 'success');
         } else {
           // 新建模式
           // v20261003 P3-10：不再传 UTC 日期串（东八区凌晨会差一天），orderDate 由后端按服务器当前时刻默认
-          var resp = await QAXQJT_API.post('/v1/orders', body);
+          var resp = await QAXQJT_API.post((QAXQJT_PATHS.ORDERS || '/v1/orders'), body);
           this._toast('✅ 订单已创建' + (resp && resp.id ? '（ID: ' + resp.id + '）' : ''), 'success');
         }
         document.getElementById('orderEditOverlay').classList.add('csp-hide');
@@ -3416,7 +3969,7 @@ try{
       // 保存订单 ID 供 saveDispatch 使用
       try { modal.dataset.orderId = id; } catch(_){}
       try {
-        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
+        var o = await QAXQJT_API.get((QAXQJT_PATHS.ORDERS_BY_ID || function (i) { return '/v1/orders/' + i; })(encodeURIComponent(id)));
         if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
         var no = o.orderNo || o.id || id;
         var cust = (o.customerName || '—') + ' / ' + (o.venueFullAddress || '—');
@@ -3551,7 +4104,7 @@ try{
       try { var __pr = (modal.dataset && modal.dataset.prevRemark) || ''; if (__pr) dispatchData.prevRemark = __pr; } catch(_){}
       this._dpSaveLock = true;
       try {
-        await QAXQJT_API.patch('/v1/orders/' + encodeURIComponent(id), {
+        await QAXQJT_API.patch((QAXQJT_PATHS.ORDERS_BY_ID || function (i) { return '/v1/orders/' + i; })(encodeURIComponent(id)), {
           internalRemark: JSON.stringify(dispatchData)
         });
         this._toast('✅ 派工单已保存（'+people.length+' 人）', 'success');
@@ -3577,7 +4130,7 @@ try{
         reason = prompt(reasonHint || '请输入取消原因：', '') || '';
       }
       try {
-        await QAXQJT_API.post('/v1/orders/' + encodeURIComponent(id) + '/transition', { to: to, reason: reason });
+        await QAXQJT_API.post((QAXQJT_PATHS.ORDERS_TRANSITION || function (i) { return '/v1/orders/' + i + '/transition'; })(encodeURIComponent(id)), { to: to, reason: reason });
         this._toast('✅ 订单状态已更新为：' + to, 'success');
         await this.load();
       } catch(e) {
@@ -3597,7 +4150,7 @@ try{
       } catch(_) {}
       if (!confirm('确认删除订单 ' + no + '？\n此操作不可撤销（仅删除订单，不删除支付流水）。')) return;
       try {
-        await QAXQJT_API.del('/v1/orders/' + encodeURIComponent(id));
+        await QAXQJT_API.del((QAXQJT_PATHS.ORDERS_BY_ID || function (i) { return '/v1/orders/' + i; })(encodeURIComponent(id)));
         this._toast('✅ 订单已删除', 'success');
         await this.load();
       } catch(e) {
@@ -3613,7 +4166,7 @@ try{
       var overlay = document.getElementById('paymentOverlay');
       if (!modal || !overlay) { this._toast('⚠️ 收款弹窗未找到', 'warning'); return; }
       try {
-        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
+        var o = await QAXQJT_API.get((QAXQJT_PATHS.ORDERS_BY_ID || function (i) { return '/v1/orders/' + i; })(encodeURIComponent(id)));
         if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
         modal.dataset.orderId = o.id || id;
         var paid = Number(o.paidAmount || 0), finalV = Number(o.finalAmount || 0);
@@ -3659,13 +4212,187 @@ try{
       if (!body.payDate) delete body.payDate;
       this._payLock = true;
       try {
-        await QAXQJT_API.post('/v1/orders/' + encodeURIComponent(id) + '/payments', body);
+        await QAXQJT_API.post((QAXQJT_PATHS.ORDERS_PAYMENTS || function (i) { return '/v1/orders/' + i + '/payments'; })(encodeURIComponent(id)), body);
         this._toast('✅ 收款 ¥' + amount.toFixed(2) + ' 已登记（流水+台账凭证已生成）', 'success');
         this.closePayment();
         await this.load();
       } catch(e) {
         this._toast('⚠️ 收款失败：' + (e && e.message ? e.message : e), 'error');
       } finally { this._payLock = false; }
+    },
+
+    // ====== v20261004 P2-1：预约管理（tab-appointments）======
+    // 列表：GET /v1/appointments（page/pageSize/keyword/status/packageType，meta 分页）
+    // 流转：POST /v1/appointments/:id/transition { to, reason }（后端 STATUS_FLOW：pending→confirmed/rejected/cancelled/converted；confirmed→converted/cancelled/pending；rejected/cancelled→pending）
+    _apptStatusText: function(s){
+      var m = { pending:'待确认', confirmed:'已确认', rejected:'已驳回', cancelled:'已取消', converted:'已转订单' };
+      return m[s] || (s || '—');
+    },
+    _apptStatusBadge: function(s){
+      var m = { pending:'badge badge-warning', confirmed:'badge badge-info', rejected:'badge badge-danger', cancelled:'badge badge-secondary', converted:'badge badge-success' };
+      return m[s] || 'badge badge-secondary';
+    },
+    _apptTypeText: function(t){
+      var m = { temple_fair:'庙会包场', cultural_tourism:'文旅演出', campus_tour:'校园巡演', custom:'定制场次' };
+      return m[t] || (t || '—');
+    },
+    _apptCanTransition: function(){ return ['super_admin','ops','director'].indexOf(this._role()) >= 0; },
+    _apptActionBtns: function(a){
+      var id = String(a.id || '');
+      var st = a.status;
+      var btns = '';
+      if (!this._apptCanTransition()) return '<span style="color:#94a3b8;font-size:.8rem;">—</span>';
+      function add(to, label, style, hint){ btns += '<button class="' + style + '" data-appt-act="tr" data-appt-to="' + to + '" data-appt-id="' + id + '" title="' + (hint||label) + '">' + label + '</button>'; }
+      if (st === 'pending') {
+        add('confirmed', '✅ 确认', 'btn btn-success btn-sm');
+        add('rejected', '🚫 驳回', 'btn btn-sm', '驳回预约');
+        add('cancelled', '❌ 取消', 'btn btn-danger btn-sm');
+      } else if (st === 'confirmed') {
+        add('converted', '📄 转订单', 'btn btn-gold btn-sm', '标记已转订单');
+        add('cancelled', '❌ 取消', 'btn btn-danger btn-sm');
+      } else if (st === 'rejected' || st === 'cancelled') {
+        add('pending', '↺ 重新待审', 'btn btn-info btn-sm');
+      }
+      return btns;
+    },
+    loadAppointments: async function(){
+      var tbody = document.getElementById('apptsMainTbody');
+      if (!tbody) return;
+      try {
+        var st = this.state;
+        var q = { page: st.apptPage || 1, pageSize: st.apptPageSize || 10 };
+        if (st.apptFilter) {
+          if (st.apptFilter.keyword) q.keyword = st.apptFilter.keyword;
+          if (st.apptFilter.status) q.status = st.apptFilter.status;
+          if (st.apptFilter.packageType) q.packageType = st.apptFilter.packageType;
+        }
+        var self = this;
+        var env = await this._envFetch((QAXQJT_PATHS.APPOINTMENTS || '/v1/appointments') + this._qs(q));
+        var rows = Array.isArray(env.data) ? env.data : [];
+        var meta = env.meta || {};
+        st.apptPage = meta.page || q.page;
+        st.apptPageSize = meta.pageSize || q.pageSize;
+        st.apptTotal = meta.total != null ? meta.total : rows.length;
+        st.apptList = rows;
+        this._renderApptsTbody(rows, tbody);
+        this._renderPager('apptsPager', st.apptPage, st.apptPageSize, st.apptTotal, {
+          onPage: function(p){ st.apptPage = p; self.loadAppointments(); },
+          onSize: function(n){ st.apptPageSize = n; st.apptPage = 1; self.loadAppointments(); }
+        });
+      } catch(e) {
+        console.warn('[__ordersApi.loadAppointments] 失败', e);
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#dc2626;">⚠️ 加载预约失败：' + this._escape(e && e.message ? e.message : e) + '</td></tr>';
+      }
+    },
+    _renderApptsTbody: function(rows, tbody){
+      tbody.innerHTML = '';
+      var self = this;
+      var esc = function(s){ return self._escape(s); };
+      rows.forEach(function(a){
+        var budget = a.totalPerformanceFee != null ? Number(a.totalPerformanceFee) : (a.estimatedBudget != null ? Number(a.estimatedBudget) : null);
+        var tr = document.createElement('tr');
+        tr.setAttribute('data-appt-row', String(a.id || ''));
+        tr.innerHTML =
+          '<td><strong style="color:var(--primary);">' + esc(a.appointmentNo || a.id || '—') + '</strong></td>' +
+          '<td>' + esc(a.customerName || '—') + '</td>' +
+          '<td>' + esc(a.phone || '—') + '</td>' +
+          '<td>' + esc(self._apptTypeText(a.packageType)) + '</td>' +
+          '<td>' + (a.preferredStartDate ? esc(String(a.preferredStartDate).slice(0,10)) : '—') + '</td>' +
+          '<td>' + (a.performanceCount || 1) + ' 场</td>' +
+          '<td>' + (budget != null ? '¥' + self._fmtMoney(budget) : '—') + '</td>' +
+          '<td><span class="badge ' + self._apptStatusBadge(a.status) + '">' + esc(self._apptStatusText(a.status)) + '</span>' + (a.rejectReason ? '<br><span style="color:#dc2626;font-size:.75rem;">' + esc(a.rejectReason) + '</span>' : '') + '</td>' +
+          '<td>' + self._fmtDateTime(a.createdAt) + '</td>' +
+          '<td><div class="admin-table-actions" style="display:flex;gap:6px;flex-wrap:wrap;">' + self._apptActionBtns(a) + '</div></td>';
+        tbody.appendChild(tr);
+      });
+      try {
+        var abtns = tbody.querySelectorAll('button[data-appt-act]');
+        for (var i=0; i<abtns.length; i++) { abtns[i].__superPatchBound = 1; abtns[i].__ts3Done = 1; abtns[i].__bindDone = 1; abtns[i].__ctE2Done = 1; abtns[i].__deadBtnChecked = 1; }
+      } catch(_){}
+      if (window.__guardRealActions) { try { window.__guardRealActions(tbody); } catch(_){} }
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#999;">📭 暂无预约数据（客户从公开预约页提交后将显示在这里）</td></tr>';
+      }
+    },
+    apptTransition: async function(id, to){
+      if (!id || !to) return;
+      var reason = '';
+      if (to === 'rejected' || to === 'cancelled') {
+        reason = prompt(to === 'rejected' ? '请输入驳回原因：' : '请输入取消原因：', '') || '';
+      }
+      try {
+        await QAXQJT_API.post((QAXQJT_PATHS.APPOINTMENTS_TRANSITION || function (i) { return '/v1/appointments/' + i + '/transition'; })(encodeURIComponent(id)), { to: to, reason: reason });
+        this._toast('✅ 预约状态已更新为：' + this._apptStatusText(to), 'success');
+        await this.loadAppointments();
+      } catch(e) {
+        console.warn('[apptTransition] id=' + id + ' to=' + to, e);
+        this._toast('⚠️ 状态更新失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+    _bindApptDelegation: function(){
+      var self = this;
+      if (this._apptDelegBound) return;
+      this._apptDelegBound = true;
+      var tbody = document.getElementById('apptsMainTbody');
+      if (!tbody) return;
+      tbody.addEventListener('click', function(e){
+        var btn = e.target.closest ? e.target.closest('button[data-appt-act]') : null;
+        if (!btn) return;
+        var id = btn.getAttribute('data-appt-id') || '';
+        var to = btn.getAttribute('data-appt-to') || '';
+        try { e.stopImmediatePropagation(); e.stopPropagation(); } catch(_){}
+        if (id && to) self.apptTransition(id, to);
+      }, true);
+    },
+    _bindApptFilterBar: function(){
+      var self = this;
+      var el = function(id){ return document.getElementById(id); };
+      var apply = function(){
+        self.state.apptFilter = {
+          keyword: (el('apptFilterKeyword') ? el('apptFilterKeyword').value : '').trim(),
+          status: el('apptFilterStatus') ? el('apptFilterStatus').value : '',
+          packageType: el('apptFilterType') ? el('apptFilterType').value : ''
+        };
+        self.state.apptPage = 1;
+        self.loadAppointments();
+      };
+      var b = el('apptFilterApplyBtn');
+      if (b) { b.setAttribute('data-real-bound','1'); b.__superPatchBound = 1; b.__ts3Done = 1; b.addEventListener('click', apply); }
+      var r = el('apptFilterResetBtn');
+      if (r) {
+        r.setAttribute('data-real-bound','1'); r.__superPatchBound = 1; r.__ts3Done = 1;
+        r.addEventListener('click', function(){
+          if (el('apptFilterKeyword')) el('apptFilterKeyword').value = '';
+          if (el('apptFilterStatus')) el('apptFilterStatus').value = '';
+          if (el('apptFilterType')) el('apptFilterType').value = '';
+          self.state.apptFilter = { keyword: '', status: '', packageType: '' };
+          self.state.apptPage = 1;
+          self.loadAppointments();
+        });
+      }
+      var k = el('apptFilterKeyword');
+      if (k) k.addEventListener('keydown', function(e){ if (e.key === 'Enter') apply(); });
+    },
+    // v20261004 P2-3：客户行操作委托（查看/编辑/删除，卡片视图与表格视图共用）
+    _bindCustomerDeleg: function(){
+      var self = this;
+      if (this._custDelegBound) return;
+      this._custDelegBound = true;
+      var handler = function(e){
+        var btn = e.target.closest ? e.target.closest('button[data-cust-act]') : null;
+        if (!btn) return;
+        var id = btn.getAttribute('data-cust-id') || '';
+        var act = btn.getAttribute('data-cust-act') || '';
+        try { e.stopImmediatePropagation(); e.stopPropagation(); } catch(_){}
+        if (!id) return;
+        if (act === 'view') self.viewCustomer(id);
+        else if (act === 'edit') self.openCustomerModal(id);
+        else if (act === 'del') self.deleteCustomer(id);
+      };
+      var tbody = document.getElementById('customersMainTbody');
+      if (tbody) tbody.addEventListener('click', handler, true);
+      var cards = document.getElementById('customersCardsTbody');
+      if (cards) cards.addEventListener('click', handler, true);
     },
 
     _bindRowDelegation: function(){
@@ -3701,8 +4428,56 @@ try{
     api._bindRowDelegation();
     api._bindFilterBar();
     api._bindCustomerFilterBar();
+    // v20261004 P2-1/P2-3：预约模块 + 客户行操作接线
+    api._bindApptDelegation();
+    api._bindApptFilterBar();
+    api._bindCustomerDeleg();
     api.load();
     api.loadCustomers();
+    api.loadAppointments();
+    // v20261004 P2-3：客户新增/编辑弹窗按钮
+    try {
+      var custAdd = document.getElementById('custAddBtn');
+      if (custAdd && !custAdd.__custBound) {
+        custAdd.__custBound = 1;
+        custAdd.setAttribute('data-real-bound','1'); custAdd.__superPatchBound = 1; custAdd.__ts3Done = 1;
+        custAdd.addEventListener('click', function(e){ e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation(); api.openCustomerModal(''); }, true);
+      }
+      var custForm = document.getElementById('custEditForm');
+      if (custForm && !custForm.__custBound) {
+        custForm.__custBound = 1; custForm.__superPatchBound = 1; custForm.__ts3Done = 1;
+        custForm.addEventListener('submit', function(e){ e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation(); api.saveCustomer(); }, true);
+        var cSaveBtn = custForm.querySelector('button[type="submit"]') || custForm.querySelector('button.btn-primary');
+        if (cSaveBtn && !cSaveBtn.__custBound) {
+          cSaveBtn.__custBound = 1; cSaveBtn.__superPatchBound = 1; cSaveBtn.__ts3Done = 1;
+          cSaveBtn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopImmediatePropagation(); ev.stopPropagation(); api.saveCustomer(); }, true);
+        }
+      }
+      ['custEditClose','custEditCancel'].forEach(function(bid){
+        var b = document.getElementById(bid);
+        if (b && !b.__custBound) {
+          b.__custBound = 1; b.__superPatchBound = 1; b.__ts3Done = 1;
+          b.addEventListener('click', function(e){ e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation(); api._hideModal('custEditModal','custEditOverlay'); }, true);
+        }
+      });
+      var custOv = document.getElementById('custEditOverlay');
+      if (custOv && !custOv.__custBound) {
+        custOv.__custBound = 1;
+        custOv.addEventListener('click', function(e){ if (e.target === custOv) api._hideModal('custEditModal','custEditOverlay'); });
+      }
+      ['custDetailClose','custDetailCancel'].forEach(function(bid){
+        var b = document.getElementById(bid);
+        if (b && !b.__custBound) {
+          b.__custBound = 1; b.__superPatchBound = 1; b.__ts3Done = 1;
+          b.addEventListener('click', function(e){ e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation(); api._hideModal('custDetailModal','custDetailOverlay'); }, true);
+        }
+      });
+      var cdOv = document.getElementById('custDetailOverlay');
+      if (cdOv && !cdOv.__custBound) {
+        cdOv.__custBound = 1;
+        cdOv.addEventListener('click', function(e){ if (e.target === cdOv) api._hideModal('custDetailModal','custDetailOverlay'); });
+      }
+    } catch(_){}
     // 派工弹窗保存按钮：用 capture 阶段拦截，改走真实 API（覆盖原 demo Storage 逻辑）
     try {
       var dpSave = document.getElementById('dispatchSave');
@@ -3743,7 +4518,7 @@ try{
     /* 真实统计卡片：GET /v1/orders/stats */
     (async function(){
       try {
-        var s = await QAXQJT_API.get('/v1/orders/stats');
+        var s = await QAXQJT_API.get((QAXQJT_PATHS.ORDERS_STATS || '/v1/orders/stats'));
         if (!s) return;
         var total = s.total || 0;
         var bySt = s.byStatus || {};
