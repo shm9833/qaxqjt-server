@@ -732,8 +732,11 @@ const generate = async ctx => {
   const staleDraftBatches = existingBatches.filter(x => x.status === 'draft');
   const staleDraftIds = staleDraftBatches.map(x => x.id);
   if (staleDraftIds.length) {
-    await prisma.wageItemsV1.deleteMany({ where: { batchId: { in: staleDraftIds } } });
-    await prisma.wageBatchesV1.deleteMany({ where: { id: { in: staleDraftIds } } });
+    // P0 性能修复：清明细+删批次合并为单事务，保证原子性且减少一次事务往返
+    await prisma.$transaction([
+      prisma.wageItemsV1.deleteMany({ where: { batchId: { in: staleDraftIds } } }),
+      prisma.wageBatchesV1.deleteMany({ where: { id: { in: staleDraftIds } } })
+    ]);
   }
   const replaced = staleDraftBatches.map(x => ({ id: x.id, batchNo: x.batchNo }));
 
@@ -756,35 +759,34 @@ const generate = async ctx => {
     }
   });
 
-  const createdItems = [];
-  for (const it of items) {
-    const row = await prisma.wageItemsV1.create({
-      data: {
-        id: idByCtx('wage', 12, nanoid),
-        batchId: batch.id,
-        performerId: it.performerId,
-        performerName: it.performerName,
-        staffNo: it.staffNo,
-        rankGrade: it.rankGrade,
-        attendanceDays: it.attendanceDays,
-        baseWage: it.baseWage,
-        nightShowBonus: it.nightShowBonus,
-        fullAttendanceBonus: it.fullAttendanceBonus,
-        transportAllowance: it.transportAllowance,
-        mealAllowance: it.mealAllowance,
-        otherDeduction: it.otherDeduction || 0,
-        otherDeductionNote: it.otherDeductionNote,
-        socialInsuranceDeduct: it.socialInsuranceDeduct || 0,
-        taxDeduct: it.taxDeduct || 0,
-        grossPay: it.grossPay,
-        totalDeduction: it.totalDeduction,
-        netPay: it.netPay,
-        remark: it.remark,
-        ts: BigInt(nowMs())
-      }
-    });
-    createdItems.push(toApi(row, batch));
-  }
+  // P0 性能修复：明细落库由逐条 await 改为单事务批量提交（原子 + 减少 N 次事务开销），返回行序与入参一致
+  const ts = BigInt(nowMs());
+  const rows = await prisma.$transaction(items.map(it => prisma.wageItemsV1.create({
+    data: {
+      id: idByCtx('wage', 12, nanoid),
+      batchId: batch.id,
+      performerId: it.performerId,
+      performerName: it.performerName,
+      staffNo: it.staffNo,
+      rankGrade: it.rankGrade,
+      attendanceDays: it.attendanceDays,
+      baseWage: it.baseWage,
+      nightShowBonus: it.nightShowBonus,
+      fullAttendanceBonus: it.fullAttendanceBonus,
+      transportAllowance: it.transportAllowance,
+      mealAllowance: it.mealAllowance,
+      otherDeduction: it.otherDeduction || 0,
+      otherDeductionNote: it.otherDeductionNote,
+      socialInsuranceDeduct: it.socialInsuranceDeduct || 0,
+      taxDeduct: it.taxDeduct || 0,
+      grossPay: it.grossPay,
+      totalDeduction: it.totalDeduction,
+      netPay: it.netPay,
+      remark: it.remark,
+      ts
+    }
+  })));
+  const createdItems = rows.map(row => toApi(row, batch));
 
   try { await audit({ ctx, module: 'wage', action: 'WAGE_GENERATE', targetId: batch.id, detail: { batchNo, wageMonth: month, count: createdItems.length, defaultMode, modeOverrides: Object.keys(settleModes).length } }); } catch (_) {}
   return created(ctx, {
