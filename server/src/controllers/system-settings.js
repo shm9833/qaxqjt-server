@@ -114,31 +114,30 @@ const remove = async ctx => {
 const batchUpdate = async ctx => {
   const b = ctx.request.body;
   if (!Array.isArray(b.items)) throw new BusinessError('VALIDATION_ERROR', 'items 必须是数组');
-  const results = [];
-  for (const item of b.items) {
-    if (!item.key || item.value === undefined) continue;
-    const row = await prisma.setting.upsert({
-      where: { key: item.key },
-      create: {
-        id: idByCtx('sett', 12, nanoid),
-        key: item.key,
-        value: String(item.value),
-        group: item.group || 'general',
-        description: item.description || null,
-        isPublic: item.isPublic || false,
-        updatedBy: ctx.state.user ? ctx.state.user.username : null,
-        ts: nowMs()
-      },
-      update: {
-        value: String(item.value),
-        group: item.group || undefined,
-        description: item.description || undefined,
-        isPublic: item.isPublic || undefined,
-        updatedBy: ctx.state.user ? ctx.state.user.username : null
-      }
-    });
-    results.push(toApi(row));
-  }
+  const username = ctx.state.user ? ctx.state.user.username : null;
+  const validItems = b.items.filter(item => item.key && item.value !== undefined);
+  // P0 性能修复：批量 upsert 包裹进单事务——原子提交（任一失败整体回滚，不留半截配置），并减少 N 次事务往返
+  const rows = await prisma.$transaction(validItems.map(item => prisma.setting.upsert({
+    where: { key: item.key },
+    create: {
+      id: idByCtx('sett', 12, nanoid),
+      key: item.key,
+      value: String(item.value),
+      group: item.group || 'general',
+      description: item.description || null,
+      isPublic: item.isPublic || false,
+      updatedBy: username,
+      ts: nowMs()
+    },
+    update: {
+      value: String(item.value),
+      group: item.group || undefined,
+      description: item.description || undefined,
+      isPublic: item.isPublic || undefined,
+      updatedBy: username
+    }
+  })));
+  const results = rows.map(toApi);
   if (results.some(r => r.key === securityConfig.KEY_CAPTCHA)) securityConfig.reloadCaptchaEnabled().catch(() => {});
   try { await audit({ ctx, module: 'setting', action: 'SETTING_BATCH_UPDATE', targetId: 'batch', detail: { count: results.length, keys: results.map(r => r.key) } }); } catch (_) {}
   return success(ctx, results);

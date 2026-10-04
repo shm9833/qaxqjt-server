@@ -151,10 +151,19 @@ async function syncPerformerToWageItems(performerId, fields) {
     let synced = 0;
     let created = 0;
 
+    // P0 性能修复：消除 N+1——一次性取出该人员在全部草稿批次的已有明细，循环内只查 Map
+    const draftIds = draftBatches.map(x => x.id);
+    const existingRows = await prisma.wageItemsV1.findMany({
+      where: { performerId, batchId: { in: draftIds } }
+    });
+    const existingByBatch = new Map(existingRows.map(r => [r.batchId, r]));
+    // 职级工资规则仅依赖 perf.rankGrade，与批次无关，提升到循环外只查一次
+    const ruleRow = perf.rankGrade
+      ? await prisma.wageRulesV1.findFirst({ where: { rankGrade: perf.rankGrade, status: 'active' } })
+      : null;
+
     for (const batch of draftBatches) {
-      const existing = await prisma.wageItemsV1.findFirst({
-        where: { performerId, batchId: batch.id }
-      });
+      const existing = existingByBatch.get(batch.id) || null;
 
       if (existing) {
         // ---- 已有明细：更新字段 ----
@@ -226,9 +235,6 @@ async function syncPerformerToWageItems(performerId, fields) {
         // 与 wages.generate 跳过规则一致：无考勤且无协议天工资不创建
         if (att.workDays <= 0 && newDailyRate == null) continue;
 
-        const ruleRow = perf.rankGrade
-          ? await prisma.wageRulesV1.findFirst({ where: { rankGrade: perf.rankGrade, status: 'active' } })
-          : null;
         const dailyRate = newDailyRate != null
           ? newDailyRate
           : (ruleRow ? Number(ruleRow.baseDailyStandard) || 0 : 0);
