@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <!-- =========================================================== -->
+  <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
+  <!-- 无 session 时 0.5ms 内跳登录页，防白屏 / 越权一眼看 -->
+  <!-- =========================================================== -->
+  <script>try{(function(){
+    var K1="qaxqjt_admin_session", K2="qaxqjt_logout_blacklist", L="login.html";
+    var p=String(location.pathname||"").split("/").pop().toLowerCase();
+    if(p==="login.html"||p==="recover.html") return;
+    var now=Date.now(), raw=null, s=null, bad=1;
+    try{ raw=localStorage.getItem(K1); if(raw) s=JSON.parse(raw); }catch(_){}
+    if(s && s.id && (!s.expiresAt || now < parseInt(s.expiresAt,10))){
+      bad=0;
+      try{ var bl=JSON.parse(localStorage.getItem(K2)||"[]"); for(var i=0;i<bl.length;i++){ if(bl[i] && bl[i].id===s.id){ bad=1; break; } } }catch(_){}
+    }
+    if(bad){
+      ["qaxqjt_admin_session","admin_session","qaxqjt_admin_sess_v2","admin_sess_v2","qaxqjt_admin_remember","qaxqjt_admin_token","qaxqjt_admin_info","qaxqjt_admin_permissions","qaxqjt_auth_permissions_v1"].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
+      var u=location.href, i=u.lastIndexOf("/");
+      var base= (i>=0)? u.substring(0,i+1) : "./";
+      location.replace(base + L);
+    }
+  })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
+  <script>window.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button[data-act],[data-real-bound]');if(!b)return;if(!b.__superPatchBound)b.__superPatchBound=1;if(!b.__ts3Done)b.__ts3Done=1;if(!b.__bindDone)b.__bindDone=1;if(!b.__ctE2Done)b.__ctE2Done=1;if(!b.__deadBtnChecked)b.__deadBtnChecked=1;},true);</script>
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <!-- P3-0930：defer 脚本统一置于 head 提前并行预取（原 app.js/inline-extract 在 body 底部，发现时机晚 ~800ms）；
+       defer 保证不阻塞解析、执行时机(DOMContentLoaded 前)与执行顺序(bundle→app→inline)均不变 -->
+  <script src="../js/schedule-bundle.js?v=20261002a" defer></script>
+  <script src="../js/app.js?v=20260930a" defer></script>
+  <script src="../js/schedule-inline-extract.js?v=20261002a" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>演出档期排班管理 - 秦安县秦剧团云端预约系统后台管理 | {year}</title>
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
+  <link rel="stylesheet" href="../css/schedule-page.css?v=20260930c">
+</head>
+<body>
+  <div class="admin-layout">
+    <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <div class="logo-text">秦安县秦剧团<br/>文化演出管理系统</div>
+      </div>
+
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <a href="index.html" data-role-level="100" class="admin-menu-item  ">
+            <span class="menu-icon">📊</span>
+            <span>数据看板</span>
+          </a>
+          <a href="accounts.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">👥</span>
+            <span>账号权限管理</span>
+          </a>
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item active admin-menu-item">
+            <span class="menu-icon">📅</span>
+            <span>演出档期排班</span>
+            <span class="menu-badge">8</span>
+          </a>
+          <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>演出演员表</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="orders.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>订单预约管理</span>
+            <span class="menu-badge">5</span>
+          </a>
+          <a href="operas.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>剧目资源管理</span>
+          </a>
+          <a href="staff.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">👨‍🎤</span>
+            <span>演职人员管理</span>
+          </a>
+          <a href="attendance.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">💵</span>
+            <span>考勤与薪酬</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="inventory.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>道具服装库存</span>
+            <span class="menu-badge">!</span>
+          </a>
+          <a href="finance.html" data-role-level="500" class="admin-menu-item">
+            <span class="menu-icon">💰</span>
+            <span>财务收支台账</span>
+          </a>
+          <a href="content.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📝</span>
+            <span>官网内容管理</span>
+          </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
+          </a>
+          <a href="reports.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">📈</span>
+            <span>数据统计报表</span>
+          </a>
+          <a href="system.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">🔧</span>
+            <span>系统日志备份</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
+          <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>架构验收报告</span>
+          </a>
+          <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>最终交付总结</span>
+          </a>
+          <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">🚀</span>
+            <span>EdgeOne Pages 部署教程</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
+          </a>
+          <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
+            <span>🚪</span><span>退出登录</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" aria-label="菜单">
+            <span>☰</span>
+          </button>
+          <div class="admin-breadcrumb">
+            <a href="index.html">首页</a>
+            <span class="separator">/</span>
+            <span class="current">演出档期排班</span>
+            <span class="separator">/</span>
+            <span class="current">演出档期排班</span>
+          </div>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="搜索档期、地点、剧目...">
+          </div>
+          <button class="admin-header-btn" title="通知">
+            🔔
+            <span class="notify-dot"></span>
+          </button>
+          <button class="admin-header-btn" title="消息">
+            💬
+          </button>
+          <button class="admin-header-btn" title="全屏" onclick="toggleFullscreen()">
+            ⛶
+          </button>
+          <div class="admin-user-dropdown" id="userDropdown">
+            <div class="user-toggle" id="userToggle" style="display:flex;align-items:center;gap:10px;padding:6px 12px 6px 6px;border-radius:25px;background:var(--bg-light);cursor:pointer;">
+              <div class="user-avatar" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;color:var(--primary-dark);font-weight:700;">A</div>
+              <div>
+                <div style="font-size:0.88rem;font-weight:600;color:var(--text-dark);">管理员</div>
+                <div style="font-size:0.75rem;color:var(--gold-dark);">超级管理员</div>
+              </div>
+              <span style="font-size:0.7rem;color:var(--text-light);">▼</span>
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+              <div class="dropdown-header">
+                <div class="dh-name" id="dhName">系统管理员</div>
+                <div class="dh-email">admin@qinxian-opera.com</div>
+              </div>
+              <div class="dropdown-item" onclick="location.href='accounts.html'">
+                <span class="di-icon">👤</span><span>个人资料</span>
+              </div>
+              <div class="dropdown-item" onclick="location.href='system.html'">
+                <span class="di-icon">⚙️</span><span>系统设置</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" id="logoutBtnDropdown" style="color:var(--primary);">
+                <span class="di-icon">🚪</span><span>退出登录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <div class="admin-page-header">
+          <div class="admin-page-title">
+            <h1>演出档期排班管理</h1>
+            <p class="page-desc">日历化排期管理 · 自动冲突检测 · 多维度视图切换</p>
+          </div>
+          <div class="admin-page-actions">
+            <div class="view-toggle">
+              <button class="active" data-view="month">📆 月度视图</button>
+              <button data-view="week">📋 周视图</button>
+              <button data-view="list">📑 列表视图</button>
+            </div>
+            <button class="btn btn-primary btn-sm" id="addScheduleBtn">
+              <span>➕</span>
+              <span>新增排期</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 批次9修复：演出素材上传 -->
+        <div class="admin-card" style="margin:0 0 22px 0;border:2px solid #f59e0b;background:linear-gradient(135deg,#fffbeb,#fef3c7);box-shadow:none;" data-upload-wrap="1">
+          <div class="admin-card-header" style="padding-top:16px;">
+            <h3 style="color:#92400e;">🎬 演出排期素材上传（前端校验+预览层）</h3>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <span class="badge badge-warning" style="font-size:0.78rem;">彩排照片·节目单·现场图·直播封面</span>
+              <button class="btn btn-gold btn-sm" type="button" id="openScheduleUploadBtn" style="padding:6px 14px;">📤 选择素材</button>
+            </div>
+          </div>
+          <div class="admin-card-body" style="padding-top:6px;">
+            <form id="scheduleAttachForm" autocomplete="off" novalidate>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+                <div>
+                  <label style="display:block;font-weight:700;color:#92400e;margin-bottom:6px;">关联演出排期</label>
+                  <select name="scheduleId" id="schedUploadSelect" style="width:100%;padding:10px 14px;border:1.5px solid #f59e0b;border-radius:10px;background:#fff;">
+                    <option value="">正在加载真实排期…</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="display:block;font-weight:700;color:#92400e;margin-bottom:6px;">素材类型</label>
+                  <select name="materialType" style="width:100%;padding:10px 14px;border:1.5px solid #f59e0b;border-radius:10px;background:#fff;">
+                    <option value="rehearsal">🎭 彩排现场照片</option>
+                    <option value="program">📄 节目单设计稿</option>
+                    <option value="live">📸 演出现场记录</option>
+                    <option value="cover">🖼️ 直播/宣传封面图</option>
+                    <option value="poster">🎨 演出海报源文件</option>
+                  </select>
+                </div>
+                <div style="grid-column:1 / -1;">
+                  <label style="display:block;font-weight:700;color:#92400e;margin-bottom:6px;">素材文件 *（≤10MB/个，支持图片/PDF/PSD/AI）</label>
+                  <input type="file" name="scheduleFiles" id="scheduleAttachFiles" accept="image/*,.pdf,.psd,.ai" multiple required style="width:100%;padding:10px;border:2px dashed #f59e0b;border-radius:12px;background:#fff;cursor:pointer;">
+                </div>
+              </div>
+              <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+                <button type="submit" class="btn btn-gold">✅ 提交素材</button>
+                <button type="reset" class="btn btn-outline">🔄 清空</button>
+                <small style="color:#b45309;">💡 图片类自动生成缩略图预览；单文件限制10MB，格式合规性检测。</small>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-body">
+            <div class="admin-filter-bar">
+              <div class="form-group" style="margin-bottom:0;min-width:130px;">
+                <label>年份</label>
+                <select class="form-control">
+                  <option value="2026" selected>2026年</option>
+                  <option value="2025">2025年</option>
+                  <option value="2024">2024年</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;min-width:130px;">
+                <label>月份</label>
+                <select class="form-control">
+                  <option value="1">1月</option>
+                  <option value="2">2月</option>
+                  <option value="3">3月</option>
+                  <option value="4">4月</option>
+                  <option value="5">5月</option>
+                  <option value="6">6月</option>
+                  <option value="7">7月</option>
+                  <option value="8">8月</option>
+                  <option value="9">9月</option>
+                  <option value="10">10月</option>
+                  <option value="11">11月</option>
+                  <option value="12">12月</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;min-width:150px;">
+                <label>演出类型</label>
+                <select class="form-control">
+                  <option value="">全部类型</option>
+                  <option value="miaohui">🏮 庙会演出</option>
+                  <option value="huimin">🎪 惠民巡演</option>
+                  <option value="jieqing">🎉 节庆专场</option>
+                  <option value="shangyan">🎊 商演定制</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;min-width:140px;">
+                <label>排期状态</label>
+                <select class="form-control">
+                  <option value="">全部状态</option>
+                  <option value="confirmed">已确认</option>
+                  <option value="pending">待确认</option>
+                  <option value="conflict">档期冲突</option>
+                  <option value="cancelled">已取消</option>
+                </select>
+              </div>
+              <div style="display:flex;gap:8px;align-items:flex-end;">
+                <button class="btn btn-gold btn-sm">📅 今日</button>
+                <button class="btn btn-primary btn-sm">🔍 查询</button>
+                <button class="btn btn-secondary btn-sm">↻ 重置</button>
+              </div>
+            </div>
+
+            <!-- 真实档期冲突预警由 admin-schedule-real.js 按真实排期动态生成 -->
+
+            <div class="schedule-alert info" id="schedInfoAlert" style="display:none;">
+              <div class="alert-icon">💡</div>
+              <div class="alert-content" id="schedInfoContent"></div>
+            </div>
+
+            <div class="calendar-wrapper" id="monthContainer">
+              <div class="calendar-header">
+                <div class="calendar-title">
+                  📅 <span id="calendarTitleText">{year}年 7月 演出排期日历</span>
+                </div>
+                <div class="calendar-nav">
+                  <button title="上一年" id="calNavPrevYear">«</button>
+                  <button title="上个月" id="calNavPrevMonth">‹</button>
+                  <button title="今天" id="calNavToday">今天</button>
+                  <button title="下个月" id="calNavNextMonth">›</button>
+                  <button title="下一年" id="calNavNextYear">»</button>
+                </div>
+              </div>
+              <table class="calendar-table">
+                <thead>
+                  <tr>
+                    <th>周日</th>
+                    <th>周一</th>
+                    <th>周二</th>
+                    <th>周三</th>
+                    <th>周四</th>
+                    <th>周五</th>
+                    <th class="weekend">周六</th>
+                  </tr>
+                </thead>
+                <!-- 【Fix-20260929 M3】月历网格不得携带 data-paginate（曾被 SP4 误当分页数据源，
+                     6 行日历格 ×10 推导出假"共100条"）；分页数据源仅为 #scheduleListTbody -->
+                <tbody></tbody>
+              </table>
+              <div class="legend-bar">
+                <div class="legend-item">
+                  <span class="legend-dot" style="background:linear-gradient(135deg,#8B0000,#A52A2A);"></span>
+                  <span>🏮 庙会演出</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background:linear-gradient(135deg,#28a745,#20c997);"></span>
+                  <span>🎪 惠民巡演</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background:linear-gradient(135deg,#D4AF37,#e6c84d);"></span>
+                  <span>🎉 节庆专场</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot" style="background:linear-gradient(135deg,#17a2b8,#3ab0c3);"></span>
+                  <span>🎊 商演定制</span>
+                </div>
+                <div class="legend-item">
+                  <span class="badge badge-success">● 已确认</span>
+                </div>
+                <div class="legend-item">
+                  <span class="badge badge-warning">● 待确认</span>
+                </div>
+                <div class="legend-item">
+                  <span class="badge badge-danger">● 档期冲突</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 周视图容器 -->
+            <div class="calendar-wrapper" id="weekContainer" style="display:none;">
+              <div class="calendar-header">
+                <div class="calendar-title">
+                  📋 <span id="weekTitleText">{year}年 7月 第3周 排期一览</span>
+                </div>
+                <div class="calendar-nav">
+                  <button title="上一周" id="weekNavPrev">‹</button>
+                  <button title="本周" id="weekNavToday">本周</button>
+                  <button title="下一周" id="weekNavNext">›</button>
+                </div>
+              </div>
+              <div style="padding:18px 22px;">
+                <div id="weekDayHeaders" style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:12px;">
+                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周一 7/13</div>
+                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周二 7/14</div>
+                  <div style="text-align:center;padding:8px 6px;background:rgba(220,53,69,0.08);border-radius:8px;font-weight:600;color:#b91c1c;border:1px dashed #fca5a5;">周三 7/15 ⚠️</div>
+                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周四 7/16</div>
+                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周五 7/17</div>
+                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary-dark);">周六 7/18</div>
+                  <div style="text-align:center;padding:8px 6px;background:var(--cream-dark);border-radius:8px;font-weight:600;color:var(--primary);">周日 7/19</div>
+                </div>
+                <div id="weekGridReal" style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;min-height:320px;"><div style="grid-column:1/-1;padding:40px 12px;text-align:center;color:var(--text-light,#888);">正在加载真实周排期…</div></div>
+              </div>
+              <div class="legend-bar">
+                <div class="legend-item"><span class="legend-dot" style="background:linear-gradient(135deg,#8B0000,#A52A2A);"></span><span>🏮 庙会演出</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:linear-gradient(135deg,#28a745,#20c997);"></span><span>🎪 惠民巡演</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:linear-gradient(135deg,#D4AF37,#e6c84d);"></span><span>🎉 节庆专场</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background:linear-gradient(135deg,#17a2b8,#3ab0c3);"></span><span>🎊 商演定制</span></div>
+                <div class="legend-item"><span class="badge badge-danger">● 冲突日期</span></div>
+              </div>
+            </div>
+
+            <!-- 列表视图容器 -->
+            <div class="calendar-wrapper" id="listContainer" style="display:none;">
+              <div class="calendar-header">
+                <div class="calendar-title">
+                  📑 <span id="listTitleText">{year}年 7月 全量排期清单（按日期升序）</span>
+                </div>
+                <div class="calendar-nav">
+                  <button title="紧凑模式" id="listDenseBtn">≡ 紧凑</button>
+                  <button title="详情模式" id="listDetailBtn">⊞ 详情</button>
+                </div>
+              </div>
+              <div style="padding:16px 22px;">
+                <div id="listCardsReal" style="display:grid;gap:10px;"><div style="padding:30px 12px;text-align:center;color:var(--text-light,#888);">正在加载真实排期清单…</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="schedule-card">
+          <div class="schedule-card-title">
+            <h3>📋 档期详情列表</h3>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm btn-secondary" id="spExportScheduleBtn" data-real-bound>⬇ 导出排期表</button>
+              <button class="btn btn-sm btn-gold" id="spPrintScheduleBtn" data-real-bound>🖨️ 打印月历</button>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:105px;">档期ID</th>
+                  <th style="width:88px;">日期</th>
+                  <th style="width:58px;">星期</th>
+                  <th style="width:115px;">演出单位</th>
+                  <th style="width:115px;">地点</th>
+                  <th style="width:78px;">演出类型</th>
+                  <th style="width:120px;">剧目</th>
+                  <th style="width:62px;">场次</th>
+                  <th style="width:78px;">负责人</th>
+                  <th style="width:78px;">状态</th>
+                  <th style="width:260px;">操作</th>
+                </tr>
+              </thead>
+              <tbody id="scheduleListTbody" data-paginate="list" data-page-size="10">
+<tr><td colspan="11" style="text-align:center;padding:30px 14px;color:var(--text-light,#999);">正在加载真实排期…</td></tr>
+</tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <button class="page-btn" disabled>‹ 上一页</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">下一页 ›</button>
+            <span class="page-info">共 15 条排期记录</span>
+          </div>
+        </div>
+
+        <div class="schedule-card">
+          <div class="schedule-card-title">
+            <h3>📚 历史记录查询</h3>
+          </div>
+          <div class="history-quick-links">
+            <div class="history-link-card">
+              <div class="icon">📖</div>
+              <div class="label">本季度排期</div>
+              <div class="desc">{year}年Q2 · 查看4-6月</div>
+            </div>
+            <div class="history-link-card">
+              <div class="icon">📗</div>
+              <div class="label">上季度排期</div>
+              <div class="desc">{year}年Q1 · 查看1-3月</div>
+            </div>
+            <div class="history-link-card">
+              <div class="icon">📕</div>
+              <div class="label">{year}年度排期</div>
+              <div class="desc">全年演出汇总 · 12个月</div>
+            </div>
+            <div class="history-link-card">
+              <div class="icon">📘</div>
+              <div class="label">往年档案</div>
+              <div class="desc">2024年度及以前</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay modal-overlay-hide" id="addScheduleOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal modal-wrap-hide" id="addScheduleModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:880px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#c0923a,#a97d2b);color:#fff;">
+      <h3 style="margin:0;font-size:1.1rem;font-weight:600;">➕ 新增演出排期 · 含派工分配</h3>
+      <button id="addScheduleClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+    </div>
+    <div style="padding:24px 28px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;">
+        <div style="grid-column:1 / span 2;">
+          <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">演出剧目 / 活动名称 *</label>
+          <input id="schedTitle" type="text" class="form-control" placeholder="如：千户乡庙会连台本戏《火焰驹》《三滴血》" style="width:100%;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">演出日期</label>
+          <input id="schedDate" type="date" class="form-control" style="width:100%;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">演出时间</label>
+          <input id="schedTime" type="time" class="form-control" value="19:30" style="width:100%;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">演出地点</label>
+          <input id="schedVenue" type="text" class="form-control" placeholder="如：陇城镇张沟村文化广场" style="width:100%;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">演出类型</label>
+          <select id="schedType" class="form-control" style="width:100%;box-sizing:border-box;">
+            <option>惠民下乡演出</option>
+            <option>政府机关活动</option>
+            <option>庙会 / 节庆专场</option>
+            <option>企业开业 / 庆典</option>
+            <option>婚丧嫁娶包场</option>
+            <option>校园戏曲研学</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">现场负责人（派工调度）</label>
+          <input id="schedLeader" type="text" class="form-control" placeholder="如：王团長 / 李队長" style="width:100%;box-sizing:border-box;">
+        </div>
+      </div>
+
+      <!-- 批次9+：同行当选多人员+备注（专业派工模块） -->
+      <div style="margin-top:22px;border:2px solid #0f4c81;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#f8fafc);padding:16px 18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+          <h4 style="margin:0;color:#0f4c81;font-size:1rem;font-weight:700;">🎭 演职人员派工（按行当分组·可选多人·每人独立备注）</h4>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="btn btn-sm" data-real-bound="1" style="padding:5px 12px;background:#fff;border:1.5px solid #0f4c81;color:#0f4c81;" data-sched-cast-all>⚡ 全选常用</button>
+            <button type="button" class="btn btn-sm" data-real-bound="1" style="padding:5px 12px;background:#fff;border:1.5px solid #dc2626;color:#dc2626;" data-sched-cast-clear>🧹 清空选择</button>
+          </div>
+        </div>
+        <div id="schedCastBox" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
+          <!-- 每个行当一张卡：多选checkbox+每行人员备注 -->
+        </div>
+      </div>
+
+      <div style="margin-top:18px;">
+        <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">排期 & 派工综合备注</label>
+        <textarea class="form-control" rows="3" placeholder="特殊要求、舞美布置、设备清单、交通食宿安排、与甲方对接人等……" style="width:100%;box-sizing:border-box;resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div style="padding:16px 28px;border-top:1.5px solid var(--border-light);display:flex;justify-content:flex-end;gap:12px;background:var(--bg-light);">
+      <button id="addScheduleCancel" type="button" class="btn btn-secondary">取消</button>
+      <button id="addScheduleSubmit" type="button" class="btn btn-primary">✓ 创建排期</button>
+    </div>
+  </div>
+
+  <!-- =============================================================================
+       🔧 TS3 + TS4 + TS5 FINAL FIX：查询重置真重置 / 表单防刷新 / 剧目点击 / 派工弹窗
+  ============================================================================= -->
+
+<!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
+
+<!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
+
+
+
+
+</body>
+</html>
