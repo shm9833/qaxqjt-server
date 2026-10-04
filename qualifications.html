@@ -553,7 +553,42 @@
   </footer>
 
   <script src="js/year-lite.js?v=20260803"></script>
-  <script src="js/app.js?v=20260930a"></script>
+  <!-- P3补修(qualifications): 引入 API 基础层，app.js initQualificationForms 才能拿到 window.QAXQJT_API 真实提交 POST /v1/appointments（此前缺引导致恒走 localStorage 草稿分支） -->
+  <script src="js/api-config.js?v=20261004a"></script>
+  <script src="js/api-request.js?v=20261004a"></script>
+  <script>
+  /* P3补修(qualifications): 消解图片上传全局拦截器与两表单真实提交的冲突。
+     app.js initImageUploaders 在 document-capture 注册全局 submit 拦截：凡含
+     input[type=file][accept*="image"] 的表单都弹"EdgeOne 静态环境请对接对象存储"提示；
+     资质核验/合作对接两表单附件框含 image/*，会与 initQualificationForms 的真实 API 提交
+     （app.js 内 form-submit 处理器 → QAXQJT_API.post('/v1/appointments')，失败才诚实暂存草稿）
+     同时触发形成矛盾双 toast。本监听器在同步脚本阶段注册（早于 DOMContentLoaded 中 App.init
+     的注册），提交瞬间临时摘除 accept 让全局图片拦截器选择器不匹配，事件继续到达真实处理器，
+     下一 tick 恢复 accept，不影响用户再次选择图片/PDF 文件。 */
+  (function(){
+    document.addEventListener('submit', function(ev){
+      var f = ev.target;
+      if(!f || f.tagName!=='FORM') return;
+      if(f.id!=='qualVerifForm' && f.id!=='coopForm') return;
+      var imgs = f.querySelectorAll('input[type="file"][accept*="image"]');
+      if(!imgs.length) return;
+      var saved = [];
+      for(var i=0;i<imgs.length;i++){
+        saved.push(imgs[i]);
+        imgs[i].setAttribute('data-qf-accept-backup', imgs[i].getAttribute('accept')||'');
+        imgs[i].removeAttribute('accept');
+      }
+      setTimeout(function(){
+        for(var j=0;j<saved.length;j++){
+          var a = saved[j].getAttribute('data-qf-accept-backup');
+          try{ saved[j].removeAttribute('data-qf-accept-backup'); }catch(_){}
+          if(a) saved[j].setAttribute('accept', a);
+        }
+      }, 0);
+    }, true);
+  })();
+  </script>
+  <script src="js/app.js?v=20261004b"></script>
   <!-- 🔧 D块前台×按钮兜底：弹窗右上角×按钮无onclick时，document级委托强制关闭最近 modal -->
   <script>
   (function(){

@@ -1564,7 +1564,7 @@
               <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
                 <button type="submit" class="btn" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border:none;">✅ 提交报表附件</button>
                 <button type="reset" class="btn btn-outline">🔄 清空</button>
-                <small style="color:#6d28d9;">💡 上传后自动生成缩略图预览，Excel/PDF显示图标；正式发布对接COS/后端接口。</small>
+                <small style="color:#6d28d9;">💡 文件经后端 /v1/upload 真实上传（需 ops/导演/超管角色），成功后按钮下方显示可访问链接。</small>
               </div>
             </form>
           </div>
@@ -1648,8 +1648,9 @@
 
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260922"></script>
+    <script>/* P3修复: 全局 PATHS 常量（带回退） */ window.QAXQJT_PATHS = (window.QAXQJT_API_CONFIG && window.QAXQJT_API_CONFIG.PATHS) || {};</script>
   <script src="../js/api-request.js?v=20260922"></script>
-<script src="../js/app.js?v=20260930a"></script>
+<script src="../js/app.js?v=20261004b"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
   <script src="../js/pagination.js?v=20261002a"></script>
   <script>
@@ -2005,94 +2006,99 @@ var __pT0=0;
       if(isSave){
     __pEvt.branch='save';
     var __pLk = __L(doneKey,900);
-    if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-    __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 保存成功','success');
-        try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
+    /* P1修复:假成功已移除 — 死按钮保存未接入后端，仅提示不再伪装成功 */
+    if(!__pLk) { __T('该功能暂未接入后端','warning'); try { e.stopPropagation(); } catch(_a){} return; }
+    __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'warning'}));
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isEdit){
         if(!__L(doneKey,700)) return;
         __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
-        __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isDel){
-        if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-        if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
-        try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
+        if(!__L(doneKey,850)) { __T('该功能暂未接入后端','warning'); try { e.stopPropagation(); } catch(_a){} return; }
+        /* P1修复:假成功已移除（不再伪造确认框与表格行删除） */
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
         if(!__L(doneKey,500)) return;
         __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
-        __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isVerify){
-        if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
+        if(!__L(doneKey,900)) { __T('该功能暂未接入后端','warning'); return; }
         __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
-        __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isExport){
-        if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
+        if(!__L(doneKey,1200)) { __T('该功能暂未接入后端','warning'); return; }
         __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
-        __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 准备新增「'+txt+'」','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
       var isAudit = txt.indexOf('审核')>=0 || txt.indexOf('审批')>=0 || txt.indexOf('驳回')>=0 || txt.indexOf('通过')>=0;
       if(isAudit){
-        if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        if(!__L(doneKey,850)){ __T('该功能暂未接入后端','warning'); try{e.stopPropagation();}catch(_a){} return; }
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
-        if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
+        /* P1修复:假成功已移除（不再伪造审核确认与结果） */
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
       var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
       if(isSign){
-        if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
+        if(!__L(doneKey,900)){ __T('该功能暂未接入后端','warning'); try{e.stopPropagation();}catch(_a){} return; }
+        /* P1修复:假成功已移除（不再伪造签约确认） */
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
       var isContract = txt.indexOf('合同')>=0 && !isSign;
       if(isContract){
-        if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
+        if(!__L(doneKey,1000)){ __T('该功能暂未接入后端','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
       var isScheduleBtn = txt.indexOf('排期')>=0 || txt.indexOf('排班')>=0 || (txt.indexOf('安排')>=0 && (txt.length<=8 || txt.indexOf('档期')>=0));
       if(isScheduleBtn){
-        if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
+        if(!__L(doneKey,800)){ __T('该功能暂未接入后端','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
+        /* P1修复:假成功已移除 */
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
       var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
       if(isCancelOrHandle && !isDel && !isSave){
-        if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if((txt.indexOf('取消')>=0) && !confirm('确认取消：'+(trKey||'当前记录')+'？')) return;
+        if(!__L(doneKey,800)){ __T('该功能暂未接入后端','warning'); try{e.stopPropagation();}catch(_a){} return; }
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
-        var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
+        /* P1修复:假成功已移除（不再伪造取消/接单/派工结果） */
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
+        __T('该功能暂未接入后端','warning');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -2218,6 +2224,8 @@ function __pLog(module,event,extra){
       try{
         var form = e.target;
         if(!form||form.tagName!=='FORM') return;
+        /* P1修复:假成功已移除 — 已绑定真实提交处理的表单（__realSubmit）直接放行 */
+        if(form.__realSubmit) return;
         e.preventDefault();
         e.stopPropagation();
         var fields = form.querySelectorAll('input,select,textarea');
@@ -2274,10 +2282,8 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 提交成功','success');
-        setTimeout(function(){
-          try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
-        }, 380);
+        /* P1修复:假成功已移除 — 校验通过但表单未接线后端，不再伪装提交成功、不再自动关弹窗 */
+        __toastH9('该功能暂未接入后端','warning');
         return false;
       }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
     }, true);
@@ -2441,6 +2447,7 @@ function __pLog(module,event,extra){
     function _isPgContainer(el){
       try{
         if(!el || el.nodeType!==1) return false;
+        if(el.closest && el.closest('.sp-pg-toolbar-20260730,.pagination-toolbar')) return false;
         var tag = (el.tagName||'').toUpperCase();
         if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
         var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
@@ -2469,7 +2476,8 @@ function __pLog(module,event,extra){
     }
     function _buildPg(container){
       try{
-        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
+        if(container.hasAttribute('data-pg-built')||container.querySelector('.sp-pg-toolbar-20260730')) return; container.setAttribute('data-pg-built','1');
+        if(container.classList && (container.classList.contains('sp-pg-toolbar-20260730')||container.classList.contains('pagination-toolbar'))) return;
         var oldToolbar = container.querySelector('.pagination-toolbar');
         if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
         var st = _ensurePgState(container);
@@ -2484,6 +2492,7 @@ function __pLog(module,event,extra){
         if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
         var wrap = document.createElement('div');
         wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.setAttribute('data-pg-built','1');
         wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
         wrap.innerHTML = ''+
           '<button class="btn btn-sm" data-pg="first">首页</button>'+
@@ -2581,7 +2590,7 @@ function __pLog(module,event,extra){
     function _scanPagination(){
       try{
         var all = document.querySelectorAll('div,nav,section,span');
-        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
+        all.forEach(function(el){ if(el.hasAttribute('data-pg-built')) return; if(_isPgContainer(el)) _buildPg(el); });
         var sty = document.createElement('style');
         if(!document.getElementById('_pgPatchCSS20260730')){
           sty.id='_pgPatchCSS20260730';
@@ -2691,7 +2700,8 @@ function __pLog(module,event,extra){
   // 功能按钮绑定（上传/新建/导出）
   try{
     function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
-    __bindBtn('openReportsUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.xls,.xlsx,.jpg,.png"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（报告附件）","info"); }; inp.click(); });
+    /* P1修复:假成功已移除 — "选择报表"改为打开下方真实上传表单的文件选择器，不再假提示已选择 */
+    __bindBtn('openReportsUploadBtn', function(){ var real=document.getElementById('reportsAttachFiles'); if(real){ real.click(); return; } var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.xls,.xlsx,.jpg,.png"; inp.onchange=function(){ console.warn('[P1] 未接线按钮: 动态报表文件选择（真实上传表单缺失）'); }; inp.click(); });
   }catch(_e){ console.warn("[upload-bind err]",_e); }
 
 try{
@@ -2740,36 +2750,34 @@ try{
         var trKey = '';
         if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
         __spT0 = Date.now();
+        /* P1修复:假成功已移除 — 死按钮兜底不再伪装操作成功，统一提示未接入后端 */
         if(tt==='save'){
           __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功','success');
-          setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='delete'){
-          if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
-            __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
-          }else{ __toastH9('↩️ 已取消操作','info'); }
+          __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey});
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='view'){
           __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='export'){
           __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印','info');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='schedule'){
           __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='audit'){
           __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='contract'){
           __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪','info');
+          __toastH9('该功能暂未接入后端','warning');
         }else if(tt==='add'){
           __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增','info');
+          __toastH9('该功能暂未接入后端','warning');
         }else{
           __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
+          __toastH9('该功能暂未接入后端','warning');
         }
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
@@ -2866,11 +2874,14 @@ window.__reportsApi = (function(){
     try{
       var yearSel = document.getElementById('yearSelect');
       var year = (yearSel && yearSel.value) ? yearSel.value : new Date().getFullYear();
-      var s = await API.get('/v1/orders/stats', { query:{ year:year } }).catch(function(){ return null; });
-      var f = await API.get('/v1/fin/summary', { query:{ year:year } }).catch(function(){ return null; });
+      // 修复 P0：区县分布/月度场次/剧目排行渲染函数定义后从未被调用，三大图区永久“正在加载”
+      // renderScheduleStats 内部自带空态与 catch，独立并行刷新，不阻塞 KPI 卡片
+      renderScheduleStats(year).catch(function(e){ console.warn('[__reportsApi.renderScheduleStats]',e); });
+      var s = await API.get((QAXQJT_PATHS.ORDERS_STATS || '/v1/orders/stats'), { query:{ year:year } }).catch(function(){ return null; });
+      var f = await API.get((QAXQJT_PATHS.FIN_SUMMARY || '/v1/fin/summary'), { query:{ year:year } }).catch(function(){ return null; });
       // 本月排期概览：/v1/schedules/stats（year + month）
       var now = new Date();
-      var sch = await API.get('/v1/schedules/stats', { query:{ year:now.getFullYear(), month:now.getMonth()+1 } }).catch(function(){ return null; });
+      var sch = await API.get((QAXQJT_PATHS.SCHEDULES_STATS || '/v1/schedules/stats'), { query:{ year:now.getFullYear(), month:now.getMonth()+1 } }).catch(function(){ return null; });
       var schedBox = document.getElementById('schedStatsBox');
       var schedMonth = document.getElementById('schedStatsMonth');
       if(schedMonth) schedMonth.textContent = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
@@ -2916,7 +2927,7 @@ window.__reportsApi = (function(){
   /* ===== 20260922 真实化：区县分布/月度场次由 /v1/schedules 真实排期生成 ===== */
   function _rows(d){ return Array.isArray(d)?d:((d&&d.items)||[]); }
   async function renderScheduleStats(year){
-    var all=_rows(await API.get("/v1/schedules",{query:{page:1,pageSize:500}}).catch(function(){return [];}));
+    var all=_rows(await API.get((QAXQJT_PATHS.SCHEDULES || '/v1/schedules'),{query:{page:1,pageSize:500}}).catch(function(){return [];}));
     var rows=all.filter(function(s){ return String(s.date||"").indexOf(year+"-")===0 && ["scheduled","confirmed","performance","completed"].indexOf(s.status)>=0; });
     // KPI0：年度演出总场次（真实排期计数）
     _setKpi(0, rows.length, "场");
@@ -2975,7 +2986,60 @@ window.__reportsApi = (function(){
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ bind(); load(); }); }
   else { bind(); load(); }
 
-  return { load:load };
+  return { load:load, renderScheduleStats:renderScheduleStats };
+})();
+
+/* ===== P1修复:统计报表附件上传接通真实后端 POST /v1/upload（multipart 字段 file，返回 data:{url,filename,originalName,...}） ===== */
+(function(){
+  var form = document.getElementById('reportsAttachForm');
+  if(!form || form.__realUploadWired) return;
+  form.__realUploadWired = 1;
+  form.__realSubmit = 1; /* 告知 SuperPatch 1/6 放行真实提交 */
+  var API = window.QAXQJT_API;
+  var T = function(m,t){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(m,t||'info',3000); }catch(_){} };
+  var box = document.createElement('div');
+  box.id = 'reportsUploadResult';
+  box.style.cssText = 'margin-top:10px;font-size:.85rem;color:#374151;word-break:break-all;';
+  form.appendChild(box);
+
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    var fileInput = document.getElementById('reportsAttachFiles');
+    var files = (fileInput && fileInput.files) ? Array.prototype.slice.call(fileInput.files) : [];
+    if(!files.length){ T('请先选择要上传的报表文件','warning'); return; }
+    var period = (form.querySelector('[name="reportPeriod"]')||{}).value || '';
+    var month = (form.querySelector('[name="reportMonth"]')||{}).value || '';
+    var okList = [], failList = [];
+    for(var i=0;i<files.length;i++){
+      var f = files[i];
+      if(f.size > 10*1024*1024){ failList.push({name:f.name, reason:'超过10MB'}); continue; }
+      try{
+        var fd = new FormData();
+        fd.append('file', f);
+        var d = await API.post((QAXQJT_PATHS.UPLOAD || '/v1/upload'), fd);
+        okList.push(d || {});
+      }catch(err){
+        failList.push({ name:f.name, reason:(err&&err.message)||('HTTP错误') });
+      }
+    }
+    var html = '';
+    if(okList.length){
+      html += '<div style="color:#15803d;font-weight:700;">✅ 已上传 '+okList.length+'/'+files.length+' 个文件（周期：'+period+' '+month+'）</div>'+
+        okList.map(function(u){ return '<div style="margin-top:4px;">📎 <a href="'+u.url+'" target="_blank" rel="noopener">'+(u.originalName||u.filename||u.url)+'</a></div>'; }).join('');
+    }
+    if(failList.length){
+      html += '<div style="color:#b91c1c;margin-top:'+(okList.length?'6px':'0')+';">⚠️ 失败 '+failList.length+' 个：'+failList.map(function(x){ return x.name+'（'+x.reason+'）'; }).join('、')+'</div>';
+    }
+    box.innerHTML = html;
+    if(okList.length && !failList.length){
+      T('✅ 报表附件已上传 '+okList.length+' 个','success');
+      try{ fileInput.value=''; }catch(_e2){}
+    }else if(okList.length){
+      T('部分文件上传成功，详见下方链接列表','warning');
+    }else{
+      T('上传失败：'+((failList[0]&&failList[0].reason)||'请检查登录与网络'),'error');
+    }
+  });
 })();
 </script>
 <script>
@@ -3107,7 +3171,7 @@ window.__dailyWageReport = (function(){
   async function doDelete(){
     if(!_pdTarget.id) return;
     try{
-      await API.del('/v1/performers/'+_pdTarget.id);
+      await API.del((QAXQJT_PATHS.PERFORMERS_BY_ID || function (i) { return '/v1/performers/' + i; })(_pdTarget.id));
       T('🗑️ 已删除并记录审计：'+_pdTarget.name,'success');
       closeConfirm(); pdSearch(); loadDelAudit(); load();
     }catch(e){ /* 错误 toast 由 api-request 统一弹出 */ }
@@ -3118,7 +3182,7 @@ window.__dailyWageReport = (function(){
     if(!kw){ box.innerHTML = '<span style="color:#999;">请输入姓名/工号等关键字</span>'; return; }
     box.innerHTML = '<span style="color:#999;">搜索中…</span>';
     try{
-      var d = await API.get('/v1/performers', { query:{ keyword:kw, page:1, pageSize:20 } });
+      var d = await API.get((QAXQJT_PATHS.PERFORMERS || '/v1/performers'), { query:{ keyword:kw, page:1, pageSize:20 } });
       var rows = _rows(d);
       if(!rows.length){ box.innerHTML = '<span style="color:#999;">未找到匹配的在册人员</span>'; return; }
       box.innerHTML = rows.map(function(p){
@@ -3138,7 +3202,7 @@ window.__dailyWageReport = (function(){
     var box = $('delAuditBox'); if(!box) return;
     box.innerHTML = '<span style="color:#999;">正在加载删除记录…</span>';
     try{
-      var d = await API.get('/v1/audit-logs', { query:{ module:'performers', action:'PERFORMER_SOFT_DELETE', page:1, pageSize:20 } });
+      var d = await API.get((QAXQJT_PATHS.AUDIT_LOGS || '/v1/audit-logs'), { query:{ module:'performers', action:'PERFORMER_SOFT_DELETE', page:1, pageSize:20 } });
       var rows = _rows(d);
       if(!rows.length){ box.innerHTML = '<span style="color:#999;">暂无删除记录</span>'; return; }
       box.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto;">'+rows.map(function(a){

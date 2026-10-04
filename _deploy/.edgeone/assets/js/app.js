@@ -1741,6 +1741,8 @@
       var _submitT0 = Date.now();
       console.log('[submitAppointment] ③ 提交方式：' + (hasApi ? 'QAXQJT_API.post → 后端API（含 localStorage 自动降级）' : '无 API 模块 → 直接 localStorage 写入'));
       var submitPromise;
+      /* P1修复:假受理已改诚实暂存 —— 标记是否走了本地降级，成功提示据此区分真实/暂存 */
+      var _fellBack = false;
       if (hasApi) {
         submitPromise = _win.QAXQJT_API.post(_apiPath, apiPayload, {
           skipAuth: true,
@@ -1749,10 +1751,12 @@
             var _reason = (fbInfo && fbInfo.reason) || 'fallback';
             var _netErr = (fbInfo && fbInfo.err && fbInfo.err.message) ? fbInfo.err.message : '';
             console.warn('[submitAppointment] ③-a ⚠️ API 不可用，触发降级：reason=' + _reason + (_netErr ? ('; 网络错误=' + _netErr) : ''));
+            _fellBack = true;
             return _saveToLocalStorage();
           }
         });
       } else {
+        _fellBack = true;
         submitPromise = Promise.resolve(_saveToLocalStorage());
       }
 
@@ -1766,7 +1770,7 @@
           status: saved && saved.status,
           _fromStorage: saved && saved._genSessionId ? 'yes(localStorage路径)' : null
         }, null, 2));
-        _finalizeSuccess(saved);
+        _finalizeSuccess(saved, _fellBack);
         return saved;
       }).catch(function (err) {
         var _elapsed = Date.now() - _submitT0;
@@ -1791,7 +1795,32 @@
         throw err;
       });
 
-      function _finalizeSuccess(saved) {
+      function _finalizeSuccess(saved, viaFallback) {
+        /* P1修复:假受理已改诚实暂存 —— 本地降级时仅诚实提示，不伪造「预约提交成功/24小时联系/预约编号」 */
+        if (viaFallback) {
+          try { Utils.toast('⚠️ 在线提交暂不可用：您的预约信息已暂存在您的设备本地，不会自动提交给剧团。请拨打 13993839833 或通过页面下方的电话/微信联系我们', 'warn', 6500); } catch (_teFb) {}
+          var smFb = document.getElementById('formSuccessMsg');
+          if (smFb) {
+            var tFb = smFb.querySelector('.success-title');
+            var dFb = smFb.querySelector('.success-desc');
+            if (tFb) tFb.textContent = '⚠️ 在线提交暂不可用，信息已暂存在您的设备本地';
+            if (dFb) dFb.innerHTML = '您的预约信息<strong>不会自动提交给剧团</strong>。请拨打 <a href="tel:13993839833">13993839833</a> 或通过页面下方的电话/微信联系我们完成预约（表单内容已保留，便于核对）。';
+            var idRowFb = smFb.querySelector('[data-booking-id-row]');
+            if (idRowFb) { try { idRowFb.classList.add('csp-hide'); } catch (_eFb) {} }
+            try { smFb.classList.remove('csp-hide'); } catch (_eFb2) {}
+            try { smFb.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_eFb3) {}
+          }
+          try {
+            form.removeAttribute('aria-busy');
+            var btsFb = form.querySelectorAll('button[type="submit"], input[type="submit"], [data-role="booking-submit"]');
+            if (btsFb && btsFb.length) for (var bFb = 0; bFb < btsFb.length; bFb++) {
+              try { btsFb[bFb].removeAttribute('disabled'); } catch (_xFb) {}
+              try { btsFb[bFb].removeAttribute('aria-disabled'); } catch (_xFb2) {}
+              try { btsFb[bFb].classList.remove('btn-submitting'); } catch (_xFb3) {}
+            }
+          } catch (eFb4) {}
+          return;
+        }
         Utils.toast('预约提交成功！我们将在24小时内与您联系', 'success');
         var finalBookingId = (saved && (saved.bookingId || saved.bookingNo)) ? (saved.bookingId || saved.bookingNo) : bookingId;
 
@@ -3703,6 +3732,19 @@
         }
 
         var localRecord = _genLocalRecord();
+        /* P1修复:假受理已改诚实暂存 —— 网络降级仅本地暂存并诚实提示，不伪造「快速预约提交成功/24小时联系」 */
+        function _qbHonestLocal() {
+          try {
+            var dk = 'qaxqjt_public_form_draft_index';
+            var arr = null;
+            try { arr = JSON.parse(localStorage.getItem(dk) || '[]'); } catch (_pe) { arr = null; }
+            if (!Array.isArray(arr)) arr = [];
+            arr.push({ form: 'quickBookForm', data: { name: name.trim(), phone: phone.trim(), serviceType: serviceType, eventDate: eventDate, message: message }, savedAt: new Date().toISOString() });
+            localStorage.setItem(dk, JSON.stringify(arr.slice(-50)));
+          } catch (_le) {}
+          Utils.toast('⚠️ 在线提交暂不可用：您的预约信息已暂存在您的设备本地，不会自动提交给剧团。请拨打 13993839833 或通过页面下方的电话/微信与我们联系（表单内容已保留，便于复制）', 'warn', 6500);
+          _unlockBtn();
+        }
         var _A = (typeof window !== 'undefined' && window.QAXQJT_API) ? window.QAXQJT_API : null;
         if (_A && typeof _A.post === 'function') {
           var apiPayload = {
@@ -3716,11 +3758,13 @@
             specialRequirements: (serviceType ? ('演出类型：' + serviceType + '\n') : '') + (message ? ('备注：' + message) : ''),
             smsVerifiedFlag: false
           };
+          var _qbFellBack = false;
           _A.post('/v1/appointments', apiPayload, {
             skipAuth: true,
             showErrorToast: false,
-            fallback: function () { return _saveLocal(localRecord); }
+            fallback: function () { _qbFellBack = true; return _saveLocal(localRecord); }
           }).then(function (saved) {
+            if (_qbFellBack) { _qbHonestLocal(); return; }
             var rec = localRecord;
             try {
               var sid = saved && (saved.bookingNo || saved.bookingId || saved.appointmentNo);
@@ -3733,7 +3777,8 @@
             _unlockBtn();
           });
         } else {
-          _showSuccess(_saveLocal(localRecord));
+          try { _saveLocal(localRecord); } catch (e) {}
+          _qbHonestLocal();
         }
       });
     },
@@ -3822,9 +3867,23 @@
           }
           _qcUnlock();
         }
+        /* P1修复:假受理已改诚实暂存 —— 网络降级仅本地暂存并诚实提示，不伪造「留言提交成功/尽快联系」 */
+        function _qcHonestLocal() {
+          try {
+            var dk = 'qaxqjt_public_form_draft_contact';
+            var arr = null;
+            try { arr = JSON.parse(localStorage.getItem(dk) || '[]'); } catch (_pe) { arr = null; }
+            if (!Array.isArray(arr)) arr = [];
+            arr.push({ form: 'quickContactForm', data: { name: name.trim(), phone: phone.trim(), message: message }, savedAt: new Date().toISOString() });
+            localStorage.setItem(dk, JSON.stringify(arr.slice(-50)));
+          } catch (_le) {}
+          Utils.toast('⚠️ 在线提交暂不可用：您的留言已暂存在您的设备本地，不会自动提交给剧团。请拨打 13993839833 或通过页面下方的电话/微信与我们联系（表单内容已保留，便于复制）', 'warn', 6500);
+          _qcUnlock();
+        }
         var _Aq = (typeof window !== 'undefined' && window.QAXQJT_API) ? window.QAXQJT_API : null;
         if (_Aq && typeof _Aq.post === 'function') {
           var _d7 = new Date(); _d7.setDate(_d7.getDate() + 7);
+          var _qcFellBack = false;
           _Aq.post('/v1/appointments', {
             customerName: name.trim(),
             contactPerson: name.trim(),
@@ -3838,17 +3897,17 @@
           }, {
             skipAuth: true,
             showErrorToast: false,
-            fallback: function () { try { Storage.create(Storage.KEYS.APPOINTMENTS, record); } catch (e) {} return record; }
+            fallback: function () { _qcFellBack = true; try { Storage.create(Storage.KEYS.APPOINTMENTS, record); } catch (e) {} return record; }
           }).then(function () {
-            _qcSuccess();
+            if (_qcFellBack) { _qcHonestLocal(); } else { _qcSuccess(); }
           }).catch(function (err) {
             console.error('[QuickContact] API submit failed:', err);
             Utils.toast('提交失败：' + ((err && err.message) ? err.message : '请稍后重试') + '。也可直接致电 13993839833', 'error');
             _qcUnlock();
           });
         } else {
-          Storage.create(Storage.KEYS.APPOINTMENTS, record);
-          _qcSuccess();
+          try { Storage.create(Storage.KEYS.APPOINTMENTS, record); } catch (e) {}
+          _qcHonestLocal();
         }
       });
     },
@@ -6992,23 +7051,36 @@
                 return false;
               }
             }
-            var key = Storage.KEYS.APPOINTMENTS + '_' + label;
-            var list = Storage._get(key) || [];
-            // ✅ 项目约束：资质核验生成 QUA-xxxx / 合作对接生成 COOP-xxxx 格式工单编号
-            var ticketPrefix = (id === 'qualVerifForm') ? 'QUA' : 'COOP';
-            var seqKey = 'qaxqjt_ticket_seq_' + ticketPrefix;
-            var curSeq = parseInt(localStorage.getItem(seqKey) || '0', 10);
-            if (isNaN(curSeq) || curSeq < 0) curSeq = 0;
-            curSeq++;
-            localStorage.setItem(seqKey, String(curSeq));
-            var ticketId = ticketPrefix + '-' + String(curSeq).padStart(4, '0');
-            obj.ticketId = ticketId;
-            obj.createdAt = new Date().toISOString();
-            list.push(obj);
-            Storage._set(key, list);
-            var toastFn2 = Utils.toast || Utils.showToast;
-            toastFn2 && toastFn2('✅ ' + label + '申请已受理！工单编号：' + ticketId + '，1 个工作日内将有专属对接人联系您', 'success', 5000);
-            f.reset();
+            /* P1修复:假受理已改真实提交/诚实暂存 —— 原逻辑仅写 localStorage 并伪造「已受理+工单编号+1个工作日联系」。
+               现接通后端公开匿名端点 POST /v1/appointments（server/src/routes/v1/index.js，无需鉴权）；
+               后端不可达时仅本地暂存（qaxqjt_public_form_draft_qualifications）并诚实提示，绝不伪造受理。 */
+            var _needList = [];
+            try {
+              var _nls = f.querySelectorAll('input[name="needList"]:checked');
+              for (var _ni = 0; _ni < _nls.length; _ni++) _needList.push(_nls[_ni].value || '');
+            } catch (_nlE) {}
+            var _isCoop = (id === 'coopForm');
+            var _who = obj.contactName || obj.coContact || '';
+            var _tel = obj.contactMobile || obj.coTel || '';
+            var _org = obj.orgName || obj.coOrg || '';
+            var _req = _isCoop
+              ? '【官网政企合作意向】单位：' + (_org || '未填') + '；合作类型：' + (obj.coType || '未填') + '；预计场次：' + (obj.coShows || '未填') + '；预算区间：' + (obj.coBudget || '未填') + '；需求描述：' + (obj.coDesc || '未填') + '；（附件未上传，请通过电话/邮件补交）'
+              : '【官网资质核验申请】单位：' + (_org || '未填') + '；项目：' + (obj.projName || '未填') + '；需索取：' + (_needList.join('、') || '默认全套') + '；（附件未上传，请通过对公邮箱/电话补交）';
+            var _d7 = new Date(); _d7.setDate(_d7.getDate() + 7);
+            var _payload = {
+              customerName: _who,
+              contactPerson: _who,
+              phone: _tel,
+              organization: _org,
+              sourceChannel: _isCoop ? 'website_cooperation' : 'website_qualification',
+              preferredStartDate: _d7.toISOString().slice(0, 10),
+              performanceCount: 1,
+              packageType: 'custom',
+              specialRequirements: _req,
+              smsVerifiedFlag: false
+            };
+            // ⚠️ XSS BUG FIX：所有用户数据进入innerHTML前 100% Utils.escapeHtml
+            var _esc = (Utils && Utils.escapeHtml) ? Utils.escapeHtml : function (s) { return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
             var box = f.querySelector('[data-form-success-box]') || (function () {
               var b = document.createElement('div');
               b.setAttribute('data-form-success-box', '1');
@@ -7017,10 +7089,49 @@
               f.parentNode.insertBefore(b, f.nextSibling);
               return b;
             })();
-            var mobile = obj.contactMobile || obj.coTel || '';
-            // ⚠️ XSS BUG FIX：所有用户数据进入innerHTML前 100% Utils.escapeHtml（原 mobile 直接拼接可执行 <img src=x onerror=alert(1)>）
-            var _esc = (Utils && Utils.escapeHtml) ? Utils.escapeHtml : function (s) { return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
-            box.innerHTML = '🎉 <strong>' + _esc(label) + '申请提交成功</strong><br>📋 工单编号：<code>' + _esc(ticketId) + '</code><br>📞 24 小时内将有对接人通过手机号 ' + _esc(mobile) + ' 与您联系';
+            function _qfDraftSave() {
+              try {
+                var dk = 'qaxqjt_public_form_draft_qualifications';
+                var arr = null;
+                try { arr = JSON.parse(localStorage.getItem(dk) || '[]'); } catch (_pe) { arr = null; }
+                if (!Array.isArray(arr)) arr = [];
+                var snap = {}; for (var kk in obj) { if (Object.prototype.hasOwnProperty.call(obj, kk)) snap[kk] = obj[kk]; }
+                if (_needList.length) snap.needList = _needList.join('、');
+                arr.push({ form: id, data: snap, savedAt: new Date().toISOString() });
+                localStorage.setItem(dk, JSON.stringify(arr.slice(-50)));
+              } catch (_le) {}
+            }
+            function _qfHonestLocal() {
+              var tf = Utils.toast || Utils.showToast;
+              tf && tf('⚠️ 在线提交暂不可用：您的信息已暂存在您的设备本地，不会自动提交给剧团。请拨打 13993839833 或通过页面下方的电话/微信联系我们（表单内容已保留，便于核对）', 'warn', 6500);
+              box.innerHTML = '⚠️ <strong>在线提交暂不可用</strong><br>您的信息已暂存在本设备本地，不会自动提交给剧团（表单内容已保留）。请拨打 <a href="tel:13993839833">13993839833</a> 或通过页面下方的电话/微信与我们联系。';
+            }
+            function _qfRealOk() {
+              var tf2 = Utils.toast || Utils.showToast;
+              tf2 && tf2('✅ ' + label + '提交成功！剧团已收到您的申请，将通过手机号 ' + _tel + ' 与您联系', 'success', 5200);
+              f.reset();
+              box.innerHTML = '🎉 <strong>' + _esc(label) + '提交成功</strong><br>📞 剧团已收到您的申请，将通过手机号 ' + _esc(_tel) + ' 与您联系（附件请备好，届时按通知补交）。';
+            }
+            var _Aq = (typeof window !== 'undefined' && window.QAXQJT_API) ? window.QAXQJT_API : null;
+            if (_Aq && typeof _Aq.post === 'function') {
+              var _qfFellBack = false;
+              _Aq.post('/v1/appointments', _payload, {
+                skipAuth: true,
+                showErrorToast: false,
+                fallback: function () { _qfFellBack = true; _qfDraftSave(); return null; }
+              }).then(function () {
+                if (_qfFellBack) { _qfHonestLocal(); } else { _qfRealOk(); }
+              }).catch(function (err) {
+                console.error('[QualificationForms] API submit failed:', err);
+                _qfDraftSave();
+                var tf3 = Utils.toast || Utils.showToast;
+                tf3 && tf3('⚠️ 提交失败：' + ((err && err.message) ? err.message : '请稍后重试') + '。信息已暂存在您的设备本地，不会自动提交给剧团，请拨打 13993839833 联系我们', 'error', 6500);
+                box.innerHTML = '⚠️ <strong>提交失败</strong>：' + _esc((err && err.message) || '未知错误') + '<br>信息已暂存在本设备本地，不会自动提交给剧团。请拨打 <a href="tel:13993839833">13993839833</a> 或通过页面下方的电话/微信与我们联系。';
+              });
+            } else {
+              _qfDraftSave();
+              _qfHonestLocal();
+            }
           } catch (err) { console.warn(err); }
           return false;
         });
