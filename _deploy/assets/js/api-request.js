@@ -102,7 +102,10 @@
       }
 
       // 401 → refresh 重试一次（非 login 接口自身）
-      if (res.status === 401 && !/\/auth\/login$/.test(path) && !opts.__refreshed__) {
+      // 【Fix-20260929 M4】仅对幂等/准幂等方法自动重试；POST 等创建类请求不重试，
+      // 避免 token 恰好在提交瞬间过期时刷新后重放，造成重复建单/重复创建排期
+      if (res.status === 401 && !/\/auth\/login$/.test(path) && !opts.__refreshed__ &&
+          ['GET', 'HEAD', 'PUT', 'PATCH', 'DELETE'].indexOf(String(method).toUpperCase()) >= 0) {
         var ok = await _doRefresh();
         if (ok) {
           return request(method, path, Object.assign({}, opts, { __refreshed__: true }));
@@ -176,11 +179,11 @@
   function _kickToLogin(needLogin) {
     CFG.clearAuth && CFG.clearAuth();
     if (typeof global.window === 'undefined') return;
-    if (needLogin !== false) _toast('登录已失效，请重新登录', 'warn');
+    if (needLogin !== false) _toast('系统安全升级已完成，您的登录状态已失效，即将跳转到登录页重新登录', 'error');
     var cur = global.location.pathname;
     var isAdmin = /\/admin\//.test(cur) || /admin[\/]?login\.html$/i.test(cur);
     var target = isAdmin ? 'login.html' : (global.location.origin + '/admin/login.html');
-    if (!/login\.html/i.test(cur)) setTimeout(function () { global.location.href = target; }, 800);
+    if (!/login\.html/i.test(cur)) setTimeout(function () { global.location.href = target; }, 3000);
   }
 
   var API = {
@@ -191,9 +194,17 @@
     patch: function (p, body, opts) { return request('PATCH', p, Object.assign({}, opts || {}, { body: body })); },
     del: function (p, opts) { return request('DELETE', p, opts); },
 
-    login: async function (username, password, captcha) {
+    // 图形验证码：captcha 为用户输入，captchaId 为 GET /v1/auth/captcha 下发的 challenge id
+    // （开关关闭时后端忽略二者；开关开启时二者必传且一次性消费）
+    getCaptcha: function () {
+      return request('GET', (CFG.PATHS && CFG.PATHS.AUTH_CAPTCHA) || '/v1/auth/captcha', {
+        skipAuth: true,
+        showErrorToast: false
+      });
+    },
+    login: async function (username, password, captcha, captchaId) {
       var r = await request('POST', (CFG.PATHS && CFG.PATHS.AUTH_LOGIN) || '/v1/auth/login', {
-        body: { username: username, password: password, captcha: captcha || '' },
+        body: { username: username, password: password, captcha: captcha || '', captchaId: captchaId || '' },
         skipAuth: true,
         showErrorToast: true
       });

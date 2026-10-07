@@ -647,11 +647,11 @@
   function _kickToLogin(needLogin) {
     CFG.clearAuth && CFG.clearAuth();
     if (typeof global.window === 'undefined') return;
-    if (needLogin !== false) _toast('登录已失效，请重新登录', 'warn');
+    if (needLogin !== false) _toast('系统安全升级已完成，您的登录状态已失效，即将跳转到登录页重新登录', 'error');
     var cur = global.location.pathname;
     var isAdmin = /\/admin\//.test(cur) || /admin[\/]?login\.html$/i.test(cur);
     var target = isAdmin ? 'login.html' : (global.location.origin + '/admin/login.html');
-    if (!/login\.html/i.test(cur)) setTimeout(function () { global.location.href = target; }, 800);
+    if (!/login\.html/i.test(cur)) setTimeout(function () { global.location.href = target; }, 3000);
   }
 
   var API = {
