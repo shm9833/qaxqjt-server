@@ -719,6 +719,112 @@ v1.post(
   requireRole(['super_admin', 'ops', 'director']),
   ordersCtrl.transition
 );
+/* ====== 洛门演出订单花名册 order-roster 路由（v20261008）====== */
+const rosterCtrl = require('../../controllers/order-roster');
+const ROSTER_READ_ROLES = ['super_admin', 'ops', 'director', 'finance_view'];
+const ROSTER_WRITE_ROLES = ['super_admin', 'ops', 'director'];
+
+v1.get('/order-roster/roles', requireRole(ROSTER_READ_ROLES), rosterCtrl.rolesList);
+v1.post(
+  '/order-roster/roles',
+  validate({ body: Joi.object({ name: Joi.string().trim().min(1).max(30).required() }) }),
+  requireRole(ROSTER_WRITE_ROLES),
+  rosterCtrl.rolesAdd
+);
+v1.get(
+  '/order-roster/stats',
+  validate({ query: Joi.object({ orderId: Joi.string().max(64).required() }) }),
+  requireRole(ROSTER_READ_ROLES),
+  rosterCtrl.stats
+);
+v1.get(
+  '/order-roster',
+  validate({
+    paginate: true,
+    query: Joi.object({
+      orderId: Joi.string().max(64).required(),
+      keyword: Joi.string().allow('').max(100).optional(),
+      performStatus: Joi.string().valid('unconfirmed', 'confirmed', 'cancelled', 'completed').optional(),
+      attendanceStatus: Joi.string().allow('').max(16).optional()
+    })
+  }),
+  requireRole(ROSTER_READ_ROLES),
+  rosterCtrl.list
+);
+v1.post(
+  '/order-roster',
+  validate({
+    body: Joi.object({
+      orderId: Joi.string().max(64).required(),
+      scheduleId: Joi.string().allow('').max(64).optional(),
+      performerId: Joi.string().allow('').max(64).optional(),
+      name: Joi.string().required(),
+      idCardNo: Joi.string().required(),
+      phone: Joi.string().required(),
+      roleName: Joi.string().required(),
+      performStatus: Joi.string().valid('unconfirmed', 'confirmed', 'cancelled', 'completed').optional(),
+      attendanceStatus: Joi.string().valid('present', 'absent', 'late', 'early', 'leave', 'rest').allow(null, '').optional(),
+      attendanceDate: Joi.string().allow('').optional(),
+      attendanceRemark: Joi.string().allow('').max(200).optional(),
+      sortOrder: Joi.number().integer().min(0).optional(),
+      remark: Joi.string().allow('').max(300).optional()
+    })
+  }),
+  requireRole(ROSTER_WRITE_ROLES),
+  rosterCtrl.create
+);
+// 批量导入（Excel/CSV 前端解析为 JSON；API 对接同契约，≤500 条/批）
+v1.post(
+  '/order-roster/import',
+  validate({
+    body: Joi.object({
+      orderId: Joi.string().max(64).required(),
+      items: Joi.array().min(1).max(500).required()
+    })
+  }),
+  requireRole(ROSTER_WRITE_ROLES),
+  rosterCtrl.importRoster
+);
+// 批量考勤（勾选 ids 或整单 orderId；事务更新）
+v1.post(
+  '/order-roster/batch-attendance',
+  validate({
+    body: Joi.object({
+      orderId: Joi.string().allow('').max(64).optional(),
+      ids: Joi.array().items(Joi.string().max(64)).max(500).optional(),
+      attendanceStatus: Joi.string().valid('present', 'absent', 'late', 'early', 'leave', 'rest').required(),
+      attendanceDate: Joi.string().allow('').optional(),
+      remark: Joi.string().allow('').max(200).optional(),
+      performStatusIn: Joi.array().items(Joi.string().valid('unconfirmed', 'confirmed', 'cancelled', 'completed')).optional()
+    })
+  }),
+  requireRole(ROSTER_WRITE_ROLES),
+  rosterCtrl.batchAttendance
+);
+v1.get('/order-roster/:id', requireRole(ROSTER_READ_ROLES), rosterCtrl.detail);
+v1.patch(
+  '/order-roster/:id',
+  validate({
+    body: Joi.object({
+      scheduleId: Joi.string().allow('').max(64).optional(),
+      name: Joi.string().optional(),
+      idCardNo: Joi.string().optional(),
+      phone: Joi.string().optional(),
+      roleName: Joi.string().optional(),
+      performStatus: Joi.string().valid('unconfirmed', 'confirmed', 'cancelled', 'completed').optional(),
+      attendanceStatus: Joi.string().valid('present', 'absent', 'late', 'early', 'leave', 'rest').allow(null, '').optional(),
+      attendanceDate: Joi.string().allow(null, '').optional(),
+      attendanceRemark: Joi.string().allow('').max(200).optional(),
+      sortOrder: Joi.number().integer().min(0).optional(),
+      remark: Joi.string().allow('').max(300).optional()
+    }).min(1)
+  }),
+  requireRole(ROSTER_WRITE_ROLES),
+  rosterCtrl.update
+);
+v1.delete('/order-roster/:id', requireRole('super_admin'), rosterCtrl.remove);
+/* ====== END 订单花名册路由 ====== */
+
 /* ====== END 订单路由 ====== */
 
 /* ====== 财务台账 fin 路由注册（v1）====== */
@@ -1211,5 +1317,22 @@ v1.put(
   requireRole(['super_admin', 'ops', 'director']),
   troupeConfigCtrl.putTemplates
 );
+
+/* ====== 系统初始化 system-init 路由（v20261008，仅 super_admin）====== */
+const sysInitCtrl = require('../../controllers/system-init');
+v1.get('/system/init/status', requireRole('super_admin'), sysInitCtrl.status);
+v1.post(
+  '/system/init/run',
+  validate({
+    body: Joi.object({
+      confirm: Joi.boolean().valid(true).required(),
+      runSchema: Joi.boolean().optional(),
+      runSeed: Joi.boolean().optional()
+    })
+  }),
+  requireRole('super_admin'),
+  sysInitCtrl.run
+);
+v1.get('/system/init/log', requireRole('super_admin'), sysInitCtrl.log);
 
 module.exports = v1;

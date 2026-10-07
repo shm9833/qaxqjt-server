@@ -681,6 +681,35 @@ model ScheduleV2 {
   @@map("schedules_v2")
 }
 
+// 洛门演出订单花名册（v20261008）：订单级参演人员明细 + 批量考勤状态
+// 与 CastSheetCrew（档期排演表人员）互补：本表在订单确认阶段即可建档，不依赖档期/排演表
+model OrderRosterV1 {
+  id               String    @id
+  orderId          String    @map("order_id")
+  scheduleId       String?   @map("schedule_id")
+  performerId      String?   @map("performer_id") // 匹配上 performers_db_v1 时自动回填
+  name             String
+  idCardNo         String    @map("id_card_no") // GB11643 18 位（应用层校验校验码）
+  phone            String
+  roleName         String    @map("role_name") // 下拉字典 + 自定义添加（字典存 settings.order_roster_roles）
+  performStatus    String    @default("unconfirmed") @map("perform_status") // unconfirmed/confirmed/cancelled/completed
+  attendanceStatus String?   @map("attendance_status") // present/absent/late/early/leave/rest
+  attendanceDate   DateTime? @map("attendance_date")
+  attendanceRemark String?   @map("attendance_remark")
+  sortOrder        Int       @default(0) @map("sort_order")
+  remark           String?
+  createdBy        String?   @map("created_by")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  ts               BigInt    @map("_ts")
+
+  @@unique([orderId, idCardNo], map: "uk_ros_order_idcard")
+  @@index([orderId, performStatus], map: "idx_ros_order_status")
+  @@index([orderId, attendanceStatus], map: "idx_ros_order_att")
+  @@index([phone], map: "idx_ros_phone")
+  @@map("order_roster_v1")
+}
+
 model ScheduleVenue {
   id            String      @id
   scheduleId    String      @map("schedule_id")
