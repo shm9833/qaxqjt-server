@@ -265,6 +265,7 @@ model Play {
   synopsis        String?
   castSummary     String?  @map("cast_summary")
   difficultyLevel String?  @map("difficulty_level")
+  isHot           Boolean  @default(false) @map("is_hot")
   status          String   @default("active")
   createdBy       String?  @map("created_by")
   createdAt       DateTime @default(now()) @map("created_at")

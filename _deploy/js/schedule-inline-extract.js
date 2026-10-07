@@ -222,6 +222,10 @@
           var v = btn.getAttribute('data-view') || 'month';
           __switchView(v);
         });
+        /* v20261007b 真实接线打标：豁免 SuperPatch 6/6 document 捕获兜底。
+           未标记时首次点击被 preventDefault+stopPropagation 吞杀并误报
+           「该功能暂未接入后端」，__switchView 永不执行（月度/周/列表切换全失效）。 */
+        try { btn.setAttribute('data-real-bound','1'); btn.__superPatchBound=1; btn.__deadBtnChecked=1; btn.__s2b=1; } catch(_vm){}
       });
       // 周视图导航
       var __weekOffset = 0;
@@ -738,14 +742,15 @@
 
         (function(){
           // 20260922 真实化：候选人员来自 /v1/performers（QinRealPerformers），不内置任何假名
-          // 行当口径（20261002 修订）：6 大行 + 武场/文场，与 cast-sheet / 派工单完全一致
+          // 行当口径（20261003 修订）：6 大行 + 后勤 + 武场/文场，与 cast-sheet / 派工单完全一致
           var CAST_GROUPS = [
             { k:'sheng',    n:'生行（文须生·武须生·小生）' },
             { k:'chou',     n:'丑行（丑角）' },
             { k:'jing',     n:'净行（大花脸·二花脸）' },
             { k:'dan',      n:'旦行（正旦·小旦·彩旦·二架旦）' },
             { k:'erjia',    n:'二架（门官·家院）' },
-            { k:'juezi',    n:'角子（龙套·校尉·刀斧手·丫鬟·彩女·电工·前场·衣箱）' },
+            { k:'juezi',    n:'角子（龙套·校尉·刀斧手·丫鬟·彩女·长随官）' },
+            { k:'houqin',   n:'后勤（帽箱·电工·前场·衣箱·剧务）' },
             { k:'wuchang',  n:'武场（司鼓·梆子·打击乐）' },
             { k:'wenchang', n:'文场（板胡·二胡·扬琴等）' }
           ];
@@ -992,6 +997,15 @@
         // 【Fix-20260929】声明本表单自带提交校验（空文件/10MB/预览层），SuperPatch 1/6 识别放行
         try { upForm.__spOwnSubmit = 1; upForm.setAttribute('data-sp-own-submit','1'); }catch(_om){}
         try { upForm.setAttribute('novalidate','novalidate'); }catch(_n){}
+        /* v20261007b 提交/重置按钮打防劫持标记：6/6 document 捕获监听对未标记按钮
+           一律 preventDefault+stopPropagation 并误报「该功能暂未接入后端」，导致
+           submit 按钮的原生提交被取消（本表单自带的空文件/10MB 校验永不可达）、
+           reset 按钮的原生重置也被取消。注意不可打 __ts3Done（下方重置绑定块会跳过绑定）。 */
+        try {
+          upForm.querySelectorAll('button[type="submit"],input[type="submit"],button[type="reset"],input[type="reset"]').forEach(function(_b){
+            _b.setAttribute('data-real-bound','1'); _b.__superPatchBound=1; _b.__deadBtnChecked=1;
+          });
+        } catch(_smk){}
         upForm.addEventListener('submit', function(ev){
           if (ev && ev.preventDefault) ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();
@@ -1163,7 +1177,8 @@
         _rpGrp('jing','净行（大花脸·二花脸）'),
         _rpGrp('dan','旦行（正旦·小旦·彩旦·二架旦）'),
         _rpGrp('erjia','二架（门官·家院）'),
-        _rpGrp('juezi','角子（龙套·校尉·刀斧手·丫鬟·彩女·电工·前场·衣箱）'),
+        _rpGrp('juezi','角子（龙套·校尉·刀斧手·丫鬟·彩女·长随官）'),
+        _rpGrp('houqin','后勤（帽箱·电工·前场·衣箱·剧务）'),
         _rpGrp('wuchang','武场（司鼓·梆子·打击乐）'),
         _rpGrp('wenchang','文场（板胡·二胡·扬琴等）')
       ];
@@ -1530,46 +1545,45 @@ var __pT0=0;
     var __pLk = __L(doneKey,900);
     if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
     __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 保存成功','success');
-        try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
+        /* P1修复:假成功已移除 */
+        __T('⚠️ 该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isEdit){
         if(!__L(doneKey,700)) return;
         __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
-        __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info');
+        /* P1修复:假成功已移除 */ __T('⚠️ 该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isDel){
         if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-        if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
-        try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
+        /* P1修复:假成功已移除（假确认框与假删行已移除） */
         __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
+        __T('⚠️ 该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
       }
       if(isView){
         if(!__L(doneKey,500)) return;
         __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
-        __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info');
+        /* P1修复:假成功已移除 */ __T('⚠️ 该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isVerify){
         if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
         __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
-        __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success');
+        /* P1修复:假成功已移除 */ __T('⚠️ 该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isExport){
         if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
         __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
-        __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success');
+        /* P1修复:假成功已移除 */ __T('⚠️ 该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       if(isAdd){
         if(!__L(doneKey,900)) return;
         __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 准备新增「'+txt+'」','info');
+        /* P1修复:假成功已移除 */ __T('⚠️ 该功能暂未接入后端','warning');
         btn.__ctE2Done = 1; return;
       }
       // ---- 新增：审核/审批/驳回/通过 ----
@@ -1577,18 +1591,18 @@ var __pT0=0;
       if(isAudit){
         if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
         var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
-        if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
+        /* P1修复:假成功已移除（假确认框已移除） */
         __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
+        __T('⚠️ 该功能暂未接入后端','warning');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：签约/签订 ----
       var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
       if(isSign){
         if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
+        /* P1修复:假成功已移除（假确认框已移除） */
         __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
+        __T('⚠️ 该功能暂未接入后端','warning');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
       // ---- 新增：合同/生成合同 ----
@@ -1596,7 +1610,7 @@ var __pT0=0;
       if(isContract){
         if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
         __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪','info');
+        /* P1修复:假成功已移除 */ __T('⚠️ 该功能暂未接入后端','warning');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：排期/排班/安排档期 ----
@@ -1604,18 +1618,17 @@ var __pT0=0;
       if(isScheduleBtn){
         if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
         __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
+        /* P1修复:假成功已移除 */ __T('⚠️ 该功能暂未接入后端','warning');
         btn.__ctE2Done=1; return;
       }
       // ---- 新增：取消/处理/确认接单 ----
       var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
       if(isCancelOrHandle && !isDel && !isSave){
         if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if((txt.indexOf('取消')>=0) && !confirm('确认取消：'+(trKey||'当前记录')+'？')) return;
+        /* P1修复:假成功已移除（假确认框已移除） */
         var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
-        var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
         __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
+        __T('⚠️ 该功能暂未接入后端','warning');
         btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
       }
 
@@ -1800,10 +1813,8 @@ function __pLog(module,event,extra){
         });
         if(firstErr){ try{ firstErr.focus(); }catch(_){} }
         if(!ok) return false;
-        __toastH9('✅ 提交成功','success');
-        setTimeout(function(){
-          try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
-        }, 380);
+        /* P1修复:假成功已移除 */
+        __toastH9('⚠️ 该功能暂未接入后端','warning');
         return false;
       }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
     }, true);
@@ -1974,6 +1985,7 @@ function __pLog(module,event,extra){
     function _isPgContainer(el){
       try{
         if(!el || el.nodeType!==1) return false;
+        if(el.closest && el.closest('.sp-pg-toolbar-20260730,.pagination-toolbar')) return false;
         var tag = (el.tagName||'').toUpperCase();
         if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
         var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
@@ -2034,7 +2046,8 @@ function __pLog(module,event,extra){
     }
     function _buildPg(container){
       try{
-        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
+        if(container.hasAttribute('data-pg-built')||container.querySelector('.sp-pg-toolbar-20260730')) return; container.setAttribute('data-pg-built','1');
+        if(container.classList && (container.classList.contains('sp-pg-toolbar-20260730')||container.classList.contains('pagination-toolbar'))) return;
         if(_pgRealBarExists(container)){
           // 静态分页占位（写死的"共15条/1·2页"）也一并隐藏，避免假数据残留
           try { container.style.display = 'none'; } catch(_h){}
@@ -2054,6 +2067,7 @@ function __pLog(module,event,extra){
         if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
         var wrap = document.createElement('div');
         wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
+        wrap.setAttribute('data-pg-built','1');
         wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
         wrap.innerHTML = ''+
           '<button class="btn btn-sm" data-pg="first">首页</button>'+
@@ -2153,7 +2167,7 @@ function __pLog(module,event,extra){
     function _scanPagination(){
       try{
         var all = document.querySelectorAll('div,nav,section,span');
-        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
+        all.forEach(function(el){ if(el.hasAttribute('data-pg-built')) return; if(_isPgContainer(el)) _buildPg(el); });
         // 【Fix-20260929 M3】表格数据重载（tr 被替换）后刷新已建工具栏：
         // _buildPg 对已存在的工具栏会早退，这里显式重算总数/页数并重新切片；
         // 若真实分页栏（pagination.js）在本工具栏构建后才挂载，则拆除 SP4 工具栏让位
@@ -2330,37 +2344,9 @@ try{
         var trKey = '';
         if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
         __spT0 = Date.now();
-        if(tt==='save'){
-          __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功','success');
-          setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
-        }else if(tt==='delete'){
-          if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
-            __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
-          }else{ __toastH9('↩️ 已取消操作','info'); }
-        }else if(tt==='view'){
-          __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
-        }else if(tt==='export'){
-          __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印','info');
-        }else if(tt==='schedule'){
-          __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
-        }else if(tt==='audit'){
-          __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
-        }else if(tt==='contract'){
-          __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪','info');
-        }else if(tt==='add'){
-          __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增','info');
-        }else{
-          __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
-        }
+        /* P1修复:假成功已移除（原各分支假成功/演示话术统一改为诚实提示） */
+        __pLog('SP','fallback_'+tt, {branch:tt, txt:txt, row:trKey});
+        __toastH9('⚠️ 该功能暂未接入后端','warning');
         return false;
       }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
     }, true);

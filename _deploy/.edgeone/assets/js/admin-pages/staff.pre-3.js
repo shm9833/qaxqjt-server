@@ -1304,6 +1304,74 @@
           return list;
         }
 
+        // ====== 后端数据适配器（工资条全链路接后端） ======
+        function _backendToFrontend(w) {
+          if (!w) return null;
+          var isPersisted = !!w.id && w.batchId !== undefined;
+          var breakdown = { leave: 0, absent: 0, late: 0, early: 0, lateTimes: 0, absentDays: 0 };
+          try {
+            var note = w.otherDeductionNote || '';
+            if (note) { var p = JSON.parse(note); if (p && typeof p === 'object') {
+              breakdown.leave = Number(p.leave) || 0; breakdown.absent = Number(p.absent) || 0;
+              breakdown.late = Number(p.late) || 0; breakdown.early = Number(p.early) || 0;
+              breakdown.lateTimes = Number(p.lateTimes) || 0; breakdown.absentDays = Number(p.absentDays) || 0;
+            }}
+          } catch (_) {}
+          var toCents = function (v) { return Math.round((Number(v) || 0) * 100); };
+          var attDays = Number(isPersisted ? w.attDays : w.attendanceDays) || 0;
+          var baseSalary = toCents(isPersisted ? w.baseSalary : w.baseWage);
+          var dailyRate = (attDays > 0 && baseSalary > 0) ? Math.round(baseSalary / attDays) / 100 : (Number(w.dailyRate) || 0);
+          return {
+            id: w.id || ('PREVIEW-' + (w.performerId || 'x') + '-' + Date.now()),
+            staffId: w.performerId || '', staffName: isPersisted ? (w.name || '') : (w.performerName || ''),
+            roleCategory: w.rankGrade || '', level: w.rankGrade || '', dailyWage: dailyRate,
+            month: w.month || '', status: (w.payslipPublished || w.status === 'paid') ? 'paid' : 'unpaid',
+            paidAt: w.payslipPublishedAt || w.paidAt || null, createdAt: w.createdAt || Date.now(),
+            updatedAt: w.updatedAt || Date.now(), remark: w.remark || '',
+            summary: { workDays: attDays, lateDays: breakdown.lateTimes, absentFullDays: breakdown.absentDays,
+                       performBenxi: 0, performZhezi: 0, performXiaxiang: 0, performOther: 0 },
+            items: {
+              baseSalary: baseSalary, performanceAllowance: toCents(isPersisted ? w.performanceBonus : 0),
+              perfectBonus: toCents(isPersisted ? w.fullBonus : w.fullAttendanceBonus),
+              seniorityAllowance: 0, mealAllowance: toCents(w.mealAllowance || 0),
+              trafficAllowance: toCents(w.transportAllowance || 0), extraBonus: 0,
+              grossPay: toCents(w.grossPay), socialInsurance: toCents(isPersisted ? w.socialSecurity : 0),
+              housingFund: toCents(isPersisted ? w.housingFund : 0),
+              attendanceDeduction: toCents(breakdown.late + breakdown.early + breakdown.absent + breakdown.leave),
+              extraDeduction: 0, totalDeduction: toCents(w.totalDeduction), netPay: toCents(w.netPay)
+            },
+            dailyDetails: []
+          };
+        }
+        // 后端工资条列表缓存（减少重复请求）
+        var __wageBackendCache = null;
+        var __wageBackendCacheTs = 0;
+        var __wageBackendCacheKey = '';
+        async function _fetchWages(query) {
+          var API = window.QAXQJT_API;
+          if (!API || !API.get) return [];
+          var cacheKey = JSON.stringify(query || {});
+          if (__wageBackendCache && __wageBackendCacheKey === cacheKey && (Date.now() - __wageBackendCacheTs) < 8000) {
+            return __wageBackendCache;
+          }
+          try {
+            var res = await API.get((QAXQJT_PATHS.WAGES || '/v1/wages'), {
+              query: Object.assign({ page: 1, pageSize: 500 }, query || {}),
+              showErrorToast: false, timeoutMs: 10000, fallbackRead: function () { return null; }
+            });
+            var list = Array.isArray(res) ? res : (res && res.items) || [];
+            var adapted = list.map(_backendToFrontend).filter(function (x) { return !!x; });
+            __wageBackendCache = adapted;
+            __wageBackendCacheTs = Date.now();
+            __wageBackendCacheKey = cacheKey;
+            return adapted;
+          } catch (e) {
+            console.warn('[WageUI] 拉取后端工资条失败', e.message);
+            return [];
+          }
+        }
+        function _clearWageCache() { __wageBackendCache = null; __wageBackendCacheTs = 0; }
+
         // 行当分组到三类（演员/乐队/舞美）的列名映射
         var ACTOR_ROLES = ['青衣','老生','须生','花脸','小生','老旦','花旦','丑角','龙套'];
         var MUSIC_ROLES = ['板胡','司鼓','二胡','板胡伴奏','扬琴','笛子','唢呐','打击乐'];
@@ -1503,103 +1571,85 @@
           window.__refreshWageStaff = function(){ try { updateGenEstimate(); } catch(_){} };
           var pb = $('wageGenPreviewBtn'); if (pb) pb.addEventListener('click', function () { runGen(true); });
           var rb = $('wageGenRunBtn'); if (rb) rb.addEventListener('click', function () { runGen(false); });
-          var db = $('wageGenDelMonthBtn'); if (db) db.addEventListener('click', function () {
+          var db = $('wageGenDelMonthBtn'); if (db) db.addEventListener('click', async function () {
             var m = (monthEl && monthEl.value);
             if (!m) { U && U.toast && U.toast('⚠️ 请先选择月份', 'warning'); return; }
             if (!window.confirm('🗑️ 确认删除月份【' + m + '】的全部工资条？该操作不可撤销！')) return;
-            var n = W ? W.deletePayslipsByMonth(m) : 0;
-            U && U.toast && U.toast('✅ 已删除 ' + n + ' 条工资条', 'success');
-            refreshGenTable();
-            updateHistStats();
-            updateBadgeCount();
+            var API = window.QAXQJT_API;
+            if (!API || !API.get || !API.del) { U && U.toast && U.toast('❌ 后端 API 未就绪', 'error'); return; }
+            try {
+              var list = await _fetchWages({ month: m });
+              if (!list.length) { U && U.toast && U.toast('ℹ️ 该月暂无工资条', 'info'); return; }
+              var okCnt = 0, failCnt = 0;
+              for (var i = 0; i < list.length; i++) {
+                try {
+                  await API.del((QAXQJT_PATHS.WAGES_BY_ID || function (id) { return '/v1/wages/' + id; })(list[i].id), { showErrorToast: false });
+                  okCnt++;
+                } catch (e) { failCnt++; console.warn('[WageUI] 删除失败 ' + list[i].id, e.message); }
+              }
+              U && U.toast && U.toast('✅ 已删除 ' + okCnt + ' 条工资条' + (failCnt ? '，失败 ' + failCnt + ' 条' : ''), failCnt ? 'warning' : 'success');
+              _clearWageCache();
+              await refreshGenTable(); await refreshHistTable(); updateHistStats(); updateBadgeCount();
+            } catch (e) {
+              U && U.toast && U.toast('❌ 删除失败：' + (e.message || e), 'error');
+            }
           });
         }
 
-        function updateGenEstimate() {
-          if (!W) return;
+        async function updateGenEstimate() {
           var monthEl = $('wageGenMonth');
           var m = (monthEl && monthEl.value) || '';
           var ml = $('wageGenMonthLabel'); if (ml) ml.textContent = m || '—';
           var sc = $('wageGenStaffCount'); if (sc) sc.textContent = getWageStaffList().length;
-          // 估算
-          var grossEst = 0, netEst = 0;
-          var rules = W.getDefaultRules();
-          getWageStaffList().forEach(function (st) {
-            var base = (Number(st.dailyWage) > 0) ? Math.round(Number(st.dailyWage) * 100) : W.getBaseDailyWage(st.roleCategory, st.level, rules);
-            var sy = st.hireYear ? Math.max(0, new Date().getFullYear() - st.hireYear) : 0;
-            var sen = Math.round(sy * (rules.seniorityPerYear || 200));
-            var meal = (rules.dailySubsidy && rules.dailySubsidy.meal) || 0;
-            var traf = (rules.dailySubsidy && rules.dailySubsidy.traffic) || 0;
-            var days = 22;
-            var perf = (rules.performanceAllowance.benxi || 0) * 8;
-            var g = (base + sen + meal + traf) * days + perf + (rules.perfectAttendanceBonus || 0);
-            var socBase = Math.round(base * (rules.standardWorkDays || 21.75));
-            var soc = Math.round(socBase * 0.105) + Math.round(socBase * 0.12);
-            grossEst += g;
-            netEst += Math.max(0, g - soc);
-          });
-          var ge = $('wageGenGrossEst'); if (ge) ge.textContent = '¥' + (grossEst/100).toLocaleString('zh-CN', {maximumFractionDigits:0});
-          var ne = $('wageGenNetEst'); if (ne) ne.textContent = '¥' + (netEst/100).toLocaleString('zh-CN', {maximumFractionDigits:0});
-          // 已有提示
+          // 已有提示（走后端）
           var hint = $('wageGenExistHint');
           if (hint && m) {
-            var n = W.getPayslipsByMonth(m).length;
-            hint.textContent = n > 0 ? ('已生成 ' + n + ' 条') : '尚未生成';
+            var list = await _fetchWages({ month: m });
+            hint.textContent = list.length > 0 ? ('已生成 ' + list.length + ' 条') : '尚未生成';
           }
         }
 
         async function runGen(previewOnly) {
-          if (!W) return;
+          var API = window.QAXQJT_API;
+          if (!API || !API.post) { U && U.toast && U.toast('❌ 后端 API 未就绪', 'error'); return; }
           var m = $('wageGenMonth') && $('wageGenMonth').value;
           if (!m) { U && U.toast && U.toast('⚠️ 请先选择结算月份', 'warning'); return; }
           var staff = getWageStaffList();
           if (!staff.length) { U && U.toast && U.toast('⚠️ 花名册暂无在册人员，请先在「花名册」录入演职人员后再生成工资条', 'warning'); return; }
 
-          // v20260922：有后端时必须以真实考勤流水为依据，杜绝模拟考勤生成假工资
-          var API = window.QAXQJT_API;
-          if (API && API.get) {
-            var attCount = 0;
-            try {
-              var res = await API.get((QAXQJT_PATHS.ATTENDANCE || '/v1/attendance'), { query: { month: m, page: 1, pageSize: 1 }, showErrorToast: false, timeoutMs: 8000, fallbackRead: function () { return null; } });
-              if (Array.isArray(res)) attCount = res.length;
-              else if (res && Array.isArray(res.items)) attCount = res.items.length;
-              else if (res && typeof res.total === 'number') attCount = res.total;
-            } catch (_) { attCount = 0; }
-            if (!attCount) {
-              U && U.toast && U.toast('⚠️ ' + m + ' 暂无真实考勤记录，无法生成工资条。请先在「考勤管理」完成打卡/录入后再核算。', 'warning', 4500);
-              return;
-            }
+          // v20261005：全链路接后端，前端不再本地计算，直接调用后端 generate 接口（自带幂等重建）
+          var remark = ($('wageGenRemark') && $('wageGenRemark').value) || '';
+          var genBody = { month: m, dryRun: previewOnly, defaultMode: 'daily_pure' };
+          var genRes;
+          try {
+            genRes = await API.post((QAXQJT_PATHS.WAGES_GENERATE || '/v1/wages/generate'), genBody, { showErrorToast: false, timeoutMs: 30000 });
+          } catch (e) {
+            var errMsg = (e && e.message) || '生成失败';
+            U && U.toast && U.toast('❌ ' + errMsg, 'error', 4500);
+            return;
           }
-
-          var remark = $('wageGenRemark') && $('wageGenRemark').value;
-          var result;
+          var items = (genRes && genRes.items) || [];
           if (previewOnly) {
-            // 预览：直接计算但不保存
-            result = W.generateMonthlyPayslips(m, staff, null, { overwrite: true });
-            // 预览后删除，避免污染真实数据
-            W.deletePayslipsByMonth(m);
-            renderPayslipRows(result.items, $('wageGenTbody'), true);
+            // 预览：渲染但不保存
+            renderPayslipRows(items.map(_backendToFrontend), $('wageGenTbody'), true);
             var lbl = $('wageGenCountLabel');
-            if (lbl) lbl.textContent = '（预览·' + (result.items && result.items.length || 0) + ' 条，未保存）';
-            U && U.toast && U.toast('🔍 预览完成，共 ' + (result.items&&result.items.length||0) + ' 条（尚未保存到存储）', 'info');
+            if (lbl) lbl.textContent = '（预览·' + items.length + ' 条，未保存）';
+            U && U.toast && U.toast('🔍 预览完成，共 ' + items.length + ' 条（尚未保存到后端）', 'info');
           } else {
-            result = W.generateMonthlyPayslips(m, staff, null, { overwrite: true });
-            if (remark && result.items) {
-              for (var i = 0; i < result.items.length; i++) {
-                result.items[i].remark = remark;
-                W.savePayslip(result.items[i]);
-              }
-            }
-            refreshGenTable();
+            // 正式生成：后端已自动建批次+明细，前端只需刷新列表
+            var batchInfo = genRes && genRes.batch;
+            U && U.toast && U.toast('✅ 工资批次 ' + (batchInfo && batchInfo.batchNo || '') + ' 已生成，共 ' + items.length + ' 条', 'success');
+            _clearWageCache();
+            await refreshGenTable();
+            await refreshHistTable();
             updateHistStats();
             updateBadgeCount();
           }
         }
 
-        function refreshGenTable() {
-          if (!W) return;
+        async function refreshGenTable() {
           var m = $('wageGenMonth') && $('wageGenMonth').value;
-          var list = m ? W.getPayslipsByMonth(m) : [];
+          var list = m ? await _fetchWages({ month: m }) : [];
           renderPayslipRows(list, $('wageGenTbody'), false);
           var lbl = $('wageGenCountLabel');
           if (lbl) lbl.textContent = m ? ('（' + m + ' · 共 ' + list.length + ' 条）') : '（空）';
@@ -1654,28 +1704,49 @@
               b.addEventListener('click', function () { showDetail(b.getAttribute('data-wdetail')); });
             });
             tbody.querySelectorAll('button[data-wpaid]').forEach(function (b) {
-              b.addEventListener('click', function () {
+              b.addEventListener('click', async function () {
                 var id = b.getAttribute('data-wpaid');
-                var ps = W.getPayslipById(id); if (!ps) return;
-                W.markPaid(id, ps.status !== 'paid');
-                refreshGenTable(); refreshHistTable(); updateHistStats(); updateBadgeCount();
+                var API = window.QAXQJT_API;
+                if (!API || !API.patch) return;
+                try {
+                  await API.patch((QAXQJT_PATHS.WAGES_BY_ID || function (i) { return '/v1/wages/' + i; })(id), { payslipPublished: true }, { showErrorToast: false });
+                  U && U.toast && U.toast('✅ 已标记为已发放', 'success');
+                } catch (e) {
+                  U && U.toast && U.toast('❌ 标记失败：' + ((e && e.message) || ''), 'error');
+                }
+                _clearWageCache(); await refreshGenTable(); await refreshHistTable(); updateHistStats(); updateBadgeCount();
               });
             });
             tbody.querySelectorAll('button[data-wdel]').forEach(function (b) {
-              b.addEventListener('click', function () {
+              b.addEventListener('click', async function () {
                 if (!window.confirm('🗑️ 确认删除该工资条？')) return;
-                W.deletePayslip(b.getAttribute('data-wdel'));
-                refreshGenTable(); refreshHistTable(); updateHistStats(); updateBadgeCount();
-                U && U.toast && U.toast('✅ 已删除', 'success');
+                var id = b.getAttribute('data-wdel');
+                var API = window.QAXQJT_API;
+                if (!API || !API.del) return;
+                try {
+                  await API.del((QAXQJT_PATHS.WAGES_BY_ID || function (i) { return '/v1/wages/' + i; })(id), { showErrorToast: false });
+                  U && U.toast && U.toast('✅ 已删除', 'success');
+                } catch (e) {
+                  U && U.toast && U.toast('❌ 删除失败：' + ((e && e.message) || ''), 'error');
+                }
+                _clearWageCache(); await refreshGenTable(); await refreshHistTable(); updateHistStats(); updateBadgeCount();
               });
             });
           }
         }
 
         // ====== 工资条明细弹窗 ======
-        function showDetail(id) {
-          if (!W) return;
-          var w = W.getPayslipById(id); if (!w) return;
+        async function showDetail(id) {
+          if (!id) return;
+          var API = window.QAXQJT_API;
+          var w = null;
+          if (API && API.get) {
+            try {
+              var res = await API.get((QAXQJT_PATHS.WAGES_BY_ID || function (i) { return '/v1/wages/' + i; })(id), { showErrorToast: false, timeoutMs: 10000 });
+              if (res) w = _backendToFrontend(res);
+            } catch (e) { console.warn('[WageUI] 拉取明细失败', e.message); }
+          }
+          if (!w) { U && U.toast && U.toast('⚠️ 未找到该工资条明细', 'warning'); return; }
           var it = w.items || {};
           var su = w.summary || {};
           var staff = null;
@@ -1772,19 +1843,31 @@
           }
         }
 
-        window._wageMarkPaid = function (id) {
-          if (!W) return;
+        window._wageMarkPaid = async function (id) {
           // 🔧 R9 FIX：防抖锁（按工资单id防止快速双击2次toggle发放→取消发放）
           var lockKey = 'wm_' + String(id || 'x');
           if (window.__OP_LOCKS && window.__OP_LOCKS[lockKey]) { try { U && U.toast && U.toast('⏳ 处理中，请稍候…', 'warning'); } catch(_){} return; }
           try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS[lockKey] = true; setTimeout(function(){try{delete window.__OP_LOCKS[lockKey];}catch(_){}}, 700); } catch(_lk){}
-          var ps = W.getPayslipById(id); if (!ps) return;
-          W.markPaid(id, ps.status !== 'paid');
-          refreshGenTable(); refreshHistTable(); updateHistStats(); updateBadgeCount();
+          var API = window.QAXQJT_API;
+          if (!API || !API.patch) return;
+          try {
+            await API.patch((QAXQJT_PATHS.WAGES_BY_ID || function (i) { return '/v1/wages/' + i; })(id), { payslipPublished: true }, { showErrorToast: false });
+            U && U.toast && U.toast('✅ 已标记为已发放', 'success');
+          } catch (e) {
+            U && U.toast && U.toast('❌ 标记失败：' + ((e && e.message) || ''), 'error');
+          }
+          _clearWageCache(); await refreshGenTable(); await refreshHistTable(); updateHistStats(); updateBadgeCount();
         };
-        window._wageExportPayslip = function (id) {
-          if (!W) return;
-          var w = W.getPayslipById(id); if (!w) return;
+        window._wageExportPayslip = async function (id) {
+          var API = window.QAXQJT_API;
+          var w = null;
+          if (API && API.get) {
+            try {
+              var res = await API.get((QAXQJT_PATHS.WAGES_BY_ID || function (i) { return '/v1/wages/' + i; })(id), { showErrorToast: false, timeoutMs: 10000 });
+              if (res) w = _backendToFrontend(res);
+            } catch (e) { console.warn('[WageUI] 导出明细拉取失败', e.message); }
+          }
+          if (!w) { U && U.toast && U.toast('⚠️ 未找到该工资条', 'warning'); return; }
           var csv = '项目,金额(元)\n';
           var names = {'baseSalary':'基本日薪×出勤','performanceAllowance':'演出补助','perfectBonus':'全勤奖','seniorityAllowance':'工龄补贴','mealAllowance':'餐补','trafficAllowance':'交通补','extraBonus':'其他奖金','grossPay':'应发合计','socialInsurance':'社保个人','housingFund':'公积金个人','attendanceDeduction':'考勤扣款','extraDeduction':'其他扣款','totalDeduction':'扣款合计','netPay':'实发工资'};
           var it = w.items || {};
@@ -1802,24 +1885,22 @@
           var kw = $('wageHistKw'); if (kw) kw.addEventListener('keydown', function (e) { if (e.key === 'Enter') refreshHistTable(); });
           var ex = $('wageHistExportBtn'); if (ex) ex.addEventListener('click', exportHistAll);
         }
-        function refreshHistMonths() {
-          var sel = $('wageHistMonth'); if (!sel || !W) return;
+        async function refreshHistMonths() {
+          var sel = $('wageHistMonth'); if (!sel) return;
           var curr = sel.value;
-          var list = W.getPayslips();
+          var list = await _fetchWages({});
           var set = {};
           for (var i = 0; i < list.length; i++) if (list[i].month) set[list[i].month] = true;
           var arr = Object.keys(set).sort().reverse();
           sel.innerHTML = '<option value="">全部月份</option>' + arr.map(function (m) { return '<option value="' + m + '">' + m + '</option>'; }).join('');
           if (curr) sel.value = curr;
         }
-        function refreshHistTable() {
-          if (!W) return;
-          refreshHistMonths();
-          updateHistStats();
+        async function refreshHistTable() {
+          await refreshHistMonths();
           var m = $('wageHistMonth') && $('wageHistMonth').value;
           var st = $('wageHistStatus') && $('wageHistStatus').value;
           var kw = (($('wageHistKw') && $('wageHistKw').value) || '').trim();
-          var list = W.getPayslips();
+          var list = await _fetchWages({});
           if (m) list = list.filter(function (w) { return w.month === m; });
           if (st) list = list.filter(function (w) { return w.status === st; });
           if (kw) {
@@ -1862,25 +1943,37 @@
             b.addEventListener('click', function () { showDetail(b.getAttribute('data-hdetail')); });
           });
           tbody.querySelectorAll('button[data-hpaid]').forEach(function (b) {
-            b.addEventListener('click', function () {
+            b.addEventListener('click', async function () {
               var id = b.getAttribute('data-hpaid');
-              var ps = W.getPayslipById(id); if (!ps) return;
-              W.markPaid(id, ps.status !== 'paid');
-              refreshGenTable(); refreshHistTable(); updateHistStats(); updateBadgeCount();
+              var API = window.QAXQJT_API;
+              if (!API || !API.patch) return;
+              try {
+                await API.patch((QAXQJT_PATHS.WAGES_BY_ID || function (i) { return '/v1/wages/' + i; })(id), { payslipPublished: true }, { showErrorToast: false });
+                U && U.toast && U.toast('✅ 已标记为已发放', 'success');
+              } catch (e) {
+                U && U.toast && U.toast('❌ 标记失败：' + ((e && e.message) || ''), 'error');
+              }
+              _clearWageCache(); await refreshGenTable(); await refreshHistTable(); updateHistStats(); updateBadgeCount();
             });
           });
           tbody.querySelectorAll('button[data-hdel]').forEach(function (b) {
-            b.addEventListener('click', function () {
+            b.addEventListener('click', async function () {
               if (!window.confirm('🗑️ 确认删除该工资条？')) return;
-              W.deletePayslip(b.getAttribute('data-hdel'));
-              refreshGenTable(); refreshHistTable(); updateHistStats(); updateBadgeCount();
-              U && U.toast && U.toast('✅ 已删除', 'success');
+              var id = b.getAttribute('data-hdel');
+              var API = window.QAXQJT_API;
+              if (!API || !API.del) return;
+              try {
+                await API.del((QAXQJT_PATHS.WAGES_BY_ID || function (i) { return '/v1/wages/' + i; })(id), { showErrorToast: false });
+                U && U.toast && U.toast('✅ 已删除', 'success');
+              } catch (e) {
+                U && U.toast && U.toast('❌ 删除失败：' + ((e && e.message) || ''), 'error');
+              }
+              _clearWageCache(); await refreshGenTable(); await refreshHistTable(); updateHistStats(); updateBadgeCount();
             });
           });
         }
-        function updateHistStats() {
-          if (!W) return;
-          var list = W.getPayslips();
+        async function updateHistStats() {
+          var list = await _fetchWages({});
           var paid = 0, unpaid = 0, net = 0, perf = 0;
           for (var i = 0; i < list.length; i++) {
             var w = list[i];
@@ -1894,13 +1987,12 @@
           var c4 = $('wageHistPerform'); if (c4) c4.textContent = '¥' + (perf/100).toLocaleString('zh-CN', {maximumFractionDigits:0});
           updateBadgeCount();
         }
-        function updateBadgeCount() {
-          var n = W ? W.getPayslips().length : 0;
-          var b = $('wageTabBadge'); if (b) b.textContent = n;
+        async function updateBadgeCount() {
+          var list = await _fetchWages({});
+          var b = $('wageTabBadge'); if (b) b.textContent = list.length;
         }
-        function exportHistAll() {
-          if (!W) return;
-          var list = W.getPayslips();
+        async function exportHistAll() {
+          var list = await _fetchWages({});
           if (!list.length) { U && U.toast && U.toast('⚠️ 暂无数据可导出', 'warning'); return; }
           var headers = ['月份','编号','姓名','工号','行当','职级','出勤天数','本戏场数','折子场数','下乡场数','应发合计','演出补助','全勤奖','工龄补贴','餐补+交通','社保个人','公积金个人','考勤扣款','扣款合计','实发工资','发放状态','发放时间','生成时间'];
           var rows = [headers.join(',')];

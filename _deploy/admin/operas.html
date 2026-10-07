@@ -858,6 +858,20 @@
             <input id="addOperaDuration" type="number" class="form-control" value="120" min="30" max="300" style="width:100%;box-sizing:border-box;">
           </div>
           <div>
+            <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">编剧/作者</label>
+            <input id="addOperaAuthor" type="text" class="form-control" placeholder="如：无名氏 / 王xx" style="width:100%;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">难度等级</label>
+            <select id="addOperaDifficulty" class="form-control" style="width:100%;box-sizing:border-box;">
+              <option value="">未设置</option>
+              <option value="简单">简单</option>
+              <option value="中等">中等</option>
+              <option value="较难">较难</option>
+              <option value="困难">困难</option>
+            </select>
+          </div>
+          <div>
             <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">适配场景</label>
             <input id="addOperaScene" type="text" class="form-control" placeholder="如：庙会/商演/惠民" style="width:100%;box-sizing:border-box;">
           </div>
@@ -872,6 +886,39 @@
           <div>
             <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">建议报价（元/场）</label>
             <input id="addOperaPrice" type="number" class="form-control" value="5000" min="0" style="width:100%;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">剧目状态</label>
+            <select id="addOperaStatus" class="form-control" style="width:100%;box-sizing:border-box;">
+              <option value="active">✅ 上架（官网可见）</option>
+              <option value="inactive">⏸ 下架（官网隐藏）</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:6px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.9rem;color:var(--text-dark);">
+              <input id="addOperaHot" type="checkbox" style="width:18px;height:18px;accent-color:#ff4757;cursor:pointer;">
+              🔥 设为热门推荐
+            </label>
+          </div>
+          <div style="grid-column:1 / span 2;">
+            <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">封面图</label>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="flex:1;">
+                <input id="addOperaPosterUrl" type="text" class="form-control" placeholder="图片 URL，或点右侧按钮上传" style="width:100%;box-sizing:border-box;">
+                <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+                  <button type="button" class="btn btn-secondary btn-sm" id="addOperaPosterUploadBtn">📤 上传封面</button>
+                  <input id="addOperaPosterFile" type="file" accept="image/*" style="display:none;">
+                  <span id="addOperaPosterUploadTip" style="font-size:0.78rem;color:#999;"></span>
+                </div>
+              </div>
+              <div id="addOperaPosterPreview" style="width:110px;height:82px;border:1px dashed var(--border-light);border-radius:8px;overflow:hidden;display:none;flex-shrink:0;background:var(--bg-light);">
+                <img id="addOperaPosterImg" alt="封面预览" style="width:100%;height:100%;object-fit:cover;">
+              </div>
+            </div>
+          </div>
+          <div style="grid-column:1 / span 2;">
+            <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">剧情简介</label>
+            <textarea id="addOperaSynopsis" class="form-control" rows="4" placeholder="剧情梗概，将显示在后台详情弹窗与官网剧目卡片" style="width:100%;box-sizing:border-box;resize:vertical;"></textarea>
           </div>
         </div>
       </div>
@@ -929,135 +976,18 @@
         <div class="detail-section">
           <div class="detail-section-title">剧目基本信息</div>
           <div class="detail-basic-grid">
-            <div class="detail-basic-item">
-              <span class="label">剧目名称：</span>
-              <span class="value">《火焰驹》</span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">剧目分类：</span>
-              <span class="value"><span class="badge badge-gold">传统本戏</span></span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">演出时长：</span>
-              <span class="value">180 分钟（3小时）</span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">演出成本：</span>
-              <span class="value">¥8,500 / 场</span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">建议报价：</span>
-              <span class="value" style="color:var(--primary);font-weight:600;">¥6,800 / 场</span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">{year}演出：</span>
-              <span class="value" style="color:var(--gold-dark);font-weight:600;">28 场</span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">累计演出：</span>
-              <span class="value">186 场</span>
-            </div>
-            <div class="detail-basic-item">
-              <span class="label">是否热门：</span>
-              <span class="value" style="color:#ff4757;">🔥 热门推荐</span>
-            </div>
+            <div class="detail-basic-item"><span class="label">加载中…</span><span></span></div>
           </div>
         </div>
 
-        <div class="detail-section">
+        <div class="detail-section" id="operaDetailSynopsisSec">
           <div class="detail-section-title">剧情简介</div>
-          <p style="color:var(--text-dark);line-height:1.9;font-size:0.95rem;text-indent:2em;">
-            《火焰驹》是秦腔传统经典剧目，讲述了北宋时期，李彦贵与黄桂英的爱情故事，以及艾谦仗义救人的侠义事迹。故事情节跌宕起伏，人物形象鲜明生动。全剧通过"卖水"、"传信"、"打路"、"祭桩"等经典折段，展现了人情冷暖、世态炎凉，歌颂了忠贞不渝的爱情和舍己为人的侠义精神。该剧唱腔激昂慷慨，表演细腻传神，是秦腔艺术宝库中的璀璨明珠，深受广大群众喜爱，常演不衰。
-          </p>
+          <p class="synopsis-text" style="color:var(--text-dark);line-height:1.9;font-size:0.95rem;text-indent:2em;">加载中…</p>
         </div>
-
-        <div class="detail-section">
-          <div class="detail-section-title">演员表（行当配置）</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div class="detail-actor-row">
-              <div>
-                <strong style="color:var(--primary-dark);">张xx</strong>
-                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 李彦贵</span>
-              </div>
-              <span class="detail-actor-role">小生</span>
-            </div>
-            <div class="detail-actor-row">
-              <div>
-                <strong style="color:var(--primary-dark);">李xx</strong>
-                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 黄桂英</span>
-              </div>
-              <span class="detail-actor-role">闺门旦</span>
-            </div>
-            <div class="detail-actor-row">
-              <div>
-                <strong style="color:var(--primary-dark);">王xx</strong>
-                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 艾谦</span>
-              </div>
-              <span class="detail-actor-role">须生</span>
-            </div>
-            <div class="detail-actor-row">
-              <div>
-                <strong style="color:var(--primary-dark);">赵xx</strong>
-                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 黄璋</span>
-              </div>
-              <span class="detail-actor-role">大花脸</span>
-            </div>
-            <div class="detail-actor-row">
-              <div>
-                <strong style="color:var(--primary-dark);">刘xx</strong>
-                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 李母</span>
-              </div>
-              <span class="detail-actor-role">老旦</span>
-            </div>
-            <div class="detail-actor-row">
-              <div>
-                <strong style="color:var(--primary-dark);">陈xx</strong>
-                <span style="color:var(--text-light);margin-left:12px;font-size:0.85rem;">饰演 周瑞菊</span>
-              </div>
-              <span class="detail-actor-role">花旦</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="detail-section">
-          <div class="detail-section-title">所需道具服装清单</div>
-          <div class="detail-prop-list">
-            <div class="detail-prop-item"><span>🧥 男蟒袍</span><span class="qty">×3</span></div>
-            <div class="detail-prop-item"><span>👘 女帔</span><span class="qty">×2</span></div>
-            <div class="detail-prop-item"><span>👑 盔头</span><span class="qty">×5</span></div>
-            <div class="detail-prop-item"><span>⚔️ 宝剑</span><span class="qty">×2</span></div>
-            <div class="detail-prop-item"><span>🎋 马鞭</span><span class="qty">×1</span></div>
-            <div class="detail-prop-item"><span>🎀 绣花鞋</span><span class="qty">×4</span></div>
-            <div class="detail-prop-item"><span>📜 书信道具</span><span class="qty">×2</span></div>
-            <div class="detail-prop-item"><span>🎭 脸谱套装</span><span class="qty">×6</span></div>
-          </div>
-        </div>
-
-        <div class="detail-section">
-          <div class="detail-section-title">伴奏乐谱</div>
-          <div style="background:var(--bg-light);border-radius:var(--radius);padding:18px;">
-            <p style="margin-bottom:12px;color:var(--text-light);font-size:0.9rem;">📋 主要曲牌与板式配置：</p>
-            <ul style="list-style:disc;padding-left:24px;color:var(--text-dark);font-size:0.92rem;line-height:2;">
-              <li><strong>开场曲牌：</strong>《跳加官》→《开台套》→《引子》</li>
-              <li><strong>主要板式：</strong>慢板、二六板、带板、尖板、滚板</li>
-              <li><strong>经典唱段：</strong>《花园卖水》（二六转慢板）、《打路》（滚板）、《祭桩》（大段苦音）</li>
-              <li><strong>乐队编制：</strong>板胡1、二胡2、扬琴1、琵琶1、三弦1、司鼓1、铙钹1、锣1、梆子1（共9人）</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="detail-section" style="margin-bottom:0;">
-          <div class="detail-section-title">演出注意事项</div>
-          <div style="background:linear-gradient(135deg, rgba(139,0,0,0.05), rgba(212,175,55,0.08));border-radius:var(--radius);padding:18px;border-left:4px solid var(--primary);">
-            <ul style="list-style:disc;padding-left:24px;color:var(--text-dark);font-size:0.92rem;line-height:2;">
-              <li>《祭桩》一折需特别注意旦角情绪把控，苦音大段演唱前需给演员充足休息时间</li>
-              <li>武打场面（如《打路》）需提前检查舞台安全，预留足够表演空间</li>
-              <li>火焰驹道具需安排专人管理，马匹造型上场前需演员熟悉</li>
-              <li>建议演出前全体演员进行至少1次完整联排，确保衔接流畅</li>
-              <li>服装组需在演出前2小时完成全部角色服装准备工作</li>
-            </ul>
-          </div>
-        </div>
+      </div>
+      <div class="modal-footer" style="padding:14px 24px;border-top:1px solid var(--border-light);display:flex;justify-content:flex-end;gap:10px;">
+        <button class="btn btn-secondary" id="operaDetailCloseBtn" type="button">关闭</button>
+        <button class="btn btn-primary" id="operaDetailEditBtn" type="button">✏️ 编辑该剧目</button>
       </div>
     </div>
   </div>
@@ -1066,11 +996,11 @@
     <script src="../js/api-config.js?v=20260803"></script>
     <script src="../js/admin-pages/operas.pre-2.js?v=20261005a"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20261004b"></script>
+<script src="../js/app.js?v=20261007b"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
   <script src="../js/pagination.js?v=20261002a"></script>
   <script src="../js/real-action-guard.js?v=20260922b"></script>
-  <script src="../js/admin-pages/operas.js?v=20261005a"></script>
+  <script src="../js/admin-pages/operas.js?v=20261006a"></script>
   
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
 

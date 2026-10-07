@@ -222,6 +222,10 @@
           var v = btn.getAttribute('data-view') || 'month';
           __switchView(v);
         });
+        /* v20261007b 真实接线打标：豁免 SuperPatch 6/6 document 捕获兜底。
+           未标记时首次点击被 preventDefault+stopPropagation 吞杀并误报
+           「该功能暂未接入后端」，__switchView 永不执行（月度/周/列表切换全失效）。 */
+        try { btn.setAttribute('data-real-bound','1'); btn.__superPatchBound=1; btn.__deadBtnChecked=1; btn.__s2b=1; } catch(_vm){}
       });
       // 周视图导航
       var __weekOffset = 0;
@@ -993,6 +997,15 @@
         // 【Fix-20260929】声明本表单自带提交校验（空文件/10MB/预览层），SuperPatch 1/6 识别放行
         try { upForm.__spOwnSubmit = 1; upForm.setAttribute('data-sp-own-submit','1'); }catch(_om){}
         try { upForm.setAttribute('novalidate','novalidate'); }catch(_n){}
+        /* v20261007b 提交/重置按钮打防劫持标记：6/6 document 捕获监听对未标记按钮
+           一律 preventDefault+stopPropagation 并误报「该功能暂未接入后端」，导致
+           submit 按钮的原生提交被取消（本表单自带的空文件/10MB 校验永不可达）、
+           reset 按钮的原生重置也被取消。注意不可打 __ts3Done（下方重置绑定块会跳过绑定）。 */
+        try {
+          upForm.querySelectorAll('button[type="submit"],input[type="submit"],button[type="reset"],input[type="reset"]').forEach(function(_b){
+            _b.setAttribute('data-real-bound','1'); _b.__superPatchBound=1; _b.__deadBtnChecked=1;
+          });
+        } catch(_smk){}
         upForm.addEventListener('submit', function(ev){
           if (ev && ev.preventDefault) ev.preventDefault();
           if (ev && ev.stopPropagation) ev.stopPropagation();

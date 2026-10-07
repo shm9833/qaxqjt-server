@@ -39,9 +39,10 @@ const stubPrisma = {
     delete: async args => { captured.delete = args; return {}; }
   },
   orderItem: { createMany: async () => ({ count: 0 }), deleteMany: async () => ({ count: 0 }) },
-  orderRefund: { deleteMany: async () => ({ count: 0 }) },
-  finPaymentV1: { deleteMany: async () => ({ count: 0 }), create: async () => ({}), findMany: async () => [] },
-  scheduleV2: { findFirst: async () => null, create: async () => ({}), update: async () => ({}), deleteMany: async () => ({ count: 0 }) },
+  orderRefund: { deleteMany: async () => ({ count: 0 }), count: async () => 0 },
+  finPaymentV1: { deleteMany: async () => ({ count: 0 }), create: async () => ({}), findMany: async () => [], count: async () => 0 },
+  finLedgerV1: { count: async () => 0 },
+  scheduleV2: { findFirst: async () => null, findMany: async () => [], create: async () => ({}), update: async () => ({}), deleteMany: async () => ({ count: 0 }) },
   customersV1: { findFirst: async () => null, create: async args => ({ id: 'cust_new_001', ...args.data }) }
 };
 require.cache[prismaId] = { id: prismaId, filename: prismaId, loaded: true, exports: stubPrisma };

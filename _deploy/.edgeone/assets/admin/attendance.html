@@ -28,7 +28,7 @@
     <script src="../js/api-config.js?v=20260803"></script>
     <script src="../js/admin-pages/attendance.pre-2.js?v=20261005a"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20261004b"></script>
+<script src="../js/app.js?v=20261006c"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
   <script src="../js/pagination.js?v=20261002a"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -907,7 +907,6 @@
               <div class="page-actions no-print">
                 <button class="btn btn-outline btn-sm" id="attBtnSelectAll">☑️ 全选本页</button>
                 <button class="btn btn-gold btn-sm" id="attBtnPrintSelected" onclick="window.print()">🖨️ 打印已选</button>
-                <button class="btn btn-danger btn-sm" id="attBtnFinanceSel">💼 所选→财务待发</button>
               </div>
             </div>
             <div class="table-wrapper data-table-container" style="overflow-x:auto;">
@@ -1011,6 +1010,7 @@
                 </table>
               </div>
             </div>
+            </div><!-- /#previewCard 修复：预览卡在此闭合，人工补录/记录管理为其兄弟节点（原嵌套其中导致未上传CSV时不可见） -->
 
             <!-- 人工补录（无需CSV） -->
             <div class="param-card no-print">
@@ -1095,8 +1095,7 @@
               </div>
             </div>
           </div>
-        </div>
-        </div><!-- 修复：补闭合 #tabUpload（原 preview-card 少一个闭合导致后续 Tab 全部嵌套其中） -->
+        </div><!-- /#tabUpload -->
 
         <!-- ========================== Tab 3: 薪资参数 ========================== -->
         <div class="att-tab-content" id="tabParams">
@@ -1363,7 +1362,7 @@
 
   
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
-<script src="../js/admin-pages/attendance.js?v=20261005a"></script>
+<script src="../js/admin-pages/attendance.js?v=20261007b"></script>
 
 
 <!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->

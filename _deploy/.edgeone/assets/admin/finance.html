@@ -781,7 +781,7 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
             <button class="btn btn-danger">
               🗑 批量删除
             </button>
-            <button class="btn btn-outline-dark">
+            <button class="btn btn-outline-dark" id="finPrintBtn">
               🖨️ 打印
             </button>
           </div>
@@ -928,7 +928,7 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
                 </div>
                 <div class="form-group">
                   <label>账目分类</label>
-                  <select class="form-control">
+                  <select class="form-control" id="finFilterCat">
                     <option>全部分类</option>
                     <option>商演收入</option>
                     <option>惠民补贴</option>
@@ -944,11 +944,11 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
                 </div>
                 <div class="form-group" style="min-width:220px;">
                   <label>关键词搜索</label>
-                  <input type="text" class="form-control" placeholder="凭证号/摘要/经手人/关联订单" />
+                  <input type="text" class="form-control" id="finFilterKw" placeholder="凭证号/摘要/经手人/关联订单" />
                 </div>
                 <div class="form-group">
-                  <button class="btn btn-primary btn-sm">🔍 查询</button>
-                  <button class="btn btn-secondary btn-sm" style="margin-left:8px;">↺ 重置</button>
+                  <button class="btn btn-primary btn-sm" id="finFilterBtn">🔍 查询</button>
+                  <button class="btn btn-secondary btn-sm" id="finFilterReset" style="margin-left:8px;">↺ 重置</button>
                 </div>
               </div>
 
@@ -1064,11 +1064,11 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
     <script src="../js/api-config.js?v=20260922"></script>
     <script src="../js/admin-pages/finance.pre-2.js?v=20261005a"></script>
   <script src="../js/api-request.js?v=20260922"></script>
-<script src="../js/app.js?v=20261004b"></script>
+<script src="../js/app.js?v=20261006c"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
   <script src="../js/pagination.js?v=20261002a"></script>
   <script src="/js/xlsx-js-style.min.js?v=20260925"></script>
-  <script src="../js/admin-pages/finance.js?v=20261005a"></script>
+  <script src="../js/admin-pages/finance.js?v=20261007d"></script>
   
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
 

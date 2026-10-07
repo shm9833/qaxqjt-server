@@ -180,6 +180,8 @@
 
       var fsBtns = document.querySelectorAll('.flow-status-filter .fs-btn');
       fsBtns.forEach(function(btn) {
+        // v20261007b: 补 SuperPatch 豁免标记（契约同 __bindBtn），否则 document 捕获层吞杀点击并误弹「暂未接入后端」
+        btn.__ub = 1; btn.__superPatchBound = 1; btn.__deadBtnChecked = 1;
         btn.addEventListener('click', function() {
           fsBtns.forEach(function(b) { b.classList.remove('active'); });
           btn.classList.add('active');
@@ -987,7 +989,7 @@ function __pLog(module,event,extra){
   
   // 功能按钮绑定（上传/新建/导出）
   try{
-    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
+    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.__superPatchBound=1; el.__deadBtnChecked=1; el.addEventListener("click", fn, true); } }
     /* P1修复:假成功已移除 —— 头部「选择图片」原为一次性临时 input（选择结果无处落地），
        改为打开表单内真实文件选择器 #invAttachFiles，让选择结果进入下方真实上传流程 */
     __bindBtn('openInvUploadBtn', function(){ var inp=document.getElementById("invAttachFiles"); if(inp&&typeof inp.click==="function"){ inp.click(); } else { __T("⚠️ 未找到图片选择控件","error"); } });
