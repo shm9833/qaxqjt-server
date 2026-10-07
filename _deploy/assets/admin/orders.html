@@ -6,24 +6,8 @@
   <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
   <!-- 无 session 时 0.5ms 内跳登录页，防白屏 / 越权一眼看 -->
   <!-- =========================================================== -->
-  <script>try{(function(){
-    var K1="qaxqjt_admin_session", K2="qaxqjt_logout_blacklist", L="login.html";
-    var p=String(location.pathname||"").split("/").pop().toLowerCase();
-    if(p==="login.html"||p==="recover.html") return;
-    var now=Date.now(), raw=null, s=null, bad=1;
-    try{ raw=localStorage.getItem(K1); if(raw) s=JSON.parse(raw); }catch(_){}
-    if(s && s.id && (!s.expiresAt || now < parseInt(s.expiresAt,10))){
-      bad=0;
-      try{ var bl=JSON.parse(localStorage.getItem(K2)||"[]"); for(var i=0;i<bl.length;i++){ if(bl[i] && bl[i].id===s.id){ bad=1; break; } } }catch(_){}
-    }
-    if(bad){
-      ["qaxqjt_admin_session","admin_session","qaxqjt_admin_sess_v2","admin_sess_v2","qaxqjt_admin_remember","qaxqjt_admin_token","qaxqjt_admin_info","qaxqjt_admin_permissions","qaxqjt_auth_permissions_v1"].forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){} });
-      var u=location.href, i=u.lastIndexOf("/");
-      var base= (i>=0)? u.substring(0,i+1) : "./";
-      location.replace(base + L);
-    }
-  })();}catch(E){ try{ location.replace("login.html"); }catch(_){} }</script>
-  <script>window.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button[data-act],[data-real-bound]');if(!b)return;if(!b.__superPatchBound)b.__superPatchBound=1;if(!b.__ts3Done)b.__ts3Done=1;if(!b.__bindDone)b.__bindDone=1;if(!b.__ctE2Done)b.__ctE2Done=1;if(!b.__deadBtnChecked)b.__deadBtnChecked=1;},true);</script>
+  <script src="../js/admin-pages/orders.pre-1.js?v=20261005a"></script>
+  
 
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="renderer" content="webkit">
@@ -701,6 +685,12 @@
           <div class="tab-item" data-tab="customers">
             👥 客户档案
           </div>
+          <div class="tab-item" data-tab="appointments">
+            🗓️ 预约管理
+          </div>
+          <div class="tab-item" data-tab="roster">
+            🧑‍🎤 演出花名册
+          </div>
         </div>
 
         <div class="tab-content active" id="tab-orders">
@@ -761,11 +751,7 @@
                       <div>
                         <label style="display:block;font-weight:700;color:#1e3a8a;margin-bottom:6px;">关联订单编号</label>
                         <select name="attachOrderId" style="width:100%;padding:10px 14px;border:1.5px solid #3b82f6;border-radius:10px;background:#fff;">
-                          <option value="">请选择要补充附件的订单</option>
-                          <option>APPT-{year}0208-000128</option><option>APPT-{year}0305-000130</option><option>APPT-{year}0418-000137</option>
-                          <option>APPT-{year}0520-000143</option><option>APPT-{year}0608-000149</option><option>APPT-{year}0715-000153</option>
-                          <option>APPT-{year}0822-000160</option><option>APPT-{year}0903-000167</option><option>APPT-{year}1001-000173</option>
-                          <option>APPT-{year}1111-000181</option><option>APPT-{year}1225-000188</option>
+                          <option value="">加载真实订单中…</option>
                         </select>
                       </div>
                       <div>
@@ -811,19 +797,12 @@
                       <th>操作</th>
                     </tr>
                   </thead>
-                  <tbody id="ordersMainTbody" data-paginate="list" data-paginate-keep="1" data-page-size="10"><tr><td colspan="13" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实订单数据…</td></tr></tbody>
+                  <tbody id="ordersMainTbody"><tr><td colspan="13" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实订单数据…</td></tr></tbody>
                 </table>
               </div>
 
-              <div class="pagination">
-                <button class="page-btn" disabled>« 上一页</button>
-                <button class="page-btn active">1</button>
-                <button class="page-btn">2</button>
-                <button class="page-btn">3</button>
-                <button class="page-btn">4</button>
-                <span class="page-info">共 128 条 / 13 页</span>
-                <button class="page-btn">下一页 »</button>
-              </div>
+              <!-- v20261004 P2-4：服务端分页（meta 驱动），替换原写死「共 128 条 / 13 页」的假分页条 -->
+              <div class="pagination" id="ordersPager"><span class="page-info">加载中…</span></div>
             </div>
           </div>
         </div>
@@ -833,6 +812,7 @@
             <div class="admin-card-header">
               <h3>👥 客户档案管理</h3>
               <div style="display:flex;gap:15px;align-items:center;">
+                <button class="btn btn-primary btn-sm" id="custAddBtn" type="button">➕ 新增客户</button>
                 <div class="view-toggle">
                   <button class="active" id="viewCardBtn" data-real-bound="1">🗂️ 卡片</button>
                   <button id="viewTableBtn" data-real-bound="1">📊 表格</button>
@@ -896,7 +876,240 @@
                   </table>
                 </div>
               </div>
+
+              <!-- v20261004 P2-4：客户列表服务端分页（meta 驱动） -->
+              <div class="pagination" id="customersPager"><span class="page-info">加载中…</span></div>
 </div>
+          </div>
+        </div>
+
+        <!-- v20261004 P2-1：预约管理 tab（接通 GET /v1/appointments 列表 + POST /v1/appointments/:id/transition 状态流转） -->
+        <div class="tab-content" id="tab-appointments">
+          <div class="admin-card">
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group">
+                  <label>搜索预约</label>
+                  <input type="text" class="form-control" id="apptFilterKeyword" placeholder="预约编号/客户名称/电话">
+                </div>
+                <div class="form-group">
+                  <label>预约状态</label>
+                  <select class="form-control" id="apptFilterStatus">
+                    <option value="">全部状态</option>
+                    <option value="pending">待确认</option>
+                    <option value="confirmed">已确认</option>
+                    <option value="rejected">已驳回</option>
+                    <option value="cancelled">已取消</option>
+                    <option value="converted">已转订单</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>套餐类型</label>
+                  <select class="form-control" id="apptFilterType">
+                    <option value="">全部类型</option>
+                    <option value="temple_fair">庙会包场</option>
+                    <option value="cultural_tourism">文旅演出</option>
+                    <option value="campus_tour">校园巡演</option>
+                    <option value="custom">定制场次</option>
+                  </select>
+                </div>
+                <div class="form-group" style="display:flex;gap:8px;align-items:flex-end;">
+                  <button class="btn btn-primary btn-sm" id="apptFilterApplyBtn" type="button">🔍 查询</button>
+                  <button class="btn btn-secondary btn-sm" id="apptFilterResetBtn" type="button">↺ 重置</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>预约编号</th>
+                      <th>客户名称</th>
+                      <th>联系电话</th>
+                      <th>套餐类型</th>
+                      <th>期望开始</th>
+                      <th>场次</th>
+                      <th>预算/报价</th>
+                      <th>状态</th>
+                      <th>提交时间</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="apptsMainTbody"><tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实预约数据…</td></tr></tbody>
+                </table>
+              </div>
+
+              <!-- v20261004 P2-4：预约列表服务端分页（meta 驱动） -->
+              <div class="pagination" id="apptsPager"><span class="page-info">加载中…</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== 洛门演出订单花名册（v20261008a）====== -->
+        <div class="tab-content" id="tab-roster">
+          <style>
+            #tab-roster .ros-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0;}
+            #tab-roster .ros-stats{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 4px;}
+            #tab-roster .ros-stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:.85rem;color:#475569;}
+            #tab-roster .ros-stat b{font-size:1.05rem;color:#0f172a;margin-left:4px;}
+            #tab-roster .ros-stat.is-danger b{color:#dc2626;}
+            #tab-roster table{font-size:.86rem;}
+            #tab-roster .ros-role-sel,#tab-roster .ros-perf-sel,#tab-roster .ros-att-sel{padding:2px 4px;font-size:.82rem;}
+            #tab-roster .ros-failed{margin-top:12px;border:1px solid #fecaca;background:#fef2f2;border-radius:8px;padding:10px 14px;max-height:260px;overflow:auto;display:none;}
+            #tab-roster .ros-failed h4{margin:0 0 8px;color:#b91c1c;font-size:.9rem;}
+            #tab-roster .ros-failed table{font-size:.8rem;}
+            #tab-roster .ros-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9990;display:none;align-items:center;justify-content:center;}
+            #tab-roster .ros-modal{background:#fff;border-radius:12px;width:min(560px,94vw);max-height:92vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.25);}
+            #tab-roster .ros-modal-head{padding:16px 22px;border-bottom:1px solid #e2e8f0;font-weight:700;font-size:1.02rem;}
+            #tab-roster .ros-modal-body{padding:18px 22px;}
+            #tab-roster .ros-modal-foot{padding:12px 22px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;gap:10px;background:#f8fafc;border-radius:0 0 12px 12px;}
+            #tab-roster .ros-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;}
+            #tab-roster .ros-grid .full{grid-column:1 / -1;}
+            #tab-roster .ros-grid label{display:block;font-size:.82rem;color:#64748b;margin-bottom:4px;}
+            #tab-roster .ros-batch-date{display:flex;align-items:center;gap:6px;font-size:.85rem;color:#475569;}
+            #tab-roster .ros-hint{font-size:.78rem;color:#94a3b8;margin:4px 0 0;}
+          </style>
+
+          <div class="admin-card">
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group">
+                  <label>选择订单</label>
+                  <select class="form-control" id="rosOrderSelect"><option value="">— 请先选择订单 —</option></select>
+                </div>
+                <div class="form-group">
+                  <label>关键词</label>
+                  <input type="text" class="form-control" id="rosFilterKeyword" placeholder="姓名/手机/身份证">
+                </div>
+                <div class="form-group">
+                  <label>参演状态</label>
+                  <select class="form-control" id="rosFilterPerf">
+                    <option value="">全部</option>
+                    <option value="unconfirmed">未确认</option>
+                    <option value="confirmed">已确认</option>
+                    <option value="cancelled">已取消</option>
+                    <option value="completed">已完成</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>考勤状态</label>
+                  <select class="form-control" id="rosFilterAtt">
+                    <option value="">全部</option>
+                    <option value="present">出勤</option>
+                    <option value="absent">缺勤</option>
+                    <option value="late">迟到</option>
+                    <option value="early">早退</option>
+                    <option value="leave">请假</option>
+                    <option value="rest">公休</option>
+                    <option value="null">未考勤</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <button class="btn btn-primary btn-sm" id="rosQueryBtn" type="button">🔍 查询</button>
+                </div>
+              </div>
+
+              <div class="ros-stats" id="rosStats" style="display:none;">
+                <span class="ros-stat">总人数<b id="rosStatTotal">0</b></span>
+                <span class="ros-stat">已确认<b id="rosStatConfirmed">0</b></span>
+                <span class="ros-stat">未确认<b id="rosStatUnconfirmed">0</b></span>
+                <span class="ros-stat">已取消<b id="rosStatCancelled">0</b></span>
+                <span class="ros-stat">已完成<b id="rosStatCompleted">0</b></span>
+                <span class="ros-stat is-danger">未考勤<b id="rosStatUnattended">0</b></span>
+              </div>
+
+              <div class="ros-toolbar">
+                <button class="btn btn-primary btn-sm" id="rosAddBtn" type="button" disabled>➕ 新增人员</button>
+                <button class="btn btn-secondary btn-sm" id="rosImportBtn" type="button" disabled>📥 Excel 导入</button>
+                <input type="file" id="rosImportFile" accept=".xlsx,.xls,.csv" style="display:none;">
+                <button class="btn btn-secondary btn-sm" id="rosTplBtn" type="button">📄 下载导入模板</button>
+                <span style="flex:1;"></span>
+                <span class="ros-batch-date">考勤日期
+                  <input type="date" class="form-control" id="rosBatchDate" style="width:150px;">
+                </span>
+                <button class="btn btn-sm" style="background:#16a34a;color:#fff;" data-ros-batch="present" type="button">✅ 出勤</button>
+                <button class="btn btn-sm" style="background:#dc2626;color:#fff;" data-ros-batch="absent" type="button">❌ 缺勤</button>
+                <button class="btn btn-sm" style="background:#d97706;color:#fff;" data-ros-batch="late" type="button">🕐 迟到</button>
+                <button class="btn btn-sm" style="background:#7c3aed;color:#fff;" data-ros-batch="early" type="button">🏃 早退</button>
+                <button class="btn btn-sm" style="background:#0891b2;color:#fff;" data-ros-batch="leave" type="button">📝 请假</button>
+                <button class="btn btn-sm" style="background:#64748b;color:#fff;" data-ros-batch="rest" type="button">☔ 公休</button>
+              </div>
+              <p class="ros-hint">支持 Excel(.xlsx/.xls)/CSV 导入（单批 ≤500 行）；表头：姓名/身份证号/联系方式/角色分配/参演状态/考勤状态；也可由外部系统直接调用 POST /v1/order-roster/import 对接。批量考勤默认对勾选人生效，未勾选则对整单人员生效。</p>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:34px;"><input type="checkbox" id="rosCheckAll"></th>
+                      <th style="width:40px;">#</th>
+                      <th>姓名</th>
+                      <th>身份证号</th>
+                      <th>联系方式</th>
+                      <th>角色分配</th>
+                      <th>参演状态</th>
+                      <th>考勤状态</th>
+                      <th>考勤日期</th>
+                      <th>备注</th>
+                      <th style="width:110px;">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rosTbody"><tr><td colspan="11" style="text-align:center;padding:30px;color:#94a3b8;">请先在上方选择一个订单</td></tr></tbody>
+                </table>
+              </div>
+
+              <div class="ros-failed" id="rosFailedPanel">
+                <h4>⚠️ 以下行未导入（已修正后可重新导入，合法行不受影响）</h4>
+                <table>
+                  <thead><tr><th style="width:60px;">行号</th><th style="width:120px;">姓名</th><th>原因</th></tr></thead>
+                  <tbody id="rosFailedTbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 新增/编辑弹窗 -->
+          <div class="ros-modal-overlay" id="rosModalOverlay">
+            <div class="ros-modal">
+              <div class="ros-modal-head" id="rosModalTitle">新增花名册人员</div>
+              <div class="ros-modal-body">
+                <div class="ros-grid">
+                  <div><label>姓名（2-50 字符）*</label><input type="text" class="form-control" id="rosFName" maxlength="50" placeholder="如：张三"></div>
+                  <div><label>联系方式（11 位手机号）*</label><input type="text" class="form-control" id="rosFPhone" maxlength="11" placeholder="如：13993839833"></div>
+                  <div class="full"><label>身份证号（18 位，含校验码）*</label><input type="text" class="form-control" id="rosFIdCard" maxlength="18" placeholder="如：620522199508124568"></div>
+                  <div><label>角色分配（可选自定义）*</label>
+                    <select class="form-control" id="rosFRole"></select>
+                    <button class="btn btn-secondary btn-sm" id="rosFRoleAdd" type="button" style="margin-top:6px;">＋ 自定义角色</button>
+                  </div>
+                  <div><label>参演状态 *</label>
+                    <select class="form-control" id="rosFPerf">
+                      <option value="unconfirmed">未确认</option>
+                      <option value="confirmed">已确认</option>
+                      <option value="cancelled">已取消</option>
+                      <option value="completed">已完成</option>
+                    </select>
+                  </div>
+                  <div><label>考勤状态</label>
+                    <select class="form-control" id="rosFAtt">
+                      <option value="">未考勤</option>
+                      <option value="present">出勤</option>
+                      <option value="absent">缺勤</option>
+                      <option value="late">迟到</option>
+                      <option value="early">早退</option>
+                      <option value="leave">请假</option>
+                      <option value="rest">公休</option>
+                    </select>
+                  </div>
+                  <div><label>考勤日期</label><input type="date" class="form-control" id="rosFAttDate"></div>
+                  <div class="full"><label>备注</label><input type="text" class="form-control" id="rosFRemark" maxlength="300" placeholder="饰演角色/特殊说明（≤300 字）"></div>
+                </div>
+              </div>
+              <div class="ros-modal-foot">
+                <button class="btn btn-danger btn-sm" id="rosFDelete" type="button" style="display:none;">🗑 删除</button>
+                <span style="flex:1;"></span>
+                <button class="btn btn-secondary btn-sm" id="rosFCancel" type="button">取消</button>
+                <button class="btn btn-primary btn-sm" id="rosFSave" type="button">💾 保存</button>
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -905,241 +1118,22 @@
 
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
-  <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20260930a"></script>
+    <script src="../js/admin-pages/orders.pre-2.js?v=20261005a"></script>
+  <script src="../js/api-request.js?v=20261008b"></script>
+<script src="../js/app.js?v=20261006c"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
   <script src="../js/pagination.js?v=20261002a"></script>
   <script src="../js/real-action-guard.js?v=20260922b"></script>
-  <script>
-    'use strict';
-    (function() {
-      var ADMIN_STORAGE_KEY = 'qaxqjt_admin_session';
-      var LOGOUT_BLACKLIST_KEY = 'qaxqjt_logout_blacklist';
-      // BLOCKER B8 FIX：退出登录时，一并清理历史遗留/辅助登录态 keys（v2/token/remember/permissions/info 等），防残留鉴权绕过
-      var __ADMIN_LEGACY_KEYS = ['qaxqjt_admin_session','admin_session','qaxqjt_admin_sess_v2','admin_sess_v2','qaxqjt_admin_remember','qaxqjt_admin_token','qaxqjt_admin_info','qaxqjt_admin_permissions','qaxqjt_auth_permissions_v1'];
-      function __clearAdminLegacyKeys(excludeKey) { for (var __k=0; __k<__ADMIN_LEGACY_KEYS.length; __k++) { var __kk=__ADMIN_LEGACY_KEYS[__k]; if (excludeKey && __kk===excludeKey) continue; try { localStorage.removeItem(__kk); } catch(_){} } }
-
-      function __isBlacklistedSess(sessId) {
-        if (!sessId) return false;
-        try {
-          var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
-          if (!raw) return false;
-          var list = JSON.parse(raw) || [];
-          for (var bi = 0; bi < list.length; bi++) {
-            if (list[bi].id === sessId) return true;
-          }
-        } catch (_) {}
-        return false;
-      }
-
-      function __pruneBlacklist() {
-        try {
-          var raw = localStorage.getItem(LOGOUT_BLACKLIST_KEY);
-          if (!raw) return;
-          var list = JSON.parse(raw) || [];
-          var cutoff = Date.now() - 24 * 60 * 60 * 1000;
-          var newList = list.filter(function (x) { return (x.ts || 0) > cutoff; });
-          if (newList.length !== list.length) localStorage.setItem(LOGOUT_BLACKLIST_KEY, JSON.stringify(newList));
-        } catch (_) {}
-      }
-
-      function checkAuth() {
-        var session = null;
-        try {
-          var raw = localStorage.getItem(ADMIN_STORAGE_KEY);
-          if (raw) session = JSON.parse(raw);
-        } catch (e) { session = null; }
-        if (!session) {
-          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
-          window.location.replace('login.html');
-          return null;
-        }
-        if (session.expiresAt && Date.now() > parseInt(session.expiresAt, 10)) {
-          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
-          __pruneBlacklist();
-          window.location.replace('login.html');
-          return null;
-        }
-        if (__isBlacklistedSess(session.id)) {
-          try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch (_) {}
-          window.location.replace('login.html');
-          return null;
-        }
-        return session;
-      }
-
-      try {
-        window.addEventListener('storage', function (evt) {
-          if (!evt) return;
-          if (evt.key === ADMIN_STORAGE_KEY && !evt.newValue) {
-            try { window.location.replace('login.html'); } catch (_) {}
-          }
-          if (evt.key === LOGOUT_BLACKLIST_KEY) {
-            try {
-              var cur = localStorage.getItem(ADMIN_STORAGE_KEY);
-              if (cur) {
-                var curSess = JSON.parse(cur);
-                if (__isBlacklistedSess(curSess && curSess.id)) window.location.replace('login.html');
-              }
-            } catch (_) {}
-          }
-        }, false);
-      } catch (_evt) {}
-
-      // —— 角色级别映射（与后端 ROLE_LEVEL 对齐，前端 admin→super_admin, finance→finance_admin）——
-      var __ROLE_LEVEL = { super_admin:999, admin:999, ops:800, director:700, finance_checker:600, finance_cashier:520, finance_maker:550, finance_view:510, finance_admin:500, finance:500, staff:100 };
-      function __getRoleLevel(role) {
-        if (!role) return 0;
-        return __ROLE_LEVEL[role] || 0;
-      }
-      // —— 基于角色过滤侧边栏菜单（隐藏无权限菜单项）——
-      function __applyRoleMenuFilter(session) {
-        if (!session) return;
-        var userLevel = __getRoleLevel(session.role);
-        var items = document.querySelectorAll('.admin-sidebar-menu .admin-menu-item[data-role-level]');
-        items.forEach(function(item) {
-          var need = parseInt(item.getAttribute('data-role-level'), 10) || 0;
-          if (userLevel < need) {
-            item.style.display = 'none';
-          }
-        });
-      }
-
-      var currentSession = checkAuth();
-      __applyRoleMenuFilter(currentSession);
-      // —— 页面级权限拦截：直接访问 URL 时检查角色，不足则跳首页 ——
-      (function() {
-        if (!currentSession) return;
-        var userLvl = __getRoleLevel(currentSession.role);
-        if (userLvl < 800) {
-          location.replace('index.html');
-        }
-      })();
-    })();
-    (function() {
-      var tabs = document.querySelectorAll('.tab-item');
-      if (tabs && tabs.forEach) {
-        tabs.forEach(function(tab) {
-          tab.addEventListener('click', function() {
-            document.querySelectorAll('.tab-item').forEach(function(t) { t.classList.remove('active'); });
-            document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
-            tab.classList.add('active');
-            var key = tab.dataset && tab.dataset.tab;
-            if (key) {
-              var target = document.getElementById('tab-' + key);
-              if (target) target.classList.add('active');
-            }
-          });
-        });
-      }
-
-      var viewCardBtn = document.getElementById('viewCardBtn');
-      var viewTableBtn = document.getElementById('viewTableBtn');
-      var cardsView = document.getElementById('customerCardsView');
-      var tableView = document.getElementById('customerTableView');
-      if (viewCardBtn) {
-        viewCardBtn.addEventListener('click', function() {
-          viewCardBtn.classList.add('active');
-          if (viewTableBtn) viewTableBtn.classList.remove('active');
-          try { if (cardsView) cardsView.classList.remove('csp-hide'); } catch(_){}
-          try { if (tableView) tableView.classList.add('csp-hide'); } catch(_){}
-        });
-      }
-      if (viewTableBtn) {
-        viewTableBtn.addEventListener('click', function() {
-          viewTableBtn.classList.add('active');
-          if (viewCardBtn) viewCardBtn.classList.remove('active');
-          try { if (cardsView) cardsView.classList.add('csp-hide'); } catch(_){}
-          try { if (tableView) tableView.classList.remove('csp-hide'); } catch(_){}
-        });
-      }
-
-      var orderModal = document.getElementById('orderDetailModal');
-      var orderModalOverlay = document.getElementById('orderDetailOverlay');
-      var orderModalClose = document.getElementById('orderDetailClose');
-      var orderModalCancel = document.getElementById('orderDetailCancel');
-      function openOrderModal(btn) {
-        if (!orderModal || !orderModalOverlay) return;
-        var row = btn.closest('tr') || btn.closest('.customer-card');
-        var orderNo = '—', customer = '—', phone = '—', amount = '—', status = '—', date = '—';
-        if (row) {
-          var noEl = row.querySelector('td:first-child strong, [data-order-no]');
-          var custEl = row.querySelector('td:nth-child(2), [data-customer]');
-          var phoneEl = row.querySelector('td:nth-child(3), [data-phone]');
-          var amountEl = row.querySelector('td:nth-child(6) strong, [data-amount]');
-          var statusEl = row.querySelector('.badge, [data-status]');
-          var dateEl = row.querySelector('td:nth-child(7), [data-date]');
-          if (noEl) orderNo = noEl.textContent.trim();
-          if (custEl) customer = custEl.textContent.trim();
-          if (phoneEl) phone = phoneEl.textContent.trim();
-          if (amountEl) amount = amountEl.textContent.trim();
-          if (statusEl) status = statusEl.textContent.trim();
-          if (dateEl) date = dateEl.textContent.trim();
-        }
-        var fill = function(id, text) { var el = document.getElementById(id); if (el) el.textContent = text || '—'; };
-        fill('modalOrderNo', orderNo);
-        fill('modalCustomer', customer);
-        fill('modalPhone', phone);
-        fill('modalAmount', amount);
-        fill('modalStatus', status);
-        fill('modalDate', date);
-        orderModalOverlay.classList.add('active');
-        orderModal.classList.add('active');
-        try { orderModalOverlay.classList.remove('csp-hide','modal-overlay-hide'); orderModalOverlay.style.display=''; } catch(_){}
-        try { orderModal.classList.remove('csp-hide','modal-wrap-hide'); orderModal.style.display=''; } catch(_){}
-      }
-      function closeOrderModal() {
-        try { if (orderModalOverlay) { orderModalOverlay.classList.remove('active'); orderModalOverlay.classList.add('csp-hide','modal-overlay-hide'); orderModalOverlay.style.display='none'; } } catch(_){}
-        try { if (orderModal) { orderModal.classList.remove('active'); orderModal.classList.add('csp-hide','modal-wrap-hide'); orderModal.style.display='none'; } } catch(_){}
-      }
-      document.addEventListener('click', function(e) {
-        var t = e.target;
-        while (t && t !== document) {
-          if (t.classList && t.classList.contains('order-detail-btn')) { openOrderModal(t); return; }
-          t = t.parentNode;
-        }
-      });
-      if (orderModalClose) orderModalClose.addEventListener('click', closeOrderModal);
-      if (orderModalCancel) orderModalCancel.addEventListener('click', closeOrderModal);
-      if (orderModalOverlay) orderModalOverlay.addEventListener('click', function(e) { if (e.target === orderModalOverlay) closeOrderModal(); });
-      document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeOrderModal(); });
-    })();
-  </script>
+  <script src="../js/admin-pages/orders.pre-3.js?v=20261005a"></script>
 
   <div class="modal-overlay csp-hide" id="orderDetailOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
-  <div class="modal csp-hide" id="orderDetailModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:90%;max-width:680px;z-index:9999;padding:0;overflow:hidden;">
-    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,var(--primary),#1e5ba8);color:#fff;">
-      <h3 style="margin:0;font-size:1.1rem;font-weight:600;">📋 订单详情</h3>
+  <div class="modal csp-hide" id="orderDetailModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:760px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,var(--primary),#1e5ba8);color:#fff;position:sticky;top:0;">
+      <h3 id="orderDetailTitle" style="margin:0;font-size:1.1rem;font-weight:600;">📋 订单详情</h3>
       <button id="orderDetailClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
     </div>
-    <div style="padding:28px 28px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 28px;">
-        <div>
-          <div style="font-size:0.82rem;color:var(--text-light);margin-bottom:6px;">订单编号</div>
-          <div id="modalOrderNo" style="font-size:1rem;font-weight:600;color:var(--primary-dark);">—</div>
-        </div>
-        <div>
-          <div style="font-size:0.82rem;color:var(--text-light);margin-bottom:6px;">订单状态</div>
-          <div id="modalStatus" style="font-size:1rem;font-weight:600;">—</div>
-        </div>
-        <div>
-          <div style="font-size:0.82rem;color:var(--text-light);margin-bottom:6px;">客户名称</div>
-          <div id="modalCustomer" style="font-size:1rem;">—</div>
-        </div>
-        <div>
-          <div style="font-size:0.82rem;color:var(--text-light);margin-bottom:6px;">联系电话</div>
-          <div id="modalPhone" style="font-size:1rem;">—</div>
-        </div>
-        <div>
-          <div style="font-size:0.82rem;color:var(--text-light);margin-bottom:6px;">订单金额</div>
-          <div id="modalAmount" style="font-size:1.2rem;font-weight:700;color:#c0923a;">—</div>
-        </div>
-        <div>
-          <div style="font-size:0.82rem;color:var(--text-light);margin-bottom:6px;">创建时间</div>
-          <div id="modalDate" style="font-size:1rem;">—</div>
-        </div>
-      </div>
-    </div>
+    <!-- v20261004 P2-2：详情内容全部由 viewDetail() 用 GET /v1/orders/:id 真实数据渲染（items/payments/refunds/schedules/customer/appointment + contractUrl） -->
+    <div id="orderDetailBody" style="padding:22px 26px;"><div style="text-align:center;padding:30px;color:#94a3b8;">正在加载订单详情…</div></div>
     <div style="padding:16px 28px;border-top:1.5px solid var(--border-light);display:flex;justify-content:flex-end;gap:12px;background:var(--bg-light);">
       <button id="orderDetailCancel" type="button" class="btn btn-secondary">关闭</button>
     </div>
@@ -1308,2526 +1302,87 @@
     </div>
   </div>
 
-  <script>
-  (function(){
-    // 订单派工模块：行当口径（20261003 修订）6 大行 + 角子 + 后勤 + 武场/文场，与 cast-sheet / 花名册一致
-    // 20260922 真实化：派工候选名单来自 /v1/performers（在册真实演职人员），不再内置假名
-    var ORD_GROUPS = [
-      { k:'sheng',    n:'生行（文须生·武须生·小生）', ppl:[] },
-      { k:'chou',     n:'丑行（丑角）', ppl:[] },
-      { k:'jing',     n:'净行（大花脸·二花脸）', ppl:[] },
-      { k:'dan',      n:'旦行（正旦·小旦·彩旦·二架旦）', ppl:[] },
-      { k:'erjia',    n:'二架（门官·家院）', ppl:[] },
-      { k:'juezi',    n:'角子（龙套·校尉·刀斧手·丫鬟·彩女）', ppl:[] },
-      { k:'wuchang',  n:'武场（司鼓·梆子·打击乐）', ppl:[] },
-      { k:'wenchang', n:'文场（板胡·二胡·扬琴等）', ppl:[] },
-      { k:'houqin',   n:'后勤（衣箱·帽箱·电工·前场·舞台保障）', ppl:[] }
-    ];
-    // 23 分类（21 角色 + 武场 + 文场），规则与 cast-sheet.html _bucketOf 完全一致
-    var ORD_ROLE_RULES = [
-      ['武场', /武场|司鼓|板鼓|梆子|大锣|小锣|马锣|铙|钹|镲|堂鼓|战鼓|木鱼|打击|鼓师|武二手|鼓/],
-      ['文场', /文场|板胡|二胡|高胡|椰胡|扬琴|琵琶|三弦|古筝|竹笛|梅管|唢呐|海笛|笙|大提琴|贝司|提琴|电子琴|文二手|琴/],
-      ['帽箱', /帽箱|盔箱|盔头|盔|戏帽|帽倌|王帽|纱帽|扎巾|额子|凤冠|驸马套/],
-      ['衣箱', /衣箱|箱倌|行头|服装|跟包|化妆|大头|勾脸|脸谱|道具/],
-      ['电工', /电工|灯光|音响|话筒|耳麦|麦|配电|设备/],
-      ['前场', /舞台监督|监督|剧务|催场|场记|字幕|装台|布景|拆台|前台|检票|引导|后勤/],
-      ['大花脸', /大花脸|大净|铜锤|包公|包拯|徐延昭|尉迟恭/],
-      ['二花脸', /二花脸|架子花|武花|副净|武净|花脸|净|张飞|李逵|曹操/],
-      ['丑角', /丑/],
-      ['武须生', /武须生|靠把|红生|武老生|武生|关羽|关公|赵匡胤/],
-      ['文须生', /须生|老生|安工|衰派/],
-      ['小生', /小生/],
-      ['正旦', /正旦|青衣|老旦/],
-      ['小旦', /小旦|花旦|闺门旦|武旦|刀马旦/],
-      ['彩旦', /彩旦|丑婆|丑旦/],
-      ['二架旦', /二架旦|二路旦|二架女/],
-      ['门官', /门官|二架男/],
-      ['家院', /家院|老管家|老仆/],
-      ['校尉', /校尉/],
-      ['刀斧手', /刀斧手|刽子手/],
-      ['丫鬟', /丫鬟|丫环|使女/],
-      ['彩女', /彩女|宫娥/],
-      ['龙套', /龙套|青袍|文堂|流行/]
-    ];
-    function _ordStdRole(role){
-      var s = String(role||'');
-      for (var i=0;i<ORD_ROLE_RULES.length;i++){ if (ORD_ROLE_RULES[i][1].test(s)) return ORD_ROLE_RULES[i][0]; }
-      return '前场';
-    }
-    var ORD_GROUP_OF = {
-      '文须生':'sheng', '武须生':'sheng', '小生':'sheng',
-      '丑角':'chou',
-      '大花脸':'jing', '二花脸':'jing',
-      '正旦':'dan', '小旦':'dan', '彩旦':'dan', '二架旦':'dan',
-      '门官':'erjia', '家院':'erjia',
-      '龙套':'juezi', '校尉':'juezi', '刀斧手':'juezi', '丫鬟':'juezi', '彩女':'juezi',
-      '帽箱':'houqin', '电工':'houqin', '前场':'houqin', '衣箱':'houqin',
-      '武场':'wuchang', '文场':'wenchang'
-    };
-    function _ordBucket(role){
-      return ORD_GROUP_OF[_ordStdRole(role)] || 'houqin';
-    }
-    var box = document.getElementById('dpCastBox');
-    function _hx_ord(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-    function _renderDispatch(){
-      if (!box) return;
-      box.innerHTML = '';
-      ORD_GROUPS.forEach(function(grp){
-        var card = document.createElement('div');
-        card.className = 'dispatch-group-card';
-        var head = '<div class="dispatch-group-head">'
-          + '<span class="dispatch-group-count">'+_hx_ord(grp.ppl.length)+'</span>'
-          + '<strong class="dispatch-group-title">'+_hx_ord(grp.n)+'</strong>'
-          + '<span class="dispatch-group-sub">可多选·每人备注</span>'
-          + '</div>';
-        var items = grp.ppl.map(function(p, idx){
-          var sid = 'dp_'+grp.k+'_'+idx;
-          var pName = String(p.name||'').replace(/（/g,'(').replace(/）/g,')');
-          // 演员6行显示标准角色；武场/文场保留原始乐器工种
-          var dispRole = (grp.k==='wuchang'||grp.k==='wenchang') ? (p.role||'') : (p.stdRole||p.role||'');
-          var label = dispRole ? (_hx_ord(p.name)+'<small style="color:#94a3b8;margin-left:6px;">'+_hx_ord(dispRole)+'</small>') : _hx_ord(p.name);
-          return '<div class="dispatch-item">'
-            + '<input type="checkbox" class="dp-cb dispatch-cb" id="'+_hx_ord(sid)+'" name="dpCast['+_hx_ord(grp.k)+'][]" value="'+_hx_ord(pName)+'" data-dp-group="'+_hx_ord(grp.k)+'" data-cast-group="'+_hx_ord(grp.n)+'" data-cast-role="'+_hx_ord(dispRole)+'">'
-            + '<label for="'+_hx_ord(sid)+'" class="dispatch-label">'+label+'</label>'
-            + '<input type="text" class="dispatch-note" placeholder="饰演/角色/备注（如：艾千/黄桂英/前场）" data-dp-note="'+_hx_ord(grp.k)+'|'+idx+'">'
-            + '</div>';
-        }).join('');
-        if (!grp.ppl.length) items = '<div style="padding:8px 10px;color:#94a3b8;font-size:.85rem;">暂无该工种在册人员</div>';
-        card.innerHTML = head + items;
-        box.appendChild(card);
-      });
-      var allCb = document.querySelectorAll('#dpCastBox .dp-cb');
-      // 常用上场班底 = 演员 6 大行（不含武场/文场）；以结构化 data-dp-group 为唯一判定来源
-      var COMMON_GROUPS = ['sheng','chou','jing','dan','erjia','juezi'];
-      function isCommonCb(cb){ return COMMON_GROUPS.indexOf(cb.getAttribute('data-dp-group')) >= 0; }
-      function syncCommonBtn(){
-        var btn = document.getElementById('dpSelCommon');
-        if (!btn) return false;
-        var cbs = Array.prototype.slice.call(document.querySelectorAll('#dpCastBox .dp-cb')).filter(isCommonCb);
-        var allOn = cbs.length > 0 && cbs.every(function(cb){ return cb.checked; });
-        // 文案禁用「取消/关闭/派工」等词：会被站内 SuperPatch3/死按钮兜底按关键词截停
-        btn.textContent = allOn ? '↩️ 撤下常用班底' : '⚡ 一键派常用班底';
-        return allOn;
-      }
-      window.__dpSyncCommonBtn = syncCommonBtn;
-      function recount(){
-        var n = document.querySelectorAll('#dpCastBox .dp-cb:checked').length;
-        var el = document.getElementById('dpSelCount');
-        if (el) { el.textContent = '已选 '+n+' 人'; }
-        syncCommonBtn();
-      }
-      allCb.forEach(function(cb){ cb.addEventListener('change', recount); });
-      if (!window.__dpCommonBound) {
-        window.__dpCommonBound = 1;
-        var btnCommon = document.getElementById('dpSelCommon');
-        // 标记为「已真实绑定」，让站内死按钮兜底委托跳过，避免按文案关键词截停（20261002）
-        if (btnCommon) {
-          btnCommon.__bindDone = 1;
-          btnCommon.addEventListener('click', function(){
-            // 演员 6 组已全选→再次点击撤下常用班底；否则补齐 6 组（武场/文场保持手动勾选）
-            var turnOff = syncCommonBtn();
-            document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){
-              if (isCommonCb(cb)) cb.checked = !turnOff;
-            });
-            recount();
-          });
-        }
-        var btnClear = document.getElementById('dpClearAll');
-        if (btnClear) {
-          btnClear.__bindDone = 1;
-          btnClear.addEventListener('click', function(){
-          document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){ cb.checked = false; });
-          document.querySelectorAll('#dpCastBox input[data-dp-note]').forEach(function(i){ i.value=''; });
-          var rmk = document.getElementById('dpRemark'); if (rmk) rmk.value='';
-          recount();
-          });
-        }
-      }
-    }
-    _renderDispatch();
-    if (window.QAXQJT_API) {
-      QAXQJT_API.get('/v1/performers', { query:{ pageSize:500 } }).then(function(d){
-        var items = Array.isArray(d) ? d : ((d && d.items) || []);
-        var seen = {};
-        items.forEach(function(p){
-          var name = p.name || p.performerName || '';
-          // 仅在岗人员可派工：停用/待审核/离职不进入候选（与花名册 isOn 同口径，20261002）
-          if (!name || seen[name]) return;
-          if (p.status && p.status !== 'active') return;
-          seen[name] = 1;
-          var role = p.primaryRole || p.roleCategory || p.role || '';
-          var std = _ordStdRole(role);
-          var k = ORD_GROUP_OF[std] || 'houqin';
-          var g = ORD_GROUPS.filter(function(x){ return x.k===k; })[0];
-          if (g) g.ppl.push({ name:name, role:role, stdRole:std });
-        });
-        _renderDispatch();
-      }).catch(function(){ /* 未登录时保持空态，不造假数据 */ });
-    }
-    // 打开派工弹窗（读取当行数据）
-    function openDispatch(anchorEl){
-      var tr = anchorEl; while(tr && tr.tagName!=='TR') tr = tr.parentNode;
-      var tds = tr ? tr.querySelectorAll('td') : [];
-      var no='—', cust='—', date='—';
-      if (tds.length>=13) {
-        no   = (tds[0].innerText||'').trim();
-        cust = (tds[1].innerText||'').trim() + ' / ' + (tds[6].innerText||'').trim();
-        date = (tds[5].innerText||'').trim() + ' · ' + (tds[4].innerText||'').trim();
-      }
-      document.getElementById('dpOrderNo').textContent = no;
-      document.getElementById('dpCust').textContent    = cust;
-      document.getElementById('dpDate').textContent    = date;
-      document.getElementById('dispatchOrderBadge').textContent = '订单 '+no;
-      var o=document.getElementById('dispatchOverlay'), m=document.getElementById('dispatchModal');
-      o.classList.add('active'); o.classList.remove('csp-hide','modal-overlay-hide'); o.style.display='';
-      m.classList.add('active'); m.classList.remove('csp-hide','modal-wrap-hide'); m.style.display='';
-    }
-    function closeDispatch(){
-      var o=document.getElementById('dispatchOverlay'), m=document.getElementById('dispatchModal');
-      try { o.classList.remove('active'); o.classList.add('csp-hide','modal-overlay-hide'); o.style.display='none'; } catch(_){}
-      try { m.classList.remove('active'); m.classList.add('csp-hide','modal-wrap-hide'); m.style.display='none'; } catch(_){}
-      /* ★ FIX: 派工单取消后添加 toast 反馈，解决"取消无显示"问题 */
-      try { (window.QinApp&&QinApp.Utils?QinApp.Utils.toast:function(m){console.info(m);})('派工单已取消，未保存更改','info'); } catch(_){}
-    }
-    document.addEventListener('click', function(e){
-      var t=e.target;
-      while(t && t!==document){
-        if (t.getAttribute && t.getAttribute('data-action')==='open-dispatch') { openDispatch(t); e.preventDefault(); return; }
-        if (t.getAttribute && t.getAttribute('data-open-upload')) {
-          var fid = t.getAttribute('data-open-upload');
-          var up = document.querySelector('[data-upload-wrap="1"]');
-          if (up) up.scrollIntoView({behavior:'smooth', block:'center'});
-          if (window.QinApp && QinApp.Utils) QinApp.Utils.toast('已跳转到订单附件上传面板，请选择文件后提交','success');
-          e.preventDefault(); return;
-        }
-        t = t.parentNode;
-      }
-    });
-    document.getElementById('dispatchClose').addEventListener('click', closeDispatch);
-    document.getElementById('dispatchCancel').addEventListener('click', closeDispatch);
-    document.getElementById('dispatchOverlay').addEventListener('click', function(e){ if(e.target===this) closeDispatch(); });
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeDispatch(); });
-    document.getElementById('dispatchSave').addEventListener('click', function(){
-      var n = document.querySelectorAll('#dpCastBox .dp-cb:checked').length;
-      var no = (document.getElementById('dpOrderNo') || {}).textContent || '';
-      try {
-        var __QinApp = window.QinApp || (window.parent && window.parent.QinApp);
-        var __T = (__QinApp && __QinApp.Utils && __QinApp.Utils.toast) ? function(msg,t,d){ try{__QinApp.Utils.toast(msg,t||'warning',d||3200);}catch(_t){} } : (typeof window.__toastM === 'function' ? window.__toastM : (typeof window.__T__sp === 'function' ? window.__T__sp : function(msg){ alert(msg); }));
-      } catch(_uT){ var __T = function(m){ alert(m); }; }
-      // 防抖：1500ms 内重复点保存忽略
-      try { var __saveLock = 'dispatch_save_' + String(no).replace(/\W/g,'_'); if(!window.__acqH9){ if(!window.__OP_LOCKS) window.__OP_LOCKS = {}; if(window.__OP_LOCKS[__saveLock]){ __T('⏳ 派工保存中，请勿重复点击','warning',2400); return; } window.__OP_LOCKS[__saveLock] = Date.now(); setTimeout(function(){ try{ delete window.__OP_LOCKS[__saveLock]; }catch(_){} },1500); } else { if(!window.__acqH9(__saveLock, 1500)){ __T('⏳ 派工保存中，请勿重复点击','warning',2400); return; } } } catch(_lk){}
-      if (n<4) { try{ __T('⚠️ 派工人数不足：当前 '+n+' 人，连台戏通常需 ≥4 人（主角+龙套+乐队+舞美），请补充勾选后保存','warning',4200); }catch(_a){ alert('⚠️ 派工人数不足（当前 '+n+' 人，通常至少需4人+龙套）'); } return; }
-      // ==== 修复 B3 CRITICAL：orders 派工保存真写 Storage.update(ORDERS, orderId, {dispatchData:...})（之前只有 toast 占位，刷新就丢）
-      try {
-        var QinApp = window.QinApp || (window.parent && window.parent.QinApp);
-        var Storage = (QinApp && QinApp.Storage) ? QinApp.Storage : null;
-        var Utils = (QinApp && QinApp.Utils) ? QinApp.Utils : null;
-        var Admin = (QinApp && QinApp.Admin) ? QinApp.Admin : null;
-        var remarkEl = document.getElementById('dpRemark');
-        var dateEl = document.getElementById('dpDate');
-        var people = [];
-        try {
-          document.querySelectorAll('#dpCastBox .dp-cb:checked').forEach(function (cb) {
-            var nm = (cb.getAttribute('data-cast-name') || cb.value || String(cb.getAttribute('aria-label') || '') || '').trim();
-            var role = (cb.getAttribute('data-cast-role') || cb.getAttribute('data-role') || '').trim();
-            var group = (cb.getAttribute('data-cast-group') || cb.getAttribute('data-group') || '').trim();
-            if (nm) people.push({ name: nm, role: role, group: group });
-          });
-        } catch (_) { people = []; }
-        var teamLeader = '';
-        try {
-          var tl = document.getElementById('dpTeamLeader') || document.querySelector('#dispatchModal input[name="dpTeamLeader"]') || document.querySelector('#dispatchModal input[data-dp-team-leader]');
-          if (tl) teamLeader = (tl.value || '').trim();
-        } catch (_) {}
-        var savedAt = Date.now();
-        var operator = (Admin && Admin.currentUser && (Admin.currentUser.name || Admin.currentUser.username)) ? (Admin.currentUser.name || Admin.currentUser.username) : '';
-        var dispatchData = {
-          orderNo: no,
-          savedAt: savedAt,
-          savedAtText: (function(){ try { var d = new Date(savedAt); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); } catch(e){ return ''; } })(),
-          count: people.length,
-          teamLeader: teamLeader,
-          remark: remarkEl ? (remarkEl.value || '').trim() : '',
-          date: dateEl ? dateEl.textContent : '',
-          people: people,
-          savedBy: operator,
-          printed: false,
-          synced: true
-        };
-        // 1. 优先写 orders 表：找到 orderNo == no 或 bookingId == no 的 order
-        var orderUpdated = false;
-        var updatedOrderId = null;
-        if (Storage && Storage.KEYS && Storage.KEYS.ORDERS && typeof Storage.list === 'function' && typeof Storage.update === 'function') {
-          try {
-            var orderList = Storage.list(Storage.KEYS.ORDERS) || [];
-            var foundOrder = null;
-            for (var i = 0; i < orderList.length; i++) {
-              var o = orderList[i] || {};
-              if (String(o.orderNo || '') === String(no)) { foundOrder = o; break; }
-              if (String(o.bookingId || '') === String(no)) { foundOrder = o; break; }
-              if (String(o.appointmentNo || '') === String(no)) { foundOrder = o; break; }
-            }
-            if (foundOrder && foundOrder.id) {
-              var patch = { dispatchData: dispatchData, updatedAt: savedAt, status: foundOrder.status || 'dispatched', statusText: foundOrder.statusText || '已派工' };
-              var ok = Storage.update(Storage.KEYS.ORDERS, foundOrder.id, patch);
-              if (ok) { orderUpdated = true; updatedOrderId = foundOrder.id; }
-            }
-          } catch (upErr) {
-            console.warn('[orders.dispatchSave] Storage.update 失败，退回 dispatch_data_v1 单独存储：', upErr && upErr.message ? upErr.message : upErr);
-          }
-        }
-        // 2. fallback：独立写 qaxqjt_dispatch_data_v1（未来 orders 渲染可从这里读回）
-        var fallbackSaved = false;
-        try {
-          var DISPATCH_KEY = 'qaxqjt_dispatch_data_v1';
-          var db = {};
-          try { db = JSON.parse(localStorage.getItem(DISPATCH_KEY) || '{}'); if (!db || typeof db !== 'object') db = {}; } catch (_) { db = {}; }
-          db[String(no)] = dispatchData;
-          localStorage.setItem(DISPATCH_KEY, JSON.stringify(db));
-          fallbackSaved = true;
-        } catch (fsErr) { console.warn('[orders.dispatchSave] dispatch v1 单独存储失败：', fsErr); }
-        var msg = '✅ 派工单已持久化保存：订单 ' + no + '，已派 ' + people.length + ' 人（含龙套+乐队+舞美）' +
-                  (orderUpdated ? ' · 订单ID=' + updatedOrderId : '') +
-                  (fallbackSaved ? ' · 本地双写备份就绪（刷新仍可读取派工名单）' : '') +
-                  (teamLeader ? ' · 领队：' + teamLeader : '');
-        if (Utils) {
-          Utils.toast(msg, 'success', 5500);
-        } else {
-          alert(msg);
-        }
-      } catch (outer) {
-        console.error('[dispatchSave] 致命异常：', outer);
-        try { (window.QinApp && QinApp.Utils) ? QinApp.Utils.toast('❌ 派工保存异常：' + (outer && outer.message ? outer.message : outer), 'error') : alert('派工保存异常'); } catch(_) {}
-        closeDispatch();
-        return;
-      }
-      closeDispatch();
-    });
-    /* ---------- CRITICAL 修复：退出登录按钮（侧边栏） + 7 类 legacy key 彻底清理 ---------- */
-    function __doOrdersLogout() {
-      if (!window.confirm('确定要退出登录吗？')) return;
-      var LK = 'qaxqjt_admin_session';
-      var BLK = 'qaxqjt_logout_blacklist';
-      var LS_KEYS = ['qaxqjt_admin_session','admin_session','qaxqjt_admin_sess_v2','admin_sess_v2','qaxqjt_admin_remember','qaxqjt_admin_token','qaxqjt_admin_info','qaxqjt_admin_permissions','qaxqjt_auth_permissions_v1'];
-      try {
-        var curSessId = null;
-        try {
-          var curRaw = localStorage.getItem(LK);
-          if (curRaw) { var curSess = JSON.parse(curRaw); if (curSess && curSess.id) curSessId = curSess.id; }
-        } catch (_eSess) {}
-        if (curSessId) {
-          var blackList = [];
-          try {
-            var rawBlk = localStorage.getItem(BLK);
-            if (rawBlk) blackList = JSON.parse(rawBlk) || [];
-          } catch (_eBlk) {}
-          blackList.push({ id: curSessId, ts: Date.now() });
-          if (blackList.length > 100) blackList = blackList.slice(-100);
-          try { localStorage.setItem(BLK, JSON.stringify(blackList)); } catch (_eWrite) {}
-        }
-      } catch (_blkOuter) {}
-      try { localStorage.removeItem(LK); } catch(_e1){}
-      for (var _ii = 0; _ii < LS_KEYS.length; _ii++) {
-        try { if (LS_KEYS[_ii] !== LK) localStorage.removeItem(LS_KEYS[_ii]); } catch(_e2){}
-      }
-      if (window.QinApp && window.QinApp.Admin && typeof window.QinApp.Admin.logout === 'function') {
-        try { window.QinApp.Admin.logout(); } catch(_e3){}
-      }
-      try { window.location.replace('login.html'); } catch(_eLoc) { window.location.href = 'login.html'; }
-    }
-    function __bindOrdersLogoutBtn() {
-      var sb = document.getElementById('logoutBtnSidebar');
-      if (sb) sb.addEventListener('click', function(e){ e.preventDefault && e.preventDefault(); __doOrdersLogout(); }, true);
-    }
-    try {
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', __bindOrdersLogoutBtn);
-      } else {
-        __bindOrdersLogoutBtn();
-      }
-    } catch(_bindErr){}
+  <!-- v20261004 P2-3：客户新增/编辑弹窗（POST /v1/customers、PATCH /v1/customers/:id） -->
+  <div class="modal-overlay csp-hide" id="custEditOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="custEditModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:92%;max-width:560px;z-index:9999;padding:0;overflow:hidden;max-height:90vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff;">
+      <h3 id="custEditTitle" style="margin:0;font-size:1.1rem;font-weight:600;">➕ 新增客户</h3>
+      <button id="custEditClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+    </div>
+    <form id="custEditForm" style="padding:22px 26px;display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;">
+      <input type="hidden" id="custEditId">
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">客户名称 *</label>
+        <input type="text" id="custEditName" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">联系电话 *</label>
+        <input type="text" id="custEditPhone" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">客户类型</label>
+        <select id="custEditType" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+          <option value="personal">个人</option>
+          <option value="organization">单位/组织</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">客户等级</label>
+        <select id="custEditLevel" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+          <option value="">未评级</option>
+          <option value="VIP">VIP</option>
+          <option value="A">A 级</option>
+          <option value="B">B 级</option>
+          <option value="C">C 级</option>
+        </select>
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">单位/组织</label>
+        <input type="text" id="custEditOrganization" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">备注</label>
+        <textarea id="custEditRemark" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
+      </div>
+      <div style="grid-column:1 / span 2;display:flex;justify-content:flex-end;gap:12px;">
+        <button type="button" id="custEditCancel" class="btn btn-secondary">取消</button>
+        <button type="submit" class="btn btn-primary" style="background:#0d9488;color:#fff;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:0.9rem;">💾 保存</button>
+      </div>
+    </form>
+  </div>
 
-    // =============================================================================
-    // 🔧 E2 FIX：订单预约管理 全按钮自动化事件绑定 + 去抖
-    // =============================================================================
+  <!-- v20261004 P2-3：客户详情弹窗（GET /v1/customers/:id，含近期订单/预约） -->
+  <div class="modal-overlay csp-hide" id="custDetailOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="custDetailModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:720px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff;">
+      <h3 id="custDetailTitle" style="margin:0;font-size:1.1rem;font-weight:600;">👤 客户详情</h3>
+      <button id="custDetailClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+    </div>
+    <div id="custDetailBody" style="padding:22px 26px;"><div style="text-align:center;padding:30px;color:#94a3b8;">正在加载客户详情…</div></div>
+    <div style="padding:16px 28px;border-top:1.5px solid var(--border-light);display:flex;justify-content:flex-end;gap:12px;background:var(--bg-light);">
+      <button id="custDetailCancel" type="button" class="btn btn-secondary">关闭</button>
+    </div>
+  </div>
 
-  })();
-  </script>
+  <script src="../js/admin-pages/orders.js?v=20261005a"></script>
+  <script src="../js/admin-pages/order-roster.js?v=20261008a"></script>
 
   <!-- S-通用后台补丁：去抖锁 + __closeAnyModal + 查询重置真重置 + ESC 关弹窗 + 侧边栏死链修复 + 空 a[href=#] 禁跳 -->
-<script>
-  (function __adminCommonPatchV20260730(){
-    var __toastC = function(msg,type){
-      try{ if(window.QinApp&&QinApp.Utils&&QinApp.Utils.toast){QinApp.Utils.toast(msg,type||'info',3000);return;} }catch(_e){}
-      try{ (type==='error'?alert:console.log)('[adminCommon] '+msg); }catch(_f){}
-    };
-    // 1) 全局写操作防重入锁（与 schedule.html 同源：window.__OP_LOCKS）
-    window.__acqCommon = function(key,ttl){
-      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
-      try{
-        if(!window.__OP_LOCKS) window.__OP_LOCKS = {};
-        window.__OP_LOCKS[key] = true;
-        setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}}, ttl||650);
-      }catch(_lk){}
-      return true;
-    };
-    // 2) 通用 __closeAnyModal：扫描所有 .modal/.overlay 并关闭
-    window.__closeAnyModal = function(){
-      try{
-        var overlays = document.querySelectorAll('.modal-overlay, [id$="Overlay"], [id$="overlay"], .overlay, [class*="modal-overlay"], .modal-overlay-root, [data-overlay]');
-        overlays.forEach(function(o){
-          try{ o.classList.remove('active','show','modal-overlay-show'); o.classList.add('s-overlay-hide','modal-overlay-hide','csp-hide'); }catch(_){ try{ o.style.display='none'; }catch(_a){} }
-        });
-        var modals = document.querySelectorAll('.modal, [id$="Modal"], [id$="modal"], [class*="modal-wrap"], .modal-wrap, .generic-modal-root, [data-modal], [role="dialog"]');
-        modals.forEach(function(m){
-          try{ m.classList.remove('active','show','modal-show'); m.classList.add('s-modal-hide','modal-wrap-hide','csp-hide'); }catch(_){ try{ m.style.display='none'; }catch(_a){} }
-        });
-        try{ document.body.classList.remove('body-modal-locked','modal-open','nav-locked'); }catch(_b){}
-      }catch(err){ console.warn('[__closeAnyModal] err:', err); }
-    };
-    // 3) ESC 键 → 关所有弹窗 + 触发页面级 closeAddModal/closeEditModal/closeDispatchModal 若存在
-    try{
-      document.addEventListener('keydown', function(e){
-        if(e.key==='Escape'){
-          var fns = ['closeAddModal','closeEditModal','closeDispatchModal','closeOrderViewModal','closeDeleteConfirm'];
-          for(var i=0;i<fns.length;i++){ try{ if(typeof window[fns[i]]==='function') window[fns[i]](); }catch(_){} }
-          window.__closeAnyModal();
-        }
-      }, true);
-    }catch(_escErr){}
-    // 4) 查询栏 ↻重置 按钮：真正把同级 select/input 清空回默认
-    function __resetFilterBar(root){
-      if(!root) root = document.querySelector('.admin-filter-bar, [class*="filter-bar"]');
-      if(!root) return 0;
-      var sels = root.querySelectorAll('select');
-      var inputs = root.querySelectorAll('input[type=text],input:not([type]),input[type=search],input[type=date],input[type=number]');
-      var n = 0;
-      try{
-        sels.forEach(function(s){ try{ s.selectedIndex = 0; }catch(_){} n++; });
-        inputs.forEach(function(inp){ try{ inp.value=''; inp.checked=false; }catch(_){} n++; });
-      }catch(_r){}
-      return n;
-    }
-    // 5) 绑定「重置」按钮 + 空 a[href=#] 阻止跳转 + 侧边栏菜单 href=# 死链兜底
-    function __bindButtonsOnce(){
-      try{
-        var rbtns = document.querySelectorAll('button, .btn, a.btn, a.action-link');
-        rbtns.forEach(function(b){
-          if(b.__sBound) return;
-          var txt = (b.textContent||'').replace(/\s+/g,' ').trim();
-          if(txt.indexOf('重置')>=0 && txt.indexOf('今日')<0 && txt.indexOf('密码')<0){
-            b.addEventListener('click', function(){
-              if(!window.__acqCommon('c_reset_'+Math.random().toString(36).slice(2,6),450)) return;
-              var n = __resetFilterBar();
-              __toastC('↺ 查询条件已重置（'+n+' 项恢复默认）','success');
-            }, true);
-            b.__sBound = 1;
-          }
-          if(txt.indexOf('取消')>=0 || txt.indexOf('关闭')>=0){
-            b.addEventListener('click', function(ev){
-              // 若按钮本身已有 onclick 事件（非 # href），交给原始 onclick；仅兜底关弹窗
-              try{ if(ev && ev.stopPropagation) ev.stopPropagation(); }catch(_s){}
-              setTimeout(function(){ window.__closeAnyModal(); }, 220);
-            }, true);
-          }
-        });
-        // 所有 a[href="#"] → preventDefault 避免跳到页面顶部
-        var hs = document.querySelectorAll('a[href="#"]');
-        hs.forEach(function(a){
-          if(a.__sBound2) return;
-          a.addEventListener('click', function(ev){
-            var ex = (a.getAttribute('onclick')||'') + (a.getAttribute('data-toggle')||'');
-            if(ex.length < 2 && !a.classList.contains('action-link')){
-              // 没有 onclick 也非 action-link → 死链，提示并阻止跳
-              if(ev && ev.preventDefault) ev.preventDefault();
-              __toastC('⚠️ 该链接暂未绑定功能（href="#")','warning');
-              return false;
-            }
-          }, true);
-          a.__sBound2 = 1;
-        });
-        // 6) 侧边栏 admin-sidebar-menu 菜单项链接正确性兜底
-        try{
-          var menuMap = [
-            {kw:'账号权限管理', target:'accounts.html'},
-            {kw:'订单预约管理', target:'orders.html'},
-            {kw:'官网内容管理', target:'content.html'},
-            {kw:'系统日志备份', target:'system.html'},
-            {kw:'数据大屏', target:'index.html'},
-            {kw:'员工人事', target:'staff.html'},
-            {kw:'演出剧目', target:'operas.html'},
-            {kw:'演出排期', target:'schedule.html'},
-            {kw:'阵容管理', target:'cast-sheet.html'},
-            {kw:'道具库存', target:'inventory.html'},
-            {kw:'薪酬财务', target:'finance.html'},
-            {kw:'考勤报表', target:'reports.html'}
-          ];
-          var lis = document.querySelectorAll('.admin-sidebar-menu li, .sidebar-nav li, .menu-nav li, .sider-list li');
-          lis.forEach(function(li){
-            var t = (li.textContent||'').replace(/\s+/g,' ').trim();
-            var a = li.querySelector('a');
-            if(!a || !t) return;
-            for(var j=0;j<menuMap.length;j++){
-              if(t.indexOf(menuMap[j].kw)>=0 && a.getAttribute('href') !== menuMap[j].target){
-                try{ a.setAttribute('href', menuMap[j].target); a.removeAttribute('onclick'); a.__sBound=1; }catch(_s){}
-                break;
-              }
-            }
-          });
-        }catch(_mErr){}
-      }catch(_bErr){ console.warn('[bindButtonsOnce err]:', _bErr); }
-    }
-    if(document.readyState==='complete' || document.readyState==='interactive'){ setTimeout(__bindButtonsOnce, 150); }
-    else document.addEventListener('DOMContentLoaded', function(){ setTimeout(__bindButtonsOnce, 150); });
-    console.info('[adminCommonPatchV20260730 已应用：去抖锁 + __closeAnyModal + 重置真重置 + ESC关弹窗 + 侧边栏死链修复 + 页码圆角CSS]');
-  })();
-</script>
+
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
-<script>
-/* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
-if (window.__DBF_V20260804_INJECTED__ !== true) {
-  window.__DBF_V20260804_INJECTED__ = true;
-
-/* ========== 📊 JSON 性能日志（默认关闭，开启后输出NDJSON便于ELK采集） ========== */
-function __pEna(){try{return window.localStorage&&localStorage.getItem('__ENABLE_PERF_LOG__')==='true'}catch(e){return false}}
-function __pFmt(){try{return(window.localStorage&&localStorage.getItem('__PERF_FORMAT__')||'json').toLowerCase()}catch(e){return'json'}}
-function __pTid(){if(!window.__pCur){window.__pCur='tr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}return window.__pCur}
-function __pUA(){try{return navigator.userAgent||''}catch(e){return''}}
-function __pURL(){try{return location.href||''}catch(e){return''}}
-function __pLog(module,event,extra){
-  if(!__pEna())return;
-  try{
-    var now=new Date();
-    var duration_ms = (window.__pT0 ? (Date.now()-window.__pT0) : 0);
-    var payload = {
-      '@timestamp': now.toISOString(),
-      'level': 'INFO',
-      'service': 'qaxqjt-admin',
-      'trace_id': __pTid(),
-      'span_id': 'sp_'+now.getTime().toString(36),
-      'module': module,            // 'DBF' 或 'SP'
-      'event': event,              // 'save_click' / 'audit_pass' 等
-      'branch': (extra && extra.branch) ? extra.branch : null,
-      'btn_text': (extra && extra.txt) ? extra.txt : null,
-      'bound':    (extra && typeof extra.bound==='boolean') ? extra.bound : null,
-      'lock_wait_ms': (extra && typeof extra.lockWait==='number') ? extra.lockWait : 0,
-      'duration_ms': duration_ms,
-      'page_url': __pURL(),
-      'user_agent': __pUA(),
-      'extra': extra || {}
-    };
-    // 删除已经提出来的重复字段，避免冗余
-    if(payload.extra){
-      ['branch','txt','bound','lockWait'].forEach(function(k){if(payload.extra[k]!==undefined)delete payload.extra[k]});
-    }
-    // 输出 NDJSON（一行一条），便于 Filebeat / Logstash 直接采集
-    console.log(JSON.stringify(payload));
-  }catch(_){}
-}
-var __pT0=0;
 
 
-  (function(){
-    function __T(msg,type){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(msg,type||'info',3000); }catch(_e){ try{(type==='error'?alert:console.log)('[deadhook] '+msg);}catch(_f){} } }
-    function __L(key,ttl){
-      if(window.__OP_LOCKS&&window.__OP_LOCKS[key]) return false;
-      try{ if(!window.__OP_LOCKS)window.__OP_LOCKS={}; window.__OP_LOCKS[key]=true; setTimeout(function(){try{delete window.__OP_LOCKS[key];}catch(_){}},ttl||600); }catch(_){}
-      return true;
-    }
-    // 只在 capture 阶段处理，便于在页面原有 handlers 之前运行：若按钮已存在 onclick / 已绑过事件，直接跳过
-    document.addEventListener('click', function(e){
-    __pT0 = Date.now();
-    var __pEvt = {target: e.target && e.target.tagName, btn: null, txt: null, branch: null, bound: null, lockWait: 0};
-    window.__pCur = 'tr_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
-    var t = e.target;
-      if(!t) return;
-      // 向上找最近的按钮元素/可点击锚点 - 扩大匹配范围，包含a标签和所有含btn/action类的元素
-      var btn = (t.tagName||'').toLowerCase() === 'button' ? t :
-                (t.closest ? t.closest('button, a, [role="button"], .btn, .btn-action, .btn-sm, .action-link, [data-action]') : null);
-      if(!btn) return;
-      // 跳过已有 onclick / 正常href跳转 / 已在脚本中手动绑定过（__bindDone=1 或 __ctE2Done=1）的按钮
-      // 注意：data-action仅作为标识，不代表已绑定事件；父元素检查仅对onclick生效
-      try{
-  function __btnHasBound(btn){
-    if(!btn) return false;
-    if(btn.__superPatchBound) return true;
-    var oc = btn.getAttribute && btn.getAttribute('onclick');
-    var hr = btn.getAttribute && btn.getAttribute('href');
-    if(oc && oc.length > 3) return true;
-    // 仅当href不是占位符且不是javascript伪协议时才算有效跳转
-    if(hr && hr !== '#' && hr !== 'javascript:;' && hr !== 'javascript:void(0);' && hr !== 'javascript:void(0)' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
-    var p = btn.parentElement, lvl = 0;
-    while(p && lvl < 4){
-      try {
-        var pOc = p.getAttribute && p.getAttribute('onclick');
-        // 父级onclick长度>3才算有效绑定
-        if(pOc && pOc.length > 3) return true;
-      }catch(_){}
-      p = p.parentElement; lvl++;
-    }
-    // 移除：匹配业务关键词=已绑定的错误逻辑。这些恰恰是需要兜底的按钮！
-    return false;
-  }
-  var __pBnd = __btnHasBound(btn);
-    __pEvt.bound = __pBnd;
-    __pLog('DBF','hasBound_result', {bound:__pBnd, check_ms:Date.now()-__pT0});
-    if(__pBnd) return;
-    var __pDrp = (btn.__bindDone || btn.__ctE2Done);
-    if(__pDrp){__pLog('DBF','dedup_skip', {reason: btn.__bindDone?'bindDone':'ctE2Done'}); return;}
-}catch(_a){}
-      var txt = (btn.textContent||'').replace(/\s+/g,' ').trim();
-      // 放宽文本长度限制：从20字符放宽到50字符，覆盖"确认订单""取消订单""派工安排"等复合文本
-      __pEvt.txt = txt;
-    __pLog('DBF','txt_resolved', {txt:txt, len:txt.length});
-    if(!txt || txt.length > 50) return;
-      var tr = btn.closest ? btn.closest('tr') : null;
-      var trKey = '';
-      if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
-      // 各按钮分发行文
-      var isSave = (txt.indexOf('保存')>=0 || txt.indexOf('提交')>=0 || txt.indexOf('确认')>=0);
-      var isEdit = (txt.indexOf('编辑')>=0);
-      var isDel  = (txt.indexOf('删除')>=0 && txt.length <= 10);
-      var isView = (txt.indexOf('查看')>=0 || (txt==='👁') || (txt.indexOf('👁')>=0 && txt.length<=6) || txt.indexOf('详情')>=0 || txt.indexOf('预览')>=0);
-      var isVerify = (txt.indexOf('核销')>=0);
-      var isExport = (txt.indexOf('导出')>=0);
-      var isAdd = (txt.indexOf('新增')>=0);
-      var doneKey = 'e2_'+(isSave?'s':isEdit?'e':isDel?'d':isView?'v':isVerify?'y':isExport?'x':isAdd?'a':'k')+'_'+(trKey||Math.random().toString(36).slice(2,6));
-      if(isSave){
-    __pEvt.branch='save';
-    var __pLk = __L(doneKey,900);
-    if(!__pLk) { __T('⏳ 保存提交中，请稍候…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-    __pLog('DBF','save_submit', Object.assign({},__pEvt,{row:trKey, lock:__pLk, toast:'success'}));
-        __T('💾 保存成功','success');
-        try{ if(typeof window.__closeAnyModal==='function') setTimeout(window.__closeAnyModal,350); }catch(_){}
-        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
-      }
-      if(isEdit){
-        if(!__L(doneKey,700)) return;
-        __pLog('DBF','edit_open', Object.assign({},__pEvt,{row:trKey, branch:'edit'}));
-        __T('✏️ 准备编辑：'+(trKey||'当前行')+'（真实环境将弹出表单）','info');
-        btn.__ctE2Done = 1; return;
-      }
-      if(isDel){
-        if(!__L(doneKey,850)) { __T('⏳ 删除处理中…','warning'); try { e.stopPropagation(); } catch(_a){} return; }
-        if(!confirm('确认删除：'+(trKey||'当前选中记录')+'？此操作不可撤销！')) return;
-        try{ if(tr){ tr.style.transition='opacity .3s'; tr.style.opacity='0.2'; setTimeout(function(){try{tr.remove&&tr.remove();}catch(_rm){}},380); } }catch(_r){}
-        __pLog('DBF','delete_confirm', Object.assign({},__pEvt,{row:trKey, branch:'delete'}));
-        __T('🗑️ '+(trKey||'记录')+' 已删除','success');
-        btn.__ctE2Done = 1; try { e.stopPropagation(); } catch(_b){} return;
-      }
-      if(isView){
-        if(!__L(doneKey,500)) return;
-        __pLog('DBF','view_detail', Object.assign({},__pEvt,{row:trKey, branch:'view'}));
-        __T('👁 查看：'+(trKey||'当前行')+'（真实环境将弹出详情 + 附件预览）','info');
-        btn.__ctE2Done = 1; return;
-      }
-      if(isVerify){
-        if(!__L(doneKey,900)) { __T('⏳ 核销处理中…','warning'); return; }
-        __pLog('DBF','verify_confirm', Object.assign({},__pEvt,{row:trKey, branch:'verify'}));
-        __T('✅ 已核销：'+(trKey||'当前记录')+'（真实环境将生成核销流水）','success');
-        btn.__ctE2Done = 1; return;
-      }
-      if(isExport){
-        if(!__L(doneKey,1200)) { __T('⏳ 正在导出，请稍候…','warning'); return; }
-        __pLog('DBF','export_start', Object.assign({},__pEvt,{row:trKey, branch:'export'}));
-        __T('📤 导出完成：CSV/Excel 文件已就绪（真实环境触发下载）','success');
-        btn.__ctE2Done = 1; return;
-      }
-      if(isAdd){
-        if(!__L(doneKey,900)) return;
-        __pLog('DBF','add_new', Object.assign({},__pEvt,{branch:'add'}));
-        __T('➕ 准备新增「'+txt+'」','info');
-        btn.__ctE2Done = 1; return;
-      }
-      // ---- 新增：审核/审批/驳回/通过 ----
-      var isAudit = txt.indexOf('审核')>=0 || txt.indexOf('审批')>=0 || txt.indexOf('驳回')>=0 || txt.indexOf('通过')>=0;
-      if(isAudit){
-        if(!__L(doneKey,850)){ __T('⏳ 审核处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        var act = (txt.indexOf('驳回')>=0)?'驳回':(txt.indexOf('通过')>=0?'通过':'审核');
-        if(act!=='通过' && !confirm('确认'+act+'：'+(trKey||'当前记录')+'？')) return;
-        __pLog('DBF','audit_result', Object.assign({},__pEvt,{row:trKey, branch:'audit', action:act}));
-        __T('✅ '+act+'处理完成：'+(trKey||'记录')+'','success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
-      }
-      // ---- 新增：签约/签订 ----
-      var isSign = txt.indexOf('签约')>=0 || txt.indexOf('签订')>=0 || (txt.indexOf('签')>=0 && txt.indexOf('约')>=0);
-      if(isSign){
-        if(!__L(doneKey,900)){ __T('⏳ 签约流程处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if(!confirm('确认正式签约：'+(trKey||'当前订单')+'？签约后订单转为正式合同。')) return;
-        __pLog('DBF','sign_confirm', Object.assign({},__pEvt,{row:trKey, branch:'sign'}));
-        __T('🤝 签约成功：'+(trKey||'订单')+'','success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
-      }
-      // ---- 新增：合同/生成合同 ----
-      var isContract = txt.indexOf('合同')>=0 && !isSign;
-      if(isContract){
-        if(!__L(doneKey,1000)){ __T('⏳ 正在准备合同文档…','warning'); return; }
-        __pLog('DBF','contract_ready', Object.assign({},__pEvt,{row:trKey, branch:'contract'}));
-        __T('📄 合同文档已就绪','info');
-        btn.__ctE2Done=1; return;
-      }
-      // ---- 新增：排期/排班/安排档期 ----
-      var isScheduleBtn = txt.indexOf('排期')>=0 || txt.indexOf('排班')>=0 || (txt.indexOf('安排')>=0 && (txt.length<=8 || txt.indexOf('档期')>=0));
-      if(isScheduleBtn){
-        if(!__L(doneKey,800)){ __T('⏳ 正在打开排期面板…','warning'); return; }
-        __pLog('DBF','schedule_open', Object.assign({},__pEvt,{row:trKey, branch:'schedule'}));
-        __T('📅 已进入排期：'+(trKey||'当前订单')+'','info');
-        btn.__ctE2Done=1; return;
-      }
-      // ---- 新增：取消/处理/确认接单 ----
-      var isCancelOrHandle = txt.indexOf('取消')>=0 || txt.indexOf('处理')>=0 || txt.indexOf('确认接单')>=0 || txt.indexOf('派工')>=0;
-      if(isCancelOrHandle && !isDel && !isSave){
-        if(!__L(doneKey,800)){ __T('⏳ 处理中…','warning'); try{e.stopPropagation();}catch(_a){} return; }
-        if((txt.indexOf('取消')>=0) && !confirm('确认取消：'+(trKey||'当前记录')+'？')) return;
-        var chBranch = txt.indexOf('取消')>=0?'cancel':(txt.indexOf('确认接单')>=0?'accept':(txt.indexOf('派工')>=0?'dispatch':'handle'));
-        var tip = (txt.indexOf('取消')>=0?'已取消：':(txt.indexOf('确认接单')>=0?'✅ 已接单：':(txt.indexOf('派工')>=0?'📋 派工成功：':'⚙️ 已处理：')))+(trKey||'记录');
-        __pLog('DBF','status_change', Object.assign({},__pEvt,{row:trKey, branch:chBranch}));
-        __T(tip+'', txt.indexOf('取消')>=0?'warning':'success');
-        btn.__ctE2Done=1; try{e.stopPropagation();}catch(_b){} return;
-      }
 
-    }, true);
-    console.info('[DeadButtonFallback 已加载：×兜底 + 保存/编辑/删除/查看/核销/导出/新增 死按钮兜底委托]');
-    try{ window.__T = __T; window.__L = __L; }catch(_){}
-  })();
-  
-} /* end of 防重复注入保护 if */
-</script>
-
-<script id="adminSuperPatchV20260730">
-/* ========== 🔒 防重复注入保护：多次粘贴时，第二份自动跳过 ========== */
-if (window.__SP_V20260804_INJECTED__ !== true) {
-  window.__SP_V20260804_INJECTED__ = true;
-
-/* ========== 📊 JSON 性能日志（默认关闭，开启后输出NDJSON便于ELK采集） ========== */
-function __pEna(){try{return window.localStorage&&localStorage.getItem('__ENABLE_PERF_LOG__')==='true'}catch(e){return false}}
-function __pFmt(){try{return(window.localStorage&&localStorage.getItem('__PERF_FORMAT__')||'json').toLowerCase()}catch(e){return'json'}}
-function __pTid(){if(!window.__pCur){window.__pCur='tr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}return window.__pCur}
-function __pUA(){try{return navigator.userAgent||''}catch(e){return''}}
-function __pURL(){try{return location.href||''}catch(e){return''}}
-var __spT0=0;
-var __spEvt={};
-function __pLog(module,event,extra){
-  if(!__pEna())return;
-  try{
-    var now=new Date();
-    var duration_ms = (__spT0 ? (Date.now()-__spT0) : 0);
-    var payload = {
-      '@timestamp': now.toISOString(),
-      'level': 'INFO',
-      'service': 'qaxqjt-admin',
-      'trace_id': __pTid(),
-      'span_id': 'sp_'+now.getTime().toString(36),
-      'module': module,
-      'event': event,
-      'branch': (extra && extra.branch) ? extra.branch : null,
-      'btn_text': (extra && extra.txt) ? extra.txt : null,
-      'btn_selector': (extra && extra.btn) ? extra.btn : null,
-      'bound': (extra && typeof extra.bound==='boolean') ? extra.bound : null,
-      'lock_wait_ms': (extra && typeof extra.lockWait==='number') ? extra.lockWait : 0,
-      'duration_ms': duration_ms,
-      'page_url': __pURL(),
-      'user_agent': __pUA(),
-      'extra': extra || {}
-    };
-    if(payload.extra){
-      ['branch','txt','bound','lockWait','btn'].forEach(function(k){if(payload.extra[k]!==undefined)delete payload.extra[k]});
-    }
-    console.log(JSON.stringify(payload));
-  }catch(_){}
-}
-
-
-(function(){
-  'use strict';
-  var PATCH_ID = 'adminSuperPatchV20260730';
-
-  function _genId(prefix){
-    var d = new Date();
-    var pad = function(n){ return n<10?'0'+n:''+n; };
-    var ymd = d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());
-    var hms = pad(d.getHours())+pad(d.getMinutes())+pad(d.getSeconds());
-    var rnd = Math.floor(Math.random()*90+10);
-    return prefix + ymd + hms + rnd;
-  }
-
-  function _pad2(n){ return n<10?'0'+n:''+n; }
-
-  if(!window.__toastH9){
-    window.__toastH9 = function(msg, type){
-      try{
-        if(window.QinApp && QinApp.Utils && typeof QinApp.Utils.toast==='function'){
-          QinApp.Utils.toast(msg, type||'info');
-          return;
-        }
-        var ts = document.querySelector('.toast-stack');
-        if(!ts){
-          ts = document.createElement('div');
-          ts.className = 'toast-stack';
-          ts.setAttribute('aria-live','polite');
-          ts.style.cssText='position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
-          document.body.appendChild(ts);
-        }
-        var el = document.createElement('div');
-        var bg = 'linear-gradient(135deg,#475569,#334155)';
-        if(type==='success') bg='linear-gradient(135deg,#16a34a,#15803d)';
-        if(type==='error') bg='linear-gradient(135deg,#dc2626,#b91c1c)';
-        if(type==='warning') bg='linear-gradient(135deg,#f59e0b,#d97706)';
-        if(type==='info') bg='linear-gradient(135deg,#0284c7,#0369a1)';
-        el.style.cssText='background:'+bg+';color:#fff;padding:10px 16px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.18);font-size:0.85rem;max-width:360px;pointer-events:auto;animation:toastInH9 .25s ease;';
-        el.textContent = msg;
-        ts.appendChild(el);
-        var st = document.createElement('style');
-        if(!document.getElementById('_toastH9Anim')){
-          st.id='_toastH9Anim';
-          st.textContent='@keyframes toastInH9{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}';
-          document.head.appendChild(st);
-        }
-        setTimeout(function(){ el.style.transition='opacity .3s,transform .3s'; el.style.opacity='0'; el.style.transform='translateY(-8px)'; setTimeout(function(){ el.remove(); },320); }, 2600);
-      }catch(e){ console.warn('[toastH9]',e); }
-    };
-  }
-
-  if(!window.__acqH9){
-    window.__acqH9 = function(btn, txtType){
-      var lockKey = '__acqLock_'+(btn&&btn.dataset?btn.dataset.acqKey:'global');
-      var now = Date.now();
-      var last = parseInt(btn&&btn.dataset?btn.dataset.__acqLast:'0',10)||0;
-      var expire = 400;
-      if(txtType==='save'||txtType==='submit'||txtType==='confirm') expire=900;
-      if(txtType==='delete'||txtType==='cancel'||txtType==='disable') expire=1200;
-      if(now-last<expire){ return false; }
-      if(btn&&btn.dataset){ btn.dataset.__acqLast = now; }
-      return true;
-    };
-  }
-
-  try{
-    console.info('[SuperPatch 1/6] FORM SUBMIT/RESET 防刷新 + 必填校验 初始化...');
-    document.addEventListener('submit', function(e){
-      try{
-        var form = e.target;
-        if(!form||form.tagName!=='FORM') return;
-        e.preventDefault();
-        e.stopPropagation();
-        var fields = form.querySelectorAll('input,select,textarea');
-        var ok = true;
-        var firstErr = null;
-        fields.forEach(function(f){
-          if(f.disabled||f.type==='file'||f.type==='hidden'||f.type==='button'||f.type==='submit'||f.type==='reset') return;
-          var isRequired = f.hasAttribute('required')||(f.classList&&f.classList.contains('required'));
-          var lbl = '';
-          var labelEl = form.querySelector('label[for="'+f.id+'"]')||f.closest('label');
-          if(labelEl) lbl = labelEl.textContent.trim();
-          if(!lbl){
-            var ph = f.getAttribute('placeholder')||'';
-            if(ph&&ph.slice(-1)==='*'){ isRequired=true; lbl=ph.slice(0,-1).trim(); }
-          }
-          if(labelEl&&labelEl.textContent.indexOf('*')>=0){ isRequired=true; lbl=labelEl.textContent.replace(/\*/g,'').trim(); }
-          if(!lbl){
-            var nm = f.getAttribute('name')||f.id||'';
-            lbl = '「'+nm+'」';
-          }
-          var val = (f.value||'').trim();
-          f.classList.remove('input-error');
-          if(isRequired&&!val){
-            f.classList.add('input-error');
-            f.style.borderColor='#dc2626'; f.style.boxShadow='0 0 0 3px rgba(220,38,38,0.1)';
-            __toastH9('⚠️ 请完整填写'+lbl+'后再提交','error');
-            ok=false; if(!firstErr) firstErr=f;
-            return;
-          }
-          if(val){
-            var t = f.type||'';
-            var n = (f.getAttribute('name')||'').toLowerCase();
-            var telReg = /^1[3-9]\d{9}$/;
-            var mailReg = /^[\w.+-]+@[\w-]+\.[\w.-]+$/;
-            var dateReg = /^\d{4}-\d{2}-\d{2}$/;
-            if(t==='tel'||n.indexOf('phone')>=0||n.indexOf('mobile')>=0){
-              if(!telReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'格式不正确（11位手机号）','error'); ok=false; if(!firstErr)firstErr=f; return; }
-            }
-            if(t==='email'||n.indexOf('mail')>=0){
-              if(!mailReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'邮箱格式不正确','error'); ok=false; if(!firstErr)firstErr=f; return; }
-            }
-            if(n.indexOf('amount')>=0||n.indexOf('price')>=0||n.indexOf('money')>=0){
-              var nv = Number(val);
-              if(isNaN(nv)||nv<0){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'金额必须≥0','error'); ok=false; if(!firstErr)firstErr=f; return; }
-            }
-            if(t==='number'){
-              var nv2 = +val;
-              if(!Number.isInteger(nv2)||nv2<0){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'必须是非负整数','error'); ok=false; if(!firstErr)firstErr=f; return; }
-            }
-            if(t==='date'){
-              if(!dateReg.test(val)){ f.classList.add('input-error'); f.style.borderColor='#dc2626'; __toastH9('⚠️ '+lbl+'日期格式应为YYYY-MM-DD','error'); ok=false; if(!firstErr)firstErr=f; return; }
-            }
-          }
-        });
-        if(firstErr){ try{ firstErr.focus(); }catch(_){} }
-        if(!ok) return false;
-        __toastH9('✅ 提交成功','success');
-        setTimeout(function(){
-          try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){}
-        }, 380);
-        return false;
-      }catch(e1){ console.warn('[SuperPatch 1/6 submit err]',e1); return false; }
-    }, true);
-
-    document.addEventListener('reset', function(e){
-      try{
-        var form = e.target;
-        if(!form||form.tagName!=='FORM') return;
-        e.preventDefault();
-        e.stopPropagation();
-        form.querySelectorAll('input,select,textarea').forEach(function(f){
-          if(f.type==='file'){ try{f.value='';}catch(_){} }
-          else if(f.type==='checkbox'||f.type==='radio'){ f.checked=false; }
-          else{ f.value=''; }
-          f.classList.remove('input-error');
-          try{ f.style.borderColor=''; f.style.boxShadow=''; }catch(_){}
-        });
-        __toastH9('🔄 已重置','info');
-        return false;
-      }catch(e2){ console.warn('[SuperPatch 1/6 reset err]',e2); return false; }
-    }, true);
-
-    var cssErr = document.createElement('style');
-    cssErr.textContent = '.input-error{border-color:#dc2626 !important;box-shadow:0 0 0 3px rgba(220,38,38,0.12) !important;transition:all .2s;}';
-    document.head.appendChild(cssErr);
-    console.info('[SuperPatch 1/6] 已激活 ✓');
-  }catch(e){ console.warn('[SuperPatch 1/6 init err]',e); }
-
-  try{
-    console.info('[SuperPatch 2/6] 编号自动生成（只读、不可手改）初始化...');
-    var idRules = [
-      {keys:['订单编号','orderNo','orderId'], prefix:'QAX'},
-      {keys:['收款编号','收款单','receiptId'], prefix:'SK'},
-      {keys:['票据编号','凭证编号','voucherId'], prefix:'PZ'},
-      {keys:['工资条编号','wageId'], prefix:'GZ'},
-      {keys:['派工编号','dispatchId'], prefix:'PG'},
-      {keys:['档期编号','scheduleId'], prefix:'DQ'},
-      {keys:['合同编号','HT','contractId'], prefix:'HT'}
-    ];
-    function _matchIdRule(inp){
-      var hay = [inp.id||'', inp.name||'', inp.getAttribute('aria-label')||'', inp.getAttribute('placeholder')||''];
-      try{
-        var lbl = document.querySelector('label[for="'+inp.id+'"]');
-        if(lbl) hay.push(lbl.textContent||'');
-        var par = inp.closest('[class*="form-group"],[class*="form-item"],td,th,div');
-        if(par) hay.push(par.textContent||'');
-      }catch(_){}
-      var s = hay.join(' ');
-      for(var i=0;i<idRules.length;i++){
-        var r = idRules[i];
-        for(var j=0;j<r.keys.length;j++){
-          if(s.indexOf(r.keys[j])>=0) return r;
-        }
-      }
-      return null;
-    }
-    function _fillIds(scope){
-      try{
-        var inputs = (scope||document).querySelectorAll('input[type=text],input:not([type])');
-        inputs.forEach(function(inp){
-          if(inp.readOnly||inp.disabled) return;
-          var rule = _matchIdRule(inp);
-          if(!rule) return;
-          if((inp.value||'').trim()!=='') return;
-          inp.value = _genId(rule.prefix);
-          inp.setAttribute('readonly','readonly');
-          inp.style.cursor='not-allowed';
-          inp.style.background='#f8fafc';
-        });
-      }catch(e){ console.warn('[SuperPatch 2/6 fillIds err]',e); }
-    }
-    function _refreshIdsOnNew(scope){
-      try{
-        var inputs = (scope||document).querySelectorAll('input[readonly]');
-        inputs.forEach(function(inp){
-          var rule = _matchIdRule(inp);
-          if(!rule) return;
-          inp.value = _genId(rule.prefix);
-        });
-      }catch(e){ console.warn('[SuperPatch 2/6 refreshIds err]',e); }
-    }
-    document.addEventListener('DOMContentLoaded', function(){ _fillIds(); }, {once:true});
-    if(document.readyState==='complete'||document.readyState==='interactive'){ _fillIds(); }
-    else{ setTimeout(_fillIds, 50); }
-    if(typeof MutationObserver!=='undefined'){
-      var mo = new MutationObserver(function(muts){
-        muts.forEach(function(m){
-          if(m.addedNodes&&m.addedNodes.length){
-            m.addedNodes.forEach(function(n){
-              if(n.nodeType===1) _fillIds(n);
-            });
-          }
-        });
-      });
-      mo.observe(document.body, {childList:true, subtree:true});
-    }
-    document.addEventListener('click', function(e){
-      try{
-        var btn = e.target.closest('button,a,[role=button]');
-        if(!btn) return;
-    __spT0 = Date.now();
-    __spEvt={target: (btn.tagName||'?') + '.' + (btn.className||'').slice(0,40), txt: (btn.textContent||'').trim()};
-    __pLog('SP','click_match', {btn:__spEvt.target, txt:__spEvt.txt, ms:Date.now()-__spT0});
-    var txt = (btn.textContent||'').trim().toLowerCase();
-        var html = (btn.innerHTML||'').toLowerCase();
-        var idCls = (btn.id||'').toLowerCase()+' '+(btn.className||'').toLowerCase();
-        if(txt.indexOf('新建')>=0||txt.indexOf('➕')>=0||txt.indexOf('+new')>=0||html.indexOf('➕')>=0||idCls.indexOf('btnadd')>=0||idCls.indexOf('-new')>=0||idCls.indexOf('new')>=0){
-          setTimeout(function(){ _refreshIdsOnNew(); }, 80);
-        }
-      }catch(_){}
-    }, true);
-    console.info('[SuperPatch 2/6] 已激活 ✓');
-  }catch(e){ console.warn('[SuperPatch 2/6 init err]',e); }
-
-  try{
-    console.info('[SuperPatch 3/6] 取消/关闭/我知道了/× 关弹窗不刷新 初始化...');
-    var closeTexts = ['取消','关闭','我知道了','我明白了','知道了','确定取消'];
-    var closeChs = ['×','✕','✖','✘','❌','⨯'];
-    document.addEventListener('click', function(e){
-      try{
-        var el = e.target;
-        var txt = (el.textContent||'').trim();
-        if(!txt&&el.closest){ txt = (el.closest('button,a,[role=button],span,div')||{}).textContent||''; txt=txt.trim(); }
-        var isClose = false;
-        if(closeChs.indexOf(txt)>=0) isClose=true;
-        for(var i=0;i<closeTexts.length;i++){
-          if(txt===closeTexts[i]||(txt.length<=12&&txt.indexOf(closeTexts[i])>=0)){ isClose=true; break; }
-        }
-        if(!isClose) return;
-        e.preventDefault();
-        e.stopPropagation();
-        var handled=false;
-        try{ if(typeof window.__closeAnyModal==='function'){ window.__closeAnyModal(); handled=true; } }catch(_){}
-        if(!handled){
-          var sels = [
-            'div[class*="modal-"]','div[class*="Modal"]','div[class*="overlay"]',
-            'div[id*="Modal"]','div[id*="modal"]','div[class*="popup"]','div[class*="Popup"]',
-            'div[class*="dialog"]','div[class*="Dialog"]'
-          ];
-          sels.forEach(function(sel){
-            try{
-              var arr = document.querySelectorAll(sel);
-              arr.forEach(function(n){
-                if(n&&n.style){
-                  n.style.display='none';
-                  try{ n.classList.add('csp-hide'); }catch(_){}
-                }
-              });
-            }catch(_){}
-          });
-        }
-        __toastH9('↩️ 已关闭弹窗','info');
-      }catch(e3){ console.warn('[SuperPatch 3/6 click err]',e3); }
-    }, true);
-    console.info('[SuperPatch 3/6] 已激活 ✓');
-  }catch(e){ console.warn('[SuperPatch 3/6 init err]',e); }
-
-  try{
-    console.info('[SuperPatch 4/6] 分页器标准化 (pagination.js结构) 初始化...');
-    var pgStateMap = new WeakMap();
-    function _isPgContainer(el){
-      try{
-        if(!el || el.nodeType!==1) return false;
-        var tag = (el.tagName||'').toUpperCase();
-        if(tag==='HTML'||tag==='BODY'||tag==='MAIN'||tag==='SECTION'||tag==='ARTICLE') return false;
-        var c = (el.className||'')+'|'+(el.id||'')+'|'+(el.getAttribute&&el.getAttribute('data-paginate')||'')+'|'+(el.getAttribute&&el.getAttribute('data-pg')||'');
-        if(c.search(/pagination|pager|pagebar|pageBar|paginate|page-number-item|pagerbar|pagebar/i)<0) return false;
-        var exclude = /admin[-_]?main|admin[-_]?content|main[-_]?content|stats[-_]?grid|list[-_]?grid|card[-_]?grid|table[-_]?wrap|table[-_]?container|data[-_]?wrap|content[-_]?wrap|page[-_]?content|admin[-_]?wrap|app[-_]?main/i;
-        if(exclude.test(c)) return false;
-        if(el.querySelector('[data-pg]')||el.querySelector('.page-number-item')||el.querySelector('button[data-pg]')) return true;
-        return true;
-      }catch(_){ return false; }
-    }
-    function _ensurePgState(container){
-      if(!pgStateMap.has(container)){
-        var total = 100;
-        var tbody = document.querySelector('tbody[data-paginate=list]');
-        if(tbody){
-          var sz = parseInt(tbody.getAttribute('data-page-size')||'10',10);
-          var rows = tbody.querySelectorAll('tr:not([style*=none]):not(.csp-hide)').length;
-          total = Math.max(100, rows*sz);
-        }
-        var size = 10;
-        var existing = container.querySelector('select[data-pg=size]');
-        if(existing){ try{ size = parseInt(existing.value||'10',10)||10; }catch(_){} }
-        pgStateMap.set(container, {total:total, pages:Math.ceil(total/size), current:1, size:size});
-      }
-      return pgStateMap.get(container);
-    }
-    function _buildPg(container){
-      try{
-        if(container.querySelector('.sp-pg-toolbar-20260730')) return;
-        var oldToolbar = container.querySelector('.pagination-toolbar');
-        if(oldToolbar){ try { oldToolbar.remove(); } catch(_r1){} }
-        var st = _ensurePgState(container);
-        var children = container.children, nonPg = 0, i;
-        for(i=0;i<children.length;i++){
-          var c = children[i]; if(!c) continue;
-          var cn = (c.className||'').toString(); var id = (c.id||'').toString(); var tag = (c.tagName||'').toString().toUpperCase();
-          if(tag==='BUTTON'||tag==='SELECT'||tag==='SPAN'||tag==='INPUT') continue;
-          if(cn.indexOf('pagination')>=0 || cn.indexOf('pager')>=0 || cn.indexOf('pagebar')>=0 || cn.indexOf('page-')>=0 || id.indexOf('page')>=0) continue;
-          nonPg++;
-        }
-        if(nonPg===0){ try { container.innerHTML = ''; } catch(_eIn){} }
-        var wrap = document.createElement('div');
-        wrap.className = 'pagination-toolbar sp-pg-toolbar-20260730';
-        wrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 4px;';
-        wrap.innerHTML = ''+
-          '<button class="btn btn-sm" data-pg="first">首页</button>'+
-          '<button class="btn btn-sm" data-pg="prev">上一页</button>'+
-          '<div class="page-number-wrap" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;"></div>'+
-          '<button class="btn btn-sm" data-pg="next">下一页</button>'+
-          '<button class="btn btn-sm" data-pg="last">末页</button>'+
-          '<span style="margin-left:6px;">跳 <input type="number" data-pg="jump" min="1" style="width:60px;padding:4px 6px;border:1.5px solid var(--border-light,#cbd5e1);border-radius:6px;"> 页</span>'+
-          '<select data-pg="size" style="padding:4px 8px;border:1.5px solid var(--border-light,#cbd5e1);border-radius:6px;">'+
-            '<option value="10">10条/页</option><option value="20">20条/页</option><option value="50">50条/页</option><option value="100">100条/页</option>'+
-          '</select>'+
-          '<span data-pg="info" style="margin-left:auto;color:var(--text-light,#64748b);">共 0 条 / 第 1 页</span>';
-        container.appendChild(wrap);
-        wrap.querySelectorAll('button').forEach(function(b){ b.style.borderRadius='999px'; });
-        var sel = wrap.querySelector('select[data-pg=size]'); if(sel&&st.size!=10){ sel.value=String(st.size); }
-        _updatePgUI(container);
-        wrap.addEventListener('click', function(ev){
-          try{
-            var t = ev.target.closest('[data-pg]');
-            if(!t) return;
-            var act = t.getAttribute('data-pg');
-            var s = _ensurePgState(container);
-            if(act==='first') s.current=1;
-            else if(act==='prev') s.current=Math.max(1,s.current-1);
-            else if(act==='next') s.current=Math.min(s.pages,s.current+1);
-            else if(act==='last') s.current=s.pages;
-            else return;
-            _updatePgUI(container);
-          }catch(_){}
-        });
-        var jp = wrap.querySelector('input[data-pg=jump]');
-        if(jp){
-          jp.addEventListener('change', function(){
-            try{
-              var s = _ensurePgState(container);
-              var v = parseInt(jp.value||'1',10);
-              if(isNaN(v)||v<1) v=1;
-              if(v>s.pages) v=s.pages;
-              s.current=v; jp.value=v;
-              _updatePgUI(container);
-            }catch(_){}
-          });
-          jp.addEventListener('keydown', function(ev){
-            if(ev.key==='Enter'){ ev.preventDefault(); jp.dispatchEvent(new Event('change')); }
-          });
-        }
-        var sz = wrap.querySelector('select[data-pg=size]');
-        if(sz){
-          sz.addEventListener('change', function(){
-            try{
-              var s = _ensurePgState(container);
-              s.size = parseInt(sz.value||'10',10)||10;
-              s.pages = Math.ceil(s.total/s.size);
-              s.current = 1;
-              _updatePgUI(container);
-            }catch(_){}
-          });
-        }
-      }catch(e){ console.warn('[SuperPatch 4/6 buildPg err]',e); }
-    }
-    function _updatePgUI(container){
-      try{
-        var wrap = container.querySelector('.sp-pg-toolbar-20260730') || container.querySelector('.pagination-toolbar');
-        if(!wrap) return;
-        var s = _ensurePgState(container);
-        var pnWrap = wrap.querySelector('.page-number-wrap');
-        var info = wrap.querySelector('[data-pg=info]');
-        if(!pnWrap && !info){ return; }
-        if(pnWrap){
-          pnWrap.innerHTML='';
-          var maxBtns = 7;
-          var cur = s.current, totalPages=s.pages;
-          var start = Math.max(1, cur - Math.floor(maxBtns/2));
-          var end = Math.min(totalPages, start+maxBtns-1);
-          start = Math.max(1, end-maxBtns+1);
-          for(var p=start;p<=end;p++){
-            var bb = document.createElement('button');
-            bb.className='btn btn-sm';
-            bb.setAttribute('data-pg','num');
-            bb.style.borderRadius='999px';
-            if(p===cur){ bb.style.background='linear-gradient(135deg,var(--primary,#0F4C81),var(--primary-dark,#0a3a63))'; bb.style.color='#fff'; bb.style.borderColor='var(--gold,#D4AF37)'; }
-            bb.textContent = String(p);
-            (function(pg){ bb.addEventListener('click', function(){ var st=_ensurePgState(container); st.current=pg; _updatePgUI(container); }); })(p);
-            pnWrap.appendChild(bb);
-          }
-        }
-        var info = wrap.querySelector('[data-pg=info]');
-        if(info){ info.textContent = '共 '+s.total+' 条 / 第 '+s.current+' 页 / 共 '+s.pages+' 页'; }
-        var firstB = wrap.querySelector('[data-pg=first]'), prevB=wrap.querySelector('[data-pg=prev]'), nxtB=wrap.querySelector('[data-pg=next]'), lastB=wrap.querySelector('[data-pg=last]');
-        var atFirst = s.current<=1, atLast=s.current>=s.pages;
-        [firstB,prevB].forEach(function(b){ if(b){ b.disabled=atFirst; b.style.opacity=atFirst?'0.45':'1'; b.style.cursor=atFirst?'not-allowed':'pointer'; } });
-        [nxtB,lastB].forEach(function(b){ if(b){ b.disabled=atLast; b.style.opacity=atLast?'0.45':'1'; b.style.cursor=atLast?'not-allowed':'pointer'; } });
-      }catch(e){ console.warn('[SuperPatch 4/6 updateUI err]',e); }
-    }
-    function _scanPagination(){
-      try{
-        var all = document.querySelectorAll('div,nav,section,span');
-        all.forEach(function(el){ if(_isPgContainer(el)) _buildPg(el); });
-        var sty = document.createElement('style');
-        if(!document.getElementById('_pgPatchCSS20260730')){
-          sty.id='_pgPatchCSS20260730';
-          sty.textContent='.pagination-toolbar button{border-radius:999px !important;}';
-          document.head.appendChild(sty);
-        }
-      }catch(e){ console.warn('[SuperPatch 4/6 scan err]',e); }
-    }
-    document.addEventListener('DOMContentLoaded', _scanPagination, {once:true});
-    if(document.readyState==='complete'||document.readyState==='interactive'){ _scanPagination(); }
-    else{ setTimeout(_scanPagination, 100); }
-    if(typeof MutationObserver!=='undefined'){
-      var mo2 = new MutationObserver(function(){ clearTimeout(window.__pgTimer); window.__pgTimer=setTimeout(_scanPagination, 200); });
-      mo2.observe(document.body, {childList:true, subtree:true});
-    }
-    console.info('[SuperPatch 4/6] 已激活 ✓');
-  }catch(e){ console.warn('[SuperPatch 4/6 init err]',e); }
-
-  try{
-    console.info('[SuperPatch 5/6] 左侧栏 9 大主菜单 + 当前页高亮 初始化...');
-    var main9 = [
-      {title:'首页', href:'index.html', icon:'🏠'},
-      {title:'订单预约与客户管理', href:'orders.html', icon:'📋'},
-      {title:'剧目管理中心', href:'operas.html', icon:'🎭'},
-      {title:'演出档期排班', href:'schedule.html', icon:'📅'},
-      {title:'演员阵容与派工', href:'cast-sheet.html', icon:'👥'},
-      {title:'内容与资讯管理', href:'content.html', icon:'📰'},
-      {title:'财务与收款管理', href:'finance.html', icon:'💰'},
-      {title:'员工与人事档案', href:'staff.html', icon:'👤'},
-      {title:'系统设置', href:'system.html', icon:'⚙️'}
-    ];
-    function _getSidebarParent(){
-      return document.getElementById('adminSidebar')||document.querySelector('.admin-sidebar')||document.querySelector('.admin-sidebar-wrap')||document.querySelector('.admin-sidebar-menu-wrap')||document.querySelector('nav .admin-menu-item, nav .admin-sidebar-menu, nav')||document.querySelector('nav');
-    }
-    function _getMenuContainer(){
-      return document.querySelector('.admin-sidebar-menu')||document.querySelector('#adminSidebar nav')||document.querySelector('#adminSidebar');
-    }
-    function _standardizeMenu(){
-      try{
-        var sidebar = _getSidebarParent();
-        if(!sidebar) return;
-        var deployLinks = sidebar.querySelectorAll('a[href*="../deploy.html"],a[href*="deploy.html"]');
-        deployLinks.forEach(function(a){ try{ a.classList.add('csp-hide'); }catch(_){} });
-        var menuBox = _getMenuContainer();
-        if(!menuBox) return;
-        var existing = {};
-        menuBox.querySelectorAll('a.admin-menu-item,a[href$=".html"]').forEach(function(a){
-          var h = (a.getAttribute('href')||'').split('/').pop().toLowerCase();
-          if(h) existing[h]=a;
-        });
-        var firstGroup = menuBox.querySelector('.admin-menu-group');
-        var insertTarget = firstGroup||menuBox;
-        var logoutAnchor = null;
-        try{
-          var tmp = sidebar.querySelector('#logoutBtnSidebar, a[href*="logout"], a:contains(退出)');
-          if(tmp){
-            logoutAnchor = tmp;
-            while(logoutAnchor&&logoutAnchor.parentNode!==menuBox) logoutAnchor = logoutAnchor.parentNode;
-          }
-        }catch(_){ logoutAnchor=null; }
-        var lastInGroup = insertTarget.lastElementChild;
-        main9.forEach(function(m){
-          var href = m.href.toLowerCase();
-          if(existing[href]) return;
-          var a = document.createElement('a');
-          a.href = m.href;
-          a.className = 'admin-menu-item';
-          a.innerHTML = '<span class="menu-icon">'+m.icon+'</span><span>'+m.title+'</span>';
-          if(logoutAnchor&&logoutAnchor.parentNode===insertTarget){
-            insertTarget.insertBefore(a, logoutAnchor);
-          }else if(lastInGroup){
-            insertTarget.insertBefore(a, lastInGroup.nextSibling||null);
-          }else{
-            insertTarget.appendChild(a);
-          }
-        });
-        var curPage = (location.pathname||'').split('/').pop().toLowerCase();
-        if(!curPage){ try{ curPage = (location.href||'').split('/').pop().split('?')[0].toLowerCase(); }catch(_){} }
-        menuBox.querySelectorAll('a.admin-menu-item,a[href$=".html"]').forEach(function(a){
-          var href = (a.getAttribute('href')||'').split('/').pop().toLowerCase();
-          a.classList.remove('active');
-          try{ a.style.background=''; a.style.color=''; a.style.border=''; a.style.borderRadius=''; a.style.margin=''; }catch(_){}
-          if(href===curPage){
-            a.classList.add('active');
-            try{
-              var cs = getComputedStyle(a);
-              var hasActiveStyle = (cs.backgroundImage&&cs.backgroundImage.indexOf('gradient')>=0)||(cs.color&&cs.color!=='');
-              if(!hasActiveStyle||cs.background==='rgba(0,0,0,0)'){
-                a.style.background='linear-gradient(135deg, rgba(212,175,55,0.25), rgba(139,0,0,0.18))';
-                a.style.color='#fef3c7';
-                a.style.border='1px solid rgba(212,175,55,0.45)';
-                a.style.borderRadius='8px';
-                a.style.margin='2px 0';
-              }
-            }catch(_){}
-          }
-        });
-      }catch(e){ console.warn('[SuperPatch 5/6 standardize err]',e); }
-    }
-    document.addEventListener('DOMContentLoaded', _standardizeMenu, {once:true});
-    if(document.readyState==='complete'||document.readyState==='interactive'){ _standardizeMenu(); }
-    else{ setTimeout(_standardizeMenu, 50); }
-    console.info('[SuperPatch 5/6] 已激活 ✓');
-  }catch(e){ console.warn('[SuperPatch 5/6 init err]',e); }
-
-  
-  // 功能按钮绑定（上传/新建/导出）
-  try{
-    function __bindBtn(id, fn){
-      var el=document.getElementById(id);
-      if(el&&!el.__ub){
-        el.__ub=1;
-        // 加标记防止 DBF/SuperPatch 在 document capture 阶段拦截（DBF _hasAction 检查 __superPatchBound/__deadBtnChecked）
-        el.__superPatchBound = 1;
-        el.__deadBtnChecked = 1;
-        el.__ts3Done = 1;
-        el.__bindDone = 1;
-        el.__ctE2Done = 1;
-        try { el.setAttribute('data-real-bound','1'); } catch(_){}
-        el.addEventListener("click", function(e){
-          try { e.stopImmediatePropagation(); e.stopPropagation(); } catch(_){}
-          fn.call(this, e);
-        }, true);
-      }
-    }
-    __bindBtn('openOrdersUploadBtn', function(){ var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.jpg,.png,.jpeg"; inp.onchange=function(){ __T("📤 已选择："+(inp.files[0]?inp.files[0].name:"")+"（订单附件）","info"); }; inp.click(); });
-    __bindBtn('spNewOrderBtn', function(){ try { window.__ordersApi && window.__ordersApi.openCreateModal && window.__ordersApi.openCreateModal(); } catch(e){ __T('⚠️ 新增订单失败：'+(e&&e.message?e.message:e),'error'); } });
-    __bindBtn('spExportOrdersBtn', function(){ try { window.__ordersApi && window.__ordersApi.exportCsv && window.__ordersApi.exportCsv(); } catch(e){ __T('⚠️ 导出失败：'+(e&&e.message?e.message:e),'error'); } });
-  }catch(_e){ console.warn("[upload-bind err]",_e); }
-
-try{
-    console.info('[SuperPatch 6/6] 死按钮兜底 + toast通道 初始化...');
-    function _hasAction(btn){
-      if(!btn) return false;
-      // 仅onclick算真正绑定；data-action只是业务标识，不算；href需为真实跳转链接
-      var oc = btn.getAttribute('onclick');
-      var hr = btn.getAttribute('href');
-      if(oc && oc.length > 3) return true;
-      if(hr && hr !== '#' && hr !== '' && hr.indexOf('javascript:') !== 0) return true;
-      if(btn.__deadBtnChecked) return true;
-      if(btn.__superPatchBound) return true;
-      return false;
-    }
-    function _txtMatch(txt, list){
-      for(var i=0;i<list.length;i++){ if(txt.indexOf(list[i])>=0) return true; }
-      return false;
-    }
-    document.addEventListener('click', function(e){
-      try{
-        // 修复：选择器扩大，包含a标签和[data-action]标识元素
-        var btn = e.target.closest('button, a, [role=button], .btn, .btn-action, .btn-sm, [data-action]');
-        if(!btn) return;
-                // 修复：模态框内的确认/取消/关闭按钮跳过 SuperPatch，让事件传播到模态框 closeIt()
-        if(btn.closest && btn.closest('.generic-modal-root, .modal-overlay-root, [role="dialog"]')) return;
-        if(btn.hasAttribute && (btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
-        if(_hasAction(btn)) return;
-        if(btn.__superPatchBound) return;
-        btn.__superPatchBound = 1;
-        var txt = (btn.textContent||'').trim();
-        var tt = 'other';
-        // 修复：扩充业务分支，覆盖派工/审核/通过/驳回/签约/排期/确认接单等
-        if(_txtMatch(txt,['保存','提交','确认','通过','签约','签订','确认接单','核销'])) tt='save';
-        else if(_txtMatch(txt,['删除','作废','禁用','取消','驳回'])) tt='delete';
-        else if(_txtMatch(txt,['编辑','查看','详情','预览'])) tt='view';
-        else if(_txtMatch(txt,['导出','打印'])) tt='export';
-        else if(_txtMatch(txt,['排期','排班','安排','派工','调度'])) tt='schedule';
-        else if(_txtMatch(txt,['审核','审批'])) tt='audit';
-        else if(_txtMatch(txt,['合同'])) tt='contract';
-        else if(_txtMatch(txt,['新增','新建','添加'])) tt='add';
-        if(!__acqH9(btn, tt)) return;
-        e.preventDefault();
-        e.stopPropagation();
-        var tr = btn.closest ? btn.closest('tr') : null;
-        var trKey = '';
-        if(tr){ var ftd = tr.querySelector('td, th'); if(ftd) trKey = (ftd.textContent||'').replace(/\s+/g,' ').trim().slice(0,20); }
-        __spT0 = Date.now();
-        if(tt==='save'){
-          __pLog('SP','fallback_save', {branch:tt, txt:txt, row:trKey});
-          __toastH9('✅ 操作成功','success');
-          setTimeout(function(){ try{ if(typeof window.__closeAnyModal==='function') window.__closeAnyModal(); }catch(_){} }, 380);
-        }else if(tt==='delete'){
-          if(_txtMatch(txt,['取消','驳回']) || confirm('真的要执行该操作？')){
-            __pLog('SP','fallback_delete', {branch:tt, txt:txt, row:trKey, cancelled: !_txtMatch(txt,['取消','驳回']) && false});
-            __toastH9((_txtMatch(txt,['取消'])?'↩️ 已取消：':'✅ 已执行：')+(trKey||'记录')+'', _txtMatch(txt,['取消','驳回'])?'warning':'success');
-          }else{ __toastH9('↩️ 已取消操作','info'); }
-        }else if(tt==='view'){
-          __pLog('SP','fallback_view', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 查看 '+trKey+' 详情/编辑','info');
-        }else if(tt==='export'){
-          __pLog('SP','fallback_export', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📤 已触发导出/打印','info');
-        }else if(tt==='schedule'){
-          __pLog('SP','fallback_schedule', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📅 已进入排期/派工：'+(trKey||'当前记录')+'','info');
-        }else if(tt==='audit'){
-          __pLog('SP','fallback_audit', {branch:tt, txt:txt, row:trKey});
-          __toastH9('🔍 审核处理完成：'+(trKey||'记录')+'','success');
-        }else if(tt==='contract'){
-          __pLog('SP','fallback_contract', {branch:tt, txt:txt, row:trKey});
-          __toastH9('📄 合同文档已就绪','info');
-        }else if(tt==='add'){
-          __pLog('SP','fallback_add', {branch:tt, txt:txt, row:trKey});
-          __toastH9('➕ 准备新增','info');
-        }else{
-          __pLog('SP','fallback_other', {branch:tt, txt:txt, row:trKey});
-          __toastH9('ℹ️ 按钮「'+txt+'」已响应','info');
-        }
-        return false;
-      }catch(e6){ console.warn('[SuperPatch 6/6 click err]',e6); }
-    }, true);
-    console.info('[SuperPatch 6/6] 已激活 ✓');
-  }catch(e){ console.warn('[SuperPatch 6/6 init err]',e); }
-
-  console.info('['+PATCH_ID+'] 6合1超级补丁全部加载完毕 ✓');
-})();
-
-} /* end of 防重复注入保护 if */
-</script>
 <!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
 
 <!-- ====== 刷新bug+弹窗修复20260825：阻止表单提交 + 绑定关闭按钮 ====== -->
-<script>
-(function(){
-  if (window.__refreshBugFix20260825) return;
-  window.__refreshBugFix20260825 = true;
-
-  // 注入CSS：确保 csp-hide 能隐藏弹窗（覆盖 .modal.active 的高优先级）
-  var style = document.createElement('style');
-  style.textContent = '.modal.csp-hide,.modal-overlay.csp-hide,.modal.active.csp-hide{display:none!important}';
-  document.head.appendChild(style);
-
-  function fixRefreshBug(){
-    // 1. 阻止所有 form 的默认提交行为
-    var forms = document.querySelectorAll('form');
-    for (var i=0;i<forms.length;i++){
-      var f = forms[i];
-      if (f.getAttribute('data-refresh-fixed')) continue;
-      f.setAttribute('data-refresh-fixed','1');
-      f.setAttribute('action','javascript:void(0)');
-      f.addEventListener('submit', function(e){ e.preventDefault(); e.stopPropagation(); return false; }, true);
-    }
-    // 2. 将所有 type=submit 的按钮改为 type=button，防止触发表单提交
-    var btns = document.querySelectorAll('button[type="submit"], button:not([type])');
-    for (var j=0;j<btns.length;j++){
-      var b = btns[j];
-      if (b.getAttribute('data-type-fixed')) continue;
-      b.setAttribute('data-type-fixed','1');
-      b.setAttribute('type','button');
-    }
-    // 3. 绑定弹窗关闭按钮（×/关闭/取消）—— CSP patch 清除了内联 onclick
-    var closeBtns = document.querySelectorAll('button');
-    for (var k=0;k<closeBtns.length;k++){
-      var btn = closeBtns[k];
-      if (btn.getAttribute('data-close-fixed')) continue;
-      var txt = (btn.textContent||'').trim();
-      if (txt==='×' || txt==='✕' || txt==='关闭' || txt==='取消' || txt==='Close' || txt==='×') {
-        btn.setAttribute('data-close-fixed','1');
-        btn.addEventListener('click', function(e){
-          e.preventDefault();
-          e.stopPropagation();
-          // 向上查找最近的 modal 和 overlay，添加 csp-hide 类
-          var target = e.currentTarget;
-          var node = target;
-          for (var n=0;n<8;n++){
-            if (!node) break;
-            if (node.classList && (node.classList.contains('modal') || node.classList.contains('modal-overlay'))){
-              node.classList.add('csp-hide');
-              node.classList.remove('active');
-              node.style.display = 'none';
-            }
-            // 同时隐藏关联的 overlay（通过 id 匹配）
-            if (node.id) {
-              var overlayId = node.id.replace('Modal','Overlay').replace('Modal','Overlay');
-              var overlay = document.getElementById(overlayId);
-              if (overlay){ overlay.classList.add('csp-hide'); overlay.classList.remove('active'); overlay.style.display='none'; }
-              var modalId = node.id.replace('Overlay','Modal');
-              var modal = document.getElementById(modalId);
-              if (modal){ modal.classList.add('csp-hide'); modal.classList.remove('active'); modal.style.display='none'; }
-            }
-            node = node.parentElement;
-          }
-          console.log('[弹窗关闭修复] 已关闭弹窗');
-        }, true);
-      }
-    }
-    // 4. 点击 overlay 背景关闭弹窗
-    var overlays = document.querySelectorAll('.modal-overlay');
-    for (var m=0;m<overlays.length;m++){
-      var ov = overlays[m];
-      if (ov.getAttribute('data-overlay-fixed')) continue;
-      ov.setAttribute('data-overlay-fixed','1');
-      ov.addEventListener('click', function(e){
-        if (e.target !== e.currentTarget) return; // 只点击背景时关闭
-        e.currentTarget.classList.add('csp-hide');
-        e.currentTarget.style.display = 'none';
-        var modalId = e.currentTarget.id.replace('Overlay','Modal');
-        var modal = document.getElementById(modalId);
-        if (modal){ modal.classList.add('csp-hide'); modal.style.display='none'; }
-      }, true);
-    }
-    console.log('[刷新bug+弹窗修复20260825] forms='+forms.length+' buttons='+btns.length);
-  }
-  if (document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', fixRefreshBug);
-  } else {
-    fixRefreshBug();
-  }
-  setTimeout(fixRefreshBug, 1000);
-  setTimeout(fixRefreshBug, 3000);
-})();
-</script>
 
 
-<script>
-/* ========== 🔽 下拉菜单 Click 切换（兼容移动端） ========== */
-(function(){
-  if(window.__DD_CLICK_INJECTED__) return;
-  window.__DD_CLICK_INJECTED__ = true;
-  document.addEventListener('click', function(e){
-    var btn = e.target.closest ? e.target.closest('.action-dropdown-btn') : null;
-    var menu = e.target.closest ? e.target.closest('.action-dropdown-menu') : null;
-    // 关闭所有下拉菜单
-    document.querySelectorAll('.action-dropdown-menu').forEach(function(m){
-      if(m !== menu) m.style.display = 'none';
-    });
-    // 切换当前下拉菜单
-    if(btn){
-      var dd = btn.closest('.action-dropdown');
-      if(dd){
-        var m = dd.querySelector('.action-dropdown-menu');
-        if(m){
-          e.preventDefault();
-          e.stopPropagation();
-          m.style.display = (m.style.display === 'block') ? 'none' : 'block';
-        }
-      }
-    }
-  });
-})();
-</script>
-<script>/* 按钮防拦截：为有id的可点击元素预设 __superPatchBound，避免 SuperPatch 首次点击拦截 */
-(function(){
-  function __markBound(){
-    var els=document.querySelectorAll('button[id], a[id], [data-action][id], .btn[id], .btn-action[id]');
-    for(var i=0;i<els.length;i++){ var el=els[i]; if(!el.__superPatchBound){ el.__superPatchBound=1; } }
-  }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
-  else { __markBound(); setTimeout(__markBound,500); }
-})();</script>
 
-<script>
-/* ========== 📋 订单管理：真实 API 接线（v20260921a）==========
- * 替换 demo 模式：load() 渲染订单 tbody，exportCsv() 拉取全量下载，
- * openCreateModal() 用 prompt 收集字段调 POST /v1/orders，
- * 行级事件委托处理详情/编辑/确认/转演出/取消/删除。
- * API：QAXQJT_API（js/api-request.js 已加载）
- * 端点：/v1/orders + /v1/orders/:id/transition + /v1/orders/:id (DELETE)
- * 备份：orders.html.bak-ordersfix-20260921
- * ======================================================== */
-(function(){
-  'use strict';
-  if (window.__ordersApi) return;
-  window.__ordersApi = {
-    state: { list: [], filter: { keyword: '', status: '', fromDate: '', toDate: '' }, loaded: false },
 
-    _toast: function(msg, type){ try { if (typeof __T === 'function') return __T(msg, type||'info'); } catch(_){} try { console.log('[ordersApi]', type, msg); } catch(_){} },
-    _escape: function(s){ if (s === null || s === undefined) return ''; return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); },
 
-    _findTbody: function(){
-      // 优先固定 id（HeightGuard 会在 t=0 剥离 data-paginate 属性，不能依赖它定位）
-      var byId = document.getElementById('ordersMainTbody');
-      if (byId) return byId;
-      // 回退：订单表是含 13 列表头的第一个 .table-wrapper tbody（客户表只有 10 列）
-      var cands = document.querySelectorAll('.table-wrapper table tbody');
-      for (var i = 0; i < cands.length; i++) {
-        var tbl = cands[i].closest('table');
-        var ths = tbl ? tbl.querySelectorAll('thead th') : [];
-        if (ths.length >= 13) return cands[i];
-      }
-      var allTbody = document.querySelectorAll('.table-wrapper tbody[data-paginate="list"]');
-      return allTbody[0] || null;
-    },
 
-    _bindFilterBar: function(){
-      var self = this;
-      var el = function(id){ return document.getElementById(id); };
-      var apply = function(){
-        self.state.filter.keyword = (el('ordFilterKeyword') ? el('ordFilterKeyword').value : '').trim();
-        self.state.filter.status = el('ordFilterStatus') ? el('ordFilterStatus').value : '';
-        self.state.filter.orderType = el('ordFilterType') ? el('ordFilterType').value : '';
-        self.state.filter.fromDate = el('ordFilterFrom') ? el('ordFilterFrom').value : '';
-        self.state.filter.toDate = el('ordFilterTo') ? el('ordFilterTo').value : '';
-        self.load();
-      };
-      var b = el('ordFilterApplyBtn');
-      if (b) { b.setAttribute('data-real-bound','1'); b.__superPatchBound = 1; b.__ts3Done = 1; b.addEventListener('click', apply); }
-      var r = el('ordFilterResetBtn');
-      if (r) {
-        r.setAttribute('data-real-bound','1'); r.__superPatchBound = 1; r.__ts3Done = 1;
-        r.addEventListener('click', function(){
-          if (el('ordFilterKeyword')) el('ordFilterKeyword').value = '';
-          if (el('ordFilterStatus')) el('ordFilterStatus').value = '';
-          if (el('ordFilterType')) el('ordFilterType').value = '';
-          if (el('ordFilterFrom')) el('ordFilterFrom').value = '2026-01-01';
-          if (el('ordFilterTo')) el('ordFilterTo').value = '2026-12-31';
-          self.state.filter = { keyword: '', status: '', orderType: '', fromDate: '', toDate: '' };
-          self.load();
-        });
-      }
-      var k = el('ordFilterKeyword');
-      if (k) k.addEventListener('keydown', function(e){ if (e.key === 'Enter') apply(); });
-    },
 
-    // ====== 客户档案（tab-customers）真实数据加载 ======
-    _custTypeText: function(t){ return t === 'organization' ? '单位/组织' : (t === 'personal' ? '个人' : (t || '个人')); },
-    _custLevelBadge: function(l){
-      if (!l) return '<span class="badge" style="background:#94a3b8;color:#fff;">未评级</span>';
-      var m = { 'VIP':'#dc2626', 'A':'#2563eb', 'B':'#059669', 'C':'#6b7280' };
-      var c = m[l] || '#6b7280';
-      return '<span class="badge" style="background:'+c+';color:#fff;">'+this._escape(l)+'</span>';
-    },
-
-    _bindCustomerFilterBar: function(){
-      var self = this;
-      var el = function(id){ return document.getElementById(id); };
-      var apply = function(){
-        self.state.custFilter = {
-          keyword: (el('custFilterKeyword') ? el('custFilterKeyword').value : '').trim(),
-          customerType: el('custFilterType') ? el('custFilterType').value : '',
-          level: el('custFilterLevel') ? el('custFilterLevel').value : ''
-        };
-        self.loadCustomers();
-      };
-      var b = el('custFilterApplyBtn');
-      if (b) { b.setAttribute('data-real-bound','1'); b.__superPatchBound = 1; b.__ts3Done = 1; b.addEventListener('click', apply); }
-      var r = el('custFilterResetBtn');
-      if (r) {
-        r.setAttribute('data-real-bound','1'); r.__superPatchBound = 1; r.__ts3Done = 1;
-        r.addEventListener('click', function(){
-          if (el('custFilterKeyword')) el('custFilterKeyword').value = '';
-          if (el('custFilterType')) el('custFilterType').value = '';
-          if (el('custFilterLevel')) el('custFilterLevel').value = '';
-          self.state.custFilter = { keyword: '', customerType: '', level: '' };
-          self.loadCustomers();
-        });
-      }
-      var k = el('custFilterKeyword');
-      if (k) k.addEventListener('keydown', function(e){ if (e.key === 'Enter') apply(); });
-    },
-
-    loadCustomers: async function(){
-      var cardsTbody = document.getElementById('customersCardsTbody');
-      var tableTbody = document.getElementById('customersMainTbody');
-      if (!cardsTbody && !tableTbody) return;
-      var loadingHtml = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">正在加载真实客户数据…</div>';
-      var loadingTr = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实客户数据…</td></tr>';
-      if (cardsTbody) cardsTbody.innerHTML = loadingHtml;
-      if (tableTbody) tableTbody.innerHTML = loadingTr;
-      try {
-        var q = { page: 1, pageSize: 200 };
-        if (this.state.custFilter) {
-          if (this.state.custFilter.keyword) q.keyword = this.state.custFilter.keyword;
-          if (this.state.custFilter.customerType) q.customerType = this.state.custFilter.customerType;
-          if (this.state.custFilter.level) q.level = this.state.custFilter.level;
-        }
-        var resp = await QAXQJT_API.get('/v1/customers', { query: q });
-        var rows = [];
-        if (Array.isArray(resp)) rows = resp;
-        else if (resp && Array.isArray(resp.data)) rows = resp.data;
-        else if (resp && Array.isArray(resp.items)) rows = resp.items;
-        else if (resp && Array.isArray(resp.list)) rows = resp.list;
-        else if (resp && Array.isArray(resp.rows)) rows = resp.rows;
-        else if (resp && resp.data && Array.isArray(resp.data.items)) rows = resp.data.items;
-        // 过滤掉已删除
-        rows = rows.filter(function(c){ return c && c.status !== 'deleted'; });
-        this.state.custList = rows;
-        this._renderCustomerCards(rows, cardsTbody);
-        this._renderCustomerTable(rows, tableTbody);
-      } catch(e) {
-        console.warn('[__ordersApi.loadCustomers] 失败', e);
-        var errHtml = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#dc2626;">⚠️ 加载客户失败：' + (e && e.message ? e.message : e) + '</div>';
-        var errTr = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#dc2626;">⚠️ 加载客户失败：' + (e && e.message ? e.message : e) + '</td></tr>';
-        if (cardsTbody) cardsTbody.innerHTML = errHtml;
-        if (tableTbody) tableTbody.innerHTML = errTr;
-      }
-    },
-
-    _renderCustomerCards: function(rows, tbody){
-      if (!tbody) return;
-      var self = this;
-      if (!rows.length) {
-        tbody.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">📭 暂无客户数据（产生订单/预约后将自动建档）</div>';
-        return;
-      }
-      tbody.innerHTML = '';
-      rows.forEach(function(c){
-        var card = document.createElement('div');
-        card.className = 'customer-card';
-        card.style.cssText = 'background:var(--bg-card);border:1px solid var(--border-light);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:8px;';
-        var ordersCount = (c._count && c._count.orders) || c.totalOrdersCount || 0;
-        var totalAmount = c.totalOrdersAmount || 0;
-        var fmt = function(n){ try { return Number(n||0).toLocaleString('zh-CN'); } catch(_) { return '0'; } };
-        var fmtDate = function(d){ if (!d) return '—'; try { return new Date(d).toLocaleDateString('zh-CN'); } catch(_) { return '—'; } };
-        card.innerHTML =
-          '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-            '<strong style="font-size:1.05rem;color:var(--text-primary);">' + self._escape(c.customerName || c.organization || '—') + '</strong>' +
-            self._custLevelBadge(c.level) +
-          '</div>' +
-          '<div style="font-size:0.85rem;color:var(--text-light);">ID: ' + self._escape(c.id || '') + '</div>' +
-          '<div style="display:flex;gap:8px;flex-wrap:wrap;font-size:0.9rem;color:var(--text-secondary);">' +
-            '<span>📞 ' + self._escape(c.phone || '—') + '</span>' +
-            '<span>🏷️ ' + self._custTypeText(c.customerType) + '</span>' +
-          '</div>' +
-          (c.organization ? '<div style="font-size:0.9rem;color:var(--text-secondary);">🏢 ' + self._escape(c.organization) + '</div>' : '') +
-          '<div style="display:flex;justify-content:space-between;border-top:1px dashed var(--border-light);padding-top:8px;font-size:0.85rem;color:var(--text-light);">' +
-            '<span>合作 ' + fmt(ordersCount) + ' 次</span>' +
-            '<span>累计 ¥' + fmt(totalAmount) + '</span>' +
-          '</div>' +
-          '<div style="font-size:0.8rem;color:var(--text-light);">首次合作：' + fmtDate(c.firstContactDate || c.createdAt) + '</div>';
-        tbody.appendChild(card);
-      });
-    },
-
-    _renderCustomerTable: function(rows, tbody){
-      if (!tbody) return;
-      var self = this;
-      if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">📭 暂无客户数据（产生订单/预约后将自动建档）</td></tr>';
-        return;
-      }
-      tbody.innerHTML = '';
-      var fmt = function(n){ try { return Number(n||0).toLocaleString('zh-CN'); } catch(_) { return '0'; } };
-      var fmtDate = function(d){ if (!d) return '—'; try { return new Date(d).toLocaleDateString('zh-CN'); } catch(_) { return '—'; } };
-      rows.forEach(function(c){
-        var tr = document.createElement('tr');
-        var ordersCount = (c._count && c._count.orders) || c.totalOrdersCount || 0;
-        var totalAmount = c.totalOrdersAmount || 0;
-        tr.innerHTML =
-          '<td><strong>' + self._escape(c.id || '') + '</strong></td>' +
-          '<td>' + self._escape(c.customerName || c.organization || '—') + '</td>' +
-          '<td>' + self._custTypeText(c.customerType) + '</td>' +
-          '<td>' + self._escape(c.phone || '—') + '</td>' +
-          '<td>' + fmt(ordersCount) + '</td>' +
-          '<td>¥' + fmt(totalAmount) + '</td>' +
-          '<td>' + fmtDate(c.firstContactDate) + '</td>' +
-          '<td>' + fmtDate(c.updatedAt || c.createdAt) + '</td>' +
-          '<td>' + self._custLevelBadge(c.level) + '</td>' +
-          '<td><button class="btn btn-sm btn-default" data-cust-id="' + self._escape(c.id || '') + '" data-real-bound="1">查看</button></td>';
-        tbody.appendChild(tr);
-      });
-    },
-
-    load: async function(){
-      var tbody = this._findTbody();
-      if (!tbody) { console.warn('[ordersApi] tbody not found'); return; }
-      try {
-        var q = { page: 1, pageSize: 200 };
-        if (this.state.filter.keyword) q.keyword = this.state.filter.keyword;
-        if (this.state.filter.status) q.status = this.state.filter.status;
-        if (this.state.filter.orderType) q.orderType = this.state.filter.orderType;
-        if (this.state.filter.fromDate) q.fromDate = this.state.filter.fromDate;
-        if (this.state.filter.toDate) q.toDate = this.state.filter.toDate;
-        var resp = await QAXQJT_API.get('/v1/orders', { query: q });
-        var rows = [];
-        if (Array.isArray(resp)) rows = resp;
-        else if (resp && Array.isArray(resp.data)) rows = resp.data;
-        else if (resp && Array.isArray(resp.items)) rows = resp.items;
-        else if (resp && Array.isArray(resp.list)) rows = resp.list;
-        else if (resp && Array.isArray(resp.rows)) rows = resp.rows;
-        else if (resp && resp.data && Array.isArray(resp.data.items)) rows = resp.data.items;
-        else if (resp && resp.data && Array.isArray(resp.data.list)) rows = resp.data.list;
-        this.state.list = rows;
-        this._renderTbody(rows, tbody);
-        this.state.loaded = true;
-        try { if (window.QinPagination && typeof QinPagination.init === 'function') QinPagination.init(); } catch(_){}
-      } catch(e) {
-        console.warn('[__ordersApi.load] 失败', e);
-        this._toast('⚠️ 加载订单列表失败：' + (e && e.message ? e.message : e), 'error');
-      }
-    },
-
-    _renderTbody: function(rows, tbody){
-      tbody.innerHTML = '';
-      var self = this;
-      var idx = 0;
-      rows.forEach(function(o){
-        if (o.status === 'deleted' || o.status === 'refunded' && o.deletedAt) return;
-        idx++;
-        var oid = String(o.orderNo || o.id || '');
-        var iid = String(o.id || oid);
-        var status = o.status || 'draft';
-        var statusBadge = self._statusBadge(status);
-        var tr = document.createElement('tr');
-        tr.setAttribute('data-order-id', iid);
-        tr.setAttribute('data-status', status);
-        var totalAmount = (o.totalAmount || 0).toLocaleString('zh-CN');
-        var finalAmount = (o.finalAmount || o.totalAmount || 0).toLocaleString('zh-CN');
-        var orderDate = o.orderDate ? String(o.orderDate).slice(0,10) : (o.createdAt ? String(o.createdAt).slice(0,10) : '—');
-        var performanceStart = o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—';
-        // 演出日期倒计时提醒（提前10天）
-        var countdownHtml = '';
-        if (o.performanceStartDate) {
-          var perfDate = new Date(o.performanceStartDate);
-          var today = new Date(); today.setHours(0,0,0,0);
-          var diffDays = Math.ceil((perfDate - today) / (1000*60*60*24));
-          if (diffDays < 0) {
-            countdownHtml = '<span style="color:#94a3b8;font-size:.78rem;">已过期</span>';
-          } else if (diffDays === 0) {
-            countdownHtml = '<span style="color:#dc2626;font-weight:700;font-size:.78rem;">⏰ 今天演出</span>';
-          } else if (diffDays <= 3) {
-            countdownHtml = '<span style="color:#dc2626;font-weight:700;font-size:.78rem;">⏰ ' + diffDays + '天</span>';
-          } else if (diffDays <= 10) {
-            countdownHtml = '<span style="color:#ea580c;font-weight:600;font-size:.78rem;">⏰ ' + diffDays + '天</span>';
-          }
-        }
-        tr.innerHTML =
-          '<td><strong style="color:var(--primary);">' + self._escape(oid) + '</strong></td>' +
-          '<td>' + self._escape(o.customerName || o.organization || '—') + '</td>' +
-          '<td>' + self._escape(o.phone || '—') + '</td>' +
-          '<td>' + self._escape(o.orderType || '—') + '</td>' +
-          '<td>' + (o.performanceCount || 1) + ' 场</td>' +
-          '<td>' + self._escape(performanceStart) + (countdownHtml ? '<br>' + countdownHtml : '') + '</td>' +
-          '<td>' + self._escape(o.venueFullAddress || '—') + '</td>' +
-          '<td>—</td>' +
-          '<td>¥' + self._escape(totalAmount) + '</td>' +
-          '<td><strong style="color:var(--primary-dark);">¥' + self._escape(finalAmount) + '</strong></td>' +
-          '<td><span class="badge ' + statusBadge.cls + '">' + self._escape(statusBadge.text) + '</span></td>' +
-          '<td>' + (o.createdAt ? String(o.createdAt).slice(0,16).replace('T',' ') : '—') + '</td>' +
-          '<td><div class="admin-table-actions" data-order-row="' + iid + '">' + self._rowActionBtns(o) + '</div></td>';
-        tbody.appendChild(tr);
-      });
-      try {
-        var obtns = tbody.querySelectorAll('button[data-act]');
-        for (var ob = 0; ob < obtns.length; ob++) { var ob1 = obtns[ob]; if(!ob1.__superPatchBound)ob1.__superPatchBound=1; if(!ob1.__ts3Done)ob1.__ts3Done=1; if(!ob1.__bindDone)ob1.__bindDone=1; if(!ob1.__ctE2Done)ob1.__ctE2Done=1; if(!ob1.__deadBtnChecked)ob1.__deadBtnChecked=1; }
-      } catch(_){}
-      if (window.__guardRealActions) { try { window.__guardRealActions(tbody); } catch(_){} }
-      if (!idx) {
-        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:30px;color:#999;">暂无订单数据（可在「新增订单」中创建第一条）</td></tr>';
-      }
-    },
-
-    // v20261003 P3-6：操作按钮严格按订单状态（对齐后端 STATUS_FLOW）+ 角色生成，杜绝死入口/必失败操作
-    _rowActionBtns: function(o){
-      var role = '';
-      try { role = (JSON.parse(localStorage.getItem('qaxqjt_admin_session')) || {}).role || ''; } catch(_){}
-      var st = o.status, btns = [];
-      function add(act, label, style, title){ btns.push('<button class="' + style + '" data-act="' + act + '" title="' + (title||label) + '">' + label + '</button>'); }
-      add('view', '👁 详情', 'btn btn-secondary btn-sm');
-      if (st === 'draft' || st === 'confirmed' || st === 'partial_paid') {
-        add('edit', '✏️ 编辑', 'btn btn-primary btn-sm');
-        add('pay', '💰 收款', 'btn btn-sm', '登记收款（流水+台账）');
-      }
-      if (st === 'paid' || st === 'confirmed' || st === 'partial_paid' || st === 'performance') {
-        add('dispatch', '📋 派工', 'btn btn-gold btn-sm');
-      }
-      if (st === 'draft') add('confirm', '✅ 确认', 'btn btn-success btn-sm');
-      if (st === 'confirmed' || st === 'partial_paid' || st === 'paid') add('to-show', '🎬 转演出', 'btn btn-info btn-sm');
-      if (st === 'draft' || st === 'confirmed' || st === 'partial_paid' || st === 'performance') add('cancel', '❌ 取消', 'btn btn-danger btn-sm');
-      // 删除仅 super_admin（后端 DELETE 仅 super_admin）；仅 draft/cancelled 状态
-      if (role === 'super_admin' && (st === 'draft' || st === 'cancelled')) {
-        btns.push('<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" data-act="del" title="删除">🗑️</button>');
-      }
-      // 收款按钮橙色样式（最后统一替换 class，避免 btn-warning 不存在）
-      return btns.join('').split('class="btn btn-sm" data-act="pay"').join('class="btn btn-sm" style="background:#f59e0b;color:#fff;border:none;padding:6px 10px;" data-act="pay"');
-    },
-
-    _statusBadge: function(status){
-      var map = {
-        'draft':        { cls: 'badge badge-secondary', text: '草稿' },
-        'confirmed':    { cls: 'badge badge-info', text: '已确认' },
-        'partial_paid': { cls: 'badge badge-warning', text: '部分付款' },
-        'paid':         { cls: 'badge badge-success', text: '已付款' },
-        'performance':  { cls: 'badge badge-warning', text: '演出中' },
-        'completed':    { cls: 'badge badge-success', text: '已完成' },
-        'cancelled':    { cls: 'badge badge-danger', text: '已取消' },
-        'refunded':     { cls: 'badge badge-danger', text: '已退款' }
-      };
-      return map[status] || { cls: 'badge badge-secondary', text: status };
-    },
-
-    exportCsv: async function(){
-      try {
-        this._toast('📊 正在拉取订单列表…', 'info');
-        var resp = await QAXQJT_API.get('/v1/orders', { query: { page: 1, pageSize: 500 } });
-        var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
-        if (!rows.length) { this._toast('⚠️ 没有可导出的订单', 'warning'); return; }
-        var csv = ['订单号,客户名称,联系电话,演出类型,场次,演出开始,演出地点,订单金额,实付金额,状态,下单时间'];
-        var self = this;
-        rows.forEach(function(o){
-          var cells = [
-            String(o.orderNo || o.id || ''),
-            String(o.customerName || o.organization || ''),
-            String(o.phone || ''),
-            String(o.orderType || ''),
-            String(o.performanceCount || 1),
-            o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '',
-            String(o.venueFullAddress || ''),
-            String(o.totalAmount || 0),
-            String(o.finalAmount || o.totalAmount || 0),
-            String(o.status || 'draft'),
-            o.createdAt ? String(o.createdAt).slice(0,19) : ''
-          ];
-          csv.push(cells.map(function(c){ c = String(c).replace(/"/g, '""'); return /[",\n]/.test(c) ? '"' + c + '"' : c; }).join(','));
-        });
-        var blob = new Blob(['\ufeff' + csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url;
-        var today = new Date().toISOString().slice(0,10);
-        a.download = 'qaxqjt-orders-' + today + '.csv';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(function(){ try { URL.revokeObjectURL(url); a.remove(); } catch(_){} }, 100);
-        this._toast('✅ 已导出 ' + rows.length + ' 条订单', 'success');
-      } catch(e) {
-        console.warn('[__ordersApi.exportCsv] 失败', e);
-        this._toast('⚠️ 导出失败：' + (e && e.message ? e.message : e), 'error');
-      }
-    },
-
-    // ====== 新建订单：复用 orderEditModal 弹窗（清空字段 + POST 新建） ======
-    openCreateModal: async function(){
-      var modal = document.getElementById('orderEditModal');
-      var overlay = document.getElementById('orderEditOverlay');
-      if (!modal || !overlay) {
-        this._toast('⚠️ 新建订单弹窗未找到', 'warning');
-        return;
-      }
-      // 清空所有字段（editOrderId 留空表示新建）
-      try {
-        document.getElementById('editOrderId').value = '';
-        document.getElementById('editCustomerName').value = '';
-        document.getElementById('editPhone').value = '';
-        document.getElementById('editOrganization').value = '';
-        document.getElementById('editOrderType').value = '';
-        document.getElementById('editPerformanceCount').value = 1;
-        document.getElementById('editTotalAmount').value = '';
-        document.getElementById('editDiscountAmount').value = 0;
-        document.getElementById('editPaidAmount').value = 0;
-        document.getElementById('editPerformanceStartDate').value = '';
-        document.getElementById('editPerformanceEndDate').value = '';
-        document.getElementById('editVenueFullAddress').value = '';
-        document.getElementById('editSpecialRequirements').value = '';
-        document.getElementById('editInternalRemark').value = '';
-        // v20261003 P2-2：新建模式清空派工 JSON 暂存与提示
-        try { document.getElementById('orderEditForm').dataset.dispatchJson = ''; var __h0 = document.getElementById('editRemarkHint'); if (__h0) { __h0.style.display = 'none'; __h0.textContent = ''; } } catch(_){}
-      } catch(_){}
-      // 切换标题为"新建订单"
-      try {
-        var titleEl = modal.querySelector('h3');
-        if (titleEl) titleEl.textContent = '➕ 新建订单';
-        var submitBtn = modal.querySelector('button[type="submit"]');
-        if (submitBtn) submitBtn.innerHTML = '➕ 创建订单';
-      } catch(_){}
-      overlay.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); overlay.style.display='';
-      modal.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); modal.style.display='';
-      try { document.body.classList.add('body-modal-locked'); } catch(_){}
-      try { document.getElementById('editCustomerName').focus(); } catch(_){}
-    },
-
-    viewDetail: async function(id){
-      if (!id) return;
-      var modal = document.getElementById('orderDetailModal');
-      var overlay = document.getElementById('orderDetailOverlay');
-      if (!modal || !overlay) { // 兜底：用 alert
-        try {
-          var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
-          if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
-          var lines = [
-            '订单ID：' + (o.id || id),
-            '客户：' + (o.customerName || o.organization || '—'),
-            '电话：' + (o.phone || '—'),
-            '类型：' + (o.orderType || '—'),
-            '金额：¥' + (o.totalAmount || 0),
-            '实付：¥' + (o.finalAmount || o.totalAmount || 0),
-            '状态：' + (o.status || 'draft'),
-            '演出开始：' + (o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—'),
-            '地点：' + (o.venueFullAddress || '—')
-          ];
-          alert(lines.join('\n'));
-        } catch(e) {
-          this._toast('⚠️ 加载详情失败：' + (e && e.message ? e.message : e), 'error');
-        }
-        return;
-      }
-      try {
-        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
-        if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
-        // 填充 modal-body
-        var body = modal.querySelector('.modal-body, .order-detail-body, .detail-body');
-        if (!body) body = modal.querySelector('div:not(.modal-header):not(.modal-footer)');
-        if (body) {
-          body.innerHTML =
-            '<div style="padding:20px 24px;">' +
-              '<h4 style="margin:0 0 12px 0;color:var(--primary-dark);">订单 ' + this._escape(o.id || id) + '</h4>' +
-              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:0.9rem;">' +
-                '<div><strong>客户：</strong>' + this._escape(o.customerName || o.organization || '—') + '</div>' +
-                '<div><strong>电话：</strong>' + this._escape(o.phone || '—') + '</div>' +
-                '<div><strong>类型：</strong>' + this._escape(o.orderType || '—') + '</div>' +
-                '<div><strong>场次：</strong>' + (o.performanceCount || 1) + ' 场</div>' +
-                '<div><strong>订单金额：</strong>¥' + (o.totalAmount || 0) + '</div>' +
-                '<div><strong>实付金额：</strong>¥' + (o.finalAmount || o.totalAmount || 0) + '</div>' +
-                '<div><strong>状态：</strong>' + this._escape(o.status || 'draft') + '</div>' +
-                '<div><strong>演出开始：</strong>' + (o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—') + '</div>' +
-                '<div style="grid-column:1 / span 2;"><strong>演出地点：</strong>' + this._escape(o.venueFullAddress || '—') + '</div>' +
-                '<div style="grid-column:1 / span 2;"><strong>特殊要求：</strong>' + this._escape(o.specialRequirements || '—') + '</div>' +
-                '<div style="grid-column:1 / span 2;"><strong>内部备注：</strong>' + this._escape(o.internalRemark || '—') + '</div>' +
-              '</div>' +
-            '</div>';
-        }
-        // 标题
-        var h3 = modal.querySelector('.modal-header h3, .modal-header h2');
-        if (h3) h3.textContent = '📋 订单详情：' + (o.id || id);
-        // 显示
-        overlay.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); overlay.style.display='';
-        modal.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); modal.style.display='';
-        try { document.body.classList.add('body-modal-locked'); } catch(_){}
-      } catch(e) {
-        console.warn('[viewDetail] id=' + id, e);
-        this._toast('⚠️ 加载详情失败：' + (e && e.message ? e.message : e), 'error');
-      }
-    },
-
-    editOrder: async function(id){
-      if (!id) return;
-      var modal = document.getElementById('orderEditModal');
-      var overlay = document.getElementById('orderEditOverlay');
-      if (!modal || !overlay) { this._toast('⚠️ 编辑弹窗未找到', 'warning'); return; }
-      try {
-        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
-        if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
-        document.getElementById('editOrderId').value = o.id || id;
-        document.getElementById('editCustomerName').value = o.customerName || '';
-        document.getElementById('editPhone').value = o.phone || '';
-        document.getElementById('editOrganization').value = o.organization || '';
-        document.getElementById('editOrderType').value = o.orderType || '';
-        document.getElementById('editPerformanceCount').value = o.performanceCount || 1;
-        document.getElementById('editTotalAmount').value = o.totalAmount || 0;
-        document.getElementById('editDiscountAmount').value = o.discountAmount || 0;
-        document.getElementById('editPaidAmount').value = o.paidAmount || 0;
-        if (o.performanceStartDate) document.getElementById('editPerformanceStartDate').value = String(o.performanceStartDate).slice(0,10);
-        if (o.performanceEndDate) document.getElementById('editPerformanceEndDate').value = String(o.performanceEndDate).slice(0,10);
-        document.getElementById('editVenueFullAddress').value = o.venueFullAddress || '';
-        document.getElementById('editSpecialRequirements').value = o.specialRequirements || '';
-        // v20261003 P2-2：派工 JSON 与普通备注分离——已派工订单仅回填派工备注，原始 JSON 暂存 form.dataset，保存时合并回写，防止互相覆盖
-        var __dispObj = null, __dispRaw = '';
-        try { var __tmp = JSON.parse(o.internalRemark || ''); if (__tmp && __tmp.type === 'dispatch') { __dispObj = __tmp; __dispRaw = o.internalRemark; } } catch(_){}
-        try { document.getElementById('orderEditForm').dataset.dispatchJson = __dispRaw; } catch(_){}
-        document.getElementById('editInternalRemark').value = __dispObj ? (__dispObj.remark || '') : (o.internalRemark || '');
-        try {
-          var __hint = document.getElementById('editRemarkHint');
-          if (__hint) {
-            if (__dispObj) {
-              __hint.style.display = '';
-              __hint.textContent = '🎬 该订单已派工（' + (__dispObj.count || (__dispObj.people || []).length) + ' 人），此处编辑派工备注' + (__dispObj.prevRemark ? '；派工前备注：' + __dispObj.prevRemark : '');
-            } else { __hint.style.display = 'none'; __hint.textContent = ''; }
-          }
-        } catch(_){}
-        // 切换标题为"编辑订单"
-        try {
-          var titleEl = modal.querySelector('h3');
-          if (titleEl) titleEl.textContent = '✏️ 编辑订单';
-          var submitBtn = modal.querySelector('button[type="submit"]');
-          if (submitBtn) submitBtn.innerHTML = '💾 保存修改';
-        } catch(_){}
-        overlay.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); overlay.style.display='';
-        modal.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); modal.style.display='';
-        try { document.body.classList.add('body-modal-locked'); } catch(_){}
-      } catch(e) {
-        this._toast('⚠️ 加载订单失败：' + (e && e.message ? e.message : e), 'error');
-      }
-    },
-
-    saveOrderEdit: async function(){
-      var id = document.getElementById('editOrderId').value;
-      var body = {
-        customerName: document.getElementById('editCustomerName').value.trim(),
-        phone: document.getElementById('editPhone').value.trim(),
-        organization: document.getElementById('editOrganization').value.trim(),
-        orderType: document.getElementById('editOrderType').value.trim(),
-        performanceCount: parseInt(document.getElementById('editPerformanceCount').value) || 1,
-        totalAmount: parseFloat(document.getElementById('editTotalAmount').value) || 0,
-        discountAmount: parseFloat(document.getElementById('editDiscountAmount').value) || 0,
-        paidAmount: parseFloat(document.getElementById('editPaidAmount').value) || 0,
-        venueFullAddress: document.getElementById('editVenueFullAddress').value.trim(),
-        specialRequirements: document.getElementById('editSpecialRequirements').value.trim(),
-        internalRemark: document.getElementById('editInternalRemark').value.trim()
-      };
-      var sd = document.getElementById('editPerformanceStartDate').value;
-      var ed = document.getElementById('editPerformanceEndDate').value;
-      if (sd) body.performanceStartDate = sd;
-      if (ed) body.performanceEndDate = ed;
-      body.finalAmount = body.totalAmount - body.discountAmount;
-      // v20261003 P3-9：金额勾稽前端预校验，给出即时可读提示（后端仍有最终校验）
-      if (!(body.totalAmount >= 0)) { this._toast('⚠️ 订单金额无效，请输入 ≥0 的数字', 'warning'); return; }
-      if (body.discountAmount > body.totalAmount) { this._toast('⚠️ 折扣金额 ¥' + body.discountAmount + ' 不能大于订单总额 ¥' + body.totalAmount, 'warning'); return; }
-      if (body.finalAmount < 0) { this._toast('⚠️ 应付金额不能为负数（总额-折扣）', 'warning'); return; }
-      if (body.paidAmount < 0) { this._toast('⚠️ 已付金额不能为负数', 'warning'); return; }
-      if (body.paidAmount - body.finalAmount > 0.001) { this._toast('⚠️ 已付金额 ¥' + body.paidAmount + ' 不能大于应付金额 ¥' + body.finalAmount, 'warning'); return; }
-      // v20261003 P2-2：已派工订单——文本框内容合并回派工 JSON 的 remark 字段，不覆盖派工名单
-      try {
-        var __dj = (document.getElementById('orderEditForm').dataset || {}).dispatchJson || '';
-        if (__dj) {
-          var __dd = JSON.parse(__dj);
-          if (__dd && __dd.type === 'dispatch') {
-            __dd.remark = document.getElementById('editInternalRemark').value.trim();
-            body.internalRemark = JSON.stringify(__dd);
-          }
-        }
-      } catch(_){}
-      try {
-        if (id) {
-          // 编辑模式
-          await QAXQJT_API.patch('/v1/orders/' + encodeURIComponent(id), body);
-          this._toast('✅ 订单已更新', 'success');
-        } else {
-          // 新建模式
-          // v20261003 P3-10：不再传 UTC 日期串（东八区凌晨会差一天），orderDate 由后端按服务器当前时刻默认
-          var resp = await QAXQJT_API.post('/v1/orders', body);
-          this._toast('✅ 订单已创建' + (resp && resp.id ? '（ID: ' + resp.id + '）' : ''), 'success');
-        }
-        document.getElementById('orderEditOverlay').classList.add('csp-hide');
-        document.getElementById('orderEditModal').classList.add('csp-hide');
-        try { document.body.classList.remove('body-modal-locked'); } catch(_){}
-        await this.load();
-      } catch(e) {
-        this._toast('⚠️ 保存失败：' + (e && e.message ? e.message : e), 'error');
-      }
-    },
-
-    // ====== 派工：打开 dispatchModal（真实 API 加载订单详情） ======
-    openDispatch: async function(id){
-      if (!id) return;
-      var modal = document.getElementById('dispatchModal');
-      var overlay = document.getElementById('dispatchOverlay');
-      if (!modal || !overlay) { this._toast('⚠️ 派工弹窗未找到', 'warning'); return; }
-      // 保存订单 ID 供 saveDispatch 使用
-      try { modal.dataset.orderId = id; } catch(_){}
-      try {
-        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
-        if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
-        var no = o.orderNo || o.id || id;
-        var cust = (o.customerName || '—') + ' / ' + (o.venueFullAddress || '—');
-        var dateStr = (o.performanceStartDate ? String(o.performanceStartDate).slice(0,10) : '—') + ' · ' + (o.performanceCount || 1) + ' 场';
-        try {
-          document.getElementById('dpOrderNo').textContent = no;
-          document.getElementById('dpCust').textContent = cust;
-          document.getElementById('dpDate').textContent = dateStr;
-          document.getElementById('dispatchOrderBadge').textContent = '订单 ' + no;
-          // 加载已保存的派工备注（internalRemark 中存储的 JSON）
-          var rmk = document.getElementById('dpRemark');
-          if (rmk) {
-            rmk.value = '';
-            if (o.internalRemark) {
-              try {
-                var parsed = JSON.parse(o.internalRemark);
-                if (parsed && parsed.remark) rmk.value = parsed.remark;
-              } catch(_) { rmk.value = String(o.internalRemark).slice(0, 500); }
-            }
-          }
-          // v20261003 P2-2：暂存派工前的普通备注，saveDispatch 时收进派工 JSON，防止被覆盖丢失
-          try {
-            var __rawRmk = String(o.internalRemark || '').trim();
-            var __prev = '';
-            if (__rawRmk) {
-              try {
-                var __ej = JSON.parse(__rawRmk);
-                __prev = (__ej && __ej.type === 'dispatch') ? (__ej.prevRemark || '') : __rawRmk;
-              } catch(_) { __prev = __rawRmk; }
-            }
-            modal.dataset.prevRemark = __prev;
-          } catch(_){}
-          // 重置勾选与每人备注
-          document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){ cb.checked = false; });
-          document.querySelectorAll('#dpCastBox input[data-dp-note]').forEach(function(i){ i.value = ''; });
-          var sc = document.getElementById('dpSelCount'); if (sc) sc.textContent = '已选 0 人';
-          // 回显上次已保存的派工名单（internalRemark JSON；兼容旧版 localStorage 双写 qaxqjt_dispatch_data_v1）
-          var savedPeople = [];
-          if (o.internalRemark) {
-            try {
-              var parsed = JSON.parse(o.internalRemark);
-              if (parsed && Array.isArray(parsed.people)) savedPeople = parsed.people;
-            } catch(_) {}
-          }
-          if (!savedPeople.length) {
-            try {
-              var legacyDb = JSON.parse(localStorage.getItem('qaxqjt_dispatch_data_v1') || '{}');
-              var lv = legacyDb[no] || legacyDb[String(o.id || id)];
-              if (lv && Array.isArray(lv.people)) savedPeople = lv.people;
-            } catch(_) {}
-          }
-          if (savedPeople.length) {
-            // 候选名单异步加载，必要时等其渲染（最多 5 秒）
-            for (var w = 0; w < 25 && !document.querySelector('#dpCastBox .dp-cb'); w++) {
-              await new Promise(function(res){ setTimeout(res, 200); });
-            }
-            var missing = [];
-            savedPeople.forEach(function(sp){
-              var nm = String(sp.name || '').trim();
-              if (!nm) return;
-              var matched = null;
-              document.querySelectorAll('#dpCastBox .dp-cb').forEach(function(cb){
-                if (matched) return;
-                if (String(cb.value || '').trim() !== nm) return;
-                // 保存了组键时按组精确匹配，避免同名串组
-                if (sp.group && cb.getAttribute('data-dp-group') !== sp.group) return;
-                matched = cb;
-              });
-              if (!matched) { missing.push(nm); return; }
-              matched.checked = true;
-              var wrap = matched.closest ? matched.closest('.dispatch-item') : null;
-              var noteInp = wrap ? wrap.querySelector('input[data-dp-note]') : null;
-              if (noteInp && sp.note) noteInp.value = sp.note;
-            });
-            var pickedN = document.querySelectorAll('#dpCastBox .dp-cb:checked').length;
-            if (sc) sc.textContent = '已选 ' + pickedN + ' 人';
-            if (typeof window.__dpSyncCommonBtn === 'function') window.__dpSyncCommonBtn();
-            if (missing.length) this._toast('⚠️ 已保存名单中 '+missing.length+' 人因停用/调离/删除未在候选：' + missing.join('、'), 'warning', 4200);
-          }
-        } catch(_){}
-      } catch(e) {
-        this._toast('⚠️ 加载订单失败：' + (e && e.message ? e.message : e), 'error');
-      }
-      overlay.classList.add('active'); overlay.classList.remove('csp-hide','modal-overlay-hide','s-overlay-hide'); overlay.style.display='';
-      modal.classList.add('active'); modal.classList.remove('csp-hide','modal-wrap-hide','s-modal-hide'); modal.style.display='';
-      try { document.body.classList.add('body-modal-locked'); } catch(_){}
-    },
-
-    // ====== 派工：保存到后端 PATCH /v1/orders/:id { internalRemark: JSON } ======
-    saveDispatch: async function(){
-      var modal = document.getElementById('dispatchModal');
-      if (!modal) return;
-      var id = modal.dataset.orderId || '';
-      if (!id) { this._toast('⚠️ 未绑定订单', 'warning'); return; }
-      var no = '';
-      try { no = (document.getElementById('dpOrderNo') || {}).textContent || ''; } catch(_){}
-      // 防抖：避免重复点击
-      if (this._dpSaveLock) { this._toast('⏳ 派工保存中，请勿重复点击', 'warning'); return; }
-      // 收集勾选人员
-      var people = [];
-      try {
-        var nodes = document.querySelectorAll('#dpCastBox .dp-cb:checked');
-        for (var i = 0; i < nodes.length; i++) {
-          var cb = nodes[i];
-          var nm = (cb.value || '').trim();
-          var grp = cb.getAttribute('data-dp-group') || '';
-          // 备注框与复选框同处一个 .dispatch-item，直接按行定位，避免全局选中序号与组内序号错位
-          var itemWrap = cb.closest ? cb.closest('.dispatch-item') : null;
-          var noteInput = itemWrap ? itemWrap.querySelector('input[data-dp-note]') : null;
-          var note = noteInput ? (noteInput.value || '').trim() : '';
-          var stdRoleName = cb.getAttribute('data-cast-role') || '';
-          var groupName = cb.getAttribute('data-cast-group') || '';
-          if (nm) people.push({ name: nm, group: grp, groupName: groupName, role: stdRoleName, note: note });
-        }
-      } catch(_) {}
-      if (people.length < 4) {
-        this._toast('⚠️ 派工人数不足：当前 '+people.length+' 人，连台戏通常需 ≥4 人（主角+龙套+乐队+舞美）', 'warning', 4200);
-        return;
-      }
-      var rmk = '';
-      try { rmk = (document.getElementById('dpRemark').value || '').trim(); } catch(_){}
-      var dispatchData = {
-        type: 'dispatch',
-        orderNo: no,
-        savedAt: Date.now(),
-        count: people.length,
-        remark: rmk,
-        people: people,
-        savedBy: 'admin'
-      };
-      // v20261003 P2-2：保留派工前的普通备注，避免被派工 JSON 覆盖丢失
-      try { var __pr = (modal.dataset && modal.dataset.prevRemark) || ''; if (__pr) dispatchData.prevRemark = __pr; } catch(_){}
-      this._dpSaveLock = true;
-      try {
-        await QAXQJT_API.patch('/v1/orders/' + encodeURIComponent(id), {
-          internalRemark: JSON.stringify(dispatchData)
-        });
-        this._toast('✅ 派工单已保存（'+people.length+' 人）', 'success');
-        // 关闭弹窗
-        try {
-          var overlay = document.getElementById('dispatchOverlay');
-          overlay.classList.remove('active'); overlay.classList.add('csp-hide','modal-overlay-hide'); overlay.style.display='none';
-          modal.classList.remove('active'); modal.classList.add('csp-hide','modal-wrap-hide'); modal.style.display='none';
-          document.body.classList.remove('body-modal-locked');
-        } catch(_){}
-        await this.load();
-      } catch(e) {
-        this._toast('⚠️ 派工保存失败：' + (e && e.message ? e.message : e), 'error');
-      } finally {
-        this._dpSaveLock = false;
-      }
-    },
-
-    transition: async function(id, to, reasonHint){
-      if (!id || !to) return;
-      var reason = '';
-      if (to === 'cancelled' || to === 'refunded') {
-        reason = prompt(reasonHint || '请输入取消原因：', '') || '';
-      }
-      try {
-        await QAXQJT_API.post('/v1/orders/' + encodeURIComponent(id) + '/transition', { to: to, reason: reason });
-        this._toast('✅ 订单状态已更新为：' + to, 'success');
-        await this.load();
-      } catch(e) {
-        console.warn('[transition] id=' + id + ' to=' + to, e);
-        this._toast('⚠️ 状态更新失败：' + (e && e.message ? e.message : e), 'error');
-      }
-    },
-
-    deleteOrder: async function(id){
-      if (!id) return;
-      var no = id;
-      try {
-        var rows = (this.state && this.state.list) || [];
-        for (var i = 0; i < rows.length; i++) {
-          if (String((rows[i] || {}).id || '') === String(id)) { no = rows[i].orderNo || id; break; }
-        }
-      } catch(_) {}
-      if (!confirm('确认删除订单 ' + no + '？\n此操作不可撤销（仅删除订单，不删除支付流水）。')) return;
-      try {
-        await QAXQJT_API.del('/v1/orders/' + encodeURIComponent(id));
-        this._toast('✅ 订单已删除', 'success');
-        await this.load();
-      } catch(e) {
-        console.warn('[deleteOrder] id=' + id, e);
-        this._toast('⚠️ 删除失败：' + (e && e.message ? e.message : e), 'error');
-      }
-    },
-
-    // ====== v20261003 P3-8：收款登记弹窗（替代只能改 paidAmount 的粗糙方式） ======
-    openPayment: async function(id){
-      if (!id) return;
-      var modal = document.getElementById('paymentModal');
-      var overlay = document.getElementById('paymentOverlay');
-      if (!modal || !overlay) { this._toast('⚠️ 收款弹窗未找到', 'warning'); return; }
-      try {
-        var o = await QAXQJT_API.get('/v1/orders/' + encodeURIComponent(id));
-        if (!o) { this._toast('⚠️ 未找到订单', 'warning'); return; }
-        modal.dataset.orderId = o.id || id;
-        var paid = Number(o.paidAmount || 0), finalV = Number(o.finalAmount || 0);
-        var remain = Math.round((finalV - paid) * 100) / 100;
-        document.getElementById('payInfo').innerHTML =
-          '订单 <b>' + this._escape(o.orderNo || id) + '</b>｜客户：' + this._escape(o.customerName || '')
-          + '<br>应付 <b>¥' + finalV.toFixed(2) + '</b> 已收 ¥' + paid.toFixed(2) + ' 尾款 <b style="color:#b45309;">¥' + remain.toFixed(2) + '</b>';
-        var amt = document.getElementById('payAmount');
-        amt.value = remain > 0 ? remain : '';
-        document.getElementById('payChannel').value = 'transfer';
-        document.getElementById('payDate').value = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-        document.getElementById('payRemark').value = '';
-        overlay.classList.remove('csp-hide', 'modal-overlay-hide', 's-overlay-hide'); overlay.style.display = '';
-        modal.classList.remove('csp-hide', 'modal-wrap-hide', 's-modal-hide'); modal.style.display = '';
-        document.body.classList.add('body-modal-locked');
-        setTimeout(function(){ try { amt.focus(); } catch(_){} }, 200);
-      } catch(e) {
-        this._toast('⚠️ 加载订单失败：' + (e && e.message ? e.message : e), 'error');
-      }
-    },
-
-    closePayment: function(){
-      try {
-        document.getElementById('paymentOverlay').classList.add('csp-hide');
-        document.getElementById('paymentModal').classList.add('csp-hide');
-        document.body.classList.remove('body-modal-locked');
-      } catch(_){}
-    },
-
-    savePayment: async function(){
-      var modal = document.getElementById('paymentModal');
-      var id = modal.dataset.orderId || '';
-      if (!id) { this._toast('⚠️ 未绑定订单', 'warning'); return; }
-      var amount = parseFloat(document.getElementById('payAmount').value);
-      if (!(amount > 0)) { this._toast('⚠️ 请输入大于 0 的收款金额', 'warning'); return; }
-      if (this._payLock) { this._toast('⏳ 收款提交中，请勿重复点击', 'warning'); return; }
-      var body = {
-        amount: Math.round(amount * 100) / 100,
-        payChannel: document.getElementById('payChannel').value,
-        payDate: document.getElementById('payDate').value,
-        remark: document.getElementById('payRemark').value.trim()
-      };
-      if (!body.payDate) delete body.payDate;
-      this._payLock = true;
-      try {
-        await QAXQJT_API.post('/v1/orders/' + encodeURIComponent(id) + '/payments', body);
-        this._toast('✅ 收款 ¥' + amount.toFixed(2) + ' 已登记（流水+台账凭证已生成）', 'success');
-        this.closePayment();
-        await this.load();
-      } catch(e) {
-        this._toast('⚠️ 收款失败：' + (e && e.message ? e.message : e), 'error');
-      } finally { this._payLock = false; }
-    },
-
-    _bindRowDelegation: function(){
-      var self = this;
-      if (this._rowDelegBound) return;
-      this._rowDelegBound = true;
-      var tbody = this._findTbody();
-      if (tbody) {
-        tbody.addEventListener('click', function(e){
-          var btn = e.target.closest('button[data-act], a[data-act]');
-          if (!btn) return;
-          var tr = btn.closest('tr');
-          var id = tr ? tr.getAttribute('data-order-id') : '';
-          if (!id) return;
-          var act = btn.getAttribute('data-act');
-          try { e.stopImmediatePropagation(); e.stopPropagation(); } catch(_){}
-          if (act === 'view') { self.viewDetail(id); }
-          else if (act === 'edit') { self.editOrder(id); }
-          else if (act === 'pay') { self.openPayment(id); }
-          else if (act === 'dispatch') { self.openDispatch(id); }
-          else if (act === 'confirm') { self.transition(id, 'confirmed', ''); }
-          else if (act === 'to-show') { self.transition(id, 'performance', ''); }
-          else if (act === 'cancel') { self.transition(id, 'cancelled', '请输入取消原因：'); }
-          else if (act === 'del') { self.deleteOrder(id); }
-        }, true);
-      }
-    }
-  };
-
-  function _bootStrap(){
-    var api = window.__ordersApi;
-    if (!api) return;
-    api._bindRowDelegation();
-    api._bindFilterBar();
-    api._bindCustomerFilterBar();
-    api.load();
-    api.loadCustomers();
-    // 派工弹窗保存按钮：用 capture 阶段拦截，改走真实 API（覆盖原 demo Storage 逻辑）
-    try {
-      var dpSave = document.getElementById('dispatchSave');
-      if (dpSave && !dpSave.__ordersApiBound) {
-        dpSave.__ordersApiBound = 1;
-        dpSave.setAttribute('data-real-bound','1'); dpSave.__superPatchBound = 1; dpSave.__ts3Done = 1;
-        dpSave.addEventListener('click', function(e){
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          e.stopPropagation();
-          api.saveDispatch();
-        }, true);
-      }
-    } catch(_){}
-    // v20261003 P3-8：收款弹窗按钮绑定（保存走真实接口；关闭/取消收弹窗）
-    try {
-      var paySaveBtn = document.getElementById('paymentSave');
-      if (paySaveBtn && !paySaveBtn.__ordersApiBound) {
-        paySaveBtn.__ordersApiBound = 1;
-        paySaveBtn.__superPatchBound = 1; paySaveBtn.__ts3Done = 1;
-        paySaveBtn.addEventListener('click', function(e){
-          e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation();
-          api.savePayment();
-        }, true);
-      }
-      ['paymentClose', 'paymentCancel'].forEach(function(bid){
-        var b = document.getElementById(bid);
-        if (b && !b.__ordersApiBound) {
-          b.__ordersApiBound = 1;
-          b.__superPatchBound = 1; b.__ts3Done = 1;
-          b.addEventListener('click', function(e){
-            e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation();
-            api.closePayment();
-          }, true);
-        }
-      });
-    } catch(_){}
-    /* 真实统计卡片：GET /v1/orders/stats */
-    (async function(){
-      try {
-        var s = await QAXQJT_API.get('/v1/orders/stats');
-        if (!s) return;
-        var total = s.total || 0;
-        var bySt = s.byStatus || {};
-        var pending = (bySt.pending||0) + (bySt.confirmed||0);
-        var done = bySt.completed || 0;
-        var cancelled = bySt.cancelled || 0;
-        var totalAmt = Number(s.totalAmount||0);
-        var paidAmt = Number(s.paidAmount||0);
-        var el = function(id){ return document.getElementById(id); };
-        var fmt = function(n){ return n.toLocaleString('zh-CN'); };
-        if (el('statTotalOrders')) el('statTotalOrders').innerHTML = fmt(total) + '<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span>';
-        if (el('statTotalAmount')) el('statTotalAmount').textContent = '总额 ¥' + fmt(totalAmt);
-        if (el('statPaidAmount')) el('statPaidAmount').textContent = '已付 ¥' + fmt(paidAmt);
-        if (el('statPendingOrders')) el('statPendingOrders').innerHTML = fmt(pending) + '<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span>';
-        if (el('statPendingSub')) el('statPendingSub').textContent = pending > 0 ? '待处理订单' : '暂无待确认';
-        if (el('statDoneOrders')) el('statDoneOrders').innerHTML = fmt(done) + '<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span>';
-        if (el('statDoneRate')) el('statDoneRate').textContent = '完成率 ' + (total > 0 ? Math.round(done/total*100) + '%' : '—');
-        if (el('statPaidRate')) el('statPaidRate').textContent = '已收款 ' + (totalAmt > 0 ? Math.round(paidAmt/totalAmt*100) + '%' : '—');
-        if (el('statCancelOrders')) el('statCancelOrders').innerHTML = fmt(cancelled) + '<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span>';
-        if (el('statCancelRate')) el('statCancelRate').textContent = '取消率 ' + (total > 0 ? (cancelled/total*100).toFixed(1) + '%' : '—');
-        if (el('statRefundAmount')) el('statRefundAmount').textContent = '退款 ¥' + fmt(Number(s.refundedAmount||0));
-      } catch(e) { console.warn('[orders stats] load failed:', e.message); }
-    })();
-    // 绑定 detail modal close 按钮
-    try {
-      var closeBtn = document.getElementById('orderDetailClose');
-      var cancelBtn = document.getElementById('orderDetailCancel');
-      var modal = document.getElementById('orderDetailModal');
-      var overlay = document.getElementById('orderDetailOverlay');
-      function _closeDetail(){
-        try { modal && modal.classList.add('csp-hide'); } catch(_){}
-        try { overlay && overlay.classList.add('csp-hide'); } catch(_){}
-        try { document.body.classList.remove('body-modal-locked'); } catch(_){}
-      }
-      if (closeBtn && !closeBtn.__odcBound) { closeBtn.__odcBound = 1; closeBtn.addEventListener('click', _closeDetail); }
-      if (cancelBtn && !cancelBtn.__odcBound) { cancelBtn.__odcBound = 1; cancelBtn.addEventListener('click', _closeDetail); }
-      if (overlay && !overlay.__odcBound) { overlay.__odcBound = 1; overlay.addEventListener('click', function(e){ if (e.target === overlay) _closeDetail(); }); }
-    } catch(_){}
-    // 绑定 edit modal
-    try {
-      var eClose = document.getElementById('orderEditClose');
-      var eCancel = document.getElementById('orderEditCancel');
-      var eModal = document.getElementById('orderEditModal');
-      var eOverlay = document.getElementById('orderEditOverlay');
-      var eForm = document.getElementById('orderEditForm');
-      function _closeEdit(){
-        try { eModal && eModal.classList.add('csp-hide'); } catch(_){}
-        try { eOverlay && eOverlay.classList.add('csp-hide'); } catch(_){}
-        try { document.body.classList.remove('body-modal-locked'); } catch(_){}
-      }
-      if (eClose && !eClose.__oecBound) { eClose.__oecBound = 1; eClose.addEventListener('click', _closeEdit); }
-      if (eCancel && !eCancel.__oecBound) { eCancel.__oecBound = 1; eCancel.addEventListener('click', _closeEdit); }
-      if (eOverlay && !eOverlay.__oecBound) { eOverlay.__oecBound = 1; eOverlay.addEventListener('click', function(e){ if (e.target === eOverlay) _closeEdit(); }); }
-      if (eForm && !eForm.__oefBound) { eForm.__oefBound = 1; eForm.__superPatchBound = 1; eForm.__ts3Done = 1;
-        // 用 capture 阶段 + stopImmediatePropagation 阻止 SuperPatch 1/6 的 document capture submit 拦截
-        eForm.addEventListener('submit', function(e){
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          e.stopPropagation();
-          api.saveOrderEdit();
-        }, true);
-      }
-      // 保存按钮：fixRefreshBug 会把 type=submit 改成 type=button，form submit 不触发；
-      // 直接给按钮绑 capture click + stopImmediatePropagation，作为双保险触发 saveOrderEdit
-      try {
-        var eSaveBtn = eForm ? eForm.querySelector('button.btn-primary') : null;
-        if (eSaveBtn && !eSaveBtn.__oesBound) {
-          eSaveBtn.__oesBound = 1;
-          eSaveBtn.setAttribute('data-refresh-fixed','1');
-          eSaveBtn.setAttribute('data-type-fixed','1');
-          eSaveBtn.setAttribute('data-real-bound','1');
-          eSaveBtn.__superPatchBound = 1; eSaveBtn.__ts3Done = 1; eSaveBtn.__bindDone = 1; eSaveBtn.__ctE2Done = 1; eSaveBtn.__deadBtnChecked = 1;
-          eSaveBtn.addEventListener('click', function(ev){
-            ev.preventDefault();
-            ev.stopImmediatePropagation();
-            ev.stopPropagation();
-            api.saveOrderEdit();
-          }, true);
-        }
-      } catch(_){}
-    } catch(_){}
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', _bootStrap);
-  } else {
-    setTimeout(_bootStrap, 200);
-  }
-})();
-</script>
 <script src="../js/admin-mobile-sidebar.js?v=20260926m"></script>
 </body>
 </html>
