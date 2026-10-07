@@ -27,7 +27,7 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20260803"></script>
   <script src="../js/api-request.js?v=20260803"></script>
-<script src="../js/app.js?v=20261004b"></script>
+<script src="../js/app.js?v=20261006c"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
   <script src="../js/pagination.js?v=20261002a"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -1403,6 +1403,67 @@
           </div>
         </div>
 
+        <!-- ====== 系统初始化向导（v20261008a）====== -->
+        <div class="admin-card" id="siwCard" style="margin-bottom:22px;border:2px solid #6366f1;box-shadow:none;">
+          <style>
+            #siwCard .siw-body{padding:18px 22px 22px;}
+            #siwCard .siw-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+            #siwCard .siw-title{font-size:1.05rem;font-weight:700;color:#312e81;}
+            #siwCard .siw-badge{font-size:.8rem;padding:3px 10px;border-radius:999px;font-weight:600;}
+            #siwCard .siw-badge.is-on{background:#dcfce7;color:#166534;}
+            #siwCard .siw-badge.is-off{background:#fee2e2;color:#991b1b;}
+            #siwCard .siw-checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;margin:10px 0 14px;}
+            #siwCard .siw-check{display:flex;gap:8px;align-items:flex-start;font-size:.85rem;padding:8px 12px;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0;}
+            #siwCard .siw-check.is-pass{border-color:#bbf7d0;background:#f0fdf4;}
+            #siwCard .siw-check.is-warn{border-color:#fde68a;background:#fffbeb;}
+            #siwCard .siw-check.is-fail{border-color:#fecaca;background:#fef2f2;}
+            #siwCard .siw-check .dot{flex:none;width:10px;height:10px;border-radius:50%;margin-top:5px;}
+            #siwCard .is-pass .dot{background:#16a34a;}
+            #siwCard .is-warn .dot{background:#d97706;}
+            #siwCard .is-fail .dot{background:#dc2626;}
+            #siwCard .siw-check b{color:#0f172a;}
+            #siwCard .siw-check span{color:#64748b;word-break:break-all;}
+            #siwCard .siw-progress-wrap{height:14px;border-radius:999px;background:#e2e8f0;overflow:hidden;margin:8px 0 4px;display:none;}
+            #siwCard .siw-progress{height:100%;width:0;background:linear-gradient(90deg,#6366f1,#8b5cf6);transition:width .3s;}
+            #siwCard .siw-step-text{font-size:.85rem;color:#4338ca;margin:2px 0 10px;display:none;}
+            #siwCard .siw-steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;margin:8px 0 12px;}
+            #siwCard .siw-step{font-size:.82rem;padding:8px 12px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;}
+            #siwCard .siw-step.is-pass{border-color:#bbf7d0;background:#f0fdf4;}
+            #siwCard .siw-step.is-fail{border-color:#fecaca;background:#fef2f2;}
+            #siwCard .siw-step.is-running{border-color:#c7d2fe;background:#eef2ff;}
+            #siwCard .siw-step.is-skip{opacity:.65;}
+            #siwCard .siw-step small{display:block;color:#94a3b8;margin-top:2px;word-break:break-all;}
+            #siwCard .siw-log{background:#0f172a;color:#a5f3fc;font-family:Consolas,monospace;font-size:.78rem;line-height:1.55;border-radius:8px;padding:12px 14px;max-height:260px;overflow:auto;white-space:pre-wrap;margin-top:10px;display:none;}
+            #siwCard .siw-danger{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:10px 14px;margin-top:12px;font-size:.85rem;color:#9a3412;}
+          </style>
+          <div class="siw-body">
+            <div class="siw-head">
+              <span class="siw-title">🚀 系统初始化向导</span>
+              <span class="siw-badge is-off" id="siwInitBadge">未初始化</span>
+              <span style="flex:1;"></span>
+              <button class="btn btn-secondary btn-sm" id="siwCheckBtn" type="button">🔄 环境检测</button>
+              <button class="btn btn-primary btn-sm" id="siwLogBtn" type="button">📜 查看最近日志</button>
+            </div>
+            <div style="font-size:.85rem;color:#64748b;">首次部署或重置后：自动检测运行环境 → 校验数据库连接 → 建表/索引/约束 → 加载管理员账户·字典·权限等初始数据；全过程生成审计日志。仅超级管理员可执行。</div>
+            <div class="siw-checks" id="siwChecks">
+              <div style="color:#94a3b8;font-size:.85rem;padding:10px 0;">点击「🔄 环境检测」开始检查服务器配置、依赖组件、端口占用与数据库连接…</div>
+            </div>
+
+            <div class="siw-progress-wrap" id="siwProgressWrap"><div class="siw-progress" id="siwProgress"></div></div>
+            <div class="siw-step-text" id="siwStepText"></div>
+            <div class="siw-steps" id="siwSteps"></div>
+            <pre class="siw-log" id="siwLog"></pre>
+
+            <div class="siw-danger">
+              <span>⚠️ <b>高危操作：</b>执行初始化将同步数据库表结构并重载初始种子数据（幂等，不删业务数据，但建议先备份）。</span>
+              <label style="display:flex;align-items:center;gap:6px;color:#7c2d12;font-weight:600;cursor:pointer;">
+                <input type="checkbox" id="siwConfirm"> 我已确认并备份数据
+              </label>
+              <button class="btn btn-danger btn-sm" id="siwRunBtn" type="button" disabled>🚀 执行初始化</button>
+            </div>
+          </div>
+        </div>
+
         <div class="sys-status-grid" data-paginate="list" data-page-size="12">
           <div class="status-card status-card--success" id="scRuntime">
             <div class="status-card-top">
@@ -1508,6 +1569,7 @@
         
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
 <script src="../js/admin-pages/system.js?v=20261005a"></script>
+<script src="../js/admin-pages/system-init.js?v=20261008a"></script>
 
 
 <!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->

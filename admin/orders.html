@@ -688,6 +688,9 @@
           <div class="tab-item" data-tab="appointments">
             🗓️ 预约管理
           </div>
+          <div class="tab-item" data-tab="roster">
+            🧑‍🎤 演出花名册
+          </div>
         </div>
 
         <div class="tab-content active" id="tab-orders">
@@ -938,6 +941,174 @@
 
               <!-- v20261004 P2-4：预约列表服务端分页（meta 驱动） -->
               <div class="pagination" id="apptsPager"><span class="page-info">加载中…</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== 洛门演出订单花名册（v20261008a）====== -->
+        <div class="tab-content" id="tab-roster">
+          <style>
+            #tab-roster .ros-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0;}
+            #tab-roster .ros-stats{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 4px;}
+            #tab-roster .ros-stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:.85rem;color:#475569;}
+            #tab-roster .ros-stat b{font-size:1.05rem;color:#0f172a;margin-left:4px;}
+            #tab-roster .ros-stat.is-danger b{color:#dc2626;}
+            #tab-roster table{font-size:.86rem;}
+            #tab-roster .ros-role-sel,#tab-roster .ros-perf-sel,#tab-roster .ros-att-sel{padding:2px 4px;font-size:.82rem;}
+            #tab-roster .ros-failed{margin-top:12px;border:1px solid #fecaca;background:#fef2f2;border-radius:8px;padding:10px 14px;max-height:260px;overflow:auto;display:none;}
+            #tab-roster .ros-failed h4{margin:0 0 8px;color:#b91c1c;font-size:.9rem;}
+            #tab-roster .ros-failed table{font-size:.8rem;}
+            #tab-roster .ros-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9990;display:none;align-items:center;justify-content:center;}
+            #tab-roster .ros-modal{background:#fff;border-radius:12px;width:min(560px,94vw);max-height:92vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.25);}
+            #tab-roster .ros-modal-head{padding:16px 22px;border-bottom:1px solid #e2e8f0;font-weight:700;font-size:1.02rem;}
+            #tab-roster .ros-modal-body{padding:18px 22px;}
+            #tab-roster .ros-modal-foot{padding:12px 22px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;gap:10px;background:#f8fafc;border-radius:0 0 12px 12px;}
+            #tab-roster .ros-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;}
+            #tab-roster .ros-grid .full{grid-column:1 / -1;}
+            #tab-roster .ros-grid label{display:block;font-size:.82rem;color:#64748b;margin-bottom:4px;}
+            #tab-roster .ros-batch-date{display:flex;align-items:center;gap:6px;font-size:.85rem;color:#475569;}
+            #tab-roster .ros-hint{font-size:.78rem;color:#94a3b8;margin:4px 0 0;}
+          </style>
+
+          <div class="admin-card">
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group">
+                  <label>选择订单</label>
+                  <select class="form-control" id="rosOrderSelect"><option value="">— 请先选择订单 —</option></select>
+                </div>
+                <div class="form-group">
+                  <label>关键词</label>
+                  <input type="text" class="form-control" id="rosFilterKeyword" placeholder="姓名/手机/身份证">
+                </div>
+                <div class="form-group">
+                  <label>参演状态</label>
+                  <select class="form-control" id="rosFilterPerf">
+                    <option value="">全部</option>
+                    <option value="unconfirmed">未确认</option>
+                    <option value="confirmed">已确认</option>
+                    <option value="cancelled">已取消</option>
+                    <option value="completed">已完成</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>考勤状态</label>
+                  <select class="form-control" id="rosFilterAtt">
+                    <option value="">全部</option>
+                    <option value="present">出勤</option>
+                    <option value="absent">缺勤</option>
+                    <option value="late">迟到</option>
+                    <option value="early">早退</option>
+                    <option value="leave">请假</option>
+                    <option value="rest">公休</option>
+                    <option value="null">未考勤</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <button class="btn btn-primary btn-sm" id="rosQueryBtn" type="button">🔍 查询</button>
+                </div>
+              </div>
+
+              <div class="ros-stats" id="rosStats" style="display:none;">
+                <span class="ros-stat">总人数<b id="rosStatTotal">0</b></span>
+                <span class="ros-stat">已确认<b id="rosStatConfirmed">0</b></span>
+                <span class="ros-stat">未确认<b id="rosStatUnconfirmed">0</b></span>
+                <span class="ros-stat">已取消<b id="rosStatCancelled">0</b></span>
+                <span class="ros-stat">已完成<b id="rosStatCompleted">0</b></span>
+                <span class="ros-stat is-danger">未考勤<b id="rosStatUnattended">0</b></span>
+              </div>
+
+              <div class="ros-toolbar">
+                <button class="btn btn-primary btn-sm" id="rosAddBtn" type="button" disabled>➕ 新增人员</button>
+                <button class="btn btn-secondary btn-sm" id="rosImportBtn" type="button" disabled>📥 Excel 导入</button>
+                <input type="file" id="rosImportFile" accept=".xlsx,.xls,.csv" style="display:none;">
+                <button class="btn btn-secondary btn-sm" id="rosTplBtn" type="button">📄 下载导入模板</button>
+                <span style="flex:1;"></span>
+                <span class="ros-batch-date">考勤日期
+                  <input type="date" class="form-control" id="rosBatchDate" style="width:150px;">
+                </span>
+                <button class="btn btn-sm" style="background:#16a34a;color:#fff;" data-ros-batch="present" type="button">✅ 出勤</button>
+                <button class="btn btn-sm" style="background:#dc2626;color:#fff;" data-ros-batch="absent" type="button">❌ 缺勤</button>
+                <button class="btn btn-sm" style="background:#d97706;color:#fff;" data-ros-batch="late" type="button">🕐 迟到</button>
+                <button class="btn btn-sm" style="background:#7c3aed;color:#fff;" data-ros-batch="early" type="button">🏃 早退</button>
+                <button class="btn btn-sm" style="background:#0891b2;color:#fff;" data-ros-batch="leave" type="button">📝 请假</button>
+                <button class="btn btn-sm" style="background:#64748b;color:#fff;" data-ros-batch="rest" type="button">☔ 公休</button>
+              </div>
+              <p class="ros-hint">支持 Excel(.xlsx/.xls)/CSV 导入（单批 ≤500 行）；表头：姓名/身份证号/联系方式/角色分配/参演状态/考勤状态；也可由外部系统直接调用 POST /v1/order-roster/import 对接。批量考勤默认对勾选人生效，未勾选则对整单人员生效。</p>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:34px;"><input type="checkbox" id="rosCheckAll"></th>
+                      <th style="width:40px;">#</th>
+                      <th>姓名</th>
+                      <th>身份证号</th>
+                      <th>联系方式</th>
+                      <th>角色分配</th>
+                      <th>参演状态</th>
+                      <th>考勤状态</th>
+                      <th>考勤日期</th>
+                      <th>备注</th>
+                      <th style="width:110px;">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rosTbody"><tr><td colspan="11" style="text-align:center;padding:30px;color:#94a3b8;">请先在上方选择一个订单</td></tr></tbody>
+                </table>
+              </div>
+
+              <div class="ros-failed" id="rosFailedPanel">
+                <h4>⚠️ 以下行未导入（已修正后可重新导入，合法行不受影响）</h4>
+                <table>
+                  <thead><tr><th style="width:60px;">行号</th><th style="width:120px;">姓名</th><th>原因</th></tr></thead>
+                  <tbody id="rosFailedTbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 新增/编辑弹窗 -->
+          <div class="ros-modal-overlay" id="rosModalOverlay">
+            <div class="ros-modal">
+              <div class="ros-modal-head" id="rosModalTitle">新增花名册人员</div>
+              <div class="ros-modal-body">
+                <div class="ros-grid">
+                  <div><label>姓名（2-50 字符）*</label><input type="text" class="form-control" id="rosFName" maxlength="50" placeholder="如：张三"></div>
+                  <div><label>联系方式（11 位手机号）*</label><input type="text" class="form-control" id="rosFPhone" maxlength="11" placeholder="如：13993839833"></div>
+                  <div class="full"><label>身份证号（18 位，含校验码）*</label><input type="text" class="form-control" id="rosFIdCard" maxlength="18" placeholder="如：620522199508124568"></div>
+                  <div><label>角色分配（可选自定义）*</label>
+                    <select class="form-control" id="rosFRole"></select>
+                    <button class="btn btn-secondary btn-sm" id="rosFRoleAdd" type="button" style="margin-top:6px;">＋ 自定义角色</button>
+                  </div>
+                  <div><label>参演状态 *</label>
+                    <select class="form-control" id="rosFPerf">
+                      <option value="unconfirmed">未确认</option>
+                      <option value="confirmed">已确认</option>
+                      <option value="cancelled">已取消</option>
+                      <option value="completed">已完成</option>
+                    </select>
+                  </div>
+                  <div><label>考勤状态</label>
+                    <select class="form-control" id="rosFAtt">
+                      <option value="">未考勤</option>
+                      <option value="present">出勤</option>
+                      <option value="absent">缺勤</option>
+                      <option value="late">迟到</option>
+                      <option value="early">早退</option>
+                      <option value="leave">请假</option>
+                      <option value="rest">公休</option>
+                    </select>
+                  </div>
+                  <div><label>考勤日期</label><input type="date" class="form-control" id="rosFAttDate"></div>
+                  <div class="full"><label>备注</label><input type="text" class="form-control" id="rosFRemark" maxlength="300" placeholder="饰演角色/特殊说明（≤300 字）"></div>
+                </div>
+              </div>
+              <div class="ros-modal-foot">
+                <button class="btn btn-danger btn-sm" id="rosFDelete" type="button" style="display:none;">🗑 删除</button>
+                <span style="flex:1;"></span>
+                <button class="btn btn-secondary btn-sm" id="rosFCancel" type="button">取消</button>
+                <button class="btn btn-primary btn-sm" id="rosFSave" type="button">💾 保存</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1194,6 +1365,7 @@
   </div>
 
   <script src="../js/admin-pages/orders.js?v=20261005a"></script>
+  <script src="../js/admin-pages/order-roster.js?v=20261008a"></script>
 
   <!-- S-通用后台补丁：去抖锁 + __closeAnyModal + 查询重置真重置 + ESC 关弹窗 + 侧边栏死链修复 + 空 a[href=#] 禁跳 -->
 

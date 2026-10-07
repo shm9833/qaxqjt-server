@@ -100,7 +100,8 @@ const idPrefixes = {
   attendance: 'att',
   punch: 'pch',
   leave: 'lea',
-  overtime: 'ovt'
+  overtime: 'ovt',
+  roster: 'ros'
 };
 
 const idByCtx = (prefix, size = 8, nanoid) => {
