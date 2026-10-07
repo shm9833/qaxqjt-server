@@ -150,7 +150,9 @@ const update = async ctx => {
   if (patch.status === 'checked') {
     patch.checkerAccountId = ctx.state.user?.sub || null;
     patch.checkedAt = new Date();
-    if (String(patch.checkerAccountId) === String(old.makerAccountId)) {
+    // M-15 双角色：admin/super_admin 角色豁免（允许复核自己制单的凭证）；其他角色仍强制制单≠复核
+    const M15_EXEMPT_ROLES = ['admin', 'super_admin'];
+    if (!M15_EXEMPT_ROLES.includes(ctx.state.user?.role) && String(patch.checkerAccountId) === String(old.makerAccountId)) {
       throw new BusinessError('FORBIDDEN', '制单人与复核人不可为同一人（M-15 双角色）');
     }
   }

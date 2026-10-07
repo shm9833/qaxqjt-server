@@ -24,11 +24,13 @@ const controllerDir = path.resolve(__dirname, '../src/controllers');
 const prismaId = require.resolve('../utils/prisma', { paths: [controllerDir] });
 
 let captured = {};
+// findUnique 返回值可被测试用例覆盖（detail 404 / remove 软删快照）
+let _findUniqueResult = null;
 const stubPrisma = {
   performersDbV1: {
     findMany: async args => { captured.findMany = args; return []; },
     count: async args => { captured.count = args; return 0; },
-    findUnique: async args => { captured.findUnique = args; return null; },
+    findUnique: async args => { captured.findUnique = args; return _findUniqueResult; },
     findFirst: async args => { captured.findFirst = args; return null; },
     create: async args => { captured.create = args; return { id: 'pf_new_001', ...args.data }; },
     update: async args => { captured.update = args; return { id: args.where.id, ...args.data }; },
@@ -58,7 +60,7 @@ function signToken(role) {
   );
 }
 const auth = role => ({ Authorization: 'Bearer ' + signToken(role) });
-const reset = () => { captured = {}; };
+const reset = () => { captured = {}; _findUniqueResult = null; };
 
 // ========== 鉴权守卫 ==========
 
@@ -157,6 +159,8 @@ test('PATCH /v1/performers/:id 成功返回 200 + 更新字段', async () => {
 
 test('DELETE /v1/performers/:id 返回 200 + status=deleted（软删除）', async () => {
   reset();
+  // 控制器删除前会先 findUnique 做快照（审计追溯），桩需提供一条在册记录
+  _findUniqueResult = { id: 'pf_001', name: '张三', status: 'active', staffNo: 'QXT-001' };
   const res = await request(handler).delete('/v1/performers/pf_001').set(auth('super_admin'));
   assert.strictEqual(res.status, 200);
   assert.strictEqual(res.body.data.status, 'deleted');

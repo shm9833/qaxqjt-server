@@ -1043,7 +1043,7 @@ function __pLog(module,event,extra){
   
   // 功能按钮绑定（上传/新建/导出）
   try{
-    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
+    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.__superPatchBound=1; el.__deadBtnChecked=1; el.addEventListener("click", fn, true); } }
     /* P1修复:假成功已移除 — "选择报表"改为打开下方真实上传表单的文件选择器，不再假提示已选择 */
     __bindBtn('openReportsUploadBtn', function(){ var real=document.getElementById('reportsAttachFiles'); if(real){ real.click(); return; } var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.xls,.xlsx,.jpg,.png"; inp.onchange=function(){ console.warn('[P1] 未接线按钮: 动态报表文件选择（真实上传表单缺失）'); }; inp.click(); });
   }catch(_e){ console.warn("[upload-bind err]",_e); }

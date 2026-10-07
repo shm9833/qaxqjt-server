@@ -38,10 +38,18 @@
       } catch (_) {}
     }
     if (p && p.posterUrl) return p.posterUrl;
+    return posterFallback(p);
+  }
+
+  // 海报加载失败（如历史演示图片文件已清理）→ 按剧名生成兜底，避免公开页裂图
+  function posterFallback(p) {
     var title = (p && p.title) || '秦腔剧目';
     var prompt = '秦腔传统戏曲《' + title + '》舞台演出剧照，演员身着华丽戏服、戏曲脸谱，中国古戏台，红色宫灯，专业舞台灯光，写实摄影风格，高清';
     return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=' +
       encodeURIComponent(prompt) + '&image_size=landscape_4_3';
+  }
+  function playImg(p, title) {
+    return '<img src="' + esc(posterUrl(p)) + '" alt="' + title + '" loading="lazy" onerror="this.onerror=null;this.src=\'' + posterFallback(p) + '\'">';
   }
 
   function playDesc(p) {
@@ -87,7 +95,7 @@
         var link = 'cast-public.html?opera=' + encodeURIComponent(p.title);
         return '<a href="' + link + '" class="repertoire-card" style="text-decoration:none;color:inherit;display:block;">' +
           '<div class="repertoire-image">' +
-            '<img src="' + esc(posterUrl(p)) + '" alt="' + title + '" loading="lazy">' +
+            playImg(p, title) +
           '</div>' +
           '<div class="repertoire-info">' +
             '<h4>《' + title + '》</h4>' +
@@ -168,7 +176,7 @@
         return '<div class="opera-card" data-category="' + esc(cat) + '" data-tab-panel="' + esc(cat) + '" data-search-text="' + esc(p.title + ' ' + cat + ' ' + playDesc(p)) + '">' +
           '<div class="opera-card-image">' +
             '<span class="opera-card-category">' + esc(cat) + '</span>' +
-            '<img src="' + esc(posterUrl(p)) + '" alt="' + title + '" loading="lazy">' +
+            playImg(p, title) +
           '</div>' +
           '<div class="opera-card-body">' +
             '<h3>《' + title + '》</h3>' +

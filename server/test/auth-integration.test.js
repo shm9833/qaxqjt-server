@@ -122,7 +122,7 @@ test('POST /v1/auth/login 成功返回 200 + accessToken + refreshToken + user',
   _pwdOk = true;
   const res = await request(handler)
     .post('/v1/auth/login')
-    .send({ username: 'admin', password: process.env.QAXQJT_ADMIN_PWD || '' });
+    .send({ username: 'admin', password: process.env.QAXQJT_ADMIN_PWD || 'stub_password' });
   assert.strictEqual(res.status, 200);
   assert.ok(res.body.data.accessToken, '必须返回 accessToken');
   assert.ok(res.body.data.refreshToken, '必须返回 refreshToken');

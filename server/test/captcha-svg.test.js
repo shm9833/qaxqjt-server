@@ -14,10 +14,11 @@ test('返回 svg + 4 位答案，字符集合法', () => {
   assert.ok(svg.includes('height="' + HEIGHT + '"'));
 });
 
-test('svg 含 4 个 text 元素', () => {
+test('字符以 path 矢量轮廓渲染（无 text 元素，防程序化提取）', () => {
   const { svg } = generate();
-  const textCount = (svg.match(/<text /g) || []).length;
-  assert.strictEqual(textCount, 4);
+  // 安全强化后不再使用 <text>（2026 captcha 加固）：字符 = 4 条描边 path + 3 条干扰曲线
+  assert.strictEqual((svg.match(/<text[\s>]/g) || []).length, 0);
+  assert.ok((svg.match(/<path /g) || []).length >= 7, 'char paths(4) + noise curves(3) >= 7');
 });
 
 test('svg 含干扰曲线和噪点', () => {
@@ -35,8 +36,11 @@ test('每次答案不同（概率性，连续 5 次全相同概率≈(1/32)^16�
 test('svg 无答案明文泄漏（答案不出现在 svg 字符串中）', () => {
   for (let i = 0; i < 20; i++) {
     const { svg, answer } = generate();
-    // text 元素里的字符就是答案，所以答案必然以 text content 出现在 svg 中；
-    // 本测试仅确认没有把 answer 作为属性/注释泄漏到非 text 位置——这里放宽：
-    assert.ok(svg.includes('>' + answer[0] + '<') || svg.includes(answer), 'answer rendered as text');
+    // 加固实现：字符为 path 轮廓，完整答案与单字符 text 内容均不得出现
+    assert.ok(!svg.includes(answer), 'answer must not appear verbatim in svg');
+    assert.ok(!svg.includes('<text'), 'no <text> element allowed');
+    for (const ch of answer) {
+      assert.ok(!svg.includes('>' + ch + '<'), 'char ' + ch + ' must not be text content');
+    }
   }
 });

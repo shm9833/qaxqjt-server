@@ -3993,6 +3993,8 @@
           if (o) o.classList.add('modal-overlay-hide');
           document.body.classList.remove('body-modal-locked');
         } catch (_e) {}
+        // 统一关闭回调：覆盖 X / 遮罩 / Esc / 取消 / 确认 全部关闭路径
+        if (typeof c.onClose === 'function') { try { c.onClose(); } catch (_e) {} }
       };
 
       var bindFooter = function (root) {
@@ -6220,46 +6222,14 @@
     },
 
     initAdminViews: function () {
-      var gridBtn = document.getElementById('viewGridBtn');
-      var listBtn = document.getElementById('viewListBtn');
-      var grid = document.querySelector('.opera-grid, [data-opera-grid]');
-      if (gridBtn && listBtn && grid) {
-        gridBtn.addEventListener('click', function () {
-          grid.classList.add('view-grid');
-          grid.classList.remove('view-list');
-          gridBtn.classList.add('active');
-          listBtn.classList.remove('active');
-          Utils.toast('🎞️ 已切换至卡片视图', 'success');
-        });
-        listBtn.addEventListener('click', function () {
-          grid.classList.add('view-list');
-          grid.classList.remove('view-grid');
-          listBtn.classList.add('active');
-          gridBtn.classList.remove('active');
-          Utils.toast('📊 已切换至列表视图', 'success');
-        });
-      }
-      var catBtn = document.querySelector('.opera-cat-manage, [data-opera-cat-manage]');
-      if (catBtn) {
-        catBtn.addEventListener('click', function () {
-          Utils.toast('⚙️ 剧目分类管理：正式环境将支持新增/编辑/排序/停用分类', 'info');
-        });
-      }
-      var scheduleToggle = document.querySelector('.schedule-view-toggle, .view-toggle');
-      if (scheduleToggle) {
-        var views = scheduleToggle.querySelectorAll('button[data-view]');
-        if (views && views.length) {
-          views.forEach(function (btn) {
-            btn.addEventListener('click', function () {
-              views.forEach(function (b) { b.classList.remove('active'); });
-              btn.classList.add('active');
-              var map = { 'month': '📆 月度', 'week': '📋 周度', 'list': '📑 列表' };
-              var label = map[btn.getAttribute('data-view')] || btn.getAttribute('data-view');
-              Utils.toast(label + '视图已切换（正式环境将对接后端日历接口渲染）', 'success');
-            });
-          });
-        }
-      }
+      /* v20261007b 演示占位监听全部移除（旧监听与真实 handler 并存，双触发误导 toast）：
+         - #viewGridBtn/#viewListBtn：真实 handler 在 js/admin-pages/operas.js（真实显隐
+           #operaGridView/#operaListView），旧监听额外弹「🎞️/📊 已切换…视图」且操作的
+           .view-grid/.view-list class 无任何 CSS 生效。
+         - .view-toggle button[data-view]：真实 handler 在 schedule-inline-extract.js
+           __switchView（显隐 month/week/listContainer + /v1/schedules 渲染），旧监听额外弹
+           「视图已切换（正式环境将对接后端日历接口渲染）」。
+         「剧目分类管理」占位块已于 v20261007a 移除。 */
     },
 
     initAdminActionButtons: function () {

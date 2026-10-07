@@ -1006,7 +1006,7 @@ function __pLog(module,event,extra){
   
   // 功能按钮绑定（上传/新建/导出）
   try{
-    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
+    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.__superPatchBound=1; el.__deadBtnChecked=1; el.addEventListener("click", fn, true); } }
     __bindBtn('openFinanceUploadBtn', function(){ /* P1修复:假成功已移除——原为临时input+假"已选择"toast，改为打开真实上传表单的文件选择框 */ var inp=document.getElementById("financeAttachFiles"); if(inp){ inp.click(); } else { __T("未找到凭证文件选择框","error"); } });
   }catch(_e){ console.warn("[upload-bind err]",_e); }
 
@@ -1185,6 +1185,44 @@ window.__finApi = (function(){
   var T = function(m,t){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(m,t||'info',3000); }catch(_){} };
 
   function _tbody(){ return document.getElementById('finLedgerTbody') || document.querySelectorAll('.table-wrapper tbody')[0] || null; }
+  // v20261007b: 台账筛选区接线（🔍查询/↺重置/🖨️打印）——window 捕获 + 全量防拦截标记（同 openFinanceUploadBtn 契约）
+  function _wireFinBtn(id, fn){
+    var el = document.getElementById(id);
+    if(!el || el.__finWired) return;
+    el.__finWired = 1; el.__superPatchBound = 1; el.__deadBtnChecked = 1;
+    el.addEventListener('click', function(ev){ ev.preventDefault(); fn(ev); }, true);
+  }
+  function _finApplyFilter(){
+    var tb = _tbody(); if(!tb) return;
+    var cat = (document.getElementById('finFilterCat')||{}).value || '';
+    var kw = ((document.getElementById('finFilterKw')||{}).value || '').trim().toLowerCase();
+    var shown = 0;
+    Array.prototype.forEach.call(tb.querySelectorAll('tr'), function(tr){
+      if(tr.querySelector('td[colspan]')) return;
+      var tds = tr.querySelectorAll('td');
+      var catTxt = (tds[5] ? tds[5].textContent : '').trim(); /* td5=账目分类（td4 是收入/支出徽章） */
+      var ok = true;
+      if(cat && cat !== '全部分类' && catTxt !== cat) ok = false;
+      if(ok && kw && tr.textContent.toLowerCase().indexOf(kw) < 0) ok = false;
+      tr.style.display = ok ? '' : 'none';
+      if(ok) shown++;
+    });
+    T('🔍 筛选完成：'+shown+' 条记录','info');
+  }
+  _wireFinBtn('finFilterBtn', _finApplyFilter);
+  _wireFinBtn('finFilterReset', function(){
+    var c = document.getElementById('finFilterCat'); if(c) c.value = '全部分类';
+    var k = document.getElementById('finFilterKw'); if(k) k.value = '';
+    _finApplyFilter();
+  });
+  _wireFinBtn('finPrintBtn', function(){ window.print(); });
+  // v20261007b: 筛选分类下拉动态补充——创建凭证的分类是自由文本，数据中新增分类自动入选项（保持与台账数据一致）
+  function _finPopulateCatOptions(rows){
+    var sel=document.getElementById('finFilterCat'); if(!sel) return;
+    var have={}; Array.prototype.forEach.call(sel.options,function(o){ have[o.text]=1; });
+    var seen={};
+    (rows||[]).forEach(function(r){ var c=String(r.voucherCategory||'').trim(); if(c&&!have[c]&&!seen[c]){ seen[c]=1; var o=document.createElement('option'); o.textContent=c; sel.appendChild(o); } });
+  }
   // 弹窗按钮接线：window 捕获阶段早于页面 SuperPatch 3/6（其在 document 捕获拦截含“取消”文本的点击，
   // 仅加隐藏类、不移除节点），在此抢先处理，确保取消真实移除节点、保存真实提交，避免重复弹窗 id 冲突。
   function _wireModal(m, cancelSel, saveSel, onSave){
@@ -1251,6 +1289,7 @@ window.__finApi = (function(){
       tb.innerHTML = html;
       _bindRowActions();
       _updateStats(rows);
+      _finPopulateCatOptions(rows);
     }catch(e){ console.warn('[__finApi.load]',e); T('❌ 加载失败：'+(e.message||e),'error'); }
   }
 
@@ -1341,6 +1380,34 @@ window.__finApi = (function(){
   async function doCheck(id){
     try{ await API.patch((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(id), { status:'checked' }); T('✓ 已复核','success'); await load(); }
     catch(e){ T('❌ 复核失败：'+(e.message||e),'error'); }
+  }
+
+  /* v20261007c: 批量核销 = 批量提交复核（draft→checked），逐条 PATCH /v1/fin/ledger/:id。
+     后端约束：仅草稿可转、制单人≠复核人（M-15 双角色），服务端拒绝项会逐条返回原因。 */
+  async function batchCheck(){
+    var tb=_tbody(); if(!tb) return;
+    var items=[];
+    tb.querySelectorAll('input.batch-row-check:checked').forEach(function(cb){
+      var tr=cb.closest('tr'); if(!tr) return;
+      var id=tr.getAttribute('data-id'); if(!id) return;
+      var statusTd=tr.querySelector('td:nth-child(10)');
+      var statusTxt=statusTd?statusTd.textContent.trim():'';
+      items.push({id:id, statusTxt:statusTxt});
+    });
+    if(!items.length){ T('⚠️ 请先勾选要核销的凭证','warning'); return; }
+    var draft=items.filter(function(it){ return it.statusTxt.indexOf('草稿')>=0; });
+    var skip=items.length-draft.length;
+    if(!draft.length){ T('⚠️ 选中的凭证均非草稿状态，无法核销（仅草稿可提交复核）','warning'); return; }
+    if(!confirm('确认核销 '+draft.length+' 笔草稿凭证？\n'+(skip?'将跳过 '+skip+' 笔非草稿凭证。\n':'')+'核销=提交复核，复核后不可撤回。')) return;
+    var okCnt=0, failCnt=0, lastErr='';
+    for(var i=0;i<draft.length;i++){
+      try{ await API.patch((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(draft[i].id), { status:'checked' }); okCnt++; }
+      catch(e){ failCnt++; lastErr=(e&&(e.message||e))?String(e.message||e):'未知错误'; }
+    }
+    if(!failCnt){ T('✓ 已核销 '+okCnt+' 笔凭证','success'); }
+    else if(okCnt){ T('⚠️ 已核销 '+okCnt+' 笔，'+failCnt+' 笔失败：'+lastErr,'warning',4500); }
+    else { T('❌ 核销失败：'+lastErr,'error'); }
+    await load();
   }
 
   /* ===== 20260922 真实化：统计卡/月度图/年度汇总/项目账目 全部由真实台账+订单+排期生成 ===== */
@@ -1729,11 +1796,13 @@ window.__finApi = (function(){
     if(btns[1]){ btns[1].__superPatchBound=1; btns[1].onclick=function(){ openAdd('expense'); }; }
     if(btns[2]){ _finMarkBtn(btns[2]); btns[2].onclick=function(){ openMonthlyRecon(); }; }
     if(btns[3]){ _finMarkBtn(btns[3]); btns[3].onclick=function(){ exportFinanceXlsx(); }; }
-    /* P1修复:批量核销无后端端点→诚实提示（台账状态机仅 draft/checked，无核销接口）；批量删除走真实 DELETE /v1/fin/ledger/:id */
-    if(btns[4]){ _finMarkBtn(btns[4]); btns[4].title='该功能暂未接入后端'; btns[4].onclick=function(){ T('该功能暂未接入后端：台账状态机仅支持 草稿/已复核 流转，暂无批量核销接口（如需批量复核请逐行点击 ✓）','warning',4500); }; }
+    /* v20261007c: 批量核销→真实接入（逐条 PATCH /v1/fin/ledger/:id {status:checked}），前端预筛草稿 */
+    if(btns[4]){ _finMarkBtn(btns[4]); btns[4].title='勾选后批量提交复核'; btns[4].onclick=function(){ batchCheck(); }; }
     if(btns[5]){ _finMarkBtn(btns[5]); btns[5].onclick=function(){ batchRemove(); }; }
     var qBtn = document.querySelector('.btn-primary.btn-sm');
-    if(qBtn && qBtn.textContent.indexOf('查询')>=0){ qBtn.__superPatchBound=1; qBtn.onclick=function(){ load(); }; }
+    /* v20261007b: 查询按钮统一由 __finApi 内 _wireFinBtn('finFilterBtn') 接管（capture+筛选）。
+       原此处 onclick=load() 会在筛选后异步重拉并重写 tbody，清空筛选状态（冲突根因），已移除。 */
+    if(qBtn && qBtn.textContent.indexOf('查询')>=0){ qBtn.__superPatchBound=1; qBtn.__deadBtnChecked=1; }
   }
 
   /* ===== P1修复:批量删除 真实接入 DELETE /v1/fin/ledger/:id（仅草稿可删，逐笔执行，成功后刷新列表） ===== */
@@ -1789,5 +1858,5 @@ window.__finApi = (function(){
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ bind(); load(); renderExtras(); }); }
   else { bind(); load(); renderExtras(); }
 
-  return { load:load, openAdd:openAdd, openEdit:openEdit, submit:submit, remove:remove };
+  return { load:load, openAdd:openAdd, openEdit:openEdit, submit:submit, remove:remove, applyFilter:_finApplyFilter };
 })();
