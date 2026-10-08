@@ -155,6 +155,9 @@
       <p>演职人员入职登记表</p>
     </div>
 
+    <!-- 二维码有效性横幅（扫码进入时显示） -->
+    <div id="qrBanner" style="display:none;border-radius:10px;padding:11px 14px;margin-bottom:12px;font-size:13px;line-height:1.6;"></div>
+
     <!-- Tab 切换 -->
     <div class="tabs" style="display:flex;gap:0;margin-bottom:0;border-radius:10px 10px 0 0;overflow:hidden;">
       <button id="tabRegister" class="tab-btn active" style="flex:1;padding:14px;border:none;background:#8b0000;color:#fff;font-size:15px;font-weight:600;cursor:pointer;">📝 入职登记</button>
@@ -315,6 +318,37 @@
       var cb = $('regulationsConfirmed');
       var btn = $('submitBtn');
 
+      // ===== 扫码进入：校验入职二维码有效性 =====
+      (function initQr() {
+        var m = /[?&]qr=([A-Za-z0-9_-]+)/.exec(location.search);
+        if (!m) return;
+        window.__QrToken = m[1];
+        var banner = $('qrBanner');
+        var url = window.QAXQJT_API_CONFIG.resolveUrl('/v1/performers/self-register/qr/' + encodeURIComponent(m[1]));
+        fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+          var info = d && d.ok && d.data;
+          if (info && info.valid) {
+            banner.style.display = 'block';
+            banner.style.background = '#e8f5e9';
+            banner.style.border = '1px solid #a5d6a7';
+            banner.style.color = '#2e7d32';
+            banner.innerHTML = '✅ 扫码入职通道' + (info.title ? '：<strong>' + info.title.replace(/[<>&"]/g, '') + '</strong>' : '');
+          } else {
+            var reason = info && info.reason;
+            var msg = reason === 'expired' ? '该入职二维码已过期'
+              : reason === 'disabled' ? '该入职二维码已停用'
+              : reason === 'full' ? '该入职二维码使用次数已达上限'
+              : '入职二维码无效';
+            banner.style.display = 'block';
+            banner.style.background = '#ffebee';
+            banner.style.border = '1px solid #ef9a9a';
+            banner.style.color = '#c62828';
+            banner.innerHTML = '⚠️ ' + msg + '，仍可填写登记但可能无法计入本次招聘批次，如有疑问请联系管理员。';
+            window.__QrToken = ''; // 无效 token 不提交，避免后端直接拒绝
+          }
+        }).catch(function () { /* 网络异常不阻断登记 */ });
+      })();
+
       // 勾选条例后才能提交
       cb.addEventListener('change', function () {
         btn.disabled = !cb.checked;
@@ -358,6 +392,7 @@
           dailyRate: dailyRateRaw === '' ? '' : Number(dailyRateRaw),
           transportType: $('transportType').value || '',
           remark: $('remark').value.trim() || '',
+          qrToken: window.__QrToken || '',
           regulationsConfirmed: true
         };
 

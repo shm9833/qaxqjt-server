@@ -1075,3 +1075,58 @@ model OvertimeRecord {
   @@index([staffId, overtimeDate], map: "idx_ot_staff")
   @@map("overtime_records")
 }
+
+// ==============================================================================
+// 员工自助服务系统（扫码入职 + 打卡 + 工资查询 + 兑账确认）
+// ==============================================================================
+
+model EmployeePunchV1 {
+  id           String    @id
+  performerId  String    @map("performer_id")
+  punchDate    DateTime  @map("punch_date")
+  punchType    String    @map("punch_type") // in=上班打卡 out=下班打卡
+  gpsLatitude  Decimal?  @map("gps_latitude")
+  gpsLongitude Decimal?  @map("gps_longitude")
+  gpsAddress   String?   @map("gps_address")
+  punchTime    DateTime  @default(now()) @map("punch_time")
+  status       String    @default("normal") // normal=正常 late=迟到 early=早退 absent=缺勤
+  remark       String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  ts           BigInt    @map("_ts")
+
+  @@unique([performerId, punchDate, punchType], map: "uk_punch_day_type")
+  @@index([punchDate], map: "idx_punch_date")
+  @@map("employee_punch_v1")
+}
+
+model WageConfirmationV1 {
+  id             String    @id
+  wageItemId     String    @map("wage_item_id")
+  performerId    String    @map("performer_id")
+  confirmStatus  String    @default("pending") @map("confirm_status") // pending/confirmed/rejected
+  confirmType    String    @default("receipt") @map("confirm_type") // receipt=工资发放确认 check=兑账核对
+  signature      String?   // 签名图片 base64
+  remark         String?
+  confirmedAt    DateTime? @map("confirmed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  ts             BigInt    @map("_ts")
+
+  @@unique([wageItemId, confirmType], map: "uk_wage_confirm_type")
+  @@index([performerId, confirmStatus], map: "idx_wc_performer_status")
+  @@map("wage_confirmation_v1")
+}
+
+model QrCodeInviteV1 {
+  id          String    @id
+  qrToken     String    @unique(map: "idx_qr_token") @map("qr_token")
+  title       String    // 二维码标题（如：2026年10月入职登记）
+  status      String    @default("active") // active/expired/disabled
+  maxUses     Int?      @map("max_uses") // 最大使用次数，null=不限
+  usedCount   Int       @default(0) @map("used_count")
+  expiresAt   DateTime? @map("expires_at")
+  createdBy   String?   @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  ts          BigInt    @map("_ts")
+
+  @@map("qr_code_invite_v1")
+}
