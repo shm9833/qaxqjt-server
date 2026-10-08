@@ -10,6 +10,7 @@ module.exports = {
   remove: core.remove,
   stats: independent.stats,
   selfRegister: core.selfRegister,
+  selfRegisterQrInfo: core.selfRegisterQrInfo,
   selfRegisterStatus: core.selfRegisterStatus,
   review: core.review,
 };

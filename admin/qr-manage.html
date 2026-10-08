@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>入职二维码管理 - 秦安县秦剧团云端预约管理系统</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <script src="../js/api-config.js?v=20261008c"></script>
+  <script src="../js/api-request.js?v=20261008c"></script>
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
+  <style>
+    html, body { overflow-x: hidden !important; max-width: 100vw !important; }
+    * { box-sizing: border-box; }
+    .qm-wrap { max-width: 1080px; }
+    .qm-card {
+      background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(139,0,0,.07);
+      padding: 20px 22px; margin-bottom: 18px; border: 1px solid #f0e6d2;
+    }
+    .qm-card h2 { font-size: 1.05rem; color: #5a3a1a; margin: 0 0 16px; display: flex; align-items: center; gap: 8px; }
+    .qm-form { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+    .qm-field { display: flex; flex-direction: column; gap: 6px; }
+    .qm-field label { font-size: .82rem; color: #8a6d3b; font-weight: 600; }
+    .qm-field input {
+      padding: 9px 12px; border: 1.5px solid #e0d0b8; border-radius: 8px; font-size: .92rem;
+      font-family: inherit; background: #fffdf7; min-width: 170px;
+    }
+    .qm-field input:focus { outline: none; border-color: #8b0000; }
+    .qm-btn {
+      padding: 10px 22px; border: none; border-radius: 8px; cursor: pointer; font-size: .92rem;
+      font-weight: 600; font-family: inherit; background: linear-gradient(135deg,#8b0000,#6b0000); color: #fff;
+    }
+    .qm-btn:active { transform: scale(.98); }
+    .qm-btn:disabled { opacity: .55; cursor: not-allowed; }
+    .qm-table-wrap { overflow-x: auto; }
+    table.qm-table { width: 100%; border-collapse: collapse; font-size: .86rem; min-width: 860px; }
+    .qm-table th, .qm-table td { padding: 11px 10px; border-bottom: 1px solid #f0e6d2; text-align: left; vertical-align: middle; }
+    .qm-table th { background: #fdf8ee; color: #5a3a1a; font-weight: 700; white-space: nowrap; }
+    .qm-table tr:hover td { background: #fffaf0; }
+    .qm-badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: .75rem; font-weight: 600; }
+    .qb-active { background: #e8f5e9; color: #2e7d32; }
+    .qb-disabled { background: #eeeeee; color: #616161; }
+    .qb-expired { background: #ffebee; color: #c62828; }
+    .link-cell { max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #8b0000; }
+    .row-btns { display: flex; gap: 6px; flex-wrap: nowrap; }
+    .mini-btn {
+      padding: 5px 10px; border-radius: 6px; border: 1px solid #c9b898; background: #fff; color: #8a6d3b;
+      font-size: .78rem; cursor: pointer; font-family: inherit; white-space: nowrap;
+    }
+    .mini-btn.red { border-color: #e0a1a1; color: #c62828; }
+    .mini-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .empty-row td { text-align: center; color: #b09a72; padding: 30px 0; }
+
+    /* QR 弹窗 */
+    .qm-mask { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .qm-mask.show { display: flex; }
+    .qm-modal { background: #fff; border-radius: 16px; padding: 24px 24px 20px; max-width: 400px; width: 100%; text-align: center; }
+    .qm-modal h3 { color: #5a3a1a; margin: 0 0 4px; font-size: 1.05rem; }
+    .qm-modal .sub { color: #9a8259; font-size: .8rem; margin-bottom: 14px; word-break: break-all; }
+    #qrCanvasBox { display: flex; justify-content: center; margin: 8px 0 14px; }
+    #qrCanvasBox canvas { border: 1px solid #eee2cc; border-radius: 8px; background: #fff; }
+    .qr-url-box {
+      background: #fdf8ee; border: 1px solid #eadfc9; border-radius: 8px; padding: 9px 11px;
+      font-size: .76rem; color: #6d5636; word-break: break-all; text-align: left; margin-bottom: 14px;
+    }
+    .qm-modal-btns { display: flex; gap: 9px; }
+    .qm-modal-btns button {
+      flex: 1; padding: 10px 6px; border-radius: 8px; border: 1.5px solid #c9b898; background: #fff;
+      color: #8a6d3b; font-size: .86rem; font-weight: 600; font-family: inherit; cursor: pointer;
+    }
+    .qm-modal-btns button.primary { background: #8b0000; border-color: #8b0000; color: #fff; }
+    .qm-tip { background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 10px 13px;
+      font-size: .8rem; color: #7a5c10; margin-bottom: 16px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon" style="display:flex;align-items:center;justify-content:center;font-size:2rem;">🎭</div>
+        <div class="logo-text">秦安县秦剧团<br/>文化演出管理系统</div>
+      </div>
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <a href="index.html" class="admin-menu-item"><span class="menu-icon">📊</span><span>数据看板</span></a>
+          <a href="accounts.html" class="admin-menu-item"><span class="menu-icon">👥</span><span>账号权限管理</span></a>
+          <a href="schedule.html" class="admin-menu-item"><span class="menu-icon">📅</span><span>演出档期排班</span></a>
+          <a href="cast-sheet.html" class="admin-menu-item"><span class="menu-icon">🎭</span><span>演出演员表</span></a>
+          <a href="orders.html" class="admin-menu-item"><span class="menu-icon">📋</span><span>订单预约管理</span></a>
+          <a href="operas.html" class="admin-menu-item"><span class="menu-icon">🎭</span><span>剧目资源管理</span></a>
+          <a href="staff.html" class="admin-menu-item"><span class="menu-icon">👨‍🎤</span><span>演职人员管理</span></a>
+          <a href="qr-manage.html" class="admin-menu-item active"><span class="menu-icon">🏷️</span><span>入职二维码</span></a>
+          <a href="self-portal.html" class="admin-menu-item"><span class="menu-icon">📱</span><span>员工自助门户</span></a>
+          <a href="attendance.html" class="admin-menu-item"><span class="menu-icon">💵</span><span>考勤与薪酬</span></a>
+          <a href="inventory.html" class="admin-menu-item"><span class="menu-icon">📦</span><span>道具服装库存</span></a>
+          <a href="finance.html" class="admin-menu-item"><span class="menu-icon">💰</span><span>财务收支台账</span></a>
+          <a href="content.html" class="admin-menu-item"><span class="menu-icon">📝</span><span>官网内容管理</span></a>
+          <a href="assets.html" class="admin-menu-item"><span class="menu-icon">🖼️</span><span>站点图片投放</span></a>
+          <a href="reports.html" class="admin-menu-item"><span class="menu-icon">📈</span><span>数据统计报表</span></a>
+          <a href="system.html" class="admin-menu-item"><span class="menu-icon">🔧</span><span>系统日志备份</span></a>
+        </div>
+      </nav>
+      <div class="admin-sidebar-footer">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:.88rem;text-decoration:none;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,.2);">
+            <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,.8);font-size:.88rem;text-decoration:none;background:rgba(139,0,0,.3);border:1px solid rgba(212,175,55,.15);">
+            <span>🚪</span><span>退出登录</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" id="sidebarToggle" aria-label="菜单"><span>☰</span></button>
+          <div class="admin-breadcrumb">
+            <a href="staff.html">演职人员管理</a><span class="separator">/</span><span class="current">入职二维码</span>
+          </div>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-user-dropdown" id="userDropdown">
+            <div class="user-toggle" id="userToggle">
+              <div class="user-avatar" id="userAvatar">管</div>
+              <div class="user-info-text">
+                <div class="user-name-text" id="userName">管理员</div>
+                <div class="user-role-text" id="userRole">—</div>
+              </div>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" id="logoutBtnDropdown" style="color:var(--primary);">
+                <span class="di-icon">🚪</span><span>退出登录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="admin-content">
+        <div class="qm-wrap">
+          <div class="sys-page-header" style="margin-bottom:18px;">
+            <div class="sys-page-title">
+              <h1>🏷️ 入职二维码管理</h1>
+              <div class="page-desc">生成扫码入职专属二维码 · 限制使用次数与有效期 · 打印张贴或微信发送给新员工</div>
+            </div>
+          </div>
+
+          <div class="qm-card">
+            <h2>➕ 生成新二维码</h2>
+            <div class="qm-tip">员工扫码后进入入职登记页（self-register.html），提交的登记信息仍需管理员在「演职人员管理」中审核通过后方可入职。员工自助门户登录方式：身份证号 + 手机号后 6 位。</div>
+            <form class="qm-form" id="createForm">
+              <div class="qm-field" style="flex:2;min-width:220px;">
+                <label>二维码标题 *（如：2026年秋季招聘）</label>
+                <input type="text" id="fTitle" maxlength="80" placeholder="请输入标题" required />
+              </div>
+              <div class="qm-field" style="flex:1;min-width:130px;">
+                <label>使用次数上限（留空不限）</label>
+                <input type="number" id="fMaxUses" min="1" max="100000" placeholder="不限" />
+              </div>
+              <div class="qm-field" style="flex:1;min-width:200px;">
+                <label>过期时间（留空长期有效）</label>
+                <input type="datetime-local" id="fExpires" />
+              </div>
+              <button class="qm-btn" type="submit" id="createBtn">生成二维码</button>
+            </form>
+          </div>
+
+          <div class="qm-card">
+            <h2>📋 二维码列表</h2>
+            <div class="qm-table-wrap">
+              <table class="qm-table">
+                <thead>
+                  <tr>
+                    <th>标题</th><th>状态</th><th>已用 / 上限</th><th>过期时间</th><th>创建时间</th><th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="qrTbody">
+                  <tr class="empty-row"><td colspan="6">加载中...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 二维码弹窗 -->
+  <div class="qm-mask" id="qrMask">
+    <div class="qm-modal">
+      <h3 id="mTitle">入职二维码</h3>
+      <div class="sub" id="mSub">新员工微信扫码即可填写入职登记</div>
+      <div id="qrCanvasBox"></div>
+      <div class="qr-url-box" id="mUrl"></div>
+      <div class="qm-modal-btns">
+        <button id="mCopy">复制链接</button>
+        <button id="mDownload">下载二维码</button>
+        <button class="primary" id="mClose">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/qrcode.min.js?v=20261008c"></script>
+  <script src="../js/app.js?v=20261006c"></script>
+  <script src="../js/admin-mobile-sidebar.js?v=20260926m"></script>
+  <script>
+  (function () {
+    'use strict';
+    var API = window.QAXQJT_API;
+    var currentUrl = '';
+
+    function toast(msg, ok) {
+      if (typeof window.showToast === 'function') { window.showToast(msg, ok === false ? 'error' : 'success'); return; }
+      alert(msg);
+    }
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function fmtDt(iso) {
+      if (!iso) return '长期有效';
+      var d = new Date(iso);
+      if (isNaN(d)) return '—';
+      function p(n) { return (n < 10 ? '0' : '') + n; }
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+    function realStatus(r) {
+      if (r.status !== 'active') return r.status;
+      if (r.expiresAt && new Date(r.expiresAt).getTime() < Date.now()) return 'expired';
+      if (r.maxUses != null && r.usedCount >= r.maxUses) return 'expired';
+      return 'active';
+    }
+
+    // 鉴权：仅超管/运营/导演可进入
+    API.me().then(function (me) {
+      var allowed = ['super_admin', 'ops', 'director'];
+      if (!me || allowed.indexOf(me.role) < 0) {
+        alert('当前账号无权访问入职二维码管理（需要超级管理员/运营/导演权限）');
+        location.href = 'index.html';
+        return;
+      }
+      if (me.realName) { document.getElementById('userName').textContent = me.realName; }
+      if (me.role) {
+        var roleMap = { super_admin: '超级管理员', ops: '运营', director: '导演' };
+        document.getElementById('userRole').textContent = roleMap[me.role] || me.role;
+      }
+      loadList();
+    }).catch(function () { location.href = 'login.html'; });
+
+    document.getElementById('logoutBtnSidebar').addEventListener('click', function () { API.logout(); });
+    document.getElementById('logoutBtnDropdown').addEventListener('click', function () { API.logout(); });
+
+    function loadList() {
+      API.get('/v1/qrcode-invites?pageSize=100').then(function (list) {
+        var tb = document.getElementById('qrTbody');
+        if (!list || !list.length) {
+          tb.innerHTML = '<tr class="empty-row"><td colspan="6">暂无二维码，请在上方表单生成</td></tr>';
+          return;
+        }
+        tb.innerHTML = list.map(function (r) {
+          var st = realStatus(r);
+          var badgeMap = { active: ['qb-active', '有效'], disabled: ['qb-disabled', '已停用'], expired: ['qb-expired', '已过期/用尽'] };
+          var b = badgeMap[st] || badgeMap.disabled;
+          var usage = r.usedCount + ' / ' + (r.maxUses == null ? '不限' : r.maxUses);
+          var btns = '<button class="mini-btn" data-act="show" data-id="' + r.id + '">二维码</button>' +
+            '<button class="mini-btn" data-act="copy" data-id="' + r.id + '">复制链接</button>';
+          if (st === 'active') {
+            btns += '<button class="mini-btn red" data-act="disable" data-id="' + r.id + '">禁用</button>';
+          }
+          return '<tr>' +
+            '<td><strong>' + esc(r.title) + '</strong></td>' +
+            '<td><span class="qm-badge ' + b[0] + '">' + b[1] + '</span></td>' +
+            '<td>' + usage + '</td>' +
+            '<td>' + fmtDt(r.expiresAt) + '</td>' +
+            '<td>' + fmtDt(r.createdAt) + '</td>' +
+            '<td><div class="row-btns">' + btns + '</div></td>' +
+            '</tr>';
+        }).join('');
+        bindRows(list);
+      }).catch(function () {
+        document.getElementById('qrTbody').innerHTML =
+          '<tr class="empty-row"><td colspan="6">加载失败，请检查后端服务后刷新</td></tr>';
+      });
+    }
+
+    function byId(list, id) {
+      for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+      return null;
+    }
+    function bindRows(list) {
+      document.querySelectorAll('[data-act]').forEach(function (btn) {
+        btn.onclick = function () {
+          var r = byId(list, btn.getAttribute('data-id'));
+          if (!r) return;
+          var act = btn.getAttribute('data-act');
+          if (act === 'show') openQr(r);
+          else if (act === 'copy') copyText(r.url);
+          else if (act === 'disable') disableQr(r);
+        };
+      });
+    }
+
+    document.getElementById('createForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var title = document.getElementById('fTitle').value.trim();
+      var maxUsesRaw = document.getElementById('fMaxUses').value.trim();
+      var expiresRaw = document.getElementById('fExpires').value;
+      if (title.length < 2) { toast('请输入至少 2 个字的标题', false); return; }
+      var body = { title: title };
+      if (maxUsesRaw) body.maxUses = Number(maxUsesRaw);
+      if (expiresRaw) body.expiresAt = new Date(expiresRaw).toISOString();
+      var btn = document.getElementById('createBtn');
+      btn.disabled = true; btn.textContent = '生成中...';
+      API.post('/v1/qrcode-invites', body).then(function (r) {
+        toast('二维码已生成');
+        document.getElementById('createForm').reset();
+        loadList();
+        openQr(r);
+      }).catch(function (err) { toast(err.message || '生成失败', false); })
+        .finally(function () { btn.disabled = false; btn.textContent = '生成二维码'; });
+    });
+
+    function disableQr(r) {
+      if (!confirm('确定禁用「' + r.title + '」？\n禁用后该二维码将无法继续用于入职登记。')) return;
+      API.post('/v1/qrcode-invites/' + r.id + '/disable', {}).then(function () {
+        toast('已禁用');
+        loadList();
+      }).catch(function (err) { toast(err.message || '禁用失败', false); });
+    }
+
+    function openQr(r) {
+      currentUrl = r.url;
+      document.getElementById('mTitle').textContent = r.title;
+      document.getElementById('mSub').textContent = '新员工微信/浏览器扫码即可进入入职登记页';
+      document.getElementById('mUrl').textContent = r.url;
+      var box = document.getElementById('qrCanvasBox');
+      box.innerHTML = '';
+      var canvas = document.createElement('canvas');
+      box.appendChild(canvas);
+      window.QRCode.toCanvas(canvas, r.url, { width: 230, margin: 2 }, function (err) {
+        if (err) box.innerHTML = '<div style="color:#c62828;font-size:.85rem;padding:20px;">二维码生成失败：' + err.message + '</div>';
+      });
+      document.getElementById('qrMask').classList.add('show');
+    }
+    document.getElementById('mClose').onclick = function () {
+      document.getElementById('qrMask').classList.remove('show');
+    };
+    document.getElementById('qrMask').onclick = function (e) {
+      if (e.target === this) this.classList.remove('show');
+    };
+    document.getElementById('mCopy').onclick = function () { copyText(currentUrl); };
+    document.getElementById('mDownload').onclick = function () {
+      window.QRCode.toDataURL(currentUrl, { width: 600, margin: 2 }, function (err, url) {
+        if (err) { toast('生成图片失败', false); return; }
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = '入职二维码-' + (document.getElementById('mTitle').textContent || 'qrcode') + '.png';
+        a.click();
+      });
+    };
+
+    function copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { toast('链接已复制'); }, fallbackCopy);
+      } else { fallbackCopy(); }
+      function fallbackCopy() {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); toast('链接已复制'); }
+        catch (e) { prompt('请手动复制链接：', text); }
+        document.body.removeChild(ta);
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

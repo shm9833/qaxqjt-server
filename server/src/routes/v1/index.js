@@ -509,6 +509,8 @@ v1.post(
   performersCtrl.create
 );
 v1.get('/performers/stats', requireRole(['super_admin', 'ops', 'director', 'finance_view']), performersCtrl.stats);
+// 自助登记二维码有效性查询（公开接口，必须在 /performers/:id 之前注册）
+v1.get('/performers/self-register/qr/:token', performersCtrl.selfRegisterQrInfo);
 // 自助登记审核结果查询（公开接口，必须在 /performers/:id 之前注册，否则被 :id 吞掉 404）
 v1.get(
   '/performers/self-register/status',
@@ -564,6 +566,7 @@ v1.post(
       dailyRate: Joi.number().min(0).max(100000).allow('').optional(),
       transportType: Joi.string().valid('单趟', '双趟').allow('').optional(),
       remark: Joi.string().allow('').optional(),
+      qrToken: Joi.string().max(40).allow('').optional(),
       regulationsConfirmed: Joi.boolean().required()
     })
   }),
@@ -1334,5 +1337,76 @@ v1.post(
   sysInitCtrl.run
 );
 v1.get('/system/init/log', requireRole('super_admin'), sysInitCtrl.log);
+
+/* ====== 员工自助服务 self-service 路由（v20261008，performer 角色）====== */
+const selfServiceCtrl = require('../../controllers/self-service');
+
+// 员工登录（无鉴权，身份证+手机号后6位）
+v1.post(
+  '/self-service/login',
+  validate({
+    body: Joi.object({
+      idCardNo: Joi.string().trim().length(18).required(),
+      phoneSuffix: Joi.string().trim().length(6).required(),
+      captcha: Joi.string().allow('').optional(),
+      captchaId: Joi.string().allow('').max(64).optional()
+    })
+  }),
+  selfServiceCtrl.login
+);
+
+// 以下接口均需 performer 角色 JWT
+v1.get('/self-service/profile', selfServiceCtrl.profile);
+v1.post(
+  '/self-service/punch',
+  validate({
+    body: Joi.object({
+      punchType: Joi.string().valid('in', 'out').required(),
+      gpsLatitude: Joi.number().optional(),
+      gpsLongitude: Joi.number().optional(),
+      gpsAddress: Joi.string().max(200).optional()
+    })
+  }),
+  selfServiceCtrl.punch
+);
+v1.get('/self-service/punch/today', selfServiceCtrl.todayPunchStatus);
+v1.get('/self-service/punch/list', validate({ paginate: true, query: Joi.object({ month: Joi.string().optional() }) }), selfServiceCtrl.punchList);
+v1.get('/self-service/wage/list', validate({ paginate: true, query: Joi.object({ month: Joi.string().optional() }) }), selfServiceCtrl.wageList);
+v1.post(
+  '/self-service/wage/confirm',
+  validate({
+    body: Joi.object({
+      wageItemId: Joi.string().required(),
+      confirmType: Joi.string().valid('receipt', 'check').required(),
+      confirmStatus: Joi.string().valid('confirmed', 'rejected').required(),
+      signature: Joi.string().allow('').optional(),
+      remark: Joi.string().allow('').max(500).optional()
+    })
+  }),
+  selfServiceCtrl.wageConfirm
+);
+
+/* ====== 入职二维码管理 qrcode-invites 路由（v20261008，管理员）====== */
+const qrcodeManageCtrl = require('../../controllers/qrcode-manage');
+v1.get(
+  '/qrcode-invites',
+  validate({ paginate: true, query: Joi.object({ status: Joi.string().optional() }) }),
+  requireRole(['super_admin', 'ops', 'director']),
+  qrcodeManageCtrl.listQr
+);
+v1.post(
+  '/qrcode-invites',
+  validate({
+    body: Joi.object({
+      title: Joi.string().trim().min(2).max(80).required(),
+      maxUses: Joi.number().integer().min(1).max(100000).optional(),
+      expiresAt: Joi.string().allow('').optional()
+    })
+  }),
+  requireRole(['super_admin', 'ops', 'director']),
+  qrcodeManageCtrl.createQr
+);
+v1.get('/qrcode-invites/:id', requireRole(['super_admin', 'ops', 'director']), qrcodeManageCtrl.detailQr);
+v1.post('/qrcode-invites/:id/disable', requireRole(['super_admin', 'ops', 'director']), qrcodeManageCtrl.disableQr);
 
 module.exports = v1;

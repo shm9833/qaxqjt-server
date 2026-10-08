@@ -71,6 +71,52 @@ const remove = async ctx => {
 
 // ========== 演员自助入职登记（公开接口，无需登录） ==========
 
+// 校验入职二维码：存在 + 启用 + 未过期
+const _validateQrToken = async token => {
+  if (!token) return null; // 不带 token 也允许登记（兼容旧链接/后台手工分享）
+  const qr = await prisma.qrCodeInviteV1.findUnique({ where: { qrToken: token } });
+  if (!qr) throw new BusinessError('VALIDATION_ERROR', '入职二维码不存在，请向管理员索取最新二维码');
+  if (qr.status === 'disabled') throw new BusinessError('FORBIDDEN', '该入职二维码已停用，请联系管理员');
+  if (qr.status === 'expired' || (qr.expiresAt && qr.expiresAt.getTime() < Date.now())) {
+    throw new BusinessError('FORBIDDEN', '该入职二维码已过期，请联系管理员');
+  }
+  if (qr.maxUses != null && qr.usedCount >= qr.maxUses) {
+    throw new BusinessError('CONFLICT', '该入职二维码使用次数已达上限，请联系管理员');
+  }
+  return qr;
+};
+
+// 成功登记后计数（条件更新防止并发超用）
+const _consumeQrToken = async qr => {
+  if (!qr) return;
+  const res = await prisma.qrCodeInviteV1.updateMany({
+    where: {
+      id: qr.id,
+      status: 'active',
+      ...(qr.maxUses != null ? { usedCount: { lt: qr.maxUses } } : {})
+    },
+    data: { usedCount: { increment: 1 }, ts: BigInt(nowMs()) }
+  });
+  if (!res.count) throw new BusinessError('CONFLICT', '该入职二维码使用次数已达上限，请联系管理员');
+};
+
+// 二维码信息公开查询（扫码进入页面时校验有效性）
+const selfRegisterQrInfo = async ctx => {
+  const token = (ctx.params.token || '').trim();
+  if (!token) throw new BusinessError('VALIDATION_ERROR', '缺少二维码参数');
+  const qr = await prisma.qrCodeInviteV1.findUnique({ where: { qrToken: token } });
+  if (!qr) return success(ctx, { valid: false, reason: 'not_found' });
+  const expired = qr.status === 'expired' || (qr.expiresAt && qr.expiresAt.getTime() < Date.now());
+  const full = qr.maxUses != null && qr.usedCount >= qr.maxUses;
+  const valid = qr.status === 'active' && !expired && !full;
+  return success(ctx, {
+    valid,
+    reason: !valid ? (qr.status === 'disabled' ? 'disabled' : expired ? 'expired' : 'full') : null,
+    title: qr.title,
+    expiresAt: qr.expiresAt ? qr.expiresAt.toISOString() : null
+  });
+};
+
 const selfRegister = async ctx => {
   const b = ctx.request.body || {};
   // 必须确认已阅读员工管理条例
@@ -80,6 +126,8 @@ const selfRegister = async ctx => {
   if (!b.name || String(b.name).trim().length < 2) {
     throw new BusinessError('VALIDATION_ERROR', '请填写姓名');
   }
+  // 校验入职二维码（若链接携带）
+  const qr = await _validateQrToken(b.qrToken ? String(b.qrToken).trim() : '');
   // 身份证号必填 + 格式校验 + 重复校验
   const idCardNo = (b.idCardNo || '').toString().trim().toUpperCase();
   if (!idCardNo) {
@@ -123,6 +171,8 @@ const selfRegister = async ctx => {
     throw new BusinessError('CONFLICT', '该身份证号已登记（' + hint + '），同一身份证不可重复提交');
   }
 
+  // 首次登记：先占用二维码名额（原子条件更新，防并发超用），再建登记记录
+  await _consumeQrToken(qr);
   const data = {
     id: idByCtx('performer', 12, nanoid),
     staffNo: null,
@@ -226,6 +276,7 @@ module.exports = {
   create,
   remove,
   selfRegister,
+  selfRegisterQrInfo,
   selfRegisterStatus,
   review,
 };

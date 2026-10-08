@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <base href="/admin/">
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>员工自助 - 秦安县秦剧团</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="stylesheet" href="../css/style.css?v=20261008c">
+  <script src="../js/api-config.js?v=20261008c"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; }
+    body {
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      background: linear-gradient(160deg, #fdf8f0 0%, #f5e6cc 100%);
+      color: #333;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app { max-width: 520px; margin: 0 auto; min-height: 100vh; position: relative; }
+    .hidden { display: none !important; }
+
+    /* ===== 登录页 ===== */
+    #loginView { padding: 36px 22px 30px; }
+    .login-logo { text-align: center; margin-bottom: 26px; }
+    .login-logo .mark { font-size: 54px; }
+    .login-logo h1 { font-size: 23px; color: #8b0000; margin-top: 8px; letter-spacing: 2px; }
+    .login-logo p { font-size: 13px; color: #8a6d3b; margin-top: 6px; }
+    .login-card { background: #fff; border-radius: 16px; box-shadow: 0 6px 26px rgba(139,0,0,.12); padding: 24px 20px 22px; }
+    .login-card h2 { font-size: 17px; color: #5a3a1a; margin-bottom: 18px; text-align: center; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13.5px; font-weight: 600; color: #5a3a1a; margin-bottom: 6px; }
+    .field input {
+      width: 100%; padding: 12px 14px; border: 1.5px solid #e0d0b8; border-radius: 10px;
+      font-size: 16px; font-family: inherit; background: #fffdf7; letter-spacing: 1px;
+    }
+    .field input:focus { outline: none; border-color: #8b0000; }
+    .field .hint { font-size: 12px; color: #9a8259; margin-top: 5px; line-height: 1.5; }
+    .btn-primary {
+      width: 100%; padding: 14px; background: linear-gradient(135deg, #8b0000, #6b0000);
+      color: #fff; border: none; border-radius: 11px; font-size: 16.5px; font-weight: 600;
+      cursor: pointer; transition: opacity .2s;
+    }
+    .btn-primary:active { transform: scale(.985); }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+    .login-foot { text-align: center; margin-top: 18px; font-size: 12.5px; color: #9a8259; line-height: 1.7; }
+    .login-foot a { color: #8b0000; text-decoration: none; }
+
+    /* ===== 主界面 ===== */
+    .topbar {
+      position: sticky; top: 0; z-index: 20; background: linear-gradient(135deg,#8b0000,#6b0000);
+      color: #fff; padding: 14px 18px 12px; box-shadow: 0 2px 10px rgba(0,0,0,.15);
+    }
+    .topbar .t1 { font-size: 17px; font-weight: 700; }
+    .topbar .t2 { font-size: 12px; opacity: .85; margin-top: 3px; }
+    .pages { padding: 14px 14px 86px; }
+    .tabbar {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 520px;
+      display: flex; background: #fff; border-top: 1px solid #eadfc9; padding-bottom: env(safe-area-inset-bottom);
+      box-shadow: 0 -2px 12px rgba(0,0,0,.06); z-index: 30;
+    }
+    .tabbar button {
+      flex: 1; border: none; background: none; padding: 9px 0 8px; font-size: 12px; color: #9a8259;
+      font-family: inherit; cursor: pointer;
+    }
+    .tabbar button .ic { display: block; font-size: 21px; line-height: 1.3; }
+    .tabbar button.active { color: #8b0000; font-weight: 700; }
+
+    .card { background: #fff; border-radius: 14px; box-shadow: 0 3px 14px rgba(139,0,0,.08); padding: 17px 16px; margin-bottom: 13px; }
+    .card h3 { font-size: 15px; color: #5a3a1a; margin-bottom: 13px; }
+    .card h3 .more { float: right; font-size: 12.5px; color: #8b0000; font-weight: 400; }
+
+    /* 打卡 */
+    .punch-date { text-align: center; color: #8a6d3b; font-size: 13px; margin-bottom: 14px; }
+    .punch-grid { display: flex; gap: 12px; }
+    .punch-btn {
+      flex: 1; border: 2px solid #e6d8bf; background: #fffdf7; border-radius: 14px; padding: 18px 8px 15px;
+      text-align: center; font-family: inherit; cursor: pointer; transition: all .2s;
+    }
+    .punch-btn .ic { font-size: 34px; display: block; }
+    .punch-btn .nm { font-size: 15px; font-weight: 700; color: #5a3a1a; margin-top: 6px; }
+    .punch-btn .tm { font-size: 12.5px; color: #9a8259; margin-top: 5px; min-height: 17px; }
+    .punch-btn.done { border-color: #cde4cd; background: #f3faf3; }
+    .punch-btn.done .nm { color: #2e7d32; }
+    .punch-btn:active:not(.done) { border-color: #8b0000; }
+    .punch-gps { margin-top: 13px; font-size: 12.5px; color: #9a8259; text-align: center; line-height: 1.6; min-height: 18px; }
+    .punch-gps.loc { color: #2e7d32; }
+    .punch-gps.err { color: #c62828; }
+
+    .status-chip { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11.5px; }
+    .chip-normal { background: #e8f5e9; color: #2e7d32; }
+    .chip-late { background: #fff3e0; color: #ef6c00; }
+    .chip-early { background: #fce4ec; color: #c2185b; }
+    .chip-pending { background: #f3eaff; color: #6a1b9a; }
+    .chip-confirmed { background: #e8f5e9; color: #2e7d32; }
+    .chip-rejected { background: #ffebee; color: #c62828; }
+
+    .rec-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee2cc; font-size: 13.5px; }
+    .rec-row:last-child { border-bottom: none; }
+    .rec-row .d { width: 88px; color: #5a3a1a; font-weight: 600; }
+    .rec-row .t { flex: 1; color: #666; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .empty { text-align: center; color: #b09a72; font-size: 13px; padding: 22px 0; }
+
+    /* 工资条 */
+    .month-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .month-bar input[type=month] {
+      flex: 1; padding: 10px 12px; border: 1.5px solid #e0d0b8; border-radius: 10px;
+      font-size: 15px; font-family: inherit; background: #fffdf7; color: #5a3a1a;
+    }
+    .wage-card .wh { display: flex; justify-content: space-between; align-items: center; }
+    .wage-card .wh .wm { font-size: 15px; font-weight: 700; color: #8b0000; }
+    .wage-card .wh .net { font-size: 20px; font-weight: 800; color: #c62828; }
+    .wage-card .wh .net small { font-size: 11px; color: #9a8259; font-weight: 400; margin-right: 3px; }
+    .wage-card .wsub { font-size: 12px; color: #9a8259; margin-top: 4px; }
+    .wage-detail { margin-top: 12px; border-top: 1px dashed #e6d8bf; padding-top: 10px; font-size: 13px; }
+    .dl-row { display: flex; justify-content: space-between; padding: 4.5px 0; color: #555; }
+    .dl-row.total { border-top: 1px solid #eee2cc; margin-top: 5px; padding-top: 8px; font-weight: 700; color: #5a3a1a; }
+    .dl-row.netpay { color: #c62828; font-size: 14.5px; }
+    .wage-actions { margin-top: 12px; border-top: 1px dashed #e6d8bf; padding-top: 12px; }
+    .wa-block { margin-bottom: 11px; }
+    .wa-block:last-child { margin-bottom: 0; }
+    .wa-head { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5a3a1a; margin-bottom: 7px; }
+    .wa-btns { display: flex; gap: 9px; }
+    .wa-btns button {
+      flex: 1; padding: 10px 6px; border-radius: 9px; border: 1.5px solid #8b0000; font-size: 13.5px;
+      font-family: inherit; cursor: pointer; background: #fff; color: #8b0000; font-weight: 600;
+    }
+    .wa-btns button.primary { background: #8b0000; color: #fff; }
+    .wa-btns button.gray { border-color: #c9b898; color: #8a6d3b; }
+    .wa-btns button:disabled { opacity: .55; cursor: not-allowed; }
+    .wa-remark { width: 100%; margin-top: 7px; min-height: 54px; border: 1.5px solid #e0d0b8; border-radius: 9px;
+      padding: 9px; font-size: 13px; font-family: inherit; background: #fffdf7; resize: vertical; }
+
+    /* 我的 */
+    .info-row { display: flex; padding: 11px 0; border-bottom: 1px dashed #eee2cc; font-size: 14px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .k { width: 92px; color: #9a8259; flex-shrink: 0; }
+    .info-row .v { flex: 1; color: #3a2a10; word-break: break-all; }
+    .btn-logout {
+      width: 100%; padding: 12px; border: 1.5px solid #c62828; color: #c62828; background: #fff;
+      border-radius: 10px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer;
+    }
+
+    /* 签名弹窗 */
+    .mask {
+      position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100;
+      display: flex; align-items: flex-end; justify-content: center;
+    }
+    .sheet {
+      background: #fff; width: 100%; max-width: 520px; border-radius: 18px 18px 0 0; padding: 18px 18px 24px;
+    }
+    .sheet h4 { font-size: 16px; color: #5a3a1a; margin-bottom: 4px; }
+    .sheet .sp { font-size: 12.5px; color: #9a8259; margin-bottom: 12px; }
+    .sign-wrap { border: 1.5px dashed #c9b898; border-radius: 12px; background: #fffdf7; position: relative; touch-action: none; }
+    #signCanvas { display: block; width: 100%; height: 170px; border-radius: 12px; }
+    .sign-tip { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: #c9b898; font-size: 14px; pointer-events: none; }
+    .sheet-btns { display: flex; gap: 10px; margin-top: 14px; }
+    .sheet-btns button {
+      flex: 1; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer;
+      border: 1.5px solid #c9b898; background: #fff; color: #8a6d3b;
+    }
+    .sheet-btns button.primary { background: #8b0000; border-color: #8b0000; color: #fff; }
+    .sheet-btns button:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* toast */
+    .toast {
+      position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 200;
+      padding: 11px 22px; border-radius: 9px; font-size: 14px; color: #fff; max-width: 88%;
+      text-align: center; display: none; box-shadow: 0 4px 16px rgba(0,0,0,.2);
+    }
+    .toast.show { display: block; }
+    .toast.ok { background: #2e7d32; }
+    .toast.err { background: #c62828; }
+    .loading { text-align: center; color: #b09a72; font-size: 13px; padding: 20px 0; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ 登录视图 ============ -->
+  <div id="loginView">
+    <div class="login-logo">
+      <div class="mark">🎭</div>
+      <h1>秦安县秦剧团</h1>
+      <p>员工自助服务平台</p>
+    </div>
+    <div class="login-card">
+      <h2>员工登录</h2>
+      <div class="field">
+        <label>身份证号</label>
+        <input type="text" id="loginIdCard" maxlength="18" placeholder="请输入18位身份证号" autocomplete="username" />
+      </div>
+      <div class="field">
+        <label>手机号后 6 位</label>
+        <input type="tel" id="loginSuffix" maxlength="6" inputmode="numeric" placeholder="登记手机号的后6位" autocomplete="off" />
+        <div class="hint">仅限审核通过的在职员工登录，登录信息仅用于本人查询与打卡</div>
+      </div>
+      <button class="btn-primary" id="loginBtn">登 录</button>
+    </div>
+    <div class="login-foot">
+      还未入职？<a href="self-register.html">扫码 / 点此填写入职登记</a><br>
+      登录即表示同意剧团信息管理规定，请妥善保管个人信息
+    </div>
+  </div>
+
+  <!-- ============ 主应用视图 ============ -->
+  <div id="mainView" class="hidden">
+    <div class="topbar">
+      <div class="t1" id="topName">—</div>
+      <div class="t2" id="topSub">—</div>
+    </div>
+
+    <!-- 打卡页 -->
+    <div class="pages" id="pagePunch">
+      <div class="card">
+        <div class="punch-date" id="punchDate">—</div>
+        <div class="punch-grid">
+          <button class="punch-btn" id="btnPunchIn">
+            <span class="ic">🌅</span><span class="nm">上班打卡</span><span class="tm" id="tmIn">未打卡</span>
+          </button>
+          <button class="punch-btn" id="btnPunchOut">
+            <span class="ic">🌇</span><span class="nm">下班打卡</span><span class="tm" id="tmOut">未打卡</span>
+          </button>
+        </div>
+        <div class="punch-gps" id="gpsTip">打卡需获取 GPS 定位，请在浏览器提示中点击"允许"</div>
+      </div>
+
+      <div class="card">
+        <h3>本月打卡记录</h3>
+        <div id="punchList"><div class="loading">加载中...</div></div>
+      </div>
+    </div>
+
+    <!-- 工资页 -->
+    <div class="pages hidden" id="pageWage">
+      <div class="month-bar">
+        <input type="month" id="wageMonth" />
+      </div>
+      <div id="wageList"><div class="loading">加载中...</div></div>
+    </div>
+
+    <!-- 我的页 -->
+    <div class="pages hidden" id="pageMe">
+      <div class="card">
+        <h3>个人信息</h3>
+        <div id="profileBox"><div class="loading">加载中...</div></div>
+      </div>
+      <div class="card">
+        <button class="btn-logout" id="logoutBtn">退出登录</button>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <button data-page="Punch" class="active"><span class="ic">📍</span>打卡</button>
+      <button data-page="Wage"><span class="ic">💰</span>工资</button>
+      <button data-page="Me"><span class="ic">👤</span>我的</button>
+    </div>
+  </div>
+
+  <!-- ============ 签名弹窗 ============ -->
+  <div class="mask hidden" id="signMask">
+    <div class="sheet">
+      <h4>工资发放确认签名</h4>
+      <div class="sp">本人确认已收到上述工资，请在下方框内手写签名：</div>
+      <div class="sign-wrap">
+        <canvas id="signCanvas"></canvas>
+        <div class="sign-tip" id="signTip">请在此处签名</div>
+      </div>
+      <div class="sheet-btns">
+        <button id="signClear">清除重签</button>
+        <button class="primary" id="signOk" disabled>确认签名并提交</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var TOKEN_KEY = 'qaxqjt_performer_token';
+  var USER_KEY = 'qaxqjt_performer_user';
+  var state = { token: null, user: null, signatureTarget: null, hasSign: false };
+
+  // ---------- 工具 ----------
+  function toast(msg, type) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (type === 'err' ? 'err' : 'ok');
+    clearTimeout(t._h);
+    t._h = setTimeout(function () { t.className = 'toast'; }, 3200);
+  }
+  function cnMonth(d) {
+    var x = new Date(d.getTime() + 8 * 3600 * 1000);
+    return x.toISOString().slice(0, 7);
+  }
+  function cnDate(d) {
+    var x = new Date(d.getTime() + 8 * 3600 * 1000);
+    return x.toISOString().slice(0, 10);
+  }
+  function fmtTime(iso) {
+    if (!iso) return '—';
+    var x = new Date(new Date(iso).getTime() + 8 * 3600 * 1000);
+    function p(n) { return (n < 10 ? '0' : '') + n; }
+    return x.getUTCMonth() + 1 + '月' + x.getUTCDate() + '日 ' + p(x.getUTCHours()) + ':' + p(x.getUTCMinutes());
+  }
+  function fmtHM(iso) {
+    var x = new Date(new Date(iso).getTime() + 8 * 3600 * 1000);
+    function p(n) { return (n < 10 ? '0' : '') + n; }
+    return p(x.getUTCHours()) + ':' + p(x.getUTCMinutes());
+  }
+  function money(n) {
+    var v = Number(n) || 0;
+    return v.toFixed(2).replace(/\.00$/, '');
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function api(method, path, body) {
+    var url = window.QAXQJT_API_CONFIG.resolveUrl(path);
+    var opt = { method: method, headers: { Accept: 'application/json' } };
+    if (state.token) opt.headers.Authorization = 'Bearer ' + state.token;
+    if (body !== undefined) {
+      opt.headers['Content-Type'] = 'application/json';
+      opt.body = JSON.stringify(body);
+    }
+    return fetch(url, opt).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (data) {
+        if (res.status === 401) {
+          backToLogin();
+          throw new Error((data && data.error && data.error.message) || '登录已过期，请重新登录');
+        }
+        if (!res.ok || !data || data.ok === false) {
+          throw new Error((data && data.error && data.error.message) || ('请求失败(' + res.status + ')'));
+        }
+        return data.data;
+      });
+    });
+  }
+
+  // ---------- 登录 / 退出 ----------
+  function backToLogin() {
+    state.token = null; state.user = null;
+    try { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); } catch (e) {}
+    $('mainView').classList.add('hidden');
+    $('loginView').classList.remove('hidden');
+  }
+
+  function doLogin() {
+    var idc = $('loginIdCard').value.trim().toUpperCase();
+    var suf = $('loginSuffix').value.trim();
+    if (!/^\d{17}[\dX]$/.test(idc)) { toast('请输入正确的18位身份证号', 'err'); return; }
+    if (!/^\d{6}$/.test(suf)) { toast('请输入手机号后6位', 'err'); return; }
+    var btn = $('loginBtn');
+    btn.disabled = true; btn.textContent = '登录中...';
+    api('POST', '/v1/self-service/login', { idCardNo: idc, phoneSuffix: suf })
+      .then(function (d) {
+        state.token = d.accessToken;
+        state.user = d.user || {};
+        try {
+          localStorage.setItem(TOKEN_KEY, d.accessToken);
+          localStorage.setItem(USER_KEY, JSON.stringify(state.user));
+        } catch (e) {}
+        enterApp();
+      })
+      .catch(function (e) { toast(e.message || '登录失败', 'err'); })
+      .finally(function () { btn.disabled = false; btn.textContent = '登 录'; });
+  }
+
+  function enterApp() {
+    $('loginView').classList.add('hidden');
+    $('mainView').classList.remove('hidden');
+    var u = state.user || {};
+    $('topName').textContent = u.name ? '你好，' + u.name : '员工自助';
+    $('topSub').textContent = '工号：' + (u.staffNo || '待分配') + (u.primaryRole ? ' · ' + u.primaryRole : '');
+    $('punchDate').textContent = cnDate(new Date()) + ' ' + ['周日','周一','周二','周三','周四','周五','周六'][new Date(new Date().getTime() + 8*3600e3).getUTCDay()];
+    switchPage('Punch');
+    loadToday();
+    loadPunchList();
+  }
+
+  $('loginBtn').addEventListener('click', doLogin);
+  $('loginSuffix').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+  $('loginIdCard').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('loginSuffix').focus(); });
+  $('logoutBtn').addEventListener('click', function () {
+    backToLogin();
+    toast('已退出登录');
+  });
+
+  // ---------- Tab 切换 ----------
+  var pageMap = { Punch: 'pagePunch', Wage: 'pageWage', Me: 'pageMe' };
+  function switchPage(name) {
+    Object.keys(pageMap).forEach(function (k) { $(pageMap[k]).classList.toggle('hidden', k !== name); });
+    var btns = document.querySelectorAll('.tabbar button');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].classList.toggle('active', btns[i].getAttribute('data-page') === name);
+    }
+    if (name === 'Wage') loadWage();
+    if (name === 'Me') loadProfile();
+  }
+  document.querySelectorAll('.tabbar button').forEach(function (b) {
+    b.addEventListener('click', function () { switchPage(b.getAttribute('data-page')); });
+  });
+
+  // ---------- 打卡 ----------
+  function gpsTip(msg, cls) {
+    var el = $('gpsTip');
+    el.textContent = msg;
+    el.className = 'punch-gps' + (cls ? ' ' + cls : '');
+  }
+
+  function getPosition() {
+    return new Promise(function (resolve, reject) {
+      if (!navigator.geolocation) { reject(new Error('当前浏览器不支持定位，请使用微信或手机浏览器打开')); return; }
+      navigator.geolocation.getCurrentPosition(
+        function (pos) { resolve(pos.coords); },
+        function (err) {
+          var msg = '定位失败';
+          if (err.code === 1) msg = '您已拒绝定位授权，请在浏览器设置中允许位置权限后重试';
+          else if (err.code === 2) msg = '位置不可用，请检查手机 GPS 是否开启';
+          else if (err.code === 3) msg = '定位超时，请到室外或靠近窗户处重试';
+          reject(new Error(msg));
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+      );
+    });
+  }
+
+  function doPunch(type) {
+    var btn = type === 'in' ? $('btnPunchIn') : $('btnPunchOut');
+    if (btn.classList.contains('done')) { toast('今天' + (type === 'in' ? '上班' : '下班') + '卡已打过', 'err'); return; }
+    gpsTip('正在获取 GPS 定位...');
+    getPosition().then(function (coords) {
+      gpsTip('定位成功：' + coords.latitude.toFixed(5) + ', ' + coords.longitude.toFixed(5) +
+        '（精度约 ' + Math.round(coords.accuracy) + ' 米），正在提交...', 'loc');
+      return api('POST', '/v1/self-service/punch', {
+        punchType: type,
+        gpsLatitude: coords.latitude,
+        gpsLongitude: coords.longitude
+      });
+    }).then(function (d) {
+      var stMap = { normal: '正常', late: '迟到', early: '早退' };
+      toast((type === 'in' ? '上班' : '下班') + '打卡成功' + (d.status !== 'normal' ? '（' + stMap[d.status] + '）' : ''));
+      gpsTip('最近定位：' + (d.punchDate || '') + ' ' + fmtHM(d.punchTime) + '，打卡已记录 GPS 位置', 'loc');
+      loadToday();
+      loadPunchList();
+    }).catch(function (e) {
+      gpsTip(e.message || '定位失败', 'err');
+      toast(e.message || '打卡失败', 'err');
+    });
+  }
+  $('btnPunchIn').addEventListener('click', function () { doPunch('in'); });
+  $('btnPunchOut').addEventListener('click', function () { doPunch('out'); });
+
+  function loadToday() {
+    api('GET', '/v1/self-service/punch/today').then(function (d) {
+      var inP = d.punches.filter(function (p) { return p.type === 'in'; })[0];
+      var outP = d.punches.filter(function (p) { return p.type === 'out'; })[0];
+      renderPunchBtn('btnPunchIn', 'tmIn', inP);
+      renderPunchBtn('btnPunchOut', 'tmOut', outP);
+      if (d.punches.length && !$('gpsTip').textContent) {
+        var last = d.punches[d.punches.length - 1];
+        gpsTip('今日已打卡 ' + d.punches.length + ' 次，最近：' + fmtHM(last.time) + (last.gpsAddress ? ' ' + last.gpsAddress : ''), 'loc');
+      }
+    }).catch(function () {});
+  }
+  function renderPunchBtn(btnId, tmId, p) {
+    var btn = $(btnId);
+    var stMap = { normal: '', late: '（迟到）', early: '（早退）' };
+    if (p) {
+      btn.classList.add('done');
+      $(tmId).textContent = fmtHM(p.time) + (stMap[p.status] || '');
+    } else {
+      btn.classList.remove('done');
+      $(tmId).textContent = '未打卡';
+    }
+  }
+
+  function loadPunchList() {
+    var month = cnMonth(new Date());
+    api('GET', '/v1/self-service/punch/list?month=' + month + '&pageSize=60').then(function (list, meta) {
+      if (!list.length) { $('punchList').innerHTML = '<div class="empty">本月暂无打卡记录</div>'; return; }
+      var stMap = { normal: '正常', late: '迟到', early: '早退', absent: '缺勤' };
+      var inMap = {}, outMap = {}, set = {};
+      list.forEach(function (r) {
+        if (r.punchType === 'in') inMap[r.punchDate] = r; else outMap[r.punchDate] = r;
+        set[r.punchDate] = 1;
+      });
+      var dates = Object.keys(set).sort().reverse();
+      var html = '';
+      dates.forEach(function (d) {
+        var i = inMap[d], o = outMap[d];
+        var abn = (i && i.status !== 'normal') || (o && o.status !== 'normal');
+        html += '<div class="rec-row"><div class="d">' + d.slice(5).replace('-', '/') + '</div>';
+        html += '<div class="t">上班 ' + (i ? fmtHM(i.punchTime) : '—') + '　下班 ' + (o ? fmtHM(o.punchTime) : '—') + '</div>';
+        html += '<span class="status-chip ' + (abn ? 'chip-late' : 'chip-normal') + '">' +
+          (abn ? ((i && i.status === 'late') ? '迟到' : '早退') : '正常') + '</span></div>';
+      });
+      $('punchList').innerHTML = html;
+    }).catch(function () { $('punchList').innerHTML = '<div class="empty">记录加载失败</div>'; });
+  }
+
+  // ---------- 工资条 ----------
+  var wageLoadedMonth = '';
+  function loadWage() {
+    var m = $('wageMonth').value;
+    if (!m) { $('wageMonth').value = cnMonth(new Date()); m = $('wageMonth').value; }
+    if (m === wageLoadedMonth) return;
+    wageLoadedMonth = m;
+    $('wageList').innerHTML = '<div class="loading">加载中...</div>';
+    api('GET', '/v1/self-service/wage/list?month=' + m + '&pageSize=50').then(function (list) {
+      if (!list.length) { $('wageList').innerHTML = '<div class="card"><div class="empty">' + m + ' 暂无已发布的工资条</div></div>'; return; }
+      $('wageList').innerHTML = list.map(renderWageCard).join('');
+      bindWageEvents();
+    }).catch(function (e) {
+      $('wageList').innerHTML = '<div class="card"><div class="empty">' + esc(e.message) + '</div></div>';
+    });
+  }
+  $('wageMonth').addEventListener('change', function () { wageLoadedMonth = ''; loadWage(); });
+
+  function stBadge(st) {
+    var map = { pending: ['chip-pending', '待确认'], confirmed: ['chip-confirmed', '已确认'], rejected: ['chip-rejected', '有异议'] };
+    var x = map[st] || map.pending;
+    return '<span class="status-chip ' + x[0] + '">' + x[1] + '</span>';
+  }
+  function dlRow(k, v, cls) {
+    return '<div class="dl-row' + (cls ? ' ' + cls : '') + '"><span>' + k + '</span><span>' + v + '</span></div>';
+  }
+
+  function renderWageCard(it) {
+    var rows = [
+      ['出勤天数', it.attendanceDays != null ? it.attendanceDays + ' 天' : '—'],
+      ['基本工资', money(it.baseWage)],
+      ['主演补贴', money(it.chiefRoleTotal)],
+      ['配角补贴', money(it.supportingRoleTotal)],
+      ['夜场补助', money(it.nightShowBonus)],
+      ['节假日补助', money(it.holidayBonus)],
+      ['交通补贴', money(it.transportAllowance)],
+      ['餐费补贴', money(it.mealAllowance)],
+      ['全勤奖', money(it.fullAttendanceBonus)],
+      ['演出奖', money(it.performanceBonus)],
+      ['其他补贴', money(it.otherAllowance)],
+      dlRow('应发合计', money(it.grossPay), 'total'),
+      ['社保扣款', money(it.socialInsuranceDeduct)],
+      ['公积金扣款', money(it.housingFundDeduct)],
+      ['个税扣款', money(it.taxDeduct)],
+      ['其他扣款', money(it.otherDeduction)],
+      dlRow('扣款合计', money(it.totalDeduction), 'total'),
+      dlRow('实发工资', '¥ ' + money(it.netPay), 'total netpay')
+    ];
+    var detailHtml = rows.map(function (r) {
+      return r[0] === '<' ? r : dlRow(r[0], r[1]);
+    }).join('');
+
+    var receiptDone = it.receiptStatus === 'confirmed';
+    var checkDone = it.checkStatus === 'confirmed';
+    var rejectHtml = function (type) {
+      return '<textarea class="wa-remark" data-id="' + it.id + '" data-type="' + type +
+        '" maxlength="300" placeholder="如有异议，请简要说明（选填后点对应按钮）"></textarea>';
+    };
+
+    return '<div class="card wage-card" data-id="' + it.id + '">' +
+      '<div class="wh"><div><div class="wm">' + esc(it.wageMonth || m0(it)) + ' 工资条</div>' +
+      '<div class="wsub">' + esc(it.batchNo || '') + (it.rankGrade ? ' · ' + esc(it.rankGrade) : '') + '</div></div>' +
+      '<div class="net"><small>实发</small>¥' + money(it.netPay) + '</div></div>' +
+      '<div class="wage-detail" id="detail_' + it.id + '" style="display:none;">' + detailHtml +
+      (it.remark ? '<div class="dl-row"><span>备注</span><span>' + esc(it.remark) + '</span></div>' : '') + '</div>' +
+      '<div style="margin-top:10px;"><span data-toggle="' + it.id + '" style="cursor:pointer;color:#8b0000;font-size:13px;">查看工资明细 ▾</span></div>' +
+      '<div class="wage-actions">' +
+        '<div class="wa-block"><div class="wa-head">① 兑账核对（核对工资明细是否正确）' + stBadge(it.checkStatus) + '</div>' +
+          '<div class="wa-btns">' +
+            '<button class="primary" data-act="check-ok" data-id="' + it.id + '" ' + (checkDone ? 'disabled' : '') + '>核对无误</button>' +
+            '<button class="gray" data-act="check-no" data-id="' + it.id + '" ' + (it.checkStatus === 'rejected' ? 'disabled' : '') + '>有异议</button>' +
+          '</div>' + rejectHtml('check') +
+        '</div>' +
+        '<div class="wa-block"><div class="wa-head">② 工资发放确认（确认已实际收到工资，需签名）' + stBadge(it.receiptStatus) + '</div>' +
+          '<div class="wa-btns">' +
+            '<button class="primary" data-act="receipt-sign" data-id="' + it.id + '" ' + (receiptDone ? 'disabled' : '') + '签名确认已收到</button>' +
+            '<button class="gray" data-act="receipt-no" data-id="' + it.id + '" ' + (it.receiptStatus === 'rejected' ? 'disabled' : '') + '>未收到/有异议</button>' +
+          '</div>' + rejectHtml('receipt') +
+        '</div>' +
+      '</div></div>';
+  }
+  function m0(it) { return (it.createdAt || '').slice(0, 7); }
+
+  function bindWageEvents() {
+    document.querySelectorAll('[data-toggle]').forEach(function (b) {
+      b.onclick = function () {
+        var box = $('detail_' + b.getAttribute('data-toggle'));
+        var open = box.style.display !== 'none';
+        box.style.display = open ? 'none' : 'block';
+        b.textContent = open ? '查看工资明细 ▾' : '收起明细 ▴';
+      };
+    });
+    document.querySelectorAll('[data-act]').forEach(function (b) {
+      b.onclick = function () {
+        var id = b.getAttribute('data-id');
+        var act = b.getAttribute('data-act');
+        var card = b.closest('.wage-card');
+        var remarkEl = card.querySelector('textarea[data-type="' + act.split('-')[0] + '"]');
+        var remark = remarkEl ? remarkEl.value.trim() : '';
+        if (act === 'check-ok') {
+          confirmWage(id, 'check', 'confirmed', '', '', b);
+        } else if (act === 'check-no') {
+          confirmWage(id, 'check', 'rejected', '', remark || '员工对工资明细有异议', b);
+        } else if (act === 'receipt-no') {
+          confirmWage(id, 'receipt', 'rejected', '', remark || '员工反馈未收到工资或金额有异议', b);
+        } else if (act === 'receipt-sign') {
+          openSignPad(id);
+        }
+      };
+    });
+  }
+
+  function confirmWage(id, type, status, signature, remark, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '提交中...'; }
+    api('POST', '/v1/self-service/wage/confirm', {
+      wageItemId: id, confirmType: type, confirmStatus: status,
+      signature: signature || '', remark: remark || ''
+    }).then(function () {
+      toast(status === 'confirmed' ? (type === 'check' ? '兑账核对已确认' : '工资发放确认成功') : '异议已提交，请等待财务联系');
+      wageLoadedMonth = '';
+      loadWage();
+    }).catch(function (e) {
+      toast(e.message || '提交失败', 'err');
+      if (btn) { btn.disabled = false; btn.textContent = btn.getAttribute('data-act') === 'check-ok' ? '核对无误' : '提交'; }
+    });
+  }
+
+  // ---------- 签名板 ----------
+  var canvas, ctx2d, drawing = false, lastPt = null;
+
+  function openSignPad(wageId) {
+    state.signatureTarget = wageId;
+    state.hasSign = false;
+    $('signMask').classList.remove('hidden');
+    $('signOk').disabled = true;
+    $('signTip').style.display = 'flex';
+    setTimeout(initCanvas, 30);
+  }
+  function initCanvas() {
+    canvas = $('signCanvas');
+    var wrap = canvas.parentElement;
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = wrap.clientWidth * dpr;
+    canvas.height = 170 * dpr;
+    ctx2d = canvas.getContext('2d');
+    ctx2d.scale(dpr, dpr);
+    ctx2d.lineWidth = 2.6;
+    ctx2d.lineCap = 'round';
+    ctx2d.lineJoin = 'round';
+    ctx2d.strokeStyle = '#1a1a1a';
+    ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.onpointerdown = function (e) {
+      drawing = true;
+      lastPt = pt(e);
+      ctx2d.beginPath();
+      ctx2d.moveTo(lastPt.x, lastPt.y);
+      canvas.setPointerCapture(e.pointerId);
+      $('signTip').style.display = 'none';
+    };
+    canvas.onpointermove = function (e) {
+      if (!drawing) return;
+      var p = pt(e);
+      ctx2d.lineTo(p.x, p.y);
+      ctx2d.stroke();
+      lastPt = p;
+      state.hasSign = true;
+      $('signOk').disabled = false;
+    };
+    var end = function () { drawing = false; };
+    canvas.onpointerup = end;
+    canvas.onpointercancel = end;
+    canvas.onpointerleave = end;
+  }
+  function pt(e) {
+    var r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  $('signClear').onclick = function () {
+    if (ctx2d) ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+    state.hasSign = false;
+    $('signOk').disabled = true;
+    $('signTip').style.display = 'flex';
+  };
+  $('signOk').onclick = function () {
+    if (!state.hasSign) { toast('请先签名', 'err'); return; }
+    var dataUrl = canvas.toDataURL('image/png');
+    var id = state.signatureTarget;
+    var btn = this;
+    btn.disabled = true; btn.textContent = '提交中...';
+    confirmWageDirect(id, dataUrl, btn);
+  };
+  function confirmWageDirect(id, dataUrl, btn) {
+    api('POST', '/v1/self-service/wage/confirm', {
+      wageItemId: id, confirmType: 'receipt', confirmStatus: 'confirmed', signature: dataUrl
+    }).then(function () {
+      $('signMask').classList.add('hidden');
+      toast('工资发放已签名确认');
+      wageLoadedMonth = '';
+      loadWage();
+    }).catch(function (e) {
+      toast(e.message || '提交失败', 'err');
+      btn.disabled = false; btn.textContent = '确认签名并提交';
+    });
+  }
+
+  // ---------- 个人信息 ----------
+  function loadProfile() {
+    api('GET', '/v1/self-service/profile').then(function (p) {
+      function row(k, v) {
+        return '<div class="info-row"><div class="k">' + k + '</div><div class="v">' + esc(v || '—') + '</div></div>';
+      }
+      var typeMap = { 单趟: '单趟路费', 双趟: '双趟路费' };
+      $('profileBox').innerHTML =
+        row('姓名', p.name) +
+        row('工号', p.staffNo) +
+        row('性别', p.gender) +
+        row('身份证号', p.idCardNo ? p.idCardNo.replace(/^(.{6}).+(.{4})$/, '$1********$2') : '—') +
+        row('手机号', p.phone) +
+        row('行当/岗位', p.primaryRole) +
+        row('档级', p.rankGrade) +
+        row('用工类型', p.employmentType) +
+        row('入职日期', p.hireDate) +
+        row('协议天工资', p.dailyRate != null ? '¥' + money(p.dailyRate) + ' /天' : '—') +
+        row('路费方式', typeMap[p.transportType] || p.transportType) +
+        row('开户银行', p.bankName) +
+        row('银行账号', p.bankAccount ? String(p.bankAccount).replace(/^(\d{4}).+(\d{4})$/, '$1********$2') : '—');
+    }).catch(function (e) {
+      $('profileBox').innerHTML = '<div class="empty">' + esc(e.message) + '</div>';
+    });
+  }
+
+  // ---------- 启动：自动登录 ----------
+  try {
+    state.token = localStorage.getItem(TOKEN_KEY);
+    var uStr = localStorage.getItem(USER_KEY);
+    if (uStr) state.user = JSON.parse(uStr);
+  } catch (e) {}
+  if (state.token) {
+    // 校验 token 仍有效
+    api('GET', '/v1/self-service/profile').then(function () { enterApp(); }).catch(function () { backToLogin(); });
+  }
+})();
+</script>
+</body>
+</html>
