@@ -8,7 +8,7 @@ const { success, pagedSuccess, parsePage } = require('../utils/response');
 const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 
-const _baseUrl = () => process.env.FRONTEND_BASE_URL || 'https://1.14.106.173';
+const _baseUrl = () => process.env.FRONTEND_BASE_URL || 'http://1.14.106.173';
 const _fmt = r => ({
   id: r.id,
   qrToken: r.qrToken,
