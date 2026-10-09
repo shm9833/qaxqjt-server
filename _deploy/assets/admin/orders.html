@@ -1130,7 +1130,7 @@
   <div class="modal csp-hide" id="orderDetailModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:760px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
     <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,var(--primary),#1e5ba8);color:#fff;position:sticky;top:0;">
       <h3 id="orderDetailTitle" style="margin:0;font-size:1.1rem;font-weight:600;">📋 订单详情</h3>
-      <button id="orderDetailClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+      <button id="orderDetailClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1.2;">×</button>
     </div>
     <!-- v20261004 P2-2：详情内容全部由 viewDetail() 用 GET /v1/orders/:id 真实数据渲染（items/payments/refunds/schedules/customer/appointment + contractUrl） -->
     <div id="orderDetailBody" style="padding:22px 26px;"><div style="text-align:center;padding:30px;color:#94a3b8;">正在加载订单详情…</div></div>
@@ -1144,7 +1144,7 @@
   <div class="modal csp-hide" id="orderEditModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:92%;max-width:720px;z-index:9999;padding:0;overflow:hidden;max-height:90vh;overflow-y:auto;">
     <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#1d4ed8,#1e5ba8);color:#fff;position:sticky;top:0;">
       <h3 style="margin:0;font-size:1.1rem;font-weight:600;">✏️ 编辑订单</h3>
-      <button id="orderEditClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+      <button id="orderEditClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1.2;">×</button>
     </div>
     <form id="orderEditForm" style="padding:24px 28px;display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;">
       <input type="hidden" id="editOrderId">
@@ -1216,7 +1216,7 @@
         <h3 style="margin:0;font-size:1.1rem;font-weight:600;">🎬 订单派工·演职人员分配</h3>
         <span id="dispatchOrderBadge" class="badge" style="background:#fff3cd;color:#856404;font-weight:600;">未绑定订单</span>
       </div>
-      <button id="dispatchClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+      <button id="dispatchClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1.2;">×</button>
     </div>
     <div style="padding:22px 28px;">
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px 20px;margin-bottom:18px;padding:14px 16px;border:1.5px dashed #ea580c;border-radius:12px;background:linear-gradient(135deg,#fff7ed,#ffedd5);">
@@ -1267,7 +1267,7 @@
   <div class="modal csp-hide" id="paymentModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:520px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
     <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#b45309,#d97706);color:#fff;">
       <h3 style="margin:0;font-size:1.1rem;font-weight:600;">💰 登记收款</h3>
-      <button id="paymentClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+      <button id="paymentClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1.2;">×</button>
     </div>
     <div style="padding:24px 28px;">
       <p id="payInfo" style="margin:0 0 16px 0;font-size:.85rem;color:var(--text-light);background:#f8fafc;border-radius:8px;padding:10px 12px;line-height:1.7;"></p>
@@ -1307,7 +1307,7 @@
   <div class="modal csp-hide" id="custEditModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:92%;max-width:560px;z-index:9999;padding:0;overflow:hidden;max-height:90vh;overflow-y:auto;">
     <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff;">
       <h3 id="custEditTitle" style="margin:0;font-size:1.1rem;font-weight:600;">➕ 新增客户</h3>
-      <button id="custEditClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+      <button id="custEditClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1.2;">×</button>
     </div>
     <form id="custEditForm" style="padding:22px 26px;display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;">
       <input type="hidden" id="custEditId">
@@ -1356,7 +1356,7 @@
   <div class="modal csp-hide" id="custDetailModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:720px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
     <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff;">
       <h3 id="custDetailTitle" style="margin:0;font-size:1.1rem;font-weight:600;">👤 客户详情</h3>
-      <button id="custDetailClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1;">×</button>
+      <button id="custDetailClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1.2;">×</button>
     </div>
     <div id="custDetailBody" style="padding:22px 26px;"><div style="text-align:center;padding:30px;color:#94a3b8;">正在加载客户详情…</div></div>
     <div style="padding:16px 28px;border-top:1.5px solid var(--border-light);display:flex;justify-content:flex-end;gap:12px;background:var(--bg-light);">
