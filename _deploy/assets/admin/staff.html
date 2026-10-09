@@ -390,7 +390,7 @@
 .admin-table-actions .btn, .action-btn-group .btn {
   padding: 3px 5px !important;
   font-size: 0.78rem !important;
-  line-height: 1 !important;
+  line-height: 1.2 !important;
   width: 30px !important;
   height: 26px !important;
   display: inline-flex !important;
@@ -496,6 +496,15 @@
           <a href="staff.html" data-role-level="800" class="admin-menu-item active admin-menu-item">
             <span class="menu-icon">👨‍🎤</span>
             <span>演职人员管理</span>
+          </a>
+          <a href="qr-manage.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🏷️</span>
+            <span>入职二维码</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="self-portal.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📱</span>
+            <span>员工自助门户</span>
           </a>
           <a href="attendance.html" data-role-level="700" class="admin-menu-item">
             <span class="menu-icon">💵</span>
@@ -1604,7 +1613,10 @@
         <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">行当/职务</label><select id="inp_stf_role" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option value="">— 请选择 —</option><optgroup label="生行"><option>文须生</option><option>武须生</option><option>小生</option></optgroup><optgroup label="丑行"><option>丑角</option></optgroup><optgroup label="净行"><option>大花脸</option><option>二花脸</option></optgroup><optgroup label="旦行"><option>正旦</option><option>小旦</option><option>彩旦</option><option>二架旦</option></optgroup><optgroup label="二架"><option>门官</option><option>家院</option></optgroup><optgroup label="角子"><option>龙套</option><option>校尉</option><option>刀斧手</option><option>丫鬟</option><option>彩女</option><option>长随官</option></optgroup><optgroup label="后勤"><option>帽箱</option><option>电工</option><option>前场</option><option>衣箱</option><option>剧务</option></optgroup><optgroup label="武场（打击乐）"><option>司鼓</option><option>梆子</option><option>大锣</option><option>铙钹</option><option>武二手</option><option>打击乐</option></optgroup><optgroup label="文场（管弦）"><option>板胡</option><option>二胡</option><option>扬琴</option><option>琵琶</option><option>三弦</option><option>笛子</option><option>唢呐</option><option>文二手</option></optgroup><option value="其他">其他</option></select></div>
         <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">入团年份</label><input id="inp_stf_year" type="number" min="1950" max="2100" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
       </div>
-      <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">联系电话</label><input id="inp_stf_phone" type="text" placeholder="138xxxxxxx" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">联系电话</label><input id="inp_stf_phone" type="text" placeholder="138xxxxxxx" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">身份证号</label><input id="inp_stf_idcard" type="text" maxlength="18" placeholder="18位身份证号" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">职级（工资标准档）</label><select id="inp_stf_rank" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option value="">未定级</option><option value="A+">A+（领衔/主演）</option><option value="A">A（主要演员）</option><option value="B">B（一般演员）</option><option value="C">C（学员/辅助）</option></select></div>
         <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">协议天工资（元/天）</label><input id="inp_stf_rate" type="number" min="0" step="1" placeholder="如：200" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><small style="display:block;margin-top:3px;font-size:11px;color:#8a6d3b;">优先于职级标准参与工资核算</small></div>
