@@ -1811,6 +1811,8 @@ function __pLog(module,event,extra){
           if(!perfs.length) loadPerfs();
         }
         async function loadPerfs(){
+          var API = window.QAXQJT_API;
+          if(!API || typeof API.get !== 'function'){ var hint0=document.getElementById('bpLoadHint'); if(hint0) hint0.textContent='接口未就绪，请刷新重试'; return; }
           var hint = document.getElementById('bpLoadHint');
           if(hint) hint.textContent = '加载中…';
           try{
@@ -1899,6 +1901,8 @@ function __pLog(module,event,extra){
           var outStatus = (document.getElementById('bpOutStatus') || {}).value || 'normal';
           var remark = (document.getElementById('bpRemark') || {}).value || '';
           if(!date){ __T('请选择打卡日期', 'error'); return; }
+          var API = window.QAXQJT_API;
+          if(!API || typeof API.post !== 'function'){ __T('⚠️ 接口未就绪，请刷新重试','error'); return; }
           var btn = document.getElementById('bpSubmitBtn');
           if(btn) btn.disabled = true;
           try{
