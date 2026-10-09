@@ -1774,7 +1774,7 @@ function __pLog(module,event,extra){
 
   // 5 个内部 Tab 切换（原页面只有样式无切换逻辑）；切回工资条列表时按当前月份重拉
   try{
-    var __TAB_PANE = { wage:'tabWage', upload:'tabUpload', params:'tabParams', rules:'tabRules', history:'tabHistory' };
+    var __TAB_PANE = { wage:'tabWage', upload:'tabUpload', bpunch:'tabBpunch', params:'tabParams', rules:'tabRules', history:'tabHistory' };
     document.querySelectorAll('#attTabs .att-tab').forEach(function(tab){
       if(tab.__wageTabBound) return;
       tab.__wageTabBound = 1;
@@ -1787,8 +1787,142 @@ function __pLog(module,event,extra){
         });
         if(key==='wage'){ try{ window.__wageNs.load(); }catch(_){} }
         if(key==='upload'){ if(window.__attRecNs){ try{ window.__attRecNs.load(); }catch(_){} } }
+        if(key==='bpunch'){ try{ window.__bpunchNs.init(); }catch(_){} }
       }, true);
     });
+    // 批量补打卡模块
+    if(!window.__bpunchNs){
+      window.__bpunchNs = (function(){
+        var perfs = [], grouped = {};
+        function init(){
+          var d = document.getElementById('bpDate');
+          if(d && !d.value){
+            var now = new Date(Date.now() + 8 * 3600 * 1000);
+            d.value = now.toISOString().slice(0, 10);
+          }
+          var lb = document.getElementById('bpLoadBtn');
+          if(lb && !lb.__bpBound){ lb.__bpBound = 1; lb.addEventListener('click', loadPerfs, true); }
+          var sm = document.getElementById('bpSearch');
+          if(sm && !sm.__bpBound){ sm.__bpBound = 1; sm.addEventListener('input', function(){ renderList(); updateSelCount(); }, true); }
+          var sb = document.getElementById('bpSubmitBtn');
+          if(sb && !sb.__bpBound){ sb.__bpBound = 1; sb.addEventListener('click', submit, true); }
+          var el = document.getElementById('bpPerfList');
+          if(el && !el.__bpBound){ el.__bpBound = 1; el.addEventListener('change', updateSelCount, true); }
+          if(!perfs.length) loadPerfs();
+        }
+        async function loadPerfs(){
+          var hint = document.getElementById('bpLoadHint');
+          if(hint) hint.textContent = '加载中…';
+          try{
+            var rows = await API.get('/v1/performers?pageSize=500');
+            perfs = (rows.data || rows.rows || []);
+            groupByRole();
+            renderList();
+            if(hint) hint.textContent = '共 ' + perfs.length + ' 人';
+          }catch(e){
+            if(hint) hint.textContent = '加载失败: ' + (e.message || e);
+          }
+        }
+        function groupByRole(){
+          grouped = {};
+          perfs.forEach(function(p){
+            var role = p.employmentType || '未填';
+            if(!grouped[role]) grouped[role] = [];
+            grouped[role].push(p);
+          });
+        }
+        function renderList(){
+          var el = document.getElementById('bpPerfList');
+          if(!el) return;
+          var kw = (document.getElementById('bpSearch') || {}).value || '';
+          kw = kw.trim().toLowerCase();
+          var html = '';
+          var roles = Object.keys(grouped).sort();
+          for(var i = 0; i < roles.length; i++){
+            var role = roles[i];
+            var list = grouped[role].filter(function(p){
+              if(!kw) return true;
+              return (p.name || '').toLowerCase().indexOf(kw) >= 0 || (p.staffNo || '').toLowerCase().indexOf(kw) >= 0;
+            });
+            if(!list.length) continue;
+            html += '<div style="margin-bottom:12px;">';
+            html += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border-light);margin-bottom:4px;">';
+            html += '<input type="checkbox" class="bp-group-all" data-role="' + role + '" checked style="cursor:pointer;" />';
+            html += '<strong style="font-size:.85rem;color:var(--primary-dark);">' + role + '（' + list.length + ' 人）</strong>';
+            html += '</div>';
+            html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px;padding-left:20px;">';
+            for(var j = 0; j < list.length; j++){
+              var p = list[j];
+              html += '<label style="display:flex;align-items:center;gap:4px;font-size:.82rem;cursor:pointer;padding:2px 4px;border-radius:4px;" onmouseover="this.style.background=\'var(--bg-accent)\'" onmouseout="this.style.background=\'\'">';
+              html += '<input type="checkbox" class="bp-perf" data-pid="' + p.id + '" data-name="' + (p.name || '') + '" checked style="cursor:pointer;" />';
+              html += '<span>' + (p.name || '') + '（' + (p.staffNo || '') + '）</span>';
+              html += '</label>';
+            }
+            html += '</div></div>';
+          }
+          el.innerHTML = html || '<p style="color:var(--text-light);text-align:center;padding:20px;">无匹配人员</p>';
+          // group all toggle
+          el.querySelectorAll('.bp-group-all').forEach(function(cb){
+            cb.addEventListener('change', function(){
+              var role = cb.getAttribute('data-role');
+              var checked = cb.checked;
+              el.querySelectorAll('.bp-perf').forEach(function(c){
+                if(c.closest('[data-role="' + role + '"]') || true){
+                  // toggle all in same group
+                }
+              });
+              // simpler: toggle all .bp-perf that are in the same group div
+              var groupDiv = cb.parentElement.parentElement;
+              groupDiv.querySelectorAll('.bp-perf').forEach(function(c){ c.checked = checked; });
+              updateSelCount();
+            }, true);
+          });
+        }
+        function getSelected(){
+          var ids = [];
+          document.querySelectorAll('#bpPerfList .bp-perf:checked').forEach(function(cb){
+            ids.push(cb.getAttribute('data-pid'));
+          });
+          return ids;
+        }
+        function updateSelCount(){
+          var sc = document.getElementById('bpSelCount');
+          if(sc) sc.textContent = String(getSelected().length);
+        }
+        async function submit(){
+          var ids = getSelected();
+          if(!ids.length){ __T('请至少选择一名员工', 'error'); return; }
+          var date = (document.getElementById('bpDate') || {}).value || '';
+          var time = (document.getElementById('bpTime') || {}).value || '09:00';
+          var punchType = (document.getElementById('bpPunchType') || {}).value || 'both';
+          var inStatus = (document.getElementById('bpInStatus') || {}).value || 'normal';
+          var outStatus = (document.getElementById('bpOutStatus') || {}).value || 'normal';
+          var remark = (document.getElementById('bpRemark') || {}).value || '';
+          if(!date){ __T('请选择打卡日期', 'error'); return; }
+          var btn = document.getElementById('bpSubmitBtn');
+          if(btn) btn.disabled = true;
+          try{
+            var res = await API.post('/v1/attendance/batch-punch', {
+              performerIds: ids, punchDate: date, punchTime: time, punchType: punchType,
+              inStatus: inStatus, outStatus: outStatus,
+              remark: remark || undefined
+            });
+            var d = res.data || res;
+            var msg = '补打卡完成：新建 ' + (d.created || 0) + ' 条，跳过 ' + (d.skipped || 0) + ' 条';
+            if(d.failed && d.failed.length) msg += '，失败 ' + d.failed.length + ' 条';
+            __T(msg, d.failed && d.failed.length ? 'error' : 'success');
+            if(d.failed && d.failed.length){
+              console.log('batch-punch failed:', d.failed);
+            }
+          }catch(e){
+            __T('补打卡失败: ' + (e.message || e), 'error');
+          }finally{
+            if(btn) btn.disabled = false;
+          }
+        }
+        return { init: init };
+      })();
+    }
     // 月份切换 → 立即重拉该月工资
     var __fMonth = document.getElementById('filterMonth');
     if(__fMonth && !__fMonth.__wageMonthBound){

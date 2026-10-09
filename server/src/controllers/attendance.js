@@ -399,6 +399,106 @@ const importRecords = async ctx => {
   return success(ctx, { created, skipped, failed });
 };
 
+// ========== 管理员批量补打卡（POST /v1/attendance/batch-punch）==========
+// 一次为多个员工补录 in+out 两条打卡记录，无 GPS，状态按时间自动判定
+const BATCH_PUNCH_LIMIT = 200;
+const batchPunch = async ctx => {
+  const b = ctx.request.body || {};
+  const performerIds = Array.isArray(b.performerIds) ? b.performerIds : [];
+  if (!performerIds.length) throw new BusinessError('VALIDATION_ERROR', 'performerIds 必填（1-200 人）');
+  if (performerIds.length > BATCH_PUNCH_LIMIT) {
+    throw new BusinessError('VALIDATION_ERROR', `单次最多 ${BATCH_PUNCH_LIMIT} 人（当前 ${performerIds.length} 人）`);
+  }
+
+  const punchDate = String(b.punchDate || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(punchDate)) {
+    throw new BusinessError('VALIDATION_ERROR', 'punchDate 格式应为 YYYY-MM-DD');
+  }
+  const dayStart = new Date(punchDate + 'T00:00:00.000Z');
+  if (isNaN(dayStart.getTime())) {
+    throw new BusinessError('VALIDATION_ERROR', 'punchDate 日期不合法');
+  }
+
+  // punchTime 可选，默认当前时间，格式 HH:MM
+  let punchHour = 9, punchMin = 0;
+  const pt = String(b.punchTime || '').trim();
+  if (pt) {
+    const m = pt.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) throw new BusinessError('VALIDATION_ERROR', 'punchTime 格式应为 HH:MM');
+    punchHour = Number(m[1]); punchMin = Number(m[2]);
+    if (punchHour > 23 || punchMin > 59) throw new BusinessError('VALIDATION_ERROR', 'punchTime 时间不合法');
+  }
+
+  // 补卡类型：in=仅上班，out=仅下班，both=上班+下班（默认）
+  const punchType = String(b.punchType || 'both').trim();
+  if (!['in', 'out', 'both'].includes(punchType)) {
+    throw new BusinessError('VALIDATION_ERROR', 'punchType 枚举非法（in/out/both）');
+  }
+  const types = punchType === 'in' ? ['in'] : punchType === 'out' ? ['out'] : ['in', 'out'];
+
+  // 状态全部由管理员手动指定，默认 normal（不再按时间自动判定）
+  let inStatus = b.inStatus || 'normal';
+  let outStatus = b.outStatus || 'normal';
+  if (!['normal', 'late', 'early', 'absent'].includes(inStatus)) {
+    throw new BusinessError('VALIDATION_ERROR', 'inStatus 枚举非法（normal/late/early/absent）');
+  }
+  if (!['normal', 'late', 'early', 'absent'].includes(outStatus)) {
+    throw new BusinessError('VALIDATION_ERROR', 'outStatus 枚举非法（normal/late/early/absent）');
+  }
+
+  const remark = b.remark ? String(b.remark).trim().slice(0, 200) : null;
+  const uniqueIds = [...new Set(performerIds.map(String))];
+
+  // 验证员工是否存在
+  const perfs = await prisma.performersDbV1.findMany({
+    where: { id: { in: uniqueIds } },
+    select: { id: true, name: true, staffNo: true }
+  });
+  const perfMap = new Map(perfs.map(p => [p.id, p]));
+
+  // 查已有打卡记录（同人同日）
+  const existing = await prisma.employeePunchV1.findMany({
+    where: {
+      performerId: { in: uniqueIds },
+      punchDate: { gte: dayStart, lt: new Date(dayStart.getTime() + 24 * 3600 * 1000) }
+    }
+  });
+  const existSet = new Set(existing.map(r => r.performerId + '|' + r.punchType));
+
+  const punchTime = new Date(punchDate + 'T' + String(punchHour).padStart(2, '0') + ':' + String(punchMin).padStart(2, '0') + ':00.000Z');
+  const ts = BigInt(nowMs());
+  let created = 0, skipped = 0;
+  const failed = [];
+  const toCreate = [];
+
+  for (const pid of uniqueIds) {
+    if (!perfMap.has(pid)) { failed.push({ performerId: pid, reason: '员工不存在' }); continue; }
+    for (const t of types) {
+      if (existSet.has(pid + '|' + t)) { skipped++; } else {
+        toCreate.push({ id: idByCtx('punch', 12, nanoid), performerId: pid, punchDate: dayStart, punchType: t, punchTime, status: t === 'in' ? inStatus : outStatus, remark, ts });
+      }
+    }
+  }
+
+  if (toCreate.length) {
+    try {
+      const result = await prisma.employeePunchV1.createMany({ data: toCreate });
+      created = result.count;
+    } catch (e) {
+      // 逐条回退（可能唯一约束冲突）
+      for (const rec of toCreate) {
+        try {
+          await prisma.employeePunchV1.create({ data: rec });
+          created++;
+        } catch (_) { skipped++; }
+      }
+    }
+  }
+
+  try { await audit({ ctx, module: 'attendance', action: 'ATTENDANCE_BATCH_PUNCH', detail: { performerCount: uniqueIds.length, created, skipped, failedCount: failed.length, punchDate, punchTime: pt || '(now)', punchType } }); } catch (_) {}
+  return success(ctx, { created, skipped, failed });
+};
+
 module.exports = {
   list,
   detail,
@@ -410,5 +510,6 @@ module.exports = {
   leaveApprove,
   stats,
   importRecords,
+  batchPunch,
   toApi
 };
