@@ -782,6 +782,9 @@
             <span>📥 考勤导入</span>
             <span class="tab-badge" id="tabUploadBadge">NEW</span>
           </div>
+          <div class="att-tab" data-tab="bpunch">
+            <span>✍️ 批量补打卡</span>
+          </div>
           <div class="att-tab" data-tab="params">
             <span>⚙️ 薪资参数</span>
           </div>
@@ -1096,6 +1099,70 @@
             </div>
           </div>
         </div><!-- /#tabUpload -->
+
+        <!-- ========================== Tab 2b: 批量补打卡 ========================== -->
+        <div class="att-tab-content" id="tabBpunch">
+          <div style="display:grid;grid-template-columns:1fr;gap:18px;">
+            <!-- 操作栏 -->
+            <div class="param-card no-print">
+              <h4 style="margin:0 0 12px 0;color:var(--primary-dark);">✍️ 批量补打卡（管理员为员工补录上下班打卡，无需 GPS）</h4>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">
+                <div>
+                  <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">打卡日期</label>
+                  <input type="date" class="form-control" id="bpDate" style="width:160px;" />
+                </div>
+                <div>
+                  <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">打卡时间</label>
+                  <input type="time" class="form-control" id="bpTime" style="width:120px;" value="09:00" />
+                </div>
+                <div>
+                  <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">补卡类型</label>
+                  <select class="form-control" id="bpPunchType" style="width:auto;min-width:120px;">
+                    <option value="both">上班+下班</option>
+                    <option value="in">仅上班</option>
+                    <option value="out">仅下班</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">上班状态</label>
+                  <select class="form-control" id="bpInStatus" style="width:auto;min-width:110px;">
+                    <option value="normal" selected>正常</option>
+                    <option value="late">迟到</option>
+                    <option value="early">早退</option>
+                    <option value="absent">缺勤</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">下班状态</label>
+                  <select class="form-control" id="bpOutStatus" style="width:auto;min-width:110px;">
+                    <option value="normal" selected>正常</option>
+                    <option value="late">迟到</option>
+                    <option value="early">早退</option>
+                    <option value="absent">缺勤</option>
+                  </select>
+                </div>
+                <div style="flex:1;min-width:200px;">
+                  <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">备注（可选）</label>
+                  <input type="text" class="form-control" id="bpRemark" placeholder="如：管理员补录" style="max-width:240px;" />
+                </div>
+                <button class="btn btn-success" id="bpSubmitBtn">✍️ 批量补打卡（已选 <span id="bpSelCount">0</span> 人）</button>
+              </div>
+              <div style="font-size:.8rem;color:var(--text-light);">勾选员工后选择补卡类型和状态，点击「批量补打卡」。状态需手动选择（正常/迟到/早退/缺勤），默认正常。同人同日已存在的打卡类型自动跳过。</div>
+            </div>
+
+            <!-- 员工列表（按行当分组） -->
+            <div class="param-card no-print">
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+                <input type="text" class="form-control" id="bpSearch" placeholder="搜索姓名/工号…" style="width:240px;" />
+                <button class="btn btn-outline btn-sm" id="bpLoadBtn">↻ 加载员工</button>
+                <span id="bpLoadHint" style="font-size:.8rem;color:var(--text-light);"></span>
+              </div>
+              <div id="bpPerfList" style="max-height:420px;overflow-y:auto;border:1px solid var(--border-light);border-radius:10px;padding:10px;">
+                <p style="color:var(--text-light);text-align:center;padding:20px;">点击「加载员工」按钮加载演职人员列表</p>
+              </div>
+            </div>
+          </div>
+        </div><!-- /#tabBpunch -->
 
         <!-- ========================== Tab 3: 薪资参数 ========================== -->
         <div class="att-tab-content" id="tabParams">

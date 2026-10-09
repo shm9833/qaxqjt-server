@@ -1207,6 +1207,8 @@ v1.post(
 );
 // v20261004a：批量导入（≤500条/次；同人同日已存在→跳过不覆盖），鉴权与写接口一致
 v1.post('/attendance/import', requireRole(['super_admin', 'ops', 'director']), attCtrl.importRecords);
+// 管理员批量补打卡（≤200人/次；自动补 in+out，无 GPS，状态按时间判定）
+v1.post('/attendance/batch-punch', requireRole(['super_admin', 'ops', 'director']), attCtrl.batchPunch);
 v1.patch(
   '/attendance/:id',
   requireRole(['super_admin', 'ops', 'director']),
