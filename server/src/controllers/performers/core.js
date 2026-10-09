@@ -42,6 +42,33 @@ const create = async ctx => {
 };
 
 
+// 禁用/启用演职人员（禁用是删除的前置状态）
+const setStatus = status => async ctx => {
+  const id = ctx.params.id;
+  const before = await prisma.performersDbV1.findUnique({ where: { id } });
+  if (!before || before.status === 'deleted') {
+    throw new BusinessError('NOT_FOUND', '人员不存在或已删除');
+  }
+  // 幂等：重复置为相同状态直接返回成功（并发/重试安全）
+  if (before.status === status) {
+    return success(ctx, { id, status, unchanged: true });
+  }
+  const row = await prisma.performersDbV1.update({
+    where: { id },
+    data: { status, updatedAt: new Date(), ts: BigInt(nowMs()) }
+  });
+  await audit({
+    ctx,
+    module: 'performers',
+    action: status === 'disabled' ? 'PERFORMER_DISABLE' : 'PERFORMER_ENABLE',
+    targetId: id,
+    detail: { name: before.name, staffNo: before.staffNo || null, from: before.status, to: status }
+  });
+  return success(ctx, { id: row.id, status: row.status });
+};
+const disable = setStatus('disabled');
+const enable = setStatus('active');
+
 const remove = async ctx => {
   const id = ctx.params.id;
   // 删除前快照（供审计追溯：删了谁、什么行当、日薪多少）
@@ -49,11 +76,16 @@ const remove = async ctx => {
   if (!before || before.status === 'deleted') {
     throw new BusinessError('NOT_FOUND', '人员不存在或已删除');
   }
-  // 软删
-  const row = await prisma.performersDbV1.update({
-    where: { id },
+  // 仅允许删除已禁用的人员
+  if (before.status !== 'disabled') {
+    throw new BusinessError('FORBIDDEN', '仅禁用状态的演职人员可删除，请先将其禁用');
+  }
+  // 条件更新软删（并发安全：并发重复删除时仅一个请求生效）
+  const res = await prisma.performersDbV1.updateMany({
+    where: { id, status: 'disabled' },
     data: { status: 'deleted', updatedAt: new Date(), ts: BigInt(nowMs()) }
   });
+  if (!res.count) throw new BusinessError('CONFLICT', '该人员状态已变化（可能已被其他操作删除或启用），请刷新后重试');
   await audit({
     ctx, module: 'performers', action: 'PERFORMER_SOFT_DELETE', targetId: id,
     detail: {
@@ -66,7 +98,77 @@ const remove = async ctx => {
       deletedAt: new Date().toISOString()
     }
   });
-  return success(ctx, { id: row.id, status: 'deleted' });
+  return success(ctx, { id, status: 'deleted' });
+};
+
+// 清理已禁用演职人员（支持批量/单条 ids，分页限制单次数量防性能问题）
+const CLEANUP_MAX_BATCH = 200;
+const cleanupDisabled = async ctx => {
+  const b = ctx.request.body || {};
+  let ids = Array.isArray(b.ids) ? b.ids.filter(x => typeof x === 'string' && x).slice(0, CLEANUP_MAX_BATCH) : null;
+  const pageSize = Math.min(Math.max(parseInt(b.pageSize, 10) || 50, 1), CLEANUP_MAX_BATCH);
+
+  // 目标集合：指定 ids 或按分页取最旧禁用记录
+  const where = { status: 'disabled' };
+  let targets;
+  if (ids && ids.length) {
+    targets = await prisma.performersDbV1.findMany({
+      where: { ...where, id: { in: ids } },
+      select: { id: true, name: true, staffNo: true, primaryRole: true, employmentType: true, rankGrade: true, dailyRate: true }
+    });
+  } else {
+    targets = await prisma.performersDbV1.findMany({
+      where,
+      orderBy: { updatedAt: 'asc' },
+      take: pageSize,
+      select: { id: true, name: true, staffNo: true, primaryRole: true, employmentType: true, rankGrade: true, dailyRate: true }
+    });
+  }
+
+  const totalDisabled = await prisma.performersDbV1.count({ where });
+  if (!targets.length) {
+    return success(ctx, { cleaned: 0, remaining: totalDisabled, skipped: ids ? ids.length : 0 });
+  }
+
+  // 条件批量软删（并发安全：只删仍是 disabled 的记录）
+  const targetIds = targets.map(t => t.id);
+  const res = await prisma.performersDbV1.updateMany({
+    where: { id: { in: targetIds }, status: 'disabled' },
+    data: { status: 'deleted', updatedAt: new Date(), ts: BigInt(nowMs()) }
+  });
+
+  // 审计：汇总一条 + 逐条明细
+  const nowIso = new Date().toISOString();
+  await audit({
+    ctx, module: 'performers', action: 'PERFORMER_CLEANUP_DISABLED',
+    detail: { requested: ids ? ids.length : null, cleaned: res.count, pageSize, at: nowIso }
+  });
+  const byId = {};
+  targets.forEach(t => { byId[t.id] = t; });
+  // updateMany 不返回成功明细，按目标逐条补审计（disabled->deleted 的条件更新已保证一致性）
+  for (const t of targets) {
+    await audit({
+      ctx, module: 'performers', action: 'PERFORMER_SOFT_DELETE', targetId: t.id,
+      detail: {
+        name: t.name,
+        staffNo: t.staffNo || null,
+        primaryRole: t.primaryRole || null,
+        employmentType: t.employmentType || null,
+        rankGrade: t.rankGrade || null,
+        dailyRate: t.dailyRate != null ? Number(t.dailyRate) : null,
+        deletedAt: nowIso,
+        via: 'cleanup'
+      }
+    });
+  }
+
+  const remaining = await prisma.performersDbV1.count({ where });
+  return success(ctx, {
+    cleaned: res.count,
+    remaining,
+    skipped: ids ? ids.length - res.count : 0,
+    pageSize
+  });
 };
 
 // ========== 演员自助入职登记（公开接口，无需登录） ==========

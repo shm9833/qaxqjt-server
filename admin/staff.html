@@ -65,7 +65,7 @@
     .roster-table th:nth-child(9){width:114px}
     .roster-table th:nth-child(11){width:88px}
     .roster-table th:nth-child(12){width:60px}
-    .roster-table th:nth-child(13){width:184px}  /* 操作列缩窄：5 个图标按钮 ~184px 足够 */
+    .roster-table th:nth-child(13){width:222px}  /* 操作列：6 个图标按钮（含删除） */
     table.roster-table td { overflow: hidden; text-overflow: ellipsis; }
     table.roster-table td:nth-child(2),
     table.roster-table td:nth-child(3),
@@ -204,6 +204,7 @@
     }
     .status-badge.on { background: rgba(40,167,69,0.12); color: #28a745; }
     .status-badge.off { background: rgba(108,117,125,0.12); color: #6c757d; }
+    .status-badge.disabled { background: rgba(220,53,69,0.14); color: #b02a37; border: 1px dashed rgba(220,53,69,0.45); }
     .status-badge.leave { background: rgba(255,193,7,0.18); color: #e6a800; }
     .status-badge.resigned { background: rgba(220,53,69,0.12); color: #dc3545; }
     .status-badge.late { background: rgba(255,152,0,0.15); color: #ff9800; }
@@ -665,6 +666,9 @@
             <button class="btn btn-secondary" id="btnStaffOnboardQr" data-stf-real="1" onclick="window.__showOnboardQr && window.__showOnboardQr()">
               📱 入职二维码
             </button>
+            <button class="btn btn-danger" id="btnStaffCleanupDisabled" data-stf-real="1" style="background:linear-gradient(135deg,#8b0000,#b02a37);" title="批量删除全部「已禁用」状态的演职人员（软删除+审计日志，仅超级管理员）">
+              🧹 清理已禁用
+            </button>
           </div>
         </div>
 
@@ -828,6 +832,7 @@
                     <option value="">全部状态</option>
                     <option value="active">在岗</option>
                     <option value="inactive">停用</option>
+                    <option value="disabled">已禁用</option>
                   </select>
                 </div>
                 <div class="search-box">
