@@ -552,6 +552,21 @@ v1.patch(
   performersCtrl.update
 );
 v1.delete('/performers/:id', requireRole('super_admin'), performersCtrl.remove);
+// 禁用/启用（禁用是删除前置条件；ops 及以上可操作）
+v1.post('/performers/:id/disable', requireRole(['super_admin', 'ops']), performersCtrl.disable);
+v1.post('/performers/:id/enable', requireRole(['super_admin', 'ops']), performersCtrl.enable);
+// 清理已禁用人员（仅超管；支持 body.ids 指定或分页批量，pageSize 上限 200）
+v1.post(
+  '/performers/cleanup-disabled',
+  validate({
+    body: Joi.object({
+      ids: Joi.array().items(Joi.string().max(40)).max(200).optional(),
+      pageSize: Joi.number().integer().min(1).max(200).optional()
+    }).optional()
+  }),
+  requireRole('super_admin'),
+  performersCtrl.cleanupDisabled
+);
 // 演员自助入职登记（公开接口，扫码访问）
 v1.post(
   '/performers/self-register',
