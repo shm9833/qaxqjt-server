@@ -818,7 +818,7 @@
       }
       html += '</div>';
       var info = [];
-      if(p.idCardNo) info.push('🆔 ' + esc(p.idCardNo).replace(/^(\d{4})\d{10}(\w{4})$/, '$1**********$2'));
+      if(p.idCardNo) info.push('🆔 ' + esc(p.idCardNo));
       if(p.phone) info.push('📱 ' + esc(p.phone));
       if(p.dailyRate != null && p.dailyRate !== '') info.push('💰 协议天工资 ¥' + esc(p.dailyRate) + '/天');
       else if(p.agreedSalary) info.push('💰 ' + esc(p.agreedSalary));
