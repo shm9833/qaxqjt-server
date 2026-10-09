@@ -52,6 +52,9 @@ qaxqjt_V2026.*_*
 验收工具包.zip
 ELK部署工具包.zip
 
+# 巡检/修复总结报告（本地生成的一次性 HTML 交付物，不入库）
+/inspection-report-*.html
+
 # Tencent Cloud EdgeOne
 .env
 .edgeone/*
