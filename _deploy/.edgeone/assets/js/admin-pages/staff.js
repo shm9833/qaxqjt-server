@@ -117,7 +117,7 @@
     var performerId = tr.getAttribute('data-performer-id') || '';
     editCtx = { gh: String(gh), readonly: !!readonly, performerId: performerId };
     fillForm(tr);
-    ['inp_stf_name','inp_stf_gender','inp_stf_age','inp_stf_dept','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_rep'].forEach(function(id){
+    ['inp_stf_name','inp_stf_gender','inp_stf_age','inp_stf_dept','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_idcard','inp_stf_rep'].forEach(function(id){
       var el = $(id); if (el){ el.disabled = !!readonly; el.style.background = readonly ? '#f5f5f5' : '#fff'; }
     });
     $('staffEditTitle').innerText = readonly ? ('👁 查看详情 · '+cellText(tr,2)) : ('✏️ 编辑演职人员 · '+cellText(tr,2));
@@ -407,6 +407,7 @@
       var p = MAP[gh];
       if (p){
         if (p.phone && $('inp_stf_phone')){ $('inp_stf_phone').value = p.phone; $('inp_stf_phone').placeholder=''; }
+        if (p.idCardNo && $('inp_stf_idcard')) $('inp_stf_idcard').value = p.idCardNo;
         if (p.staffNo && $('inp_stf_gh')) $('inp_stf_gh').value = p.staffNo;
         if ($('inp_stf_rank')) $('inp_stf_rank').value = p.rankGrade || '';
         if ($('inp_stf_rate')) $('inp_stf_rate').value = (p.dailyRate != null && p.dailyRate !== '') ? p.dailyRate : '';
@@ -418,12 +419,12 @@
   /* ---- 新增人员：接「➕ 新增人员」演示按钮 ---- */
   function openNew(){
     window.__PF_EDIT__ = { mode:'new' };
-    ['inp_stf_gh','inp_stf_name','inp_stf_age','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_rep','inp_stf_rank','inp_stf_rate','inp_stf_transport'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
+    ['inp_stf_gh','inp_stf_name','inp_stf_age','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_idcard','inp_stf_rep','inp_stf_rank','inp_stf_rate','inp_stf_transport'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
     if ($('inp_stf_gender')) $('inp_stf_gender').value='男';
     if ($('inp_stf_dept')) $('inp_stf_dept').value='演员队';
     if ($('staffEditTitle')) $('staffEditTitle').innerText='➕ 新增演职人员';
     if ($('staffEditSaveBtn')) $('staffEditSaveBtn').style.display='';
-    ['inp_stf_name','inp_stf_gender','inp_stf_age','inp_stf_dept','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_rep','inp_stf_rank','inp_stf_rate','inp_stf_transport'].forEach(function(id){ var el=$(id); if(el){ el.disabled=false; el.style.background='#fff'; } });
+    ['inp_stf_name','inp_stf_gender','inp_stf_age','inp_stf_dept','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_idcard','inp_stf_rep','inp_stf_rank','inp_stf_rate','inp_stf_transport'].forEach(function(id){ var el=$(id); if(el){ el.disabled=false; el.style.background='#fff'; } });
     if ($('inp_stf_gh')) $('inp_stf_gh').value='（保存后自动生成）';
     if ($('staffEditModal')) $('staffEditModal').style.display='flex';
     document.body.style.overflow='hidden';
@@ -443,6 +444,8 @@
     var phone = ($('inp_stf_phone').value||'').trim();
     if(phone && /[*＊]/.test(phone)) phone='';
     if(phone && !/^1[3-9]\d{9}$/.test(phone)){ toast('❌ 手机号格式不正确（11 位中国大陆手机号）','error'); return; }
+    var idCard = ($('inp_stf_idcard')?$('inp_stf_idcard').value:'').trim().toUpperCase();
+    if(idCard && !/^\d{17}[\dX]$/.test(idCard)){ toast('❌ 身份证号格式不正确（应为18位）','error'); return; }
     var age = ($('inp_stf_age').value||'').trim();
     if(age!=='' && (parseInt(age,10)<16||parseInt(age,10)>90)){ toast('❌ 年龄需在 16~90 之间','error'); return; }
     var year = ($('inp_stf_year').value||'').trim();
@@ -457,6 +460,7 @@
       remark: ($('inp_stf_rep').value||'').trim()
     };
     if (phone) body.phone = phone;
+    if (idCard) body.idCardNo = idCard;
     if (age !== '') body.birthDate = (new Date().getFullYear()-parseInt(age,10))+'-01-01';
     if (year && /^\d{4}$/.test(year)) body.hireDate = year+'-06-01';
     var done = function(d){ try{ window.closeStaffEditModal && window.closeStaffEditModal(); }catch(_){} var sn=d&&(d.staffNo||(d.data&&d.data.staffNo)); toast('✅ 已保存：'+name+(sn?('（工号 '+sn+'）'):''),'success'); load(); loadStats(); };

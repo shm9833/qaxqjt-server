@@ -155,6 +155,9 @@
       <p>演职人员入职登记表</p>
     </div>
 
+    <!-- 二维码有效性横幅（扫码进入时显示） -->
+    <div id="qrBanner" style="display:none;border-radius:10px;padding:11px 14px;margin-bottom:12px;font-size:13px;line-height:1.6;"></div>
+
     <!-- Tab 切换 -->
     <div class="tabs" style="display:flex;gap:0;margin-bottom:0;border-radius:10px 10px 0 0;overflow:hidden;">
       <button id="tabRegister" class="tab-btn active" style="flex:1;padding:14px;border:none;background:#8b0000;color:#fff;font-size:15px;font-weight:600;cursor:pointer;">📝 入职登记</button>
@@ -270,6 +273,15 @@
           <p>（六）因违反安全管理规定引发事故，或造成自身、他人人身伤害及剧团财产损失的，一律承担赔偿责任并给予纪律处分；构成违法犯罪的，移交司法机关依法追究刑事责任。</p>
           <p><strong>第七条 离职交接</strong></p>
           <p>演职人员离职必须提前书面告知剧团（临时聘用按协议约定期限执行），经批准后方可办理离职手续。离职前必须完成工作、剧目、财物、证件、资料等全部交接，归还借用的服装、道具、设备及其他团产；未办妥交接或给剧团造成损失的，剧团有权暂缓办理离职手续并追偿，其保密、安全等义务不因离职而免除。</p>
+          <p><strong>第八条 演出前变更与退出限制</strong></p>
+          <p>（一）演职人员入职后，凡有演出安排的，演出前 15 日内不得变更角色或岗位、不得提出离职或退出。确因重病、不可抗力等特殊情况确需变更或退出的，须提交书面申请并报团长特批，经批准后方可执行。</p>
+          <p>（二）擅自在演出前 15 日内变更角色、岗位或退出，导致演出安排受影响的，剧团有权立即中止其演出任务，扣减当月全部演出补贴，并按第九条违约责任追究赔偿。</p>
+          <p>（三）因上述变更或退出造成角色空缺、临时替角、排练返工、演出降级或取消等后果的，相关实际损失由违约人员全额承担。</p>
+          <p><strong>第九条 违约责任</strong></p>
+          <p>（一）演职人员违反本条例各项规定的，剧团有权视情节轻重分别给予警告、通报批评、扣减补贴、罚款、解聘等处理；造成剧团经济损失或声誉损害的，责令全额赔偿。</p>
+          <p>（二）违反第八条规定（演出前 15 日内变更或退出）的，除扣减当月全部演出补贴外，还须赔偿剧团因此产生的实际损失，包括但不限于临时替角费用、排练返工费用、演出降级或取消造成的票房及补贴损失等。</p>
+          <p>（三）因罢演、闹场、临阵退出、严重违反演出纪律等行为造成演出事故或经济损失的，赔偿全额损失并予以解聘；构成违法犯罪的，移交司法机关依法追究刑事责任。</p>
+          <p>（四）违约人员未按期赔偿的，剧团有权从其尚未发放的工资、补贴中直接扣除；仍不足的，依法追偿。</p>
           <p style="color:#8b0000;margin-top:8px;">本条例自发布之日起施行，最终解释权归秦安县秦剧团所有。</p>
         </div>
       </details>
@@ -315,6 +327,37 @@
       var cb = $('regulationsConfirmed');
       var btn = $('submitBtn');
 
+      // ===== 扫码进入：校验入职二维码有效性 =====
+      (function initQr() {
+        var m = /[?&]qr=([A-Za-z0-9_-]+)/.exec(location.search);
+        if (!m) return;
+        window.__QrToken = m[1];
+        var banner = $('qrBanner');
+        var url = window.QAXQJT_API_CONFIG.resolveUrl('/v1/performers/self-register/qr/' + encodeURIComponent(m[1]));
+        fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+          var info = d && d.ok && d.data;
+          if (info && info.valid) {
+            banner.style.display = 'block';
+            banner.style.background = '#e8f5e9';
+            banner.style.border = '1px solid #a5d6a7';
+            banner.style.color = '#2e7d32';
+            banner.innerHTML = '✅ 扫码入职通道' + (info.title ? '：<strong>' + info.title.replace(/[<>&"]/g, '') + '</strong>' : '');
+          } else {
+            var reason = info && info.reason;
+            var msg = reason === 'expired' ? '该入职二维码已过期'
+              : reason === 'disabled' ? '该入职二维码已停用'
+              : reason === 'full' ? '该入职二维码使用次数已达上限'
+              : '入职二维码无效';
+            banner.style.display = 'block';
+            banner.style.background = '#ffebee';
+            banner.style.border = '1px solid #ef9a9a';
+            banner.style.color = '#c62828';
+            banner.innerHTML = '⚠️ ' + msg + '，仍可填写登记但可能无法计入本次招聘批次，如有疑问请联系管理员。';
+            window.__QrToken = ''; // 无效 token 不提交，避免后端直接拒绝
+          }
+        }).catch(function () { /* 网络异常不阻断登记 */ });
+      })();
+
       // 勾选条例后才能提交
       cb.addEventListener('change', function () {
         btn.disabled = !cb.checked;
@@ -358,6 +401,7 @@
           dailyRate: dailyRateRaw === '' ? '' : Number(dailyRateRaw),
           transportType: $('transportType').value || '',
           remark: $('remark').value.trim() || '',
+          qrToken: window.__QrToken || '',
           regulationsConfirmed: true
         };
 
