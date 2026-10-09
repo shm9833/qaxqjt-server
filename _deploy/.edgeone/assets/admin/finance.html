@@ -555,6 +555,10 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
   gap: 8px !important;
 }
 
+  /* 后台表头覆盖：浅灰背景+深色文字+微软雅黑（避免继承前台蓝色渐变+楷体） */
+  table thead { background:#f1f5f9 !important; }
+  table thead th, table th { background:#f1f5f9 !important; color:#334155 !important; font-weight:600 !important; font-family:"Microsoft YaHei","PingFang SC",sans-serif !important; padding:10px 12px !important; text-align:left; border-bottom:2px solid #e2e8f0; white-space:nowrap; letter-spacing:.3px; font-size:.85rem; }
+
 </style>
 </head>
 <body>
