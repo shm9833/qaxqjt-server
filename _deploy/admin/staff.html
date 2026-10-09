@@ -76,6 +76,16 @@
     table.roster-table td .role-tag,
     table.roster-table td .status-badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
 
+    /* ========== 演职人员列表：全部文字水平+垂直居中（2026-10-10） ==========
+       覆盖 style.css thead th{text-align:left} 与浏览器默认（td 默认 middle，
+       th 默认 center 但全局被改左）；fixed 布局 + min-width:1080px + 容器横向
+       滚动保证任意屏幕尺寸下列宽一致，居中效果在各端一致。!important 压过
+       style.css 与 app.js 注入的 H9 补丁。 */
+    table.roster-table th,
+    table.roster-table td { text-align: center !important; vertical-align: middle !important; }
+    /* 操作列按钮组同样整体居中 */
+    table.roster-table td .admin-table-actions { justify-content: center !important; }
+
     .admin-sidebar-overlay {
       display: none;
       position: fixed;
@@ -1571,6 +1581,7 @@
   <script src="../js/qrcode.min.js?v=20260923"></script>
   <script src="/js/xlsx-js-style.min.js?v=20260925"></script>
 <script src="../js/app.js?v=20261009a"></script>
+  <script src="../js/tooltip.js?v=20261010a"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
 <script src="../js/admin-wage-negotiate.js?v=20260930a"></script>
   <script src="../js/pagination.js?v=20261002a"></script>
