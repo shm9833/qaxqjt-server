@@ -24,17 +24,20 @@ const controllerDir = path.resolve(__dirname, '../src/controllers');
 const prismaId = require.resolve('../utils/prisma', { paths: [controllerDir] });
 
 let captured = {};
-// findUnique 返回值可被测试用例覆盖（detail 404 / remove 软删快照）
+// findUnique 返回值可被测试用例覆盖（detail 404 / remove 软删快照 / disable 状态机）
 let _findUniqueResult = null;
+// findMany / updateMany 返回值可被测试用例覆盖（cleanup-disabled 批量清理）
+let _findManyResult = null;
+let _updateManyResult = { count: 0 };
 const stubPrisma = {
   performersDbV1: {
-    findMany: async args => { captured.findMany = args; return []; },
+    findMany: async args => { captured.findMany = args; return _findManyResult || []; },
     count: async args => { captured.count = args; return 0; },
     findUnique: async args => { captured.findUnique = args; return _findUniqueResult; },
     findFirst: async args => { captured.findFirst = args; return null; },
     create: async args => { captured.create = args; return { id: 'pf_new_001', ...args.data }; },
     update: async args => { captured.update = args; return { id: args.where.id, ...args.data }; },
-    updateMany: async () => ({ count: 0 })
+    updateMany: async args => { captured.updateMany = args; return _updateManyResult; }
   },
   // 工资同步链路：draft 批次为空 → 不触发工资条创建/更新
   wageBatchesV1: { findMany: async () => [], update: async () => ({}) },
@@ -60,7 +63,7 @@ function signToken(role) {
   );
 }
 const auth = role => ({ Authorization: 'Bearer ' + signToken(role) });
-const reset = () => { captured = {}; _findUniqueResult = null; };
+const reset = () => { captured = {}; _findUniqueResult = null; _findManyResult = null; _updateManyResult = { count: 0 }; };
 
 // ========== 鉴权守卫 ==========
 
@@ -155,18 +158,164 @@ test('PATCH /v1/performers/:id 成功返回 200 + 更新字段', async () => {
   assert.strictEqual(captured.update.data.status, 'left');
 });
 
-// ========== remove（软删）==========
+// ========== remove（禁用前置 + 条件软删）==========
 
-test('DELETE /v1/performers/:id 返回 200 + status=deleted（软删除）', async () => {
+test('DELETE /v1/performers/:id 无 token 返回 401', async () => {
   reset();
-  // 控制器删除前会先 findUnique 做快照（审计追溯），桩需提供一条在册记录
+  const res = await request(handler).delete('/v1/performers/pf_001');
+  assert.strictEqual(res.status, 401);
+  assert.strictEqual(res.body.error.code, 'UNAUTHORIZED');
+});
+
+test('DELETE /v1/performers/:id ops 角色（非超管）返回 403', async () => {
+  reset();
+  const res = await request(handler).delete('/v1/performers/pf_001').set(auth('ops'));
+  assert.strictEqual(res.status, 403);
+  assert.strictEqual(res.body.error.code, 'FORBIDDEN');
+});
+
+test('DELETE /v1/performers/:id active 人员返回 403 FORBIDDEN（必须先禁用）', async () => {
+  reset();
   _findUniqueResult = { id: 'pf_001', name: '张三', status: 'active', staffNo: 'QXT-001' };
+  const res = await request(handler).delete('/v1/performers/pf_001').set(auth('super_admin'));
+  assert.strictEqual(res.status, 403);
+  assert.strictEqual(res.body.error.code, 'FORBIDDEN');
+  assert.match(res.body.error.message, /禁用/);
+  assert.strictEqual(captured.updateMany, undefined, '未禁用人员不得执行软删写库');
+});
+
+test('DELETE /v1/performers/:id 已 deleted 人员返回 404', async () => {
+  reset();
+  _findUniqueResult = { id: 'pf_001', name: '张三', status: 'deleted' };
+  const res = await request(handler).delete('/v1/performers/pf_001').set(auth('super_admin'));
+  assert.strictEqual(res.status, 404);
+  assert.strictEqual(res.body.error.code, 'NOT_FOUND');
+});
+
+test('DELETE /v1/performers/:id disabled 人员返回 200 + 条件软删 status=deleted', async () => {
+  reset();
+  _findUniqueResult = { id: 'pf_001', name: '张三', status: 'disabled', staffNo: 'QXT-001' };
+  _updateManyResult = { count: 1 };
   const res = await request(handler).delete('/v1/performers/pf_001').set(auth('super_admin'));
   assert.strictEqual(res.status, 200);
   assert.strictEqual(res.body.data.status, 'deleted');
-  // 软删走 update，不是 prisma.delete
-  assert.strictEqual(captured.update.where.id, 'pf_001');
-  assert.strictEqual(captured.update.data.status, 'deleted');
+  // 并发安全：条件更新必须带 status='disabled'
+  assert.deepStrictEqual(captured.updateMany.where, { id: 'pf_001', status: 'disabled' });
+  assert.strictEqual(captured.updateMany.data.status, 'deleted');
+});
+
+test('DELETE /v1/performers/:id 并发竞争（条件更新 count=0）返回 409 CONFLICT', async () => {
+  reset();
+  _findUniqueResult = { id: 'pf_001', name: '张三', status: 'disabled', staffNo: 'QXT-001' };
+  _updateManyResult = { count: 0 };
+  const res = await request(handler).delete('/v1/performers/pf_001').set(auth('super_admin'));
+  assert.strictEqual(res.status, 409);
+  assert.strictEqual(res.body.error.code, 'CONFLICT');
+});
+
+// ========== disable / enable（删除前置状态动作，ops 及以上）==========
+
+test('POST /v1/performers/:id/disable staff 角色返回 403', async () => {
+  reset();
+  const res = await request(handler).post('/v1/performers/pf_001/disable').set(auth('staff'));
+  assert.strictEqual(res.status, 403);
+});
+
+test('POST /v1/performers/:id/disable 人员不存在返回 404', async () => {
+  reset();
+  const res = await request(handler).post('/v1/performers/pf_notexist/disable').set(auth('super_admin'));
+  assert.strictEqual(res.status, 404);
+  assert.strictEqual(res.body.error.code, 'NOT_FOUND');
+});
+
+test('POST /v1/performers/:id/disable ops 角色 active→disabled 返回 200', async () => {
+  reset();
+  _findUniqueResult = { id: 'pf_001', name: '张三', status: 'active', staffNo: 'QXT-001' };
+  const res = await request(handler).post('/v1/performers/pf_001/disable').set(auth('ops'));
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.data.status, 'disabled');
+  assert.strictEqual(captured.update.data.status, 'disabled');
+});
+
+test('POST /v1/performers/:id/disable 重复禁用幂等返回 unchanged:true', async () => {
+  reset();
+  _findUniqueResult = { id: 'pf_001', name: '张三', status: 'disabled', staffNo: 'QXT-001' };
+  const res = await request(handler).post('/v1/performers/pf_001/disable').set(auth('super_admin'));
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.data.unchanged, true);
+  assert.strictEqual(captured.update, undefined, '幂等请求不得写库');
+});
+
+test('POST /v1/performers/:id/enable disabled→active 返回 200', async () => {
+  reset();
+  _findUniqueResult = { id: 'pf_001', name: '张三', status: 'disabled', staffNo: 'QXT-001' };
+  const res = await request(handler).post('/v1/performers/pf_001/enable').set(auth('super_admin'));
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.data.status, 'active');
+});
+
+// ========== cleanup-disabled（仅超管 + Joi 分页/ids 校验）==========
+
+test('POST /v1/performers/cleanup-disabled 无 token 返回 401', async () => {
+  reset();
+  const res = await request(handler).post('/v1/performers/cleanup-disabled').send({});
+  assert.strictEqual(res.status, 401);
+});
+
+test('POST /v1/performers/cleanup-disabled ops 角色返回 403（仅超管可清理）', async () => {
+  reset();
+  const res = await request(handler).post('/v1/performers/cleanup-disabled').set(auth('ops')).send({});
+  assert.strictEqual(res.status, 403);
+  assert.strictEqual(res.body.error.code, 'FORBIDDEN');
+});
+
+test('POST /v1/performers/cleanup-disabled pageSize=0 返回 400（Joi min 1）', async () => {
+  reset();
+  const res = await request(handler).post('/v1/performers/cleanup-disabled').set(auth('super_admin')).send({ pageSize: 0 });
+  assert.strictEqual(res.status, 400);
+  assert.strictEqual(res.body.error.code, 'VALIDATION_ERROR');
+});
+
+test('POST /v1/performers/cleanup-disabled pageSize=201 返回 400（Joi max 200）', async () => {
+  reset();
+  const res = await request(handler).post('/v1/performers/cleanup-disabled').set(auth('super_admin')).send({ pageSize: 201 });
+  assert.strictEqual(res.status, 400);
+  assert.strictEqual(res.body.error.code, 'VALIDATION_ERROR');
+});
+
+test('POST /v1/performers/cleanup-disabled ids 超过 200 条返回 400', async () => {
+  reset();
+  const ids = Array.from({ length: 201 }, (_, i) => 'p' + i);
+  const res = await request(handler).post('/v1/performers/cleanup-disabled').set(auth('super_admin')).send({ ids });
+  assert.strictEqual(res.status, 400);
+  assert.strictEqual(res.body.error.code, 'VALIDATION_ERROR');
+});
+
+test('POST /v1/performers/cleanup-disabled 超管空 body 返回 200 + cleaned:0 分页结构', async () => {
+  reset();
+  const res = await request(handler).post('/v1/performers/cleanup-disabled').set(auth('super_admin')).send({});
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.ok, true);
+  assert.strictEqual(res.body.data.cleaned, 0);
+  assert.strictEqual(res.body.data.remaining, 0);
+  // 默认分页参数：where=disabled + updatedAt 升序 + take 50
+  assert.deepStrictEqual(captured.findMany.where, { status: 'disabled' });
+  assert.strictEqual(captured.findMany.take, 50);
+});
+
+test('POST /v1/performers/cleanup-disabled 指定 ids 且命中 1 条返回 200 + cleaned:1', async () => {
+  reset();
+  _findManyResult = [{ id: 'pf_001', name: '张三', staffNo: 'QXT-001', primaryRole: '生角', employmentType: '全职', rankGrade: 'W3', dailyRate: 300 }];
+  _updateManyResult = { count: 1 };
+  const res = await request(handler)
+    .post('/v1/performers/cleanup-disabled')
+    .set(auth('super_admin'))
+    .send({ ids: ['pf_001'] });
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.data.cleaned, 1);
+  assert.strictEqual(res.body.data.skipped, 0);
+  assert.deepStrictEqual(captured.findMany.where, { status: 'disabled', id: { in: ['pf_001'] } });
+  assert.strictEqual(captured.updateMany.where.status, 'disabled', '批量软删必须带 disabled 条件（并发安全）');
 });
 
 // ========== self-register（公开，无需鉴权）==========
