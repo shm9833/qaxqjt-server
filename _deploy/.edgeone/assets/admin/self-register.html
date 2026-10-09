@@ -342,10 +342,26 @@
             banner.style.border = '1px solid #a5d6a7';
             banner.style.color = '#2e7d32';
             banner.innerHTML = '✅ 扫码入职通道' + (info.title ? '：<strong>' + info.title.replace(/[<>&"]/g, '') + '</strong>' : '');
+          } else if (info && info.reason === 'expired') {
+            banner.style.display = 'block';
+            banner.style.background = '#ffebee';
+            banner.style.border = '2px solid #c62828';
+            banner.style.color = '#c62828';
+            banner.style.fontSize = '14px';
+            banner.style.fontWeight = '600';
+            banner.style.textAlign = 'center';
+            banner.innerHTML = '⛔ 该入职二维码已过期，无法填写入职登记。<br/>请联系剧团管理员获取新的二维码。';
+            window.__QrToken = '';
+            var fc = $('formCard');
+            fc.style.opacity = '0.45';
+            fc.style.filter = 'grayscale(.4)';
+            fc.style.pointerEvents = 'none';
+            fc.style.userSelect = 'none';
+            btn.disabled = true;
+            $('tabRegister').disabled = true;
           } else {
             var reason = info && info.reason;
-            var msg = reason === 'expired' ? '该入职二维码已过期'
-              : reason === 'disabled' ? '该入职二维码已停用'
+            var msg = reason === 'disabled' ? '该入职二维码已停用'
               : reason === 'full' ? '该入职二维码使用次数已达上限'
               : '入职二维码无效';
             banner.style.display = 'block';
