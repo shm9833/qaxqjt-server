@@ -50,6 +50,13 @@
     .mini-btn.red { border-color: #e0a1a1; color: #c62828; }
     .mini-btn:disabled { opacity: .5; cursor: not-allowed; }
     .empty-row td { text-align: center; color: #b09a72; padding: 30px 0; }
+    .qm-toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+    .qm-select {
+      padding: 8px 12px; border: 1.5px solid #e0d0b8; border-radius: 8px; font-size: .86rem;
+      font-family: inherit; background: #fffdf7; color: #5a3a1a; cursor: pointer;
+    }
+    .qm-select:focus { outline: none; border-color: #8b0000; }
+    .qm-toolbar-spacer { flex: 1; }
 
     /* QR 弹窗 */
     .qm-mask { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; }
@@ -173,6 +180,16 @@
 
           <div class="qm-card">
             <h2>📋 二维码列表</h2>
+            <div class="qm-toolbar">
+              <select class="qm-select" id="fStatus" data-tip="按状态筛选二维码列表">
+                <option value="">全部状态</option>
+                <option value="active">有效</option>
+                <option value="disabled">已停用</option>
+                <option value="expired">已过期/用尽</option>
+              </select>
+              <span class="qm-toolbar-spacer"></span>
+              <button class="mini-btn" id="cleanupBtn" data-tip="一键删除所有已过期且从未使用的二维码（已产生入职记录、已停用或仍有效的二维码不受影响）">🧹 清理已过期（未使用）</button>
+            </div>
             <div class="qm-table-wrap">
               <table class="qm-table">
                 <thead>
@@ -261,8 +278,12 @@
     function loadList() {
       API.get('/v1/qrcode-invites?pageSize=100').then(function (list) {
         var tb = document.getElementById('qrTbody');
+        var filter = (document.getElementById('fStatus').value || '').trim();
+        if (filter) {
+          list = (list || []).filter(function (r) { return realStatus(r) === filter; });
+        }
         if (!list || !list.length) {
-          tb.innerHTML = '<tr class="empty-row"><td colspan="6">暂无二维码，请在上方表单生成</td></tr>';
+          tb.innerHTML = '<tr class="empty-row"><td colspan="6">' + (filter ? '当前筛选条件下暂无二维码' : '暂无二维码，请在上方表单生成') + '</td></tr>';
           return;
         }
         tb.innerHTML = list.map(function (r) {
@@ -270,10 +291,14 @@
           var badgeMap = { active: ['qb-active', '有效'], disabled: ['qb-disabled', '已停用'], expired: ['qb-expired', '已过期/用尽'] };
           var b = badgeMap[st] || badgeMap.disabled;
           var usage = r.usedCount + ' / ' + (r.maxUses == null ? '不限' : r.maxUses);
-          var btns = '<button class="mini-btn" data-act="show" data-id="' + r.id + '">二维码</button>' +
-            '<button class="mini-btn" data-act="copy" data-id="' + r.id + '">复制链接</button>';
+          var btns = '<button class="mini-btn" data-act="show" data-id="' + r.id + '" data-tip="查看并下载该二维码图片">二维码</button>' +
+            '<button class="mini-btn" data-act="copy" data-id="' + r.id + '" data-tip="复制该二维码对应的入职登记链接">复制链接</button>';
           if (st === 'active') {
-            btns += '<button class="mini-btn red" data-act="disable" data-id="' + r.id + '">禁用</button>';
+            btns += '<button class="mini-btn red" data-act="disable" data-id="' + r.id + '" data-tip="禁用后该二维码将无法继续用于入职登记">禁用</button>';
+          } else if (r.usedCount > 0) {
+            btns += '<button class="mini-btn" disabled data-tip="已产生入职登记记录，为保证数据可追溯不可删除">删除</button>';
+          } else {
+            btns += '<button class="mini-btn red" data-act="del" data-id="' + r.id + '" data-tip="删除该二维码，删除后扫码链接永久失效">删除</button>';
           }
           return '<tr>' +
             '<td><strong>' + esc(r.title) + '</strong></td>' +
@@ -304,9 +329,24 @@
           if (act === 'show') openQr(r);
           else if (act === 'copy') copyText(r.url);
           else if (act === 'disable') disableQr(r);
+          else if (act === 'del') delQr(r);
         };
       });
     }
+
+    document.getElementById('fStatus').addEventListener('change', loadList);
+
+    document.getElementById('cleanupBtn').addEventListener('click', function () {
+      if (!confirm('确认一键清理所有「已过期且从未使用」的二维码？\n删除后扫码链接将永久失效，不可恢复。\n（已产生入职记录、已停用或仍有效的二维码不受影响）')) return;
+      var btn = this;
+      btn.disabled = true;
+      API.post('/v1/qrcode-invites/cleanup-expired', {}).then(function (r) {
+        var n = r && typeof r.count === 'number' ? r.count : 0;
+        toast(n > 0 ? '已清理 ' + n + ' 个未使用的过期二维码' : '没有需要清理的过期二维码');
+        loadList();
+      }).catch(function (err) { toast(err.message || '清理失败', false); })
+        .finally(function () { btn.disabled = false; });
+    });
 
     document.getElementById('createForm').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -334,6 +374,14 @@
         toast('已禁用');
         loadList();
       }).catch(function (err) { toast(err.message || '禁用失败', false); });
+    }
+
+    function delQr(r) {
+      if (!confirm('确认删除二维码「' + r.title + '」？\n删除后扫码链接将永久失效，不可恢复。')) return;
+      API.del('/v1/qrcode-invites/' + r.id).then(function () {
+        toast('二维码已删除');
+        loadList();
+      }).catch(function (err) { toast(err.message || '删除失败', false); });
     }
 
     function openQr(r) {

@@ -1410,5 +1410,7 @@ v1.post(
 );
 v1.get('/qrcode-invites/:id', requireRole(['super_admin', 'ops', 'director']), qrcodeManageCtrl.detailQr);
 v1.post('/qrcode-invites/:id/disable', requireRole(['super_admin', 'ops', 'director']), qrcodeManageCtrl.disableQr);
+v1.delete('/qrcode-invites/:id', requireRole(['super_admin', 'ops', 'director']), qrcodeManageCtrl.deleteQr);
+v1.post('/qrcode-invites/cleanup-expired', requireRole(['super_admin']), qrcodeManageCtrl.cleanupExpired);
 
 module.exports = v1;
