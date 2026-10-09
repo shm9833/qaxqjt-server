@@ -11,6 +11,21 @@ const fs = require('fs');
 const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
 const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.pdf', '.doc', '.docx', '.xls', '.xlsx'];
 
+// 扩展名 → MIME 映射（与 ALLOWED_EXT 对应，确保浏览器正确渲染）
+const MIME_MAP = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
+  '.pdf': 'application/pdf',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.xls': 'application/vnd.ms-excel',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+};
+
 module.exports = function serveUploads(opts) {
   opts = opts || {};
   const prefix = opts.prefix || '/uploads';
@@ -47,6 +62,8 @@ module.exports = function serveUploads(opts) {
     }
 
     ctx.set('Content-Length', stat.size);
+    ctx.set('Content-Type', MIME_MAP[ext] || 'application/octet-stream');
+    ctx.set('X-Content-Type-Options', 'nosniff');
     ctx.set('Cache-Control', 'public, max-age=86400');
     ctx.body = fs.createReadStream(absPath);
   };
