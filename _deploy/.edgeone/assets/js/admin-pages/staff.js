@@ -301,6 +301,7 @@
   }
   function rowHtml(p){
     var on = isOn(p);
+    var dis = (p.status==='disabled');
     var gh = p.staffNo || ('PF'+String(p.id||'').slice(0,6));
     return '<tr data-performer-id="'+esc(p.id)+'" data-staff-no="'+esc(gh)+'">'
       +'<td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>'
@@ -313,14 +314,15 @@
       +'<td>'+yearOf(p.hireDate)+'</td>'
       +'<td>'+maskPhone(p.phone)+'</td>'
       +'<td style="max-width:180px;">'+esc(p.remark||'—')+'</td>'
-      +'<td><span class="status-badge '+(on?'on':'off')+'">'+(on?'● 在岗':'○ 停用')+'</span></td>'
+      +'<td><span class="status-badge '+(dis?'disabled':(on?'on':'off'))+'">'+(dis?'⊘ 已禁用':(on?'● 在岗':'○ 停用'))+'</span></td>'
       +'<td style="color:var(--primary);font-weight:700;">—</td>'
       +'<td><div class="admin-table-actions">'
       +'<button class="btn btn-secondary btn-sm" title="查看详情">👁</button>'
       +'<button class="btn btn-primary btn-sm" title="编辑">✏️</button>'
       +'<button class="btn btn-gold btn-sm" title="考勤录入">🕐</button>'
       +'<button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;" title="排班">📅</button>'
-      +'<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" title="'+(on?'禁用':'启用')+'">'+(on?'🚫':'✅')+'</button>'
+      +'<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" title="'+(on?'禁用（禁用后才可删除）':'启用')+'">'+(on?'🚫':'✅')+'</button>'
+      +'<button class="btn btn-sm" style="background:'+(dis?'rgba(220,53,69,0.85);color:#fff;':'rgba(220,53,69,0.05);color:#d9b3b8;')+'padding:6px 10px;" title="'+(dis?'删除该人员（软删除，记录审计日志）':'删除（需先将该人员禁用）')+'">🗑</button>'
       +'</div></td></tr>';
   }
   function render(rows){
@@ -475,7 +477,7 @@
     }
   };
 
-  /* ---- 停/启用：捕获阶段接管 API 行（旧本地逻辑处理不到 API 行） ---- */
+  /* ---- 禁用/启用 + 删除：捕获阶段接管 API 行（旧本地逻辑处理不到 API 行） ---- */
   function bindToggle(){
     var t = tb(); if(!t || t.__pfCapBound) return; t.__pfCapBound = true;
     t.addEventListener('click', function(e){
@@ -484,14 +486,25 @@
       var tr = btn.closest('tr'); if(!tr) return;
       var acts = tr.querySelectorAll('.admin-table-actions button');
       var idx=-1; for(var i=0;i<acts.length;i++){ if(acts[i]===btn){idx=i;break;} }
-      if(idx!==4) return;
+      if(idx!==4 && idx!==5) return;
       var p = MAP[tr.getAttribute('data-staff-no')];
       if(!p || !p.id) return;
       e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+      var base = (QAXQJT_PATHS.PERFORMERS_BY_ID || function (i) { return '/v1/performers/' + i; })(p.id);
+      /* 删除（仅已禁用；二次确认；软删除+审计） */
+      if(idx===5){
+        if(p.status!=='disabled'){ toast('⚠️ 仅「已禁用」状态的人员可删除，请先点击 🚫 禁用','warning'); return; }
+        if(!confirm('⚠️ 删除二次确认\n\n确定要删除 '+p.name+'（工号 '+(p.staffNo||'—')+'）吗？\n删除后将从花名册列表移除（软删除，操作将记录审计日志）。\n\n点击「确定」执行删除。')) return;
+        API.del(base, { showErrorToast:false })
+          .then(function(){ toast('🗑 已删除：'+p.name,'success'); load(); loadStats(); })
+          .catch(function(err){ toast('❌ 删除失败：'+((err&&err.message)||'网络/服务异常'),'error'); });
+        return;
+      }
+      /* 禁用/启用 */
       var on = isOn(p);
-      if(on && !confirm('确定要停用 '+p.name+'（'+(p.staffNo||'')+'）吗？停用后该员工将无法接单/排班。')) return;
-      API.patch((QAXQJT_PATHS.PERFORMERS_BY_ID || function (i) { return '/v1/performers/' + i; })(p.id), { status: on?'inactive':'active' }, { showErrorToast:false })
-        .then(function(){ toast(on?('✕ 已停用：'+p.name):('✓ 已启用：'+p.name), on?'warning':'success'); load(); loadStats(); })
+      if(on && !confirm('确定要禁用 '+p.name+'（'+(p.staffNo||'')+'）吗？\n禁用后该员工将无法接单/排班；仅禁用状态的人员可执行删除。')) return;
+      API.post(base + (on?'/disable':'/enable'), {}, { showErrorToast:false })
+        .then(function(){ toast(on?('⊘ 已禁用：'+p.name):('✓ 已启用：'+p.name), on?'warning':'success'); load(); loadStats(); })
         .catch(function(err){ toast('❌ 操作失败：'+((err&&err.message)||'网络/服务异常'),'error'); });
     }, true);
   }
@@ -563,6 +576,7 @@
         var pStat = p.status || 'active';
         if (stat === 'active' && (pStat==='inactive' || pStat==='disabled' || pStat==='离职')) return false;
         if (stat === 'inactive' && pStat !== 'inactive' && pStat !== 'disabled' && pStat !== '离职') return false;
+        if (stat === 'disabled' && pStat !== 'disabled') return false;
       }
       if (kw){
         var stdR = window.QaxRoles ? window.QaxRoles.stdRole(p.primaryRole) : '';
@@ -624,7 +638,7 @@
         (p.hireDate && String(p.hireDate).match(/(19|20)\d{2}/)) ? String(p.hireDate).match(/(19|20)\d{2}/)[0] : '',
         p.phone || '',
         p.remark || '',
-        on ? '在岗' : '停用',
+        p.status === 'disabled' ? '已禁用' : (on ? '在岗' : '停用'),
         p.remark || ''
       ]);
     });
@@ -634,11 +648,11 @@
     toast('📥 已导出 '+rows.length+' 条演职人员到 '+fname,'success');
   }
 
-  /* —— 批量启停：批量 PATCH /v1/performers/:id（仅当前页可见行，跳过分页/筛选隐藏行） —— */
+  /* —— 批量启停：POST /v1/performers/:id/(disable|enable)（仅当前页可见行，跳过分页/筛选隐藏行） —— */
   function batchToggle(enable){
     var t = tb(); if (!t){ toast('❌ 找不到花名册表','error'); return; }
     var checks = t.querySelectorAll('tr:not(.pg-hidden) input[type=checkbox].batch-row-check:checked');
-    if (!checks.length){ toast('⚠️ 请先勾选要'+(enable?'启用':'停用')+'的人员行','warning'); return; }
+    if (!checks.length){ toast('⚠️ 请先勾选要'+(enable?'启用':'禁用')+'的人员行','warning'); return; }
     var ids = [];
     var byStaffNo = window.__PF_MAP__ || {};
     checks.forEach(function(cb){
@@ -648,19 +662,19 @@
       if (p && p.id) ids.push({ id: p.id, name: p.name, staffNo: sn });
     });
     if (!ids.length){ toast('⚠️ 选中行未匹配到后端记录（请刷新页面后重试）','warning'); return; }
-    if (!confirm('确认'+(enable?'启用':'停用')+' '+ids.length+' 名演职人员？此操作将同步到后端。')) return;
+    if (!confirm('确认'+(enable?'启用':'禁用')+' '+ids.length+' 名演职人员？'+(enable?'':'禁用后才可执行删除操作。')+'此操作将同步到后端。')) return;
     var API = window.QAXQJT_API;
-    if (!API || typeof API.patch !== 'function'){ toast('❌ API 接口不可用','error'); return; }
-    toast('⏳ 正在批量'+(enable?'启用':'停用')+' '+ids.length+' 人...','info');
+    if (!API || typeof API.post !== 'function'){ toast('❌ API 接口不可用','error'); return; }
+    toast('⏳ 正在批量'+(enable?'启用':'禁用')+' '+ids.length+' 人...','info');
     var ok = 0, fail = 0, done = 0, total = ids.length;
     ids.forEach(function(it){
-      API.patch((QAXQJT_PATHS.PERFORMERS_BY_ID || function (i) { return '/v1/performers/' + i; })(it.id), { status: enable ? 'active' : 'inactive' }, { showErrorToast: false })
+      API.post(((QAXQJT_PATHS.PERFORMERS_BY_ID || function (i) { return '/v1/performers/' + i; })(it.id)) + (enable ? '/enable' : '/disable'), {}, { showErrorToast: false })
         .then(function(){ ok++; })
         .catch(function(){ fail++; })
         .then(function(){
           done++;
           if (done === total){
-            if (fail === 0) toast('✅ 已'+(enable?'启用':'停用')+' '+ok+' 人'+(fail?'，'+fail+'人失败':''),'success');
+            if (fail === 0) toast('✅ 已'+(enable?'启用':'禁用')+' '+ok+' 人'+(fail?'，'+fail+'人失败':''),'success');
             else toast('⚠️ 批量操作完成：成功 '+ok+' / 失败 '+fail,'warning');
             /* 触发重载 */
             try { window.__STF_LOAD__ && window.__STF_LOAD__(); }catch(_){}
@@ -668,6 +682,32 @@
           }
         });
     });
+  }
+
+  /* —— 清理已禁用人员：POST /v1/performers/cleanup-disabled（仅超管；分页批量软删，带审计） —— */
+  function cleanupDisabled(){
+    var rows = window.__PF_ROWS__ || [];
+    var disabledRows = rows.filter(function(p){ return p.status === 'disabled'; });
+    if (!disabledRows.length){ toast('ℹ️ 当前没有「已禁用」状态的演职人员，无需清理','info'); return; }
+    if (!confirm('⚠️ 清理二次确认\n\n将批量删除全部「已禁用」状态的演职人员（当前列表内 '+disabledRows.length+' 人，按每批 50 人分页清理）。\n删除为软删除，操作人/时间/人员信息将记录审计日志。\n\n点击「确定」开始清理。')) return;
+    if (!confirm('⚠️ 最终确认\n\n此操作不可在页面上直接撤销（仅可通过审计日志追溯）。\n确认继续清理 '+disabledRows.length+' 名已禁用人员？')) return;
+    var API = window.QAXQJT_API;
+    if (!API || typeof API.post !== 'function'){ toast('❌ API 接口不可用','error'); return; }
+    toast('⏳ 正在清理已禁用人员...','info');
+    var totalCleaned = 0, rounds = 0, maxRounds = 20;
+    (function loop(){
+      API.post('/v1/performers/cleanup-disabled', { pageSize: 50 }, { showErrorToast: false })
+        .then(function(res){
+          var d = (res && res.data) || res || {};
+          totalCleaned += (d.cleaned || 0);
+          rounds++;
+          var remaining = (typeof d.remaining === 'number') ? d.remaining : 0;
+          if (remaining > 0 && (d.cleaned || 0) > 0 && rounds < maxRounds){ loop(); return; }
+          toast('🧹 清理完成：共删除 '+totalCleaned+' 名已禁用人员'+(remaining>0?('（剩余 '+remaining+' 人，可再次点击继续清理）'):''),'success');
+          try { window.__STF_LOAD__ && window.__STF_LOAD__(); }catch(_){}
+        })
+        .catch(function(err){ toast('❌ 清理失败：'+((err&&err.message)||'网络/服务异常'),'error'); });
+    })();
   }
 
   /* —— 批量补卡：跳转到考勤 tab 并提示（仅当前页可见行） —— */
@@ -703,7 +743,7 @@
         '22',
         on ? '22' : '0',
         '0','0','0',
-        on ? '在岗' : '停用'
+        p.status === 'disabled' ? '已禁用' : (on ? '在岗' : '停用')
       ]);
     });
     var fname = '考勤统计_'+monthStr+'.csv';
@@ -728,7 +768,8 @@
       'btnStaffBatchEnable': function(){ batchToggle(true); },
       'btnStaffBatchDisable': function(){ batchToggle(false); },
       'btnStaffBatchMakeup': batchMakeup,
-      'btnStaffExportAttendance': exportAttendanceStats
+      'btnStaffExportAttendance': exportAttendanceStats,
+      'btnStaffCleanupDisabled': cleanupDisabled
     };
     Object.keys(map).forEach(function(id){
       var btn = $(id); if (!btn || btn.__stfHeaderBound) return;

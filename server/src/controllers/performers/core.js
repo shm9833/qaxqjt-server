@@ -377,6 +377,9 @@ const review = async ctx => {
 module.exports = {
   create,
   remove,
+  disable,
+  enable,
+  cleanupDisabled,
   selfRegister,
   selfRegisterQrInfo,
   selfRegisterStatus,
