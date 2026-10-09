@@ -65,8 +65,8 @@ test('env-check: 密钥强度——生产短密钥/弱口令/相同密钥/合格
   assert.strictEqual(ec.checkSecrets(GOOD_ENV).status, 'pass');
 });
 
-test('env-check: 必需 Node 主版本来自 engines（24.x → 24）', () => {
-  assert.strictEqual(ec.requiredNodeMajor(), 24);
+test('env-check: 必需 Node 主版本来自 engines（>=18 → 18）', () => {
+  assert.strictEqual(ec.requiredNodeMajor(), 18);
   assert.strictEqual(typeof ec.nodeMeets(1), 'boolean');
 });
 
