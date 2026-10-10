@@ -2,7 +2,7 @@
 # Process 12 admin/*.html files
 
 $ErrorActionPreference = "Stop"
-$baseDir = "d:\全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）\qaxqjt\admin"
+$baseDir = "d:\全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）\qaxqjt\admin"
 $files = @("index.html","orders.html","operas.html","schedule.html","cast-sheet.html","content.html","finance.html","staff.html","system.html","accounts.html","inventory.html","reports.html")
 
 # ====== 增强版 __btnHasBound 函数（作为字符串注入点） ======

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-秦安县秦剧团云端预约系统 · 前端 UI 回归测试
+秦安县秦剧团文化演出有限公司云端预约系统 · 前端 UI 回归测试
 防止以下 Bug 回归：
   1. 最新系统动态区域无限延长（.system-notice-list 缺少 max-height）
   2. 派工单取消无显示（closeDispatch 缺少 toast 反馈）
@@ -197,7 +197,7 @@ def test_dispatch_close_logic(base: Path, label: str) -> None:
 # ============================================================
 def main() -> int:
     print("=" * 60)
-    print("  秦安县秦剧团云端预约系统 · 前端 UI 回归测试")
+    print("  秦安县秦剧团文化演出有限公司云端预约系统 · 前端 UI 回归测试")
     print("  防止 Bug 回归: 系统动态无限延长 / 派工单取消无显示 / HeightGuard 误判")
     print("=" * 60)
 

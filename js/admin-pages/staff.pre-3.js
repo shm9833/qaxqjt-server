@@ -972,7 +972,7 @@
         var pad = function(n){ return String(n).padStart(2, '0'); };
         var nowStr = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
         var out = [];
-        out.push(['秦安县秦剧团 考勤预警名单（按部门分组）']);
+        out.push(['秦安县秦剧团文化演出有限公司 考勤预警名单（按部门分组）']);
         out.push(['统计月份', h.monthLabel, '导出时间', nowStr]);
         out.push(['概览', '在册人数 ' + h.totalRoster + '；本月有记录 ' + h.peopleWithRecords + '；迟到/早退 ' + h.totLate + ' 人次；事假 ' + h.totPL + ' 人次；旷工 ' + h.totAbsent + ' 人次；解聘风险 ' + h.redCount + ' 人；需关注 ' + (h.orangeCount + h.yellowCount) + ' 人']);
         out.push(['依据', '《员工管理条例》第二条：迟到30分钟内罚款20元/次；超30分钟按旷工半天；事假每月≤2次且≤2天（团长特批除外）；当月旷工2天或全年3次可解聘']);
@@ -1080,7 +1080,7 @@
         function mergeRange(sr, sc, er, ec){ merges.push({ s:{r:sr,c:sc}, e:{r:er,c:ec} }); }
 
         // 第1行：标题
-        var r = styledRow(['秦安县秦剧团 考勤预警名单（按部门分组）','','','','','','','',''], new Array(NCOL).fill(S_TITLE));
+        var r = styledRow(['秦安县秦剧团文化演出有限公司 考勤预警名单（按部门分组）','','','','','','','',''], new Array(NCOL).fill(S_TITLE));
         mergeRange(r, 0, r, 8);
         // 第2行：统计月份 / 导出时间
         r = styledRow(['统计月份', h.monthLabel, '', '导出时间', nowStr, '', '', '', ''],

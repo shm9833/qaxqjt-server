@@ -214,7 +214,7 @@ const vizMet = so('visualization', vizMetId, {
 // ---------- 3) Dashboard: 2x3 grid ----------
 const dashId = 'qaxqjt-dashboard-perf-overview';
 const dashboard = so('dashboard', dashId, {
-  title: '🎭 秦安县秦剧团 · Admin 按钮兜底 Perf 总览（QAX-QJT v20260804）',
+  title: '🎭 秦安县秦剧团文化演出有限公司 · Admin 按钮兜底 Perf 总览（QAX-QJT v20260804）',
   description: '对应通用复制模板 v20260804-2 输出的 JSON Perf 日志，需 Filebeat/Logstash 写入到索引 qaxqjt-admin-perf-*',
   version: 1,
   kibanaSavedObjectMeta: { searchSourceJSON: JSON.stringify({filter:[], query:{language:'kuery',query:''}}) },
@@ -250,13 +250,13 @@ console.log('【导入步骤】');
 console.log('  1. 登录 Kibana → 进入 ☰ → Stack Management → Saved Objects');
 console.log('  2. 右上角 Import → 选择文件：', path.relative(process.cwd(), OUT));
 console.log('  3. 点击 Import（若提示已存在 → 选 Automatically overwrite conflicts）');
-console.log('  4. 打开 Dashboard：搜索 "秦安县秦剧团 · Admin 按钮兜底 Perf 总览"');
+console.log('  4. 打开 Dashboard：搜索 "秦安县秦剧团文化演出有限公司 · Admin 按钮兜底 Perf 总览"');
 console.log('');
 console.log('【Logstash pipeline 参考配置】（写到 elk/logstash_pipeline_qaxqjt_perf.conf 也给你一份）');
 
 // ---------- 附赠：Logstash pipeline 配置示例 ----------
 const logstashConf = `# =====================================================
-#  Logstash Pipeline：采集 秦安县秦剧团 Admin 按钮兜底 Perf 日志
+#  Logstash Pipeline：采集 秦安县秦剧团文化演出有限公司 Admin 按钮兜底 Perf 日志
 #  日志格式：NDJSON（一行一条 JSON） → 文件放在 /var/log/qaxqjt/*.log
 #  使用：logstash -f logstash_pipeline_qaxqjt_perf.conf
 # =====================================================

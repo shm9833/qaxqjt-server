@@ -1,5 +1,5 @@
 # ============================================================
-#  秦安县秦剧团云端预约系统 · 部署后冒烟连通性检测 V2026.8.3
+#  秦安县秦剧团文化演出有限公司云端预约系统 · 部署后冒烟连通性检测 V2026.8.3
 #  用法：PowerShell 执行 →  .\_smoke_check.ps1 -BaseUrl "https://你的域名"
 #  作用：10秒内 14 个关键页 HTTP 200 + 标题关键词 双校验
 # ============================================================
@@ -9,7 +9,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $pages = @(
-    @{ Rel = "/index.html";              Title = "秦安县秦剧团" },
+    @{ Rel = "/index.html";              Title = "秦安县秦剧团文化演出有限公司" },
     @{ Rel = "/booking.html";            Title = "在线预约" },
     @{ Rel = "/operas.html";             Title = "剧目展演" },
     @{ Rel = "/cast-public.html";        Title = "阵容公开" },

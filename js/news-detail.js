@@ -185,7 +185,7 @@
         paragraphs.map(function (p) { return '<p style="margin:0 0 14px;text-indent:2em;">' + _escape(p) + '</p>'; }).join('') + '</div>';
     }
     html += '<div style="margin-top:26px;padding-top:14px;border-top:1px dashed #e5e7eb;font-size:0.8rem;color:#9ca3af;text-align:center;">' +
-      _escape(opts.footer || ('秦安县秦剧团 · ' + (dt ? dt.y : ''))) + '</div>';
+      _escape(opts.footer || ('秦安县秦剧团文化演出有限公司 · ' + (dt ? dt.y : ''))) + '</div>';
 
     body.innerHTML = html;
     body.scrollTop = 0;

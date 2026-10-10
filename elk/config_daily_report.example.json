@@ -1,5 +1,5 @@
 {
-  "_comment": "=== 秦安县秦剧团 Admin Perf P99 日报配置示例 · 把此文件复制为 config_daily_report.json 并填入真实值 ===",
+  "_comment": "=== 秦安县秦剧团文化演出有限公司 Admin Perf P99 日报配置示例 · 把此文件复制为 config_daily_report.json 并填入真实值 ===",
   "_comment_smtp_ports": "常见SMTP端口：腾讯企业邮/QQ邮箱 smtp.exmail.qq.com 465 SSL / 587 STARTTLS；163: smtp.163.com 465；Gmail: smtp.gmail.com 465（需APP专用密码）；阿里云企业邮: smtp.qiye.aliyun.com 465",
   "es": {
     "host": "http://127.0.0.1:9200",

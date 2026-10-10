@@ -1,7 +1,7 @@
 # 按钮兜底机制修复说明文档
 ## DeadButtonFallback + SuperPatch 6/6 · 2026-08-04
 
-> **适用范围**：秦安县秦剧团云端预约系统 · 管理后台 12 个页面（admin/*.html）
+> **适用范围**：秦安县秦剧团文化演出有限公司云端预约系统 · 管理后台 12 个页面（admin/*.html）
 > **文档目的**：帮助维护人员快速理解本次修复的"现象 → 根因 → 改动点 → 验证方法"，避免后续回归
 > **当前状态**：✅ 代码已落地（admin/ + _deploy/两份副本） · GetDiagnostics 0 错误 · Grep 旧模式 0 匹配
 
@@ -47,7 +47,7 @@
 ## 三、修复清单（与代码一一对应）
 
 ### ✅ 修复 1：DeadButtonFallback 重写（12 页面 × 1 处）
-**关键代码位置参考**：[orders.html L2322-L2356](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/orders.html#L2322-L2356)
+**关键代码位置参考**：[orders.html L2322-L2356](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/orders.html#L2322-L2356)
 
 | 改动点 | 修复前 | 修复后 |
 |--------|--------|--------|
@@ -59,7 +59,7 @@
 ---
 
 ### ✅ 修复 2：SuperPatch 6/6 重写（12 页面 × 1 处）
-**关键代码位置参考**：[orders.html L3279-L3346](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/orders.html#L3279-L3346)
+**关键代码位置参考**：[orders.html L3279-L3346](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/orders.html#L3279-L3346)
 
 | 改动点 | 修复前 | 修复后 |
 |--------|--------|--------|
@@ -85,20 +85,20 @@
 ### 主文件（admin 目录）
 | 文件 | DeadButtonFallback | SuperPatch 6/6 | 同步完成 |
 |------|:---:|:---:|:---:|
-| [orders.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/orders.html) | ✅ | ✅ | ✅ |
-| [accounts.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/accounts.html) | ✅ | ✅ | ✅ |
-| [schedule.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/schedule.html) | ✅ | ✅ | ✅ |
-| [finance.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/finance.html) | ✅ | ✅ | ✅ |
-| [content.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/content.html) | ✅ | ✅ | ✅ |
-| [staff.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/staff.html) | ✅ | ✅ | ✅ |
-| [operas.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/operas.html) | ✅ | ✅ | ✅ |
-| [inventory.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/inventory.html) | ✅ | ✅ | ✅ |
-| [cast-sheet.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/cast-sheet.html) | ✅ | ✅ | ✅ |
-| [attendance.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/attendance.html) | —（无兜底模块） | —（无兜底模块） | — |
-| [reports.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/reports.html) | ✅ | ✅ | ✅ |
-| [system.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/system.html) | ✅ | ✅ | ✅ |
-| [index.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/index.html) | ✅（含 3 处死按钮兜底模块，全部修完） | ✅ | ✅ |
-| [login.html](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/login.html) | —（登录页无表格按钮） | —（无 SuperPatch 模块） | — |
+| [orders.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/orders.html) | ✅ | ✅ | ✅ |
+| [accounts.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/accounts.html) | ✅ | ✅ | ✅ |
+| [schedule.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/schedule.html) | ✅ | ✅ | ✅ |
+| [finance.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/finance.html) | ✅ | ✅ | ✅ |
+| [content.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/content.html) | ✅ | ✅ | ✅ |
+| [staff.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/staff.html) | ✅ | ✅ | ✅ |
+| [operas.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/operas.html) | ✅ | ✅ | ✅ |
+| [inventory.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/inventory.html) | ✅ | ✅ | ✅ |
+| [cast-sheet.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/cast-sheet.html) | ✅ | ✅ | ✅ |
+| [attendance.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/attendance.html) | —（无兜底模块） | —（无兜底模块） | — |
+| [reports.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/reports.html) | ✅ | ✅ | ✅ |
+| [system.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/system.html) | ✅ | ✅ | ✅ |
+| [index.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/index.html) | ✅（含 3 处死按钮兜底模块，全部修完） | ✅ | ✅ |
+| [login.html](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/login.html) | —（登录页无表格按钮） | —（无 SuperPatch 模块） | — |
 
 ---
 

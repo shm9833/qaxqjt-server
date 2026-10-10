@@ -43,7 +43,7 @@
 
   "report": {
     "title": "【测试环境】秦剧团 Admin 性能 P99 日报",
-    "subtitle": "秦安县秦剧团云端预约系统 · ELK 自动分析",
+    "subtitle": "秦安县秦剧团文化演出有限公司云端预约系统 · ELK 自动分析",
     "output_dir": "./reports",
     "log_dir": "./logs",
     "keep_report_days": 30

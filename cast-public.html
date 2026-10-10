@@ -9,20 +9,20 @@
 <meta name="format-detection" content="telephone=no,email=no,address=no">
 <meta name="applicable-device" content="pc,mobile">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="秦安县秦剧团云端预约系统">
-<meta property="og:title" content="秦安县秦剧团 · 本场演出阵容">
+<meta property="og:site_name" content="秦安县秦剧团文化演出有限公司云端预约系统">
+<meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 本场演出阵容">
 <meta property="og:description" content="秦安县秦剧团文化演出有限公司 · 本场演出演员表与节目单公开版 · 传承陇原秦韵，唱响乡土华章">
 <meta property="og:image" content="favicon.svg">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="description" content="秦安县秦剧团文化演出有限公司·本场演出阵容公开页·演员名单·剧目介绍·乐队阵容·节目单">
 <meta name="keywords" content="秦安秦剧团,演出阵容,演员表,秦腔演出,节目单">
-<title>秦安县秦剧团 · 本场演出阵容公开 | {year}</title>
+<title>秦安县秦剧团文化演出有限公司 · 本场演出阵容公开 | {year}</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <script src="js/favicon-inject.js?v=20260803" defer></script>
     <script src="js/site-assets.js?v=20260929a" defer></script>
 <script src="js/wechat-fallback.js?v=20260803" defer></script>
 <script src="js/year-lite.js?v=20260803" defer></script>
-<script src="js/api-config.js?v=20260922" defer></script>
+<script src="js/api-config.js?v=20261010a" defer></script>
 <script src="js/api-request.js?v=20260922" defer></script>
 <script src="js/app.js?v=20261009a" defer></script>
 <link rel="stylesheet" href="css/style.css?v=20260923a">
@@ -254,7 +254,7 @@ color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,2
 <div class="cp-wrap">
   <!-- 顶部海报Banner -->
   <div class="cp-poster" id="cpPoster">
-    <div class="cp-company">秦安县秦剧团<em> · 文化演出有限公司</em></div>
+    <div class="cp-company">秦安县秦剧团文化演出有限公司<em> · 文化演出有限公司</em></div>
     <div class="cp-title" id="cpTitle"><span>本场演出阵容（公开版）</span></div>
     <div class="cp-meta" id="cpMeta">
       <div class="m"><span class="ic">📢</span><b>主办单位</b><span class="v" id="mHost">—</span></div>
@@ -410,7 +410,7 @@ color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,2
       header: {
         title: playTitle ? (_operaName(playTitle) + ' · 演出阵容') : '本场演出阵容',
         host: '秦安县秦剧团文化演出有限公司',
-        organizer: '秦安县秦剧团',
+        organizer: '秦安县秦剧团文化演出有限公司',
         coorganizer: '',
         sponsor: '',
         date: detail.performanceDate || '',
@@ -531,7 +531,7 @@ color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,2
 
   /* ======== 渲染 ======== */
   function renderHeader(h){
-    if(nonEmpty(h.title)){ $('cpTitle').innerHTML = '<span>'+hx(h.title)+'</span>'; document.title = '秦安县秦剧团 · '+h.title+' 演出阵容 | {year}'.replace('{year}', new Date().getFullYear()); }
+    if(nonEmpty(h.title)){ $('cpTitle').innerHTML = '<span>'+hx(h.title)+'</span>'; document.title = '秦安县秦剧团文化演出有限公司 · '+h.title+' 演出阵容 | {year}'.replace('{year}', new Date().getFullYear()); }
     $('mHost').textContent = nonEmpty(h.host)?h.host:'—';
     $('mOrganizer').textContent = nonEmpty(h.organizer)?h.organizer:'—';
     $('mCoorganizer').textContent = nonEmpty(h.coorganizer)?h.coorganizer:'—';
@@ -542,7 +542,7 @@ color:#fff;border-bottom:6px double #fbbf24;box-shadow:0 10px 30px rgba(127,29,2
     if(nonEmpty(h.notice)) $('mNotice').innerHTML = '💡 温馨提示：'+hx(h.notice);
     // OG
     try{
-      var ogT = document.querySelector('meta[property="og:title"]'); if(ogT && nonEmpty(h.title)) ogT.setAttribute('content', '秦安县秦剧团 · '+h.title);
+      var ogT = document.querySelector('meta[property="og:title"]'); if(ogT && nonEmpty(h.title)) ogT.setAttribute('content', '秦安县秦剧团文化演出有限公司 · '+h.title);
       var ogD = document.querySelector('meta[property="og:description"]'); if(ogD) ogD.setAttribute('content', (h.venue?'📍'+h.venue+' · ':'')+'秦安县秦剧团文化演出有限公司·本场演出阵容公开');
     }catch(e){ console.warn('[cast-public] renderHeader OG meta update failed:', e && e.message ? e.message : e); }
   }

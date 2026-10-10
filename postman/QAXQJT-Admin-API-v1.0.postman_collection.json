@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "f13a9b86-7c5d-4f1e-a2b3-9c8d7e6a5b4c",
-    "name": "秦安县秦剧团云端预约系统 · 管理后台 API v1.0 (12页核心CRUD)",
+    "name": "秦安县秦剧团文化演出有限公司云端预约系统 · 管理后台 API v1.0 (12页核心CRUD)",
     "description": "包含 12 个管理页面核心 CRUD：认证/账号/角色权限/审计日志/客户/预约/排期/剧团演员/考勤/财务/报表/库存\n\n接入步骤：\n1. 导入 Collection 后，设置 Collection Variables（baseUrl / admin_username / admin_password）\n2. 先执行『01-认证登录 → POST 登录』获取 Token（脚本自动写入 accessToken 变量）\n3. 后续所有请求自动继承 Authorization: Bearer {{accessToken}}\n4. 若后端离线，可在 booking.html / admin/login.html 观察 localStorage 降级日志（Console）\n\n对应文档：E-5 后端接口对接方案v1.0 / E-2 后端REST鉴权规范v1.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },

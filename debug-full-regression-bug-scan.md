@@ -2,7 +2,7 @@
 **Status**: [CLOSED - ✅ PASS]  
 **Created At**: 2026-07-31  
 **Session ID**: full-regression-bug-scan  
-**Objective**: 从零开始对秦安县秦剧团云端预约系统（前台18页+后台13页，共31页130个script块）执行全量 Bug 扫描与回归验证，覆盖：语法正确性、页面渲染完整性、前后台数据流通、边界条件鲁棒性、Console Error 清零。
+**Objective**: 从零开始对秦安县秦剧团文化演出有限公司云端预约系统（前台18页+后台13页，共31页130个script块）执行全量 Bug 扫描与回归验证，覆盖：语法正确性、页面渲染完整性、前后台数据流通、边界条件鲁棒性、Console Error 清零。
 
 ---
 

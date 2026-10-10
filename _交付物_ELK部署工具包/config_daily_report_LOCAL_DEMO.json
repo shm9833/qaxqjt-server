@@ -16,7 +16,7 @@
     "port": 10025,
     "use_ssl": false,
     "starttls": false,
-    "sender_name": "秦安县秦剧团·演示系统",
+    "sender_name": "秦安县秦剧团文化演出有限公司·演示系统",
     "sender_email": "daily-report-demo@qaxqjt.local",
     "user": "demo_user",
     "password": "demo_pass_123",

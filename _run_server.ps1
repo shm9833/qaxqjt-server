@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $PyPath = (Get-Command python).Source
 if (-not $PyPath) { throw 'python not found' }
-$ScriptPath = 'd:\全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）\qaxqjt\_serve_local.py'
+$ScriptPath = 'd:\全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）\qaxqjt\_serve_local.py'
 $OutLog = 'C:\Users\hp\AppData\Local\Temp\trae-agent-toolhost\jobs\srv_out.log'
 $ErrLog = 'C:\Users\hp\AppData\Local\Temp\trae-agent-toolhost\jobs\srv_err.log'
 $P = Start-Process -FilePath $PyPath -ArgumentList $ScriptPath -PassThru -NoNewWindow `

@@ -28,7 +28,7 @@ function Test-IsAdmin {
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  秦安县秦剧团 - Windows Server 一键部署" -ForegroundColor Cyan
+Write-Host "  秦安县秦剧团文化演出有限公司 - Windows Server 一键部署" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 

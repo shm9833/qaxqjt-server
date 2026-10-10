@@ -1,4 +1,4 @@
-# 秦安县秦剧团 · ELK 日报工具最终交付 README
+# 秦安县秦剧团文化演出有限公司 · ELK 日报工具最终交付 README
 
 > 本包已修复 Windows UTF-8 BOM 配置加载失败、SMTP EHLO `local_hostname` 不合规导致被拒的问题，**9 个单元测试 + 6 个 Mock 离线回归场景 100% 通过**。
 

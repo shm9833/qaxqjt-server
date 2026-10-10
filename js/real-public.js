@@ -56,7 +56,7 @@
     var s = String((p && (p.synopsis || p.castSummary)) || '').replace(/\s+/g, ' ').trim();
     if (s && s !== '待定') return s;
     var g = p && p.genre ? p.genre : '传统剧目';
-    return '秦安县秦剧团常演' + g + '，适配庙会、惠民下乡、节庆庆典等演出场景，欢迎预约。';
+    return '秦安县秦剧团文化演出有限公司常演' + g + '，适配庙会、惠民下乡、节庆庆典等演出场景，欢迎预约。';
   }
 
   function fmtDate(d) {

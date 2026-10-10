@@ -423,7 +423,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, '127.0.0.1', () => {
   console.log('\n' + '='.repeat(72));
-  console.log('✅ 秦安县秦剧团云端预约系统 · MOCK API + 前端静态服务 已启动');
+  console.log('✅ 秦安县秦剧团文化演出有限公司云端预约系统 · MOCK API + 前端静态服务 已启动');
   console.log('   单端口托管：前端页面 + Mock API 同源，无需在 8080 / 3001 之间切换');
   console.log('');
   console.log('   统一入口：  http://127.0.0.1:' + PORT + '/');

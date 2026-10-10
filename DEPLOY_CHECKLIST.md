@@ -1,4 +1,4 @@
-# 秦安县秦剧团云端预约系统 · 部署前最终检查清单
+# 秦安县秦剧团文化演出有限公司云端预约系统 · 部署前最终检查清单
 
 > **生成时间**：2026-08-04 11:35  
 > **适用范围**：本地 Mock 同源验证 → EdgeOne Pages 静态托管 + 真实后端（或继续 Mock）上线前夕  
@@ -105,7 +105,7 @@ request() → fallback: force_fallback
 ### 2.1 一键健康检查 4 条（PowerShell）
 ```powershell
 # 运行：复制粘贴进 PowerShell 即出结果
-cd "d:\全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）\qaxqjt"
+cd "d:\全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）\qaxqjt"
 
 $A = Invoke-RestMethod http://127.0.0.1:3001/v1/healthz
 $B = Invoke-RestMethod http://127.0.0.1:3001/api/v1/healthz  # ← 同源 /api 前缀
@@ -314,8 +314,8 @@ Write-Output "初始干净状态: total=$($Apt.data.total) (应为 0)"
 
 ## 八、腾讯云 EdgeOne Pages 部署步骤（10 步 · 对应 edgeone.config.json v1.0）
 
-> **配置文件位置**：[edgeone.config.json](file:///D:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/edgeone.config.json)  
-> **配套静态文件**：[404.html](file:///D:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/404.html) 已按 §一·8 更新带「快速入口 + admin + booking + healthz」4 锚点
+> **配置文件位置**：[edgeone.config.json](file:///D:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/edgeone.config.json)  
+> **配套静态文件**：[404.html](file:///D:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/404.html) 已按 §一·8 更新带「快速入口 + admin + booking + healthz」4 锚点
 
 ### Step 1 · 在腾讯云 EdgeOne 控制台新建 Pages 项目
 1. 登录 [腾讯云 EdgeOne 控制台](https://console.cloud.tencent.com/edgeone) → **Pages** → **新建项目**
@@ -334,7 +334,7 @@ Write-Output "初始干净状态: total=$($Apt.data.total) (应为 0)"
 - **环境变量 (Environment)**：
   | Key | 建议值 | 用途 |
   |---|---|---|
-  | `VITE_APP_NAME` | `秦安县秦剧团云端预约系统` | 前端页头展示 |
+  | `VITE_APP_NAME` | `秦安县秦剧团文化演出有限公司云端预约系统` | 前端页头展示 |
   | `VITE_APP_DEPLOY_ENV` | `edgeone-pages` | 前端显示当前环境 |
   | `JWT_SECRET` | ≥ 32 位随机字符串（真实后端必填，见经验 2044860 §4 fail-fast） | 鉴权签名 |
 
@@ -444,7 +444,7 @@ ${YOUR_EDGEONE_PAGES_DOMAIN:https://qin-anyuanxi.example.com} → Pages 项目�
 
 **问题现象**：用户在 booking.html 填写表单点击「提交预约申请」后，前端控制台输出 `[submitAppointment] ③-a ⚠️ API 不可用，触发降级：reason=force_fallback`，预约数据**未提交到后端**，仅写入 localStorage（bookingId 前缀 `26-QA-`，而非后端的 `APT`）。即使后端服务正常运行、`qaxqjt_fallback_mode=0`，仍然走降级路径。
 
-**根因**：[js/api-request.js:55](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/js/api-request.js#L55-L62) 的判断条件 `if (CFG.isFallbackMode && ...)` 检查的是**函数引用**（永远为 truthy），而非函数调用结果。导致只要 `opts.fallback` 回调存在，就强制走降级路径。
+**根因**：[js/api-request.js:55](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/js/api-request.js#L55-L62) 的判断条件 `if (CFG.isFallbackMode && ...)` 检查的是**函数引用**（永远为 truthy），而非函数调用结果。导致只要 `opts.fallback` 回调存在，就强制走降级路径。
 
 **修复 Diff**（3 份文件已同步：主目录 + `_deploy/js/` + `_deploy/.edgeone/assets/js/`）：
 
@@ -473,14 +473,14 @@ ${YOUR_EDGEONE_PAGES_DOMAIN:https://qin-anyuanxi.example.com} → Pages 项目�
 
 | # | 文件 | 行号 | Bug | 修复 |
 |---|---|---|---|---|
-| 1 | [server/src/controllers/appointments.js](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/server/src/controllers/appointments.js#L179-L189) | L179 | `prisma.appointmentPlay.createMany({ data, skipDuplicates: true })` — SQLite 不支持 `skipDuplicates` 参数，抛 `PrismaClientValidationError` | 移除 `skipDuplicates: true` 参数 |
-| 2 | [server/src/app.js](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/server/src/app.js#L7-L10) | L7-L10 | Prisma 返回的 `ts` 字段是 BigInt，`JSON.stringify` 抛 `TypeError: Do not know how to serialize a BigInt` | 在 app.js 顶部添加 `BigInt.prototype.toJSON = function () { return Number(this); }` |
+| 1 | [server/src/controllers/appointments.js](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/server/src/controllers/appointments.js#L179-L189) | L179 | `prisma.appointmentPlay.createMany({ data, skipDuplicates: true })` — SQLite 不支持 `skipDuplicates` 参数，抛 `PrismaClientValidationError` | 移除 `skipDuplicates: true` 参数 |
+| 2 | [server/src/app.js](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/server/src/app.js#L7-L10) | L7-L10 | Prisma 返回的 `ts` 字段是 BigInt，`JSON.stringify` 抛 `TypeError: Do not know how to serialize a BigInt` | 在 app.js 顶部添加 `BigInt.prototype.toJSON = function () { return Number(this); }` |
 
 **注意**：`server/src/controllers/customers.js` L82/L89 和 `server/src/controllers/roles.js` L92 仍残留 `skipDuplicates: true`，但当前预约流程不触发这两个接口。生产部署前建议一并清理（grep `skipDuplicates` 应返回 0 条）。
 
 ### 9.3 副本完整性补齐（`_deploy` 之前遗漏 2 个文件）
 
-**问题**：`_deploy/js/` 和 `_deploy/.edgeone/assets/js/` 目录此前**缺失** `api-config.js` 和 `api-request.js`，但 [booking.html:523-524](file:///d:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/booking.html#L523-L524) 引用了这两个文件。若直接将 `_deploy/` 部署到 EdgeOne Pages，前端会因 404 加载失败而无法发起任何 API 请求。
+**问题**：`_deploy/js/` 和 `_deploy/.edgeone/assets/js/` 目录此前**缺失** `api-config.js` 和 `api-request.js`，但 [booking.html:523-524](file:///d:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/booking.html#L523-L524) 引用了这两个文件。若直接将 `_deploy/` 部署到 EdgeOne Pages，前端会因 404 加载失败而无法发起任何 API 请求。
 
 **已同步文件清单**（4 个文件，2026-08-08 15:05 复制完成）：
 

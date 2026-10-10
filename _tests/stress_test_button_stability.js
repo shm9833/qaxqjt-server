@@ -207,7 +207,7 @@ async function runVirtualUser(userId) {
 // ========== 主流程：RampUp → Steady → RampDown ==========
 async function main() {
   console.log('\n' + '█'.repeat(70));
-  console.log('█  秦安县秦剧团云端预约系统 · 按钮兜底机制 高并发稳定性压测');
+  console.log('█  秦安县秦剧团文化演出有限公司云端预约系统 · 按钮兜底机制 高并发稳定性压测');
   console.log('█  配置 MAX_CONCURRENT=',CONFIG.MAX_CONCURRENT,
     'RAMP=',CONFIG.RAMP_UP_SEC,'s STEADY=',CONFIG.STEADY_SEC,'s RDN=',CONFIG.RAMP_DOWN_SEC,'s');
   console.log('█'.repeat(70));

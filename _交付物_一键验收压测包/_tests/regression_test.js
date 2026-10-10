@@ -1,5 +1,5 @@
 /**
- * 秦安县秦剧团云端预约系统 · Admin按钮兜底机制全量回归测试
+ * 秦安县秦剧团文化演出有限公司云端预约系统 · Admin按钮兜底机制全量回归测试
  * 测试范围：DeadButtonFallback + SuperPatch 6/6 （修复后版本）
  * 测试方法：轻量DOM模拟器 + 12页面静态代码扫描
  * 运行：node _tests/regression_test.js
@@ -592,7 +592,7 @@ function runOmnibusOmissionCheck() {
 // ============================================================
 function main() {
   console.log('\n' + '█'.repeat(70));
-  console.log('█  秦安县秦剧团云端预约系统 · 按钮兜底机制 全量回归测试报告');
+  console.log('█  秦安县秦剧团文化演出有限公司云端预约系统 · 按钮兜底机制 全量回归测试报告');
   console.log('█  版本：修复版 v20260804');
   console.log('█'.repeat(70));
 

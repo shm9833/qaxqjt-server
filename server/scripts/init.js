@@ -23,7 +23,7 @@ function line(c) {
 }
 
 async function main() {
-  console.log('====== 秦安县秦剧团云端预约系统 · 初始化向导 ======');
+  console.log('====== 秦安县秦剧团文化演出有限公司云端预约系统 · 初始化向导 ======');
   console.log(`NODE_ENV=${env.NODE_ENV || 'development'}  APP_PORT=${env.APP_PORT || 3001}`);
   console.log('');
 

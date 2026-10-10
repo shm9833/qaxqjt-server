@@ -146,7 +146,7 @@ async function t(name, fn) {
     assert(stf.hashStr('PF001') !== stf.hashStr('PF002'));
     assert.strictEqual(stf.hashStr(''), 0);
     assert(Number.isFinite(stf.hashStr(12345)));
-    assert(stf.hashStr('秦安县秦剧团') >= 0);
+    assert(stf.hashStr('秦安县秦剧团文化演出有限公司') >= 0);
   });
   await t('staff.esc: 四字符转义', () => {
     assert.strictEqual(stf.esc('<b>"&"'), '&lt;b&gt;&quot;&amp;&quot;');

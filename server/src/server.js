@@ -47,7 +47,7 @@ const server = app.listen(PORT, '0.0.0.0', async () => {
       version: env.APP_VERSION,
       ts: nowMs()
     },
-    `秦安县秦剧团云端预约 API 已启动 -> http://127.0.0.1:${PORT}/v1/healthz`
+    `秦安县秦剧团文化演出有限公司云端预约 API 已启动 -> http://127.0.0.1:${PORT}/v1/healthz`
   );
 });
 

@@ -30,7 +30,7 @@
 | S3b | STEP3b | H4 | 后台orders页扫描localStorage + 搜索关键字匹配 | localStorage中找到完整JSON预约记录：`[{"customerName":"全链路测试_张经理","phone":"13800001111","organization":"秦安县全链路测试村委会","serviceType":"乡村庙会戏曲演出","shows":3,"selectedPlays":["火焰驹","大升官","铡美案"],"preferredStartDate":"2026-11-15"}]`，字段完整100% | ✅ **H4 PASS** |
 | S4a | STEP4a | H5 | orders页验证器grep+调用：ORD_MAX_SHOWS=365/ORD_MAX_AMOUNT=99999999.99/ORD_MIN_YEAR=1990/ORD_MAX_YEAR=2100 + _ordIsValidDate含日期溢出检测 | _ordIsValidDate第3690行存在 `dt.getDate()===dd` 溢出检测，2026-02-30可正确拦截 | ✅ orders 8/9 边界项通过 |
 | S4b | STEP4b-pre | H5 | Finance边界Pre-fix扫描：_parseMoney9/9+_isValidDateStr8/8+_validateNewPayment INT集成链7项→6/7 | INT#3失败：输入amt='999999999.99'(超上限9.99亿→被_parseMoney截断为上限值→amt>上限条件永不触发，静默"蒙混过关") | ⚠️ 发现Bug INT#3 |
-| S4b-fix | STEP4b-fix | H5 | 修复 [finance.html](file:///D:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/finance.html#L3611-L3637) `_validateNewPayment`：在_parseMoney前先对原始输入做rawAmt范围+科学计数法拦截，并保留_parseMoney后作为二次安全网 | 新增约12行代码：① rawAmtStr→Clean→Num比较范围 ② 原始超范围直接toast拦截 return null ③ 科学计数法/Infinity/NaN 提前拦截 ④ parseMoney后保留二次安全网 ⑤ 报错信息增加"原始输入"前缀展示 | 🛠 FixID: FIN-INT3-BOUNDARY applied |
+| S4b-fix | STEP4b-fix | H5 | 修复 [finance.html](file:///D:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/finance.html#L3611-L3637) `_validateNewPayment`：在_parseMoney前先对原始输入做rawAmt范围+科学计数法拦截，并保留_parseMoney后作为二次安全网 | 新增约12行代码：① rawAmtStr→Clean→Num比较范围 ② 原始超范围直接toast拦截 return null ③ 科学计数法/Infinity/NaN 提前拦截 ④ parseMoney后保留二次安全网 ⑤ 报错信息增加"原始输入"前缀展示 | 🛠 FixID: FIN-INT3-BOUNDARY applied |
 | S4b-post | STEP4b-post | H5 | Finance Post-fix重新执行24项测试 | PM9/9+DV8/8+INT7/7=**24/24 100%**通过。关键修复验证INT#3: rawAmt=999999999.99 → 提前拦截，报错含"超过业务上限 原始输入：999999999.99" | ✅ **Finance 24/24全通** |
 | S4c | STEP4c | H5 | Attendance(新增考勤页)边界扫描：`Math.max(0,Number(x)|0)` 非负保护×10处、`calcTax`分段校验、`!isFinite(n)→0`、薪资参数默认值回退 | 全部输入入口均有`Number(value)||DEFAULT`保护，无null/undefined崩溃风险 | ✅ attendance边界OK |
 | S5 | STEP5 | - | 扫尾：Debug文档更新、最终结果汇总 | 5假设全部✅通过，发现1个边界Bug并成功修复 | 🏁 回归完毕 |
@@ -41,7 +41,7 @@
 
 | BugID | 严重度 | 页面 | 描述 | 复现步骤 | 状态 |
 |-------|-------|------|------|---------|------|
-| BUG-V2-001 | 中（边界逻辑） | [finance.html](file:///D:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/finance.html#L3611-L3621) | **_validateNewPayment超限值被_parseMoney提前截断，导致`amt>FIN_MAX_AMOUNT`检查永不触发**。用户输入9.99亿(>9999.99万上限)时，先被_parseMoney截断为9999.99万，再与上限比较9999.99万不大于上限，toast拦截失效，异常金额放行保存。 | 1. 新建收款单 2. 金额输入框填写`999999999.99` 3. 其余字段合法填写 4. 原代码下验证通过并保存，金额静默降为99999999.99，无任何拦截提示 | **✅ FIXED** (见Fix-FIN-INT3) |
+| BUG-V2-001 | 中（边界逻辑） | [finance.html](file:///D:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/finance.html#L3611-L3621) | **_validateNewPayment超限值被_parseMoney提前截断，导致`amt>FIN_MAX_AMOUNT`检查永不触发**。用户输入9.99亿(>9999.99万上限)时，先被_parseMoney截断为9999.99万，再与上限比较9999.99万不大于上限，toast拦截失效，异常金额放行保存。 | 1. 新建收款单 2. 金额输入框填写`999999999.99` 3. 其余字段合法填写 4. 原代码下验证通过并保存，金额静默降为99999999.99，无任何拦截提示 | **✅ FIXED** (见Fix-FIN-INT3) |
 
 > **历史前序问题验证**：前序会话修复的问题全部保持稳定（live-api/qr-booking选择器语法修复、schedule IIFE粘连修复、pagination空引用保护、orders 365场/日期年范围边界加固等），本次133块语法零错误证明上述修复均持续生效。
 
@@ -51,7 +51,7 @@
 
 | FixID | 对应 BugID | 修复摘要 | 影响文件 | 回归验证 |
 |-------|-----------|---------|---------|---------|
-| Fix-FIN-INT3-BOUNDARY | BUG-V2-001 | **在_validateNewPayment增加前置原始范围检查层**：①先对rawAmtStr清洗后Number转换检查超上限(含正负) ②科学计数法/NaN/Infinity提前拦截 ③ 报错toast增加"原始输入"前缀，用户知道输入值 ④ _parseMoney清洗解析后保留二次安全网，双保险确保不遗漏。修改行数：约+12行，位于函数入口处 | [admin/finance.html#L3611-L3637](file:///D:/全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/finance.html#L3611-L3637) | 修复前：INT7/7=6/7(INT#3失败)；**修复后：24项边界测试=PM9/9 + DV8/8 + INT7/7 = 100%全通过**。关键修复点INT#3测试通过：非法值999,999,999.99在解析前被拦截并给出明确toast提示 |
+| Fix-FIN-INT3-BOUNDARY | BUG-V2-001 | **在_validateNewPayment增加前置原始范围检查层**：①先对rawAmtStr清洗后Number转换检查超上限(含正负) ②科学计数法/NaN/Infinity提前拦截 ③ 报错toast增加"原始输入"前缀，用户知道输入值 ④ _parseMoney清洗解析后保留二次安全网，双保险确保不遗漏。修改行数：约+12行，位于函数入口处 | [admin/finance.html#L3611-L3637](file:///D:/全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）/qaxqjt/admin/finance.html#L3611-L3637) | 修复前：INT7/7=6/7(INT#3失败)；**修复后：24项边界测试=PM9/9 + DV8/8 + INT7/7 = 100%全通过**。关键修复点INT#3测试通过：非法值999,999,999.99在解析前被拦截并给出明确toast提示 |
 
 ---
 
