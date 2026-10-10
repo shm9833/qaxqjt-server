@@ -37,6 +37,32 @@ const RESPONSE_DROP = ["content-encoding", "content-length", "transfer-encoding"
 export default {
   async fetch(request) {
     const u = new URL(request.url);
+
+    // 临时诊断路由（验证后删除）
+    if (u.searchParams.has("__wdbg")) {
+      const t = new URL(u.pathname + u.search, ORIGIN);
+      t.searchParams.delete("__wdbg");
+      const dbg = { incomingHost: u.host, target: t.toString(), targetHostHeader: ORIGIN_HOST };
+      try {
+        const probe = await fetch(t.toString(), {
+          method: "GET",
+          headers: { Host: ORIGIN_HOST },
+          redirect: "manual"
+        });
+        const txt = await probe.text();
+        dbg.probe = {
+          status: probe.status,
+          srv: probe.headers.get("server"),
+          bodyHead: txt.substring(0, 120)
+        };
+      } catch (e) {
+        dbg.probeErr = String(e);
+      }
+      return new Response(JSON.stringify(dbg, null, 2), {
+        headers: { "Content-Type": "application/json; charset=utf-8" }
+      });
+    }
+
     const target = new URL(u.pathname + u.search, ORIGIN);
 
     const h = new Headers();
