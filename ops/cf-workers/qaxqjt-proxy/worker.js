@@ -41,10 +41,11 @@ export default {
     // 临时诊断路由（验证后删除）
     if (u.searchParams.has("__wdbg")) {
       const port = u.searchParams.get("__port") || "80";
+      const scheme = u.searchParams.get("__scheme") || "http";
       const path = u.searchParams.get("__path") || u.pathname;
       const hostHdr = u.searchParams.get("__host"); // null=不设Host; 'ip'=IP; 其他原样
       const targetIp = u.searchParams.get("__ip") || ORIGIN_HOST;
-      const t = new URL(path, `http://${targetIp}:${port}`);
+      const t = new URL(path, `${scheme}://${targetIp}:${port}`);
       const dbg = { incomingHost: u.host, target: t.toString(), hostHdr: hostHdr || "(auto)" };
       try {
         const hdrs = {};
@@ -60,6 +61,7 @@ export default {
           status: probe.status,
           srv: probe.headers.get("server"),
           ct: probe.headers.get("content-type"),
+          loc: probe.headers.get("location"),
           bodyHead: txt.substring(0, 150)
         };
       } catch (e) {
