@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 ======================================================================
-  秦安县秦剧团云端预约系统 · Admin 按钮兜底 Perf 监控
+  秦安县秦剧团文化演出有限公司云端预约系统 · Admin 按钮兜底 Perf 监控
   P99 延迟 HTML 报表生成脚本
 ======================================================================
   功能：
@@ -243,7 +243,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
-<title>🎭 秦安县秦剧团 · Admin 按钮兜底 Perf P99 报表</title>
+<title>🎭 秦安县秦剧团文化演出有限公司 · Admin 按钮兜底 Perf P99 报表</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 <style>
   * { box-sizing:border-box; }
@@ -279,7 +279,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </style>
 </head>
 <body>
-  <h1>🎭 秦安县秦剧团云端预约系统 · Admin 按钮兜底 Perf P99 报表</h1>
+  <h1>🎭 秦安县秦剧团文化演出有限公司云端预约系统 · Admin 按钮兜底 Perf P99 报表</h1>
   <div class="sub">
     报表时间：{{GEN_AT}} · 查询范围：最近 {{HOURS}} 小时 · 分桶：{{BUCKET}} · 索引：<code>{{INDEX}}</code> ·
     ES：<code>{{HOST}}</code>

@@ -1,5 +1,5 @@
 {
-  "_comment": "腾讯云 EdgeOne Pages 部署配置 · 秦安县秦剧团云端预约系统 | 对应控制台：EdgeOne 控制台 → Pages → 项目设置 → 构建与部署 / 路由与回源 / 安全头",
+  "_comment": "腾讯云 EdgeOne Pages 部署配置 · 秦安县秦剧团文化演出有限公司云端预约系统 | 对应控制台：EdgeOne 控制台 → Pages → 项目设置 → 构建与部署 / 路由与回源 / 安全头",
   "version": "1.0",
   "build": {
     "_comment": "项目是纯静态 HTML/JS/CSS（booking.html、admin/login.html、js/app.js、css/ 等），无 Vite/Webpack 构建。真实用户若后续引入构建可改为 `npm install && npm run build`",
@@ -8,7 +8,7 @@
     "installCommand": "",
     "nodeVersion": "18",
     "environment": {
-      "VITE_APP_NAME": "秦安县秦剧团云端预约系统",
+      "VITE_APP_NAME": "秦安县秦剧团文化演出有限公司云端预约系统",
       "VITE_APP_DEPLOY_ENV": "edgeone-pages",
       "_comment_build_date": "构建时间戳将由 EdgeOne Pages CI 注入 BUILD_ID 环境变量"
     }

@@ -1,5 +1,5 @@
 # ==================================================================
-#   秦安县秦剧团 · Admin Perf P99 日报
+#   秦安县秦剧团文化演出有限公司 · Admin Perf P99 日报
 #   Dockerfile · 生产镜像（K8s CronJob 调度用）
 # ==================================================================
 #   构建侧（CI 提交）：修改本文件后提交到代码仓库 → 触发 CI 产出新镜像
@@ -9,7 +9,7 @@
 ARG PY_VER=3.11-slim-bookworm
 FROM python:${PY_VER}
 
-LABEL maintainer="秦安县秦剧团云端预约系统运维 <ops@qaxqjt.local>"
+LABEL maintainer="秦安县秦剧团文化演出有限公司云端预约系统运维 <ops@qaxqjt.local>"
 LABEL description="QAXQJT Admin Perf P99 Daily Report Mailer - CronJob Image"
 
 # ---------- 0. shell pipefail（强制依赖安装失败直接中断构建，不静默）----------

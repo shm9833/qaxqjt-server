@@ -759,7 +759,7 @@
             '<div class="sb-cell"><div class="sb-label">🎩 团长签字</div><span class="sb-line"></span><div class="sb-hint">（审定人）</div></div>' +
             '<div class="sb-cell"><div class="sb-label">🎬 导演签字</div><span class="sb-line"></span><div class="sb-hint">（艺术总监/执行导演）</div></div>' +
             '<div class="sb-cell"><div class="sb-label">🎪 剧务签字</div><span class="sb-line"></span><div class="sb-hint">（舞台监督/催场）</div></div>' +
-            '<div class="sb-cell stamp"><div class="sb-label">🔖 剧团盖章</div><div class="sb-stamp-box">秦安县秦剧团<br>（公章处）</div><div class="sb-hint">盖骑缝章有效</div></div>' +
+            '<div class="sb-cell stamp"><div class="sb-label">🔖 剧团盖章</div><div class="sb-stamp-box">秦安县秦剧团文化演出有限公司<br>（公章处）</div><div class="sb-hint">盖骑缝章有效</div></div>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -1280,7 +1280,7 @@
     var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    var fn = '秦安县秦剧团-演员表-'+(h.date||new Date().toISOString().slice(0,10))+'-'+(h.title||'未命名').replace(/[《》\\/:*?"<>|]/g,'')+'.csv';
+    var fn = '秦安县秦剧团文化演出有限公司-演员表-'+(h.date||new Date().toISOString().slice(0,10))+'-'+(h.title||'未命名').replace(/[《》\\/:*?"<>|]/g,'')+'.csv';
     a.href = url; a.download = fn;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function(){ try{ URL.revokeObjectURL(url); }catch(e){} }, 500);
@@ -1358,7 +1358,7 @@
     if(typeof toast !== 'undefined') toast('📊 准备 Excel 组件...','info',1200);
     var wb = buildAllWorkbook();
     var h = state.header || {};
-    var fn = '秦安县秦剧团-演出演员表-'+(h.date||new Date().toISOString().slice(0,10))+'-'+String(h.title||'未命名').replace(/[《》\\/:*?"<>|]/g,'').slice(0,20)+'.xlsx';
+    var fn = '秦安县秦剧团文化演出有限公司-演出演员表-'+(h.date||new Date().toISOString().slice(0,10))+'-'+String(h.title||'未命名').replace(/[《》\\/:*?"<>|]/g,'').slice(0,20)+'.xlsx';
     window.XLSX.writeFile(wb, fn);
     if(typeof toast !== 'undefined') toast('📊 已导出全表 XLSX（'+wb.SheetNames.length+'个Sheet）：'+fn,'success',3400);
   }
@@ -1390,7 +1390,7 @@
     }
     if(!added){ if(typeof toast !== 'undefined') toast('⚠️ 勾选的板块暂无可导出内容','warning',2000); return; }
     var h2 = state.header || {};
-    var fn2 = '秦安县秦剧团-演员表勾选板块-'+(h2.date||new Date().toISOString().slice(0,10))+'.xlsx';
+    var fn2 = '秦安县秦剧团文化演出有限公司-演员表勾选板块-'+(h2.date||new Date().toISOString().slice(0,10))+'.xlsx';
     window.XLSX.writeFile(wb, fn2);
     if(typeof toast !== 'undefined') toast('📊 已导出 '+added+' 个板块：'+fn2,'success',3200);
   }
@@ -2804,7 +2804,7 @@ function __pLog(module,event,extra){
     var days=parseInt($('tpDays')?$('tpDays').value:3)||3;
     var win=window.open('','_blank');
     var html='<html><head><title>天工资商议单</title><style>body{font-family:SimSun,Arial}table{border-collapse:collapse;width:100%}th,td{border:1px solid #333;padding:6px 10px}th{background:#f0f7ff}h1{text-align:center}.total{font-weight:bold;color:#dc3545}</style></head><body>';
-    html+='<h1>秦安县秦剧团 · 天工资商议单</h1>';
+    html+='<h1>秦安县秦剧团文化演出有限公司 · 天工资商议单</h1>';
     html+='<p>演出天数：'+days+'天 | 生成日期：'+new Date().toLocaleDateString('zh-CN')+'</p>';
     html+='<table><tr><th>序号</th><th>姓名</th><th>组别</th><th>行当/岗位</th><th>工资等级</th><th>日薪(元)</th><th>'+days+'天合计(元)</th></tr>';
     var total=0;
@@ -3029,7 +3029,7 @@ function __pLog(module,event,extra){
     var d=wageBudgetData(); if(!d) return;
     var esc=function(s){ return '"'+String(s==null?'':s).replace(/"/g,'""')+'"'; };
     var L=[];
-    L.push(['秦安县秦剧团 · 工资预算评估表（组团 '+d.tpl.length+'人 × '+d.days+'天）'].map(esc).join(','));
+    L.push(['秦安县秦剧团文化演出有限公司 · 工资预算评估表（组团 '+d.tpl.length+'人 × '+d.days+'天）'].map(esc).join(','));
     L.push(['导出时间', new Date().toLocaleString('zh-CN')].map(esc).join(','));
     L.push('');
     L.push(['#','姓名','组别','行当/岗位','等级','日薪(元)','天数','小计(元)'].map(esc).join(','));
@@ -3051,7 +3051,7 @@ function __pLog(module,event,extra){
     if(typeof toast !== 'undefined') toast('📘 准备 Excel 组件...','info',1200);
     var X=window.XLSX;
     var wb=X.utils.book_new();
-    var aoa=[['秦安县秦剧团 · 工资预算评估表'],['组团人数', d.tpl.length+'人','演出天数', d.days+'天','预算总额(元)', d.total],[]];
+    var aoa=[['秦安县秦剧团文化演出有限公司 · 工资预算评估表'],['组团人数', d.tpl.length+'人','演出天数', d.days+'天','预算总额(元)', d.total],[]];
     aoa.push(['#','姓名','组别','行当/岗位','等级','日薪(元)','天数','小计(元)']);
     d.rows.forEach(function(r){ aoa.push(r); });
     aoa.push(['合计', d.tpl.length+'人','','','','','', d.total]);

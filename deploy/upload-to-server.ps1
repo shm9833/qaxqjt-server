@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    秦安县秦剧团云端预约系统 - Windows 上传后端代码到 Linux 服务器
+    秦安县秦剧团文化演出有限公司云端预约系统 - Windows 上传后端代码到 Linux 服务器
 .DESCRIPTION
     将 server/ 目录和部署脚本上传到远程服务器
     使用前请先修改下方 $SERVER_IP 和 $SSH_USER

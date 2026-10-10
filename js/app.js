@@ -1,5 +1,5 @@
 /**
- * app.js - 秦安县秦剧团云端预约系统主业务逻辑
+ * app.js - 秦安县秦剧团文化演出有限公司云端预约系统主业务逻辑
  *
  * 功能模块：
  * 1. 阶梯优惠计算引擎
@@ -2721,9 +2721,9 @@
      */
     initFooterActions: function () {
       var wechatPhone = '13993839833';
-      var mpAccount = '秦安县秦剧团';
+      var mpAccount = '秦安县秦剧团文化演出有限公司';
       var mpFullName = '秦安县秦剧团文化演出有限公司';
-      var shipinhaoName = '秦安县秦剧团官方';
+      var shipinhaoName = '秦安县秦剧团文化演出有限公司官方';
       // 后台可维护项（admin/assets.html「微信客服信息」）：site.text.* 与客服二维码
       var wechatId = '';
       var wechatQrUrl = '';

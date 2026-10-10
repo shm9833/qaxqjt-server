@@ -21,7 +21,7 @@
     <circle cx="14" cy="9" r="1.5" fill="#07c160"/>
     <path d="M3,16 Q7,13 11,15" stroke="#07c160" stroke-width="1.2" fill="none"/>
   </g>
-  <text x="54" y="32" font-family="Microsoft YaHei,sans-serif" font-size="16" fill="#fff" font-weight="bold">秦安县秦剧团 · 官方微信</text>
+  <text x="54" y="32" font-family="Microsoft YaHei,sans-serif" font-size="16" fill="#fff" font-weight="bold">秦安县秦剧团文化演出有限公司 · 官方微信</text>
   <!-- 二维码区域（模拟QR码） -->
   <g transform="translate(50,64)">
     <rect x="0" y="0" width="200" height="200" rx="8" fill="#fff" stroke="#d1d5db" stroke-width="1"/>

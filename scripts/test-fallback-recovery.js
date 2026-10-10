@@ -245,7 +245,7 @@ async function healthz(phaseMode){
 function fmtReport(report){
   const lines = [];
   lines.push('='.repeat(80));
-  lines.push(' 秦安县秦剧团 · booking.html 降级逻辑 & 弱网恢复自动化测试报告');
+  lines.push(' 秦安县秦剧团文化演出有限公司 · booking.html 降级逻辑 & 弱网恢复自动化测试报告');
   lines.push(' 生成时间: ' + new Date().toISOString());
   lines.push(' 配置    : ONLINE=' + CFG.ONLINE_BASE + ' OFFLINE=' + CFG.OFFLINE_BASE);
   lines.push('         : 弱网 LOSS=' + (CFG.WEAK_LOSS*100).toFixed(0) + '% 延迟=' + CFG.WEAK_MIN_MS + '~' + CFG.WEAK_MAX_MS + 'ms 重试=' + CFG.WEAK_RETRY);

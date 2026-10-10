@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 ======================================================================
-  秦安县秦剧团云端预约系统 · Admin 按钮兜底 Perf
+  秦安县秦剧团文化演出有限公司云端预约系统 · Admin 按钮兜底 Perf
   P99 日报自动化：每日报表生成 + 邮件发送 工具
 ======================================================================
   功能：
@@ -95,7 +95,7 @@ def load_config(path: str) -> Dict[str, Any]:
 def example_config() -> Dict[str, Any]:
     """生成示例配置（用于 --gen-example 打印/或者用户首次使用示例生成）"""
     return {
-        "_comment": "=== 秦安县秦剧团 Admin Perf P99 日报配置示例 · 把此文件复制为 config_daily_report.json 并填入真实值 ===",
+        "_comment": "=== 秦安县秦剧团文化演出有限公司 Admin Perf P99 日报配置示例 · 把此文件复制为 config_daily_report.json 并填入真实值 ===",
         "es": {
             "host": "http://127.0.0.1:9200",
             "index": "qaxqjt-admin-perf-*",
@@ -548,7 +548,7 @@ def _build_email_body(data: Dict[str, Any]) -> Tuple[str, str]:
     bound_txt = '\n'.join(f'  · {k}：{v:,}' for k, v in bound_kv) if bound_kv else '  · （无数据）'
 
     # 文本
-    plain = f"""🎭 秦安县秦剧团 Admin 按钮兜底 Perf · P99 日报
+    plain = f"""🎭 秦安县秦剧团文化演出有限公司 Admin 按钮兜底 Perf · P99 日报
 ═══════════════════════════════════════
 总体评级：{badge}
 ═══════════════════════════════════════
@@ -570,7 +570,7 @@ P99 延迟：{fv(p99)} ms
 """
 
     html = f"""<div style="font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;color:#0f172a;max-width:680px;margin:0 auto;padding:18px;background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(15,23,42,.08)">
-<h2 style="margin:0 0 14px;color:#0a3a63">🎭 秦安县秦剧团 · Admin按钮兜底 Perf P99 日报</h2>
+<h2 style="margin:0 0 14px;color:#0a3a63">🎭 秦安县秦剧团文化演出有限公司 · Admin按钮兜底 Perf P99 日报</h2>
 <div style="padding:10px 14px;border-radius:10px;background:#f8fafc;margin-bottom:18px">总体评级：<b style="color:{badge_c};font-size:16px">{badge}</b></div>
 <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
 <tr><td style="padding:10px;border:1px solid #e2e8f0;background:#f8fafc">总样本量</td><td style="padding:10px;border:1px solid #e2e8f0;text-align:right;font-weight:700;font-size:18px;color:#4338ca">{total:,}</td>

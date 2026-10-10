@@ -1,10 +1,10 @@
 # ==============================================================================
-# 秦安县秦剧团云端预约系统 · Node.js 18 LTS Dockerfile
+# 秦安县秦剧团文化演出有限公司云端预约系统 · Node.js 18 LTS Dockerfile
 # 对应文档：F-1 §一 推荐栈 Node.js 18 + Express + MySQL 8
 # M-8 PM2 进程守护集群模式
 # ==============================================================================
 FROM node:18-alpine3.19 AS deps
-LABEL maintainer="秦安县秦剧团云端运维 <ops@yourdomain.cn>"
+LABEL maintainer="秦安县秦剧团文化演出有限公司云端运维 <ops@yourdomain.cn>"
 LABEL version="V2026.8.3"
 LABEL description="Qin'an County Qin Opera Troupe Cloud Booking System Backend"
 

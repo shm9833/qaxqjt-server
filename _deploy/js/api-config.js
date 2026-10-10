@@ -21,23 +21,34 @@
   };
 
   var PATHS = {
+    // ---- auth ----
     AUTH_LOGIN: '/v1/auth/login',
     AUTH_REFRESH: '/v1/auth/refresh',
     AUTH_LOGOUT: '/v1/auth/logout',
     AUTH_ME: '/v1/auth/me',
+    AUTH_CAPTCHA: '/v1/auth/captcha',
+    AUTH_QR_CREATE: '/v1/auth/qrcode/create',
+    AUTH_QR_CONFIRM: '/v1/auth/qrcode/confirm',
+    AUTH_QR_STATUS: function (token) { return '/v1/auth/qrcode/status/' + token; },
 
+    // ---- accounts / IAM ----
     ACCOUNTS: '/v1/accounts',
+    ACCOUNTS_BY_ID: function (id) { return '/v1/accounts/' + id; },
+    ACCOUNT_RESET_PWD: function (id) { return '/v1/accounts/' + id + '/reset-password'; },
     ACCOUNT_ME_PWD: '/v1/accounts/me/password',
 
     ROLES: '/v1/roles',
+    ROLES_BY_ID: function (id) { return '/v1/roles/' + id; },
     ROLE_PERMISSIONS: function (rid) { return '/v1/roles/' + rid + '/permissions'; },
     PERMISSIONS: '/v1/permissions',
 
     AUDIT_LOGS: '/v1/audit-logs',
 
+    // ---- customers ----
     CUSTOMERS: '/v1/customers',
     CUSTOMERS_BY_ID: function (id) { return '/v1/customers/' + id; },
 
+    // ---- appointments ----
     APPOINTMENTS: '/v1/appointments',
     APPOINTMENTS_STATS: '/v1/appointments/stats',
     APPOINTMENTS_BY_ID: function (id) { return '/v1/appointments/' + id; },
@@ -45,16 +56,101 @@
     APPOINTMENTS_PLAYS: function (id) { return '/v1/appointments/' + id + '/plays'; },
     APPOINTMENTS_AUDITS: function (id) { return '/v1/appointments/' + id + '/audit-logs'; },
 
+    // ---- orders ----
     ORDERS: '/v1/orders',
+    ORDERS_STATS: '/v1/orders/stats',
     ORDERS_BY_ID: function (id) { return '/v1/orders/' + id; },
-    SCHEDULES: '/v1/schedules',
+    ORDERS_TRANSITION: function (id) { return '/v1/orders/' + id + '/transition'; },
+    ORDERS_PAYMENTS: function (id) { return '/v1/orders/' + id + '/payments'; },
+
+    // ---- performers ----
     PERFORMERS: '/v1/performers',
+    PERFORMERS_STATS: '/v1/performers/stats',
+    PERFORMERS_BY_ID: function (id) { return '/v1/performers/' + id; },
+    PERFORMERS_REVIEW: function (id) { return '/v1/performers/' + id + '/review'; },
+    PERFORMERS_PUBLIC: '/v1/performers/public',
+    PERFORMERS_SELF_REGISTER: '/v1/performers/self-register',
+    PERFORMERS_SELF_REGISTER_STATUS: function (idCard) { return '/v1/performers/self-register/status?idCard=' + encodeURIComponent(idCard); },
+
+    // ---- cast sheets ----
     CAST_SHEETS: '/v1/cast-sheets',
-    ATTENDANCES: '/v1/attendances',
+    CAST_SHEETS_BY_ID: function (id) { return '/v1/cast-sheets/' + id; },
+    CAST_SHEETS_PUBLIC: '/v1/cast-sheets/public',
+    CAST_SHEETS_PUBLIC_BY_ID: function (id) { return '/v1/cast-sheets/public/' + id; },
+
+    // ---- attendance ----
+    ATTENDANCE: '/v1/attendance',
+    ATTENDANCE_BY_ID: function (id) { return '/v1/attendance/' + id; },
+    ATTENDANCE_STATS: '/v1/attendance/stats',
+    ATTENDANCE_IMPORT: '/v1/attendance/import',
+    ATTENDANCE_LEAVES: '/v1/attendance/leaves',
+    ATTENDANCE_LEAVES_APPROVE: function (id) { return '/v1/attendance/leaves/' + id + '/approve'; },
+
+    // ---- wages ----
+    WAGES: '/v1/wages',
+    WAGES_BY_ID: function (id) { return '/v1/wages/' + id; },
+    WAGES_GENERATE: '/v1/wages/generate',
+    WAGE_RULES: '/v1/wage-rules',
+    WAGE_RULES_BY_GRADE: function (grade) { return '/v1/wage-rules/' + grade; },
     WAGE_BATCHES: '/v1/wage-batches',
-    FIN_LEDGER: '/v1/fin-ledger',
-    INVENTORY: '/v1/inventory',
-    CONTENTS: '/v1/contents'
+    WAGE_BATCH_CONFIRM: function (id) { return '/v1/wage-batches/' + id + '/confirm'; },
+    WAGE_BATCH_POST: function (id) { return '/v1/wage-batches/' + id + '/post'; },
+
+    // ---- finance ledger ----
+    FIN_LEDGER: '/v1/fin/ledger',
+    FIN_LEDGER_BY_ID: function (id) { return '/v1/fin/ledger/' + id; },
+    FIN_SUMMARY: '/v1/fin/summary',
+
+    // ---- inventory ----
+    INVENTORY_ITEMS: '/v1/inventory/items',
+    INVENTORY_ITEMS_BY_ID: function (id) { return '/v1/inventory/items/' + id; },
+    INVENTORY_RECORDS: '/v1/inventory/records',
+
+    // ---- plays & categories ----
+    PLAYS: '/v1/plays',
+    PLAYS_BY_ID: function (id) { return '/v1/plays/' + id; },
+    PLAYS_PUBLIC: '/v1/plays/public',
+    PLAY_CATEGORIES: '/v1/play-categories',
+    PLAY_CATEGORIES_BY_ID: function (id) { return '/v1/play-categories/' + id; },
+    PLAY_CATEGORIES_PUBLIC: '/v1/play-categories/public',
+
+    // ---- schedules ----
+    SCHEDULES: '/v1/schedules',
+    SCHEDULES_BY_ID: function (id) { return '/v1/schedules/' + id; },
+    SCHEDULES_CALENDAR: '/v1/schedules/calendar',
+    SCHEDULES_CONFLICTS: '/v1/schedules/conflicts',
+    SCHEDULES_STATS: '/v1/schedules/stats',
+    SCHEDULES_PUBLIC: '/v1/schedules/public',
+
+    // ---- contents ----
+    CONTENTS: '/v1/contents',
+    CONTENTS_BY_ID: function (id) { return '/v1/contents/' + id; },
+    CONTENTS_PUBLIC: '/v1/contents/public',
+
+    // ---- site assets & troupe config ----
+    SITE_ASSETS: '/v1/site-assets',
+    SITE_ASSETS_BY_KEY: function (key) { return '/v1/site-assets/' + key; },
+    SITE_ASSETS_PUBLIC: '/v1/site-assets/public',
+    TROUPE_CONFIG: '/v1/troupe-config',
+    TROUPE_CONFIG_TEMPLATES: '/v1/troupe-config/templates',
+    TROUPE_CONFIG_WAGE_GRADES: '/v1/troupe-config/wage-grades',
+
+    // ---- system ----
+    SYSTEM_INFO: '/v1/system/info',
+    SYSTEM_SETTINGS: '/v1/system/settings',
+    SYSTEM_SETTINGS_BY_ID: function (id) { return '/v1/system/settings/' + id; },
+    SYSTEM_SETTINGS_BATCH: '/v1/system/settings/batch',
+    SYSTEM_SETTINGS_BY_KEY: function (key) { return '/v1/system/settings/key/' + key; },
+
+    // ---- public stats ----
+    STATS_PUBLIC: '/v1/stats/public',
+
+    // ---- health ----
+    HEALTHZ: '/v1/healthz',
+
+    // ---- upload ----
+    UPLOAD: '/v1/upload',
+    UPLOAD_MULTI: '/v1/upload/multi'
   };
 
   function _resolveBase() {
@@ -65,7 +161,8 @@
       var s = global.localStorage && global.localStorage.getItem(STORAGE_KEYS.API_BASE);
       if (s && /^https?:\/\//i.test(s)) return _stripTrailingSlash(s);
     } catch (_e) { /* noop */ }
-    // 同源部署：默认走 Nginx /api 反代 → 后端 3001
+    // 生产统一走同源 /api 反代（Nginx location /api → node:3001；
+    // Cloudflare Tunnel / EdgeOne Pages / HTTP 直访均适用，禁止裸 IP 硬编码）
     return '';
   }
 

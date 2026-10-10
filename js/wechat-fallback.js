@@ -1,5 +1,5 @@
 /**
- * 秦安县秦剧团云端预约系统 - 微信内置浏览器友好降级引导
+ * 秦安县秦剧团文化演出有限公司云端预约系统 - 微信内置浏览器友好降级引导
  * -------------------------------------------------------------
  * 功能：
  *   0. 【优先执行】在 <meta charset> 后注入 WeChat/移动端专属 meta 标签
@@ -34,7 +34,7 @@
       // iOS WebApp 模式
       { name: 'apple-mobile-web-app-capable', content: 'yes' },
       { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-      { name: 'apple-mobile-web-app-title', content: '秦安县秦剧团' },
+      { name: 'apple-mobile-web-app-title', content: '秦安县秦剧团文化演出有限公司' },
       // 禁止自动识别
       { name: 'format-detection', content: 'telephone=no,email=no,address=no,date=no' },
       // 顶栏主题色（蓝色国风主色 #0F4C81）

@@ -26,7 +26,7 @@
 
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<title>演出演员表配置 - 秦安县秦剧团文化演出管理系统</title>
+<title>演出演员表配置 - 秦安县秦剧团文化演出有限公司文化演出管理系统</title>
 <link rel="stylesheet" href="../css/style.css?v=20260803">
 <style>
 /* ============================================================
@@ -712,7 +712,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
       <!-- 01 演出封面横幅 -->
       <div class="show-banner">
         <div class="qr-placeholder"><div class="qr-img"></div>扫码看电子阵容</div>
-        <div class="comp-name">秦安县秦剧团<em>文化演出有限公司</em></div>
+        <div class="comp-name">秦安县秦剧团文化演出有限公司<em>文化演出有限公司</em></div>
         <div class="show-title"><input type="text" id="inp-title" placeholder="例：{year} 文化惠民 · 秦腔经典传统剧目专场"></div>
         <div class="meta-grid">
           <div class="row"><b>📢 主办单位</b><input type="text" id="inp-host" placeholder="例：中共秦安县委宣传部"></div>
@@ -1823,7 +1823,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
             '<div class="sb-cell"><div class="sb-label">🎩 团长签字</div><span class="sb-line"></span><div class="sb-hint">（审定人）</div></div>' +
             '<div class="sb-cell"><div class="sb-label">🎬 导演签字</div><span class="sb-line"></span><div class="sb-hint">（艺术总监/执行导演）</div></div>' +
             '<div class="sb-cell"><div class="sb-label">🎪 剧务签字</div><span class="sb-line"></span><div class="sb-hint">（舞台监督/催场）</div></div>' +
-            '<div class="sb-cell stamp"><div class="sb-label">🔖 剧团盖章</div><div class="sb-stamp-box">秦安县秦剧团<br>（公章处）</div><div class="sb-hint">盖骑缝章有效</div></div>' +
+            '<div class="sb-cell stamp"><div class="sb-label">🔖 剧团盖章</div><div class="sb-stamp-box">秦安县秦剧团文化演出有限公司<br>（公章处）</div><div class="sb-hint">盖骑缝章有效</div></div>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -2299,7 +2299,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    var fn = '秦安县秦剧团-演员表-'+(h.date||new Date().toISOString().slice(0,10))+'-'+(h.title||'未命名').replace(/[《》\\/:*?"<>|]/g,'')+'.csv';
+    var fn = '秦安县秦剧团文化演出有限公司-演员表-'+(h.date||new Date().toISOString().slice(0,10))+'-'+(h.title||'未命名').replace(/[《》\\/:*?"<>|]/g,'')+'.csv';
     a.href = url; a.download = fn;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function(){ try{ URL.revokeObjectURL(url); }catch(e){} }, 500);
@@ -3675,7 +3675,7 @@ function __pLog(module,event,extra){
     var days=parseInt($('tpDays')?$('tpDays').value:3)||3;
     var win=window.open('','_blank');
     var html='<html><head><title>天工资商议单</title><style>body{font-family:SimSun,Arial}table{border-collapse:collapse;width:100%}th,td{border:1px solid #333;padding:6px 10px}th{background:#f0f7ff}h1{text-align:center}.total{font-weight:bold;color:#dc3545}</style></head><body>';
-    html+='<h1>秦安县秦剧团 · 天工资商议单</h1>';
+    html+='<h1>秦安县秦剧团文化演出有限公司 · 天工资商议单</h1>';
     html+='<p>演出天数：'+days+'天 | 生成日期：'+new Date().toLocaleDateString('zh-CN')+'</p>';
     html+='<table><tr><th>序号</th><th>姓名</th><th>组别</th><th>行当/岗位</th><th>工资等级</th><th>日薪(元)</th><th>'+days+'天合计(元)</th></tr>';
     var total=0;

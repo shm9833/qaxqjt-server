@@ -1,6 +1,6 @@
 /* ==========================================================================
  * admin-wage-negotiate.js v20260928d
- * 秦安县秦剧团 · 天工资商议单 —— 模板数据全部可自定义
+ * 秦安县秦剧团文化演出有限公司 · 天工资商议单 —— 模板数据全部可自定义
  * 存储：Setting 表单条 JSON（key=wage_negotiate_template, group=wage_negotiate）
  *       GET /v1/system/settings/key/:key 读取（404 用默认）
  *       POST /v1/system/settings/batch 保存（super_admin）

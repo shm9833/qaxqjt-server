@@ -17,7 +17,7 @@ function Refresh-Path {
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  秦安县秦剧团 - WebShell 一键部署" -ForegroundColor Cyan
+Write-Host "  秦安县秦剧团文化演出有限公司 - WebShell 一键部署" -ForegroundColor Cyan
 Write-Host "  无需上传文件，自动从 GitHub 拉取" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""

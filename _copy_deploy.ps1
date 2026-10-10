@@ -1,5 +1,5 @@
 $ErrorActionPreference = "Stop"
-$root = "d:\全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）\qaxqjt"
+$root = "d:\全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）\qaxqjt"
 $base = Join-Path $root "admin"
 $dest1 = Join-Path $root "_deploy\admin"
 $dest2 = Join-Path $root "_deploy\.edgeone\assets\admin"

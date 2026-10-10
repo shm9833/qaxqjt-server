@@ -1,4 +1,4 @@
-/* tests/e2e-login.spec.js — 秦安县秦剧团后台 E2E 登录与页面访问测试
+/* tests/e2e-login.spec.js — 秦安县秦剧团文化演出有限公司后台 E2E 登录与页面访问测试
  *
  * 用法：
  *   node tests/e2e-login.spec.js                       # 跑默认 nginx 环境
@@ -47,7 +47,7 @@ function record(name, pass, evidence) {
 }
 
 async function main() {
-  console.log('=== 秦安县秦剧团后台 E2E 登录测试 ===');
+  console.log('=== 秦安县秦剧团文化演出有限公司后台 E2E 登录测试 ===');
   console.log(`Base URL: ${BASE_URL}`);
   console.log(`Headless: ${HEADLESS}`);
   console.log(`Chromium: ${CHROMIUM_EXE}`);
@@ -97,7 +97,7 @@ async function main() {
     await page.goto(BASE_URL + '/admin/login.html', { waitUntil: 'networkidle', timeout: 30000 });
 
     const title = await page.title();
-    record('登录页 title 含"秦安县秦剧团"', title.includes('秦安县秦剧团') || title.includes('登录'), `title="${title}"`);
+    record('登录页 title 含"秦安县秦剧团文化演出有限公司"', title.includes('秦安县秦剧团文化演出有限公司') || title.includes('登录'), `title="${title}"`);
 
     // ===== 2. 验证表单元素存在 =====
     const unameOk = await page.locator('#admin-username').count();

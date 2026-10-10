@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-秦安县秦剧团 · 一键完整演示启动器
+秦安县秦剧团文化演出有限公司 · 一键完整演示启动器
 流程：
   1) 后台启动 mock_local_smtp_server.py（监听 127.0.0.1:10025）
   2) 等待服务器就绪
@@ -82,7 +82,7 @@ def list_artifacts() -> None:
 
 
 def main() -> int:
-    banner('秦安县秦剧团 · 本地完整演示启动器 🚀')
+    banner('秦安县秦剧团文化演出有限公司 · 本地完整演示启动器 🚀')
 
     # ========== 1) 检查配置文件/脚本是否存在 ==========
     for fp in [CFG, SMTP_SCRIPT, 'daily_mailer.py']:

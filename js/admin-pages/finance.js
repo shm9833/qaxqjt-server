@@ -1695,7 +1695,7 @@ window.__finApi = (function(){
 
     // —— Sheet1 年度汇总（7列 A-G） ——
     var a1=[], s1=[];
-    a1.push(['秦安县秦剧团 '+year+'年度财务汇总','','','','','','']); s1.push([S_TTL,S_TTL,S_TTL,S_TTL,S_TTL,S_TTL,S_TTL]);
+    a1.push(['秦安县秦剧团文化演出有限公司 '+year+'年度财务汇总','','','','','','']); s1.push([S_TTL,S_TTL,S_TTL,S_TTL,S_TTL,S_TTL,S_TTL]);
     a1.push(['导出时间：'+nowTxt,'','','','','','']); s1.push([S_META,null,null,null,null,null,null]);
     a1.push(['数据来源：财务台账 / 订单 / 演出排期（仅统计已录入凭证，未制单数据不在内）','','','','','','']); s1.push([S_NOTE,null,null,null,null,null,null]);
     a1.push(['']); s1.push([null]);

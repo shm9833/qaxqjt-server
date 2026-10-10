@@ -1411,7 +1411,7 @@ function __pLog(module,event,extra){
         '<h1 style="font-size:26px;line-height:1.4;margin:0 0 10px;color:#111827;">' + _escape(body.title) + '</h1>' +
         (body.subtitle ? '<p style="font-size:15px;color:#6b7280;margin:0 0 14px;">' + _escape(body.subtitle) + '</p>' : '') +
         '<div style="display:flex;gap:14px;align-items:center;color:#9ca3af;font-size:13px;border-bottom:1px solid #f0f0f0;padding-bottom:14px;margin-bottom:20px;flex-wrap:wrap;">' +
-          '<span>✍️ ' + _escape(body.authorName || '秦安县秦剧团') + '</span>' +
+          '<span>✍️ ' + _escape(body.authorName || '秦安县秦剧团文化演出有限公司') + '</span>' +
           '<span>📅 ' + _escape(dateStr) + '</span>' +
         '</div>' +
         (body.coverImage ? '<img src="' + _escape(body.coverImage) + '" alt="封面" style="width:100%;border-radius:12px;margin-bottom:20px;display:block;" onerror="this.style.display=\'none\'" />' : '') +

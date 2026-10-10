@@ -620,7 +620,7 @@
                 tr.innerHTML = '<td><strong class="sched-tag-bold">' + _hx(saved.id || schedId) + '</strong></td>' +
                   '<td>' + _hx(saved.date || '-') + '</td>' +
                   '<td>' + _hx(saved.week || '-') + '</td>' +
-                  '<td>秦安县秦剧团</td>' +
+                  '<td>秦安县秦剧团文化演出有限公司</td>' +
                   '<td>' + _hx(saved.venue || '') + '</td>' +
                   '<td><span class="op-type-badge op-type-edit ws-nowrap">' + _hx(saved.type || '') + '</span></td>' +
                   '<td class="sched-title-bold">' + _hx(saved.plays || title) + '</td>' +
@@ -2494,7 +2494,7 @@ try{
           '<td><strong class="sched-tag-bold">' + self._escape(showNo) + '</strong></td>' +
           '<td>' + self._escape(dateStr) + '</td>' +
           '<td>' + self._escape(weekStr || '—') + '</td>' +
-          '<td>秦安县秦剧团</td>' +
+          '<td>秦安县秦剧团文化演出有限公司</td>' +
           '<td>' + self._escape(venue) + '</td>' +
           '<td><span class="op-type-badge op-type-edit ws-nowrap">' + self._escape(type) + '</span></td>' +
           '<td class="sched-title-bold">' + self._escape(playTitle) + '</td>' +
@@ -2563,7 +2563,7 @@ try{
           var status = s.status || 'draft';
           var statusText = (self._statusBadge(status) || {}).text || status;
           var createdAt = s.createdAt ? String(s.createdAt).slice(0,19) : '';
-          var cells = [sid, dateStr, weekStr, '秦安县秦剧团', venue, type, playTitle, '1', leader, statusText, createdAt];
+          var cells = [sid, dateStr, weekStr, '秦安县秦剧团文化演出有限公司', venue, type, playTitle, '1', leader, statusText, createdAt];
           csv.push(cells.map(function(c){ c = String(c).replace(/"/g, '""'); return /[",\n]/.test(c) ? '"' + c + '"' : c; }).join(','));
         });
         var blob = new Blob(['\ufeff' + csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -2645,7 +2645,7 @@ try{
           ['甲方名称', playTitle, false],
           ['开始时间', dateStart, false],
           ['结束时间', dateEnd || '—', false],
-          ['演出团队', s.performTeam || '秦安县秦剧团', false],
+          ['演出团队', s.performTeam || '秦安县秦剧团文化演出有限公司', false],
           ['演出地点', venue, false],
           ['演出类型', type, false],
           ['负责人', leader || '—', false],

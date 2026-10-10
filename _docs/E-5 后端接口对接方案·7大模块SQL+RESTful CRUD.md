@@ -1,4 +1,4 @@
-# 秦安县秦剧团云端预约系统 · 后端接口对接方案 v1.0
+# 秦安县秦剧团文化演出有限公司云端预约系统 · 后端接口对接方案 v1.0
 > **文档版本**：v1.0 · 2026-08-03
 > **适用版本**：qaxqjt V2026.8.3
 > **配套文档**：E-1 数据字典.md（字段权威来源）、E-2 后端REST鉴权规范v1.0.md（鉴权+错误码+通用响应结构）
@@ -672,7 +672,7 @@ CREATE TABLE log_sec_event      (...);
    □ 1.1 核心 37 张表 + 5 张审计表
    □ 1.2 唯一键 / 外键 / 普通索引全部生效（EXPLAIN 验证）
    □ 1.3 写入初始化数据：
-       - settings（秦安县秦剧团 troupeName）
+       - settings（秦安县秦剧团文化演出有限公司 troupeName）
        - accounts_v2 1 条 super admin（bcrypt 初始密码→首次登录强制改）
        - performers_db_v1 初始 30+ 行当（根据实际剧团人）
        - troupe_templates_v1 1-3 条默认组团模板

@@ -2,7 +2,7 @@
 import os, sys
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
-ROOT = r"d:\全套最终整合交付（秦安县秦剧团云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）\qaxqjt"
+ROOT = r"d:\全套最终整合交付（秦安县秦剧团文化演出有限公司云端预约系统·14文档+架构终审全汇总·可直接EdgeOne Pages部署）\qaxqjt"
 PORT = 18089
 
 os.chdir(ROOT)

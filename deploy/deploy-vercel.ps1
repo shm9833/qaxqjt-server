@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    秦安县秦剧团云端预约系统 - Vercel 前端部署脚本
+    秦安县秦剧团文化演出有限公司云端预约系统 - Vercel 前端部署脚本
 .DESCRIPTION
     一键完成：1) 替换后端回源地址  2) vercel login 认证  3) vercel deploy --prod
     部署模式：前端静态页托管到 Vercel，后端 API 通过 rewrites 回源到云服务器
@@ -34,7 +34,7 @@ $ProjectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Pa
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  秦安县秦剧团云端预约系统 - Vercel 部署" -ForegroundColor Cyan
+Write-Host "  秦安县秦剧团文化演出有限公司云端预约系统 - Vercel 部署" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  后端回源地址 : https://$BackendPublicHost"
 Write-Host "  部署模式     : $(if($UseProjectRoot){'项目根(outputDirectory=_deploy)'}else{'_deploy/ 独立上传'})"
