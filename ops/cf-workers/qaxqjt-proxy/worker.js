@@ -40,8 +40,9 @@ export default {
 
     // 临时诊断路由（验证后删除）
     if (u.searchParams.has("__wdbg")) {
-      const t = new URL(u.pathname + u.search, ORIGIN);
-      t.searchParams.delete("__wdbg");
+      const port = u.searchParams.get("__port") || "80";
+      const path = u.searchParams.get("__path") || u.pathname;
+      const t = new URL(path, `http://${ORIGIN_HOST}:${port}`);
       const dbg = { incomingHost: u.host, target: t.toString(), targetHostHeader: ORIGIN_HOST };
       try {
         const probe = await fetch(t.toString(), {
@@ -53,6 +54,7 @@ export default {
         dbg.probe = {
           status: probe.status,
           srv: probe.headers.get("server"),
+          ct: probe.headers.get("content-type"),
           bodyHead: txt.substring(0, 120)
         };
       } catch (e) {
