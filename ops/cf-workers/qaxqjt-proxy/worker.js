@@ -42,12 +42,17 @@ export default {
     if (u.searchParams.has("__wdbg")) {
       const port = u.searchParams.get("__port") || "80";
       const path = u.searchParams.get("__path") || u.pathname;
-      const t = new URL(path, `http://${ORIGIN_HOST}:${port}`);
-      const dbg = { incomingHost: u.host, target: t.toString(), targetHostHeader: ORIGIN_HOST };
+      const hostHdr = u.searchParams.get("__host"); // null=不设Host; 'ip'=IP; 其他原样
+      const targetIp = u.searchParams.get("__ip") || ORIGIN_HOST;
+      const t = new URL(path, `http://${targetIp}:${port}`);
+      const dbg = { incomingHost: u.host, target: t.toString(), hostHdr: hostHdr || "(auto)" };
       try {
+        const hdrs = {};
+        if (hostHdr === "ip") hdrs.Host = targetIp;
+        else if (hostHdr) hdrs.Host = hostHdr;
         const probe = await fetch(t.toString(), {
           method: "GET",
-          headers: { Host: ORIGIN_HOST },
+          headers: hdrs,
           redirect: "manual"
         });
         const txt = await probe.text();
@@ -55,7 +60,7 @@ export default {
           status: probe.status,
           srv: probe.headers.get("server"),
           ct: probe.headers.get("content-type"),
-          bodyHead: txt.substring(0, 120)
+          bodyHead: txt.substring(0, 150)
         };
       } catch (e) {
         dbg.probeErr = String(e);
