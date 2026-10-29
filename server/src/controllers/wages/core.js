@@ -380,7 +380,10 @@ const generate = async ctx => {
     const loanExp = loanExpMap[p.id] || null;
     const luExp = luExpMap[p.id] || null;
     // v20261027b daily_pure 计薪天 = Σ演出场次（考勤只用于扣罚，不影响计薪天）；showBased 备注标注口径
-    const attForCalc = (mode === 'daily_pure' && showDaysTotal > 0) ? Object.assign({}, att, { workDays: showDaysTotal }) : att;
+    // v20261029h leaveTrace 溯源扣减留痕随 att 传入计算器 → otherDeductionNote.leave 工资条展示
+    const attForCalc = (mode === 'daily_pure' && showDaysTotal > 0)
+      ? Object.assign({}, att, { workDays: showDaysTotal, leaveTrace: (ob0 && ob0.leaveTrace) || null })
+      : (mode === 'daily_pure' && ob0 && ob0.leaveTrace && ob0.leaveTrace.days ? Object.assign({}, att, { leaveTrace: ob0.leaveTrace }) : att);
     const calc = mode === 'daily_pure'
       ? _calcWageItem(p, attForCalc, rule, settleParams, punchP, travelExp, loanExp, periodLabel, showDaysTotal > 0, luExp)
       : _calcSettleWageItem(p, att, mode, settleParams, luExp);
@@ -713,6 +716,56 @@ const batchPost = async ctx => {
   return success(ctx, _batchToApi(row));
 };
 
+// ========== v20261029i 批次撤回（发放错误修正闭环：撤回 → 修正 → 审核 → 重新发放） ==========
+// POST /wages/batches/:id/unpost
+// 仅 confirmed/posted 批次可撤回；posted 撤回时同步删除本批次自动生成的 draft 台账分录
+// （凭证已复核 → 拒绝自动撤回，交财务模块处理）；撤回后批次回 draft，明细可改、可重新审核发放。
+// batchPost 的幂等护栏已兼容"撤回后重过账"（撤回删分录 → 重过账重建分录，不重复记账）。
+const batchUnpost = async ctx => {
+  const exists = await prisma.wageBatchesV1.findUnique({ where: { id: ctx.params.id } });
+  if (!exists) throw new BusinessError('NOT_FOUND', '工资批次不存在');
+  if (exists.status !== 'posted' && exists.status !== 'confirmed') {
+    throw new BusinessError('UNPROCESSABLE', '仅已确认/已过账发放的批次可撤回，当前状态：' + (exists.status || 'draft'));
+  }
+  const ledgerRows = await prisma.finLedgerV1.findMany({ where: { relatedBatchId: exists.id } });
+  // void（已作废）凭证不阻止撤回：作废即财务侧已处理完毕，撤回批次后重过账生成新凭证
+  // （生产 FinLedgerV1.status 枚举实测为 draft/checked/void）
+  const locked = ledgerRows.filter(x => x.status !== 'draft' && x.status !== 'void');
+  if (locked.length) {
+    throw new BusinessError('UNPROCESSABLE', `本批次关联台账凭证已复核（${locked[0].voucherNo}），不可自动撤回；请先在财务模块作废该凭证`);
+  }
+  const txResult = await prisma.$transaction(async tx => {
+    const cur = await tx.wageBatchesV1.findUnique({ where: { id: exists.id } });
+    if (!cur || (cur.status !== 'posted' && cur.status !== 'confirmed')) {
+      throw new BusinessError('CONFLICT', '批次状态已变化，请刷新后重试');
+    }
+    // 事务内复查后：删 draft 台账分录（仅本批次自动生成的 WBP-* 凭证）+ 批次回 draft
+    const del = await tx.finLedgerV1.deleteMany({ where: { relatedBatchId: exists.id } });
+    const row = await tx.wageBatchesV1.update({
+      where: { id: exists.id },
+      data: { status: 'draft', postedToLedger: false, postedAt: null, ts: BigInt(nowMs()) }
+    });
+    return { row, ledgerDeleted: del.count };
+  });
+  // 撤回后明细审核状态保留（已 approved 条目无需重审，直接可重新确认/过账；如需重审可逐条 reset）
+  // v20261029i 撤回后自动重算该月工资条（假条变更等修正即时生效），失败不阻断撤回
+  let recalcOut = null;
+  try {
+    const { recalcLeaveWages } = require('./leave-recalc.js');
+    recalcOut = await recalcLeaveWages(prisma, { _attendanceByStaff, _orderBreakdownByStaff }, { month: exists.wageMonth });
+  } catch (e) { recalcOut = { error: String(e.message || e) }; }
+  try {
+    await audit({
+      ctx,
+      module: 'wage',
+      action: 'WAGE_BATCH_UNPOST',
+      targetId: txResult.row.id,
+      detail: { batchNo: txResult.row.batchNo, wageMonth: txResult.row.wageMonth, prevStatus: exists.status, ledgerDeleted: txResult.ledgerDeleted, recalc: recalcOut }
+    });
+  } catch (_) {}
+  return success(ctx, Object.assign(_batchToApi(txResult.row), { unpostInfo: { ledgerDeleted: txResult.ledgerDeleted, recalc: recalcOut } }));
+};
+
 // ========== 工资规则（WageRulesV1） ==========
 
 module.exports = {
@@ -724,4 +777,5 @@ module.exports = {
   batchCreate,
   batchConfirm,
   batchPost,
+  batchUnpost,
 };

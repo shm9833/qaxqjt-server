@@ -1309,7 +1309,7 @@ function __pLog(module,event,extra){
       var batches = await listBatches(month);
       var confirmed = batches.filter(function(b){ return b.status === 'confirmed'; });
       if(!confirmed.length){ __T('⚠️ '+month+' 无已确认批次可过账（请先「确认批次」）','info'); return; }
-      if(!confirm('确认过账 '+month+' 的 '+confirmed.length+' 个批次？\n过账后将生成财务台账凭证，不可撤销。')) return;
+      if(!confirm('确认过账 '+month+' 的 '+confirmed.length+' 个批次？\n过账后将生成财务台账凭证；如发放有误可后续「↩️ 撤回批次」修正后重新发放。')) return;
       var ok = 0, fail = 0;
       for(var i=0;i<confirmed.length;i++){
         try {
@@ -1321,7 +1321,31 @@ function __pLog(module,event,extra){
       await load(month);
     }
 
-    return { load: load, generate: generate, currentMonth: currentMonth, confirmBatch: confirmBatch, postBatch: postBatch, listBatches: listBatches };
+    // v20261029i 撤回批次：confirmed/posted → draft（发放错误修正闭环：撤回 → 修正 → 审核 → 重新发放）
+    // posted 撤回时后端同步删除本批次 draft 台账凭证（已复核凭证会被拒绝，交财务处理）
+    async function unpostBatch(month){
+      month = month || currentMonth();
+      var API = window.QAXQJT_API;
+      if(!API){ __T('⚠️ 接口未就绪','error'); return; }
+      var batches = await listBatches(month);
+      var locked = batches.filter(function(b){ return b.status === 'confirmed' || b.status === 'posted'; });
+      if(!locked.length){ __T('⚠️ '+month+' 无已确认/已过账批次可撤回','info'); return; }
+      var postedCnt = locked.filter(function(b){ return b.status === 'posted'; }).length;
+      if(!confirm('撤回 '+month+' 的 '+locked.length+' 个批次？\n'
+        + (postedCnt ? ('其中 '+postedCnt+' 个已过账批次将同步删除对应财务台账凭证（草稿态）。\n') : '')
+        + '撤回后批次回到草稿态，可修正工资数据后重新「✅ 审核 → 确认 → 过账」。')) return;
+      var ok = 0, fail = 0, errs = [];
+      for(var i=0;i<locked.length;i++){
+        try {
+          await API.post((QAXQJT_PATHS.WAGE_BATCH_UNPOST || function (i) { return '/v1/wage-batches/' + i + '/unpost'; })(locked[i].id), {});
+          ok++;
+        } catch(e){ fail++; errs.push((locked[i].batchNo||locked[i].id)+':'+((e&&e.message)||'')); }
+      }
+      __T((fail ? '⚠️ 部分撤回失败' : '↩️ 已撤回')+'：成功 '+ok+' 个'+(fail?',失败 '+fail+' 个（'+errs.slice(0,2).join(';')+'）':''), fail?'error':'success',6000);
+      await load(month);
+    }
+
+    return { load: load, generate: generate, currentMonth: currentMonth, confirmBatch: confirmBatch, postBatch: postBatch, unpostBatch: unpostBatch, listBatches: listBatches };
   })();
 
   // ====== 考勤记录管理（v20261002b：批量录入 / 批量改类型 / 批量删除，走 /v1/attendance 真实接口） ======
@@ -2389,6 +2413,8 @@ function __pLog(module,event,extra){
     __attBind('attBtnLuReg', function(){ if (window.__attLuReg && window.__attLuReg.open) window.__attLuReg.open(); else __T('⚠️ 装卸车登记模块未加载，请刷新重试','error'); });
     __attBind('attBtnBatchConfirm', function(){ window.__wageNs.confirmBatch(); });
     __attBind('attBtnBatchPost', function(){ window.__wageNs.postBatch(); });
+    // v20261029i 批次撤回按钮（发放错误修正闭环）
+    __attBind('attBtnBatchUnpost', function(){ window.__wageNs.unpostBatch(); });
     __attBind('attBtnExportCsv', function(){
       var items = window.__lastWageItems || [];
       if(!items.length){ __T('⚠️ 请先核算当月工资再导出','warning'); return; }

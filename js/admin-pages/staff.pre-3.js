@@ -3140,6 +3140,8 @@
           var kw = $('wageHistKw'); if (kw) kw.addEventListener('keydown', function (e) { if (e.key === 'Enter') refreshHistTable(); });
           var ex = $('wageHistExportBtn'); if (ex) ex.addEventListener('click', exportHistAll);
           var bp = $('wageHistBatchPublishBtn'); if (bp) bp.addEventListener('click', function () { if (window._wageBatchPublish) window._wageBatchPublish(); });
+          // v20261029h 当月工资生成Tab：批量发布按钮与历史Tab同一发布函数（发布当月待发放条）
+          var gp = $('wageGenBatchPublishBtn'); if (gp) gp.addEventListener('click', function () { if (window._wageBatchPublish) window._wageBatchPublish(); });
         }
         async function refreshHistMonths() {
           var sel = $('wageHistMonth'); if (!sel) return;

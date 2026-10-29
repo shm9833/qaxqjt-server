@@ -842,12 +842,15 @@
       ['社保扣款', money(it.socialInsuranceDeduct)],
       ['公积金扣款', money(it.housingFundDeduct)],
       ['个税扣款', money(it.taxDeduct)],
+      (Number(it.leaveDeduction) > 0
+        ? ['请假扣款', money(it.leaveDeduction) + (Number(it.leaveDays) ? '（' + (it.leaveTypes || '请假') + ' ' + it.leaveDays + ' 天）' : '')]
+        : null),
       ['其他扣款', money(it.otherDeduction)],
       dlRow('扣款合计', money(it.totalDeduction), 'total'),
       dlRow('实发工资', '¥ ' + money(it.netPay), 'total netpay')
     ];
     var detailHtml = rows.map(function (r) {
-      return r[0] === '<' ? r : dlRow(r[0], r[1]);
+      return !r ? '' : (r[0] === '<' ? r : dlRow(r[0], r[1]));
     }).join('');
 
     var receiptDone = it.receiptStatus === 'confirmed';
@@ -873,7 +876,7 @@
         '</div>' +
         '<div class="wa-block"><div class="wa-head">② 工资发放确认（确认已实际收到工资，需签名）' + stBadge(it.receiptStatus) + '</div>' +
           '<div class="wa-btns">' +
-            '<button class="primary" data-act="receipt-sign" data-id="' + it.id + '" ' + (receiptDone ? 'disabled' : '') + '签名确认已收到</button>' +
+            '<button class="primary" data-act="receipt-sign" data-id="' + it.id + '" ' + (receiptDone ? 'disabled' : '') + '>签名确认已收到</button>' +
             '<button class="gray" data-act="receipt-no" data-id="' + it.id + '" ' + (it.receiptStatus === 'rejected' ? 'disabled' : '') + '>未收到/有异议</button>' +
           '</div>' + rejectHtml('receipt') +
         '</div>' +

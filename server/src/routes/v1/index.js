@@ -1241,6 +1241,19 @@ v1.patch(
   requireRole(['super_admin', 'ops', 'director']),
   attCtrl.leaveApprove
 );
+// v20261029h 编辑请假单（类型/日期/天数/事由；已批准单编辑后重置待审批并清考勤同步行）；必须在 /attendance/:id 之前注册
+v1.put(
+  '/attendance/leaves/:id',
+  validate({ body: Joi.object({
+    leaveType: Joi.string().optional(),
+    dateFrom: Joi.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    dateTo: Joi.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    totalDays: Joi.number().min(0.5).max(31).optional(),
+    reason: Joi.string().allow('').optional()
+  }).unknown(false) }),
+  requireRole(['super_admin', 'ops', 'director']),
+  attCtrl.leaveUpdate
+);
 // v20261017g：删除请假单（仅 rejected/cancelled，供 E2E 自动清理）；必须在 /attendance/:id 之前注册
 v1.delete(
   '/attendance/leaves/:id',
@@ -1316,6 +1329,8 @@ v1.get('/wage-batches', requireRole(['super_admin', 'ops', 'director', 'finance_
 v1.post('/wage-batches', requireRole(['super_admin', 'ops', 'director']), wagesCtrl.batchCreate);
 v1.post('/wage-batches/:id/confirm', requireRole(['super_admin', 'ops', 'director']), wagesCtrl.batchConfirm);
 v1.post('/wage-batches/:id/post', requireRole(['super_admin', 'ops', 'director']), wagesCtrl.batchPost);
+// v20261029i 批次撤回（发放错误修正：撤回 → 修正 → 审核 → 重新发放；posted 撤回同步删 draft 台账分录）
+v1.post('/wage-batches/:id/unpost', requireRole(['super_admin', 'ops', 'director']), wagesCtrl.batchUnpost);
 v1.get('/wage-rules', requireRole(['super_admin', 'ops', 'director', 'finance_view']), wagesCtrl.rulesList);
 v1.get('/wage-rules/:rankGrade', requireRole(['super_admin', 'ops', 'director', 'finance_view']), wagesCtrl.rulesDetail);
 

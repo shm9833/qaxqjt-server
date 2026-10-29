@@ -11,6 +11,8 @@ const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
 const punchParams = require('../services/punch-params');
+// v20261029i：请假审批联动自动重算工资条（wages/helpers 的考勤/订单聚合口径）
+const hWages = require('./wages/helpers');
 
 // ========== 工具：DB 行 -> API 字段 ==========
 function toApi(row) {
@@ -269,6 +271,49 @@ const leaveCreate = async ctx => {
   return created(ctx, _leaveToApi(row));
 };
 
+// v20261029f：审批通过自动同步考勤（根因修复：此前审批只改状态，考勤表无请假行，工资聚合只看考勤 → 请假不扣款）
+// 规则：批准 → 按请假区间逐日生成 attendanceType=leaveType 的考勤行（remark 前缀 请假#单号，可识别可回滚）；
+//       当日已有其他考勤行（人工记录/补假行）则跳过不覆盖；驳回/撤回 → 删除本单同步的考勤行。
+const _leaveSyncPrefix = '请假#';
+
+const _syncLeaveAttendance = async (row) => {
+  if (row.approveStatus === 'approved') {
+    const from = row.dateFrom ? new Date(row.dateFrom) : null;
+    const to = row.dateTo ? new Date(row.dateTo) : from;
+    if (!from || isNaN(from.getTime())) return;
+    const start = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()));
+    const end = to && !isNaN(to.getTime()) ? new Date(Date.UTC(to.getUTCFullYear(), to.getUTCMonth(), to.getUTCDate())) : start;
+    let created = 0, skipped = 0;
+    for (let d = new Date(start); d <= end && created + skipped < 31; d.setUTCDate(d.getUTCDate() + 1)) {
+      const day = new Date(d.getTime());
+      // 先清本单旧同步行（幂等 + 支持改期/改类型后重新审批）
+      await prisma.attendanceV1.deleteMany({ where: { staffId: row.staffId, attendanceDate: day, remark: { startsWith: _leaveSyncPrefix + row.id } } });
+      const dup = await prisma.attendanceV1.findFirst({ where: { staffId: row.staffId, attendanceDate: day } });
+      if (dup) { skipped += 1; continue; }
+      await prisma.attendanceV1.create({
+        data: {
+          id: idByCtx('att', 12, nanoid),
+          staffId: row.staffId,
+          staffName: row.staffName,
+          attendanceMonth: day.toISOString().substring(0, 7),
+          attendanceDate: day,
+          attendanceType: row.leaveType,
+          remark: _leaveSyncPrefix + row.id + '（' + (row.leaveType || '') + ' ' + day.toISOString().substring(0, 10) + '）',
+          approveStatus: 'approved',
+          approvedBy: row.approverName || null,
+          ts: nowMs()
+        }
+      });
+      created += 1;
+    }
+    return { created, skipped };
+  }
+  if (row.approveStatus === 'rejected' || row.approveStatus === 'cancelled') {
+    await prisma.attendanceV1.deleteMany({ where: { staffId: row.staffId, remark: { startsWith: _leaveSyncPrefix + row.id } } });
+  }
+  return null;
+};
+
 const leaveApprove = async ctx => {
   const b = ctx.request.body;
   const exists = await prisma.leaveApplication.findUnique({ where: { id: ctx.params.id } });
@@ -286,7 +331,64 @@ const leaveApprove = async ctx => {
     }
   });
   try { await audit({ ctx, module: 'attendance', action: 'LEAVE_APPROVE', targetId: row.id, detail: { staffId: row.staffId, status: row.approveStatus } }); } catch (_) {}
-  return success(ctx, _leaveToApi(row));
+  // v20261029f：审批结果同步考勤行（失败不阻断审批，仅记录日志）
+  let syncInfo = null;
+  try { syncInfo = await _syncLeaveAttendance(row); } catch (e) { syncInfo = { error: e.message }; }
+  // v20261029i：审批通过/驳回 → 自动重算该员工受影响月份的工资条（口径与 recalc-leave-1029f 完全一致）
+  // 通过 → 同步扣减；驳回 → 考勤行已删，重算恢复；失败不阻断审批，仅记录 recalcError
+  try {
+    if (row.approveStatus === 'approved' || row.approveStatus === 'rejected') {
+      const mSet = new Set();
+      for (const d of [row.dateFrom, row.dateTo]) { if (d && !isNaN(new Date(d).getTime())) mSet.add(new Date(d).toISOString().substring(0, 7)); }
+      const recalcOut = [];
+      for (const mo of mSet) {
+        const mod = require('./wages/leave-recalc.js');
+        recalcOut.push(await mod.recalcLeaveWages(prisma, hWages, { month: mo, staffIds: [row.staffId] }));
+      }
+      if (syncInfo) syncInfo.recalc = recalcOut; else syncInfo = { recalc: recalcOut };
+    }
+  } catch (e) { syncInfo = Object.assign(syncInfo || {}, { recalcError: e.message }); }
+  return success(ctx, Object.assign(_leaveToApi(row), syncInfo ? { attendanceSync: syncInfo } : {}));
+};
+
+// v20261029h 管理端编辑请假单：可改类型/起止日期/天数/事由；已批准单编辑后重置为待审批，
+// 并清除旧考勤同步行（重新批准时按新日期自动重建，见 _syncLeaveAttendance）
+const leaveUpdate = async ctx => {
+  const b = ctx.request.body || {};
+  const exists = await prisma.leaveApplication.findUnique({ where: { id: ctx.params.id } });
+  if (!exists) throw new BusinessError('NOT_FOUND', '请假申请不存在');
+  if (exists.approveStatus === 'cancelled') throw new BusinessError('VALIDATION_ERROR', '已撤回的请假单不能编辑，请删除后重新申请');
+  const data = {};
+  if (b.leaveType != null) data.leaveType = String(b.leaveType).trim();
+  if (b.dateFrom != null && b.dateFrom !== '') data.dateFrom = new Date(b.dateFrom + 'T00:00:00.000Z');
+  if (b.dateTo != null && b.dateTo !== '') data.dateTo = new Date(b.dateTo + 'T00:00:00.000Z');
+  if (b.totalDays != null) data.totalDays = Number(b.totalDays) || 1;
+  if (b.reason != null) data.reason = String(b.reason).trim();
+  if (!Object.keys(data).length) throw new BusinessError('VALIDATION_ERROR', '无可更新字段');
+  if (data.dateFrom && isNaN(data.dateFrom.getTime())) throw new BusinessError('VALIDATION_ERROR', '开始日期格式错误');
+  if (data.dateTo && isNaN(data.dateTo.getTime())) throw new BusinessError('VALIDATION_ERROR', '结束日期格式错误');
+  const f = data.dateFrom || exists.dateFrom;
+  const t = data.dateTo || exists.dateTo;
+  if (f && t && new Date(t).getTime() < new Date(f).getTime()) throw new BusinessError('VALIDATION_ERROR', '结束日期不能早于开始日期');
+  const wasApproved = exists.approveStatus === 'approved';
+  if (wasApproved) {
+    // 已批准单被编辑 → 重新走审批流（清审批人/时间，考勤同步行随之清除）
+    data.approveStatus = 'pending';
+    data.approverId = null;
+    data.approverName = null;
+    data.approvedAt = null;
+    data.rejectReason = null;
+  }
+  const row = await prisma.leaveApplication.update({ where: { id: exists.id }, data });
+  try { await audit({ ctx, module: 'attendance', action: 'LEAVE_UPDATE', targetId: row.id, detail: { staffId: row.staffId, before: { type: exists.leaveType, from: exists.dateFrom, to: exists.dateTo, days: exists.totalDays }, after: { type: row.leaveType, from: row.dateFrom, to: row.dateTo, days: row.totalDays }, reapprove: wasApproved } }); } catch (_) {}
+  let syncInfo = null;
+  if (wasApproved) {
+    try {
+      const r = await prisma.attendanceV1.deleteMany({ where: { staffId: exists.staffId, remark: { startsWith: _leaveSyncPrefix + exists.id } } });
+      syncInfo = { attendanceCleared: r.count, note: '已批准假条被编辑，考勤同步行已清除，待重新批准后按新日期重建' };
+    } catch (e) { syncInfo = { error: e.message }; }
+  }
+  return success(ctx, Object.assign(_leaveToApi(row), syncInfo ? { attendanceSync: syncInfo } : {}));
 };
 
 // v20261017g：删除请假单（仅限已驳回/已撤回，供 E2E 测试数据自动清理及日常纠错）
@@ -749,6 +851,7 @@ module.exports = {
   leaveList,
   leaveCreate,
   leaveApprove,
+  leaveUpdate,
   leaveRemove,
   leaveMakeup,
   leaveMakeupCancel,

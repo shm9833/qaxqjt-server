@@ -121,7 +121,7 @@ async function _attendanceOfMonth(performerId, month, range) {
     where: range && range.gte && range.lt
       ? { staffId: performerId, attendanceDate: { gte: range.gte, lt: range.lt } }
       : { staffId: performerId, attendanceMonth: month },
-    select: { attendanceType: true }
+    select: { attendanceType: true, remark: true }
   });
   const m = {
     workDays: 0, nightShows: 0, absent: 0, leave: 0, late: 0, lateOver: 0,
@@ -129,6 +129,11 @@ async function _attendanceOfMonth(performerId, month, range) {
   };
   for (const r of rows) {
     const t = r.attendanceType;
+    // v20261029e 补假不带薪：补假行（remark 前缀 补假#，attendanceType=full）改入事假桶，与 wages/helpers 同口径
+    if (typeof r.remark === 'string' && r.remark.indexOf('补假#') === 0 && SYNC_WORK_DAY_TYPES[t] != null) {
+      m.leave += 1;
+      continue;
+    }
     if (SYNC_WORK_DAY_TYPES[t] != null) {
       m.workDays += SYNC_WORK_DAY_TYPES[t];
       if (t === 'night') m.nightShows += 1;
@@ -139,8 +144,9 @@ async function _attendanceOfMonth(performerId, month, range) {
     else if (t === 'early_over') { m.earlyOver += 1; m.early += 1; }
     else if (t === 'PL') m.leave += 1;
     else if (t === 'SL') m.sick += 1;
-    else if (t === 'AL' || t === 'ML' || t === 'BL') m.paidLeave += 1;
+    else if (t === 'AL' || t === 'ML' || t === 'BL') m.leave += 1; // v20261029e 统一不带薪，与 wages/helpers 同口径（paidLeave 键保留恒 0）
     else if (t === 'leave' || t === 'outing' || t === 'study' || t === 'business' || t === 'injury') m.leave += 1;
+    else if (t === 'OL' || t === 'OL2') m.leave += 1; // v20261029f 调休/字典外假类：一律不带薪，与 wages/helpers 同口径
     else if (t === 'stage_in' || t === 'stage_out') { /* 装台/卸台日：不计薪资、不计迟到、不计奖励 */ }
     else if (t === 'accident_l1') m.accident1 += 1;
     else if (t === 'accident_l2') m.accident2 += 1;

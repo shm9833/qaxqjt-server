@@ -15,6 +15,7 @@ module.exports = {
   batchCreate: core.batchCreate,
   batchConfirm: core.batchConfirm,
   batchPost: core.batchPost,
+  batchUnpost: core.batchUnpost,
   rulesList: independent.rulesList,
   rulesDetail: independent.rulesDetail,
   toApi: helpers.toApi,

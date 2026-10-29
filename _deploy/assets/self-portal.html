@@ -873,7 +873,7 @@
         '</div>' +
         '<div class="wa-block"><div class="wa-head">② 工资发放确认（确认已实际收到工资，需签名）' + stBadge(it.receiptStatus) + '</div>' +
           '<div class="wa-btns">' +
-            '<button class="primary" data-act="receipt-sign" data-id="' + it.id + '" ' + (receiptDone ? 'disabled' : '') + '签名确认已收到</button>' +
+            '<button class="primary" data-act="receipt-sign" data-id="' + it.id + '" ' + (receiptDone ? 'disabled' : '') + '>签名确认已收到</button>' +
             '<button class="gray" data-act="receipt-no" data-id="' + it.id + '" ' + (it.receiptStatus === 'rejected' ? 'disabled' : '') + '>未收到/有异议</button>' +
           '</div>' + rejectHtml('receipt') +
         '</div>' +

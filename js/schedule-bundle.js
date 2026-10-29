@@ -359,6 +359,7 @@
     WAGE_BATCHES: '/v1/wage-batches',
     WAGE_BATCH_CONFIRM: function (id) { return '/v1/wage-batches/' + id + '/confirm'; },
     WAGE_BATCH_POST: function (id) { return '/v1/wage-batches/' + id + '/post'; },
+    WAGE_BATCH_UNPOST: function (id) { return '/v1/wage-batches/' + id + '/unpost'; },
     FIN_LEDGER: '/v1/fin/ledger',
     INVENTORY: '/v1/inventory',
     CONTENTS: '/v1/contents'

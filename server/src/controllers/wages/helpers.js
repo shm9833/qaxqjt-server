@@ -99,6 +99,9 @@ function _ruleToApi(row) {
 
 const WORK_DAY_TYPES = { full: 1, night: 1, double: 1, half: 0.5 };
 
+// v20261029f 请假类考勤类型集合（订单溯源时从 showDays 扣减；与 _attendanceByStaff 的事假/病假桶口径一致）
+const _LEAVE_TRACE_TYPES = { PL: 1, SL: 1, AL: 1, ML: 1, BL: 1, leave: 1, outing: 1, study: 1, business: 1, injury: 1, OL: 1, OL2: 1 };
+
 // ========== 考勤扣罚规则（与《员工管理条例》第二条一致，唯一计算口径，勿在别处重复实现）==========
 
 async function _attendanceByStaff(month, range) {
@@ -109,7 +112,7 @@ async function _attendanceByStaff(month, range) {
   // 一次性拉取该月全部考勤，按 staffId 聚合，避免 N 次查询
   const rows = await prisma.attendanceV1.findMany({
     where,
-    select: { staffId: true, attendanceType: true, attendanceDate: true }
+    select: { staffId: true, attendanceType: true, attendanceDate: true, remark: true }
   });
   // v20261017 全团打卡总控：休假/暂停区间内的考勤记录统一跳过（不计工资、不进任何桶）
   const ctlState = await punchControlSvc.getState();
@@ -122,6 +125,13 @@ async function _attendanceByStaff(month, range) {
       accident1: 0, accident2: 0, accident3: 0
     };
     const t = r.attendanceType;
+    // v20261029e 补假不带薪：补假行（remark 前缀 补假#，attendanceType=full）原按带薪工天计，改入事假桶
+    // （月结按折算日薪扣回、影响全勤奖；日结天然无薪）——与"只要请假就不带薪"口径一致
+    if (typeof r.remark === 'string' && r.remark.indexOf('补假#') === 0 && WORK_DAY_TYPES[t] != null) {
+      m.leave += 1;
+      map[r.staffId] = m;
+      continue;
+    }
     if (WORK_DAY_TYPES[t] != null) {
       m.workDays += WORK_DAY_TYPES[t];
       if (t === 'night') m.nightShows += 1;
@@ -131,9 +141,10 @@ async function _attendanceByStaff(month, range) {
     else if (t === 'early') m.early += 1;
     else if (t === 'early_over') { m.earlyOver += 1; m.early += 1; } // 早退超30分钟按旷工半天，同时计早退次数
     else if (t === 'PL') m.leave += 1;   // 事假：与 leave 同桶（monthly 按折算日薪扣回，影响全勤奖）
-    else if (t === 'SL') m.sick += 1;    // 病假：monthly 按折算日薪50%扣回，影响全勤奖
-    else if (t === 'AL' || t === 'ML' || t === 'BL') m.paidLeave += 1; // 年假/婚假/丧假：法定带薪，不扣款、不影响全勤
+    else if (t === 'SL') m.sick += 1;    // 病假：monthly 按折算日薪全额扣回（只要请假就不带薪），影响全勤奖
+    else if (t === 'AL' || t === 'ML' || t === 'BL') m.leave += 1; // 年假/婚假/丧假：v20261029e 统一不带薪，并入事假桶（月结全额扣回、影响全勤；paidLeave 键保留恒 0 兼容旧数据）
     else if (t === 'leave' || t === 'outing' || t === 'study' || t === 'business' || t === 'injury') m.leave += 1;
+    else if (t === 'OL' || t === 'OL2') m.leave += 1; // v20261029f 调休/字典外假类：一律不带薪，并入事假桶
     else if (t === 'stage_in' || t === 'stage_out') { /* 装台/卸台日：不计薪资、不计迟到、不计奖励，不进任何桶 */ }
     else if (t === 'accident_l1') m.accident1 += 1; // v20261012 事故分级：一级 10 元/天
     else if (t === 'accident_l2') m.accident2 += 1; // 二级 30 元/天
@@ -157,7 +168,7 @@ async function _orderBreakdownByStaff(month, range) {
     : { attendanceMonth: month };
   const rows = await prisma.attendanceV1.findMany({
     where,
-    select: { staffId: true, attendanceType: true, attendanceDate: true }
+    select: { staffId: true, attendanceType: true, attendanceDate: true, remark: true }
   });
   const ctlState = await punchControlSvc.getState();
   // 与结算区间有交集且未取消/退款的演出订单（同字段条件合并避免 Prisma 冲突）
@@ -181,9 +192,14 @@ async function _orderBreakdownByStaff(month, range) {
   }
   const map = {};
   for (const r of rows) {
-    if (r.attendanceDate && punchControlSvc.isDateExcludedIn(ctlState, r.attendanceDate.getTime())) continue;
+    // v20261029g 请假扣薪豁免打卡总控：请假类考勤行（含 请假# 前缀兜底）即使落在打卡暂停/休假区间，
+    // 只要命中订单演出段仍须参与溯源扣减（"演出时段请假必扣"）；其余类型维持暂停期排除口径不变
+    const isLeaveTraceRow = !!_LEAVE_TRACE_TYPES[r.attendanceType] || (typeof r.remark === 'string' && r.remark.indexOf('请假#') === 0);
+    if (r.attendanceDate && !isLeaveTraceRow && punchControlSvc.isDateExcludedIn(ctlState, r.attendanceDate.getTime())) continue;
+    // v20261029e 补假不带薪：补假行不参与订单溯源（其日期不触发订单参与判定/不计入订单与兜底工天）
+    if (typeof r.remark === 'string' && r.remark.indexOf('补假#') === 0) continue;
     const t = r.attendanceDate ? r.attendanceDate.getTime() : null;
-    const m = map[r.staffId] || { orders: {}, fallback: { workDays: 0, nightShows: 0 } };
+    const m = map[r.staffId] || { orders: {}, fallback: { workDays: 0, nightShows: 0 }, leaveTrace: { days: 0, byType: {} } };
     const payType = WORK_DAY_TYPES[r.attendanceType] != null;
     // 命中订单演出段：场次最多的订单优先（重叠日期段避免重复计薪）
     let hit = null;
@@ -203,6 +219,13 @@ async function _orderBreakdownByStaff(month, range) {
       if (payType) {
         b.workDays += WORK_DAY_TYPES[r.attendanceType];
         if (r.attendanceType === 'night') b.nightShows += 1;
+      } else if (_LEAVE_TRACE_TYPES[r.attendanceType]) {
+        // v20261029f 请假不带薪：请假类考勤日命中订单演出段 → 从该订单 showDays 扣减 1 天
+        // （请假当天未参演，不应按演出段日历天计薪；扣至 0 为限；补假行已在上方整行排除）
+        b.showDays = Math.max(0, (b.showDays || 0) - 1);
+        // v20261029h 溯源扣减留痕：记录扣减天数与假类，工资条 otherDeductionNote.leave 展示扣款明细
+        m.leaveTrace.days += 1;
+        m.leaveTrace.byType[r.attendanceType] = (m.leaveTrace.byType[r.attendanceType] || 0) + 1;
       }
     } else if (payType) {
       m.fallback.workDays += WORK_DAY_TYPES[r.attendanceType];
@@ -391,6 +414,15 @@ function _calcWageItem(perf, att, rule, params, punchP, travelExp, loanExp, peri
   // 无协议天工资的人员 baseWage=0（备注中标注未设置天工资），避免等级工资混入日薪结算口径。
   const hasPersonalRate = perf.dailyRate != null && Number(perf.dailyRate) > 0;
   const dailyRate = hasPersonalRate ? Number(perf.dailyRate) : 0;
+  // v20261029h 请假扣款明细（daily_pure 溯源口径）：演出段请假天已通过 showDays 扣减体现在
+  // baseWage（少发），此处换算金额仅用于工资条展示，不再计入 totalDeduction（避免双扣）
+  const _leaveTypeCn = { PL: '事假', SL: '病假', AL: '年假', ML: '婚假', BL: '丧假', leave: '请假', outing: '外出', study: '学习', business: '出差', injury: '工伤', OL: '调休', OL2: '调休' };
+  const lvTrace = att && att.leaveTrace ? att.leaveTrace : null;
+  const lvDays = lvTrace && lvTrace.days ? lvTrace.days : 0;
+  const leaveDeduct = _round2(lvDays * dailyRate);
+  const lvTypesStr = lvTrace && lvTrace.byType
+    ? Object.keys(lvTrace.byType).map(k => (_leaveTypeCn[k] || k) + (lvTrace.byType[k] > 1 ? '×' + lvTrace.byType[k] : '')).join('、')
+    : '';
 
   const baseWage = _round2(dailyRate * workDays);
   const nightShowBonus = 0;
@@ -434,6 +466,7 @@ function _calcWageItem(perf, att, rule, params, punchP, travelExp, loanExp, peri
   if (penalty.earlyOverFine) penaltyParts.push(`早退超30分钟${penalty.earlyOverTimes}次按旷工半天扣¥${penalty.earlyOverFine}`);
   if (penalty.absentFine) penaltyParts.push(`旷工${penalty.absentDays}天扣两日工资¥${penalty.absentFine}`);
   if (luDedApplied) penaltyParts.push(`装卸车缺席${luAbsent}次（装${luExp.loadAbsent || 0}/卸${luExp.unloadAbsent || 0}）×¥${luUnit}=¥${luDedApplied}`);
+  if (lvDays) penaltyParts.push(`演出段请假${lvDays}天（${lvTypesStr}）不计薪，按¥${dailyRate}/天从演出天数扣减=¥${leaveDeduct}`);
   if (unpaidCarryOver) penaltyParts.push(`扣罚超出应发¥${unpaidCarryOver}，本次按0元发放，余额依条例另行追缴`);
   // v20261024 区间结算：子区间批次在备注中标注结算周期（如「结算周期 10-01~10-15」），工资条可追溯
   const rateNoteBase = rateNote + (periodLabel ? `；结算周期 ${periodLabel}` : '');
@@ -463,7 +496,10 @@ function _calcWageItem(perf, att, rule, params, punchP, travelExp, loanExp, peri
     travelExpenseItems: travelExp && travelExp.items ? travelExp.items : [],
     otherDeductionNote: JSON.stringify({
       mode: 'daily_pure',
-      leave: 0,              // 纯日结按出勤天计酬，请假日无日薪（workDays 已体现），不另扣
+      leave: leaveDeduct,    // v20261029h：演出段溯源扣减金额（已从 baseWage 少发体现，员工端显示"请假扣款"行）
+      leaveDays: lvDays,
+      leaveTypes: lvTypesStr,
+      leaveNote: lvDays ? `演出段请假${lvDays}天（${lvTypesStr}）不计薪，按¥${dailyRate}/天扣减` : '',
       absent: penalty.absentFine,
       late: lateTotal,
       early: earlyTotal,
@@ -580,7 +616,7 @@ function _calcSettleWageItem(perf, att, mode, params, luExp) {
   const earlyFine = params.enEarlyDeduct ? _round2(earlyTimes * params.earlyDeduct) : 0;
   const absentFine = params.enAbsentDeduct ? _round2(absentDays * dailyBase * params.absentMult) : 0;
   const leaveFine = (isMonthly && params.enLeaveDeduct) ? _round2(leaveDays * dailyBase) : 0;
-  // 病假：仅按月结算需从已全额发放的底薪中扣回（折算模式病假不在出勤天，天然少发）；比例 50%，与事假同受假期扣款开关控制
+  // 病假：仅按月结算需从已全额发放的底薪中扣回（折算模式病假不在出勤天，天然少发）；v20261029e 比例改全额（只要请假就不带薪），与事假同受假期扣款开关控制
   const sickFine = (isMonthly && params.enLeaveDeduct)
     ? _round2(sickDays * dailyBase * WAGE_DEDUCT_RULES.SICK_DEDUCT_RATIO) : 0;
   const social = params.enSocial ? _round2(params.social) : 0;
@@ -603,7 +639,7 @@ function _calcSettleWageItem(perf, att, mode, params, luExp) {
 
   const parts = [];
   if (leaveFine) parts.push(`事假${leaveDays}天×¥${dailyBase}=¥${leaveFine}`);
-  if (sickFine) parts.push(`病假${sickDays}天×¥${dailyBase}×50%=¥${sickFine}`);
+  if (sickFine) parts.push(`病假${sickDays}天×¥${dailyBase}=¥${sickFine}`);
   if (absentFine) parts.push(`旷工${absentDays}天×¥${dailyBase}×${params.absentMult}=¥${absentFine}`);
   if (lateFine) parts.push(`迟到${lateTimes}次按新规¥${lateFine}`);
   if (earlyFine) parts.push(`早退${earlyTimes}次×¥${params.earlyDeduct}=¥${earlyFine}`);
@@ -663,6 +699,8 @@ function toApi(row, batch) {
       var parsed = JSON.parse(row.otherDeductionNote);
       if (parsed && typeof parsed === 'object') {
         breakdown.leave = Number(parsed.leave) || 0;
+        breakdown.leaveDays = Number(parsed.leaveDays) || 0;   // v20261029h 溯源扣减天数
+        breakdown.leaveTypes = typeof parsed.leaveTypes === 'string' ? parsed.leaveTypes : '';
         breakdown.absent = Number(parsed.absent) || 0;
         breakdown.late = Number(parsed.late) || 0;
         breakdown.early = Number(parsed.early) || 0;
@@ -750,6 +788,8 @@ function toApi(row, batch) {
     otherAllowance: Number(row.otherAllowance) || 0,
     otherAllowanceNote: row.otherAllowanceNote || '',
     leaveDeduction: breakdown.leave,
+    leaveDays: breakdown.leaveDays || 0,       // v20261029h
+    leaveTypes: breakdown.leaveTypes || '',    // v20261029h
     absentDeduction: breakdown.absent,
     lateDeduction: breakdown.late,
     earlyDeduction: breakdown.early,
@@ -980,7 +1020,7 @@ const WAGE_DEDUCT_RULES = {
   LATE_FINE_PER_TIME: 20,       // 迟到/早退30分钟以内：20元/次
   LATE_OVER_DEDUCT_DAYS: 0.5,   // 迟到/早退超30分钟：按旷工半天，扣当日一半日工资
   ABSENT_DEDUCT_DAYS: 2,        // 旷工1天：扣两日工资
-  SICK_DEDUCT_RATIO: 0.5,       // 病假扣回比例（monthly 底薪已全额发，病假按折算日薪50%扣回；可调）
+  SICK_DEDUCT_RATIO: 1,         // 病假扣回比例：v20261029e 改全额=1（只要请假就不带薪；月结底薪已全额发，病假按折算日薪100%扣回）
   PERSONAL_LEAVE_MAX_TIMES: 2,  // 每月事假上限：2次
   PERSONAL_LEAVE_MAX_DAYS: 2    // 每月事假上限：累计2天
 };

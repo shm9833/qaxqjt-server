@@ -1453,13 +1453,20 @@
       var acts = '';
       if (st === 'pending') {
         acts = '<button class="btn btn-success btn-xs" data-act="approve" data-id="' + r.id + '">批准</button> ' +
-               '<button class="btn btn-danger btn-xs" data-act="reject" data-id="' + r.id + '">驳回</button>';
+               '<button class="btn btn-danger btn-xs" data-act="reject" data-id="' + r.id + '">驳回</button> ' +
+               '<button class="btn btn-secondary btn-xs" data-act="leaveEdit" data-id="' + r.id + '">✏️ 编辑</button>';
       } else if (st === 'approved') {
         // v20261028b 补假：已批准可安排补假日期（自动生成 full 出勤考勤，按出勤计薪）；已安排可改期/取消
+        // v20261029h 已批准假条可编辑（改后重置待审批并清考勤同步行，重新批准按新日期重建）
         acts = r.makeupDate
           ? '<button class="btn btn-secondary btn-xs" data-act="makeup" data-id="' + r.id + '">📅 改期</button> ' +
-            '<button class="btn btn-danger btn-xs" data-act="makeupCancel" data-id="' + r.id + '">取消补假</button>'
-          : '<button class="btn btn-primary btn-xs" data-act="makeup" data-id="' + r.id + '">📅 补假</button>';
+            '<button class="btn btn-danger btn-xs" data-act="makeupCancel" data-id="' + r.id + '">取消补假</button> ' +
+            '<button class="btn btn-secondary btn-xs" data-act="leaveEdit" data-id="' + r.id + '">✏️ 编辑</button>'
+          : '<button class="btn btn-primary btn-xs" data-act="makeup" data-id="' + r.id + '">📅 补假</button> ' +
+            '<button class="btn btn-secondary btn-xs" data-act="leaveEdit" data-id="' + r.id + '">✏️ 编辑</button>';
+      } else if (st === 'rejected') {
+        // v20261029h 已驳回假条可编辑后重新提交审批
+        acts = '<button class="btn btn-secondary btn-xs" data-act="leaveEdit" data-id="' + r.id + '">✏️ 编辑</button>';
       } else {
         acts = '<span style="color:#999;font-size:.8rem;">—</span>';
       }
@@ -1568,6 +1575,51 @@
     };
   }
 
+  // v20261029h 编辑请假单：类型/日期/天数/事由可改；已批准单保存后重置待审批并清考勤同步行
+  function openEditModal(rec) {
+    var df = rec.dateFrom ? String(rec.dateFrom).slice(0, 10) : '';
+    var dt = rec.dateTo ? String(rec.dateTo).slice(0, 10) : '';
+    var html = '<div id="leaveEditModal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center;">' +
+      '<div style="background:#fff;border-radius:14px;padding:24px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto;">' +
+      '<h3 style="margin:0 0 8px;color:var(--primary-dark);">✏️ 编辑请假单</h3>' +
+      '<p style="margin:0 0 14px;color:#8a6d3b;font-size:.82rem;">' + (rec.approveStatus === 'approved' ? '⚠️ 该假条已批准：保存后将重置为「待审批」，并清除已生成的请假考勤，重新批准后按新日期自动重建。' : '保存后按新内容提交审批。') + '</p>' +
+      '<div class="form-group"><label>请假人员（不可修改）</label><input class="form-control" readonly value="' + (rec.staffName || '') + (rec.staffId ? '（' + rec.staffId + '）' : '') + '"></div>' +
+      '<div class="form-group"><label>请假类型 *</label><select id="leType" class="form-control">' +
+      Object.keys(LEAVE_TYPES).map(function (k) { return '<option value="' + k + '"' + (k === rec.leaveType ? ' selected' : '') + '>' + LEAVE_TYPES[k] + '</option>'; }).join('') +
+      '</select></div>' +
+      '<div class="form-row"><div class="form-group"><label>开始日期 *</label><input id="leFrom" type="date" class="form-control" value="' + df + '"></div>' +
+      '<div class="form-group"><label>结束日期 *</label><input id="leTo" type="date" class="form-control" value="' + dt + '"></div></div>' +
+      '<div class="form-group"><label>天数 *</label><input id="leDays" type="number" min="0.5" step="0.5" value="' + (rec.totalDays != null ? Number(rec.totalDays) : 1) + '" class="form-control"></div>' +
+      '<div class="form-group"><label>事由 *</label><textarea id="leReason" class="form-control" rows="3">' + (rec.reason || '') + '</textarea></div>' +
+      '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">' +
+      '<button class="btn btn-secondary" id="leCancel">取消</button>' +
+      '<button class="btn btn-primary" id="leSave">保存</button></div></div></div>';
+    var wrap = document.createElement('div');
+    wrap.innerHTML = html;
+    document.body.appendChild(wrap);
+    $('leCancel').onclick = function () { document.body.removeChild(wrap); };
+    $('leSave').onclick = async function () {
+      var body = {
+        leaveType: $('leType').value,
+        dateFrom: $('leFrom').value,
+        dateTo: $('leTo').value,
+        totalDays: Number($('leDays').value) || 1,
+        reason: $('leReason').value.trim()
+      };
+      if (!body.dateFrom || !body.dateTo || !body.reason) { toast('请填写必填项', 'error'); return; }
+      if (body.dateTo < body.dateFrom) { toast('结束日期不能早于开始日期', 'error'); return; }
+      try {
+        var res = await API.put(leavePath() + '/' + rec.id, body);
+        var sync = res && res.attendanceSync;
+        toast(sync && sync.attendanceCleared != null
+          ? '已保存并重置为待审批（已清除 ' + sync.attendanceCleared + ' 条旧考勤）'
+          : '请假单已保存', 'success', 4000);
+        document.body.removeChild(wrap);
+        loadLeaves();
+      } catch (e) { toast('保存失败：' + (e.message || e), 'error', 4000); }
+    };
+  }
+
   function bind() {
     var tab = document.querySelector('.staff-tab[data-tab="leave"]');
     if (tab) tab.addEventListener('click', loadLeaves);
@@ -1583,6 +1635,12 @@
       var id = btn.getAttribute('data-id');
       var act = btn.getAttribute('data-act');
       if (act === 'approve') approve(id, 'approved');
+      else if (act === 'leaveEdit') {
+        // v20261029h 编辑请假单
+        var rec2 = (state.list || []).filter(function (x) { return x.id === id; })[0];
+        if (rec2) openEditModal(rec2);
+        else toast('未找到该请假记录，请刷新列表', 'error');
+      }
       else if (act === 'reject') {
         var reason = prompt('请输入驳回原因：');
         if (reason !== null) approve(id, 'rejected', reason);
