@@ -1501,12 +1501,30 @@
     } catch (e) { toast('操作失败：' + (e.message || e), 'error'); }
   }
 
-  function openCreateModal() {
+  // v20261029d 新建请假申请关联花名册：员工改为从花名册下拉选择（自动带出 ID/工号），不再手填
+  async function _ensureRosterRows() {
+    var roster = (window.__PF_ROWS__ || []).filter(function (p) { return p && p.status !== 'pending' && p.id; });
+    if (roster.length) return roster;
+    try {
+      var res = await API.get((QAXQJT_PATHS.PERFORMERS || '/v1/performers'), { query: { page: 1, pageSize: 500 }, showErrorToast: false, timeoutMs: 12000, fallbackRead: function () { return null; } });
+      var all = Array.isArray(res) ? res : (res && res.items) || [];
+      roster = all.filter(function (p) { return p && p.status !== 'pending' && p.id; });
+    } catch (e) { roster = []; }
+    return roster;
+  }
+
+  async function openCreateModal() {
+    var roster = await _ensureRosterRows();
+    var perfMap = {};
+    var optHtml = roster.map(function (p) {
+      perfMap[String(p.id)] = p;
+      return '<option value="' + p.id + '">' + (p.name || '') + (p.staffNo ? '（' + p.staffNo + '）' : '') + (p.rankGrade ? ' · ' + p.rankGrade : '') + '</option>';
+    }).join('');
     var html = '<div id="leaveModal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center;">' +
       '<div style="background:#fff;border-radius:14px;padding:24px;max-width:520px;width:90%;max-height:90vh;overflow-y:auto;">' +
       '<h3 style="margin:0 0 16px;color:var(--primary-dark);">➕ 新建请假申请</h3>' +
-      '<div class="form-group"><label>员工姓名 *</label><input id="lfName" class="form-control" placeholder="请输入员工姓名"></div>' +
-      '<div class="form-group"><label>员工ID *</label><input id="lfStaffId" class="form-control" placeholder="员工工号/ID"></div>' +
+      '<div class="form-group"><label>花名册人员 *（关联花名册，自动带出工号）</label><select id="lfPerf" class="form-control"><option value="">— 请选择花名册人员 —</option>' + optHtml + '</select></div>' +
+      '<div class="form-group"><label>关联信息（自动带出）</label><input id="lfStaffRef" class="form-control" readonly placeholder="选择花名册人员后自动显示工号/ID"></div>' +
       '<div class="form-group"><label>请假类型 *</label><select id="lfType" class="form-control">' +
       Object.keys(LEAVE_TYPES).map(function (k) { return '<option value="' + k + '">' + LEAVE_TYPES[k] + '</option>'; }).join('') +
       '</select></div>' +
@@ -1522,10 +1540,17 @@
     wrap.innerHTML = html;
     document.body.appendChild(wrap);
     $('lfCancel').onclick = function () { document.body.removeChild(wrap); };
+    var selPerf = $('lfPerf');
+    selPerf.onchange = function () {
+      var p = perfMap[selPerf.value];
+      $('lfStaffRef').value = p ? ((p.staffNo || '无工号') + ' / ' + p.id) : '';
+    };
     $('lfSubmit').onclick = async function () {
+      var p = perfMap[selPerf.value];
+      if (!p) { toast('请从花名册选择请假人员', 'error'); return; }
       var body = {
-        staffName: $('lfName').value.trim(),
-        staffId: $('lfStaffId').value.trim(),
+        staffId: String(p.id),
+        staffName: p.name || '',
         leaveType: $('lfType').value,
         dateFrom: $('lfFrom').value,
         dateTo: $('lfTo').value,
@@ -1536,7 +1561,7 @@
       if (!body.staffName || !body.staffId || !body.reason || !body.dateFrom || !body.dateTo) { toast('请填写必填项', 'error'); return; }
       try {
         await API.post(leavePath(), body);
-        toast('请假申请已提交', 'success');
+        toast('请假申请已提交（' + body.staffName + '）', 'success');
         document.body.removeChild(wrap);
         loadLeaves();
       } catch (e) { toast('提交失败：' + (e.message || e), 'error'); }

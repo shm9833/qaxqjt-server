@@ -114,8 +114,11 @@ const update = async ctx => {
     include: { batch: true }
   });
   if (!exists) throw new BusinessError('NOT_FOUND', '工资条不存在');
+  // v20261029d 过账保护豁免：payslipPublished 仅是员工端可见性开关（非金额字段），
+  // 已确认/已过账批次仍需支持「发放工资条」；请求体仅含 payslipPublished 时放行，其余字段维持冻结
+  const publishOnly = Object.keys(b).length > 0 && Object.keys(b).every(k => k === 'payslipPublished');
   // 过账保护：confirmed/posted 批次的明细金额与字段冻结，与 DELETE 同口径
-  if (exists.batch && exists.batch.status && exists.batch.status !== 'draft') {
+  if (!publishOnly && exists.batch && exists.batch.status && exists.batch.status !== 'draft') {
     const act = exists.batch.status === 'posted' ? '已过账发放' : '已确认';
     throw new BusinessError('UNPROCESSABLE', `工资批次${act}，工资明细不可修改（如需调整请先撤回批次）`);
   }

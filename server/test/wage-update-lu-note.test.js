@@ -1,10 +1,11 @@
 'use strict';
 
 /**
- * 工资条 PATCH 装卸车扣款审核保存测试（v20261029c）
+ * 工资条 PATCH 装卸车扣款审核保存测试（v20261029c）+ 过账批次发布工资条豁免（v20261029d）
  * 覆盖 wages/core update 的 note 合并编码：
  *   1. PATCH 4 项扣款时，note 中已有的 loadUnloadDeduction/AbsentCount/UnitPrice/Items 原样保留
  *   2. PATCH loadUnloadDeduction 时金额写入 note，其他字段保留，otherDeduction 仍=4 项之和
+ *   3. 过账批次 PATCH 仅 payslipPublished → 放行（发放工资条）；夹带其他字段/金额字段 → 422 冻结
  * 桩：prisma（wageItemsV1）+ audit-service
  */
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
@@ -94,4 +95,37 @@ test('PATCH loadUnloadDeduction 审核改装卸车扣款生效', async () => {
   assert.strictEqual(note.loadUnloadAbsentCount, 1, '缺席次数保留');
   assert.strictEqual(note.loadUnloadItems.length, 1, '逐笔明细保留');
   assert.strictEqual(updated.data.otherDeduction, 0, 'otherDeduction 不含装卸车');
+});
+
+// ========== v20261029d 过账批次发布工资条豁免 ==========
+test('过账批次 PATCH 仅 payslipPublished 放行（发放工资条）', async () => {
+  wageRow = makeRow();
+  wageRow.batch = { status: 'posted' };
+  updated = null; auditCalls.length = 0;
+  const res = await request(handler)
+    .patch('/v1/wages/wage_lu_test1')
+    .set('Authorization', 'Bearer ' + signToken())
+    .send({ payslipPublished: true });
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(updated.data.payslipPublished, true, 'payslipPublished 应写入');
+  assert.ok(updated.data.payslipPublishedAt instanceof Date, 'payslipPublishedAt 应写入时间');
+  assert.strictEqual(updated.data.otherDeductionNote, undefined, '不触碰 note');
+});
+
+test('过账批次 PATCH 金额字段仍冻结（422），混合仅发布+其他字段也拒绝', async () => {
+  wageRow = makeRow();
+  wageRow.batch = { status: 'posted' };
+  updated = null; auditCalls.length = 0;
+  const r1 = await request(handler)
+    .patch('/v1/wages/wage_lu_test1')
+    .set('Authorization', 'Bearer ' + signToken())
+    .send({ netPay: 1 });
+  assert.strictEqual(r1.status, 422, '金额字段应冻结');
+  assert.strictEqual(r1.body.error.code, 'UNPROCESSABLE');
+  const r2 = await request(handler)
+    .patch('/v1/wages/wage_lu_test1')
+    .set('Authorization', 'Bearer ' + signToken())
+    .send({ payslipPublished: true, baseWage: 1 });
+  assert.strictEqual(r2.status, 422, '发布+金额混合请求应整体拒绝');
+  assert.strictEqual(updated, null, '冻结请求不应触达 DB');
 });

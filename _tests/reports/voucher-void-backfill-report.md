@@ -1,6 +1,6 @@
 # 凭证作废 & backfill 自动化验证报告
 
-> 运行批次 `20261029013228` · 2026-10-29T01:32:28.305Z · 耗时 11.7s · 临时库 `file:C:/Users/hp/AppData/Local/Temp/qaxqjt-verify-20261029013228.db`（已销毁）
+> 运行批次 `20261029031244` · 2026-10-29T03:12:44.099Z · 耗时 10.0s · 临时库 `file:C:/Users/hp/AppData/Local/Temp/qaxqjt-verify-20261029031244.db`（已销毁）
 
 ## 一、结果汇总
 
@@ -20,9 +20,9 @@
 | 1 | B1.1 diff>0 触发补差（synced=1） | true | true | ✅ | r={"synced":1,"target":1000,"net":0,"diff":1000} |
 | 2 | B1.2 收款流水已落库 | true | true | ✅ |  |
 | 3 | B1.3 台账凭证已落库 | true | true | ✅ |  |
-| 4 | B1.4 payNo 格式 PAY+12位时间戳+6位 | true | true | ✅ | PAY202610290932VVWUOD |
-| 5 | B1.5 voucherNo 格式 LSR+12位时间戳+4位 | true | true | ✅ | LSR202610290932LRL1 |
-| 6 | B1.6 流水↔凭证 voucherNo 一致 | LSR202610290932LRL1 | LSR202610290932LRL1 | ✅ |  |
+| 4 | B1.4 payNo 格式 PAY+12位时间戳+6位 | true | true | ✅ | PAY202610291112ERWOOL |
+| 5 | B1.5 voucherNo 格式 LSR+12位时间戳+4位 | true | true | ✅ | LSR202610291112SCPP |
+| 6 | B1.6 流水↔凭证 voucherNo 一致 | LSR202610291112SCPP | LSR202610291112SCPP | ✅ |  |
 | 7 | B1.7 payType=in | in | in | ✅ |  |
 | 8 | B1.8 流水金额=diff | 1000 | 1000 | ✅ |  |
 | 9 | B1.9 流水 status=confirmed | confirmed | confirmed | ✅ |  |
@@ -30,7 +30,7 @@
 | 11 | B1.11 payerName=客户名 | 验证客户1 | 验证客户1 | ✅ |  |
 | 12 | B1.12 凭证 voucherType=receipt | receipt | receipt | ✅ |  |
 | 13 | B1.13 凭证 category=演出收入 | 演出收入 | 演出收入 | ✅ |  |
-| 14 | B1.14 summary 精确格式 | 订单收款（VERIFY-20261029013228-1） - 验证客户1 | 订单收款（VERIFY-20261029013228-1） - 验证客户1 | ✅ |  |
+| 14 | B1.14 summary 精确格式 | 订单收款（VERIFY-20261029031244-1） - 验证客户1 | 订单收款（VERIFY-20261029031244-1） - 验证客户1 | ✅ |  |
 | 15 | B1.15 creditAmount=diff（收入=贷） | 1000 | 1000 | ✅ |  |
 | 16 | B1.16 debitAmount=0 | 0 | 0 | ✅ |  |
 | 17 | B1.17 cashFlowType=in | in | in | ✅ |  |
@@ -40,10 +40,10 @@
 | 21 | B1.21 orderId 关联正确 | ordvfy00000001 | ordvfy00000001 | ✅ |  |
 | 22 | B1.22 makerAccountId=actor | verify_maker | verify_maker | ✅ |  |
 | 23 | B1.23 <10000 免双复核 | false | false | ✅ |  |
-| 24 | B1.24 remark 含收款流水号 | true | true | ✅ | 由订单收款自动生成，收款流水号 PAY202610290932VVWUOD |
-| 25 | B1.25 voucherDate≈now（±2min） | true | true | ✅ | 2026-10-29T01:32:39.447Z |
-| 26 | B1.26 ts BigInt 毫秒窗（±2min） | true | true | ✅ | 1793237559455 |
-| 27 | B1.27 voucherNo 时间戳=UTC+8(voucherDate) | 202610290932 | 202610290932 | ✅ |  |
+| 24 | B1.24 remark 含收款流水号 | true | true | ✅ | 由订单收款自动生成，收款流水号 PAY202610291112ERWOOL |
+| 25 | B1.25 voucherDate≈now（±2min） | true | true | ✅ | 2026-10-29T03:12:53.534Z |
+| 26 | B1.26 ts BigInt 毫秒窗（±2min） | true | true | ✅ | 1793243573541 |
+| 27 | B1.27 voucherNo 时间戳=UTC+8(voucherDate) | 202610291112 | 202610291112 | ✅ |  |
 | 28 | B1.28 payDate≈voucherDate（±5s） | true | true | ✅ |  |
 | 29 | B1.29 madeAt 已记录 | true | true | ✅ |  |
 | 30 | B2.1 重跑零操作（synced=0, diff=0） | true | true | ✅ | {"synced":0,"diff":0} |

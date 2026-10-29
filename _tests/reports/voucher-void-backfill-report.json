@@ -1,15 +1,15 @@
 {
-  "runTag": "20261029013228",
-  "startedAt": "2026-10-29T01:32:28.305Z",
-  "finishedAt": "2026-10-29T01:32:40.014Z",
-  "durationSec": 11.7,
+  "runTag": "20261029031244",
+  "startedAt": "2026-10-29T03:12:44.099Z",
+  "finishedAt": "2026-10-29T03:12:54.060Z",
+  "durationSec": 10,
   "summary": {
     "total": 96,
     "passed": 96,
     "failed": 0,
     "passRate": "100.0%"
   },
-  "dbUrl": "file:C:/Users/hp/AppData/Local/Temp/qaxqjt-verify-20261029013228.db",
+  "dbUrl": "file:C:/Users/hp/AppData/Local/Temp/qaxqjt-verify-20261029031244.db",
   "groups": {
     "B-backfill": {
       "total": 58,
@@ -49,7 +49,7 @@
           "expected": "true",
           "actual": "true",
           "pass": true,
-          "note": "PAY202610290932VVWUOD"
+          "note": "PAY202610291112ERWOOL"
         },
         {
           "id": 5,
@@ -58,14 +58,14 @@
           "expected": "true",
           "actual": "true",
           "pass": true,
-          "note": "LSR202610290932LRL1"
+          "note": "LSR202610291112SCPP"
         },
         {
           "id": 6,
           "group": "B-backfill",
           "name": "B1.6 流水↔凭证 voucherNo 一致",
-          "expected": "LSR202610290932LRL1",
-          "actual": "LSR202610290932LRL1",
+          "expected": "LSR202610291112SCPP",
+          "actual": "LSR202610291112SCPP",
           "pass": true,
           "note": ""
         },
@@ -136,8 +136,8 @@
           "id": 14,
           "group": "B-backfill",
           "name": "B1.14 summary 精确格式",
-          "expected": "订单收款（VERIFY-20261029013228-1） - 验证客户1",
-          "actual": "订单收款（VERIFY-20261029013228-1） - 验证客户1",
+          "expected": "订单收款（VERIFY-20261029031244-1） - 验证客户1",
+          "actual": "订单收款（VERIFY-20261029031244-1） - 验证客户1",
           "pass": true,
           "note": ""
         },
@@ -229,7 +229,7 @@
           "expected": "true",
           "actual": "true",
           "pass": true,
-          "note": "由订单收款自动生成，收款流水号 PAY202610290932VVWUOD"
+          "note": "由订单收款自动生成，收款流水号 PAY202610291112ERWOOL"
         },
         {
           "id": 25,
@@ -238,7 +238,7 @@
           "expected": "true",
           "actual": "true",
           "pass": true,
-          "note": "2026-10-29T01:32:39.447Z"
+          "note": "2026-10-29T03:12:53.534Z"
         },
         {
           "id": 26,
@@ -247,14 +247,14 @@
           "expected": "true",
           "actual": "true",
           "pass": true,
-          "note": 1793237559455
+          "note": 1793243573541
         },
         {
           "id": 27,
           "group": "B-backfill",
           "name": "B1.27 voucherNo 时间戳=UTC+8(voucherDate)",
-          "expected": "202610290932",
-          "actual": "202610290932",
+          "expected": "202610291112",
+          "actual": "202610291112",
           "pass": true,
           "note": ""
         },

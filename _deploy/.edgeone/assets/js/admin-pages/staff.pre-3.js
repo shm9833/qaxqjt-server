@@ -3075,6 +3075,44 @@
           }
           _clearWageCache(); await refreshGenTable(); await refreshHistTable(); updateHistStats(); updateBadgeCount();
         };
+        // v20261029d 批量发布：按历史Tab当前筛选（月份/状态/关键字）把「待发放」工资条逐条发布（员工端可见）
+        window._wageBatchPublish = async function () {
+          var lockKey = 'wbp_hist';
+          if (window.__OP_LOCKS && window.__OP_LOCKS[lockKey]) { try { U && U.toast && U.toast('⏳ 批量发布进行中，请稍候…', 'warning'); } catch(_){} return; }
+          try { if (!window.__OP_LOCKS) window.__OP_LOCKS = {}; window.__OP_LOCKS[lockKey] = true; } catch(_lk){}
+          var API = window.QAXQJT_API;
+          if (!API || !API.patch) { try { delete window.__OP_LOCKS[lockKey]; } catch(_){} return; }
+          try {
+            var m = ($('wageHistMonth') || {}).value || '';
+            var st = ($('wageHistStatus') || {}).value || '';
+            var kw = (($('wageHistKw') || {}).value || '').trim();
+            var list = await _fetchWages({});
+            if (m) list = list.filter(function (w) { return w.month === m; });
+            if (st) list = list.filter(function (w) { return w.status === st; });
+            if (kw) list = list.filter(function (w) {
+              return ((w.staffName||'').indexOf(kw)>=0) || ((w.staffId||'').indexOf(kw)>=0) || ((w.id||'').indexOf(kw)>=0);
+            });
+            var todo = list.filter(function (w) { return w.status !== 'paid'; });
+            if (!todo.length) { U && U.toast && U.toast('当前筛选下没有待发放工资条', 'info'); return; }
+            var netSum = todo.reduce(function (s, w) { return s + ((w.items && w.items.netPay) || 0); }, 0);
+            if (!window.confirm('📢 将批量发布 ' + todo.length + ' 条工资条（发布后员工自助门户立即可见）\n\n'
+              + (m ? '月份：' + m + '\n' : '月份：全部\n')
+              + '实发合计：¥' + netSum.toFixed(2) + '\n\n确认执行？')) return;
+            var ok = 0, fail = 0, errs = [];
+            for (var i = 0; i < todo.length; i++) {
+              try {
+                await API.patch((QAXQJT_PATHS.WAGES_BY_ID || function (id) { return '/v1/wages/' + id; })(todo[i].id), { payslipPublished: true }, { showErrorToast: false });
+                ok++;
+              } catch (e) { fail++; errs.push((todo[i].staffName || todo[i].id) + ':' + ((e && e.message) || '')); }
+            }
+            U && U.toast && U.toast('📢 批量发布完成：成功 ' + ok + ' 条' + (fail ? '，失败 ' + fail + ' 条（' + errs.slice(0, 3).join(';') + '）' : ''), fail ? 'warning' : 'success', 5000);
+            _clearWageCache(); await refreshHistTable(); updateHistStats(); updateBadgeCount();
+          } catch (e) {
+            U && U.toast && U.toast('❌ 批量发布失败：' + ((e && e.message) || ''), 'error');
+          } finally {
+            try { delete window.__OP_LOCKS[lockKey]; } catch(_){}
+          }
+        };
         window._wageExportPayslip = async function (id) {
           var API = window.QAXQJT_API;
           var w = null;
@@ -3101,6 +3139,7 @@
           var sb = $('wageHistSearchBtn'); if (sb) sb.addEventListener('click', refreshHistTable);
           var kw = $('wageHistKw'); if (kw) kw.addEventListener('keydown', function (e) { if (e.key === 'Enter') refreshHistTable(); });
           var ex = $('wageHistExportBtn'); if (ex) ex.addEventListener('click', exportHistAll);
+          var bp = $('wageHistBatchPublishBtn'); if (bp) bp.addEventListener('click', function () { if (window._wageBatchPublish) window._wageBatchPublish(); });
         }
         async function refreshHistMonths() {
           var sel = $('wageHistMonth'); if (!sel) return;
