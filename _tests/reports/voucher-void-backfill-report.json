@@ -1,0 +1,1060 @@
+{
+  "runTag": "20261029013228",
+  "startedAt": "2026-10-29T01:32:28.305Z",
+  "finishedAt": "2026-10-29T01:32:40.014Z",
+  "durationSec": 11.7,
+  "summary": {
+    "total": 96,
+    "passed": 96,
+    "failed": 0,
+    "passRate": "100.0%"
+  },
+  "dbUrl": "file:C:/Users/hp/AppData/Local/Temp/qaxqjt-verify-20261029013228.db",
+  "groups": {
+    "B-backfill": {
+      "total": 58,
+      "passed": 58,
+      "checks": [
+        {
+          "id": 1,
+          "group": "B-backfill",
+          "name": "B1.1 diff>0 触发补差（synced=1）",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "r={\"synced\":1,\"target\":1000,\"net\":0,\"diff\":1000}"
+        },
+        {
+          "id": 2,
+          "group": "B-backfill",
+          "name": "B1.2 收款流水已落库",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 3,
+          "group": "B-backfill",
+          "name": "B1.3 台账凭证已落库",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 4,
+          "group": "B-backfill",
+          "name": "B1.4 payNo 格式 PAY+12位时间戳+6位",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "PAY202610290932VVWUOD"
+        },
+        {
+          "id": 5,
+          "group": "B-backfill",
+          "name": "B1.5 voucherNo 格式 LSR+12位时间戳+4位",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "LSR202610290932LRL1"
+        },
+        {
+          "id": 6,
+          "group": "B-backfill",
+          "name": "B1.6 流水↔凭证 voucherNo 一致",
+          "expected": "LSR202610290932LRL1",
+          "actual": "LSR202610290932LRL1",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 7,
+          "group": "B-backfill",
+          "name": "B1.7 payType=in",
+          "expected": "in",
+          "actual": "in",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 8,
+          "group": "B-backfill",
+          "name": "B1.8 流水金额=diff",
+          "expected": "1000",
+          "actual": "1000",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 9,
+          "group": "B-backfill",
+          "name": "B1.9 流水 status=confirmed",
+          "expected": "confirmed",
+          "actual": "confirmed",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 10,
+          "group": "B-backfill",
+          "name": "B1.10 payChannel 默认 transfer",
+          "expected": "transfer",
+          "actual": "transfer",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 11,
+          "group": "B-backfill",
+          "name": "B1.11 payerName=客户名",
+          "expected": "验证客户1",
+          "actual": "验证客户1",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 12,
+          "group": "B-backfill",
+          "name": "B1.12 凭证 voucherType=receipt",
+          "expected": "receipt",
+          "actual": "receipt",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 13,
+          "group": "B-backfill",
+          "name": "B1.13 凭证 category=演出收入",
+          "expected": "演出收入",
+          "actual": "演出收入",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 14,
+          "group": "B-backfill",
+          "name": "B1.14 summary 精确格式",
+          "expected": "订单收款（VERIFY-20261029013228-1） - 验证客户1",
+          "actual": "订单收款（VERIFY-20261029013228-1） - 验证客户1",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 15,
+          "group": "B-backfill",
+          "name": "B1.15 creditAmount=diff（收入=贷）",
+          "expected": "1000",
+          "actual": "1000",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 16,
+          "group": "B-backfill",
+          "name": "B1.16 debitAmount=0",
+          "expected": "0",
+          "actual": "0",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 17,
+          "group": "B-backfill",
+          "name": "B1.17 cashFlowType=in",
+          "expected": "in",
+          "actual": "in",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 18,
+          "group": "B-backfill",
+          "name": "B1.18 cashFlowAmount=diff",
+          "expected": "1000",
+          "actual": "1000",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 19,
+          "group": "B-backfill",
+          "name": "B1.19 凭证 status=draft（M-15 自动凭证强制草稿）",
+          "expected": "draft",
+          "actual": "draft",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 20,
+          "group": "B-backfill",
+          "name": "B1.20 isReconciled=false",
+          "expected": "false",
+          "actual": "false",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 21,
+          "group": "B-backfill",
+          "name": "B1.21 orderId 关联正确",
+          "expected": "ordvfy00000001",
+          "actual": "ordvfy00000001",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 22,
+          "group": "B-backfill",
+          "name": "B1.22 makerAccountId=actor",
+          "expected": "verify_maker",
+          "actual": "verify_maker",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 23,
+          "group": "B-backfill",
+          "name": "B1.23 <10000 免双复核",
+          "expected": "false",
+          "actual": "false",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 24,
+          "group": "B-backfill",
+          "name": "B1.24 remark 含收款流水号",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "由订单收款自动生成，收款流水号 PAY202610290932VVWUOD"
+        },
+        {
+          "id": 25,
+          "group": "B-backfill",
+          "name": "B1.25 voucherDate≈now（±2min）",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "2026-10-29T01:32:39.447Z"
+        },
+        {
+          "id": 26,
+          "group": "B-backfill",
+          "name": "B1.26 ts BigInt 毫秒窗（±2min）",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": 1793237559455
+        },
+        {
+          "id": 27,
+          "group": "B-backfill",
+          "name": "B1.27 voucherNo 时间戳=UTC+8(voucherDate)",
+          "expected": "202610290932",
+          "actual": "202610290932",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 28,
+          "group": "B-backfill",
+          "name": "B1.28 payDate≈voucherDate（±5s）",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 29,
+          "group": "B-backfill",
+          "name": "B1.29 madeAt 已记录",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 30,
+          "group": "B-backfill",
+          "name": "B2.1 重跑零操作（synced=0, diff=0）",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "{\"synced\":0,\"diff\":0}"
+        },
+        {
+          "id": 31,
+          "group": "B-backfill",
+          "name": "B2.2 流水数不变",
+          "expected": "1",
+          "actual": "1",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 32,
+          "group": "B-backfill",
+          "name": "B2.3 凭证数不变",
+          "expected": "1",
+          "actual": "1",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 33,
+          "group": "B-backfill",
+          "name": "B3.1 增量 diff=500 仅补差",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "{\"synced\":1,\"diff\":500,\"net\":1000}"
+        },
+        {
+          "id": 34,
+          "group": "B-backfill",
+          "name": "B3.2 凭证总数=2（1000+500 两张）",
+          "expected": "2",
+          "actual": "2",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 35,
+          "group": "B-backfill",
+          "name": "B3.3 新凭证 credit=500",
+          "expected": "500",
+          "actual": "500",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 36,
+          "group": "B-backfill",
+          "name": "B3.4 流水净额=1500",
+          "expected": "1500",
+          "actual": "1500",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 37,
+          "group": "B-backfill",
+          "name": "B4.1 0.99 补差精确（round2）",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "diff=0.99"
+        },
+        {
+          "id": 38,
+          "group": "B-backfill",
+          "name": "B4.2 精度收敛幂等（重跑 diff=0）",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "diff=0"
+        },
+        {
+          "id": 39,
+          "group": "B-backfill",
+          "name": "B5.1 diff<0 不自动冲销（synced=0）",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "{\"synced\":0,\"diff\":-700.99,\"net\":1500.99}"
+        },
+        {
+          "id": 40,
+          "group": "B-backfill",
+          "name": "B5.2 流水数不变（历史保留）",
+          "expected": "3",
+          "actual": "3",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 41,
+          "group": "B-backfill",
+          "name": "B5.3 凭证数不变（须人工红冲）",
+          "expected": "3",
+          "actual": "3",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 42,
+          "group": "B-backfill",
+          "name": "B6.1 paidAmount=0 → target=0，diff<0 不冲销",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "{\"synced\":0,\"target\":0,\"diff\":-600}"
+        },
+        {
+          "id": 43,
+          "group": "B-backfill",
+          "name": "B6.2 历史凭证保留",
+          "expected": "1",
+          "actual": "1",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 44,
+          "group": "B-backfill",
+          "name": "B6.3 orders 控制器触发守卫存在（paidAmount<=0 跳过）",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 45,
+          "group": "B-backfill",
+          "name": "B7.1 大额补差 synced=1",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "diff=12000"
+        },
+        {
+          "id": 46,
+          "group": "B-backfill",
+          "name": "B7.2 ≥10000 doubleCheckRequired=true",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 47,
+          "group": "B-backfill",
+          "name": "B8.1 out 冲减参与净额（diff=400）",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "{\"net\":800,\"diff\":400}"
+        },
+        {
+          "id": 48,
+          "group": "B-backfill",
+          "name": "B8.2 新凭证 credit=400",
+          "expected": "400",
+          "actual": "400",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 49,
+          "group": "B-backfill",
+          "name": "B9.1 故障注入后异常上抛（失败隔离由调用方负责）",
+          "expected": "INJECTED_FAULT_LEDGER",
+          "actual": "INJECTED_FAULT_LEDGER",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 50,
+          "group": "B-backfill",
+          "name": "B9.2 回滚：流水零残留（无半成品）",
+          "expected": "0",
+          "actual": "0",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 51,
+          "group": "B-backfill",
+          "name": "B9.3 回滚：凭证零残留",
+          "expected": "0",
+          "actual": "0",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 52,
+          "group": "B-backfill",
+          "name": "B9.4 解除故障后重跑成功",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "{\"synced\":1,\"diff\":2000}"
+        },
+        {
+          "id": 53,
+          "group": "B-backfill",
+          "name": "B10.1 全部凭证 voucherNo 时间戳=UTC+8(voucherDate)",
+          "expected": "0",
+          "actual": "0",
+          "pass": true,
+          "note": "[]"
+        },
+        {
+          "id": 54,
+          "group": "B-backfill",
+          "name": "B10.2 全部凭证时间窗内（±2min）",
+          "expected": "0",
+          "actual": "0",
+          "pass": true,
+          "note": "[]"
+        },
+        {
+          "id": 55,
+          "group": "B-backfill",
+          "name": "B11 orders/core.js 接入 syncOrderPayments",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 56,
+          "group": "B-backfill",
+          "name": "B11 orders/independent.js 接入 syncOrderPayments",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 57,
+          "group": "B-backfill",
+          "name": "B11 orders/helpers.js 接入 syncOrderPayments",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 58,
+          "group": "B-backfill",
+          "name": "B11 orders/core.js 联动审计 AUTO_LEDGER_FROM_ORDER",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": ""
+        }
+      ]
+    },
+    "V-状态机": {
+      "total": 20,
+      "passed": 20,
+      "checks": [
+        {
+          "id": 59,
+          "group": "V-状态机",
+          "name": "V1.1 PATCH status=void → VALIDATION_ERROR（后端无作废流转）",
+          "expected": "VALIDATION_ERROR",
+          "actual": "VALIDATION_ERROR",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 60,
+          "group": "V-状态机",
+          "name": "V1.2 拒绝文案指向合法集合 draft/checked",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "status 仅允许 draft / checked"
+        },
+        {
+          "id": 61,
+          "group": "V-状态机",
+          "name": "V1.3 未落库",
+          "expected": "undefined",
+          "actual": "undefined",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 62,
+          "group": "V-状态机",
+          "name": "V2 已复核不可撤回为草稿",
+          "expected": "CONFLICT",
+          "actual": "CONFLICT",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 63,
+          "group": "V-状态机",
+          "name": "V3.1 复核放行 status=200",
+          "expected": "200",
+          "actual": "200",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 64,
+          "group": "V-状态机",
+          "name": "V3.2 checkerAccountId=复核人",
+          "expected": "acc_super",
+          "actual": "acc_super",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 65,
+          "group": "V-状态机",
+          "name": "V3.3 checkedAt 已记录",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 66,
+          "group": "V-状态机",
+          "name": "V4 已对账凭证不允许修改",
+          "expected": "CONFLICT",
+          "actual": "CONFLICT",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 67,
+          "group": "V-状态机",
+          "name": "V5 草稿凭证可删除（204）",
+          "expected": "204",
+          "actual": "204",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 68,
+          "group": "V-状态机",
+          "name": "V6.1 已复核凭证删除被拒",
+          "expected": "CONFLICT",
+          "actual": "CONFLICT",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 69,
+          "group": "V-状态机",
+          "name": "V6.2 错误文案=「仅草稿状态凭证可删除，已复核凭证须走作废流程」",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "仅草稿状态凭证可删除，已复核凭证须走作废流程"
+        },
+        {
+          "id": 70,
+          "group": "V-状态机",
+          "name": "V7 已对账凭证不允许删除",
+          "expected": "CONFLICT",
+          "actual": "CONFLICT",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 71,
+          "group": "V-状态机",
+          "name": "V8.1 删除不存在凭证 → NOT_FOUND",
+          "expected": "NOT_FOUND",
+          "actual": "NOT_FOUND",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 72,
+          "group": "V-状态机",
+          "name": "V8.2 修改不存在凭证 → NOT_FOUND",
+          "expected": "NOT_FOUND",
+          "actual": "NOT_FOUND",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 73,
+          "group": "V-状态机",
+          "name": "V9 复核账号夹带业务字段被拒",
+          "expected": "FORBIDDEN",
+          "actual": "FORBIDDEN",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 74,
+          "group": "V-状态机",
+          "name": "V10 create 强制 status=draft（M-15 制单≠复核）",
+          "expected": "draft",
+          "actual": "draft",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 75,
+          "group": "V-状态机",
+          "name": "V11.1 已复核回填凭证在调减后保留（不自动冲销）",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "status=checked diff=-1200.99"
+        },
+        {
+          "id": 76,
+          "group": "V-状态机",
+          "name": "V11.2 checked 凭证删除仍会被状态机拒绝（语义一致性）",
+          "expected": "CONFLICT",
+          "actual": "CONFLICT",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 77,
+          "group": "V-状态机",
+          "name": "V12.1 过期草稿仍可正常复核（无时效拦截）",
+          "expected": "200",
+          "actual": "200",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 78,
+          "group": "V-状态机",
+          "name": "V12.2 过期已复核凭证删除同样被拒（系统无「过期可删」分支）",
+          "expected": "CONFLICT",
+          "actual": "CONFLICT",
+          "pass": true,
+          "note": ""
+        }
+      ]
+    },
+    "W-作废端点": {
+      "total": 18,
+      "passed": 18,
+      "checks": [
+        {
+          "id": 79,
+          "group": "W-作废端点",
+          "name": "W1 缺作废原因 → VALIDATION_ERROR",
+          "expected": "VALIDATION_ERROR",
+          "actual": "VALIDATION_ERROR",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 80,
+          "group": "W-作废端点",
+          "name": "W2 作废原因不足 2 字（trim 后）→ VALIDATION_ERROR",
+          "expected": "VALIDATION_ERROR",
+          "actual": "VALIDATION_ERROR",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 81,
+          "group": "W-作废端点",
+          "name": "W3 凭证不存在 → NOT_FOUND",
+          "expected": "NOT_FOUND",
+          "actual": "NOT_FOUND",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 82,
+          "group": "W-作废端点",
+          "name": "W4 草稿凭证作废被拒（提示直接删除）",
+          "expected": "CONFLICT",
+          "actual": "CONFLICT",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 83,
+          "group": "W-作废端点",
+          "name": "W5 已作废凭证重复作废 → CONFLICT",
+          "expected": "CONFLICT",
+          "actual": "CONFLICT",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 84,
+          "group": "W-作废端点",
+          "name": "W6 已对账凭证作废被拒",
+          "expected": "CONFLICT",
+          "actual": "CONFLICT",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 85,
+          "group": "W-作废端点",
+          "name": "W7.1 作废成功 status=200",
+          "expected": "200",
+          "actual": "200",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 86,
+          "group": "W-作废端点",
+          "name": "W7.2 status 落 void 终态",
+          "expected": "void",
+          "actual": "void",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 87,
+          "group": "W-作废端点",
+          "name": "W7.3 voidReason trim 后落库",
+          "expected": "测试作废原因",
+          "actual": "测试作废原因",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 88,
+          "group": "W-作废端点",
+          "name": "W7.4 voidedBy=操作人",
+          "expected": "acc_super",
+          "actual": "acc_super",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 89,
+          "group": "W-作废端点",
+          "name": "W7.5 voidedAt 已记录",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 90,
+          "group": "W-作废端点",
+          "name": "W8 已作废凭证不允许修改",
+          "expected": "CONFLICT",
+          "actual": "CONFLICT",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 91,
+          "group": "W-作废端点",
+          "name": "W9 已作废凭证不可删除（审计痕迹保留）",
+          "expected": "CONFLICT",
+          "actual": "CONFLICT",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 92,
+          "group": "W-作废端点",
+          "name": "W10 summary 查询排除 status=void",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": "{\"voucherDate\":{\"gte\":\"2026-09-30T16:00:00.000Z\"},\"status\":{\"not\":\"void\"}}"
+        },
+        {
+          "id": 93,
+          "group": "W-作废端点",
+          "name": "W11 通用 PATCH status=void 仍被状态机白名单拒绝",
+          "expected": "VALIDATION_ERROR",
+          "actual": "VALIDATION_ERROR",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 94,
+          "group": "W-作废端点",
+          "name": "W12.1 真实库 void status 持久化",
+          "expected": "void",
+          "actual": "void",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 95,
+          "group": "W-作废端点",
+          "name": "W12.2 真实库 voidReason/voidedBy 持久化",
+          "expected": "真实库验证|verify",
+          "actual": "真实库验证|verify",
+          "pass": true,
+          "note": ""
+        },
+        {
+          "id": 96,
+          "group": "W-作废端点",
+          "name": "W12.3 真实库 voidedAt 时间戳",
+          "expected": "true",
+          "actual": "true",
+          "pass": true,
+          "note": ""
+        }
+      ]
+    }
+  },
+  "gaps": [
+    {
+      "id": "GAP-1",
+      "title": "凭证「作废」端点已实现（v20261016），待部署生产",
+      "evidence": "W1-W12 全分支验证通过：PATCH /v1/fin/ledger/:id/void（super_admin/finance_admin；reason 必填 2-200 字；checked→void 终态；草稿/已对账/重复作废均拒绝；已作废不可改不可删；通用 PATCH 无法写 void；summary 排除 void）；schema 新增 void_reason/voided_at/voided_by 三列（真实库往返验证）",
+      "impact": "待生产部署（db push 增量加列 + PM2 重启）后，线上 LED202609090230ILIR 等已复核凭证即可合法作废",
+      "suggestion": "走 qaxqjt-remote-deploy 后端部署流程（§2.4 六步脚本）；随后在前端财务页补「作废」按钮闭环 GAP-2"
+    },
+    {
+      "id": "GAP-2",
+      "title": "前端缺「作废」操作入口（后端状态已可产出）",
+      "evidence": "后端已产出 status=void（前端 _FIN_VST.void=已作废 徽章可正常显示），但 js/admin-pages/finance.js 凭证行尚未提供作废按钮 + reason 弹窗",
+      "impact": "部署后管理员暂需通过 API 直调触发作废（低危，临时方案）",
+      "suggestion": "前端凭证行对 checked 状态加「作废」按钮：PATCH /v1/fin/ledger/:id/void + 二次确认 + reason 输入"
+    }
+  ],
+  "coverage": {
+    "backfillBranches": [
+      {
+        "branch": "diff>0 补差（首笔回填）",
+        "cases": [
+          "B1.*"
+        ],
+        "result": "已验证"
+      },
+      {
+        "branch": "diff=0 幂等零操作",
+        "cases": [
+          "B2.*",
+          "B4.2"
+        ],
+        "result": "已验证"
+      },
+      {
+        "branch": "diff>0 增量补差（多张凭证累积）",
+        "cases": [
+          "B3.*",
+          "B8.*"
+        ],
+        "result": "已验证"
+      },
+      {
+        "branch": "diff<0 调减不冲销（部分使用/退回场景）",
+        "cases": [
+          "B5.*",
+          "V11.1"
+        ],
+        "result": "已验证"
+      },
+      {
+        "branch": "paidAmount=0 边界（target 归零 + 控制器触发守卫）",
+        "cases": [
+          "B6.*"
+        ],
+        "result": "已验证"
+      },
+      {
+        "branch": "≥10000 双复核标记",
+        "cases": [
+          "B7.2"
+        ],
+        "result": "已验证"
+      },
+      {
+        "branch": "out 流水冲减净额",
+        "cases": [
+          "B8.1"
+        ],
+        "result": "已验证"
+      },
+      {
+        "branch": "事务原子性（同事务回滚，无半成品）",
+        "cases": [
+          "B9.*"
+        ],
+        "result": "已验证（故障注入）"
+      },
+      {
+        "branch": "时间戳正确性（ts/voucherDate/UTC+8 编号戳/payDate/madeAt）",
+        "cases": [
+          "B1.25-B1.29",
+          "B10.*"
+        ],
+        "result": "已验证"
+      },
+      {
+        "branch": "触发点接线（orders core/independent/helpers + 审计）",
+        "cases": [
+          "B11.*"
+        ],
+        "result": "已验证"
+      }
+    ],
+    "stateMachine": [
+      {
+        "rule": "PATCH status 仅允许 draft/checked（void 被拒）",
+        "cases": [
+          "V1.*"
+        ],
+        "result": "已验证"
+      },
+      {
+        "rule": "checked 不可撤回 draft",
+        "cases": [
+          "V2"
+        ],
+        "result": "已验证"
+      },
+      {
+        "rule": "draft→checked 单向复核 + M-15 豁免",
+        "cases": [
+          "V3.*",
+          "V9",
+          "V10"
+        ],
+        "result": "已验证"
+      },
+      {
+        "rule": "isReconciled 禁改禁删",
+        "cases": [
+          "V4",
+          "V7"
+        ],
+        "result": "已验证"
+      },
+      {
+        "rule": "删除仅限 draft（checked/reconciled 拒绝）",
+        "cases": [
+          "V5",
+          "V6.*"
+        ],
+        "result": "已验证"
+      },
+      {
+        "rule": "NOT_FOUND 容错",
+        "cases": [
+          "V8.*"
+        ],
+        "result": "已验证"
+      },
+      {
+        "rule": "无时效豁免（过期凭证同规则）",
+        "cases": [
+          "V12.*"
+        ],
+        "result": "已验证"
+      },
+      {
+        "rule": "作废端点全分支（reason 校验/NOT_FOUND/草稿拒绝/重复作废/对账拒绝/成功四字段/终态不可改不可删/summary 排除/通用 PATCH 防绕过）",
+        "cases": [
+          "W1-W11"
+        ],
+        "result": "已验证"
+      },
+      {
+        "rule": "schema void 字段真实库往返（迁移生效）",
+        "cases": [
+          "W12.*"
+        ],
+        "result": "已验证"
+      }
+    ]
+  }
+}

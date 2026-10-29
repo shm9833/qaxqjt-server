@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg8" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdf2e9"/>
+      <stop offset="100%" stop-color="#fadbd8"/>
+    </linearGradient>
+    <linearGradient id="gold8" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b7950b"/>
+      <stop offset="100%" stop-color="#784212"/>
+    </linearGradient>
+    <linearGradient id="red8" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c0392b"/>
+      <stop offset="100%" stop-color="#7b241c"/>
+    </linearGradient>
+  </defs>
+  <!-- 背景 -->
+  <rect width="800" height="450" fill="url(#bg8)"/>
+  <!-- 装饰卷轴 -->
+  <rect x="60" y="70" width="680" height="310" rx="8" fill="#fdebd0" stroke="#a04000" stroke-width="4"/>
+  <rect x="50" y="60" width="700" height="20" rx="6" fill="url(#red8)"/>
+  <rect x="50" y="370" width="700" height="20" rx="6" fill="url(#red8)"/>
+  <!-- 标题 -->
+  <g transform="translate(400,105)">
+    <text x="0" y="0" text-anchor="middle" font-family="STXingkai,KaiTi,serif" font-size="28" fill="#641e16" font-weight="bold" letter-spacing="6">部分保留剧目一览</text>
+    <line x1="-280" y1="20" x2="280" y2="20" stroke="url(#gold8)" stroke-width="2"/>
+  </g>
+  <!-- 三列剧目名（与系统在册 20 部一致） -->
+  <g font-family="KaiTi,STKaiti,serif" font-size="20" fill="#4a2c00">
+    <text x="180" y="160" text-anchor="middle">《破宁国》</text>
+    <text x="180" y="190" text-anchor="middle">《金沙滩》</text>
+    <text x="180" y="220" text-anchor="middle">《五典坡》</text>
+    <text x="180" y="250" text-anchor="middle">《狸猫换太子（后）》</text>
+    <text x="180" y="280" text-anchor="middle">《出五关》</text>
+    <text x="180" y="310" text-anchor="middle">《哑女告状》</text>
+    <text x="180" y="340" text-anchor="middle">《金麒麟》</text>
+    <text x="400" y="160" text-anchor="middle">《生死牌》</text>
+    <text x="400" y="190" text-anchor="middle">《清风亭》</text>
+    <text x="400" y="220" text-anchor="middle">《大香山》</text>
+    <text x="400" y="250" text-anchor="middle">《回荆州》</text>
+    <text x="400" y="280" text-anchor="middle">《忠保国》</text>
+    <text x="400" y="310" text-anchor="middle">《三娘教子》</text>
+    <text x="400" y="340" text-anchor="middle">《断桥》</text>
+    <text x="620" y="160" text-anchor="middle">《下河东》</text>
+    <text x="620" y="190" text-anchor="middle">《龙凤呈祥》</text>
+    <text x="620" y="220" text-anchor="middle">《火焰驹》</text>
+    <text x="620" y="250" text-anchor="middle">《窦娥冤》</text>
+    <text x="620" y="280" text-anchor="middle">《铡美案》</text>
+    <text x="620" y="310" text-anchor="middle">《周仁回府》</text>
+    <text x="620" y="340" text-anchor="middle" font-size="16" fill="#92400e">（在册共20部）</text>
+  </g>
+  <!-- 右下角印章 -->
+  <g transform="translate(680,340)">
+    <rect x="-28" y="-28" width="56" height="56" fill="#c0392b" rx="4"/>
+    <text x="0" y="-4" text-anchor="middle" font-family="STXingkai,KaiTi,serif" font-size="14" fill="#fff" font-weight="bold">秦安</text>
+    <text x="0" y="14" text-anchor="middle" font-family="STXingkai,KaiTi,serif" font-size="14" fill="#fff" font-weight="bold">秦劇</text>
+  </g>
+  <text x="400" y="415" text-anchor="middle" font-family="STXingkai,KaiTi,serif" font-size="26" fill="url(#gold8)" font-weight="bold" letter-spacing="6">更多剧目 · 尽在剧目中心</text>
+</svg>

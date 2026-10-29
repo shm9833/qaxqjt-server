@@ -14,9 +14,34 @@ const { audit } = require('../../services/audit-service');
 const { computeAttendancePenalty } = require('../wages');
 const { buildData, syncPerformerToWageItems, allocateStaffNo, toDailyRate, cleanupRejectedRecords } = require('./helpers');
 const { detail, list } = require('./independent');
+const perfWindow = require('../../services/perf-ops-window');
+
+// v20261013 必填新规：联系电话/行当/协议天工资/路费方式（自助登记与后台新增共用一套提示）
+const _requireOnboardFields = b => {
+  const phone = (b.phone || '').toString().trim();
+  if (!phone) throw new BusinessError('VALIDATION_ERROR', '请填写联系电话');
+  if (!/^1[3-9]\d{9}$/.test(phone)) throw new BusinessError('VALIDATION_ERROR', '手机号格式不正确（应为11位手机号）');
+  const primaryRole = (b.primaryRole || '').toString().trim();
+  if (!primaryRole) throw new BusinessError('VALIDATION_ERROR', '请选择行当/岗位');
+  const dailyRate = toDailyRate(b.dailyRate);
+  if (dailyRate == null || dailyRate <= 0) throw new BusinessError('VALIDATION_ERROR', '请填写协议天工资（元/天，需大于0）');
+  const transportType = (b.transportType || '').toString().trim();
+  if (!transportType) throw new BusinessError('VALIDATION_ERROR', '请选择路费方式');
+  return { phone, primaryRole, dailyRate, transportType };
+};
+
+const _requireIdCard = b => {
+  const idCardNo = (b.idCardNo || '').toString().trim().toUpperCase();
+  if (!idCardNo) throw new BusinessError('VALIDATION_ERROR', '请填写身份证号');
+  if (!/^\d{17}[\dX]$/.test(idCardNo)) throw new BusinessError('VALIDATION_ERROR', '身份证号格式不正确（应为18位）');
+  return idCardNo;
+};
 
 const create = async ctx => {
   const b = ctx.request.body;
+  // v20261013 必填新规（与后台表单一致）：身份证号/联系电话/行当/工资/路费
+  _requireIdCard(b);
+  _requireOnboardFields(b);
   const manualNo = (b.staffNo || '').toString().trim();
   let lastErr = null;
   // 自动分配工号时带唯一冲突重试（并发新增安全）；手工指定工号则不重试
@@ -228,31 +253,31 @@ const selfRegister = async ctx => {
   if (!b.name || String(b.name).trim().length < 2) {
     throw new BusinessError('VALIDATION_ERROR', '请填写姓名');
   }
+  // v20261013 演出入职开放时限：演出前10天自动开放，演出结束后24小时关闭（连场自动续接）
+  const w = await perfWindow.computeWindow();
+  if (!w.registerOpen) {
+    throw new BusinessError('FORBIDDEN', w.message + (w.nextOpenDate ? '；下次开放时间：' + w.nextOpenDate + ' 起' : ''));
+  }
   // 校验入职二维码（若链接携带）
   const qr = await _validateQrToken(b.qrToken ? String(b.qrToken).trim() : '');
   // 身份证号必填 + 格式校验 + 重复校验
-  const idCardNo = (b.idCardNo || '').toString().trim().toUpperCase();
-  if (!idCardNo) {
-    throw new BusinessError('VALIDATION_ERROR', '请填写身份证号');
-  }
-  if (!/^\d{17}[\dX]$/.test(idCardNo)) {
-    throw new BusinessError('VALIDATION_ERROR', '身份证号格式不正确（应为18位）');
-  }
+  const idCardNo = _requireIdCard(b);
   // 查重：同一身份证号不可重复登记（排除已软删除记录）
   const dup = await prisma.performersDbV1.findFirst({
     where: { idCardNo, status: { not: 'deleted' } },
     select: { id: true, name: true, status: true, reviewStatus: true }
   });
-  const dailyRate = toDailyRate(b.dailyRate);
+  // v20261013 必填新规：联系电话/行当/协议天工资/路费方式
+  const req = _requireOnboardFields(b);
   const baseData = {
     name: String(b.name).trim(),
     idCardNo,
     gender: b.gender || null,
-    phone: b.phone || null,
-    primaryRole: b.primaryRole || null,
-    dailyRate: dailyRate,
-    agreedSalary: dailyRate != null ? ('协议天工资 ' + dailyRate + ' 元/天') : (b.agreedSalary || null),
-    transportType: b.transportType || null,
+    phone: req.phone,
+    primaryRole: req.primaryRole,
+    dailyRate: req.dailyRate,
+    agreedSalary: '协议天工资 ' + req.dailyRate + ' 元/天',
+    transportType: req.transportType,
     remark: b.remark || null,
     regulationsConfirmed: true,
     ts: BigInt(nowMs())

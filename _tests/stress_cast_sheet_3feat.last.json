@@ -1,0 +1,201 @@
+{
+  "tag": "csfixb-watchdog-2026-10-16",
+  "WATCH_MS": 90000,
+  "CFG": {
+    "permIters": 500,
+    "summaryIters": 2000,
+    "snapshotIters": 200,
+    "modalIters": 40,
+    "extractIters": 10,
+    "applyIters": 10,
+    "scaleIters": 3,
+    "scales": [
+      50,
+      200,
+      800
+    ],
+    "threshold": {
+      "snapshotAvg": 10,
+      "snapshotP95": 40,
+      "summaryAvg": 1,
+      "extract200Avg": 30,
+      "extract200P95": 70,
+      "applyOverhead": 30,
+      "permAvg": 1,
+      "modalOpenAvg": 20,
+      "nodeGrowth": 60
+    }
+  },
+  "R": {
+    "diag": {
+      "hookOK": true,
+      "stateTitle": "压测诊断"
+    },
+    "perm": {
+      "stage": "perm",
+      "iters": 500,
+      "total": 4,
+      "avg": 0.008,
+      "p95": 0.1,
+      "max": 0.4,
+      "samples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "summary": {
+      "stage": "summary",
+      "iters": 2000,
+      "total": 5.3,
+      "avg": 0.0027,
+      "p95": 0,
+      "max": 1.4,
+      "samples": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "modal": {
+      "modalOpen": {
+        "avg": 0.21,
+        "p95": 0.1,
+        "max": 0.2,
+        "n": 80
+      },
+      "modalClose": {
+        "avg": 0.9312,
+        "p95": 0.7,
+        "max": 0.8,
+        "n": 80
+      },
+      "nodeGrowth": 133,
+      "diag": {
+        "cycles": {
+          "role": {
+            "opened": 40,
+            "closed": 40,
+            "missingAt": -1
+          },
+          "ver": {
+            "opened": 40,
+            "closed": 40,
+            "missingAt": -1
+          }
+        }
+      }
+    },
+    "snapshot": {
+      "stage": "snapshot",
+      "iters": 200,
+      "total": 536.8,
+      "avg": 2.684,
+      "p95": 5.3,
+      "max": 13.1,
+      "samples": [
+        0.29999999701976776,
+        0.5,
+        0.5,
+        0.5,
+        0.5999999940395355
+      ]
+    },
+    "extract200": {
+      "stage": "extract200",
+      "iters": 10,
+      "total": 528.5,
+      "avg": 52.85,
+      "p95": 95.3,
+      "max": 95.3,
+      "samples": [
+        38.099999994039536,
+        39.70000000298023,
+        42.099999994039536,
+        44.30000001192093,
+        46.79999999701977
+      ]
+    },
+    "apply200": {
+      "renderBaseline": {
+        "stage": "renderBaseline200",
+        "iters": 10,
+        "total": 644.1,
+        "avg": 64.41,
+        "p95": 74.1,
+        "max": 74.1,
+        "samples": [
+          54.79999999701977,
+          58.20000000298023,
+          58.3999999910593,
+          61.8999999910593,
+          62.6000000089407,
+          62.8999999910593,
+          68.20000000298023,
+          71,
+          72,
+          74.09999999403954
+        ]
+      },
+      "apply": {
+        "stage": "apply200",
+        "iters": 10,
+        "total": 837.1,
+        "avg": 83.71,
+        "p95": 169.6,
+        "max": 169.6,
+        "samples": [
+          65.79999999701977,
+          66.59999999403954,
+          69.09999999403954,
+          69.30000001192093,
+          70.20000000298023,
+          70.20000000298023,
+          70.6000000089407,
+          90.29999999701977,
+          95.40000000596046,
+          169.59999999403954
+        ]
+      },
+      "overhead": 19.3
+    },
+    "scaling": [
+      {
+        "scale": 50,
+        "extractAvg": 11.9333,
+        "extractP95": 13.5,
+        "extractMax": 13.5,
+        "snapshotAvg": 0.4333,
+        "snapshotP95": 0.6,
+        "snapshotMax": 0.6
+      },
+      {
+        "scale": 200,
+        "extractAvg": 45.7667,
+        "extractP95": 47.1,
+        "extractMax": 47.1,
+        "snapshotAvg": 1.0333,
+        "snapshotP95": 1.7,
+        "snapshotMax": 1.7
+      }
+    ],
+    "store": {
+      "__exc": true,
+      "__watchdog": false,
+      "msg": "page.evaluate: Execution context was destroyed, most likely because of a navigation"
+    }
+  },
+  "fail": [
+    "30 条上限裁剪正确 :: 999",
+    "40 次开关无 DOM 泄漏（节点净增 < 60） :: 净增 133",
+    "200 行提取 avg < 30ms :: 52.85ms",
+    "200 行提取 p95 < 70ms :: 95.3ms",
+    "全流程零 JS 运行时错误 :: [console] Failed to load resource: the server responded with a status of 401 (Unauthorized) | [console] Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  ],
+  "wd": [],
+  "verdict": "FAIL · 5 项未达标 / 0 次 watchdog"
+}

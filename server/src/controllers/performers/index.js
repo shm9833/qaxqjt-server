@@ -12,6 +12,7 @@ module.exports = {
   enable: core.enable,
   cleanupDisabled: core.cleanupDisabled,
   stats: independent.stats,
+  salaryPreview: independent.salaryPreview,
   selfRegister: core.selfRegister,
   selfRegisterQrInfo: core.selfRegisterQrInfo,
   selfRegisterStatus: core.selfRegisterStatus,

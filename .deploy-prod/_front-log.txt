@@ -1,0 +1,3 @@
+OK C:\qaxqjt-frontend\admin\cast-sheet.html
+OK C:\qaxqjt-frontend\js\cast-sheet-real.js
+MISSING C:\qaxqjt-frontend\js\admin-pages\cast-sheet-manage.js

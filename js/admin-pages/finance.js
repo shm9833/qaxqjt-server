@@ -98,6 +98,15 @@
 
       var currentSession = checkAuth();
       __applyRoleMenuFilter(currentSession);
+      // —— 凭证作废按钮可见角色白名单（20261016，与后端 requireRole(['super_admin','finance_admin']) 对齐）——
+      // admin 为前端 999 级超管别名；ops/director/finance_checker 等 500+ 角色一律不可见（后端 403 兜底）
+      var __VOID_ROLES = ['super_admin', 'admin', 'finance_admin'];
+      function __canVoid() {
+        return !!currentSession && __VOID_ROLES.indexOf(currentSession.role) >= 0;
+      }
+      /* v20261016c：暴露到 window，供下方 __finApi 独立 IIFE 内的行渲染调用
+         （跨 IIFE 作用域不可见，直接调用会 ReferenceError 导致台账整表渲染失败） */
+      window.__finCanVoid = __canVoid;
       // —— 页面级权限拦截：直接访问 URL 时检查角色，不足则跳首页 ——
       (function() {
         if (!currentSession) return;
@@ -1249,6 +1258,59 @@ window.__finApi = (function(){
     return '<span class="status-badge '+(map[s]||'draft')+'">● '+_esc(txt[s]||s)+'</span>';
   }
 
+  // ===== v20261027 recv1027：应收账款（演出收入关联订单未付金额）=====
+  var __unpaidMap = {};
+  var __recvLoaded = false;
+  function __finFmt(n){ var v = Number(n)||0; return '¥'+v.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  async function __loadReceivables(rerender){
+    try{
+      var d = await API.get('/v1/fin/receivables');
+      d = d || {};
+      __unpaidMap = d.unpaidByOrderId || {};
+      var items = d.items || [];
+      var total = Number(d.totalUnpaid)||0;
+      var v = document.getElementById('fscValueRecv');
+      var sub = document.getElementById('fscSubRecv');
+      var tot = document.getElementById('finRecvTotal');
+      if(v) v.textContent = __finFmt(total);
+      if(tot) tot.textContent = __finFmt(total);
+      if(sub) sub.textContent = items.length ? ('未付清订单 '+items.length+' 笔 · 实时统计') : '全部订单已结清';
+      var card = document.getElementById('finRecvCard');
+      var tb2 = document.getElementById('finRecvTbody');
+      if(card && tb2){
+        if(!items.length){ card.style.display='none'; }
+        else{
+          card.style.display='';
+          var stTxt = {confirmed:'已确认',partial_paid:'部分付款',paid:'已付清',performance:'演出中',completed:'已完成'};
+          tb2.innerHTML = items.map(function(o){
+            var ps = String(o.performanceStartDate||'').slice(0,10);
+            var pe = String(o.performanceEndDate||'').slice(0,10);
+            var span = (ps||pe) ? ((ps||'?')+' ~ '+(pe||'?')) : '—';
+            return '<tr>'
+              + '<td style="font-family:monospace;color:var(--primary);">'+_esc(o.orderNo||'—')+'</td>'
+              + '<td>'+_esc(o.customerName||'—')+'</td>'
+              + '<td>'+_esc(stTxt[o.status]||o.status||'—')+'</td>'
+              + '<td>'+span+'</td>'
+              + '<td style="text-align:right;">'+__finFmt(o.finalAmount)+'</td>'
+              + '<td style="text-align:right;">'+__finFmt(o.paidAmount)+'</td>'
+              + '<td style="text-align:right;color:#dc3545;font-weight:700;">'+__finFmt(o.unpaid)+'</td>'
+              + '</tr>';
+          }).join('')
+          + '<tr style="background:#f6f2ff;font-weight:700;"><td colspan="6" style="text-align:right;">未付合计</td>'
+          + '<td style="text-align:right;color:#dc3545;">'+__finFmt(total)+'</td></tr>';
+        }
+      }
+    }catch(_e){ console.warn('[fin] receivables load failed', _e); return; }
+    // recv1027b：应收映射到达后重渲染台账行，让凭证行 badge 补上未付金额（仅一次，防循环）
+    if(rerender){ try{ load(); }catch(_e2){} }
+  }
+  function __unpaidBadge(orderId){
+    if(!orderId) return '';
+    var u = Number(__unpaidMap[orderId]);
+    if(!u || u <= 0.005) return '';
+    return ' <span style="display:inline-block;margin-left:6px;padding:1px 8px;border-radius:10px;font-size:0.72rem;background:rgba(111,66,193,0.12);color:#6f42c1;font-weight:600;" title="该订单演出收入未付金额">未付'+__finFmt(u)+'</span>';
+  }
+
   async function load(){
     var tb = _tbody(); if(!tb) return;
     try{
@@ -1257,7 +1319,9 @@ window.__finApi = (function(){
       if(inputs[0] && inputs[0].value) q.fromDate = inputs[0].value;
       if(inputs[1] && inputs[1].value) q.toDate = inputs[1].value;
       var rows = await API.get((QAXQJT_PATHS.FIN_LEDGER || '/v1/fin/ledger'), { query:q });
+      if(!__recvLoaded){ __recvLoaded = true; __loadReceivables(true); } // recv1027：拉应收账款，返回后重渲染补 badge
       rows = rows || [];
+      rows = rows.filter(function(r){ return r && r.status !== 'void'; }); // v20261028 作废凭证不计入台账展示与收支统计
       tb.innerHTML = '';
       if(!rows.length){
         tb.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--text-light);">暂无财务记录</td></tr>';
@@ -1274,7 +1338,7 @@ window.__finApi = (function(){
           + '<td>'+_esc(r.summary||'—')+'</td>'
           + '<td><span class="type-badge '+(isIncome?'income':'expense')+'">● '+(isIncome?'收入':'支出')+'</span></td>'
           + '<td>'+_esc(r.voucherCategory||'—')+'</td>'
-          + '<td>'+(r.orderId?'<span style="color:var(--primary);font-family:monospace;">'+_esc(r.orderId)+'</span>':'—')+'</td>'
+          + '<td>'+(r.orderId?'<span style="color:var(--primary);font-family:monospace;">'+_esc(r.orderId)+'</span>'+__unpaidBadge(r.orderId):'—')+'</td>'
           + '<td class="'+(isIncome?'amount-income':'amount-expense')+'">'+_fmtMoney(amt)+'</td>'
           + '<td>'+_esc(r.offsetAccount||'—')+'</td>'
           + '<td>'+_statusBadge(r.status)+'</td>'
@@ -1283,6 +1347,7 @@ window.__finApi = (function(){
           + '<button class="btn btn-secondary btn-sm __fin-view" title="查看">👁</button>'
           + '<button class="btn btn-primary btn-sm __fin-edit" title="编辑">✏️</button>'
           + '<button class="btn btn-sm __fin-check" style="color:#28a745;padding:6px 10px;" title="复核">✓</button>'
+          + (r.status==='checked' && !r.isReconciled && window.__finCanVoid && window.__finCanVoid() ? '<button class="btn btn-sm __fin-void" style="color:#e67e22;padding:6px 10px;" title="作废（保留审计痕迹，作废金额不计入收支汇总）">🚫</button>' : '')
           + '<button class="btn btn-sm __fin-del" style="color:#dc3545;padding:6px 10px;" title="删除">🗑</button>'
           + '</div></td></tr>';
       }).join('');
@@ -1309,6 +1374,7 @@ window.__finApi = (function(){
       var del = tr.querySelector('.__fin-del'); if(del) del.onclick = function(){ remove(id); };
       var view = tr.querySelector('.__fin-view'); if(view) view.onclick = function(){ openView(id); };
       var check = tr.querySelector('.__fin-check'); if(check) check.onclick = function(){ doCheck(id); };
+      var vbtn = tr.querySelector('.__fin-void'); if(vbtn) vbtn.onclick = function(){ openVoid(id, tr); };
     });
   }
 
@@ -1328,7 +1394,7 @@ window.__finApi = (function(){
       + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">凭证日期</label><input id="__fin_date" type="date" class="form-control" value="'+(d.voucherDate?_fmtDate(d.voucherDate):new Date().toISOString().slice(0,10))+'"></div>'
       + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">摘要 *</label><input id="__fin_summary" class="form-control" value="'+_esc(d.summary||'')+'"></div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
-      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">分类</label><input id="__fin_cat" class="form-control" placeholder="如：商演收入/人员工资" value="'+_esc(d.voucherCategory||'')+'"></div>'
+      + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">分类</label><input id="__fin_cat" class="form-control" placeholder="如：商演收入/运输费/生活费/人员工资" value="'+_esc(d.voucherCategory||'')+'"></div>'
       + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">关联订单号</label><input id="__fin_order" class="form-control" value="'+_esc(d.orderId||'')+'"></div>'
       + '</div>'
       + '<div><label style="display:block;margin-bottom:4px;font-size:0.85rem;">金额(元) *</label><input id="__fin_amount" type="number" step="0.01" class="form-control" value="'+(isIncome?(d.creditAmount||''):(d.debitAmount||''))+'"></div>'
@@ -1382,6 +1448,48 @@ window.__finApi = (function(){
     catch(e){ T('❌ 复核失败：'+(e.message||e),'error'); }
   }
 
+  /* v20261016 作废凭证（GAP-2 闭环）：仅已复核且未对账的凭证显示 🚫 按钮。
+     PATCH /v1/fin/ledger/:id/void（后端校验 super_admin/finance_admin + reason 2-200 字）。
+     作废 = status 落 void 终态，凭证保留审计痕迹（voidReason/voidedAt/voidedBy），
+     不可再修改/删除，月度汇总自动排除该笔金额。 */
+  function openVoid(id, tr){
+    var old = document.getElementById('__finVoidModal'); if(old) old.remove();
+    var no = '';
+    try{ no = (tr.querySelector('.stat-voucher-id')||{}).textContent || ''; }catch(_){}
+    var html = '<div id="__finVoidModal" role="dialog" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">'
+      + '<div style="background:#fff;border-radius:12px;padding:24px;width:460px;max-width:92vw;">'
+      + '<h3 style="margin:0 0 12px;color:#e67e22;">🚫 作废凭证</h3>'
+      + '<p style="margin:0 0 12px;font-size:0.9rem;color:#666;">凭证号 <b>'+_esc(no.trim()||id)+'</b> · 作废后金额不再计入收支汇总，凭证与作废记录永久保留（审计痕迹），不可恢复。</p>'
+      + '<label style="display:block;margin-bottom:4px;font-size:0.85rem;">作废原因 *（2-200 字，必填）</label>'
+      + '<textarea id="__fin_void_reason" class="form-control" rows="3" maxlength="200" placeholder="如：测试数据清理 / 录入错误需重开"></textarea>'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">'
+      + '<button id="__fin_void_cancel" class="btn btn-secondary">取消</button>'
+      + '<button id="__fin_void_ok" class="btn" style="background:#e67e22;color:#fff;border:none;">确认作废</button>'
+      + '</div></div></div>';
+    var div=document.createElement('div'); div.innerHTML=html; document.body.appendChild(div.firstChild);
+    var m=document.getElementById('__finVoidModal');
+    m.querySelector('#__fin_void_cancel').__superPatchBound=1;
+    m.querySelector('#__fin_void_cancel').__ts3Done=1;
+    m.querySelector('#__fin_void_ok').__superPatchBound=1;
+    m.querySelector('#__fin_void_ok').__ts3Done=1;
+    m.addEventListener('click', function(ev){ if(ev.target===m){ m.remove(); } });
+    m.querySelector('#__fin_void_cancel').onclick = function(){ m.remove(); };
+    m.querySelector('#__fin_void_ok').onclick = function(){ doVoid(id, m); };
+    var ta = m.querySelector('#__fin_void_reason'); if(ta) ta.focus();
+  }
+
+  async function doVoid(id, m){
+    var reason = (document.getElementById('__fin_void_reason').value||'').trim();
+    if(reason.length<2 || reason.length>200){ T('⚠️ 作废原因必填（2-200 字）','error'); return; }
+    if(!confirm('再次确认：作废后不可恢复，作废金额不再计入收支汇总。确定作废？')) return;
+    try{
+      await API.patch((QAXQJT_PATHS.FIN_LEDGER_BY_ID || function (i) { return '/v1/fin/ledger/' + i; })(id) + '/void', { reason: reason });
+      T('🚫 凭证已作废（保留审计痕迹）','success');
+      m.remove();
+      await load();
+    }catch(e){ T('❌ 作废失败：'+(e.message||e),'error'); }
+  }
+
   /* v20261007c: 批量核销 = 批量提交复核（draft→checked），逐条 PATCH /v1/fin/ledger/:id。
      后端约束：仅草稿可转、制单人≠复核人（M-15 双角色），服务端拒绝项会逐条返回原因。 */
   async function batchCheck(){
@@ -1417,7 +1525,7 @@ window.__finApi = (function(){
   function _finSet(sel,val){ var el=document.querySelector(sel); if(el) el.innerHTML=val; }
   async function renderExtras(){
     try{
-      var all=_finRows(await API.get((QAXQJT_PATHS.FIN_LEDGER || '/v1/fin/ledger'),{query:{page:1,pageSize:500}}));
+      var all=_finRows(await API.get((QAXQJT_PATHS.FIN_LEDGER || '/v1/fin/ledger'),{query:{page:1,pageSize:500}})).filter(function(r){ return r && r.status !== "void"; }); // v20261028 作废凭证不入统计卡/月度图/项目账目
       var year=new Date().getFullYear();
       var thisYM=year+"-"+String(new Date().getMonth()+1).padStart(2,"0");
       var yIn=0,yOut=0,mIn=0,mOut=0,mInCnt=0,mOutCnt=0, monthly={};
@@ -1554,7 +1662,7 @@ window.__finApi = (function(){
       API.get((QAXQJT_PATHS.ORDERS || '/v1/orders'),{query:{page:1,pageSize:500}}).then(_finRows).catch(function(){return [];}),
       API.get((QAXQJT_PATHS.SCHEDULES || '/v1/schedules'),{query:{page:1,pageSize:500}}).then(_finRows).catch(function(){return [];})
     ]);
-    var all=rs[0], orders=rs[1], sch=rs[2], months=[];
+    var all=(rs[0]||[]).filter(function(r){ return r && r.status !== 'void'; }), orders=rs[1], sch=rs[2], months=[]; // v20261028 作废凭证不入月度对账/年度Excel
     for(var i=0;i<12;i++){ months.push({label:(i+1)+'月',in:0,out:0,rCnt:0,pCnt:0,cnt:0,rec:0,shows:0}); }
     var yLed=[];
     all.forEach(function(r){

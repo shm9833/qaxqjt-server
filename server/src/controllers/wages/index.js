@@ -8,6 +8,7 @@ module.exports = {
   detail: independent.detail,
   create: core.create,
   update: core.update,
+  review: core.review,
   remove: core.remove,
   generate: core.generate,
   batchList: independent.batchList,
@@ -18,5 +19,9 @@ module.exports = {
   rulesDetail: independent.rulesDetail,
   toApi: helpers.toApi,
   computeAttendancePenalty: helpers.computeAttendancePenalty,
+  _calcWageItem: helpers._calcWageItem,
+  _punchLateStatsByStaff: helpers._punchLateStatsByStaff,
+  _travelExpenseByStaffMonth: helpers._travelExpenseByStaffMonth,
+  _parseBatchPeriod: helpers._parseBatchPeriod,
   WAGE_DEDUCT_RULES: helpers.WAGE_DEDUCT_RULES,
 };

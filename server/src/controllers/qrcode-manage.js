@@ -9,7 +9,7 @@ const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
 
-const _baseUrl = () => process.env.FRONTEND_BASE_URL || 'http://1.14.106.173';
+const _baseUrl = () => process.env.FRONTEND_BASE_URL || 'https://qaxqjt.cn';
 const _fmt = r => ({
   id: r.id,
   qrToken: r.qrToken,

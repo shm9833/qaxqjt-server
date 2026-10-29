@@ -2611,7 +2611,7 @@
       }
 
       toggle.addEventListener('click', function () {
-        var isOpen = menu.classList.toggle('nav-open');
+        var isOpen = menu.classList.toggle('open');
         toggle.classList.toggle('nav-active', isOpen);
         toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         menu.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
@@ -2621,8 +2621,8 @@
       var links = menu.querySelectorAll('a[href^="#"]');
       for (var i = 0; i < links.length; i++) {
         links[i].addEventListener('click', function () {
-          if (menu.classList.contains('nav-open')) {
-            menu.classList.remove('nav-open');
+          if (menu.classList.contains('open')) {
+            menu.classList.remove('open');
             toggle.classList.remove('nav-active');
             toggle.setAttribute('aria-expanded', 'false');
             document.body.classList.remove('nav-locked');

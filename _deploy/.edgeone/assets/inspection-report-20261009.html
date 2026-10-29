@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>系统巡检修复总结报告 - 2026-10-09</title>
+<style>
+  :root {
+    --primary: #1a56c4;
+    --success: #16a34a;
+    --warning: #f59e0b;
+    --danger: #dc2626;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-light: #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 20px; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .header { background: linear-gradient(135deg, var(--primary), #2563eb); color: white; padding: 32px 40px; border-radius: 12px; margin-bottom: 24px; }
+  .header h1 { font-size: 24px; margin-bottom: 8px; }
+  .header .meta { font-size: 14px; opacity: 0.9; }
+  .header .meta span { margin-right: 20px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .card h2 { font-size: 18px; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .card h2 .badge { font-size: 12px; padding: 2px 10px; border-radius: 12px; font-weight: 600; }
+  .badge-ok { background: #dcfce7; color: var(--success); }
+  .badge-warn { background: #fef3c7; color: var(--warning); }
+  .badge-fix { background: #dbeafe; color: var(--primary); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: #f1f5f9; text-align: left; padding: 10px 12px; font-weight: 600; color: var(--text-light); border-bottom: 2px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  .status-ok { color: var(--success); font-weight: 600; }
+  .status-warn { color: var(--warning); font-weight: 600; }
+  .fix-item { padding: 14px; margin-bottom: 12px; border: 1px solid #dbeafe; border-radius: 8px; background: #f0f7ff; }
+  .fix-item h3 { font-size: 15px; color: var(--primary); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .fix-item .fix-detail { font-size: 13px; color: var(--text-light); }
+  .fix-item code { background: #e0e7ff; padding: 1px 5px; border-radius: 4px; font-size: 12px; color: var(--primary); }
+  .fix-item .commit { font-size: 12px; color: var(--success); margin-top: 4px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 8px; }
+  .stat-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: center; }
+  .stat-card .num { font-size: 28px; font-weight: 700; color: var(--primary); }
+  .stat-card .label { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+  .footer { text-align: center; padding: 20px; color: var(--text-light); font-size: 13px; border-top: 1px solid var(--border); margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>秦安县秦剧团云端预约系统 - 巡检修复总结报告</h1>
+    <div class="meta">
+      <span>日期：2026-10-09</span>
+      <span>环境：生产 1.14.106.173 + EdgeOne Pages</span>
+      <span>状态：全部完成</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>巡检覆盖范围 <span class="badge badge-ok">全部通过</span></h2>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="num">33</div><div class="label">页面 HTTP 检查</div></div>
+      <div class="stat-card"><div class="num">84</div><div class="label">前端 JS 语法</div></div>
+      <div class="stat-card"><div class="num">58</div><div class="label">后端文件语法</div></div>
+      <div class="stat-card"><div class="num">20+</div><div class="label">API 接口冒烟</div></div>
+      <div class="stat-card"><div class="num">48</div><div class="label">数据库模型</div></div>
+      <div class="stat-card"><div class="num">75</div><div class="label">数据库索引</div></div>
+      <div class="stat-card"><div class="num">8</div><div class="label">安全检查项</div></div>
+      <div class="stat-card"><div class="num">8</div><div class="label">修复项</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>修复内容详情 <span class="badge badge-fix">8 项</span></h2>
+
+    <div class="fix-item">
+      <h3>1. 管理员批量补打卡功能（新功能）</h3>
+      <div class="fix-detail">
+        后端新增 <code>POST /v1/attendance/batch-punch</code> 接口，权限 super_admin/ops/director。支持补卡类型（上班/下班/都补），按 (员工, 日期, 卡类型) 自动去重，状态手动指定（默认正常），单次最多 200 人，审计日志 <code>ATTENDANCE_BATCH_PUNCH</code>。
+      </div>
+      <div class="fix-detail">前端 attendance.html 新增「批量补打卡」tab，按用工类型分组显示员工，每组带全选框，支持姓名/工号搜索，提交后显示新建/跳过/失败明细。</div>
+      <div class="commit">涉及文件：server/src/controllers/attendance.js · server/src/routes/v1/index.js · admin/attendance.html · js/admin-pages/attendance.js</div>
+    </div>
+
+    <div class="fix-item">
+      <h3>2. 批量补打卡 "API is not defined" 修复</h3>
+      <div class="fix-detail">
+        前端 <code>__bpunchNs</code> 模块的 <code>loadPerfs()</code> 和 <code>submit()</code> 函数未获取 <code>window.QAXQJT_API</code>，导致「加载失败: API is not defined」。修复：函数开头加 <code>var API = window.QAXQJT_API;</code> + 接口未就绪保护。
+      </div>
+      <div class="commit">涉及文件：js/admin-pages/attendance.js</div>
+    </div>
+
+    <div class="fix-item">
+      <h3>3. 演职人员管理身份证号录入字段</h3>
+      <div class="fix-detail">
+        staff.html 编辑弹窗新增「身份证号」输入框（18位 maxlength），staff.js 4 处修改：清空/启用列表、编辑回填 <code>p.idCardNo</code>、格式校验 <code>^\d{17}[\dX]$</code>、保存传值。后端无需修改（已支持 <code>idCardNo</code> 字段）。
+      </div>
+      <div class="commit">涉及文件：admin/staff.html · js/admin-pages/staff.js</div>
+    </div>
+
+    <div class="fix-item">
+      <h3>4. 身份证号显示统一化</h3>
+      <div class="fix-detail">
+        花名册详情页身份证号从脱敏显示（前4+****+后4）改为明文显示，与订单名册表格、工资协商保持一致。员工自助门户仍保持脱敏以保护隐私。
+      </div>
+      <div class="commit">涉及文件：js/admin-pages/staff.js</div>
+    </div>
+
+    <div class="fix-item">
+      <h3>5. app.js 版本号统一（116 文件）</h3>
+      <div class="fix-detail">
+        全站 app.js 引用版本号不统一（前台 <code>20261004b</code>、后台 <code>20261006c</code>/<code>20261007b</code>），统一为 <code>v=20261009a</code>。修改 34 个源 HTML + 82 个 _deploy 副本，共 116 个文件。
+      </div>
+      <div class="commit">涉及文件：全站 HTML 文件（116 个）</div>
+    </div>
+
+    <div class="fix-item">
+      <h3>6. serve-uploads Content-Type + nosniff 安全头</h3>
+      <div class="fix-detail">
+        上传文件中间件缺少 Content-Type 设置，图片可能被浏览器当作 <code>application/octet-stream</code> 下载。修复：新增 <code>MIME_MAP</code>（11 种扩展名映射），设置 <code>Content-Type</code> + <code>X-Content-Type-Options: nosniff</code> 防止浏览器类型嗅探。
+      </div>
+      <div class="commit">涉及文件：server/src/middleware/serve-uploads.js</div>
+    </div>
+
+    <div class="fix-item">
+      <h3>7. change-password.html 版本号参数</h3>
+      <div class="fix-detail">
+        <code>api-config.js</code> 和 <code>api-request.js</code> 缺少 <code>?v=</code> 版本号参数，可能导致更新后浏览器使用旧缓存。修复：添加 <code>?v=20261009a</code>。
+      </div>
+      <div class="commit">涉及文件：admin/change-password.html</div>
+    </div>
+
+    <div class="fix-item">
+      <h3>8. .env JWT 密钥强化 + DATABASE_URL 修复</h3>
+      <div class="fix-detail">
+        JWT 密钥从可预测默认值（<code>qaxqjt_prod_access_secret_2026_min64chars_xyz</code>）替换为 48 字节强随机 base64 值。部署时 DATABASE_URL 被误覆盖为 PostgreSQL URL，修复为 SQLite <code>file:C:/qaxqjt-server/prisma/prod.db</code>，并补充 9 个缺失环境变量。
+      </div>
+      <div class="commit">涉及文件：server/.env</div>
+    </div>
+
+  </div>
+
+  <div class="card">
+    <h2>巡检结果总览 <span class="badge badge-ok">无严重 Bug</span></h2>
+    <table>
+      <thead>
+        <tr><th>模块</th><th>检查项</th><th>数量</th><th>结果</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>前端-后台页面</td><td>HTTP 状态码</td><td>20 页</td><td class="status-ok">全部 200</td></tr>
+        <tr><td>前端-前台页面</td><td>HTTP 状态码</td><td>13 页</td><td class="status-ok">全部 200</td></tr>
+        <tr><td>前端-admin-pages JS</td><td>语法检查</td><td>15 文件</td><td class="status-ok">全部通过</td></tr>
+        <tr><td>前端-核心 JS</td><td>语法检查</td><td>11 文件</td><td class="status-ok">全部通过</td></tr>
+        <tr><td>前端-其他模块</td><td>语法检查</td><td>4 文件</td><td class="status-ok">pagination/wage/sidebar/notif</td></tr>
+        <tr><td>后端-控制器</td><td>语法检查</td><td>36 文件</td><td class="status-ok">全部通过</td></tr>
+        <tr><td>后端-中间件/服务/工具</td><td>语法检查</td><td>22 文件</td><td class="status-ok">全部通过</td></tr>
+        <tr><td>后端-服务模块</td><td>语法检查</td><td>4 文件</td><td class="status-ok">captcha/audit/payment-sync/svg</td></tr>
+        <tr><td>数据库</td><td>Prisma client 加载</td><td>—</td><td class="status-ok">正常</td></tr>
+        <tr><td>数据库</td><td>模型数量</td><td>48 个</td><td class="status-ok">覆盖全部业务</td></tr>
+        <tr><td>数据库</td><td>索引/唯一约束</td><td>75 个</td><td class="status-ok">完善</td></tr>
+        <tr><td>API</td><td>接口冒烟测试</td><td>20+ 接口</td><td class="status-ok">全部 200</td></tr>
+        <tr><td>路由</td><td>模块注册</td><td>20 模块</td><td class="status-ok">完整</td></tr>
+        <tr><td>安全-上传</td><td>扩展名白名单</td><td>11 种</td><td class="status-ok">jpg/png/gif/webp/svg/pdf/doc/docx/xls/xlsx</td></tr>
+        <tr><td>安全-上传</td><td>大小限制</td><td>50MB</td><td class="status-ok">已限制</td></tr>
+        <tr><td>安全-路径</td><td>路径遍历防护</td><td>—</td><td class="status-ok">basename+normalize+startsWith</td></tr>
+        <tr><td>安全-RBAC</td><td>权限控制</td><td>—</td><td class="status-ok">requireRole 中间件</td></tr>
+        <tr><td>安全-错误</td><td>错误处理</td><td>8 种状态码</td><td class="status-ok">400/401/403/404/409/422/429/500</td></tr>
+        <tr><td>安全-CORS</td><td>跨域配置</td><td>—</td><td class="status-ok">白名单+禁止 *+credentials</td></tr>
+        <tr><td>安全-JWT</td><td>令牌配置</td><td>—</td><td class="status-ok">双密钥+TTL限制+已强化</td></tr>
+        <tr><td>安全-serve-uploads</td><td>Content-Type+nosniff</td><td>—</td><td class="status-ok">已修复</td></tr>
+        <tr><td>验证码</td><td>配置开关</td><td>—</td><td class="status-ok">DB Setting 热更新+30s轮询</td></tr>
+        <tr><td>定时任务</td><td>清理被拒绝记录</td><td>—</td><td class="status-ok">try-catch 保护</td></tr>
+        <tr><td>中间件链</td><td>完整性</td><td>—</td><td class="status-ok">error→cors→body→log→jwt→auth→uploads→router</td></tr>
+        <tr><td>日志</td><td>pino 结构化</td><td>—</td><td class="status-ok">分级输出</td></tr>
+        <tr><td>viewport</td><td>移动端适配</td><td>21 HTML</td><td class="status-ok">全部有 meta</td></tr>
+        <tr><td>表单校验</td><td>前端校验</td><td>—</td><td class="status-ok">trim+必填+格式</td></tr>
+        <tr><td>app.js 版本号</td><td>统一性</td><td>116 文件</td><td class="status-ok">v=20261009a</td></tr>
+        <tr><td>EdgeOne Pages</td><td>大陆 401</td><td>—</td><td class="status-warn">已知，nginx 主服务</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Git 提交记录 <span class="badge badge-ok">已推送</span></h2>
+    <table>
+      <thead>
+        <tr><th>Commit</th><th>修复内容</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>cd17c0a</code></td><td>批量补打卡功能（attendance.html + attendance.js + 后端 batchPunch）</td></tr>
+        <tr><td><code>0005c35</code></td><td>身份证号录入字段 + API is not defined 修复</td></tr>
+        <tr><td><code>ae58229</code></td><td>身份证号显示统一化（脱敏改明文）</td></tr>
+        <tr><td><code>fe0e3f5</code></td><td>app.js 版本号统一（v=20261009a，116 文件）</td></tr>
+        <tr><td><code>2cabfc8</code></td><td>serve-uploads Content-Type + nosniff 安全头</td></tr>
+        <tr><td><code>a631c02</code></td><td>change-password.html 版本号 + .env JWT/DATABASE_URL 修复</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>部署状态 <span class="badge badge-ok">全部已部署</span></h2>
+    <table>
+      <thead>
+        <tr><th>环境</th><th>组件</th><th>状态</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>生产 nginx</td><td>前端 HTML/JS/CSS</td><td class="status-ok">已部署 + HTTP 验证通过</td></tr>
+        <tr><td>生产 PM2</td><td>qaxqjt-api 后端</td><td class="status-ok">已重启 + healthz 正常</td></tr>
+        <tr><td>生产 .env</td><td>JWT 密钥 + DATABASE_URL</td><td class="status-ok">已修复 + 登录验证通过</td></tr>
+        <tr><td>EdgeOne Pages</td><td>前端静态资源</td><td class="status-ok">已部署</td></tr>
+        <tr><td>Git main</td><td>代码仓库</td><td class="status-ok">6 个 commit 已推送</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    秦安县秦剧团云端预约系统 · 巡检修复总结报告 · 生成于 2026-10-09
+  </div>
+
+</div>
+</body>
+</html>

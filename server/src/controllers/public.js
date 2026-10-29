@@ -180,7 +180,7 @@ const stats = async ctx => {
 
 // ========== 公开演出阵容列表（仅已确认/已锁定，扫码可见）==========
 const castSheets = async ctx => {
-  const where = { status: { in: ['confirmed', 'locked'] } };
+  const where = { status: { in: ['confirmed', 'locked'] }, deletedAt: null };
   const play = (ctx.query.play || ctx.query.playTitle || '').trim();
   if (play) where.playTitle = { contains: play };
   const take = Math.min(Number(ctx.query.pageSize) || 20, 50);
@@ -225,7 +225,7 @@ const castSheetDetail = async ctx => {
     where: { id: ctx.params.id },
     include: { crew: { orderBy: { sortOrder: 'asc' } } }
   });
-  if (!row || ['confirmed', 'locked'].indexOf(row.status) === -1) {
+  if (!row || row.deletedAt || ['confirmed', 'locked'].indexOf(row.status) === -1) {
     throw new BusinessError('NOT_FOUND', '演出阵容暂未发布');
   }
   const crew = row.crew.map((c, idx) => ({

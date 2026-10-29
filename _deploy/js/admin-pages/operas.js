@@ -1008,50 +1008,56 @@ function __pLog(module,event,extra){
       var __uploading = false;
       function doUpload(){
         if(__uploading) return;
-        try{
-          var files = fileInput && fileInput.files ? fileInput.files : null;
-          if(!files || !files.length){ T('⚠️ 请先选择要上传的剧照/海报','error'); return; }
-          var okFiles = [];
-          for(var i=0;i<files.length;i++){
-            var f = files[i];
-            if(!/^image\/(jpeg|png|webp)$/i.test(f.type||'')){ T('⚠️ 仅支持 JPG/PNG/WebP：'+f.name,'error'); return; }
-            if(f.size > 10*1024*1024){ T('⚠️ 文件超过10MB：'+f.name,'error'); return; }
-            okFiles.push(f);
-          }
-          __uploading = true;
-          var fd = new FormData();
-          okFiles.forEach(function(f){ fd.append('file', f); });
-          if(okFiles.length > 1){ okFiles.forEach(function(f){ fd.append('files', f); }); }
-          var path = okFiles.length > 1 ? (QAXQJT_PATHS.UPLOAD_MULTI || '/v1/upload/multi') : (QAXQJT_PATHS.UPLOAD || '/v1/upload');
-          T('📤 正在上传 '+okFiles.length+' 张图片…','info');
-          window.QAXQJT_API.post(path, fd).then(function(data){
+        __uploading = true;
+        (async function(){
+          try{
+            var files = fileInput && fileInput.files ? fileInput.files : null;
+            if(!files || !files.length){ T('⚠️ 请先选择要上传的剧照/海报','error'); return; }
+            var okFiles = [];
+            for(var i=0;i<files.length;i++){
+              var f = files[i];
+              if(!/^image\/(jpeg|png|webp)$/i.test(f.type||'')){ T('⚠️ 仅支持 JPG/PNG/WebP：'+f.name,'error'); return; }
+              if(f.size > 10*1024*1024){ T('⚠️ 文件超过10MB：'+f.name,'error'); return; }
+              okFiles.push(f);
+            }
+            /* EdgeOne /api 代理 multipart 请求体 ~350KB 隐性上限：逐张压缩 ≤150KB 并逐张上传，
+               保证单请求体足够小（多图合并单请求会超限被断连） */
             var urls = [];
-            if(data && Array.isArray(data.files)){ data.files.forEach(function(d){ if(d&&d.url) urls.push(d.url); }); }
-            else if(Array.isArray(data)){ data.forEach(function(d){ if(d&&d.url) urls.push(d.url); }); }
-            else if(data && data.url){ urls.push(data.url); }
-            if(!urls.length){ T('❌ 上传响应未返回 url','error'); return; }
+            for(var j=0;j<okFiles.length;j++){
+              var cf = okFiles[j];
+              if(window.__compressOperaImage && cf.size > 150*1024){
+                T('📦 压缩中 ('+(j+1)+'/'+okFiles.length+')…','info');
+                cf = await window.__compressOperaImage(cf, { maxDim: 1600, targetKB: 150 });
+              }
+              T('📤 正在上传 ('+(j+1)+'/'+okFiles.length+')…','info');
+              var fd1 = new FormData();
+              fd1.append('file', cf);
+              var d1 = await window.QAXQJT_API.post((QAXQJT_PATHS.UPLOAD || '/v1/upload'), fd1, { timeoutMs: 60000 });
+              var u1 = d1 && (d1.url || (d1.data && d1.data.url));
+              if(!u1){ T('❌ 第'+(j+1)+'张上传响应未返回 url','error'); return; }
+              urls.push(u1);
+            }
             var sel = document.getElementById('operasAttachPlaySelect');
             var playId = sel ? (sel.value||'').trim() : '';
             if(playId){
               var playLabel = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : playId;
-              window.QAXQJT_API.patch((QAXQJT_PATHS.PLAYS_BY_ID || function (i) { return '/v1/plays/' + i; })(encodeURIComponent(playId)), { posterUrl: urls[0] }).then(function(){
+              try {
+                await window.QAXQJT_API.patch((QAXQJT_PATHS.PLAYS_BY_ID || function (i) { return '/v1/plays/' + i; })(encodeURIComponent(playId)), { posterUrl: urls[0] });
                 window.__operasLastPosterUrl = urls[0];
                 T('✅ 已上传 '+urls.length+' 张图片，封面已更新到《'+playLabel.replace(/^《|》$/g,'')+'》','success');
                 try { if(window.__operasApi && window.__operasApi.load) window.__operasApi.load(); } catch(_rl){}
-              }).catch(function(err){
+              } catch(err){
                 console.warn('[P1 upload] posterUrl 更新失败', err);
                 T('❌ 图片已上传但封面更新失败：'+((err&&err.message)||err),'error');
-              });
+              }
             } else {
               window.__operasLastPosterUrl = urls[0];
               console.info('[P1 upload] 已上传 URL：', urls.join(', '), '（未选关联剧目，可重新上传时选择）');
               T('✅ 已上传 '+urls.length+' 张图片（未选关联剧目，URL 已暂存）','success');
             }
-          }).catch(function(err){
-            console.warn('[P1 upload] 失败', err);
-            T('❌ 上传失败：'+((err&&err.message)||err),'error');
-          }).finally(function(){ __uploading = false; });
-        }catch(_e){ __uploading = false; console.warn('[P1 upload err]', _e); T('❌ 上传失败：'+((_e&&_e.message)||_e),'error'); }
+          }catch(_e){ console.warn('[P1 upload err]', _e); T('❌ 上传失败：'+((_e&&_e.message)||_e),'error'); }
+          finally{ __uploading = false; try{ fileInput.value=''; }catch(_){} }
+        })();
       }
       // window 捕获阶段先于 SuperPatch 1/6 的 document 捕获 submit 拦截，抢先把本表单导向真实上传
       window.addEventListener('submit', function(ev){
@@ -1088,6 +1094,7 @@ function __pLog(module,event,extra){
         m.style.setProperty('display','none','important');
       }
     }
+    window.__closeAddOperaModal = __closeAddOperaModal;
     __bindBtn('spNewOperaBtn', __openAddOperaModal);
     __bindBtn('addOperaCloseBtn', __closeAddOperaModal);
     __bindBtn('addOperaCancelBtn', __closeAddOperaModal);
@@ -1338,7 +1345,7 @@ try{
   'use strict';
   if (window.__operasApi) return;
   window.__operasApi = {
-    state: { plays: [], filter: { genre: '', keyword: '' }, editingId: null, loaded: false, categories: [] },
+    state: { plays: [], filter: { genre: '', keyword: '' }, editingId: null, lastViewedId: null, loaded: false, categories: [] },
     _toast: function(msg, type){ try { if (typeof __T === 'function') return __T(msg, type||'info'); } catch(_){} try { console.log('[operasApi]', type, msg); } catch(_){} },
     _escape: function(s){ if (s === null || s === undefined) return ''; return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); },
 
@@ -1688,18 +1695,38 @@ try{
       var cast = ((document.getElementById('addOperaCast') || {}).value || '').trim();
       var cost = parseInt((document.getElementById('addOperaCost') || {}).value, 10) || 0;
       var price = parseInt((document.getElementById('addOperaPrice') || {}).value, 10) || 0;
+      var author = ((document.getElementById('addOperaAuthor') || {}).value || '').trim();
+      var difficultyLevel = (document.getElementById('addOperaDifficulty') || {}).value || '';
+      var status = (document.getElementById('addOperaStatus') || {}).value || 'active';
+      var is_hot = !!(document.getElementById('addOperaHot') || {}).checked;
+      var posterUrl = ((document.getElementById('addOperaPosterUrl') || {}).value || '').trim();
+      var synopsis = ((document.getElementById('addOperaSynopsis') || {}).value || '').trim();
 
       var body = {
         title: name,
         genre: category,
         durationMinutes: duration,
         subtitle: scene,
-        castSummary: cast
+        castSummary: cast,
+        author: author,
+        difficultyLevel: difficultyLevel,
+        status: status,
+        is_hot: is_hot,
+        posterUrl: posterUrl,
+        synopsis: synopsis
       };
       var editId = this.state.editingId;
       try {
         if (editId) {
           await QAXQJT_API.patch((QAXQJT_PATHS.PLAYS_BY_ID || function (i) { return '/v1/plays/' + i; })(encodeURIComponent(editId)), body);
+          /* 编辑模式同样保存成本/报价到 localStorage 定价表（此前仅新增分支写入，导致编辑后丢失） */
+          try {
+            var ekey = 'qaxqjt_operas_pricing_v1';
+            var epricing = {};
+            try { epricing = JSON.parse(localStorage.getItem(ekey) || '{}'); } catch(_){}
+            epricing[editId] = { cost: cost, price: price, updatedAt: new Date().toISOString() };
+            localStorage.setItem(ekey, JSON.stringify(epricing));
+          } catch(_){}
           this._toast('✅ 剧目《' + name + '》已更新', 'success');
         } else {
           var created = await QAXQJT_API.post((QAXQJT_PATHS.PLAYS || '/v1/plays'), body);
@@ -1723,9 +1750,18 @@ try{
           document.getElementById('addOperaCast').value = '';
           document.getElementById('addOperaCost').value = '6000';
           document.getElementById('addOperaPrice').value = '5000';
+          document.getElementById('addOperaAuthor').value = '';
+          document.getElementById('addOperaDifficulty').value = '';
+          document.getElementById('addOperaStatus').value = 'active';
+          var hotChk = document.getElementById('addOperaHot'); if (hotChk) hotChk.checked = false;
+          document.getElementById('addOperaPosterUrl').value = '';
+          document.getElementById('addOperaSynopsis').value = '';
+          var prev = document.getElementById('addOperaPosterPreview'); if (prev) prev.style.display = 'none';
+          var tip = document.getElementById('addOperaPosterUploadTip'); if (tip) tip.textContent = '';
         } catch(_){}
         this.state.editingId = null;
         await this.load();
+        if (editId && this.state.lastViewedId === editId) { try { this.viewDetail(editId); } catch(_){} }
       } catch(e) {
         console.warn('[__operasApi.submitCreate] 失败', e);
         this._toast('⚠️ 提交剧目失败：' + (e && e.message ? e.message : e), 'error');
@@ -1828,6 +1864,7 @@ try{
       if (!id) return;
       var modal = document.getElementById('operaDetailModal');
       if (!modal) { this._toast('⚠️ 详情弹窗未就绪', 'error'); return; }
+      this.state.lastViewedId = id;
       try {
         var p = await QAXQJT_API.get((QAXQJT_PATHS.PLAYS_BY_ID || function (i) { return '/v1/plays/' + i; })(encodeURIComponent(id)));
         if (!p) { this._toast('⚠️ 未找到该剧目', 'warning'); return; }
@@ -1846,12 +1883,12 @@ try{
             '<div class="detail-basic-item"><span class="label">难度等级：</span><span>' + this._escape(p.difficultyLevel || '—') + '</span></div>' +
             '<div class="detail-basic-item"><span class="label">热门：</span><span>' + ((p.is_hot || p.isHot) ? '🔥 是' : '否') + '</span></div>' +
             '<div class="detail-basic-item"><span class="label">状态：</span><span>' + this._escape(p.status || 'active') + '</span></div>' +
+            (p.posterUrl ? '<div class="detail-basic-item" style="grid-column:1/-1;"><span class="label">封面：</span><span><img src="' + this._escape(p.posterUrl) + '" alt="封面" style="max-width:220px;border-radius:8px;border:1px solid var(--border-light);"></span></div>' : '') +
             '<div class="detail-basic-item"><span class="label">创建时间：</span><span>' + (p.createdAt ? String(p.createdAt).slice(0,19) : '—') + '</span></div>' +
             '<div class="detail-basic-item"><span class="label">更新时间：</span><span>' + (p.updatedAt ? String(p.updatedAt).slice(0,19) : '—') + '</span></div>';
         }
-        var sections = modal.querySelectorAll('.detail-section');
-        if (sections.length >= 2) {
-          var synSec = sections[1];
+        var synSec = modal.querySelector('#operaDetailSynopsisSec') || (modal.querySelectorAll('.detail-section') || [])[1];
+        if (synSec) {
           var existing = synSec.querySelector('p.synopsis-text');
           if (existing) { existing.textContent = p.synopsis || '暂无剧情简介'; }
           else {
@@ -1882,6 +1919,25 @@ try{
         document.getElementById('addOperaDuration').value = rowData.durationMinutes || rowData.duration || 120;
         document.getElementById('addOperaScene').value = rowData.subtitle || rowData.scene || '';
         document.getElementById('addOperaCast').value = rowData.castSummary || rowData.cast || '';
+        document.getElementById('addOperaAuthor').value = rowData.author || '';
+        document.getElementById('addOperaDifficulty').value = rowData.difficultyLevel || '';
+        var st = rowData.status || 'active';
+        var statusSel = document.getElementById('addOperaStatus');
+        if (statusSel) {
+          var hasSt = Array.prototype.some.call(statusSel.options, function(o){ return o.value === st; });
+          statusSel.value = hasSt ? st : 'active';
+        }
+        var hotChk = document.getElementById('addOperaHot');
+        if (hotChk) hotChk.checked = !!(rowData.is_hot || rowData.isHot);
+        var purl = rowData.posterUrl || '';
+        document.getElementById('addOperaPosterUrl').value = purl;
+        var prev = document.getElementById('addOperaPosterPreview');
+        var pimg = document.getElementById('addOperaPosterImg');
+        if (prev && pimg) {
+          if (purl) { pimg.src = purl; prev.style.display = 'block'; }
+          else { prev.style.display = 'none'; }
+        }
+        document.getElementById('addOperaSynopsis').value = rowData.synopsis || '';
         document.getElementById('addOperaCost').value = '0';
         document.getElementById('addOperaPrice').value = '0';
         try {
@@ -1977,8 +2033,16 @@ try{
         document.getElementById('addOperaCast').value = '';
         document.getElementById('addOperaCost').value = '6000';
         document.getElementById('addOperaPrice').value = '5000';
+        document.getElementById('addOperaAuthor').value = '';
+        document.getElementById('addOperaDifficulty').value = '';
+        document.getElementById('addOperaStatus').value = 'active';
+        var hotChk = document.getElementById('addOperaHot'); if (hotChk) hotChk.checked = false;
+        document.getElementById('addOperaPosterUrl').value = '';
+        document.getElementById('addOperaSynopsis').value = '';
+        var prev = document.getElementById('addOperaPosterPreview'); if (prev) prev.style.display = 'none';
+        var tip = document.getElementById('addOperaPosterUploadTip'); if (tip) tip.textContent = '';
       } catch(_){}
-    }
+    },
   };
 
   // spNewOperaBtn 点击前清空 editingId（capture 阶段，在 __bindBtn 之前）
@@ -2048,6 +2112,126 @@ try{
       });
     }
     api._bindRowDelegation();
+    /* P1修复:详情弹窗「✏️ 编辑该剧目」按钮 → 关闭详情并打开编辑表单 */
+    var detailEditBtn = document.getElementById('operaDetailEditBtn');
+    if (detailEditBtn) {
+      detailEditBtn.__superPatchBound = 1; detailEditBtn.__deadBtnChecked = 1;
+      detailEditBtn.addEventListener('click', function(){
+        var vid = api.state.lastViewedId;
+        if (!vid) { api._toast('⚠️ 未找到当前剧目 ID', 'warning'); return; }
+        var dm = document.getElementById('operaDetailModal');
+        if (dm) { dm.classList.remove('active'); dm.style.setProperty('display','none','important'); }
+        try { document.body.classList.remove('body-modal-locked'); } catch(_){}
+        api._editByLoad(vid, '');
+      }, true);
+    }
+    var detailCloseBtn = document.getElementById('operaDetailCloseBtn');
+    if (detailCloseBtn) {
+      detailCloseBtn.__superPatchBound = 1; detailCloseBtn.__deadBtnChecked = 1;
+      detailCloseBtn.addEventListener('click', function(){
+        var dm = document.getElementById('operaDetailModal');
+        if (dm) { dm.classList.remove('active'); dm.style.setProperty('display','none','important'); }
+        try { document.body.classList.remove('body-modal-locked'); } catch(_){}
+      }, true);
+    }
+    /* P1修复:封面图上传 → POST /v1/upload（FormData file 字段）→ 回填 posterUrl */
+    /* 客户端自动压缩（EdgeOne /api 代理对 multipart 请求体有 ~350KB 隐性上限，超限直接断连）：
+       目标 ≤200KB，逐级降质量(0.85→0.35)，到底后每次缩尺寸×0.75，直至达标或触及下限 */
+    function __compressImage(file, opts) {
+      return new Promise(function (resolve) {
+        try {
+          if (!file || !/^image\//.test(file.type) || /svg|gif/i.test(file.type)) return resolve(file);
+          var target = ((opts && opts.targetKB) || 200) * 1024;
+          if (file.size <= target) return resolve(file);
+          var reader = new FileReader();
+          reader.onload = function () {
+            var img = new Image();
+            img.onload = function () {
+              try {
+                var w = img.width, h = img.height;
+                var scale = Math.min(1, ((opts && opts.maxDim) || 1600) / Math.max(w, h));
+                var canvas = document.createElement('canvas');
+                var cx = canvas.getContext('2d');
+                var qualities = [0.85, 0.75, 0.65, 0.55, 0.45, 0.35];
+                var qi = 0;
+                (function attempt() {
+                  var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+                  canvas.width = cw; canvas.height = ch;
+                  cx.drawImage(img, 0, 0, cw, ch);
+                  canvas.toBlob(function (blob) {
+                    if (blob && (blob.size <= target || (qi >= qualities.length - 1 && scale <= 0.2))) {
+                      if (blob.size >= file.size) return resolve(file);
+                      var name = (file.name || 'cover').replace(/\.\w+$/, '') + '.jpg';
+                      try { return resolve(new File([blob], name, { type: 'image/jpeg' })); }
+                      catch (_) { return resolve(new File([blob], 'cover.jpg', { type: 'image/jpeg' })); }
+                    }
+                    if (qi < qualities.length - 1) qi++; else scale *= 0.75;
+                    attempt();
+                  }, 'image/jpeg', qualities[qi]);
+                })();
+              } catch (_) { resolve(file); }
+            };
+            img.onerror = function () { resolve(file); };
+            img.src = reader.result;
+          };
+          reader.onerror = function () { resolve(file); };
+          reader.readAsDataURL(file);
+        } catch (_) { resolve(file); }
+      });
+    }
+    try { window.__compressOperaImage = __compressImage; } catch (_) {}
+    var posterUploadBtn = document.getElementById('addOperaPosterUploadBtn');
+    var posterFileInput = document.getElementById('addOperaPosterFile');
+    if (posterUploadBtn && posterFileInput) {
+      posterUploadBtn.__superPatchBound = 1; posterUploadBtn.__deadBtnChecked = 1;
+      posterUploadBtn.addEventListener('click', function(){ posterFileInput.click(); }, true);
+      posterFileInput.addEventListener('change', async function(){
+        var f = posterFileInput.files && posterFileInput.files[0];
+        if (!f) return;
+        var tip = document.getElementById('addOperaPosterUploadTip');
+        if (f.size > 50 * 1024 * 1024) { api._toast('⚠️ 图片不能超过 50MB', 'error'); return; }
+        var origSize = f.size;
+        if (f.size > 200 * 1024) {
+          if (tip) tip.textContent = '压缩中…';
+          f = await __compressImage(f, { maxDim: 1600, targetKB: 200 });
+        }
+        if (tip) tip.textContent = '上传中…';
+        try {
+          var fd = new FormData();
+          fd.append('file', f);
+          var uploadPath = (window.QAXQJT_API_CONFIG && window.QAXQJT_API_CONFIG.PATHS && window.QAXQJT_API_CONFIG.PATHS.UPLOAD) || '/v1/upload';
+          var resp = await QAXQJT_API.post(uploadPath, fd, { isFormData: true, timeoutMs: 60000 });
+          var url = resp && (resp.url || (resp.data && resp.data.url));
+          if (!url) throw new Error('上传响应缺少 url');
+          var urlInput = document.getElementById('addOperaPosterUrl');
+          if (urlInput) urlInput.value = url;
+          var prev = document.getElementById('addOperaPosterPreview');
+          var pimg = document.getElementById('addOperaPosterImg');
+          if (prev && pimg) { pimg.src = url; prev.style.display = 'block'; }
+          var okMsg = f.size < origSize ? ('✅ 已自动压缩 ' + (origSize / 1048576).toFixed(1) + 'MB→' + (f.size / 1048576).toFixed(1) + 'MB 并上传') : '✅ 已上传';
+          if (tip) tip.textContent = okMsg;
+          api._toast(okMsg, 'success');
+        } catch(e) {
+          var upErrMsg = (e && e.name === 'AbortError') ? '上传超时，请压缩图片或检查网络后重试' : (e && e.message ? e.message : String(e));
+          if (tip) tip.textContent = '上传失败: ' + upErrMsg;
+          api._toast('⚠️ 封面上传失败：' + upErrMsg, 'error');
+        }
+        try { posterFileInput.value = ''; } catch(_){}
+      });
+      /* URL 输入框手动变化时也刷新预览 */
+      var posterUrlInput = document.getElementById('addOperaPosterUrl');
+      if (posterUrlInput) {
+        posterUrlInput.addEventListener('input', function(){
+          var v = (posterUrlInput.value || '').trim();
+          var prev = document.getElementById('addOperaPosterPreview');
+          var pimg = document.getElementById('addOperaPosterImg');
+          if (prev && pimg) {
+            if (v) { pimg.src = v; prev.style.display = 'block'; }
+            else { prev.style.display = 'none'; }
+          }
+        });
+      }
+    }
     api.load();
   }
   if (document.readyState === 'loading') {

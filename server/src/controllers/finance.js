@@ -6,6 +6,7 @@
  * POST   /v1/fin/ledger         制单（voucherNo 自动生成）
  * GET    /v1/fin/ledger/:id     凭证详情
  * PATCH  /v1/fin/ledger/:id     修改
+ * PATCH  /v1/fin/ledger/:id/void 作废（仅 checked 可作废；void=终态；留审计痕迹）
  * DELETE /v1/fin/ledger/:id     删除（仅 draft/reconciled=false 可删）
  * GET    /v1/fin/summary        月度汇总（收入/支出/分类/净利/利润率）
  *
@@ -42,7 +43,10 @@ const list = async ctx => {
   }
   if (ctx.query.voucherType) where.voucherType = ctx.query.voucherType;
   if (ctx.query.voucherCategory) where.voucherCategory = ctx.query.voucherCategory;
+  // v20261028 作废凭证（void=终态）不计入任何账目统计、不出现在任何数据展示页：
+  // 列表默认始终排除 void；显式传 status 保留为审计查询入口（如 status=void 对账核查）
   if (ctx.query.status) where.status = ctx.query.status;
+  else where.status = { not: 'void' };
   if (ctx.query.orderId) where.orderId = ctx.query.orderId;
   if (ctx.query.fromDate) where.voucherDate = { gte: new Date(ctx.query.fromDate) };
   if (ctx.query.toDate) {
@@ -116,6 +120,7 @@ const update = async ctx => {
   const old = await prisma.finLedgerV1.findUnique({ where: { id } });
   if (!old) throw new BusinessError('NOT_FOUND', '凭证不存在');
   if (old.isReconciled) throw new BusinessError('CONFLICT', '已对账凭证不允许修改');
+  if (old.status === 'void') throw new BusinessError('CONFLICT', '已作废凭证不允许修改');
 
   // 复核人仅可执行"提交复核"（status=checked）这一个动作，不得借 PATCH 改任何业务字段
   if (ctx.state.user?.role === 'finance_checker') {
@@ -168,10 +173,51 @@ const remove = async ctx => {
   const old = await prisma.finLedgerV1.findUnique({ where: { id } });
   if (!old) throw new BusinessError('NOT_FOUND', '凭证不存在');
   if (old.isReconciled) throw new BusinessError('CONFLICT', '已对账凭证不允许删除');
+  if (old.status === 'void') throw new BusinessError('CONFLICT', '已作废凭证不可删除（保留审计痕迹）');
   if (old.status !== 'draft') throw new BusinessError('CONFLICT', '仅草稿状态凭证可删除，已复核凭证须走作废流程');
   await prisma.finLedgerV1.delete({ where: { id } });
   await audit({ ctx, module: 'finance', action: 'LEDGER_DELETE', targetId: id, detail: { no: old.voucherNo } });
   return noContent(ctx);
+};
+
+/**
+ * 作废凭证 PATCH /v1/fin/ledger/:id/void   body { reason }
+ * 仅 super_admin/finance_admin；前置状态 checked（草稿请直接删除）；已对账不可作废。
+ * 语义：status 落 'void' 终态（前端徽章「已作废」），保留凭证与 voidReason/voidedAt/voidedBy
+ * 审计痕迹，不可再修改/删除；月度汇总（summary）排除 status=void，作废金额不计入收支。
+ * 审计：LEDGER_VOID。
+ */
+const voidVoucher = async ctx => {
+  const id = ctx.params.id;
+  const b = ctx.request.body || {};
+  const reason = String(b.reason || '').trim();
+  if (reason.length < 2 || reason.length > 200) {
+    throw new BusinessError('VALIDATION_ERROR', '作废原因必填（2-200 字）');
+  }
+  const old = await prisma.finLedgerV1.findUnique({ where: { id } });
+  if (!old) throw new BusinessError('NOT_FOUND', '凭证不存在');
+  if (old.isReconciled) throw new BusinessError('CONFLICT', '已对账凭证不可作废（须先取消对账）');
+  if (old.status === 'void') throw new BusinessError('CONFLICT', '凭证已作废，无需重复操作');
+  if (old.status !== 'checked') throw new BusinessError('CONFLICT', '仅已复核凭证可作废（草稿凭证请直接删除）');
+  const row = await prisma.finLedgerV1.update({
+    where: { id },
+    data: {
+      status: 'void',
+      voidReason: reason,
+      voidedAt: new Date(),
+      voidedBy: ctx.state.user?.sub || null,
+      updatedAt: new Date(),
+      ts: BigInt(nowMs())
+    }
+  });
+  await audit({
+    ctx,
+    module: 'finance',
+    action: 'LEDGER_VOID',
+    targetId: id,
+    detail: { no: old.voucherNo, reason }
+  });
+  return success(ctx, row);
 };
 
 /**
@@ -187,7 +233,7 @@ const summary = async ctx => {
 
   const [ledgers, orderAgg] = await Promise.all([
     prisma.finLedgerV1.findMany({
-      where: { voucherDate: { gte: start } },
+      where: { voucherDate: { gte: start }, status: { not: 'void' } }, // 作废凭证不计入收支汇总
       select: { voucherDate: true, voucherCategory: true, debitAmount: true, creditAmount: true }
     }),
     prisma.order.findMany({
@@ -246,4 +292,48 @@ const summary = async ctx => {
   return success(ctx, rows);
 };
 
-module.exports = { list, create, detail, update, remove, summary };
+// 应收账款（v20261027 recv1027）：演出收入关联订单未付金额
+// 口径：有效订单（排除 cancelled/refunded/draft）的 finalAmount - paidAmount > 0
+// 返回：未付清订单明细 + 合计 + 全量 orderId→unpaid 映射（供台账凭证行展示关联订单未付余额）
+const receivables = async ctx => {
+  const orders = await prisma.order.findMany({
+    where: { status: { notIn: ['cancelled', 'refunded', 'draft'] } },
+    select: {
+      id: true, orderNo: true, customerName: true, status: true,
+      finalAmount: true, paidAmount: true, performanceStartDate: true, performanceEndDate: true
+    }
+  });
+  const round2 = n => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+  const unpaidByOrderId = {};
+  const items = [];
+  let totalUnpaid = 0;
+  for (const o of orders) {
+    const finalAmount = round2(o.finalAmount);
+    const paidAmount = round2(o.paidAmount);
+    const unpaid = round2(finalAmount - paidAmount);
+    unpaidByOrderId[o.id] = unpaid;
+    if (unpaid > 0.005) {
+      totalUnpaid += unpaid;
+      items.push({
+        orderId: o.id,
+        orderNo: o.orderNo,
+        customerName: o.customerName,
+        status: o.status,
+        finalAmount,
+        paidAmount,
+        unpaid,
+        performanceStartDate: o.performanceStartDate,
+        performanceEndDate: o.performanceEndDate
+      });
+    }
+  }
+  items.sort((a, b) => b.unpaid - a.unpaid);
+  return success(ctx, {
+    items,
+    count: items.length,
+    totalUnpaid: round2(totalUnpaid),
+    unpaidByOrderId
+  });
+};
+
+module.exports = { list, create, detail, update, remove, voidVoucher, summary, receivables };

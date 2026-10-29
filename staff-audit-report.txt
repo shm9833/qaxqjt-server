@@ -1,0 +1,129 @@
+2026-10-16T09:30:49.006Z | === 在籍人员信息核查开始 ===
+2026-10-16T09:30:49.091Z | 数据库总人数: 67
+2026-10-16T09:30:49.091Z | 
+2026-10-16T09:30:49.092Z | === 分类统计 ===
+2026-10-16T09:30:49.092Z | 有效在册人员: 30 人
+2026-10-16T09:30:49.092Z | 已离职/已迁出人员: 0 人
+2026-10-16T09:30:49.092Z | 状态待确认人员: 0 人
+2026-10-16T09:30:49.092Z | 审核不通过人员: 0 人
+2026-10-16T09:30:49.093Z | 
+2026-10-16T09:30:49.093Z | === 信息缺失明细（63 条）===
+2026-10-16T09:30:49.093Z | [无编号] | 刘桂香 | 状态:deleted | 审核:expired | 缺失:staffNo,hireDate,employmentType
+2026-10-16T09:30:49.094Z | [无编号] | 石爱勤 | 状态:deleted | 审核:expired | 缺失:staffNo,hireDate,employmentType
+2026-10-16T09:30:49.094Z | [无编号] | 王喜苍 | 状态:deleted | 审核:expired | 缺失:staffNo,hireDate,employmentType
+2026-10-16T09:30:49.094Z | [无编号] | 刘桂香 | 状态:deleted | 审核:expired | 缺失:staffNo,hireDate,employmentType
+2026-10-16T09:30:49.094Z | [无编号] | 雷旭梅 | 状态:deleted | 审核:expired | 缺失:staffNo,hireDate,employmentType
+2026-10-16T09:30:49.094Z | PF002 | 马卫东 | 状态:active | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.094Z | PF003 | 伏晓亮 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.095Z | PF004 | 刘博老婆 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.095Z | PF005 | 卫东同学 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.095Z | PF006 | 小霞 | 状态:deleted | 审核:approved | 缺失:phone,idCardNo
+2026-10-16T09:30:49.095Z | PF007 | 角子1 | 状态:deleted | 审核:approved | 缺失:phone,idCardNo
+2026-10-16T09:30:49.095Z | PF008 | 角子2 | 状态:deleted | 审核:approved | 缺失:phone,idCardNo
+2026-10-16T09:30:49.095Z | PF009 | 角子3 | 状态:deleted | 审核:approved | 缺失:phone,idCardNo
+2026-10-16T09:30:49.095Z | PF010 | 角子4 | 状态:deleted | 审核:approved | 缺失:phone,idCardNo
+2026-10-16T09:30:49.096Z | PF011 | 角子5 | 状态:deleted | 审核:approved | 缺失:phone,idCardNo
+2026-10-16T09:30:49.096Z | PF012 | 角子6 | 状态:deleted | 审核:approved | 缺失:phone,idCardNo
+2026-10-16T09:30:49.096Z | PF013 | 老李 | 状态:active | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.096Z | PF014 | 牛老师 | 状态:deleted | 审核:approved | 缺失:phone,idCardNo
+2026-10-16T09:30:49.096Z | PF015 | 老孙 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.096Z | PF016 | 唐淑琴 | 状态:deleted | 审核:approved | 缺失:idCardNo,hireDate
+2026-10-16T09:30:49.097Z | PF019 | 孙回民 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.097Z | PF022 | 王亚军 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.098Z | PF035 | 打卡验证测试员 | 状态:deleted | 审核:approved | 缺失:hireDate,employmentType
+2026-10-16T09:30:49.098Z | PF036 | 打卡验证测试员 | 状态:deleted | 审核:approved | 缺失:hireDate,employmentType
+2026-10-16T09:30:49.099Z | PF039 | 打卡验证测试员 | 状态:deleted | 审核:approved | 缺失:hireDate,employmentType
+2026-10-16T09:30:49.566Z | PF040 | 打卡验证测试员 | 状态:deleted | 审核:approved | 缺失:hireDate,employmentType
+2026-10-16T09:30:49.566Z | PF071 | 郑瑞芝 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.567Z | PF072 | 张旺吉 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.567Z | PF073 | 漆三喜 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.568Z | PF074 | 陈敏 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.568Z | PF075 | 潘彩霞 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.569Z | PF076 | 杜学成 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.569Z | PF077 | 袁文明 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.570Z | PF079 | 周水仙 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.570Z | PF080 | 王爱琴 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.571Z | PF081 | 赵彦斌 | 状态:active | 审核:approved | 缺失:idCardNo,hireDate
+2026-10-16T09:30:49.571Z | PF082 | 陈玲玲 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.571Z | PF083 | 测试打卡验证A | 状态:deleted | 审核:approved | 缺失:hireDate,employmentType
+2026-10-16T09:30:49.572Z | PF086 | 贾耀芳 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.572Z | PF087 | 刘宝云 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.573Z | PF088 | 柏乖秀 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.573Z | PF089 | 牛有霞 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.574Z | PF090 | 闫转霞 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.574Z | PF091 | 高林 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.575Z | PF092 | 雷旭梅 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.575Z | PF093 | 李艺忠 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.575Z | PF094 | 刘桂香 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.576Z | PF095 | 王红兵 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.576Z | PF096 | 俞红梅 | 状态:active | 审核:approved | 缺失:hireDate
+2026-10-16T09:30:49.577Z | QA-P-004 | 漆三喜 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.577Z | QA-P-005 | 郑婷 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.578Z | QA-P-006 | 周玲 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.578Z | QA-P-007 | 王菊红 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.578Z | QA-P-008 | 李松林 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.579Z | QA-P-009 | 高林 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.726Z | QA-P-010 | 杜学成 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.727Z | QA-P-011 | 张旺吉 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.727Z | QA-P-012 | 老白 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.727Z | QA-P-013 | 周水仙 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.728Z | QA-P-014 | 王宏斌 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.728Z | QA-P-015 | 吴宏斌 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.729Z | QA-P-017 | 袁老师 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.729Z | QA-P-018 | 赵彦斌 | 状态:deleted | 审核:approved | 缺失:idCardNo
+2026-10-16T09:30:49.730Z | 
+2026-10-16T09:30:49.730Z | === 状态异常明细（32 条）===
+2026-10-16T09:30:49.731Z | PF003 | 伏晓亮 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.731Z | PF004 | 刘博老婆 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.732Z | PF005 | 卫东同学 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.732Z | PF006 | 小霞 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.733Z | PF007 | 角子1 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.733Z | PF008 | 角子2 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.734Z | PF009 | 角子3 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.734Z | PF010 | 角子4 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.735Z | PF011 | 角子5 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.752Z | PF012 | 角子6 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.753Z | PF014 | 牛老师 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.753Z | PF015 | 老孙 | 状态:deleted | 审核:approved | 入职:Sun Jun 01 2014 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.754Z | PF016 | 唐淑琴 | 状态:deleted | 审核:approved | 入职:null
+2026-10-16T09:30:49.754Z | PF035 | 打卡验证测试员 | 状态:deleted | 审核:approved | 入职:null
+2026-10-16T09:30:49.755Z | PF036 | 打卡验证测试员 | 状态:deleted | 审核:approved | 入职:null
+2026-10-16T09:30:49.755Z | PF039 | 打卡验证测试员 | 状态:deleted | 审核:approved | 入职:null
+2026-10-16T09:30:49.756Z | PF040 | 打卡验证测试员 | 状态:deleted | 审核:approved | 入职:null
+2026-10-16T09:30:49.756Z | PF083 | 测试打卡验证A | 状态:deleted | 审核:approved | 入职:null
+2026-10-16T09:30:49.757Z | QA-P-004 | 漆三喜 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.757Z | QA-P-005 | 郑婷 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.758Z | QA-P-006 | 周玲 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.758Z | QA-P-007 | 王菊红 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.759Z | QA-P-008 | 李松林 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.760Z | QA-P-009 | 高林 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.760Z | QA-P-010 | 杜学成 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.761Z | QA-P-011 | 张旺吉 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.762Z | QA-P-012 | 老白 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.762Z | QA-P-013 | 周水仙 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.763Z | QA-P-014 | 王宏斌 | 状态:deleted | 审核:approved | 入职:Mon Jun 01 2026 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.763Z | QA-P-015 | 吴宏斌 | 状态:deleted | 审核:approved | 入职:Wed Jun 01 2005 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.764Z | QA-P-017 | 袁老师 | 状态:deleted | 审核:approved | 入职:Wed Jun 01 2016 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.764Z | QA-P-018 | 赵彦斌 | 状态:deleted | 审核:approved | 入职:Wed Jun 01 2016 08:00:00 GMT+0800 (中国标准时间)
+2026-10-16T09:30:49.765Z | 
+2026-10-16T09:30:49.765Z | === 待确认人员明细（0 条）===
+2026-10-16T09:30:49.766Z | 
+2026-10-16T09:30:49.766Z | === 编号唯一性核查 ===
+2026-10-16T09:30:49.772Z | 编号无重复
+2026-10-16T09:30:49.773Z | 
+2026-10-16T09:30:49.773Z | === 身份证号格式核查 ===
+2026-10-16T09:30:49.774Z | 身份证号格式均正确
+2026-10-16T09:30:49.774Z | 
+2026-10-16T09:30:49.774Z | === 雇佣类型分布 ===
+2026-10-16T09:30:49.775Z | [未填]: 10 人
+2026-10-16T09:30:49.775Z | 演员队: 36 人
+2026-10-16T09:30:49.776Z | 舞美队: 3 人
+2026-10-16T09:30:49.776Z | 行政: 1 人
+2026-10-16T09:30:49.777Z | 乐队: 17 人
+2026-10-16T09:30:49.777Z | 
+2026-10-16T09:30:49.778Z | === 处理建议 ===
+2026-10-16T09:30:49.778Z | 1. 信息缺失: 63 人需补全核心字段，建议联系本人或部门负责人补充
+2026-10-16T09:30:49.779Z | 3. 状态异常: 32 人状态非 active 但审核已通过，建议核实是否已离职
+2026-10-16T09:30:49.779Z | 
+2026-10-16T09:30:49.780Z | === 核查完成 ===
+

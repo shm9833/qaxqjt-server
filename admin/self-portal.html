@@ -103,6 +103,8 @@
     .status-chip { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11.5px; }
     .chip-normal { background: #e8f5e9; color: #2e7d32; }
     .chip-late { background: #fff3e0; color: #ef6c00; }
+    .chip-invalid { background: #ffebee; color: #c62828; }
+    .chip-stage { background: #e3f2fd; color: #1565c0; }
     .chip-early { background: #fce4ec; color: #c2185b; }
     .chip-pending { background: #f3eaff; color: #6a1b9a; }
     .chip-confirmed { background: #e8f5e9; color: #2e7d32; }
@@ -125,6 +127,64 @@
     .wage-card .wh .net { font-size: 20px; font-weight: 800; color: #c62828; }
     .wage-card .wh .net small { font-size: 11px; color: #9a8259; font-weight: 400; margin-right: 3px; }
     .wage-card .wsub { font-size: 12px; color: #9a8259; margin-top: 4px; }
+
+    /* ============ 天工资商议凭证（v20261018） ============ */
+    .agree-card { border: 1px solid #f0d9b5; background: linear-gradient(135deg, #fffaf2, #fff); }
+    .agree-card .agree-title { display: flex; justify-content: space-between; align-items: center; }
+    .agree-card .agree-title .t { font-size: 15px; font-weight: 700; color: #8b0000; }
+    .agree-card .agree-no { font-size: 11px; color: #9a8259; margin-top: 3px; }
+    .agree-card .agree-rate { font-size: 24px; font-weight: 800; color: #c62828; margin: 10px 0 4px; }
+    .agree-card .agree-rate small { font-size: 12px; color: #9a8259; font-weight: 400; }
+    .agree-card .agree-sub { font-size: 12px; color: #6b5a3e; line-height: 1.7; }
+    .agree-card .agree-actions { display: flex; gap: 10px; margin-top: 12px; }
+    .agree-card .agree-actions button {
+      flex: 1; border: none; border-radius: 10px; padding: 11px 0; font-size: 14px; cursor: pointer;
+    }
+    .btn-view-agree { background: #8b0000; color: #fff; }
+    .btn-print-agree { background: #f5e6d0; color: #8b0000; }
+
+    /* 凭证打印页（全屏覆盖层，A4 红头样式） */
+    #certPrintView {
+      display: none; position: fixed; inset: 0; z-index: 999; background: #f3ead9;
+      overflow-y: auto; padding: 18px 14px 90px;
+    }
+    #certPrintView.show { display: block; }
+    .cert-paper {
+      max-width: 640px; margin: 0 auto; background: #fff; border-radius: 4px;
+      box-shadow: 0 4px 22px rgba(0,0,0,.18); padding: 34px 30px 26px; position: relative;
+      border: 1px solid #e8ddc8;
+    }
+    .cert-redhead { text-align: center; border-bottom: 3px double #c62828; padding-bottom: 14px; }
+    .cert-redhead .co { font-size: 21px; font-weight: 800; color: #c62828; letter-spacing: 2px; }
+    .cert-redhead .ti { font-size: 16px; font-weight: 700; color: #333; margin-top: 8px; letter-spacing: 3px; }
+    .cert-no-line { display: flex; justify-content: space-between; font-size: 11.5px; color: #666; margin-top: 8px; }
+    .cert-body { padding: 18px 4px 6px; font-size: 14.5px; line-height: 2.05; color: #222; }
+    .cert-body .crow { display: flex; border-bottom: 1px dotted #d9c9a8; padding: 3px 0; }
+    .cert-body .crow .k { width: 108px; color: #7a6a4d; flex-shrink: 0; }
+    .cert-body .crow .v { flex: 1; font-weight: 600; }
+    .cert-rate-big { text-align: center; margin: 16px 0 10px; padding: 14px; background: #fdf6ec; border: 1px solid #f0d9b5; border-radius: 8px; }
+    .cert-rate-big .amt { font-size: 30px; font-weight: 800; color: #c62828; }
+    .cert-rate-big .cap { font-size: 15px; color: #8b6b3a; margin-top: 3px; font-weight: 600; }
+    .cert-note { font-size: 12px; color: #8a7a58; line-height: 1.8; margin-top: 12px; }
+    .cert-sign { display: flex; justify-content: space-between; margin-top: 26px; font-size: 13.5px; }
+    .cert-sign .seal {
+      width: 96px; height: 96px; border: 2.5px solid rgba(198,40,40,.6); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      color: rgba(198,40,40,.75); font-size: 11px; line-height: 1.5; transform: rotate(-12deg);
+    }
+    .cert-toolbar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 10px; padding: 12px 16px; background: #fff; box-shadow: 0 -3px 14px rgba(0,0,0,.1); }
+    .cert-toolbar button { flex: 1; border: none; border-radius: 10px; padding: 13px 0; font-size: 15px; cursor: pointer; }
+    .cert-toolbar .b-print { background: #c62828; color: #fff; font-weight: 700; }
+    .cert-toolbar .b-close { background: #eee; color: #555; }
+
+    /* 打印时只保留凭证纸张 */
+    @media print {
+      body * { visibility: hidden !important; }
+      #certPrintView, #certPrintView * { visibility: visible !important; }
+      #certPrintView { position: absolute; inset: 0; padding: 0; background: #fff; overflow: visible; }
+      .cert-toolbar { display: none !important; }
+      .cert-paper { box-shadow: none; border: none; max-width: none; border-radius: 0; }
+    }
     .wage-detail { margin-top: 12px; border-top: 1px dashed #e6d8bf; padding-top: 10px; font-size: 13px; }
     .dl-row { display: flex; justify-content: space-between; padding: 4.5px 0; color: #555; }
     .dl-row.total { border-top: 1px solid #eee2cc; margin-top: 5px; padding-top: 8px; font-weight: 700; color: #5a3a1a; }
@@ -186,6 +246,33 @@
     .toast.ok { background: #2e7d32; }
     .toast.err { background: #c62828; }
     .loading { text-align: center; color: #b09a72; font-size: 13px; padding: 20px 0; }
+
+    /* 桌面快捷方式（v20261013） */
+    .desk-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px; }
+    .desk-item {
+      position: relative; background: #fffdf7; border: 1.5px solid #eadfc9; border-radius: 14px;
+      padding: 13px 4px 10px; text-align: center; cursor: pointer; transition: transform .12s, border-color .2s;
+      user-select: none; -webkit-user-select: none;
+    }
+    .desk-item:active { transform: scale(.93); border-color: #8b0000; }
+    .desk-item .ic { font-size: 29px; display: block; line-height: 1.25; }
+    .desk-item .nm { display: block; font-size: 12px; color: #5a3a1a; margin-top: 5px; font-weight: 600; }
+    .desk-item.add { border-style: dashed; background: #fbf6ea; }
+    .desk-item.add .ic { opacity: .75; }
+    .desk-item .del {
+      position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; border-radius: 50%;
+      background: #c62828; color: #fff; font-size: 14px; line-height: 22px; text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,.28); font-weight: 700;
+    }
+    .desk-tip { font-size: 12px; color: #9a8259; margin-top: 12px; text-align: center; line-height: 1.6; }
+    #deskEditBtn { cursor: pointer; }
+
+    /* 演出操作通道关闭横幅（v20261013） */
+    .ops-closed {
+      background: #fff3e0; border: 1.5px solid #ef6c00; color: #a84300; border-radius: 12px;
+      padding: 11px 14px; font-size: 13px; line-height: 1.7; margin-bottom: 13px;
+    }
+    .punch-btn:disabled { opacity: .45; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -227,9 +314,24 @@
       <div class="t2" id="topSub">—</div>
     </div>
 
-    <!-- 打卡页 -->
-    <div class="pages" id="pagePunch">
+    <!-- 桌面页（v20261013：快捷方式可自定义增删，按员工本机保存） -->
+    <div class="pages" id="pageDesktop">
+      <div class="ops-closed hidden" id="opsClosedBannerDesk"></div>
       <div class="card">
+        <h3>我的桌面 <span class="more" id="deskEditBtn">编辑</span></h3>
+        <div class="desk-grid" id="deskGrid"></div>
+        <div class="desk-tip" id="deskTip">点击图标快速进入常用功能</div>
+      </div>
+      <div class="card hidden" id="deskAddCard">
+        <h3>添加到桌面</h3>
+        <div class="desk-grid" id="deskAddGrid"></div>
+      </div>
+    </div>
+
+    <!-- 打卡页 -->
+    <div class="pages hidden" id="pagePunch">
+      <div class="card">
+        <div class="ops-closed hidden" id="opsClosedBanner"></div>
         <div class="punch-date" id="punchDate">—</div>
         <div class="punch-grid">
           <button class="punch-btn" id="btnPunchIn">
@@ -240,18 +342,36 @@
           </button>
         </div>
         <div class="punch-gps" id="gpsTip">打卡需获取 GPS 定位，请在浏览器提示中点击"允许"</div>
+        <div id="punchRules" class="hint" style="margin-top:10px;line-height:1.8;">打卡规则加载中...</div>
       </div>
 
       <div class="card">
         <h3>本月打卡记录</h3>
         <div id="punchList"><div class="loading">加载中...</div></div>
       </div>
+
+      <div class="card">
+        <h3>本月考勤记录</h3>
+        <div class="hint" style="margin:-6px 0 10px 0;">装台/卸台、事故分级等由管理侧登记，此处可查看本人记录</div>
+        <div id="attListSelf"><div class="loading">加载中...</div></div>
+      </div>
     </div>
 
     <!-- 工资页 -->
     <div class="pages hidden" id="pageWage">
-      <div class="month-bar">
-        <input type="month" id="wageMonth" />
+      <div class="ops-closed hidden" id="opsClosedBannerWage"></div>
+      <!-- 天工资标准商议凭证（v20261018：关联花名册+商议工资数据） -->
+      <div class="card agree-card hidden" id="agreeCard">
+        <div class="agree-title"><span class="t">📜 天工资标准商议凭证</span><span class="agree-no" id="agreeNo"></span></div>
+        <div class="agree-rate" id="agreeRate"></div>
+        <div class="agree-sub" id="agreeSub"></div>
+        <div class="agree-actions">
+          <button class="btn-view-agree" id="btnViewAgree">查看凭证</button>
+          <button class="btn-print-agree" id="btnPrintAgree">打印 / 另存PDF</button>
+        </div>
+      </div>
+      <div class="month-bar" style="justify-content:center;">
+        <span style="font-size:12px;color:#9a8259;">💰 工资按结算期间显示（如 10-01~10-15），最近的在前</span>
       </div>
       <div id="wageList"><div class="loading">加载中...</div></div>
     </div>
@@ -268,15 +388,18 @@
     </div>
 
     <div class="tabbar">
-      <button data-page="Punch" class="active"><span class="ic">📍</span>打卡</button>
+      <button data-page="Desktop" class="active"><span class="ic">🏠</span>桌面</button>
+      <button data-page="Punch"><span class="ic">📍</span>打卡</button>
       <button data-page="Wage"><span class="ic">💰</span>工资</button>
       <button data-page="Me"><span class="ic">👤</span>我的</button>
     </div>
   </div>
 
+  <!-- ============ 天工资商议凭证打印页（v20261018） ============ -->
+  <div id="certPrintView"></div>
+
   <!-- ============ 签名弹窗 ============ -->
-  <div class="mask hidden" id="signMask">
-    <div class="sheet">
+  <div class="mask hidden" id="signMask">    <div class="sheet">
       <h4>工资发放确认签名</h4>
       <div class="sp">本人确认已收到上述工资，请在下方框内手写签名：</div>
       <div class="sign-wrap">
@@ -396,9 +519,11 @@
     $('topName').textContent = u.name ? '你好，' + u.name : '员工自助';
     $('topSub').textContent = '工号：' + (u.staffNo || '待分配') + (u.primaryRole ? ' · ' + u.primaryRole : '');
     $('punchDate').textContent = cnDate(new Date()) + ' ' + ['周日','周一','周二','周三','周四','周五','周六'][new Date(new Date().getTime() + 8*3600e3).getUTCDay()];
-    switchPage('Punch');
+    switchPage('Desktop');
     loadToday();
     loadPunchList();
+    loadAttListSelf();
+    loadOpsWindow();
   }
 
   $('loginBtn').addEventListener('click', doLogin);
@@ -410,15 +535,17 @@
   });
 
   // ---------- Tab 切换 ----------
-  var pageMap = { Punch: 'pagePunch', Wage: 'pageWage', Me: 'pageMe' };
+  var pageMap = { Desktop: 'pageDesktop', Punch: 'pagePunch', Wage: 'pageWage', Me: 'pageMe' };
   function switchPage(name) {
     Object.keys(pageMap).forEach(function (k) { $(pageMap[k]).classList.toggle('hidden', k !== name); });
     var btns = document.querySelectorAll('.tabbar button');
     for (var i = 0; i < btns.length; i++) {
       btns[i].classList.toggle('active', btns[i].getAttribute('data-page') === name);
     }
-    if (name === 'Wage') loadWage();
+    if (name === 'Desktop') renderDesk();
+    if (name === 'Wage') { loadWage(); loadAgreement(); }
     if (name === 'Me') loadProfile();
+    if (name === 'Punch') loadOpsWindow();
   }
   document.querySelectorAll('.tabbar button').forEach(function (b) {
     b.addEventListener('click', function () { switchPage(b.getAttribute('data-page')); });
@@ -450,6 +577,12 @@
 
   function doPunch(type) {
     var btn = type === 'in' ? $('btnPunchIn') : $('btnPunchOut');
+    if (btn.disabled) {
+      // v20261017：提示语随总控状态区分（休假/暂停 vs 演出通道关闭）
+      var ctl = (state.opsWindow && state.opsWindow.control) || {};
+      var msg = ctl.mode === 'vacation' ? '全团休假中，暂停打卡' : (ctl.mode === 'pause' ? '打卡已暂停，恢复开放后可打卡' : '当前不在演出开放时段内，打卡通道已关闭');
+      toast(msg, 'err'); return;
+    }
     if (btn.classList.contains('done')) { toast('今天' + (type === 'in' ? '上班' : '下班') + '卡已打过', 'err'); return; }
     gpsTip('正在获取 GPS 定位...');
     getPosition().then(function (coords) {
@@ -461,11 +594,17 @@
         gpsLongitude: coords.longitude
       });
     }).then(function (d) {
-      var stMap = { normal: '正常', late: '迟到', early: '早退' };
-      toast((type === 'in' ? '上班' : '下班') + '打卡成功' + (d.status !== 'normal' ? '（' + stMap[d.status] + '）' : ''));
+      // v20261012 新规：打卡结果反馈迟到分钟/罚款/本场失效/装台卸台
+      var part = '';
+      if (d.remark) part = '（' + d.remark + '）';
+      else if (d.status === 'late_invalid' || d.showInvalid) part = '（迟到' + (d.lateMinutes || 0) + '分钟，本场失效不计薪）';
+      else if (d.status === 'late' && d.lateMinutes) part = '（迟到' + d.lateMinutes + '分钟' + (d.lateFine ? '，扣 ' + money(d.lateFine) + ' 元' : '') + '）';
+      else if (d.status === 'early') part = '（早退）';
+      toast((type === 'in' ? '上班' : '下班') + '打卡成功' + part);
       gpsTip('最近定位：' + (d.punchDate || '') + ' ' + fmtHM(d.punchTime) + '，打卡已记录 GPS 位置', 'loc');
       loadToday();
       loadPunchList();
+      loadAttListSelf();
     }).catch(function (e) {
       gpsTip(e.message || '定位失败', 'err');
       toast(e.message || '打卡失败', 'err');
@@ -476,22 +615,38 @@
 
   function loadToday() {
     api('GET', '/v1/self-service/punch/today').then(function (d) {
-      var inP = d.punches.filter(function (p) { return p.type === 'in'; })[0];
-      var outP = d.punches.filter(function (p) { return p.type === 'out'; })[0];
+      var inP = null, outP = null;
+      (d.punches || []).forEach(function (p) { if (p.type === 'in' && !inP) inP = p; if (p.type === 'out' && !outP) outP = p; });
       renderPunchBtn('btnPunchIn', 'tmIn', inP);
       renderPunchBtn('btnPunchOut', 'tmOut', outP);
-      if (d.punches.length && !$('gpsTip').textContent) {
+      renderPunchRules(d.params);
+      if (d.punches && d.punches.length && !$('gpsTip').textContent) {
         var last = d.punches[d.punches.length - 1];
         gpsTip('今日已打卡 ' + d.punches.length + ' 次，最近：' + fmtHM(last.time) + (last.gpsAddress ? ' ' + last.gpsAddress : ''), 'loc');
       }
     }).catch(function () {});
   }
+  // v20261012：展示当前打卡规则参数（与后台「打卡参数」同源）
+  function renderPunchRules(P) {
+    if (!P) return;
+    var html = '<b>打卡规则</b>：日场 ' + esc(P.dayWindowStart) + '–' + esc(P.dayWindowEnd) + '（基准 ' + esc(P.dayBaseline) + '）｜' +
+      '晚场 ' + esc(P.nightWindowStart) + '–' + esc(P.nightWindowEnd) + '（基准 ' + esc(P.nightBaseline) + '）<br>' +
+      '迟到 ' + esc(P.lateFinePerMin) + ' 元/分钟，单场封顶 ' + esc(P.lateFineCap) + ' 元；迟到满 ' + esc(P.lateInvalidMinutes) +
+      ' 分钟本场失效（不计薪）；不设任何奖励<br>' +
+      '事故分级：一级 ' + esc(P.accidentLevel1Fine) + ' 元/天 · 二级 ' + esc(P.accidentLevel2Fine) + ' 元/天 · 三级 ' +
+      esc(P.accidentLevel3Fine) + ' 元/天（代打卡查实按三级）<br>' +
+      '装台/卸台日：不计薪资、不计迟到、不计奖励';
+    var box = $('punchRules');
+    if (box) box.innerHTML = html;
+  }
   function renderPunchBtn(btnId, tmId, p) {
     var btn = $(btnId);
-    var stMap = { normal: '', late: '（迟到）', early: '（早退）' };
+    var stMap = { normal: '', late: '（迟到）', early: '（早退）', late_invalid: '（本场失效）' };
     if (p) {
       btn.classList.add('done');
-      $(tmId).textContent = fmtHM(p.time) + (stMap[p.status] || '');
+      var txt = fmtHM(p.time) + (stMap[p.status] || '');
+      if (p.status === 'late' && p.lateMinutes) txt += p.showInvalid ? '（' + p.lateMinutes + '分钟·本场失效）' : '（' + p.lateMinutes + '分钟' + (p.lateFine ? '扣' + money(p.lateFine) + '元' : '') + '）';
+      $(tmId).textContent = txt;
     } else {
       btn.classList.remove('done');
       $(tmId).textContent = '未打卡';
@@ -502,7 +657,6 @@
     var month = cnMonth(new Date());
     api('GET', '/v1/self-service/punch/list?month=' + month + '&pageSize=60').then(function (list, meta) {
       if (!list.length) { $('punchList').innerHTML = '<div class="empty">本月暂无打卡记录</div>'; return; }
-      var stMap = { normal: '正常', late: '迟到', early: '早退', absent: '缺勤' };
       var inMap = {}, outMap = {}, set = {};
       list.forEach(function (r) {
         if (r.punchType === 'in') inMap[r.punchDate] = r; else outMap[r.punchDate] = r;
@@ -512,33 +666,155 @@
       var html = '';
       dates.forEach(function (d) {
         var i = inMap[d], o = outMap[d];
-        var abn = (i && i.status !== 'normal') || (o && o.status !== 'normal');
+        // v20261012 新规 chip：优先展示迟到分钟/罚款/本场失效，装台卸台展示不计薪
+        var chip = '', cls = 'chip-normal';
+        if (i && (i.sessionType === 'stage' || i.remark)) { chip = esc(i.statusText || '装台/卸台'); cls = 'chip-stage'; }
+        else if (i && (i.status === 'late' || i.status === 'late_invalid')) {
+          if (i.showInvalid || i.status === 'late_invalid') { chip = '迟到 ' + (i.lateMinutes || 0) + ' 分 · 本场失效'; cls = 'chip-invalid'; }
+          else { chip = '迟到 ' + (i.lateMinutes || 0) + ' 分' + (i.lateFine ? ' · 扣 ' + money(i.lateFine) + ' 元' : ''); cls = 'chip-late'; }
+        }
+        else if (o && o.status !== 'normal') { chip = esc(o.statusText || '早退'); cls = 'chip-late'; }
+        else chip = '正常';
         html += '<div class="rec-row"><div class="d">' + d.slice(5).replace('-', '/') + '</div>';
         html += '<div class="t">上班 ' + (i ? fmtHM(i.punchTime) : '—') + '　下班 ' + (o ? fmtHM(o.punchTime) : '—') + '</div>';
-        html += '<span class="status-chip ' + (abn ? 'chip-late' : 'chip-normal') + '">' +
-          (abn ? ((i && i.status === 'late') ? '迟到' : '早退') : '正常') + '</span></div>';
+        html += '<span class="status-chip ' + cls + '">' + chip + '</span></div>';
       });
       $('punchList').innerHTML = html;
     }).catch(function () { $('punchList').innerHTML = '<div class="empty">记录加载失败</div>'; });
   }
 
+  // ---------- 本人考勤记录（v20261012：装台/卸台/事故分级等管理侧登记，员工可查看） ----------
+  function loadAttListSelf() {
+    var month = cnMonth(new Date());
+    api('GET', '/v1/self-service/attendance/list?month=' + month + '&pageSize=60').then(function (list) {
+      var box = $('attListSelf');
+      if (!box) return;
+      if (!list || !list.length) { box.innerHTML = '<div class="empty">本月暂无考勤登记</div>'; return; }
+      var html = '';
+      list.forEach(function (r) {
+        var cls = 'chip-normal';
+        if (r.type === 'accident_l1' || r.type === 'accident_l2' || r.type === 'accident_l3') cls = 'chip-invalid';
+        else if (r.type === 'stage_in' || r.type === 'stage_out') cls = 'chip-stage';
+        html += '<div class="rec-row"><div class="d">' + esc((r.date || '').slice(5).replace('-', '/')) + '</div>' +
+          '<div class="t">' + esc(r.typeText || r.type || '') + (r.remark ? '　' + esc(r.remark) : '') + '</div>' +
+          '<span class="status-chip ' + cls + '">' + (cls === 'chip-normal' ? '登记' : (cls === 'chip-stage' ? '不计薪' : '扣款')) + '</span></div>';
+      });
+      box.innerHTML = html;
+    }).catch(function () { var b = $('attListSelf'); if (b) b.innerHTML = '<div class="empty">考勤记录加载失败</div>'; });
+  }
+
   // ---------- 工资条 ----------
-  var wageLoadedMonth = '';
-  function loadWage() {
-    var m = $('wageMonth').value;
-    if (!m) { $('wageMonth').value = cnMonth(new Date()); m = $('wageMonth').value; }
-    if (m === wageLoadedMonth) return;
-    wageLoadedMonth = m;
-    $('wageList').innerHTML = '<div class="loading">加载中...</div>';
-    api('GET', '/v1/self-service/wage/list?month=' + m + '&pageSize=50').then(function (list) {
-      if (!list.length) { $('wageList').innerHTML = '<div class="card"><div class="empty">' + m + ' 暂无已发布的工资条</div></div>'; return; }
-      $('wageList').innerHTML = list.map(renderWageCard).join('');
+  // ---------- 天工资标准商议凭证（v20261018：关联花名册+商议工资数据，在线查看/打印下载） ----------
+  var agreeData = null;
+  function cnNumCap(n) {
+    // 金额大写（仅整数元，天工资标准为整数）
+    var d = '零壹贰叁肆伍陆柒捌玖', u = ['', '拾', '佰', '仟', '万'];
+    var s = String(Math.round(Number(n) || 0)), out = '';
+    for (var i = 0; i < s.length; i++) {
+      var c = Number(s[i]), pos = s.length - 1 - i;
+      if (c === 0) { if (out && out.slice(-1) !== '零') out += '零'; }
+      else out += d[c] + u[pos % 5 === 4 ? 4 : pos % 4];
+    }
+    return (out || '零').replace(/零+$/, '') + '元整';
+  }
+  function loadAgreement() {
+    api('GET', '/v1/self-service/wage-agreement').then(function (d) {
+      agreeData = d;
+      $('agreeCard').classList.remove('hidden');
+      $('agreeNo').textContent = '编号 ' + esc(d.certNo);
+      $('agreeRate').innerHTML = '¥' + money(d.dailyRate) + '<small> 元/天</small>';
+      $('agreeSub').innerHTML =
+        esc(d.name) + '（' + esc(d.staffNo || '无工号') + '）· ' + esc(d.rankGrade || '未定级') + '档 · ' + esc(d.primaryRole || '演职') +
+        '<br>商议生效：' + esc(d.effectiveDate || '—') + ' · 入职：' + esc(d.hireDate || '—');
+    }).catch(function () {
+      // 未商议确认或无权限时不显示卡片（不报错打扰工资条使用）
+      $('agreeCard').classList.add('hidden');
+      agreeData = null;
+    });
+  }
+  function certPaperHtml(d) {
+    return '<div class="cert-paper">' +
+      '<div class="cert-redhead"><div class="co">' + esc(d.company) + '</div><div class="ti">' + esc(d.title) + '</div></div>' +
+      '<div class="cert-no-line"><span>凭证编号：' + esc(d.certNo) + '</span><span>签发日期：' + esc(d.issueDate) + '</span></div>' +
+      '<div class="cert-body">' +
+        '<div class="crow"><span class="k">姓　　名</span><span class="v">' + esc(d.name) + '</span></div>' +
+        '<div class="crow"><span class="k">工　　号</span><span class="v">' + esc(d.staffNo || '—') + '</span></div>' +
+        '<div class="crow"><span class="k">身份证号</span><span class="v">' + esc(d.idCardMasked) + '</span></div>' +
+        '<div class="crow"><span class="k">职　　级</span><span class="v">' + esc(d.rankGrade || '—') + '</span></div>' +
+        '<div class="crow"><span class="k">行　　当</span><span class="v">' + esc(d.primaryRole || '—') + '</span></div>' +
+        '<div class="crow"><span class="k">用工类型</span><span class="v">' + esc(d.employmentType || '—') + '</span></div>' +
+        '<div class="crow"><span class="k">入职日期</span><span class="v">' + esc(d.hireDate || '—') + '</span></div>' +
+        '<div class="cert-rate-big"><div class="amt">¥ ' + money(d.dailyRate) + ' / 天</div><div class="cap">' + esc(cnNumCap(d.dailyRate)) + '</div></div>' +
+        '<div class="crow"><span class="k">商议内容</span><span class="v">' + esc(d.agreedSalary) + '</span></div>' +
+        (d.transportType ? '<div class="crow"><span class="k">路费约定</span><span class="v">' + esc(d.transportType) + '</span></div>' : '') +
+        '<div class="crow"><span class="k">生效日期</span><span class="v">' + esc(d.effectiveDate || '—') + '</span></div>' +
+        '<div class="crow"><span class="k">有 效 期</span><span class="v">自生效之日起，至下一次天工资标准商议变更前有效；本人停止打卡（离职/停用）之日即行终止</span></div>' +
+        '<div class="cert-note">兹证明上述演职人员天工资标准已经本人与 ' + esc(d.company) + ' 协商一致确认，作为工资核算基准（协议天工资 × 出勤天 + 各项补贴 − 扣款）。本凭证关联花名册与工资核算数据，最近一次核算沿用天工资 ¥' + money(d.appliedRate) + '/天' + (d.appliedAt ? '（' + esc(d.appliedAt) + '）' : '') + '。凭证编号可用于电话核真，涂改无效。</div>' +
+        '<div class="cert-sign"><div>演职人员（签字）：<br><br>' + esc(d.name) + '</div><div class="seal">' + esc(d.company) + '<br>工资商议专用</div></div>' +
+      '</div>' +
+    '</div>';
+  }
+  function openCert() {
+    if (!agreeData) { toast('凭证数据未加载，请稍后再试', 'err'); return; }
+    $('certPrintView').innerHTML = certPaperHtml(agreeData) +
+      '<div class="cert-toolbar"><button class="b-close" id="certClose">返 回</button><button class="b-print" id="certPrint">🖨️ 打印 / 另存 PDF</button></div>';
+    $('certPrintView').classList.add('show');
+    $('certClose').addEventListener('click', function () { $('certPrintView').classList.remove('show'); });
+    $('certPrint').addEventListener('click', function () { window.print(); });
+  }
+  $('btnViewAgree').addEventListener('click', openCert);
+  $('btnPrintAgree').addEventListener('click', function () {
+    if (!agreeData) { toast('凭证数据未加载，请稍后再试', 'err'); return; }
+    openCert();
+    setTimeout(function () { window.print(); }, 350);
+  });
+
+  // v20261024 区间结算（wrange1024）：工资按结算期间显示（不按自然月筛选），最近发布在前，支持加载更多
+  var wagePage = 0, wageLoading = false, wageHasMore = false;
+  var WAGE_PAGE_SIZE = 20;
+  function periodText(it) {
+    var p = it.settlePeriod;
+    if (p && p.start && p.end) {
+      if (p.start.substring(0, 4) === p.end.substring(0, 4)) return p.start.substring(5) + '~' + p.end.substring(5) + ' 结算工资';
+      return p.start + '~' + p.end + ' 结算工资';
+    }
+    return (it.wageMonth || m0(it)) + ' 全月结算工资';
+  }
+  function loadWage(append) {
+    if (wageLoading) return;
+    wageLoading = true;
+    if (!append) { wagePage = 0; $('wageList').innerHTML = '<div class="loading">加载中...</div>'; }
+    api('GET', '/v1/self-service/wage/list?page=' + (wagePage + 1) + '&pageSize=' + WAGE_PAGE_SIZE).then(function (list) {
+      list = list || [];
+      wagePage += 1;
+      wageHasMore = list.length >= WAGE_PAGE_SIZE;
+      var html = list.map(renderWageCard).join('');
+      if (!append) {
+        $('wageList').innerHTML = html || '<div class="card"><div class="empty">暂无已发布的工资条</div></div>';
+      } else {
+        var more = $('wageMoreBtn');
+        if (more) more.insertAdjacentHTML('beforebegin', html);
+      }
+      if (wageHasMore) {
+        var btn = $('wageMoreBtn');
+        if (!btn) {
+          btn = document.createElement('button');
+          btn.id = 'wageMoreBtn';
+          btn.setAttribute('style', 'display:block;width:100%;margin:10px 0;padding:10px;border:1px dashed #c9b48a;background:#fffaf0;color:#8b0000;border-radius:10px;font-size:14px;');
+          btn.textContent = '加载更多 ▾';
+          btn.onclick = function () { loadWage(true); };
+          $('wageList').appendChild(btn);
+        } else { btn.disabled = false; btn.textContent = '加载更多 ▾'; }
+      } else {
+        var mb = $('wageMoreBtn'); if (mb) mb.remove();
+      }
       bindWageEvents();
+      wageLoading = false;
     }).catch(function (e) {
+      wageLoading = false;
       $('wageList').innerHTML = '<div class="card"><div class="empty">' + esc(e.message) + '</div></div>';
     });
   }
-  $('wageMonth').addEventListener('change', function () { wageLoadedMonth = ''; loadWage(); });
 
   function stBadge(st) {
     var map = { pending: ['chip-pending', '待确认'], confirmed: ['chip-confirmed', '已确认'], rejected: ['chip-rejected', '有异议'] };
@@ -582,7 +858,7 @@
     };
 
     return '<div class="card wage-card" data-id="' + it.id + '">' +
-      '<div class="wh"><div><div class="wm">' + esc(it.wageMonth || m0(it)) + ' 工资条</div>' +
+      '<div class="wh"><div><div class="wm">' + esc(periodText(it)) + '</div>' +
       '<div class="wsub">' + esc(it.batchNo || '') + (it.rankGrade ? ' · ' + esc(it.rankGrade) : '') + '</div></div>' +
       '<div class="net"><small>实发</small>¥' + money(it.netPay) + '</div></div>' +
       '<div class="wage-detail" id="detail_' + it.id + '" style="display:none;">' + detailHtml +
@@ -641,7 +917,6 @@
       signature: signature || '', remark: remark || ''
     }).then(function () {
       toast(status === 'confirmed' ? (type === 'check' ? '兑账核对已确认' : '工资发放确认成功') : '异议已提交，请等待财务联系');
-      wageLoadedMonth = '';
       loadWage();
     }).catch(function (e) {
       toast(e.message || '提交失败', 'err');
@@ -719,7 +994,6 @@
     }).then(function () {
       $('signMask').classList.add('hidden');
       toast('工资发放已签名确认');
-      wageLoadedMonth = '';
       loadWage();
     }).catch(function (e) {
       toast(e.message || '提交失败', 'err');
@@ -753,6 +1027,141 @@
     });
   }
 
+  // ---------- 桌面快捷方式（v20261013：本机 localStorage 按员工保存，可增删） ----------
+  var DESK_CATALOG = [
+    { key: 'punch', icon: '📍', name: '打卡', act: function () { switchPage('Punch'); } },
+    { key: 'wage', icon: '💰', name: '工资条', act: function () { switchPage('Wage'); } },
+    { key: 'punchList', icon: '🗓️', name: '打卡记录', act: function () { switchPage('Punch'); setTimeout(function () { scrollToEl('punchList'); }, 80); } },
+    { key: 'att', icon: '📋', name: '考勤记录', act: function () { switchPage('Punch'); setTimeout(function () { scrollToEl('attListSelf'); }, 80); } },
+    { key: 'me', icon: '👤', name: '个人信息', act: function () { switchPage('Me'); } },
+    { key: 'loan', icon: '🏦', name: '借款申请', act: function () { openLoanApply(); } },
+    { key: 'travel', icon: '🚌', name: '路费报销', act: function () { openTravelClaim(); } },
+    { key: 'leave', icon: '🏖️', name: '请假申请', act: function () { openLeaveApply(); } },
+    { key: 'register', icon: '📝', name: '入职登记', act: function () { location.href = 'self-register.html'; } }
+  ];
+  var DESK_DEFAULT = ['punch', 'wage', 'me'];
+  var deskEdit = false;
+
+  function deskByKey(k) {
+    for (var i = 0; i < DESK_CATALOG.length; i++) if (DESK_CATALOG[i].key === k) return DESK_CATALOG[i];
+    return null;
+  }
+  function scrollToEl(id) {
+    var el = $(id);
+    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function deskStoreKey() {
+    var u = state.user || {};
+    return 'qaxqjt_desktop_' + (u.staffNo || u.id || 'anon');
+  }
+  function deskLoad() {
+    try {
+      var arr = JSON.parse(localStorage.getItem(deskStoreKey()) || 'null');
+      if (arr && arr.length) return arr.filter(function (k) { return !!deskByKey(k); });
+    } catch (e) {}
+    return DESK_DEFAULT.slice();
+  }
+  function deskSave(arr) {
+    try { localStorage.setItem(deskStoreKey(), JSON.stringify(arr)); } catch (e) {}
+  }
+  function renderDesk() {
+    var grid = $('deskGrid');
+    if (!grid) return;
+    var cur = deskLoad();
+    var html = '';
+    cur.forEach(function (k) {
+      var c = deskByKey(k);
+      if (!c) return;
+      html += '<div class="desk-item" data-key="' + c.key + '"><span class="ic">' + c.icon + '</span>' +
+        '<span class="nm">' + c.name + '</span>' +
+        (deskEdit ? '<span class="del" data-del="' + c.key + '">×</span>' : '') + '</div>';
+    });
+    grid.innerHTML = html || '<div class="empty" style="grid-column:1/-1;">桌面为空，点右上角「编辑」添加常用功能</div>';
+    grid.querySelectorAll('.desk-item').forEach(function (el) {
+      el.addEventListener('click', function () {
+        if (deskEdit) return;
+        var c = deskByKey(el.getAttribute('data-key'));
+        if (c && c.act) c.act();
+      });
+    });
+    grid.querySelectorAll('[data-del]').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var k = el.getAttribute('data-del');
+        deskSave(deskLoad().filter(function (x) { return x !== k; }));
+        var c = deskByKey(k);
+        toast('已从桌面移除「' + (c ? c.name : k) + '」');
+        renderDesk();
+      });
+    });
+    var addCard = $('deskAddCard');
+    if (!deskEdit) {
+      addCard.classList.add('hidden');
+    } else {
+      addCard.classList.remove('hidden');
+      var restHtml = '';
+      DESK_CATALOG.forEach(function (c) {
+        if (cur.indexOf(c.key) >= 0) return;
+        restHtml += '<div class="desk-item add" data-add="' + c.key + '"><span class="ic">' + c.icon + '</span><span class="nm">' + c.name + '</span></div>';
+      });
+      $('deskAddGrid').innerHTML = restHtml || '<div class="empty" style="grid-column:1/-1;">全部功能都已在桌面上</div>';
+      $('deskAddGrid').querySelectorAll('[data-add]').forEach(function (el) {
+        el.addEventListener('click', function () {
+          var k = el.getAttribute('data-add');
+          var arr = deskLoad();
+          arr.push(k);
+          deskSave(arr);
+          var c = deskByKey(k);
+          toast('已添加「' + (c ? c.name : k) + '」到桌面');
+          renderDesk();
+        });
+      });
+    }
+    $('deskEditBtn').textContent = deskEdit ? '完成' : '编辑';
+    $('deskTip').textContent = deskEdit ? '编辑模式：点 × 移除快捷方式，点下方图标添加到桌面' : '点击图标快速进入常用功能，点「编辑」可增删';
+  }
+  $('deskEditBtn').addEventListener('click', function () { deskEdit = !deskEdit; renderDesk(); });
+
+  // ---------- 演出操作时限窗口（v20261013：演出开始后开放，结束24小时自动关闭，连场自动续接） ----------
+  function loadOpsWindow() {
+    api('GET', '/v1/self-service/ops-window').then(function (w) {
+      state.opsWindow = w;
+      applyOpsWindow(w);
+    }).catch(function () {});
+  }
+  function applyOpsWindow(w) {
+    // v20261017 全团打卡总控：休假/暂停进行中时优先展示总控文案（打卡与工资确认同步关闭）
+    var ctl = (w && w.control) || { mode: 'open' };
+    var ctlClosed = !!(ctl && ctl.mode && ctl.mode !== 'open');
+    var closed = ctlClosed || !!(w && w.enabled !== false && w.opsOpen === false);
+    var html = '';
+    if (closed) {
+      if (ctlClosed) {
+        var title = ctl.mode === 'vacation' ? '🏖️ <b>全团休假中</b>' : '⏸️ <b>打卡已暂停</b>';
+        html = title + '<br>' + esc(w.message || '休假/暂停期间停止打卡，不计工资') +
+          '<br>恢复开放后自动重开，恢复当日即可打卡并计薪';
+      } else {
+        html = '🔒 <b>演出操作通道已关闭</b><br>' + esc(w.message || '当前不在演出开放时段内') +
+          (w.nextOpenDate ? '<br>下次开放：<b>' + esc(w.nextOpenDate) + '</b> 起' : '');
+      }
+    }
+    ['opsClosedBannerDesk', 'opsClosedBanner', 'opsClosedBannerWage'].forEach(function (id) {
+      var b = $(id);
+      if (!b) return;
+      if (closed) { b.innerHTML = html; b.classList.remove('hidden'); }
+      else b.classList.add('hidden');
+    });
+    ['btnPunchIn', 'btnPunchOut'].forEach(function (id) {
+      var b = $(id);
+      if (b) b.disabled = closed;
+    });
+  }
+  // v20261017 全系统刷新：每60秒轮询窗口状态 + 切回页面立即刷新（休假/暂停/恢复全团即时感知）
+  setInterval(function () { if (state.user) loadOpsWindow(); }, 60000);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && state.user) loadOpsWindow();
+  });
+
   // ---------- 启动：自动登录 ----------
   try {
     state.token = localStorage.getItem(TOKEN_KEY);
@@ -763,8 +1172,376 @@
     // 校验 token 仍有效
     api('GET', '/v1/self-service/profile').then(function () { enterApp(); }).catch(function () { backToLogin(); });
   }
+
+  // ---------- 路费报销（v20261024：天工资人员自助提交 → 后台审核 → 计入工资） ----------
+  var _trvPerfId = null;
+  window.openTravelClaim = function () {
+    var m = document.getElementById('travelModal');
+    if (!m) return;
+    m.style.display = 'flex';
+    var d = new Date();
+    document.getElementById('trvDate').value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    document.getElementById('trvAmount').value = '';
+    document.getElementById('trvType').value = '单趟';
+    document.getElementById('trvRemark').value = '';
+    _trvPerfId = null;
+    loadTravelList();
+  };
+  window.closeTravelClaim = function () {
+    var m = document.getElementById('travelModal');
+    if (m) m.style.display = 'none';
+  };
+  window.submitTravelClaim = function () {
+    var amt = parseFloat(document.getElementById('trvAmount').value);
+    var dt = document.getElementById('trvDate').value;
+    if (!dt) { alert('请选择费用日期'); return; }
+    if (!amt || amt <= 0) { alert('请输入正确的金额'); return; }
+    var btn = document.getElementById('trvSubmitBtn');
+    btn.disabled = true;
+    var _route = document.getElementById('trvRoute').value.trim();
+    var _memo = document.getElementById('trvRemark').value.trim();
+    var _remark = (_route ? '【路线】' + _route : '') + (_route && _memo ? '；' : '') + _memo;
+    api('POST', '/v1/travel-expenses/mine', {
+      expenseDate: dt,
+      amount: amt,
+      transportType: document.getElementById('trvType').value,
+      remark: _remark
+    }).then(function () {
+      alert('✅ 报销已提交，等待管理员审核；审核通过后将计入当月工资的「差旅路费」');
+      document.getElementById('trvAmount').value = '';
+      document.getElementById('trvRoute').value = '';
+      document.getElementById('trvRemark').value = '';
+      loadTravelList();
+    }).catch(function (e) {
+      alert('提交失败：' + e.message);
+    }).finally(function () { btn.disabled = false; });
+  };
+  function loadTravelList() {
+    api('GET', '/v1/travel-expenses/mine?pageSize=50').then(function (d) {
+      var list = (d && d.list) || [];
+      var box = document.getElementById('travelList');
+      if (!list.length) {
+        box.innerHTML = '<div style="color:#999;padding:12px 0;text-align:center;">暂无报销记录</div>';
+        return;
+      }
+      var statusMap = { pending: '待审核', active: '已计入', rejected: '已驳回', cancelled: '已作废' };
+      var colorMap = { pending: '#d97706', active: '#16a34a', rejected: '#dc2626', cancelled: '#6b7280' };
+      var bgMap = { pending: '#fef3c7', active: '#dcfce7', rejected: '#fee2e2', cancelled: '#f3f4f6' };
+      var html = '';
+      list.forEach(function (r) {
+        var st = statusMap[r.status] || r.status;
+        html += '<div style="border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:8px;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<span style="font-family:Georgia,serif;font-weight:700;color:#0F4C81;font-size:15px;">¥' + (Number(r.amount) || 0).toFixed(2) + '</span>' +
+          '<span style="font-size:12px;padding:2px 10px;border-radius:10px;background:' + (bgMap[r.status] || '#f3f4f6') + ';color:' + (colorMap[r.status] || '#666') + ';">' + st + '</span>' +
+          '</div>' +
+          '<div style="font-size:12px;color:#666;margin-top:4px;">' + esc(String(r.expenseDate || '').substring(0, 10)) + (r.transportType ? ' · ' + esc(r.transportType) : '') + (r.scheduleTitle ? ' · ' + esc(r.scheduleTitle) : '') + '</div>' +
+          (r.description ? '<div style="font-size:12px;color:#999;margin-top:2px;">' + esc(r.description) + '</div>' : '') +
+          '</div>';
+      });
+      box.innerHTML = html;
+    }).catch(function (e) {
+      document.getElementById('travelList').innerHTML = '<div style="color:#dc2626;">加载失败：' + esc(e.message) + '</div>';
+    });
+  }
+
+  // ---------- 借款申请（v20261017） ----------
+  var _loanPerfId = null;
+  window.openLoanApply = function () {
+    var m = document.getElementById('loanModal');
+    if (!m) return;
+    m.style.display = 'flex';
+    document.getElementById('loanAmount').value = '';
+    document.getElementById('loanReason').value = '';
+    document.getElementById('loanRemark').value = '';
+    // 获取 profile（含 id、dailyRate）
+    api('GET', '/v1/self-service/profile').then(function (p) {
+      _loanPerfId = p.id;
+      var daily = Number(p.dailyRate) || 0;
+      var limit = Math.round(daily * 21.75 * 0.8 * 100) / 100;
+      var html = '月工资基数 ¥' + (daily * 21.75).toFixed(2) + '（天工资¥' + daily.toFixed(2) + '×21.75），可借额度上限 ¥' + limit.toFixed(2) + '（80%）';
+      document.getElementById('loanLimitInfo').textContent = html;
+    }).catch(function () { document.getElementById('loanLimitInfo').textContent = '无法获取额度信息'; });
+    loadLoanList();
+  };
+  window.closeLoanApply = function () {
+    var m = document.getElementById('loanModal');
+    if (m) m.style.display = 'none';
+  };
+  window.submitLoanApply = function () {
+    var amt = parseFloat(document.getElementById('loanAmount').value);
+    if (!amt || amt <= 0) { alert('请输入正确的借款金额'); return; }
+    if (!_loanPerfId) { alert('未获取到员工信息，请重试'); return; }
+    var body = {
+      performerId: _loanPerfId,
+      amount: amt,
+      reason: document.getElementById('loanReason').value.trim(),
+      remark: document.getElementById('loanRemark').value.trim()
+    };
+    api('POST', '/v1/employee-loans', body).then(function () {
+      alert('借款申请已提交，等待后台审批');
+      loadLoanList();
+    }).catch(function (e) { alert('提交失败：' + e.message); });
+  };
+  function loadLoanList() {
+    if (!_loanPerfId) {
+      api('GET', '/v1/self-service/profile').then(function (p) { _loanPerfId = p.id; loadLoanList(); });
+      return;
+    }
+    api('GET', '/v1/employee-loans/mine?performerId=' + _loanPerfId + '&pageSize=50').then(function (d) {
+      var list = (d && d.list) || [];
+      var statusMap = { pending: '待审批', approved: '已通过', rejected: '已驳回', repaid: '已还清' };
+      var colorMap = { pending: '#d97706', approved: '#16a34a', rejected: '#dc2626', repaid: '#6b7280' };
+      if (!list.length) {
+        document.getElementById('loanList').innerHTML = '<div style="color:#999;padding:12px 0;text-align:center;">暂无借款记录</div>';
+        return;
+      }
+      var html = '';
+      list.forEach(function (r) {
+        html += '<div style="border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:8px;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<span style="font-weight:600;">¥' + Number(r.amount).toFixed(2) + '</span>' +
+          '<span style="color:' + colorMap[r.status] + ';font-size:12px;">' + statusMap[r.status] + '</span>' +
+          '</div>' +
+          '<div style="font-size:12px;color:#666;margin-top:4px;">' + esc(r.loanDate) + (r.reason ? ' · ' + esc(r.reason) : '') + '</div>' +
+          (r.status === 'approved' ? '<div style="font-size:12px;color:#dc2626;margin-top:2px;">未还 ¥' + Number(r.outstanding).toFixed(2) + '</div>' : '') +
+          (r.status === 'rejected' && r.rejectReason ? '<div style="font-size:12px;color:#dc2626;margin-top:2px;">驳回原因：' + esc(r.rejectReason) + '</div>' : '') +
+          '</div>';
+      });
+      document.getElementById('loanList').innerHTML = html;
+    }).catch(function () {
+      document.getElementById('loanList').innerHTML = '<div style="color:#dc2626;">加载失败</div>';
+    });
+  }
+
+  // ---------- 请假申请（v20261017e 提交；v20261017f 待审批单可编辑/撤回） ----------
+  var leaveEditingId = null; // 非 null=编辑待审批单
+  var myLeaveRows = [];
+  function resetLeaveForm() {
+    leaveEditingId = null;
+    document.getElementById('leaveType').value = 'PL';
+    document.getElementById('leaveDateFrom').value = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
+    document.getElementById('leaveDays').value = '1';
+    document.getElementById('leaveReason').value = '';
+    var t = document.getElementById('leaveModalTitle'); if (t) t.textContent = '🏖️ 请假申请';
+    var b = document.getElementById('leaveSubmitBtn'); if (b) b.textContent = '提交申请';
+  }
+  window.openLeaveApply = function () {
+    var m = document.getElementById('leaveModal');
+    if (!m) return;
+    m.style.display = 'flex';
+    resetLeaveForm();
+    loadMyLeaveList();
+  };
+  window.closeLeaveApply = function () {
+    var m = document.getElementById('leaveModal');
+    if (m) m.style.display = 'none';
+    resetLeaveForm();
+  };
+  window.submitLeaveApply = function () {
+    var type = document.getElementById('leaveType').value;
+    var from = document.getElementById('leaveDateFrom').value;
+    var days = parseFloat(document.getElementById('leaveDays').value);
+    var reason = document.getElementById('leaveReason').value.trim();
+    if (!type) { alert('请选择请假类型'); return; }
+    if (!from) { alert('请选择开始日期'); return; }
+    if (!days || days <= 0) { alert('请输入正确的请假天数'); return; }
+    if (!reason || reason.length < 2) { alert('请填写请假事由（至少2个字）'); return; }
+    var payload = { leaveType: type, dateFrom: from, totalDays: days, reason: reason };
+    var req = leaveEditingId
+      ? api('PATCH', '/v1/self-service/leaves/' + encodeURIComponent(leaveEditingId), payload)
+      : api('POST', '/v1/self-service/leaves', payload);
+    req.then(function () {
+      alert(leaveEditingId ? '请假单已修改，重新等待后台审批' : '请假申请已提交，等待后台审批');
+      resetLeaveForm();
+      loadMyLeaveList();
+    }).catch(function (e) { alert((leaveEditingId ? '修改失败：' : '提交失败：') + e.message); });
+  };
+  // v20261017f：编辑待审批单（回填表单，提交走 PATCH）
+  window.editMyLeave = function (id) {
+    var r = null;
+    for (var i = 0; i < myLeaveRows.length; i++) { if (String(myLeaveRows[i].id) === String(id)) { r = myLeaveRows[i]; break; } }
+    if (!r) { alert('未找到该请假单，请刷新列表'); return; }
+    if (r.approveStatus !== 'pending') { alert('仅待审批的请假单可以编辑'); return; }
+    leaveEditingId = r.id;
+    document.getElementById('leaveType').value = r.leaveType || 'PL';
+    document.getElementById('leaveDateFrom').value = r.dateFrom || '';
+    document.getElementById('leaveDays').value = String(Number(r.totalDays || 1));
+    document.getElementById('leaveReason').value = r.reason || '';
+    var t = document.getElementById('leaveModalTitle'); if (t) t.textContent = '✏️ 修改请假单（待审批）';
+    var b = document.getElementById('leaveSubmitBtn'); if (b) b.textContent = '保存修改';
+    document.getElementById('leaveReason').focus();
+  };
+  // v20261017f：撤回待审批单（保留单据，状态变“已撤回”，可重新申请）
+  window.cancelMyLeave = function (id) {
+    var r = null;
+    for (var i = 0; i < myLeaveRows.length; i++) { if (String(myLeaveRows[i].id) === String(id)) { r = myLeaveRows[i]; break; } }
+    if (!r) { alert('未找到该请假单，请刷新列表'); return; }
+    if (r.approveStatus !== 'pending') { alert('仅待审批的请假单可以撤回'); return; }
+    if (!confirm('确定撤回这张' + (r.leaveTypeText || r.leaveType || '') + '请假单吗？撤回后需重新提交。')) return;
+    api('POST', '/v1/self-service/leaves/' + encodeURIComponent(id) + '/cancel').then(function () {
+      alert('请假单已撤回');
+      if (String(leaveEditingId) === String(id)) resetLeaveForm();
+      loadMyLeaveList();
+    }).catch(function (e) { alert('撤回失败：' + e.message); });
+  };
+  function loadMyLeaveList() {
+    api('GET', '/v1/self-service/leaves?pageSize=50').then(function (d) {
+      // v20261017f：分页接口 data 为裸数组，兼容 {list} 形态
+      var list = Array.isArray(d) ? d : ((d && d.list) || []);
+      myLeaveRows = list;
+      var colorMap = { pending: '#d97706', approved: '#16a34a', rejected: '#dc2626', cancelled: '#6b7280' };
+      if (!list.length) {
+        document.getElementById('myLeaveList').innerHTML = '<div style="color:#999;padding:12px 0;text-align:center;">暂无请假记录</div>';
+        return;
+      }
+      var html = '';
+      list.forEach(function (r) {
+        var ops = '';
+        if (r.approveStatus === 'pending') {
+          ops = '<div style="margin-top:6px;display:flex;gap:8px;">' +
+            '<button type="button" onclick="editMyLeave(\'' + esc(String(r.id)) + '\')" style="padding:3px 12px;font-size:12px;border:1px solid #1a56db;color:#1a56db;background:#fff;border-radius:6px;cursor:pointer;">编辑</button>' +
+            '<button type="button" onclick="cancelMyLeave(\'' + esc(String(r.id)) + '\')" style="padding:3px 12px;font-size:12px;border:1px solid #dc2626;color:#dc2626;background:#fff;border-radius:6px;cursor:pointer;">撤回</button>' +
+            '</div>';
+        }
+        html += '<div style="border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:8px;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<span style="font-weight:600;">' + esc(r.leaveTypeText || r.leaveType) + ' · ' + Number(r.totalDays || 0) + '天</span>' +
+          '<span style="color:' + (colorMap[r.approveStatus] || '#666') + ';font-size:12px;">' + esc(r.statusText || r.approveStatus) + '</span>' +
+          '</div>' +
+          '<div style="font-size:12px;color:#666;margin-top:4px;">' + esc(r.dateFrom) + ' 起 · ' + esc(r.reason || '') + '</div>' +
+          (r.approveStatus === 'rejected' && r.rejectReason ? '<div style="font-size:12px;color:#dc2626;margin-top:2px;">驳回原因：' + esc(r.rejectReason) + '</div>' : '') +
+          ops +
+          '</div>';
+      });
+      document.getElementById('myLeaveList').innerHTML = html;
+    }).catch(function () {
+      document.getElementById('myLeaveList').innerHTML = '<div style="color:#dc2626;">加载失败</div>';
+    });
+  }
 })();
 </script>
   <script src="../js/tooltip.js?v=20261010a"></script>
+  <script src="../js/analytics.js?v=20261016a"></script>
+  <script src="../js/shortcut-bubble.js?v=20261016c"></script>
+
+  <!-- 借款申请弹窗 -->
+  <div id="loanModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:12px;padding:24px;width:92%;max-width:480px;max-height:90vh;overflow-y:auto;">
+      <div style="font-size:18px;font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+        <span>🏦 借款申请</span>
+        <span style="cursor:pointer;font-size:24px;color:#999;" onclick="closeLoanApply()">×</span>
+      </div>
+      <div id="loanLimitInfo" style="background:#f0f7ff;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#1a56db;"></div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;">借款金额（元）<span style="color:#e11;">*</span></label>
+        <input id="loanAmount" type="number" min="0.01" step="0.01" placeholder="请输入金额" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:15px;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;">借款事由</label>
+        <input id="loanReason" type="text" placeholder="请简要说明借款用途" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:15px;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;">备注</label>
+        <textarea id="loanRemark" rows="2" placeholder="可选" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:14px;resize:vertical;"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeLoanApply()" style="flex:1;padding:11px;border:1px solid #d9d9d9;background:#fff;border-radius:8px;font-size:15px;cursor:pointer;">取消</button>
+        <button onclick="submitLoanApply()" style="flex:1;padding:11px;background:#1a56db;color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer;">提交申请</button>
+      </div>
+      <div id="loanListWrap" style="margin-top:20px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:10px;">我的借款记录</div>
+        <div id="loanList" style="font-size:13px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 路费报销弹窗（v20261024） -->
+  <div id="travelModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:12px;padding:24px;width:92%;max-width:480px;max-height:90vh;overflow-y:auto;">
+      <div style="font-size:18px;font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+        <span>🚌 路费报销</span>
+        <span style="cursor:pointer;font-size:24px;color:#999;" onclick="closeTravelClaim()">×</span>
+      </div>
+      <div style="background:#fffbeb;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#92400e;">填写实际发生的路费，提交后由管理员审核；<b>审核通过后计入当月工资「差旅路费」</b>（按费用日期所在月份归集）。</div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;">费用日期<span style="color:#e11;">*</span></label>
+        <input id="trvDate" type="date" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:15px;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;">金额（元）<span style="color:#e11;">*</span></label>
+        <input id="trvAmount" type="number" min="0.01" step="0.01" placeholder="请输入金额" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:15px;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;">路费方式</label>
+        <select id="trvType" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:15px;background:#fff;">
+          <option value="单趟">单趟</option>
+          <option value="双趟">双趟</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;">出行路线（途径点）<span style="color:#999;">（建议填写）</span></label>
+        <input id="trvRoute" type="text" maxlength="120" placeholder="出发地—途经地—目的地，如：张沟村—兴国镇—秦安县城" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:15px;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;">备注说明</label>
+        <textarea id="trvRemark" rows="2" placeholder="其他补充说明（可选）" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:14px;resize:vertical;"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeTravelClaim()" style="flex:1;padding:11px;border:1px solid #d9d9d9;background:#fff;border-radius:8px;font-size:15px;cursor:pointer;">取消</button>
+        <button id="trvSubmitBtn" onclick="submitTravelClaim()" style="flex:1;padding:11px;background:#1a56db;color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer;">提交报销</button>
+      </div>
+      <div id="travelListWrap" style="margin-top:20px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:10px;">我的报销记录</div>
+        <div id="travelList" style="font-size:13px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 请假申请弹窗（v20261017e） -->
+  <div id="leaveModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:12px;padding:24px;width:92%;max-width:480px;max-height:90vh;overflow-y:auto;">
+      <div style="font-size:18px;font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+        <span id="leaveModalTitle">🏖️ 请假申请</span>
+        <span style="cursor:pointer;font-size:24px;color:#999;" onclick="closeLeaveApply()">×</span>
+      </div>
+      <div style="background:#fffbeb;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#92400e;">事假每月不超过 2 次、累计不超过 2 天；请假期间不计工资，提交后由后台考勤审批。<b>待审批</b>的请假单可随时编辑或撤回。</div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;">请假类型<span style="color:#e11;">*</span></label>
+        <select id="leaveType" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:15px;">
+          <option value="PL">事假</option>
+          <option value="SL">病假</option>
+          <option value="ML">婚假</option>
+          <option value="BL">丧假</option>
+          <option value="AL">年假</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;">
+        <div style="flex:1;">
+          <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;">开始日期<span style="color:#e11;">*</span></label>
+          <input id="leaveDateFrom" type="date" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:15px;">
+        </div>
+        <div style="flex:1;">
+          <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;">请假天数<span style="color:#e11;">*</span></label>
+          <input id="leaveDays" type="number" min="0.5" step="0.5" placeholder="如 1 或 0.5" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:15px;">
+        </div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;">请假事由<span style="color:#e11;">*</span></label>
+        <textarea id="leaveReason" rows="2" placeholder="请简要说明请假原因" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:14px;resize:vertical;"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeLeaveApply()" style="flex:1;padding:11px;border:1px solid #d9d9d9;background:#fff;border-radius:8px;font-size:15px;cursor:pointer;">取消</button>
+        <button id="leaveSubmitBtn" onclick="submitLeaveApply()" style="flex:1;padding:11px;background:#1a56db;color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer;">提交申请</button>
+      </div>
+      <div style="margin-top:20px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:10px;">我的请假记录</div>
+        <div id="myLeaveList" style="font-size:13px;"></div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
+
+

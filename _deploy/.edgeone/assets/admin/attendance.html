@@ -16,7 +16,7 @@
     <meta name="format-detection" content="telephone=no,email=no,address=no">
     <meta name="applicable-device" content="pc,mobile">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:site_name" content="秦安县秦剧团文化演出有限公司云端预约系统">
     <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
     <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
     <meta property="og:image" content="favicon.svg">
@@ -28,12 +28,12 @@
     <script src="../js/api-config.js?v=20261010a"></script>
     <script src="../js/admin-pages/attendance.pre-2.js?v=20261005a"></script>
   <script src="../js/api-request.js?v=20261008b"></script>
-<script src="../js/app.js?v=20261009a"></script>
+<script src="../js/app.js?v=20261028a"></script>
   <script src="../js/tooltip.js?v=20261010a"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
   <script src="../js/pagination.js?v=20261002a"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>考勤与薪酬管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
+  <title>考勤与薪酬管理 - 秦安县秦剧团文化演出有限公司云端预约管理系统 {year}</title>
   <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     /* ============================================================
@@ -598,7 +598,7 @@
     <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
   </g>
 </svg></div>
-        <div class="logo-text">秦安县秦剧团<br/>文化演出管理系统</div>
+        <div class="logo-text">秦安县秦剧团文化演出有限公司<br/>文化演出管理系统</div>
       </div>
 
       <nav class="admin-sidebar-menu">
@@ -764,6 +764,7 @@
               <button class="btn btn-outline btn-sm" id="attBtnDemoCsv">📥 下载示例 CSV</button>
               <button class="btn btn-gold btn-sm" id="attBtnUploadCsv">📤 上传考勤 CSV</button>
               <button class="btn btn-success btn-sm" id="attBtnCalcAll">🧮 核算当月工资</button>
+              <button class="btn btn-secondary btn-sm" id="attBtnLuReg" title="登记装车/卸车参加情况；缺席计次 × 人员单价 = 工资扣款，保存后草稿工资自动重算">🚚 装卸车登记</button>
               <button class="btn btn-warning btn-sm" id="attBtnBatchConfirm">✅ 确认批次</button>
               <button class="btn btn-danger btn-sm" id="attBtnBatchPost">📤 过账批次</button>
               <button class="btn btn-primary btn-sm" id="attBtnExportCsv">📊 导出工资表 CSV</button>
@@ -927,10 +928,12 @@
                     <th class="num">底薪</th>
                     <th class="num add">全勤奖</th>
                     <th class="num add">夜场补</th>
+                    <th class="num add" style="color:#0369a1;" title="差旅路费（已计入应发）">差旅费</th>
                     <th class="num deduct">事假扣</th>
                     <th class="num deduct">旷工扣</th>
                     <th class="num deduct">迟到扣</th>
                     <th class="num deduct">早退扣</th>
+                    <th class="num deduct" id="thLu" title="装卸车缺席扣除（数据来源：考勤装卸车登记）">装卸车扣</th>
                     <th class="num deduct">社保</th>
                     <th class="num deduct">个税</th>
                     <th class="num">应发</th>
@@ -952,10 +955,12 @@
                     <td class="num" id="tfBase">¥0</td>
                     <td class="num" id="tfFull">¥0</td>
                     <td class="num" id="tfNightSub">¥0</td>
+                    <td class="num" id="tfTravel" style="color:#0369a1;">¥0</td>
                     <td class="num" id="tfLeave">¥0</td>
                     <td class="num" id="tfAbsent">¥0</td>
                     <td class="num" id="tfLate">¥0</td>
                     <td class="num" id="tfEarly">¥0</td>
+                    <td class="num" id="tfLu" style="color:#dc3545;">¥0</td>
                     <td class="num" id="tfSocial">¥0</td>
                     <td class="num" id="tfTax">¥0</td>
                     <td class="num" id="tfGross">¥0</td>
@@ -1097,6 +1102,36 @@
                 </div>
                 <div style="margin-top:8px;font-size:.8rem;color:var(--text-light);">起止日期范围内每天生成一条考勤；同一员工同一天已有记录时自动跳过（可取消勾选强制录入）。事假每月超 2 次需团长特批，超限的会提交失败并在结果中逐条报告。</div>
               </div>
+              <!-- 📅 按结算区间批量录入考勤·多员工（v20261025：多选员工 × 起止日期区间 × 统一类型，走 POST /v1/attendance/batch-entry） -->
+              <div style="border-top:1px dashed var(--border-light);margin-top:14px;padding-top:12px;">
+                <h5 style="margin:0 0 10px 0;color:var(--primary-dark);">📅 按结算区间批量录入考勤（多员工）</h5>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+                  <input type="text" class="form-control" id="bmeSearch" placeholder="搜索姓名/工号…" style="width:200px;" />
+                  <button class="btn btn-outline btn-sm" id="bmeLoadBtn">↻ 加载员工</button>
+                  <button class="btn btn-success btn-sm" id="bmeAllBtn">☑️ 全选</button>
+                  <button class="btn btn-outline btn-sm" id="bmeNoneBtn">⬜ 全不选</button>
+                  <span id="bmeHint" style="font-size:.8rem;color:var(--text-light);">勾选员工后选结算起止日期与统一考勤类型，一次提交</span>
+                </div>
+                <div id="bmePerfList" style="max-height:240px;overflow-y:auto;border:1px solid var(--border-light);border-radius:10px;padding:8px;">
+                  <p style="color:var(--text-light);text-align:center;padding:12px;">点击「加载员工」按钮加载演职人员列表</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr auto;gap:10px;align-items:end;margin-top:10px;">
+                  <div>
+                    <label style="font-size:.82rem;font-weight:600;">结算开始日期</label>
+                    <input type="date" class="form-control" id="bmeFrom" />
+                  </div>
+                  <div>
+                    <label style="font-size:.82rem;font-weight:600;">结算结束日期</label>
+                    <input type="date" class="form-control" id="bmeTo" />
+                  </div>
+                  <div>
+                    <label style="font-size:.82rem;font-weight:600;">统一考勤类型</label>
+                    <select class="form-control" id="bmeType"></select>
+                  </div>
+                  <button class="btn btn-success" id="bmeSubmitBtn">➕ 批量录入（已选 <span id="bmeSelCount">0</span> 人）</button>
+                </div>
+                <div style="margin-top:8px;font-size:.8rem;color:var(--text-light);">为所选员工在结算区间内逐日生成同类型考勤；同一员工同一天已有记录自动跳过；事假每月超 2 次需团长特批（超限的逐条报失败，不影响其余提交）。区间×人数过大时自动分批提交。</div>
+              </div>
             </div>
           </div>
         </div><!-- /#tabUpload -->
@@ -1148,14 +1183,16 @@
                 </div>
                 <button class="btn btn-success" id="bpSubmitBtn">✍️ 批量补打卡（已选 <span id="bpSelCount">0</span> 人）</button>
               </div>
-              <div style="font-size:.8rem;color:var(--text-light);">勾选员工后选择补卡类型和状态，点击「批量补打卡」。状态需手动选择（正常/迟到/早退/缺勤），默认正常。同人同日已存在的打卡类型自动跳过。</div>
+              <div style="font-size:.8rem;color:var(--text-light);">勾选员工后选择补卡类型和状态，点击「批量补打卡」。状态需手动选择（正常/迟到/早退/缺勤），默认正常。可用「☑️ 全选人员」一键全选（按当前搜索结果过滤，未加载时自动加载），「⬜ 全不选」一键清空。同人同日已存在的打卡类型自动跳过。</div>
             </div>
 
             <!-- 员工列表（按行当分组） -->
             <div class="param-card no-print">
-              <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
                 <input type="text" class="form-control" id="bpSearch" placeholder="搜索姓名/工号…" style="width:240px;" />
                 <button class="btn btn-outline btn-sm" id="bpLoadBtn">↻ 加载员工</button>
+                <button class="btn btn-success btn-sm" id="bpAllBtn">☑️ 全选人员</button>
+                <button class="btn btn-outline btn-sm" id="bpNoneBtn">⬜ 全不选</button>
                 <span id="bpLoadHint" style="font-size:.8rem;color:var(--text-light);"></span>
               </div>
               <div id="bpPerfList" style="max-height:420px;overflow-y:auto;border:1px solid var(--border-light);border-radius:10px;padding:10px;">
@@ -1167,6 +1204,119 @@
 
         <!-- ========================== Tab 3: 薪资参数 ========================== -->
         <div class="att-tab-content" id="tabParams">
+          <!-- 🎛️ 全团打卡总控（v20261017 新规：休假/暂停/恢复，全局生效；期间打卡+工资确认关闭、考勤不计薪） -->
+          <div class="param-card" style="margin-bottom:16px;border-left:4px solid var(--primary);">
+            <div class="wage-formula-box" style="margin-bottom:12px;">
+              <h4 style="margin:0 0 6px 0;">🎛️ 全团打卡总控（v20261017 新规·全局通用·即时生效）</h4>
+              <p style="margin:0;font-size:.84rem;color:#64748b;">
+                休假/暂停期间：员工打卡与工资确认同步关闭，区间内考勤记录不计工资（恢复当日即可打卡并计薪）；
+                员工自助门户每分钟自动刷新状态，全系统即时生效。
+              </p>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+              <span id="pcStatusBadge" style="display:inline-block;padding:6px 16px;border-radius:999px;font-weight:600;font-size:.95rem;background:#e2e8f0;color:#475569;">状态加载中…</span>
+              <span id="pcStateLine" style="font-size:.86rem;color:#64748b;"></span>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+              <button class="btn btn-warning" id="pcBtnVacation">🏖️ 全团休假</button>
+              <button class="btn btn-outline" id="pcBtnPause">⏸️ 暂停打卡</button>
+              <button class="btn btn-success" id="pcBtnResume">▶️ 恢复开放（收假）</button>
+              <button class="btn btn-outline btn-sm" id="pcBtnRefresh">🔄 刷新状态</button>
+            </div>
+            <div id="pcHint" style="margin-top:8px;font-size:.8rem;color:var(--text-light);"></div>
+          </div>
+          <!-- ⏰ 打卡参数（v20261012 新规：窗口/基准/迟到1元每分封顶30/事故分级10·30·50，存后端 Setting，员工端同步展示） -->
+          <div class="param-card" style="margin-bottom:16px;">
+            <div class="wage-formula-box" style="margin-bottom:12px;">
+              <h4 style="margin:0 0 6px 0;">⏰ 打卡参数（v20261012 新规·保存到服务器，员工打卡/工资核算即时生效）</h4>
+              <p style="margin:0;font-size:.84rem;color:#64748b;">
+                打卡窗口内打卡有效；迟到罚款 = 迟到分钟 × 单价（单场封顶），迟到满「失效分钟」本场不计薪；
+                事故分级按天扣款（代打卡查实按三级登记）；装台/卸台日不计薪资、不计迟到、不计奖励；不设任何奖励项。
+              </p>
+            </div>
+            <div class="param-grid">
+              <div class="param-item">
+                <label>🌅 日场打卡窗口</label>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <input type="time" class="form-control" id="ppDayStart" value="13:30" style="flex:1;" />
+                  <span>~</span>
+                  <input type="time" class="form-control" id="ppDayEnd" value="14:00" style="flex:1;" />
+                </div>
+                <div class="param-hint">窗口内打卡有效，基准取「日场基准」</div>
+              </div>
+              <div class="param-item">
+                <label>🎯 日场基准时间</label>
+                <input type="time" class="form-control" id="ppDayBase" value="13:30" />
+                <div class="param-hint">晚于基准 = 迟到，按分钟计罚</div>
+              </div>
+              <div class="param-item">
+                <label>🌆 晚场打卡窗口</label>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <input type="time" class="form-control" id="ppNightStart" value="19:30" style="flex:1;" />
+                  <span>~</span>
+                  <input type="time" class="form-control" id="ppNightEnd" value="20:00" style="flex:1;" />
+                </div>
+                <div class="param-hint">窗口内打卡有效，基准取「晚场基准」</div>
+              </div>
+              <div class="param-item">
+                <label>🎯 晚场基准时间</label>
+                <input type="time" class="form-control" id="ppNightBase" value="19:30" />
+                <div class="param-hint">晚于基准 = 迟到，按分钟计罚</div>
+              </div>
+              <div class="param-item">
+                <label>⏱️ 迟到罚款（元 / 分钟）</label>
+                <input type="number" min="0" max="100" step="1" class="form-control" id="ppLatePerMin" value="1" />
+                <div class="param-hint">按打卡记录迟到分钟计算</div>
+              </div>
+              <div class="param-item">
+                <label>💰 单场罚款封顶（元）</label>
+                <input type="number" min="0" step="5" class="form-control" id="ppLateCap" value="30" />
+                <div class="param-hint">单场迟到罚款不超过此金额</div>
+              </div>
+              <div class="param-item">
+                <label>🚫 本场失效分钟（≥ 不计薪）</label>
+                <input type="number" min="1" step="5" class="form-control" id="ppLateInvalid" value="30" />
+                <div class="param-hint">迟到达此分钟数，本场出勤不计薪</div>
+              </div>
+              <div class="param-item">
+                <label>🥇 事故一级扣款（元 / 天）</label>
+                <input type="number" min="0" step="5" class="form-control" id="ppAcc1" value="10" />
+                <div class="param-hint">按天登记 accident_l1 考勤即计</div>
+              </div>
+              <div class="param-item">
+                <label>🥈 事故二级扣款（元 / 天）</label>
+                <input type="number" min="0" step="5" class="form-control" id="ppAcc2" value="30" />
+                <div class="param-hint">按天登记 accident_l2 考勤即计</div>
+              </div>
+              <div class="param-item">
+                <label>🥉 事故三级扣款（元 / 天）</label>
+                <input type="number" min="0" step="5" class="form-control" id="ppAcc3" value="50" />
+                <div class="param-hint">代打卡查实按三级登记扣款</div>
+              </div>
+              <div class="param-item">
+                <label>🎁 奖励项</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;padding:9px 12px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;">
+                  <input type="checkbox" id="ppRewardEnabled" disabled /> 启用奖励（新规固定关闭）
+                </label>
+                <div class="param-hint">新规：不设任何奖励</div>
+              </div>
+              <div class="param-item">
+                <label>🏗️ 装台 / 卸台日</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;padding:9px 12px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;">
+                  <input type="checkbox" id="ppStageNoPay" disabled checked /> 不计薪资/迟到/奖励（新规固定开启）
+                </label>
+                <div class="param-hint">stage_in / stage_out 考勤不进工资桶</div>
+              </div>
+              <div class="param-item" style="grid-column:1/-1;">
+                <div class="page-actions" style="align-items:center;">
+                  <button class="btn btn-outline" id="ppReloadBtn">↺ 重新加载</button>
+                  <button class="btn btn-primary" id="ppSaveBtn">💾 保存打卡参数（服务器）</button>
+                  <span id="ppHint" style="font-size:.84rem;color:var(--text-light);"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="wage-formula-box">
             <h4>🔧 薪资参数配置（修改后点击「保存参数」生效，下次核算自动采用）</h4>
             <div class="formula" style="background:transparent;border:none;padding:0;">
@@ -1429,8 +1579,34 @@
   </div>
 
   
+<!-- ✏️ 考勤记录编辑弹窗（v20261025：修改日期/类型/备注，PATCH /v1/attendance/:id）—— 必须在 attendance.js 之前，否则 init 时 DOM 不存在、下拉不填充/按钮不绑定 -->
+<div id="attEditModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:22px 24px;width:min(420px,92vw);box-shadow:0 18px 50px rgba(0,0,0,.25);">
+    <h4 style="margin:0 0 14px 0;color:var(--primary-dark);">✏️ 编辑考勤记录</h4>
+    <div style="font-size:.85rem;color:var(--text-light);margin-bottom:12px;" id="attEditStaff">—</div>
+    <div style="display:grid;gap:10px;">
+      <div>
+        <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">日期</label>
+        <input type="date" class="form-control" id="attEditDate" />
+      </div>
+      <div>
+        <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">考勤类型</label>
+        <select class="form-control" id="attEditType"></select>
+      </div>
+      <div>
+        <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">备注</label>
+        <input type="text" class="form-control" id="attEditRemark" maxlength="200" placeholder="选填" />
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+      <button class="btn btn-outline btn-sm" id="attEditCancelBtn">✕ 取消</button>
+      <button class="btn btn-primary btn-sm" id="attEditSaveBtn">💾 保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
-<script src="../js/admin-pages/attendance.js?v=20261007b"></script>
+<script src="../js/admin-pages/attendance.js?v=20261029c"></script>
 
 
 <!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->

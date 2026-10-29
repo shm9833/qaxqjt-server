@@ -502,7 +502,8 @@ v1.post(
       avatarUrl: Joi.string().allow('').optional(),
       agreedSalary: Joi.string().allow('').max(100).optional(),
       dailyRate: Joi.number().min(0).max(100000).allow('').optional(),
-      transportType: Joi.string().valid('单趟', '双趟').allow('').optional()
+      transportType: Joi.string().valid('单趟', '双趟').allow('').optional(),
+      travelFeeAmount: Joi.number().min(0).max(100000).allow('').optional()
     })
   }),
   requireRole(['super_admin', 'ops']),
@@ -522,6 +523,16 @@ v1.get(
   }),
   performersCtrl.selfRegisterStatus
 );
+// v20261013：演出入职登记开放时限查询（公开，必须在 /performers/:id 之前注册）
+const perfWindowCtrl = require('../../controllers/perf-ops-window');
+v1.get('/performers/self-register/window', perfWindowCtrl.publicWindow);
+// v20261028 员工编辑弹窗工资预览：当月演出天数 + 未关联订单收入（如未挂场次的路费），须在 /performers/:id 之前注册
+v1.get(
+  '/performers/:id/salary-preview',
+  validate({ query: Joi.object({ month: Joi.string().pattern(/^\d{4}-\d{2}$/).optional() }) }),
+  requireRole(['super_admin', 'ops', 'director', 'finance_view']),
+  performersCtrl.salaryPreview
+);
 v1.get('/performers/:id', requireRole(['super_admin', 'ops', 'director']), performersCtrl.detail);
 v1.patch(
   '/performers/:id',
@@ -537,6 +548,8 @@ v1.patch(
       primaryRole: Joi.string().allow('').optional(),
       hireDate: Joi.string().allow('').optional(),
       employmentType: Joi.string().allow('').optional(),
+      // 兼容历史前端提交别名 department（与 employmentType 同义，服务端归一化后写入 employment_type）
+      department: Joi.string().allow('').optional(),
       bankAccount: Joi.string().allow('').optional(),
       bankName: Joi.string().allow('').optional(),
       socialSecurityNo: Joi.string().allow('').optional(),
@@ -545,7 +558,8 @@ v1.patch(
       avatarUrl: Joi.string().allow('').optional(),
       agreedSalary: Joi.string().allow('').max(100).optional(),
       dailyRate: Joi.number().min(0).max(100000).allow('').optional(),
-      transportType: Joi.string().valid('单趟', '双趟').allow('').optional()
+      transportType: Joi.string().valid('单趟', '双趟').allow('').optional(),
+      travelFeeAmount: Joi.number().min(0).max(100000).allow('').optional()
     }).min(1)
   }),
   requireRole(['super_admin', 'ops']),
@@ -575,11 +589,12 @@ v1.post(
       name: Joi.string().trim().min(2).max(50).required(),
       idCardNo: Joi.string().trim().pattern(/^\d{17}[\dXx]$/).required(),
       gender: Joi.string().valid('男', '女', 'other').allow('').optional(),
-      phone: Joi.string().allow('').optional(),
-      primaryRole: Joi.string().allow('').optional(),
+      phone: Joi.string().allow('').max(20).optional(),
+      primaryRole: Joi.string().allow('').max(64).optional(),
       agreedSalary: Joi.string().allow('').max(100).optional(),
       dailyRate: Joi.number().min(0).max(100000).allow('').optional(),
-      transportType: Joi.string().valid('单趟', '双趟').allow('').optional(),
+      // v20261013：路费必填（controller 校验中文提示）；允许自定义说明文本，不再限定 单趟/双趟
+      transportType: Joi.string().trim().max(30).allow('').optional(),
       remark: Joi.string().allow('').optional(),
       qrToken: Joi.string().max(40).allow('').optional(),
       regulationsConfirmed: Joi.boolean().required()
@@ -869,6 +884,7 @@ v1.get(
   financeCtrl.list
 );
 v1.get('/fin/summary', requireRole(FIN_READ_ROLES), financeCtrl.summary);
+v1.get('/fin/receivables', requireRole(FIN_READ_ROLES), financeCtrl.receivables);
 v1.post(
   '/fin/ledger',
   validate({
@@ -917,6 +933,17 @@ v1.patch(
   // finance_checker 仅为提交复核而放行；控制器内限制其只能 PATCH status=checked
   requireRole(['super_admin', 'finance_admin', 'finance_maker', 'finance_checker']),
   financeCtrl.update
+);
+v1.patch(
+  '/fin/ledger/:id/void',
+  validate({
+    body: Joi.object({
+      reason: Joi.string().trim().min(2).max(200).required() // 作废原因（审计痕迹，必填）
+    })
+  }),
+  // 作废=破坏性终态操作，与删除同级权限（super_admin/finance_admin）
+  requireRole(['super_admin', 'finance_admin']),
+  financeCtrl.voidVoucher
 );
 v1.delete('/fin/ledger/:id', requireRole(['super_admin', 'finance_admin']), financeCtrl.remove);
 /* ====== END 财务路由 ====== */
@@ -1214,6 +1241,44 @@ v1.patch(
   requireRole(['super_admin', 'ops', 'director']),
   attCtrl.leaveApprove
 );
+// v20261017g：删除请假单（仅 rejected/cancelled，供 E2E 自动清理）；必须在 /attendance/:id 之前注册
+v1.delete(
+  '/attendance/leaves/:id',
+  requireRole(['super_admin', 'ops', 'director']),
+  attCtrl.leaveRemove
+);
+// v20261028b 补假：已批准请假单安排补假日期（自动生成 full 出勤考勤）；必须在 /attendance/:id 之前注册
+v1.post(
+  '/attendance/leaves/:id/makeup',
+  validate({ body: Joi.object({ makeupDate: Joi.string().regex(/^\d{4}-\d{2}-\d{2}$/).required() }) }),
+  requireRole(['super_admin', 'ops', 'director']),
+  attCtrl.leaveMakeup
+);
+v1.delete(
+  '/attendance/leaves/:id/makeup',
+  requireRole(['super_admin', 'ops', 'director']),
+  attCtrl.leaveMakeupCancel
+);
+// v20261012 打卡新规参数（日/晚场窗口基准、迟到罚款、事故分级、装台卸台）：必须在 /attendance/:id 之前注册
+v1.get('/attendance/punch-params', requireRole(['super_admin', 'ops', 'director', 'finance_view']), attCtrl.getPunchParamsCtrl);
+v1.put(
+  '/attendance/punch-params',
+  requireRole(['super_admin', 'ops', 'director']),
+  attCtrl.savePunchParamsCtrl
+);
+// v20261017 全团打卡总控（休假/暂停/恢复）：必须在 /attendance/:id 之前注册
+const punchControlCtrl = require('../../controllers/punch-control');
+v1.get('/attendance/punch-control', requireRole(['super_admin', 'ops', 'director', 'finance_view']), punchControlCtrl.getCtrl);
+v1.post(
+  '/attendance/punch-control/start',
+  validate({ body: Joi.object({ kind: Joi.string().valid('vacation', 'pause').required(), reason: Joi.string().allow('').max(100).optional() }) }),
+  requireRole(['super_admin', 'ops']),
+  punchControlCtrl.startCtrl
+);
+v1.post('/attendance/punch-control/stop', requireRole(['super_admin', 'ops']), punchControlCtrl.stopCtrl);
+// v20261013：演出入职/演职操作开放时限参数（前10天开放登记·演出开始开放操作·结束后24小时关闭）
+v1.get('/system/perf-ops-window', requireRole(['super_admin', 'ops', 'director']), perfWindowCtrl.getParamsCtrl);
+v1.put('/system/perf-ops-window', requireRole(['super_admin', 'ops']), perfWindowCtrl.saveParamsCtrl);
 v1.get('/attendance/:id', requireRole(['super_admin', 'ops', 'director', 'finance_view']), attCtrl.detail);
 v1.post(
   '/attendance',
@@ -1224,6 +1289,8 @@ v1.post(
 v1.post('/attendance/import', requireRole(['super_admin', 'ops', 'director']), attCtrl.importRecords);
 // 管理员批量补打卡（≤200人/次；自动补 in+out，无 GPS，状态按时间判定）
 v1.post('/attendance/batch-punch', requireRole(['super_admin', 'ops', 'director']), attCtrl.batchPunch);
+// v20261025 按结算区间多员工批量手工考勤（≤500条/次；同人同日已有→跳过；PL 超限→failed）
+v1.post('/attendance/batch-entry', requireRole(['super_admin', 'ops', 'director']), attCtrl.batchEntry);
 v1.patch(
   '/attendance/:id',
   requireRole(['super_admin', 'ops', 'director']),
@@ -1243,6 +1310,7 @@ v1.get('/wages/:id', requireRole(['super_admin', 'ops', 'director', 'finance_vie
 v1.post('/wages', requireRole(['super_admin', 'ops', 'director']), wagesCtrl.create);
 v1.post('/wages/generate', requireRole(['super_admin', 'ops', 'director']), wagesCtrl.generate);
 v1.patch('/wages/:id', requireRole(['super_admin', 'ops', 'director']), wagesCtrl.update);
+v1.post('/wages/:id/review', requireRole(['super_admin', 'ops', 'director']), wagesCtrl.review);
 v1.delete('/wages/:id', requireRole('super_admin'), wagesCtrl.remove);
 v1.get('/wage-batches', requireRole(['super_admin', 'ops', 'director', 'finance_view']), wagesCtrl.batchList);
 v1.post('/wage-batches', requireRole(['super_admin', 'ops', 'director']), wagesCtrl.batchCreate);
@@ -1251,7 +1319,107 @@ v1.post('/wage-batches/:id/post', requireRole(['super_admin', 'ops', 'director']
 v1.get('/wage-rules', requireRole(['super_admin', 'ops', 'director', 'finance_view']), wagesCtrl.rulesList);
 v1.get('/wage-rules/:rankGrade', requireRole(['super_admin', 'ops', 'director', 'finance_view']), wagesCtrl.rulesDetail);
 
+/* ====== 差旅路费 travel-expenses 路由注册（v20261015）====== */
+const travelExpCtrl = require('../../controllers/travel-expenses');
+v1.get(
+  '/travel-expenses',
+  validate({ paginate: true, query: Joi.object({ keyword: Joi.string().allow('').optional(), performerId: Joi.string().optional(), scheduleId: Joi.string().optional(), month: Joi.string().optional(), status: Joi.string().valid('active', 'cancelled', 'pending', 'rejected').optional() }).unknown(true) }),
+  requireRole(['super_admin', 'ops', 'director', 'finance_view']),
+  travelExpCtrl.list
+);
+// 自助报销（v20261024）：天工资人员提交/查询自己的路费报销，须注册在 /:id 之前防遮蔽
+v1.get('/travel-expenses/mine', travelExpCtrl.myList);
+v1.post(
+  '/travel-expenses/mine',
+  validate({
+    body: Joi.object({
+      expenseDate: Joi.string().allow('').optional(),
+      amount: Joi.number().precision(2).positive().required(),
+      transportType: Joi.string().allow('').max(20).optional(),
+      scheduleId: Joi.string().allow('', null).optional(),
+      remark: Joi.string().allow('').max(300).optional(),
+      description: Joi.string().allow('').max(300).optional()
+    })
+  }),
+  travelExpCtrl.myCreate
+);
+v1.get('/travel-expenses/:id', requireRole(['super_admin', 'ops', 'director', 'finance_view']), travelExpCtrl.detail);
+v1.post(
+  '/travel-expenses',
+  validate({
+    body: Joi.object({
+      performerId: Joi.string().required(),
+      scheduleId: Joi.string().allow('', null).optional(),
+      orderId: Joi.string().allow('', null).optional(),
+      expenseDate: Joi.string().allow('').optional(),
+      amount: Joi.number().precision(2).positive().required(),
+      transportType: Joi.string().allow('').max(20).optional(),
+      description: Joi.string().allow('').max(300).optional(),
+      remark: Joi.string().allow('').max(300).optional()
+    })
+  }),
+  requireRole(['super_admin', 'ops', 'director']),
+  travelExpCtrl.create
+);
+v1.patch(
+  '/travel-expenses/:id',
+  validate({
+    body: Joi.object({
+      performerId: Joi.string().optional(),
+      scheduleId: Joi.string().allow('', null).optional(),
+      orderId: Joi.string().allow('', null).optional(),
+      expenseDate: Joi.string().allow('').optional(),
+      amount: Joi.number().precision(2).positive().optional(),
+      transportType: Joi.string().allow('').max(20).optional(),
+      description: Joi.string().allow('').max(300).optional(),
+      status: Joi.string().valid('active', 'cancelled', 'pending', 'rejected').optional(),
+      remark: Joi.string().allow('').max(300).optional()
+    }).min(1)
+  }),
+  requireRole(['super_admin', 'ops', 'director']),
+  travelExpCtrl.update
+);
+v1.delete('/travel-expenses/:id', requireRole(['super_admin']), travelExpCtrl.remove);
+v1.get('/travel-expenses/summary/:performerId/:month', requireRole(['super_admin', 'ops', 'director', 'finance_view']), travelExpCtrl.summaryByPerformerMonth);
+
+/* ====== 员工借款 employee-loans 路由注册（v20261017）====== */
+const loanCtrl = require('../../controllers/employee-loans');
+v1.get('/employee-loans', requireRole(['super_admin', 'ops', 'director', 'finance_view']), loanCtrl.list);
+v1.get('/employee-loans/mine', loanCtrl.myLoans);
+v1.post('/employee-loans', validate({ body: Joi.object({ performerId: Joi.string().required(), amount: Joi.number().positive().required(), loanDate: Joi.string().optional(), reason: Joi.string().allow('').optional(), remark: Joi.string().allow('').optional() }).unknown(true) }), loanCtrl.create);
+v1.post('/employee-loans/:id/approve', requireRole(['super_admin', 'ops', 'director']), loanCtrl.approve);
+v1.post('/employee-loans/:id/reject', requireRole(['super_admin', 'ops', 'director']), loanCtrl.reject);
+v1.post('/employee-loans/:id/repay', requireRole(['super_admin', 'ops', 'director', 'finance_admin']), loanCtrl.repay);
+v1.delete('/employee-loans/:id', requireRole(['super_admin']), loanCtrl.remove);
+v1.get('/employee-loans/summary/:performerId/:month', requireRole(['super_admin', 'ops', 'director', 'finance_view']), loanCtrl.summary);
+
+/* ====== 装卸车登记 load-unload-records 路由注册（v20261028f）====== */
+const luCtrl = require('../../controllers/load-unload-records');
+v1.get('/load-unload-records', requireRole(['super_admin', 'ops', 'director', 'finance_view']), luCtrl.list);
+v1.get('/load-unload-records/:id', requireRole(['super_admin', 'ops', 'director', 'finance_view']), luCtrl.detail);
+v1.post('/load-unload-records', requireRole(['super_admin', 'ops', 'director']), validate({
+  body: Joi.object({
+    performerId: Joi.string().required(),
+    recordDate: Joi.string().optional(),
+    recordType: Joi.string().valid('load', 'unload').required(),
+    attend: Joi.boolean().optional(),
+    remark: Joi.string().allow('').optional()
+  }).unknown(true)
+}), luCtrl.create);
+v1.patch('/load-unload-records/:id', requireRole(['super_admin', 'ops', 'director']), validate({
+  body: Joi.object({
+    recordDate: Joi.string().optional(),
+    recordType: Joi.string().valid('load', 'unload').optional(),
+    attend: Joi.boolean().optional(),
+    remark: Joi.string().allow('').optional()
+  }).unknown(true)
+}), luCtrl.update);
+v1.delete('/load-unload-records/:id', requireRole(['super_admin', 'ops', 'director']), luCtrl.remove);
+
+
 /* ====== 演员表 cast-sheets 路由注册（v1）====== */
+// 权限：白名单放开到 创建者/管理员 场景，最终「仅创建者或管理员」判定在控制器内 _assertCanOperate
+const CAST_SHEET_ROLES = ['super_admin', 'admin', 'ops', 'director'];
 const castSheetsCtrl = require('../../controllers/cast-sheets');
 v1.get(
   '/cast-sheets',
@@ -1263,13 +1431,18 @@ v1.get(
       status: Joi.string().optional()
     }).unknown(true)
   }),
-  requireRole(['super_admin', 'ops', 'director']),
+  requireRole(CAST_SHEET_ROLES),
   castSheetsCtrl.list
 );
-v1.get('/cast-sheets/:id', requireRole(['super_admin', 'ops', 'director']), castSheetsCtrl.detail);
-v1.post('/cast-sheets', requireRole(['super_admin', 'ops', 'director']), castSheetsCtrl.create);
-v1.patch('/cast-sheets/:id', requireRole(['super_admin', 'ops', 'director']), castSheetsCtrl.update);
-v1.delete('/cast-sheets/:id', requireRole(['super_admin']), castSheetsCtrl.remove);
+// 注意：/cast-sheets/public 已在公开路由区注册，此处 /:id 系列不与其冲突
+v1.get('/cast-sheets/:id/versions', requireRole(CAST_SHEET_ROLES), castSheetsCtrl.listVersions);
+v1.get('/cast-sheets/:id/versions/:vid', requireRole(CAST_SHEET_ROLES), castSheetsCtrl.getVersion);
+v1.post('/cast-sheets/:id/versions/:vid/rollback', requireRole(CAST_SHEET_ROLES), castSheetsCtrl.rollback);
+v1.post('/cast-sheets/:id/visibility', requireRole(CAST_SHEET_ROLES), castSheetsCtrl.setVisibility);
+v1.get('/cast-sheets/:id', requireRole(CAST_SHEET_ROLES), castSheetsCtrl.detail);
+v1.post('/cast-sheets', requireRole(CAST_SHEET_ROLES), castSheetsCtrl.create);
+v1.patch('/cast-sheets/:id', requireRole(CAST_SHEET_ROLES), castSheetsCtrl.update);
+v1.delete('/cast-sheets/:id', requireRole(CAST_SHEET_ROLES), castSheetsCtrl.remove);
 
 /* ====== 系统设置 system-settings 路由注册（v1）====== */
 const settCtrl = require('../../controllers/system-settings');
@@ -1387,8 +1560,14 @@ v1.post(
   selfServiceCtrl.punch
 );
 v1.get('/self-service/punch/today', selfServiceCtrl.todayPunchStatus);
+// v20261013：演职操作开放时限状态（门户打卡按钮启用依据）
+v1.get('/self-service/ops-window', perfWindowCtrl.opsWindow);
 v1.get('/self-service/punch/list', validate({ paginate: true, query: Joi.object({ month: Joi.string().optional() }) }), selfServiceCtrl.punchList);
+// v20261012：员工查看本人考勤记录（含装台/卸台/事故分级等管理侧登记）
+v1.get('/self-service/attendance/list', validate({ paginate: true, query: Joi.object({ month: Joi.string().optional() }) }), selfServiceCtrl.attListSelf);
 v1.get('/self-service/wage/list', validate({ paginate: true, query: Joi.object({ month: Joi.string().optional() }) }), selfServiceCtrl.wageList);
+// v20261018：天工资标准商议凭证（关联花名册+商议工资数据，仅本人可查，身份证脱敏）
+v1.get('/self-service/wage-agreement', selfServiceCtrl.wageAgreement);
 v1.post(
   '/self-service/wage/confirm',
   validate({
@@ -1402,6 +1581,37 @@ v1.post(
   }),
   selfServiceCtrl.wageConfirm
 );
+
+// v20261017e：员工端请假（本人提交 → 管理侧考勤审批流；限本人数据）
+v1.get('/self-service/leaves', validate({ paginate: true }), selfServiceCtrl.myLeaves);
+v1.post(
+  '/self-service/leaves',
+  validate({
+    body: Joi.object({
+      leaveType: Joi.string().valid('PL', 'SL', 'ML', 'BL', 'AL').required(),
+      dateFrom: Joi.string().allow('').optional(),
+      dateTo: Joi.string().allow('').optional(),
+      totalDays: Joi.number().positive().max(366).optional(),
+      reason: Joi.string().required().min(2).max(300)
+    })
+  }),
+  selfServiceCtrl.leaveCreateSelf
+);
+// v20261017f：员工端编辑/撤回待审批请假单（控制器内强制本人+pending 校验）
+v1.patch(
+  '/self-service/leaves/:id',
+  validate({
+    body: Joi.object({
+      leaveType: Joi.string().valid('PL', 'SL', 'ML', 'BL', 'AL').required(),
+      dateFrom: Joi.string().allow('').optional(),
+      dateTo: Joi.string().allow('').optional(),
+      totalDays: Joi.number().positive().max(366).optional(),
+      reason: Joi.string().required().min(2).max(300)
+    })
+  }),
+  selfServiceCtrl.leaveUpdateSelf
+);
+v1.post('/self-service/leaves/:id/cancel', selfServiceCtrl.leaveCancelSelf);
 
 /* ====== 入职二维码管理 qrcode-invites 路由（v20261008，管理员）====== */
 const qrcodeManageCtrl = require('../../controllers/qrcode-manage');
@@ -1427,5 +1637,33 @@ v1.get('/qrcode-invites/:id', requireRole(['super_admin', 'ops', 'director']), q
 v1.post('/qrcode-invites/:id/disable', requireRole(['super_admin', 'ops', 'director']), qrcodeManageCtrl.disableQr);
 v1.delete('/qrcode-invites/:id', requireRole(['super_admin', 'ops', 'director']), qrcodeManageCtrl.deleteQr);
 v1.post('/qrcode-invites/cleanup-expired', requireRole(['super_admin']), qrcodeManageCtrl.cleanupExpired);
+
+/* ====== 前端埋点统计 analytics 路由（无鉴权，仅收集数据）====== */
+v1.post('/analytics/events', async ctx => {
+  try {
+    const { events, deviceId } = ctx.request.body || {};
+    if (!Array.isArray(events) || events.length === 0) {
+      ctx.status = 400;
+      ctx.body = { ok: false, error: { code: 'BAD_REQUEST', message: 'events must be a non-empty array' } };
+      return;
+    }
+
+    // 记录到日志（生产环境可替换为数据库存储或第三方服务）
+    const timestamp = new Date().toISOString();
+    events.forEach(evt => {
+      console.log(`[Analytics] ${timestamp} device=${deviceId} event=${evt.event}`, {
+        properties: evt.properties,
+        env: evt.env,
+        timestamp: evt.timestamp
+      });
+    });
+
+    ctx.status = 200;
+    ctx.body = { ok: true, received: events.length };
+  } catch (err) {
+    ctx.status = 500;
+    ctx.body = { ok: false, error: { code: 'INTERNAL', message: err.message } };
+  }
+});
 
 module.exports = v1;

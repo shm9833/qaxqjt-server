@@ -934,6 +934,31 @@ function __pLog(module,event,extra){
       ['🏃 早退扣款', w.earlyDeduction], ['📝 其他扣款', w.otherDeduction],
       ['🏥 社保个人', w.socialSecurity], ['🏠 公积金个人', w.housingFund], ['💸 个税', w.tax]
     ].filter(function(r){ return Number(r[1]) > 0; });
+    // v20261026 订单收入明细（后端 orderBreakdown：[{orderId,orderNo,workDays,nightShows,baseShare}]，
+    // 考勤→排期→订单溯源；orderId 为空的行=无排期/行政考勤兜底桶「非演出考勤」）
+    var obRows = Array.isArray(w.orderBreakdown) ? w.orderBreakdown : [];
+    var obHtml = '';
+    if (obRows.length) {
+      var obTdR = 'padding:6px 8px;border-bottom:1px solid rgba(0,0,0,0.05);text-align:right;';
+      obHtml = '<div style="font-weight:700;margin:12px 0 6px 0;color:#0f4c81;">🎬 订单收入明细（考勤→排期→订单溯源）</div>'
+        + '<div style="overflow-x:auto;border:1px solid rgba(0,0,0,0.06);border-radius:8px;"><table style="width:100%;border-collapse:collapse;font-size:.82rem;">'
+        + '<thead><tr style="color:var(--text-light,#64748b);text-align:left;background:rgba(15,76,129,0.04);">'
+        + '<th style="padding:6px 10px;">订单号</th>'
+        + '<th style="padding:6px 10px;text-align:right;">出勤天</th>'
+        + '<th style="padding:6px 10px;text-align:right;">夜场</th>'
+        + '<th style="padding:6px 10px;text-align:right;">金额</th>'
+        + '</tr></thead><tbody>'
+        + obRows.map(function(o){
+            var isFb = !o.orderId;
+            return '<tr>'
+              + '<td style="padding:6px 10px;">'+__escD(o.orderNo||o.orderId||'—')+(isFb?' <span style="font-size:.72rem;color:var(--text-light,#94a3b8);">（无排期/行政考勤）</span>':'')+'</td>'
+              + '<td style="'+obTdR+'">'+(Number(o.workDays)||0)+'</td>'
+              + '<td style="'+obTdR+'">'+(Number(o.nightShows)||0)+'</td>'
+              + '<td style="'+obTdR+'font-weight:600;color:#198754;">'+__fmtYuan(o.baseShare)+'</td>'
+              + '</tr>';
+          }).join('')
+        + '</tbody></table></div>';
+    }
     var html =
       '<div style="font-size:.88rem;">'
       + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:14px;">'
@@ -950,6 +975,7 @@ function __pLog(module,event,extra){
       + '<div style="display:grid;gap:6px;">'
       + (incomeRows.length ? incomeRows.map(function(r){ return __wageDetailCard('income', r[0], r[1]); }).join('') : '<div style="color:var(--text-light,#64748b);font-size:.82rem;padding:4px 8px;">无收入项</div>')
       + '</div>'
+      + obHtml
       + '<div style="font-weight:700;margin:12px 0 6px 0;color:#dc3545;">扣款项</div>'
       + '<div style="display:grid;gap:6px;">'
       + (deductRows.length ? deductRows.map(function(r){ return __wageDetailCard('deduct', r[0], r[1]); }).join('') : '<div style="color:var(--text-light,#64748b);font-size:.82rem;padding:4px 8px;">无扣款</div>')
@@ -1123,7 +1149,9 @@ function __pLog(module,event,extra){
       ['full','全天班'],['night','夜班'],['double','双班'],['half','半天班'],['rest','公休'],
       ['late','迟到(30分钟内)'],['late_over','迟到超30分钟'],['early','早退(30分钟内)'],['early_over','早退超30分钟'],['absent','旷工'],
       ['leave','请假(其他·无上限)'],['PL','事假(每月≤2次/2天)'],['SL','病假'],['AL','年假'],['ML','婚假'],['BL','丧假'],
-      ['outing','外出'],['study','学习'],['business','出差'],['injury','工伤']
+      ['outing','外出'],['study','学习'],['business','出差'],['injury','工伤'],
+      ['stage_in','装台日(不计薪不计迟到)'],['stage_out','卸台日(不计薪不计迟到)'],
+      ['accident_l1','事故一级(扣10元/天)'],['accident_l2','事故二级(扣30元/天)'],['accident_l3','事故三级(扣50元/天·代打卡查实按此级)']
     ];
     var TYPE_NAMES={}; ATT_TYPES.forEach(function(t){ TYPE_NAMES[t[0]]=t[1]; });
     var _rows=[], _loading=false;
@@ -1148,7 +1176,7 @@ function __pLog(module,event,extra){
       updateSelCount();
       var all=el('attRecAll'); if(all) all.checked=false;
       if(!_rows.length){
-        tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-light);">当月暂无考勤记录（可通过下方批量录入或 CSV 导入生成）</td></tr>';
+        tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-light);">当月暂无考勤记录（可通过下方批量录入或 CSV 导入生成）</td></tr>';
         return;
       }
       tbody.innerHTML='';
@@ -1159,8 +1187,16 @@ function __pLog(module,event,extra){
           '<td>'+(r.date||'')+'</td>'+
           '<td><strong>'+((r.staffName||'')+'').replace(/</g,'&lt;')+'</strong></td>'+
           '<td>'+(r.typeText||TYPE_NAMES[r.type]||r.type||'')+'</td>'+
-          '<td>'+((r.remark||'')+'').replace(/</g,'&lt;')+'</td>';
+          '<td>'+((r.remark||'')+'').replace(/</g,'&lt;')+'</td>'+
+          '<td style="white-space:nowrap;">'+
+            '<button type="button" class="btn btn-outline btn-sm attRecEditBtn" data-id="'+(r.id||'')+'">✏️ 编辑</button> '+
+            '<button type="button" class="btn btn-outline btn-sm attRecDelBtn" data-id="'+(r.id||'')+'">🗑️</button>'+
+          '</td>';
         tbody.appendChild(tr);
+      });
+      // v20261025b 打旁路标志：动态操作列按钮由 tbody 委托处理，必须绕过 DBF/SuperPatch 捕获期死按钮兜底（否则「编辑」被当未接线按钮吞掉）
+      tbody.querySelectorAll('.attRecEditBtn,.attRecDelBtn').forEach(function(b){
+        b.__superPatchBound=1; b.__bindDone=1;
       });
     }
     function selectedIds(){
@@ -1171,7 +1207,7 @@ function __pLog(module,event,extra){
     async function load(month){
       month=month||currentMonth();
       var api=API(); var tbody=el('attRecTbody');
-      if(!api||typeof api.get!=='function'){ if(tbody) tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:#dc3545;">接口未就绪，请刷新重试</td></tr>'; return; }
+      if(!api||typeof api.get!=='function'){ if(tbody) tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:#dc3545;">接口未就绪，请刷新重试</td></tr>'; return; }
       if(_loading) return; _loading=true;
       var ml=el('attRecMonthLabel'); if(ml) ml.textContent=month;
       try{
@@ -1180,7 +1216,7 @@ function __pLog(module,event,extra){
         _rows=rows; render();
         setHint('共 '+rows.length+' 条记录；勾选后可批量修改类型或删除（批量删除仅超级管理员可用）');
       }catch(e){
-        if(tbody) tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:#dc3545;">考勤记录载入失败：'+(((e&&e.message)||e)+'').replace(/</g,'&lt;')+'</td></tr>';
+        if(tbody) tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:#dc3545;">考勤记录载入失败：'+(((e&&e.message)||e)+'').replace(/</g,'&lt;')+'</td></tr>';
       }finally{ _loading=false; }
     }
     // 批量改类型：逐条 PATCH /v1/attendance/:id
@@ -1252,6 +1288,148 @@ function __pLog(module,event,extra){
       }
       __T('📅 批量录入完成：成功 '+ok+' 条'+(skip?('，跳过已有 '+skip+' 条'):'')+(fail?('，失败 '+fail+' 条'+(lastErr?('（'+lastErr+'）'):'')):''),fail?'error':'success',7000);
       await load();
+    }
+    // ===== 📅 按结算区间多员工批量录入（v20261025：POST /v1/attendance/batch-entry）=====
+    var _bmeStaffs=[], _bmeLoaded=false, _bmeBusy=false;
+    function bmeSelCount(){
+      var n=document.querySelectorAll('#bmePerfList input.bmeCk:checked').length;
+      var s=el('bmeSelCount'); if(s) s.textContent=String(n);
+    }
+    function bmeRenderList(){
+      var box=el('bmePerfList'); if(!box) return;
+      var kw=(el('bmeSearch')?el('bmeSearch').value:'').trim().toLowerCase();
+      var checked={};
+      box.querySelectorAll('input.bmeCk').forEach(function(c){ if(c.checked) checked[c.getAttribute('data-id')]=1; });
+      var rows=_bmeStaffs.filter(function(p){
+        if(!kw) return true;
+        return (String(p.name||'')+' '+String(p.staffNo||'')).toLowerCase().indexOf(kw)>=0;
+      });
+      if(!rows.length){ box.innerHTML='<p style="color:var(--text-light);text-align:center;padding:12px;">'+(kw?'无匹配员工':'暂无演职人员')+'</p>'; bmeSelCount(); return; }
+      box.innerHTML=rows.map(function(p){
+        var ck=checked[p.id]?' checked':'';
+        return '<label style="display:flex;align-items:center;gap:8px;padding:5px 6px;cursor:pointer;border-bottom:1px dashed var(--border-light);">'+
+          '<input type="checkbox" class="bmeCk" data-id="'+(p.id||'')+'"'+ck+' />'+
+          '<span>'+((p.staffNo?p.staffNo+' ':'')+(p.name||'')).replace(/</g,'&lt;')+'</span></label>';
+      }).join('');
+      bmeSelCount();
+    }
+    async function bmeLoad(){
+      var api=API(); var box=el('bmePerfList');
+      if(!api){ if(box) box.innerHTML='<p style="color:#dc3545;text-align:center;padding:12px;">接口未就绪，请刷新重试</p>'; return; }
+      if(box) box.innerHTML='<p style="color:var(--text-light);text-align:center;padding:12px;">⏳ 加载中...</p>';
+      try{
+        var rows=await api.get((QAXQJT_PATHS.PERFORMERS||'/v1/performers')+'?pageSize=500');
+        if(!Array.isArray(rows)) rows=(rows&&rows.data)||[];
+        _bmeStaffs=(rows||[]).filter(function(p){ return p&&p.status!=='deleted'; });
+        _bmeStaffs.sort(function(a,b){ return String(a.staffNo||'').localeCompare(String(b.staffNo||''),'zh-CN')||String(a.name||'').localeCompare(String(b.name||''),'zh-CN'); });
+        _bmeLoaded=true;
+        bmeRenderList();
+        var h=el('bmeHint'); if(h) h.textContent='已加载 '+_bmeStaffs.length+' 名员工；勾选后选结算区间与统一类型，一次提交';
+      }catch(e){
+        if(box) box.innerHTML='<p style="color:#dc3545;text-align:center;padding:12px;">人员载入失败：'+(((e&&e.message)||e)+'').replace(/</g,'&lt;')+'（可重试）</p>';
+      }
+    }
+    function bmeSetAll(v){
+      document.querySelectorAll('#bmePerfList input.bmeCk').forEach(function(c){ c.checked=!!v; });
+      bmeSelCount();
+    }
+    async function bmeSubmit(){
+      if(_bmeBusy) return;
+      var api=API();
+      if(!api||typeof api.post!=='function'){ __T('⚠️ 接口未就绪','error'); return; }
+      if(!_bmeLoaded){ __T('⚠️ 请先点「↻ 加载员工」','warning'); return; }
+      var ids=[];
+      document.querySelectorAll('#bmePerfList input.bmeCk:checked').forEach(function(c){ ids.push(c.getAttribute('data-id')); });
+      if(!ids.length){ __T('⚠️ 请先勾选员工','warning'); return; }
+      var from=el('bmeFrom')?el('bmeFrom').value:''; var to=el('bmeTo')?el('bmeTo').value:'';
+      var type=el('bmeType')?el('bmeType').value:'';
+      if(!from||!to){ __T('⚠️ 请选择结算开始/结束日期','warning'); return; }
+      if(to<from){ __T('⚠️ 结束日期不能早于开始日期','warning'); return; }
+      if(!type){ __T('⚠️ 请选择统一考勤类型','warning'); return; }
+      var fd=new Date(from+'T00:00:00'), td=new Date(to+'T00:00:00');
+      var days=Math.round((td-fd)/86400000)+1;
+      if(!(days>0)||days>62){ __T('⚠️ 结算区间无效或过长（最长 62 天），请分段录入','warning'); return; }
+      var total=ids.length*days;
+      if(!confirm('将为 '+ids.length+' 名员工在 '+from+' ~ '+to+'（共 '+days+' 天）逐日录入「'+(TYPE_NAMES[type]||type)+'」，合计 '+total+' 条。\n同一员工同一天已有记录自动跳过；事假每月超 2 次的逐条报失败。\n确认提交？')) return;
+      var items=[];
+      for(var d=new Date(fd); d<=td; d.setDate(d.getDate()+1)){
+        var ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+        for(var i=0;i<ids.length;i++) items.push({ staffId:ids[i], date:ds, type:type });
+      }
+      var btn=el('bmeSubmitBtn'); var oldHtml=btn?btn.innerHTML:'';
+      _bmeBusy=true; if(btn){ btn.disabled=true; btn.innerHTML='⏳ 提交中...'; }
+      var created=0, skipped=0, failed=[], errs='';
+      try{
+        var CH=500;
+        for(var off=0; off<items.length; off+=CH){
+          var part=items.slice(off,off+CH);
+          var res=await api.post((QAXQJT_PATHS.ATTENDANCE||'/v1/attendance')+'/batch-entry',{ items:part });
+          if(res&&res.data&&typeof res.data==='object'&&!Array.isArray(res.data)) res=res.data;
+          if(res&&typeof res==='object'){
+            created+=res.created||0; skipped+=res.skipped||0;
+            if(Array.isArray(res.failed)) failed=failed.concat(res.failed);
+          }
+        }
+        failed.slice(0,3).forEach(function(f){ errs+=(errs?'；':'')+((f&&f.reason)?f.reason:''); });
+        if(failed.length>3) errs+=' 等';
+        __T('📅 批量录入完成：成功 '+created+' 条'+(skipped?('，跳过已有 '+skipped+' 条'):'')+(failed.length?('，失败 '+failed.length+' 条（'+errs+'）'):''),failed.length?'error':'success',8000);
+        await load();
+        var cm=currentMonth();
+        if(from.substring(0,7)<=cm&&cm<=to.substring(0,7)&&window.__wageNs&&typeof window.__wageNs.load==='function'){ try{ await window.__wageNs.load(cm); }catch(_e){} }
+      }catch(e){
+        __T('⚠️ 批量录入失败：'+(((e&&e.message)||e)+''),'error',8000);
+      }finally{
+        _bmeBusy=false; if(btn){ btn.disabled=false; btn.innerHTML=oldHtml; }
+      }
+    }
+    // ===== ✏️ 单条编辑弹窗（v20261025：日期/类型/备注，PATCH /v1/attendance/:id）=====
+    var _editId='';
+    function openAttEdit(id){
+      var r=null;
+      for(var i=0;i<_rows.length;i++){ if(_rows[i].id===id){ r=_rows[i]; break; } }
+      if(!r){ __T('⚠️ 记录不存在或列表已刷新，请重试','warning'); return; }
+      _editId=id;
+      var s=el('attEditStaff'); if(s) s.textContent=(r.staffName||'')+' · '+(r.date||'')+' · '+(r.typeText||TYPE_NAMES[r.type]||r.type||'');
+      var d=el('attEditDate'); if(d) d.value=r.date||'';
+      var t=el('attEditType'); if(t) t.value=r.type||'';
+      var rm=el('attEditRemark'); if(rm) rm.value=r.remark||'';
+      var m=el('attEditModal'); if(m) m.style.display='flex';
+    }
+    function closeAttEdit(){ var m=el('attEditModal'); if(m) m.style.display='none'; _editId=''; }
+    async function saveAttEdit(){
+      if(!_editId) return;
+      var d=el('attEditDate')?el('attEditDate').value:'';
+      var t=el('attEditType')?el('attEditType').value:'';
+      var rm=el('attEditRemark')?el('attEditRemark').value.trim():'';
+      if(!d){ __T('⚠️ 请选择日期','warning'); return; }
+      if(!t){ __T('⚠️ 请选择考勤类型','warning'); return; }
+      var api=API();
+      if(!api||typeof api.patch!=='function'){ __T('⚠️ 接口未就绪','error'); return; }
+      var btn=el('attEditSaveBtn'); var old=btn?btn.innerHTML:'';
+      if(btn){ btn.disabled=true; btn.innerHTML='⏳ 保存中...'; }
+      try{
+        await api.patch((QAXQJT_PATHS.ATTENDANCE_BY_ID||function(i){ return '/v1/attendance/'+i; })(_editId),{ date:d, type:t, remark:rm });
+        __T('✅ 考勤记录已更新','success');
+        closeAttEdit();
+        await load();
+        var nm=d.substring(0,7);
+        if(nm===currentMonth()&&window.__wageNs&&typeof window.__wageNs.load==='function'){ try{ await window.__wageNs.load(nm); }catch(_e){} }
+      }catch(e){
+        __T('⚠️ 保存失败：'+(((e&&e.message)||e)+''),'error',7000);
+      }finally{ if(btn){ btn.disabled=false; btn.innerHTML=old; } }
+    }
+    async function delAttRec(id){
+      if(!id) return;
+      if(!confirm('确认删除这条考勤记录？此操作不可撤销！')) return;
+      var api=API();
+      if(!api||typeof api.del!=='function'){ __T('⚠️ 接口未就绪','error'); return; }
+      try{
+        await api.del((QAXQJT_PATHS.ATTENDANCE_BY_ID||function(i){ return '/v1/attendance/'+i; })(id));
+        __T('🗑️ 已删除 1 条考勤记录','success');
+        await load();
+      }catch(e){
+        __T('⚠️ 删除失败：'+(((e&&e.message)||e)+''),'error',7000);
+      }
     }
     async function loadStaff(){
       var api=API(); var sel=el('baStaff'); var msel=el('manualStaff');
@@ -1352,11 +1530,39 @@ function __pLog(module,event,extra){
       var opts=ATT_TYPES.map(function(t){ return '<option value="'+t[0]+'">'+t[1]+'</option>'; }).join('');
       var nt=el('attRecNewType'); if(nt) nt.innerHTML='<option value="">— 选择类型 —</option>'+opts;
       var bt=el('baType'); if(bt) bt.innerHTML=opts;
+      var bmt=el('bmeType'); if(bmt) bmt.innerHTML=opts;
+      var et=el('attEditType'); if(et) et.innerHTML=opts;
       bind('attRecReloadBtn',function(){ load(); });
       bind('attRecTypeBtn',function(){ batchType(); });
       bind('attRecDelBtn',function(){ batchDel(); });
       bind('baAddBtn',function(){ batchAdd(); });
       bind('manualAddBtn',function(){ manualAdd(); });
+      // v20261025 多员工批量录入 + 弹窗编辑
+      bind('bmeLoadBtn',function(){ bmeLoad(); });
+      bind('bmeAllBtn',function(){ bmeSetAll(true); });
+      bind('bmeNoneBtn',function(){ bmeSetAll(false); });
+      bind('bmeSubmitBtn',function(){ bmeSubmit(); });
+      bind('attEditCancelBtn',function(){ closeAttEdit(); });
+      bind('attEditSaveBtn',function(){ saveAttEdit(); });
+      var bs=el('bmeSearch');
+      if(bs&&!bs.__bmeBound){ bs.__bmeBound=1; bs.addEventListener('input',function(){ bmeRenderList(); }); }
+      var bpl=el('bmePerfList');
+      if(bpl&&!bpl.__bmeBound){
+        bpl.__bmeBound=1;
+        bpl.addEventListener('change',function(e){ if(e.target&&e.target.classList&&e.target.classList.contains('bmeCk')) bmeSelCount(); });
+      }
+      var em=el('attEditModal');
+      if(em&&!em.__bmeBound){ em.__bmeBound=1; em.addEventListener('click',function(e){ if(e.target===em) closeAttEdit(); }); }
+      // 记录表操作列（编辑/删除）事件委托
+      var tb=el('attRecTbody');
+      if(tb&&!tb.__attRecOpsBound){
+        tb.__attRecOpsBound=1;
+        tb.addEventListener('click',function(e){
+          var t=e.target;
+          if(t&&t.classList&&t.classList.contains('attRecEditBtn')){ e.preventDefault(); openAttEdit(t.getAttribute('data-id')); }
+          else if(t&&t.classList&&t.classList.contains('attRecDelBtn')){ e.preventDefault(); delAttRec(t.getAttribute('data-id')); }
+        });
+      }
       var all=el('attRecAll');
       if(all&&!all.__attRecBound){
         all.__attRecBound=1;
@@ -1806,6 +2012,10 @@ function __pLog(module,event,extra){
           if(sm && !sm.__bpBound){ sm.__bpBound = 1; sm.addEventListener('input', function(){ renderList(); updateSelCount(); }, true); }
           var sb = document.getElementById('bpSubmitBtn');
           if(sb && !sb.__bpBound){ sb.__bpBound = 1; sb.addEventListener('click', submit, true); }
+          var ab = document.getElementById('bpAllBtn');
+          if(ab && !ab.__bpBound){ ab.__bpBound = 1; ab.addEventListener('click', selectAllPerfs, true); }
+          var nb = document.getElementById('bpNoneBtn');
+          if(nb && !nb.__bpBound){ nb.__bpBound = 1; nb.addEventListener('click', selectNonePerfs, true); }
           var el = document.getElementById('bpPerfList');
           if(el && !el.__bpBound){ el.__bpBound = 1; el.addEventListener('change', updateSelCount, true); }
           if(!perfs.length) loadPerfs();
@@ -1863,6 +2073,7 @@ function __pLog(module,event,extra){
             html += '</div></div>';
           }
           el.innerHTML = html || '<p style="color:var(--text-light);text-align:center;padding:20px;">无匹配人员</p>';
+          updateSelCount();
           // group all toggle
           el.querySelectorAll('.bp-group-all').forEach(function(cb){
             cb.addEventListener('change', function(){
@@ -1879,6 +2090,25 @@ function __pLog(module,event,extra){
               updateSelCount();
             }, true);
           });
+        }
+        async function selectAllPerfs(){
+          if(!perfs.length){ await loadPerfs(); }
+          var el = document.getElementById('bpPerfList');
+          if(!el) return;
+          var n = 0;
+          el.querySelectorAll('.bp-perf').forEach(function(c){ c.checked = true; n++; });
+          el.querySelectorAll('.bp-group-all').forEach(function(c){ c.checked = true; });
+          updateSelCount();
+          var kw = ((document.getElementById('bpSearch') || {}).value || '').trim();
+          __T('已全选 ' + n + ' 人' + (kw ? '（按搜索「' + kw + '」过滤）' : '') + '，可直接点击「批量补打卡」', 'success');
+        }
+        function selectNonePerfs(){
+          var el = document.getElementById('bpPerfList');
+          if(!el) return;
+          el.querySelectorAll('.bp-perf').forEach(function(c){ c.checked = false; });
+          el.querySelectorAll('.bp-group-all').forEach(function(c){ c.checked = false; });
+          updateSelCount();
+          __T('已清空全部勾选', 'success');
         }
         function getSelected(){
           var ids = [];
@@ -1918,6 +2148,8 @@ function __pLog(module,event,extra){
             if(d.failed && d.failed.length){
               console.log('batch-punch failed:', d.failed);
             }
+            // Fix-20261012：批量打卡后刷新考勤列表，确保新打卡记录立即可见
+            if(window.__attRecNs && typeof window.__attRecNs.load === 'function'){ try{ await window.__attRecNs.load(); }catch(_e){} }
           }catch(e){
             __T('补打卡失败: ' + (e.message || e), 'error');
           }finally{
@@ -2007,8 +2239,8 @@ function __pLog(module,event,extra){
   // ====== 考勤批量导入（v20261004a：真实接入 POST /v1/attendance/import）======
   // 流程：打开弹窗（粘贴 CSV/制表符 或 选择 .csv）→ 解析预览前 20 条 → 确认导入 → toast 真实结果并刷新列表
   window.__attImportNs = (function(){
-    var TYPE_ALIAS = { '出勤':'full','全天班':'full','全天':'full','正常':'full','夜班':'night','双班':'double','半天班':'half','半天':'half','公休':'rest','休息':'rest','雨休':'rainout','事假':'PL','病假':'SL','丧假':'BL','婚假':'ML','年假':'AL','迟到':'late','迟到超30分钟':'late_over','早退':'early','早退超30分钟':'early_over','旷工':'absent','缺勤':'absent','请假':'leave','外出':'outing','学习':'study','出差':'business','工伤':'injury' };
-    var TYPE_NAMES = { full:'全天班', night:'夜班', double:'双班', half:'半天班', rest:'公休', SL:'病假', PL:'事假', BL:'丧假', ML:'婚假', AL:'年假', absent:'旷工', rainout:'雨休', leave:'请假', late:'迟到', late_over:'迟到超30分钟', early:'早退', early_over:'早退超30分钟', outing:'外出', study:'学习', business:'出差', injury:'工伤' };
+    var TYPE_ALIAS = { '出勤':'full','全天班':'full','全天':'full','正常':'full','夜班':'night','双班':'double','半天班':'half','半天':'half','公休':'rest','休息':'rest','雨休':'rainout','事假':'PL','病假':'SL','丧假':'BL','婚假':'ML','年假':'AL','迟到':'late','迟到超30分钟':'late_over','早退':'early','早退超30分钟':'early_over','旷工':'absent','缺勤':'absent','请假':'leave','外出':'outing','学习':'study','出差':'business','工伤':'injury','装台':'stage_in','装台日':'stage_in','卸台':'stage_out','卸台日':'stage_out','事故一级':'accident_l1','一级':'accident_l1','事故二级':'accident_l2','二级':'accident_l2','事故三级':'accident_l3','三级':'accident_l3','代打卡':'accident_l3' };
+    var TYPE_NAMES = { full:'全天班', night:'夜班', double:'双班', half:'半天班', rest:'公休', SL:'病假', PL:'事假', BL:'丧假', ML:'婚假', AL:'年假', absent:'旷工', rainout:'雨休', leave:'请假', late:'迟到', late_over:'迟到超30分钟', early:'早退', early_over:'早退超30分钟', outing:'外出', study:'学习', business:'出差', injury:'工伤', stage_in:'装台日(不计薪不计迟到)', stage_out:'卸台日(不计薪不计迟到)', accident_l1:'事故一级(扣10元/天)', accident_l2:'事故二级(扣30元/天)', accident_l3:'事故三级(扣50元/天·代打卡查实按此级)' };
     var HEAD = {
       no: ['工号','编号','工牌','演员编号','工牌号'],
       name: ['姓名','名字'],
@@ -2332,4 +2564,144 @@ function __pLog(module,event,extra){
   }
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',__markBound); }
   else { __markBound(); setTimeout(__markBound,500); }
+})();
+
+/* ===== v20261012 打卡参数（新规）：GET/PUT /v1/attendance/punch-params（存服务器 Setting，员工端同步展示） ===== */
+window.__punchParamsNs = (function(){
+  var _tries = 0;
+  function el(id){ return document.getElementById(id); }
+  function API(){ return window.QAXQJT_API; }
+  function hint(msg, isErr){ var h = el('ppHint'); if(h){ h.textContent = msg || ''; h.style.color = isErr ? '#dc3545' : 'var(--text-light)'; } }
+  var FIELDS = ['ppDayStart','ppDayEnd','ppDayBase','ppNightStart','ppNightEnd','ppNightBase','ppLatePerMin','ppLateCap','ppLateInvalid','ppAcc1','ppAcc2','ppAcc3'];
+  var KEYMAP = { ppDayStart:'dayWindowStart', ppDayEnd:'dayWindowEnd', ppDayBase:'dayBaseline', ppNightStart:'nightWindowStart', ppNightEnd:'nightWindowEnd', ppNightBase:'nightBaseline', ppLatePerMin:'lateFinePerMin', ppLateCap:'lateFineCap', ppLateInvalid:'lateInvalidMinutes', ppAcc1:'accidentLevel1Fine', ppAcc2:'accidentLevel2Fine', ppAcc3:'accidentLevel3Fine' };
+  function fill(p){
+    if(!p) return;
+    FIELDS.forEach(function(id){ var e = el(id); if(e && p[KEYMAP[id]] != null) e.value = p[KEYMAP[id]]; });
+    var rw = el('ppRewardEnabled'); if(rw) rw.checked = !!p.rewardEnabled;
+    var sp = el('ppStageNoPay'); if(sp) sp.checked = p.stageDayNoPay !== false;
+  }
+  async function load(){
+    var api = API();
+    if(!api || typeof api.get !== 'function'){ hint('接口未就绪，请刷新重试', true); return; }
+    try{
+      var res = await api.get('/v1/attendance/punch-params');
+      var p = (res && res.data) || res;
+      fill(p);
+      hint('已加载当前打卡参数' + (p && p.updatedAt ? ('（更新于 ' + String(p.updatedAt).replace('T',' ').slice(0,16) + '）') : ''));
+    }catch(e){ hint('打卡参数加载失败：' + ((e && e.message) || e), true); }
+  }
+  async function save(){
+    var api = API();
+    if(!api || typeof api.put !== 'function'){ hint('接口未就绪，请刷新重试', true); return; }
+    var body = {};
+    FIELDS.forEach(function(id){ var e = el(id); if(e) body[KEYMAP[id]] = e.value; });
+    if(!body.dayWindowStart || !body.dayWindowEnd || !body.dayBaseline || !body.nightWindowStart || !body.nightWindowEnd || !body.nightBaseline){ hint('窗口/基准时间不能为空', true); return; }
+    ['lateFinePerMin','lateFineCap','lateInvalidMinutes','accidentLevel1Fine','accidentLevel2Fine','accidentLevel3Fine'].forEach(function(k){ body[k] = Number(body[k]) || 0; });
+    if(body.lateInvalidMinutes < 1){ hint('本场失效分钟至少为 1', true); return; }
+    body.rewardEnabled = false;   // v20261012 新规：不设任何奖励
+    body.stageDayNoPay = true;    // 装台/卸台日固定不计薪
+    var btn = el('ppSaveBtn'); if(btn) btn.disabled = true;
+    try{
+      await api.put('/v1/attendance/punch-params', body);
+      hint('✅ 已保存（即时生效）');
+      __T('✅ 打卡参数已保存：窗口/基准/迟到罚款/事故分级已更新，员工打卡与工资核算即时生效', 'success', 5000);
+      await load();
+    }catch(e){ var m = (e && e.message) || e; hint('保存失败：' + m, true); __T('⚠️ 打卡参数保存失败：' + m, 'error', 6000); }
+    finally{ if(btn) btn.disabled = false; }
+  }
+  function mark(b){ b.__ppBound = 1; b.__bindDone = 1; b.__superPatchBound = 1; b.__ts3Done = 1; b.__deadBtnChecked = 1; b.__attBound = 1; }
+  function bind(){
+    var s = el('ppSaveBtn'), r = el('ppReloadBtn');
+    if(s && !s.__ppBound){ mark(s); s.addEventListener('click', function(e){ e.preventDefault(); save(); }, true); }
+    if(r && !r.__ppBound){ mark(r); r.addEventListener('click', function(e){ e.preventDefault(); load(); }, true); }
+    return !!(s && r);
+  }
+  function boot(){
+    if(bind()){ load(); return; }
+    if(_tries++ < 20) setTimeout(boot, 300);
+  }
+  boot();
+  return { load: load, save: save };
+})();
+
+/* ===== v20261017 全团打卡总控（休假/暂停/恢复）：GET/POST /v1/attendance/punch-control（存服务器 Setting，全局即时生效） ===== */
+window.__punchControlNs = (function(){
+  var _tries = 0, _timer = null;
+  function el(id){ return document.getElementById(id); }
+  function API(){ return window.QAXQJT_API; }
+  function hint(msg, isErr){ var h = el('pcHint'); if(h){ h.textContent = msg || ''; h.style.color = isErr ? '#dc3545' : 'var(--text-light)'; } }
+  var MODE_UI = {
+    open:     { text: '✅ 开放中', bg: '#dcfce7', color: '#15803d' },
+    vacation: { text: '🏖️ 全团休假中', bg: '#fef3c7', color: '#b45309' },
+    pause:    { text: '⏸️ 打卡已暂停', bg: '#fee2e2', color: '#b91c1c' }
+  };
+  function render(st){
+    st = st || {};
+    var mode = st.mode || 'open';
+    var ui = MODE_UI[mode] || MODE_UI.open;
+    var badge = el('pcStatusBadge');
+    if(badge){ badge.textContent = ui.text; badge.style.background = ui.bg; badge.style.color = ui.color; }
+    var line = '';
+    if(mode !== 'open' && st.current){
+      line = '自 ' + st.current.start + ' 起' + (st.current.reason ? '；原因：' + st.current.reason : '') + (st.current.by ? '；操作人：' + st.current.by : '');
+    } else if(st.updatedAt){
+      line = '最近变更：' + new Date(st.updatedAt).toLocaleString('zh-CN', { hour12: false }) + (st.updatedBy ? '（' + st.updatedBy + '）' : '');
+    }
+    var sl = el('pcStateLine'); if(sl) sl.textContent = line;
+    var busy = mode !== 'open';
+    var bv = el('pcBtnVacation'), bp = el('pcBtnPause'), br = el('pcBtnResume');
+    if(bv) bv.disabled = busy;
+    if(bp) bp.disabled = busy;
+    if(br) br.disabled = !busy;
+  }
+  async function load(){
+    var api = API();
+    if(!api || typeof api.get !== 'function'){ hint('接口未就绪，请刷新重试', true); return; }
+    try{
+      var res = await api.get('/v1/attendance/punch-control');
+      render((res && res.data) || res);
+      hint('');
+    }catch(e){ hint('总控状态加载失败：' + ((e && e.message) || e), true); }
+  }
+  async function start(kind){
+    var api = API();
+    if(!api || typeof api.post !== 'function'){ hint('接口未就绪，请刷新重试', true); return; }
+    var label = kind === 'vacation' ? '全团休假' : '暂停打卡';
+    if(!window.confirm('确认发起「' + label + '」？\n\n生效后：员工打卡与工资确认立即关闭（全局通用），期间考勤不计工资；员工门户每分钟自动刷新。')) return;
+    var reason = window.prompt('可填写原因（可选，100字内）：', '') || '';
+    try{
+      var res = await api.post('/v1/attendance/punch-control/start', { kind: kind, reason: reason });
+      render((res && res.data) || res);
+      __T('✅ ' + label + '已生效：打卡与工资确认已关闭，期间不计工资', 'success', 5000);
+    }catch(e){ var m = (e && e.message) || e; hint('操作失败：' + m, true); __T('⚠️ ' + label + '失败：' + m, 'error', 6000); }
+  }
+  async function stop(){
+    var api = API();
+    if(!api || typeof api.post !== 'function'){ hint('接口未就绪，请刷新重试', true); return; }
+    if(!window.confirm('确认「恢复开放（收假）」？\n\n恢复后：今日起员工可正常打卡、工资确认重开，今日考勤正常计薪。')) return;
+    try{
+      var res = await api.post('/v1/attendance/punch-control/stop', {});
+      render((res && res.data) || res);
+      __T('✅ 已恢复开放：打卡与工资确认已重开，今日起正常计薪', 'success', 5000);
+    }catch(e){ var m = (e && e.message) || e; hint('操作失败：' + m, true); __T('⚠️ 恢复开放失败：' + m, 'error', 6000); }
+  }
+  function mark(b){ b.__pcBound = 1; b.__bindDone = 1; b.__superPatchBound = 1; b.__ts3Done = 1; b.__deadBtnChecked = 1; b.__attBound = 1; }
+  function bind(){
+    var v = el('pcBtnVacation'), p = el('pcBtnPause'), r = el('pcBtnResume'), f = el('pcBtnRefresh');
+    if(v && !v.__pcBound){ mark(v); v.addEventListener('click', function(e){ e.preventDefault(); start('vacation'); }, true); }
+    if(p && !p.__pcBound){ mark(p); p.addEventListener('click', function(e){ e.preventDefault(); start('pause'); }, true); }
+    if(r && !r.__pcBound){ mark(r); r.addEventListener('click', function(e){ e.preventDefault(); stop(); }, true); }
+    if(f && !f.__pcBound){ mark(f); f.addEventListener('click', function(e){ e.preventDefault(); load(); }, true); }
+    return !!(v && p && r && f);
+  }
+  function boot(){
+    if(bind()){
+      load();
+      if(!_timer) _timer = setInterval(load, 60000);   // 全系统刷新：每60秒同步总控状态
+      return;
+    }
+    if(_tries++ < 20) setTimeout(boot, 300);
+  }
+  boot();
+  return { load: load, render: render };
 })();

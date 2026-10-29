@@ -251,7 +251,7 @@
   <script src="../js/year-lite.js?v=20260803"></script>
   <script src="../js/api-config.js?v=20261010a"></script>
   <script src="../js/api-request.js?v=20261008b"></script>
-  <script src="../js/app.js?v=20261009a"></script>
+  <script src="../js/app.js?v=20261027a"></script>
   <script src="../js/tooltip.js?v=20261010a"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
   <script src="../js/admin-mobile-sidebar.js?v=20260926m"></script>
@@ -319,7 +319,11 @@
       { key: 'site.text.wechat_id', label: '客服微信号', hint: '微信客服弹窗中展示并支持一键复制；留空则默认显示客服手机号' },
       { key: 'site.text.mp_name', label: '微信公众号简称', hint: '页脚「公众号」弹窗搜索指引使用' },
       { key: 'site.text.mp_fullname', label: '微信公众号全称', hint: '页脚「公众号二维码」弹窗展示' },
-      { key: 'site.text.shipinhao', label: '微信视频号名称', hint: '页脚「视频号」弹窗搜索指引使用' }
+      { key: 'site.text.shipinhao', label: '微信视频号名称', hint: '页脚「视频号」弹窗搜索指引使用' },
+      { key: 'site.text.home_about_subtitle', label: '首页·剧团简介副标题', hint: '首页「剧团简介」标题下的一行短句；留空显示默认文案', multiline: false },
+      { key: 'site.text.home_about_p1', label: '首页·剧团简介第一段', hint: '首页「剧团简介」板块第一段正文（建议 200 字内）；留空显示默认文案', multiline: true },
+      { key: 'site.text.home_about_p2', label: '首页·剧团简介第二段', hint: '首页「剧团简介」板块第二段正文（建议 200 字内）；留空显示默认文案', multiline: true },
+      { key: 'site.text.about_qual_text', label: '剧团简介页·企业资质正文', hint: 'about 剧团简介页「企业资质」卡片正文（建议 200 字内）；留空显示默认文案', multiline: true }
     ];
 
     var state = { values: {}, meta: {}, loaded: false };
@@ -397,7 +401,7 @@
       tg.className = 'asset-group';
       var tt = document.createElement('h3');
       tt.className = 'asset-group-title';
-      tt.textContent = '💬 微信客服信息维护（文本配置 · ' + TEXT_SLOTS.length + ' 项）';
+      tt.textContent = '📝 站点文本配置（' + TEXT_SLOTS.length + ' 项）';
       tg.appendChild(tt);
       var tgrid = document.createElement('div');
       tgrid.className = 'asset-grid';
@@ -427,10 +431,11 @@
         card.appendChild(h);
       }
 
-      var input = document.createElement('input');
+      var input = document.createElement(slot.multiline ? 'textarea' : 'input');
       input.className = 'asset-url';
       input.placeholder = '请输入文本内容（保存后前台约 5 分钟内生效）';
       input.value = val;
+      if (slot.multiline) { input.rows = 4; input.style.minHeight = '90px'; input.style.resize = 'vertical'; input.style.whiteSpace = 'pre-wrap'; }
       input.setAttribute('data-key', slot.key);
       card.appendChild(input);
 
@@ -559,10 +564,10 @@
       var act = b.getAttribute('data-act');
       if (act === 'upload') { doUpload(key); return; }
       if (act === 'save') {
-        var input = document.querySelector('input.asset-url[data-key="' + key + '"]');
+        var input = document.querySelector('.asset-url[data-key="' + key + '"]');
         var v = input ? input.value.trim() : '';
         if (key.indexOf('site.text.') !== 0 && v && !/^(https?:\/\/|\/|data:image\/)/i.test(v)) { notify('请输入合法的图片 URL（http/https 开头）', 'error'); return; }
-        if (key.indexOf('site.text.') === 0 && v.length > 200) { notify('文本内容不能超过 200 字', 'error'); return; }
+        if (key.indexOf('site.text.') === 0 && v.length > 2000) { notify('文本内容不能超过 2000 字', 'error'); return; }
         saveKey(key, v);
         return;
       }

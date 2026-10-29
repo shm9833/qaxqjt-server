@@ -15,7 +15,7 @@
     <meta name="format-detection" content="telephone=no,email=no,address=no">
     <meta name="applicable-device" content="pc,mobile">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:site_name" content="秦安县秦剧团文化演出有限公司云端预约系统">
     <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
     <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
     <meta property="og:image" content="favicon.svg">
@@ -24,7 +24,7 @@
     <script src="../js/favicon-inject.js?v=20260803" defer></script>
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>财务收支台账管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
+  <title>财务收支台账管理 - 秦安县秦剧团文化演出有限公司云端预约管理系统 {year}</title>
   <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     /* ============================================================
@@ -606,7 +606,7 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
     <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
   </g>
 </svg></div>
-        <div class="logo-text">秦安县秦剧团<br/>文化演出管理系统</div>
+        <div class="logo-text">秦安县秦剧团文化演出有限公司<br/>文化演出管理系统</div>
       </div>
 
       <nav class="admin-sidebar-menu">
@@ -843,8 +843,30 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
               <span class="fsc-trend">● 实时</span>
             </div>
             <div class="fsc-title">待收账款</div>
-            <div class="fsc-value">—</div>
-            <div class="fsc-sub">按订单未付金额实时统计</div>
+            <div class="fsc-value" id="fscValueRecv">—</div>
+            <div class="fsc-sub" id="fscSubRecv">按订单未付金额实时统计</div>
+          </div>
+        </div>
+
+        <!-- v20261027 recv1027：应收账款明细（演出收入关联订单未付金额） -->
+        <div class="admin-card" id="finRecvCard" style="display:none;margin:0 0 22px 0;border:2px solid #6f42c1;background:linear-gradient(135deg,#f6f2ff,#ede7ff);box-shadow:none;">
+          <div class="admin-card-header" style="padding-top:16px;">
+            <h3 style="color:#4a2d8f;">⏳ 应收账款明细（演出收入关联订单未付金额）</h3>
+            <span class="badge" style="font-size:0.78rem;background:linear-gradient(135deg,#6f42c1,#9b7bd6);color:#fff;">未付合计 <b id="finRecvTotal">—</b></span>
+          </div>
+          <div class="admin-card-body" style="padding-top:6px;">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>订单号</th><th>客户</th><th>订单状态</th><th>演出档期</th>
+                    <th style="text-align:right;">应收</th><th style="text-align:right;">已收</th><th style="text-align:right;">未付</th>
+                  </tr>
+                </thead>
+                <tbody id="finRecvTbody"></tbody>
+              </table>
+            </div>
+            <small style="color:#4a2d8f;">💡 未付金额 = 订单应收（finalAmount）− 已收（paidAmount）；订单收款后自动联动生成演出收入凭证，此表实时反映尚未收回的演出收入。</small>
           </div>
         </div>
 
@@ -1058,7 +1080,7 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
         </div>
 
         <div style="text-align:center;padding:30px 0 10px;color:#999;font-size:0.82rem;">
-          © {year} 秦安县秦剧团云端预约管理系统 · 财务数据加密存储 · 戏曲文化传承者
+          © {year} 秦安县秦剧团文化演出有限公司云端预约管理系统 · 财务数据加密存储 · 戏曲文化传承者
         </div>
       </section>
     </main>
@@ -1068,12 +1090,12 @@ html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-h
     <script src="../js/api-config.js?v=20261010a"></script>
     <script src="../js/admin-pages/finance.pre-2.js?v=20261005a"></script>
   <script src="../js/api-request.js?v=20261008b"></script>
-<script src="../js/app.js?v=20261009a"></script>
+<script src="../js/app.js?v=20261027a"></script>
   <script src="../js/tooltip.js?v=20261010a"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
   <script src="../js/pagination.js?v=20261002a"></script>
   <script src="/js/xlsx-js-style.min.js?v=20260925"></script>
-  <script src="../js/admin-pages/finance.js?v=20261007d"></script>
+  <script src="../js/admin-pages/finance.js?v=20261028a"></script>
   
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
 

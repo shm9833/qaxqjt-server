@@ -18,8 +18,13 @@ const { idByCtx, nowMs } = require('../../config');
 const { BusinessError } = require('../../middleware/error-handler');
 const { audit } = require('../../services/audit-service');
 const { syncOrderPayments } = require('../../services/order-payment-sync');
+const { autoCompleteExpiredOrders } = require('./helpers');
+
+// v20261029b 演出结束自动完结（惰性触发，失败隔离不阻塞查询）
+const _autoCompleteSafely = async () => { try { await autoCompleteExpiredOrders(); } catch (_) {} };
 
 const list = async ctx => {
+  await _autoCompleteSafely();
   const { skip, take, page, pageSize } = parsePage(ctx.query);
   const where = {};
   const kw = (ctx.query.keyword || '').trim();
@@ -56,6 +61,7 @@ const list = async ctx => {
 
 
 const stats = async ctx => {
+  await _autoCompleteSafely();
   const [byStatus, total, agg] = await Promise.all([
     prisma.order.groupBy({ by: ['status'], _count: { id: true } }),
     prisma.order.count(),
@@ -74,6 +80,7 @@ const stats = async ctx => {
 
 
 const detail = async ctx => {
+  await _autoCompleteSafely();
   const r = await prisma.order.findUnique({
     where: { id: ctx.params.id },
     include: {

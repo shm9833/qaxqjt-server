@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <base href="/admin/">
+  <meta charset="UTF-8" />
+  <!-- =========================================================== -->
+  <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
+  <!-- 无 session 时 0.5ms 内跳登录页，防白屏 / 越权一眼看 -->
+  <!-- =========================================================== -->
+  <script src="../js/admin-pages/staff.pre-1.js?v=20261005a"></script>
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团文化演出有限公司云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <script src="../js/favicon-inject.js?v=20260803" defer></script>
+    <script src="../js/wechat-fallback.js?v=20260803" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>演职人员人事管理 - 秦安县秦剧团文化演出有限公司云端预约管理系统 {year}</title>
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
+  <style>
+    /* ============================================================
+       FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
+       ============================================================ */
+    html, body {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+      width: 100%;
+    }
+    * { box-sizing: border-box; }
+    table { table-layout: fixed; word-break: break-word; }
+    pre, code, textarea { white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+    .admin-main, .admin-content, main, .page-wrap { max-width: 100%; overflow-x: hidden; }
+    /* ============================================================
+       FIX: 花名册等多列表格文字掺插重叠（2026-09-06）
+       根因：全局 table-layout:fixed 把 13 列均分到 ~66px，style.css 的
+       nowrap 单元格内容（部门/行当标签、状态徽章、剧目、操作按钮）溢出
+       越界到相邻列 → 文字互相掺插。app.js 注入的 H9 总补CSS 有
+       min-width:760px!important，压制普通 min-width，故需同优先级+
+       更高特异性选择器 .table-wrapper > table.roster-table 才能覆盖。
+       方案：花名册表 fixed+指定列宽（th:nth-child，min-width 1150 横向滚动），
+       其余 wrapper 表格恢复自动布局；单元格溢出改为省略号截断。
+       ============================================================ */
+    .table-wrapper > table { table-layout: auto !important; }
+    .table-wrapper > table td,
+    .table-wrapper > table th { word-break: normal !important; }
+    .table-wrapper > table.roster-table { table-layout: fixed !important; min-width: 1080px !important; }
+    .roster-table th:nth-child(1){width:42px}
+    .roster-table th:nth-child(2){width:108px}  /* 工号加宽：容纳 PF018/ACC-2026-018 等 10+ 字符 */
+    .roster-table th:nth-child(3){width:80px}
+    .roster-table th:nth-child(4){width:48px}
+    .roster-table th:nth-child(5){width:48px}
+    .roster-table th:nth-child(6){width:80px}
+    .roster-table th:nth-child(7){width:88px}   /* 行当略加宽：容纳"靠须生""二架男"等 */
+    .roster-table th:nth-child(8){width:60px}
+    .roster-table th:nth-child(9){width:114px}
+    .roster-table th:nth-child(11){width:88px}
+    .roster-table th:nth-child(12){width:60px}
+    .roster-table th:nth-child(13){width:222px}  /* 操作列：6 个图标按钮（含删除） */
+    table.roster-table td { overflow: hidden; text-overflow: ellipsis; }
+    table.roster-table td:nth-child(2),
+    table.roster-table td:nth-child(3),
+    table.roster-table td:nth-child(6),
+    table.roster-table td:nth-child(7) { white-space: normal; word-break: break-all; }  /* 工号/姓名/部门/行当允许换行避免截断 */
+    table.roster-table td:nth-child(10) { white-space: normal; }
+    table.roster-table td .dept-tag,
+    table.roster-table td .role-tag,
+    table.roster-table td .status-badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+
+    /* ========== 演职人员列表：全部文字水平+垂直居中（2026-10-10） ==========
+       覆盖 style.css thead th{text-align:left} 与浏览器默认（td 默认 middle，
+       th 默认 center 但全局被改左）；fixed 布局 + min-width:1080px + 容器横向
+       滚动保证任意屏幕尺寸下列宽一致，居中效果在各端一致。!important 压过
+       style.css 与 app.js 注入的 H9 补丁。 */
+    table.roster-table th,
+    table.roster-table td { text-align: center !important; vertical-align: middle !important; }
+    /* 操作列按钮组同样整体居中 */
+    table.roster-table td .admin-table-actions { justify-content: center !important; }
+
+    .admin-sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 90;
+    }
+    .admin-sidebar-overlay.active { display: block; }
+    @media (max-width: 900px) {
+      .admin-sidebar { transform: translateX(-100%); }
+      .admin-sidebar.mobile-open { transform: translateX(0); }
+      .admin-main { margin-left: 0 !important; }
+      .admin-sidebar-toggle { display: flex !important; }
+      .admin-search { display: none; }
+      .admin-content { padding: 20px 15px !important; }
+    }
+    .admin-user-dropdown { position: relative; }
+    .admin-user-dropdown .user-toggle {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 12px 6px 6px; border-radius: 25px;
+      background: var(--bg-light); cursor: pointer;
+      transition: var(--transition); border: 1px solid transparent;
+    }
+    .admin-user-dropdown .user-toggle:hover { background: var(--cream); border-color: var(--gold); }
+    .admin-user-dropdown .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex; align-items: center; justify-content: center;
+      color: var(--primary-dark); font-weight: 700; font-size: 0.95rem; flex-shrink: 0;
+    }
+    .admin-user-dropdown .user-name-text { font-size: 0.88rem; font-weight: 600; color: var(--text-dark); }
+    .admin-user-dropdown .user-role-text { font-size: 0.75rem; color: var(--gold-dark); }
+    .admin-user-dropdown .dropdown-arrow { font-size: 0.7rem; color: var(--text-light); transition: transform 0.3s ease; }
+    .admin-user-dropdown.open .dropdown-arrow { transform: rotate(180deg); }
+    .admin-user-dropdown .dropdown-menu {
+      position: absolute; top: calc(100% + 8px); right: 0; min-width: 200px;
+      background: var(--cream); border: 1px solid var(--border-light);
+      border-radius: var(--radius); box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+      overflow: hidden; opacity: 0; visibility: hidden;
+      transform: translateY(-8px); transition: all 0.25s ease; z-index: 200;
+    }
+    .admin-user-dropdown.open .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-menu .dropdown-header { padding: 15px 18px; border-bottom: 1px solid var(--border-light);
+      background: linear-gradient(135deg, rgba(139,0,0,0.05), rgba(212,175,55,0.05)); }
+    .dropdown-menu .dh-name { font-weight: 600; color: var(--primary-dark); font-size: 0.95rem; margin-bottom: 3px; }
+    .dropdown-menu .dh-email { font-size: 0.8rem; color: var(--text-light); }
+    .dropdown-menu .dropdown-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 18px; font-size: 0.88rem; color: var(--text-dark);
+      cursor: pointer; transition: var(--transition);
+    }
+    .dropdown-menu .dropdown-item:hover { background: rgba(139,0,0,0.05); color: var(--primary); padding-left: 22px; }
+    .dropdown-menu .di-icon { width: 18px; text-align: center; color: var(--gold-dark); }
+    .dropdown-menu .dropdown-divider { height: 1px; background: var(--border-light); margin: 4px 0; }
+
+    .staff-tabs {
+      display: flex; gap: 0; border-bottom: 2px solid var(--border-light);
+      background: var(--bg-light); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: 0 20px; overflow-x: auto;
+    }
+    .staff-tab {
+      padding: 16px 28px; cursor: pointer; font-size: 0.95rem;
+      color: var(--text-light); font-weight: 500; position: relative;
+      white-space: nowrap; transition: var(--transition);
+      border-bottom: 3px solid transparent;
+    }
+    .staff-tab:hover { color: var(--primary); }
+    .staff-tab.active {
+      color: var(--primary); font-weight: 700;
+      border-bottom-color: var(--primary);
+    }
+    .staff-tab .tab-badge {
+      display: inline-block; margin-left: 8px; padding: 2px 8px;
+      border-radius: 10px; font-size: 0.72rem; font-weight: 600;
+      background: rgba(139,0,0,0.08); color: var(--primary);
+    }
+    .staff-tab.active .tab-badge { background: var(--primary); color: var(--cream); }
+    .staff-tab-content { display: none; }
+    .staff-tab-content.active { display: block; }
+
+    .filter-bar {
+      display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+      padding: 18px 22px; background: var(--bg-light);
+      border-radius: var(--radius); margin-bottom: 20px;
+      border: 1px solid var(--border-light);
+    }
+    .filter-bar .form-group { display: flex; align-items: center; gap: 8px; }
+    .filter-bar .form-group label {
+      font-size: 0.85rem; color: var(--text-light); font-weight: 500; white-space: nowrap;
+    }
+    .filter-bar .form-control {
+      padding: 8px 14px; border: 1.5px solid var(--border-light);
+      border-radius: 20px; font-size: 0.85rem; background: var(--cream);
+      color: var(--text-dark); font-family: inherit; outline: none;
+      transition: var(--transition);
+    }
+    .filter-bar .form-control:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.1); }
+    .filter-bar .search-box {
+      position: relative; flex: 1; min-width: 240px;
+    }
+    .filter-bar .search-box input {
+      width: 100%; padding: 9px 16px 9px 40px;
+      border: 1.5px solid var(--border-light); border-radius: 25px;
+      background: var(--cream); font-family: inherit; font-size: 0.88rem;
+      outline: none; transition: var(--transition);
+    }
+    .filter-bar .search-box input:focus { border-color: var(--gold); }
+    .filter-bar .search-box .search-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--text-light);
+    }
+
+    .status-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 12px;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    .status-badge.on { background: rgba(40,167,69,0.12); color: #28a745; }
+    .status-badge.off { background: rgba(108,117,125,0.12); color: #6c757d; }
+    .status-badge.disabled { background: rgba(220,53,69,0.14); color: #b02a37; border: 1px dashed rgba(220,53,69,0.45); }
+    .status-badge.leave { background: rgba(255,193,7,0.18); color: #e6a800; }
+    .status-badge.resigned { background: rgba(220,53,69,0.12); color: #dc3545; }
+    .status-badge.late { background: rgba(255,152,0,0.15); color: #ff9800; }
+    .status-badge.absent { background: rgba(220,53,69,0.12); color: #dc3545; }
+    .status-badge.normal { background: rgba(40,167,69,0.12); color: #28a745; }
+    .status-badge.borrowed { background: rgba(23,162,184,0.12); color: #17a2b8; }
+    .status-badge.repair { background: rgba(255,152,0,0.15); color: #ff9800; }
+    .status-badge.scrapped { background: rgba(220,53,69,0.12); color: #dc3545; }
+    .status-badge.stock { background: rgba(40,167,69,0.12); color: #28a745; }
+
+    .attendance-calendar {
+      background: var(--bg-light); border-radius: var(--radius);
+      padding: 20px; border: 1px solid var(--border-light);
+    }
+    .calendar-toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 18px; flex-wrap: wrap; gap: 12px;
+    }
+    .calendar-toolbar h4 {
+      margin: 0; font-size: 1.1rem; color: var(--primary-dark);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .calendar-nav { display: flex; gap: 6px; }
+    .calendar-nav button {
+      width: 36px; height: 36px; border: 1px solid var(--border-light);
+      background: var(--cream); border-radius: 8px; cursor: pointer;
+      color: var(--primary); transition: var(--transition); font-size: 1rem;
+    }
+    .calendar-nav button:hover { background: var(--primary); color: var(--cream); border-color: var(--primary); }
+    .month-selector {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 14px; border: 1.5px solid var(--border-light);
+      border-radius: 20px; background: var(--cream);
+    }
+    .month-selector select {
+      border: none; background: transparent; font-family: inherit;
+      font-size: 0.88rem; color: var(--text-dark); outline: none; cursor: pointer;
+    }
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;
+    }
+    .cal-weekday {
+      text-align: center; padding: 10px 0; font-size: 0.82rem;
+      font-weight: 600; color: var(--gold-dark);
+      background: rgba(212,175,55,0.08); border-radius: 6px;
+    }
+    .cal-weekday.we { color: var(--primary); }
+    .cal-day {
+      aspect-ratio: 1 / 0.85; display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start; border-radius: 8px;
+      font-size: 0.8rem; cursor: pointer; transition: var(--transition);
+      background: var(--cream); border: 1px solid var(--border-light);
+      padding: 6px 4px; position: relative;
+    }
+    .cal-day:hover { border-color: var(--gold); transform: scale(1.03); }
+    .cal-day.empty { background: transparent; border: none; cursor: default; }
+    .cal-day.empty:hover { transform: none; border: none; }
+    .cal-day.today {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--cream); font-weight: 700; box-shadow: 0 2px 8px rgba(139,0,0,0.3);
+    }
+    .cal-day .d-num { font-weight: 600; margin-bottom: 4px; }
+    .cal-day .d-status {
+      display: flex; flex-wrap: wrap; gap: 2px; justify-content: center;
+      font-size: 0.6rem;
+    }
+    .cal-day .d-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+    }
+    .cal-day .d-dot.ok { background: #28a745; }
+    .cal-day .d-dot.late { background: #ff9800; }
+    .cal-day .d-dot.absent { background: #dc3545; }
+    .cal-day .d-dot.leave { background: #e6a800; }
+
+    .abnormal-list { margin-top: 20px; }
+    .abnormal-list h4 {
+      font-size: 1rem; color: var(--primary-dark); margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .abnormal-list h4::before {
+      content: ''; width: 4px; height: 18px;
+      background: linear-gradient(180deg, var(--gold), var(--primary));
+      border-radius: 2px;
+    }
+    .abnormal-summary {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px; margin-bottom: 16px;
+    }
+    .abnormal-item {
+      padding: 12px 16px; border-radius: var(--radius);
+      border: 1px solid var(--border-light); background: var(--cream);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .abnormal-item .ab-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .abnormal-item.late .ab-icon { background: rgba(255,152,0,0.12); }
+    .abnormal-item.early .ab-icon { background: rgba(123,31,162,0.12); }
+    .abnormal-item.absent .ab-icon { background: rgba(220,53,69,0.12); }
+    .abnormal-item.leave .ab-icon { background: rgba(255,193,7,0.15); }
+    .abnormal-item .ab-info .num { font-size: 1.2rem; font-weight: 700; color: var(--primary-dark); }
+    .abnormal-item .ab-info .label { font-size: 0.78rem; color: var(--text-light); }
+
+    .staff-bar-chart {
+      padding: 24px 20px; background: var(--bg-light);
+      border-radius: var(--radius); border: 1px solid var(--border-light);
+    }
+    .staff-bar-item {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
+    }
+    .staff-bar-item:last-child { margin-bottom: 0; }
+    .staff-bar-rank {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.88rem; flex-shrink: 0;
+      background: var(--cream); color: var(--text-light);
+      border: 1px solid var(--border-light);
+    }
+    .staff-bar-rank.top1 { background: linear-gradient(135deg, #FFD700, #FFA000); color: #fff; box-shadow: 0 2px 8px rgba(255,160,0,0.3); }
+    .staff-bar-rank.top2 { background: linear-gradient(135deg, #C0C0C0, #9E9E9E); color: #fff; }
+    .staff-bar-rank.top3 { background: linear-gradient(135deg, #CD7F32, #A0522D); color: #fff; }
+    .staff-bar-label {
+      width: 140px; flex-shrink: 0; font-size: 0.88rem;
+      font-weight: 500; color: var(--text-dark);
+    }
+    .staff-bar-label small { display: block; font-size: 0.72rem; color: var(--text-light); font-weight: 400; }
+    .staff-bar-track {
+      flex: 1; height: 28px; background: var(--cream);
+      border-radius: 14px; overflow: hidden; position: relative;
+      border: 1px solid var(--border-light);
+    }
+    .staff-bar-fill {
+      height: 100%; border-radius: 14px; position: relative;
+      transition: width 1s ease;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    }
+    .staff-bar-fill.gold { background: linear-gradient(90deg, var(--gold-dark), var(--gold-light)); }
+    .staff-bar-fill.teal { background: linear-gradient(90deg, #17a2b8, #3ab0c3); }
+    .staff-bar-fill.green { background: linear-gradient(90deg, #28a745, #5cb85c); }
+    .staff-bar-fill.purple { background: linear-gradient(90deg, #6f42c1, #9b7bd6); }
+    .staff-bar-fill.orange { background: linear-gradient(90deg, #f26522, #ff8f5a); }
+    .staff-bar-fill .val {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      font-size: 0.75rem; font-weight: 600; color: var(--cream);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .staff-bar-count {
+      width: 60px; flex-shrink: 0; text-align: right;
+      font-size: 0.9rem; font-weight: 700; color: var(--primary-dark);
+    }
+    .staff-bar-count small { display: block; font-size: 0.7rem; color: var(--text-light); font-weight: 400; }
+
+    .dept-tag {
+      display: inline-block; padding: 3px 10px; border-radius: 10px;
+      font-size: 0.78rem; font-weight: 500;
+    }
+    .dept-tag.actor { background: rgba(139,0,0,0.1); color: var(--primary); }
+    .dept-tag.music { background: rgba(23,162,184,0.12); color: #17a2b8; }
+    .dept-tag.stage { background: rgba(124,58,237,0.12); color: #7c3aed; }
+
+    .role-tag {
+      display: inline-block; padding: 3px 8px; border-radius: 8px;
+      font-size: 0.75rem; font-weight: 500;
+      background: rgba(212,175,55,0.12); color: var(--gold-dark);
+    }
+  
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 1px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 5px !important;
+  font-size: 0.78rem !important;
+  line-height: 1.2 !important;
+  width: 30px !important;
+  height: 26px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+</style>
+</head>
+<body>
+  <div class="admin-layout">
+    <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <div class="logo-text">秦安县秦剧团文化演出有限公司<br/>文化演出管理系统</div>
+      </div>
+
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <a href="index.html" data-role-level="100" class="admin-menu-item  ">
+            <span class="menu-icon">📊</span>
+            <span>数据看板</span>
+          </a>
+          <a href="accounts.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">👥</span>
+            <span>账号权限管理</span>
+          </a>
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
+            <span class="menu-icon">📅</span>
+            <span>演出档期排班</span>
+            
+          </a>
+          <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>演出演员表</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="orders.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>订单预约管理</span>
+            
+          </a>
+          <a href="operas.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>剧目资源管理</span>
+          </a>
+          <a href="staff.html" data-role-level="800" class="admin-menu-item active admin-menu-item">
+            <span class="menu-icon">👨‍🎤</span>
+            <span>演职人员管理</span>
+          </a>
+          <a href="qr-manage.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🏷️</span>
+            <span>入职二维码</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="self-portal.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📱</span>
+            <span>员工自助门户</span>
+          </a>
+          <a href="attendance.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">💵</span>
+            <span>考勤与薪酬</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="inventory.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>道具服装库存</span>
+            
+          </a>
+          <a href="finance.html" data-role-level="500" class="admin-menu-item">
+            <span class="menu-icon">💰</span>
+            <span>财务收支台账</span>
+          </a>
+          <a href="content.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📝</span>
+            <span>官网内容管理</span>
+          </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
+          </a>
+          <a href="reports.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">📈</span>
+            <span>数据统计报表</span>
+          </a>
+          <a href="system.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">🔧</span>
+            <span>系统日志备份</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
+          <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>架构验收报告</span>
+          </a>
+          <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>最终交付总结</span>
+          </a>
+          <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">🚀</span>
+            <span>EdgeOne Pages 部署教程</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
+          </a>
+          <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
+            <span>🚪</span><span>退出登录</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" id="sidebarToggle" aria-label="菜单">
+            <span>☰</span>
+          </button>
+          <div class="admin-breadcrumb">
+            <a href="index.html">首页</a>
+            <span class="separator">/</span>
+            <span class="current">演职人员管理</span>
+            <span class="separator">/</span>
+            <span class="current">演职人员人事管理</span>
+          </div>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="搜索人员、工号..." />
+          </div>
+          <button class="admin-header-btn" title="通知">
+            <span>🔔</span>
+            <span class="notify-dot"></span>
+          </button>
+          <button class="admin-header-btn" title="消息">
+            <span>✉️</span>
+          </button>
+          <button class="admin-header-btn" title="全屏" onclick="toggleFullscreen()">
+            <span>⛶</span>
+          </button>
+          <div class="admin-user-dropdown" id="userDropdown">
+            <div class="user-toggle" id="userToggle">
+              <div class="user-avatar" id="userAvatar">A</div>
+              <div>
+                <div class="user-name-text" id="userName">管理员</div>
+                <div class="user-role-text" id="userRole">超级管理员</div>
+              </div>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+              <div class="dropdown-header">
+                <div class="dh-name" id="dhName">系统管理员</div>
+                <div class="dh-email">admin@qinxian-opera.com</div>
+              </div>
+              <div class="dropdown-item" onclick="location.href='accounts.html'">
+                <span class="di-icon">👤</span><span>个人资料</span>
+              </div>
+              <div class="dropdown-item" onclick="location.href='system.html'">
+                <span class="di-icon">⚙️</span><span>系统设置</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" id="logoutBtnDropdown" style="color:var(--primary);">
+                <span class="di-icon">🚪</span><span>退出登录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="admin-content">
+        <div class="admin-page-header">
+          <div class="admin-page-title">
+            <h1>演职人员人事管理</h1>
+            <p class="page-desc">管理剧团全体演职人员档案、考勤记录及演出场次统计</p>
+          </div>
+          <div class="admin-page-actions">
+            <button class="btn btn-primary" id="btnStaffAddNew" data-stf-real="1">
+              ➕ 新增人员
+            </button>
+            <button class="btn btn-secondary" id="btnStaffExportRoster" data-stf-real="1">
+              📤 导出花名册
+            </button>
+            <button class="btn btn-success" id="btnStaffBatchEnable" data-stf-real="1">
+              ✅ 批量启用
+            </button>
+            <button class="btn btn-danger" id="btnStaffBatchDisable" data-stf-real="1">
+              🚫 批量禁用
+            </button>
+            <button class="btn btn-outline-dark" id="btnStaffBatchMakeup" data-stf-real="1">
+              ➕ 批量补卡
+            </button>
+            <button class="btn btn-gold" id="btnStaffExportAttendance" data-stf-real="1">
+              📊 考勤统计导出
+            </button>
+            <button class="btn btn-secondary" id="btnStaffOnboardQr" data-stf-real="1" onclick="window.__showOnboardQr && window.__showOnboardQr()">
+              📱 入职二维码
+            </button>
+            <button class="btn btn-danger" id="btnStaffCleanupDisabled" data-stf-real="1" style="background:linear-gradient(135deg,#8b0000,#b02a37);" title="批量删除全部「已禁用」状态的演职人员（软删除+审计日志，仅超级管理员）">
+              🧹 清理已禁用
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card stat-card--primary">
+            <div class="stat-card-header">
+              <div class="stat-card-icon">👥</div>
+              <div class="stat-card-trend" style="background:rgba(139,0,0,0.08);color:var(--text-light);">
+                <span>—</span><span>稳定</span>
+              </div>
+            </div>
+            <div class="stat-card-title">在职人员总数</div>
+            <div class="stat-card-value"><span id="statTotalActive">—</span><span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">人</span></div>
+            <div class="stat-card-sub">
+              <span>演员<span id="statActor">0</span></span>
+              <span class="divider"></span>
+              <span>乐师<span id="statMusic">0</span></span>
+              <span class="divider"></span>
+              <span>舞美<span id="statStage">0</span></span>
+            </div>
+          </div>
+          <div class="stat-card stat-card--success">
+            <div class="stat-card-header">
+              <div class="stat-card-icon">✅</div>
+              <div class="stat-card-trend" id="statAttTrend" style="color:var(--text-light);">
+                <span>—</span>
+              </div>
+            </div>
+            <div class="stat-card-title">本月在岗率</div>
+            <div class="stat-card-value"><span id="statAttRate">—</span><span style="font-size:1.1rem;margin-left:2px;">%</span></div>
+            <div class="stat-card-sub">
+              <span>出勤<span id="statPresent">0</span></span>
+              <span class="divider"></span>
+              <span style="color:var(--text-light);">异常<span id="statAttTotal">0</span></span>
+            </div>
+          </div>
+          <div class="stat-card stat-card--gold">
+            <div class="stat-card-header">
+              <div class="stat-card-icon">🎬</div>
+              <div class="stat-card-trend" id="statPerfTrend" style="color:var(--text-light);">
+                <span>—</span>
+              </div>
+            </div>
+            <div class="stat-card-title"><span id="statYear">2026</span>年累计参演</div>
+            <div class="stat-card-value"><span id="statPerfTotal">—</span><span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">人次</span></div>
+            <div class="stat-card-sub">
+              <span>本戏<span id="statBenxi">0</span></span>
+              <span class="divider"></span>
+              <span>折子<span id="statZhezi">0</span></span>
+            </div>
+          </div>
+          <div class="stat-card stat-card--danger">
+            <div class="stat-card-header">
+              <div class="stat-card-icon">⚠️</div>
+              <div class="stat-card-trend" id="statExcTrend" style="color:var(--text-light);">
+                <span>—</span>
+              </div>
+            </div>
+            <div class="stat-card-title">待考勤异常</div>
+            <div class="stat-card-value"><span id="statExcTotal">—</span><span style="font-size:0.95rem;margin-left:4px;color:var(--text-light);">条</span></div>
+            <div class="stat-card-sub">
+              <span>迟到<span id="statLate">0</span></span>
+              <span class="divider"></span>
+              <span>缺勤<span id="statAbsent">0</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 批次9修复：人员档案附件上传 -->
+        <div class="admin-card" style="margin:0 0 22px 0;border:2px solid #0ea5e9;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);box-shadow:none;" data-upload-wrap="1">
+          <div class="admin-card-header" style="padding-top:16px;">
+            <h3 style="color:#0c4a6e;">👤 演职人员档案附件上传（前端校验+预览层）</h3>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <span class="badge badge-info" style="font-size:0.78rem;">证件照·资格证书·劳动合同·演员档案</span>
+              <button class="btn btn-primary btn-sm" type="button" id="openStaffUploadBtn" style="padding:6px 14px;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;">📤 选择档案</button>
+            </div>
+          </div>
+          <div class="admin-card-body" style="padding-top:6px;">
+            <form id="staffAttachForm" autocomplete="off" novalidate>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+                <div>
+                  <label style="display:block;font-weight:700;color:#0c4a6e;margin-bottom:6px;">关联人员（工号·姓名）</label>
+                  <select name="staffId" style="width:100%;padding:10px 14px;border:1.5px solid #0ea5e9;border-radius:10px;background:#fff;">
+                    <option value="">请选择要补充档案的演职人员</option></select>
+                </div>
+                <div>
+                  <label style="display:block;font-weight:700;color:#0c4a6e;margin-bottom:6px;">档案附件类型</label>
+                  <select name="staffDocType" style="width:100%;padding:10px 14px;border:1.5px solid #0ea5e9;border-radius:10px;background:#fff;">
+                    <option value="id_photo">📷 一寸免冠证件照</option>
+                    <option value="cert">📜 演员资格/职称证书</option>
+                    <option value="contract">📄 劳动合同/聘书</option>
+                    <option value="profile">🎭 个人艺术档案卡</option>
+                    <option value="award">🏆 获奖证书/荣誉证明</option>
+                  </select>
+                </div>
+                <div style="grid-column:1 / -1;">
+                  <label style="display:block;font-weight:700;color:#0c4a6e;margin-bottom:6px;">附件文件 *（≤10MB/个，支持JPG/PNG/PDF/DOCX）</label>
+                  <input type="file" name="staffFiles" id="staffAttachFiles" accept="image/*,.pdf,.doc,.docx" multiple required style="width:100%;padding:10px;border:2px dashed #0ea5e9;border-radius:12px;background:#fff;cursor:pointer;">
+                </div>
+              </div>
+              <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+                <button type="submit" class="btn btn-primary" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);border:none;">✅ 提交档案</button>
+                <button type="reset" class="btn btn-outline">🔄 清空</button>
+                <small style="color:#0369a1;">💡 证件照自动裁剪为一寸预览，PDF/Word显示图标。</small>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="admin-card" style="padding:0;overflow:hidden;">
+          <div class="staff-tabs" id="staffTabs">
+            <div class="staff-tab active" data-tab="roster">
+              📋 人员花名册 <span class="tab-badge" id="rosterBadge">0</span>
+            </div>
+            <div class="staff-tab" data-tab="attendance">
+              📅 考勤管理 <span class="tab-badge" id="attBadge">0</span>
+            </div>
+            <div class="staff-tab" data-tab="attv2">
+              🧾 V2 考勤与奖罚 <span class="tab-badge" id="attv2TabBadge" style="background:#fd7e14;color:#fff;">新</span>
+            </div>
+            <div class="staff-tab" data-tab="stats">
+              📈 场次统计
+            </div>
+            <div class="staff-tab" data-tab="wage">
+              💰 工资条 <span class="tab-badge" id="wageTabBadge">0</span>
+            </div>
+            <div class="staff-tab" data-tab="leave">
+              🏖 请假管理 <span class="tab-badge" id="leaveTabBadge">0</span>
+            </div>
+          </div>
+
+          <div class="admin-card-body">
+            <div class="staff-tab-content active" id="tab-roster">
+              <div class="filter-bar">
+                <div class="form-group">
+                  <label>部门：</label>
+                  <select class="form-control" id="stfFilterDept" data-stf-filter="1">
+                    <option value="">全部部门</option>
+                    <option>演员队</option>
+                    <option>乐队</option>
+                    <option>舞美队</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>行当：</label>
+                  <select class="form-control" id="stfFilterRole" data-stf-filter="1">
+                    <option value="">全部行当</option>
+                    <optgroup label="生行"><option>文须生</option><option>武须生</option><option>小生</option></optgroup>
+                    <optgroup label="丑行"><option>丑角</option></optgroup>
+                    <optgroup label="净行"><option>大花脸</option><option>二花脸</option></optgroup>
+                    <optgroup label="旦行"><option>正旦</option><option>小旦</option><option>彩旦</option><option>二架旦</option></optgroup>
+                    <optgroup label="二架"><option>门官</option><option>家院</option><option>其他二架</option></optgroup>
+                    <optgroup label="角子"><option>龙套</option><option>校尉</option><option>刀斧手</option><option>丫鬟</option><option>彩女</option><option>长随官</option></optgroup>
+                    <optgroup label="后勤"><option>帽箱</option><option>电工</option><option>前场</option><option>衣箱</option><option>剧务</option></optgroup>
+                    <optgroup label="乐队"><option>武场</option><option>文场</option></optgroup>
+                    <optgroup label="文乐队"><option>电子琴</option></optgroup>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>状态：</label>
+                  <select class="form-control" id="stfFilterStatus" data-stf-filter="1">
+                    <option value="">全部状态</option>
+                    <option value="active">在岗</option>
+                    <option value="inactive">停用</option>
+                    <option value="disabled">已禁用</option>
+                  </select>
+                </div>
+                <div class="search-box">
+                  <span class="search-icon">🔍</span>
+                  <input type="text" id="stfFilterKw" data-stf-filter="1" placeholder="搜索工号、姓名、电话、擅长剧目..." />
+                </div>
+              </div>
+
+              <!-- 待入职审核面板 -->
+              <div id="pendingReviewPanel" style="margin-bottom:14px;background:#fff8e7;border:1px solid #e8d5b7;border-radius:10px;display:none;">
+                <div style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f0e0c0;cursor:pointer;" onclick="var b=document.getElementById('pendingReviewBody');b.style.display=b.style.display==='none'?'block':'none';">
+                  <span style="font-weight:600;color:#8b0000;">⏳ 待入职审核 <span id="pendingCount" style="background:#d32f2f;color:#fff;border-radius:10px;padding:1px 8px;font-size:12px;margin-left:6px;">0</span></span>
+                  <span style="color:#8a6d3b;font-size:12px;">点击展开/收起</span>
+                </div>
+                <div id="pendingReviewBody" style="padding:12px 14px;display:block;max-height:360px;overflow-y:auto;">
+                  <div id="pendingReviewList"></div>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table class="roster-table">
+                  <thead>
+                    <tr>
+                      <th style="width:46px;text-align:center;"><input type="checkbox" onclick="var c=this.checked,tb=this.closest('table');if(tb){tb.querySelectorAll('tbody tr').forEach(function(r){if(r.classList.contains('pg-hidden')||r.getAttribute('data-pagination-hidden')==='1')return;var cb=r.querySelector('td:first-child input[type=checkbox]');if(cb)cb.checked=c;})}" title="全选当前页" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></th>
+                      <th>工号</th>
+                      <th>姓名</th>
+                      <th>性别</th>
+                      <th>年龄</th>
+                      <th>部门</th>
+                      <th>岗位行当</th>
+                      <th>入职年份</th>
+                      <th>联系电话</th>
+                      <th>擅长剧目</th>
+                      <th>在岗状态</th>
+                      <th>月度场次</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody data-paginate="list" data-page-size="10" data-paginate-keep="1" data-stf-roster="1">
+<tr><td colspan="13" style="text-align:center;padding:30px 14px;color:var(--text-light,#999);">正在加载真实花名册…</td></tr>
+</tbody>
+                </table>
+              </div>
+</div>
+
+            <div class="staff-tab-content" id="tab-attendance">
+              <div class="filter-bar" style="margin-bottom:20px;">
+                <div class="form-group">
+                  <label>考勤月份：</label>
+                  <div class="month-selector">
+                    <span>📅</span>
+                    <select id="attendanceYear"></select>
+                    <select id="attendanceMonth"></select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>人员：</label>
+                  <select class="form-control" id="attendanceStaff">
+                    <option value="">全部人员</option>
+                    </select>
+                </div>
+                <div style="margin-left:auto;">
+                  <button class="btn btn-secondary btn-sm" id="btnAttExport" type="button">📥 导出考勤表</button>
+                  <button class="btn btn-primary btn-sm" id="btnAttManualEntry" type="button">✍️ 手工登记考勤</button>
+                </div>
+              </div>
+
+              <!-- 考勤预警面板（支持《员工管理条例》解聘条款） -->
+              <div id="attWarnPanel" style="display:none;margin-bottom:18px;"></div>
+
+              <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:20px;margin-bottom:25px;">
+                <div class="attendance-calendar">
+                  <div class="calendar-toolbar">
+                    <h4 id="attCalTitle">📆 本月考勤打卡日历</h4>
+                    <div class="calendar-nav">
+                      <button onclick="changeCalMonth(-1)">‹</button>
+                      <button onclick="resetCalMonth()">今</button>
+                      <button onclick="changeCalMonth(1)">›</button>
+                    </div>
+                  </div>
+                  <div class="cal-grid" id="attendanceCalGrid"></div>
+                  <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border-light);display:flex;flex-wrap:wrap;gap:18px;font-size:0.78rem;color:var(--text-light);">
+                    <div style="display:flex;align-items:center;gap:6px;"><div class="d-dot ok"></div>正常出勤</div>
+                    <div style="display:flex;align-items:center;gap:6px;"><div class="d-dot late"></div>迟到</div>
+                    <div style="display:flex;align-items:center;gap:6px;"><div class="d-dot absent"></div>缺勤</div>
+                    <div style="display:flex;align-items:center;gap:6px;"><div class="d-dot leave"></div>请假</div>
+                  </div>
+                </div>
+
+                <div class="abnormal-list">
+                  <h4>📌 考勤异常列表 <span style="font-size:0.8rem;color:var(--text-light);font-weight:400;">（本月）</span></h4>
+                  <div class="abnormal-summary">
+                    <div class="abnormal-item late">
+                      <div class="ab-icon">⏰</div>
+                      <div class="ab-info">
+                        <div class="num" id="attStatLate">0</div>
+                        <div class="label">迟到</div>
+                      </div>
+                    </div>
+                    <div class="abnormal-item early">
+                      <div class="ab-icon">🏃</div>
+                      <div class="ab-info">
+                        <div class="num" id="attStatEarly">0</div>
+                        <div class="label">早退</div>
+                      </div>
+                    </div>
+                    <div class="abnormal-item absent">
+                      <div class="ab-icon">❌</div>
+                      <div class="ab-info">
+                        <div class="num" id="attStatAbsent">0</div>
+                        <div class="label">缺勤</div>
+                      </div>
+                    </div>
+                    <div class="abnormal-item leave">
+                      <div class="ab-icon">📝</div>
+                      <div class="ab-info">
+                        <div class="num" id="attStatLeave">0</div>
+                        <div class="label">请假</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="padding:14px;border-radius:var(--radius);background:rgba(220,53,69,0.06);border:1px solid rgba(220,53,69,0.15);margin-bottom:14px;">
+                    <div style="font-size:0.88rem;font-weight:600;color:var(--primary);margin-bottom:8px;">⚠️ 待处理异常（<span id="attStatPending">0</span>条）</div>
+                    <div style="font-size:0.82rem;color:var(--text-light);">待审批请假申请，请及时完成审批处理</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>日期</th>
+                      <th>姓名</th>
+                      <th>班次</th>
+                      <th>签到时间</th>
+                      <th>签退时间</th>
+                      <th>工时</th>
+                      <th>状态</th>
+                      <th>备注</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="attendanceListTbody"><!-- 真实考勤记录由 /v1/attendance 渲染 --></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- V2 考勤与奖罚管理 Tab（适配 ISAPI 两次打卡规则） -->
+            <div class="staff-tab-content" id="tab-attv2">
+              <div class="filter-bar" style="margin-bottom:18px;">
+                <div class="form-group">
+                  <label>考勤日期：</label>
+                  <input type="date" id="attv2Date" class="form-control" style="min-width:170px;" />
+                </div>
+                <div class="form-group">
+                  <label>岗位：</label>
+                  <select id="attv2RoleCategory" class="form-control">
+                    <option value="">全部岗位</option>
+                    <option>生角</option>
+                    <option>旦角</option>
+                    <option>净角</option>
+                    <option>丑角</option>
+                    <option>乐队</option>
+                    <option>龙套</option>
+                    <option>后勤</option>
+                    <option>编剧/导演</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>关键字：</label>
+                  <input type="text" id="attv2Keyword" class="form-control" placeholder="姓名 / 工号…" />
+                </div>
+                <div class="form-actions" style="gap:8px;">
+                  <button class="btn btn-primary btn-sm" id="attv2RefreshBtn" onclick="window.AttV2UI && window.AttV2UI.render()">🔄 刷新</button>
+                  <button class="btn btn-secondary btn-sm" onclick="window.AttV2UI && window.AttV2UI.exportCsv()">📥 导出CSV</button>
+                </div>
+              </div>
+
+              <div class="card" style="background:linear-gradient(90deg,#fff7ed,#fff);border-left:4px solid #fd7e14;padding:14px 18px;margin-bottom:18px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
+                <div style="line-height:1.7;font-size:0.9rem;color:#7a3e00;">
+                  <div style="font-weight:700;font-size:1rem;margin-bottom:4px;">🧾 《演员考勤与薪酬管理规定》V2 控制台 · 适配 ISAPI 自动对接考勤机</div>
+                  <div>日场窗口 13:30–14:00 基准 13:30 ｜ 晚场窗口 19:30–20:00 基准 19:30 ｜ 迟到 1 元/分（单场上限 30 元，≥30 分本场失效） ｜ 奖励 5 元/天</div>
+                  <div>事故分级：一级=10元 · 二级=30元 · 三级=50元（代打卡查实按三级）｜ 装台/卸台日：不计薪资、不计迟到、不计奖励</div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <select id="attv2BatchTagType" class="form-control" style="min-width:120px;">
+                    <option value="常规">批量：标记常规</option>
+                    <option value="装台">批量：标记装台</option>
+                    <option value="卸台">批量：标记卸台</option>
+                  </select>
+                  <button class="btn btn-outline-dark btn-sm" onclick="window.AttV2UI && window.AttV2UI.batchTag()">📝 批量标记</button>
+                  <button class="btn btn-gold btn-sm" onclick="window.AttV2UI && window.AttV2UI.batchReward()">⭐ 批量奖励(+5元)</button>
+                  <div style="display:flex;gap:6px;">
+                    <select id="attv2AccLevel" class="form-control">
+                      <option value="1">一级事故(10元)</option>
+                      <option value="2">二级事故(30元)</option>
+                      <option value="3">三级事故(50元)</option>
+                    </select>
+                    <button class="btn btn-sm" style="background:#fde2e1;color:#c0392b;" onclick="window.AttV2UI && window.AttV2UI.batchAccident()">⚠️ 批量登记事故</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============================================================
+                   🧩 ISAPI 对接调试面板（海康 / 腾讯云 / 通用自动识别）
+                   生产环境可隐藏：style="display:none;" 即可
+                   ============================================================ -->
+              <div class="card" id="isapiDebugPanel" style="border:1px dashed #3742fa;border-radius:8px;padding:14px 18px;margin-bottom:18px;background:#f0f4ff;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer;" onclick="var c=document.getElementById('isapiDebugBody'); if(c){c.style.display=c.style.display==='none'?'block':'none';}">
+                  <div style="font-weight:700;color:#3742fa;font-size:1rem;">🧩 ISAPI 对接调试面板</div>
+                  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:0.82rem;color:#3742fa;">
+                    <span id="isapiStatusHint">点击展开</span>
+                    <span id="isapiVendorBadge"></span>
+                  </div>
+                </div>
+                <div id="isapiDebugBody" style="display:none;margin-top:12px;">
+                  <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px 14px;align-items:end;margin-bottom:12px;">
+                    <div>
+                      <label style="font-size:0.82rem;color:#555;display:block;margin-bottom:4px;">粘贴考勤机原始 JSON（直接贴数组就行，字段自动识别海康/腾讯云/通用）</label>
+                      <textarea id="isapiRawJson" class="form-control" style="width:100%;height:84px;resize:vertical;font-family:Consolas, monospace;font-size:0.82rem;border:1px solid #cbd5e0;border-radius:6px;padding:8px;" placeholder='示例（海康）：&#10;[&#10;  {personId:&quot;QA001&quot;, punchTime:1785354000000, inOut:&quot;in&quot;, sn:&quot;DS-K1T607M-1001&quot;},&#10;  {personId:&quot;QA002&quot;, punchTime:&quot;2026-07-30 19:42:05&quot;, employeeNo:&quot;QA002&quot;}&#10;]'></textarea>
+                    </div>
+                    <div>
+                      <label style="font-size:0.82rem;color:#555;display:block;margin-bottom:4px;">考勤机厂商</label>
+                      <select id="isapiVendor" class="form-control">
+                        <option value="hikvision">海康威视 ISAPI</option>
+                        <option value="tencent">腾讯云人脸/优图</option>
+                        <option value="generic">通用后台脚本</option>
+                      </select>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                      <button class="btn btn-primary btn-sm" onclick="window.AttV2UI && window.AttV2UI.isapiImport()">📥 粘贴导入</button>
+                      <button class="btn btn-sm" style="background:#e8f0fe;color:#3742fa;" onclick="window.AttV2UI && window.AttV2UI.isapiMock(50)">🎲 生成 50 条</button>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 14px;align-items:end;margin-bottom:12px;">
+                    <div>
+                      <label style="font-size:0.82rem;color:#555;display:block;margin-bottom:4px;">凌晨归属日偏移（小时，0-6）</label>
+                      <input type="number" id="isapiDayShift" class="form-control" min="0" max="6" value="4" />
+                    </div>
+                    <div>
+                      <label style="font-size:0.82rem;color:#555;display:block;margin-bottom:4px;">丢弃下班/签退记录</label>
+                      <select id="isapiDiscardOut" class="form-control">
+                        <option value="1" selected>是（默认，V2 只记上班）</option>
+                        <option value="0">否（全部保留）</option>
+                      </select>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                      <button class="btn btn-secondary btn-sm" onclick="window.AttV2UI && window.AttV2UI.isapiMock(100)">🎲 生成 100 条</button>
+                      <button class="btn btn-sm" style="background:#fff1f0;color:#c0392b;" onclick="window.AttV2UI && window.AttV2UI.isapiClear()">🗑 清空所有打卡</button>
+                    </div>
+                  </div>
+                  <div style="background:#fff;border-radius:6px;padding:10px 14px;font-size:0.84rem;line-height:1.75;color:#333;border:1px solid #e2e8f0;">
+                    <div>📌 <b>接入说明</b>：生产环境对接 ISAPI 拉取后只需要在同步脚本调用这 1 行，之后 V2 表格/薪资/导出 自动生效：<code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;color:#0f172a;">QinApp.Wage.isapi.ingestClockRecords(rawArray,{vendor:'hikvision'});</code></div>
+                    <div id="isapiSyncInfo" style="margin-top:6px;color:#64748b;">⏱ 最近同步：- / 累计写入：- / 覆盖 [员工×日]：-</div>
+                    <div id="isapiLastResult" style="margin-top:4px;color:#334155;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr;gap:22px;">
+                <!-- V2 考勤表格 -->
+                <div class="card" style="padding:18px;border-radius:8px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+                    <div style="font-size:1.05rem;font-weight:700;color:#222;">📋 当日考勤明细 <span id="attv2SummaryTag" style="font-weight:500;color:#666;font-size:0.85rem;"></span></div>
+                    <div style="display:flex;gap:8px;align-items:center;font-size:0.85rem;color:#666;">
+                      <label style="margin:0;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="attv2CheckAll" onchange="window.AttV2UI && window.AttV2UI.toggleAll(this)" /> <span>全选</span></label>
+                      <span id="attv2SelectedTag" style="color:#fd7e14;font-weight:600;"></span>
+                    </div>
+                  </div>
+                  <div style="overflow-x:auto;">
+                    <table class="data-table" id="attv2Table" style="font-size:0.88rem;">
+                      <thead>
+                        <tr>
+                          <th style="width:42px;text-align:center;"><span style="color:#aaa;">选</span></th>
+                          <th>姓名</th><th>工号</th><th>岗位/等级</th>
+                          <th style="min-width:100px;">日场打卡</th>
+                          <th style="min-width:100px;">晚场打卡</th>
+                          <th style="text-align:center;">场次</th>
+                          <th style="text-align:center;">薪资比</th>
+                          <th style="text-align:center;">基础工资</th>
+                          <th style="text-align:center;">管理员标记</th>
+                          <th style="text-align:center;">奖励</th>
+                          <th style="text-align:center;">迟到</th>
+                          <th style="text-align:center;">事故</th>
+                          <th style="text-align:center;font-weight:700;color:#b45309;">当日小计</th>
+                          <th style="min-width:180px;">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody id="attv2Tbody"><!-- 动态渲染 --></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- 操作日志 & 事故明细 -->
+                <div style="display:grid;grid-template-columns:1.35fr 1fr;gap:20px;">
+                  <div class="card" style="padding:18px;border-radius:8px;">
+                    <div style="font-size:1.05rem;font-weight:700;color:#222;margin-bottom:14px;display:flex;align-items:center;gap:8px;">📜 操作日志 <span class="badge" style="background:#e9ecef;color:#555;font-size:0.75rem;" id="attv2AuditCount">0</span><button class="btn btn-outline-dark btn-xs" style="margin-left:auto;" onclick="window.AttV2UI && window.AttV2UI.clearAudit()">清空</button></div>
+                    <div style="max-height:340px;overflow-y:auto;border:1px solid #eee;border-radius:6px;">
+                      <table class="data-table" style="font-size:0.82rem;margin:0;">
+                        <thead style="position:sticky;top:0;background:#fafafa;z-index:1;"><tr><th style="width:160px;">时间</th><th style="width:90px;">操作人</th><th>对象（日期 · 人员）</th><th style="min-width:230px;">变更</th><th style="width:180px;">备注</th></tr></thead>
+                        <tbody id="attv2AuditTbody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div class="card" style="padding:18px;border-radius:8px;">
+                    <div style="font-size:1.05rem;font-weight:700;color:#222;margin-bottom:14px;display:flex;align-items:center;gap:8px;">🧱 当日事故登记明细 <button class="btn btn-outline-dark btn-xs" style="margin-left:auto;" onclick="window.AttV2UI && window.AttV2UI.render()">刷新</button></div>
+                    <div style="max-height:340px;overflow-y:auto;">
+                      <table class="data-table" style="font-size:0.82rem;">
+                        <thead style="position:sticky;top:0;background:#fafafa;z-index:1;"><tr><th>员工</th><th style="width:80px;">级别</th><th style="width:72px;">金额</th><th>备注</th><th style="width:100px;">时间</th></tr></thead>
+                        <tbody id="attv2AccidentTbody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="staff-tab-content" id="tab-stats">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+                <div>
+                  <h3 style="font-size:1.15rem;margin:0;display:flex;align-items:center;gap:8px;">
+                    📊 {year}年度参演场次排名
+                    <span class="badge badge-gold">实时统计</span>
+                  </h3>
+                  <p style="font-size:0.85rem;color:var(--text-light);margin-top:4px;">按人员总参演场次降序排列，数据截至今日</p>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                  <select class="form-control" style="padding:8px 14px;border:1.5px solid var(--border-light);border-radius:20px;">
+                    <option>全部部门</option>
+                    <option>演员队</option>
+                    <option>乐队</option>
+                    <option>舞美队</option>
+                  </select>
+                  <select class="form-control" style="padding:8px 14px;border:1.5px solid var(--border-light);border-radius:20px;">
+                    <option>全部行当</option>
+                    <option>生角</option>
+                    <option>旦角</option>
+                    <option>净角</option>
+                    <option>丑角</option>
+                    <option>龙套</option>
+                  </select>
+                  <button class="btn btn-secondary btn-sm">📥 导出统计</button>
+                </div>
+              </div>
+
+              <div class="staff-bar-chart" style="margin-bottom:25px;text-align:center;padding:30px;color:var(--text-light);">暂无出勤统计数据，真实考勤数据随打卡/补卡录入后生成</div>
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>排名</th>
+                      <th>工号</th>
+                      <th>姓名</th>
+                      <th>行当</th>
+                      <th>本戏场次</th>
+                      <th>折子戏</th>
+                      <th>惠民场次</th>
+                      <th>商演场次</th>
+                      <th>总场次</th>
+                      <th>出勤率</th>
+                    </tr>
+                  </thead>
+                  <tbody><!-- 演示排名已清，真实统计由考勤数据生成 --></tbody>
+                </table>
+              </div>
+</div>
+
+            <!-- ====== 工资条 Tab ====== -->
+            <div class="staff-tab-content" id="tab-wage">
+              <!-- 子Tab切换 -->
+              <div style="display:flex;gap:0;border-bottom:2px solid var(--border-light);margin-bottom:20px;flex-wrap:wrap;">
+                <button class="wage-sub-tab active" data-wtab="rules" style="padding:12px 24px;cursor:pointer;background:transparent;border:none;border-bottom:3px solid transparent;font-size:0.9rem;font-weight:600;color:var(--text-light);transition:all 0.3s;">
+                  📋 默认日工资规则
+                </button>
+                <button class="wage-sub-tab" data-wtab="generate" style="padding:12px 24px;cursor:pointer;background:transparent;border:none;border-bottom:3px solid transparent;font-size:0.9rem;font-weight:600;color:var(--text-light);transition:all 0.3s;">
+                  ⚙️ 当月工资生成
+                </button>
+                <button class="wage-sub-tab" data-wtab="history" style="padding:12px 24px;cursor:pointer;background:transparent;border:none;border-bottom:3px solid transparent;font-size:0.9rem;font-weight:600;color:var(--text-light);transition:all 0.3s;">
+                  📜 工资条历史
+                </button>
+                <button class="wage-sub-tab" data-wtab="negotiate" style="padding:12px 24px;cursor:pointer;background:transparent;border:none;border-bottom:3px solid transparent;font-size:0.9rem;font-weight:600;color:var(--text-light);transition:all 0.3s;">
+                  📝 天工资商议单
+                </button>
+                <button class="wage-sub-tab" data-wtab="archive" style="padding:12px 24px;cursor:pointer;background:transparent;border:none;border-bottom:3px solid transparent;font-size:0.9rem;font-weight:600;color:var(--text-light);transition:all 0.3s;">
+                  🗂 商议单存档
+                </button>
+              </div>
+              <style>
+                .wage-sub-tab.active { color:var(--primary) !important; border-bottom-color:var(--primary) !important; }
+                .wage-sub-panel { display:none; }
+                .wage-sub-panel.active { display:block; }
+                .wage-stat-card { padding:18px;border-radius:12px;background:linear-gradient(135deg,#fff,#fafbfd);border:1px solid var(--border-light); }
+                .wage-stat-card .label { font-size:0.8rem;color:var(--text-light);margin-bottom:6px; }
+                .wage-stat-card .value { font-size:1.5rem;font-weight:800;color:var(--primary-dark);font-family:'Georgia',serif; }
+                .wage-stat-card .sub { font-size:0.75rem;color:var(--text-light);margin-top:4px; }
+                .wage-rule-table { width:100%;border-collapse:collapse; }
+                .wage-rule-table th, .wage-rule-table td { border:1px solid var(--border-light);padding:10px 12px;text-align:center;font-size:0.85rem; }
+                .wage-rule-table th { background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:var(--cream);font-weight:600; }
+                .wage-rule-table td input { width:100%;padding:6px 8px;border:1px solid var(--border-light);border-radius:6px;background:#fff;font-family:inherit;text-align:center; }
+                .wage-rule-table td input:focus { outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,169,98,0.15); }
+                .wage-rule-table tr:nth-child(even) td { background:rgba(201,169,98,0.03); }
+                .wage-payslip-table { width:100%;border-collapse:collapse; }
+                .wage-payslip-table th { background:linear-gradient(135deg,#1869AD,#0F4C81);color:#fff;padding:12px;text-align:center;font-weight:600;font-size:0.85rem; }
+                .wage-payslip-table td { padding:11px 12px;border-bottom:1px solid var(--border-light);text-align:center;font-size:0.85rem;vertical-align:middle; }
+                .wage-payslip-table tbody tr:hover { background:rgba(201,169,98,0.08); }
+                .wage-payslip-table .amt-right { text-align:right;font-weight:600;font-family:'Georgia',serif; }
+                .payslip-detail-modal { background:#fff;border-radius:16px;max-width:820px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(15,76,129,0.25); }
+                .payslip-detail-header { background:linear-gradient(135deg,#0F4C81,#1E6FB5);color:#fff;padding:22px 26px;border-radius:16px 16px 0 0; }
+                .payslip-detail-body { padding:24px 26px; }
+                .payslip-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:16px; }
+                .payslip-item { padding:12px 14px;background:linear-gradient(135deg,#fff,#fafbfd);border:1px solid var(--border-light);border-radius:10px; }
+                .payslip-item .pl { font-size:0.78rem;color:var(--text-light);margin-bottom:4px; }
+                .payslip-item .pv { font-size:1.05rem;font-weight:700;color:var(--primary-dark);font-family:'Georgia',serif; }
+                .payslip-item.income .pv { color:#28a745; }
+                .payslip-item.deduct .pv { color:#dc3545; }
+                .payslip-item.total { grid-column:1 / -1;background:linear-gradient(135deg,#0F4C81,#1E6FB5);color:#fff;border:none; }
+                .payslip-item.total .pl { color:rgba(255,255,255,0.75); }
+                .payslip-item.total .pv { color:#FFD700;font-size:1.6rem; }
+/* 🔧 H9后台总补CSS：页码圆角10px + 后台表格min-width:760px/720px/680px响应式断点 + 遮罩隐藏类 */
+.pagination .page-btn, button.page-btn, .page-btn,
+.pagination button, .page-number-item button, .pager button,
+.btn-pagination, [class*="pagination"] button,
+.btn, button.btn {
+  border-radius: 10px !important;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+.pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+}
+/* 后台表格最小宽度（768px以上 → 760px；480~767 →720px；<480 →680px） */
+.admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+.data-table-container, [class*="table-wrapper"], .admin-content table {
+  min-width: 760px !important;
+  overflow-x: auto !important;
+}
+@media (max-width: 768px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 720px !important;
+  }
+}
+@media (max-width: 480px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 680px !important;
+  }
+}
+.s-modal-hide { display: none !important; }
+.s-overlay-hide { display: none !important; }
+/* 侧边栏菜单项标准外观（防止死链接缺少视觉反馈） */
+.admin-sidebar-menu li a:not([href]), .admin-sidebar-menu li a[href="#"] { cursor: pointer; position: relative; }
+.admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
+  content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
+}
+              </style>
+
+              <!-- ===== 子Tab 1：日工资规则 ===== -->
+              <div class="wage-sub-panel active" id="wtab-rules">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;flex-wrap:wrap;gap:14px;">
+                  <div>
+                    <h3 style="margin:0 0 6px 0;font-size:1.15rem;color:var(--primary-dark);display:flex;align-items:center;gap:8px;">
+                      📋 默认日工资规则矩阵（行当 × 职级）
+                      <span class="badge badge-gold" id="wageRuleVersionBadge">v20260730 · 默认</span>
+                    </h3>
+                    <p style="margin:0;font-size:0.85rem;color:var(--text-light);">单位：<strong>元/天</strong>。所有金额后台以<strong>分精度整数</strong>存储，避免浮点误差。修改后点击「保存规则」即时生效。</p>
+                  </div>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-gold btn-sm" id="saveWageRulesBtn">💾 保存规则</button>
+                    <button class="btn btn-outline-dark btn-sm" id="resetWageRulesBtn">🔄 恢复默认</button>
+                    <button class="btn btn-secondary btn-sm" id="exportWageRulesBtn">📥 导出JSON</button>
+                  </div>
+                </div>
+
+                <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:22px;">
+                  <div class="wage-stat-card"><div class="label">演出补助·本戏</div><div class="value" id="wstatBenxi">¥120</div><div class="sub">元/场</div></div>
+                  <div class="wage-stat-card"><div class="label">演出补助·折子戏</div><div class="value" id="wstatZhezi">¥60</div><div class="sub">元/场</div></div>
+                  <div class="wage-stat-card"><div class="label">演出补助·下乡</div><div class="value" id="wstatXiaxiang">¥80</div><div class="sub">元/场</div></div>
+                  <div class="wage-stat-card"><div class="label">全勤奖</div><div class="value" id="wstatPerfect">¥800</div><div class="sub">元/月·无缺勤迟到<3次</div></div>
+                  <div class="wage-stat-card"><div class="label">工龄补贴</div><div class="value" id="wstatSeniority">¥2</div><div class="sub">元/天·每年</div></div>
+                  <div class="wage-stat-card"><div class="label">餐补 / 交通补</div><div class="value" id="wstatMeal">¥30/¥20</div><div class="sub">元/天</div></div>
+                  <div class="wage-stat-card"><div class="label">社保个人 / 公积金</div><div class="value" id="wstatSocial">10.5%/12%</div><div class="sub">按折算月基数</div></div>
+                  <div class="wage-stat-card"><div class="label">标准计薪日</div><div class="value" id="wstatStdDay">21.75</div><div class="sub">天/月（法定）</div></div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:22px;margin-bottom:22px;">
+                  <!-- 演员队 -->
+                  <div class="admin-card" style="padding:18px;margin:0;">
+                    <h4 style="margin:0 0 14px 0;color:var(--primary-dark);display:flex;align-items:center;gap:8px;">🎭 演员队·行当日薪（元/天）</h4>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+                      <table class="wage-rule-table" data-wrule-group="actor">
+                        <thead><tr><th style="min-width:90px;">行当</th><th>一级演员</th><th>二级演员</th><th>三级演员</th><th>优秀青年</th><th>学员</th></tr></thead>
+                        <tbody id="wrule-actor-body"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <!-- 乐队 -->
+                  <div class="admin-card" style="padding:18px;margin:0;">
+                    <h4 style="margin:0 0 14px 0;color:#17a2b8;display:flex;align-items:center;gap:8px;">🎵 乐队·行当日薪（元/天）</h4>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+                      <table class="wage-rule-table" data-wrule-group="music">
+                        <thead><tr><th style="min-width:100px;">行当</th><th>一级演奏员</th><th>二级演奏员</th><th>三级演奏员</th><th>其他</th><th>学员</th></tr></thead>
+                        <tbody id="wrule-music-body"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <!-- 舞美队 -->
+                  <div class="admin-card" style="padding:18px;margin:0;">
+                    <h4 style="margin:0 0 14px 0;color:#7c3aed;display:flex;align-items:center;gap:8px;">🎨 舞美队·行当日薪（元/天）</h4>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+                      <table class="wage-rule-table" data-wrule-group="stage">
+                        <thead><tr><th style="min-width:90px;">行当</th><th>高级舞美</th><th>舞美师</th><th>舞美员</th><th>技术员</th><th>学员</th></tr></thead>
+                        <tbody id="wrule-stage-body"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <!-- 扣款/补助速调 -->
+                  <div class="admin-card" style="padding:18px;margin:0;">
+                    <h4 style="margin:0 0 14px 0;color:#dc3545;display:flex;align-items:center;gap:8px;">⚙️ 演出补助·扣款·速调参数</h4>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">本戏补助（元/场）</small><input type="number" id="wPaBenxi" class="wage-global-input" data-wkey="performanceAllowance.benxi" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">折子戏补助（元/场）</small><input type="number" id="wPaZhezi" class="wage-global-input" data-wkey="performanceAllowance.zhezi" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">下乡补助（元/场）</small><input type="number" id="wPaXiaxiang" class="wage-global-input" data-wkey="performanceAllowance.xiaxiang" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">节庆专场补助（元/场）</small><input type="number" id="wPaFestival" class="wage-global-input" data-wkey="performanceAllowance.festival" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">全勤奖（元/月）</small><input type="number" id="wPerfect" class="wage-global-input" data-wkey="perfectAttendanceBonus" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">基础日工资标准（元/天）</small><input type="number" id="wBaseDaily" class="wage-global-input" data-wkey="baseDailyStandard" min="0" step="1" placeholder="如 200" style="padding:8px 10px;border:1.5px solid var(--gold);border-radius:8px;background:#fff8e7;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">工龄补贴（元/天·年）</small><input type="number" id="wSeniority" class="wage-global-input" data-wkey="seniorityPerYear" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">餐补（元/天）</small><input type="number" id="wMeal" class="wage-global-input" data-wkey="dailySubsidy.meal" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">交通补（元/天）</small><input type="number" id="wTraffic" class="wage-global-input" data-wkey="dailySubsidy.traffic" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">迟到<30分钟扣款（元）</small><input type="number" id="wLate1" class="wage-global-input" data-wkey="deductions.lateUnder30min" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">迟到≥30分钟扣款（当日工资%，按旷工半天）</small><input type="text" id="wLate2" class="wage-global-input" data-wkey="deductions.lateOver30min" placeholder="如 50%" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">旷工罚款（元/天）</small><input type="number" id="wAbsent" class="wage-global-input" data-wkey="deductions.absentFine" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">旷工全天扣款比例</small><input type="text" id="wAbsentFull" class="wage-global-input" data-wkey="deductions.absentFullDay" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ===== 子Tab 2：当月工资生成 ===== -->
+              <div class="wage-sub-panel" id="wtab-generate">
+                <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:22px;">
+                  <div class="wage-stat-card"><div class="label">📅 当前选择月份</div><div class="value" id="wageGenMonthLabel" style="font-size:1.2rem;">—</div><div class="sub" id="wageGenExistHint">尚未生成</div></div>
+                  <div class="wage-stat-card"><div class="label">👥 在职人数</div><div class="value" id="wageGenStaffCount">0</div><div class="sub">人员花名册总数</div></div>
+                  <div class="wage-stat-card"><div class="label">💰 预计总应发</div><div class="value" id="wageGenGrossEst">¥0</div><div class="sub">按基准估算（未含实际考勤）</div></div>
+                  <div class="wage-stat-card"><div class="label">💳 预计总实发</div><div class="value" id="wageGenNetEst">¥0</div><div class="sub">含社保/公积金估算</div></div>
+                </div>
+
+                <div class="admin-card" style="padding:22px;margin-bottom:22px;">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;align-items:end;">
+                    <label style="display:flex;flex-direction:column;gap:6px;"><strong style="font-size:0.88rem;color:var(--primary-dark);">📅 结算月份 *</strong><input type="month" id="wageGenMonth" style="padding:10px 14px;border:2px solid var(--gold);border-radius:10px;background:var(--cream);font-family:inherit;font-size:0.95rem;font-weight:600;color:var(--primary-dark);" /></label>
+                    <label style="display:flex;flex-direction:column;gap:6px;"><strong style="font-size:0.88rem;color:var(--primary-dark);">🧾 结算说明</strong><input type="text" id="wageGenRemark" placeholder="如：7月正常工资+下乡演出补助" style="padding:10px 14px;border:1.5px solid var(--border-light);border-radius:10px;background:#fff;font-family:inherit;" /></label>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                      <button class="btn btn-primary" id="wageGenPreviewBtn" style="flex:1;min-width:120px;">🔍 预览核算</button>
+                      <button class="btn btn-gold" id="wageGenRunBtn" style="flex:1;min-width:120px;">⚙️ 生成当月工资条</button>
+                      <button class="btn btn-outline-dark btn-sm" id="wageGenDelMonthBtn" title="删除该月已生成工资条">🗑️ 清除该月</button>
+                    </div>
+                  </div>
+                  <div style="margin-top:14px;padding:12px 16px;background:rgba(24,105,173,0.05);border:1px solid rgba(24,105,173,0.15);border-radius:10px;font-size:0.82rem;color:#1e6fb5;line-height:1.7;">
+                    💡 <strong>说明：</strong>工资条严格依据「考勤管理」中的真实考勤流水与演出记录核算。当月尚无考勤记录时无法生成，请先完成打卡/考勤录入后再操作。
+                  </div>
+                </div>
+
+                <!-- 预览/生成结果 -->
+                <div class="admin-card" style="padding:0;overflow:hidden;">
+                  <div class="admin-card-header" style="padding:16px 22px;border-bottom:1px solid var(--border-light);">
+                    <h3 style="margin:0;font-size:1.05rem;">🧾 当月工资条列表 <small id="wageGenCountLabel" style="font-size:0.8rem;color:var(--text-light);font-weight:400;">（空）</small></h3>
+                  </div>
+                  <div class="table-wrapper" style="margin:0;">
+                    <table class="wage-payslip-table" id="wageGenTable">
+                      <thead>
+                        <tr>
+                          <th style="min-width:150px;">工资条编号</th>
+                          <th>姓名</th>
+                          <th>行当·职级</th>
+                          <th>出勤<br/>天数</th>
+                          <th>本戏/折子<br/>下乡/其他</th>
+                          <th class="amt-right">协议<br/>天工资</th>
+                          <th class="amt-right">基本<br/>日薪</th>
+                          <th class="amt-right">演出<br/>补助</th>
+                          <th class="amt-right">全勤/工龄<br/>餐交补</th>
+                          <th class="amt-right">应发<br/>合计</th>
+                          <th class="amt-right">社保/公积<br/>考勤扣款</th>
+                          <th class="amt-right" style="background:linear-gradient(135deg,#B8860B,#DAA520);color:#fff;">实发</th>
+                          <th>状态</th>
+                          <th style="min-width:160px;">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody id="wageGenTbody">
+                        <tr><td colspan="14" style="padding:50px 20px;color:var(--text-light);font-size:0.9rem;">
+                          🈳 尚无数据。选择月份后，点击「预览核算」可基于真实考勤查看预估，点击「生成当月工资条」即可按在册人员批量创建工资单。
+                        </td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ===== 子Tab 3：历史查看 ===== -->
+              <div class="wage-sub-panel" id="wtab-history">
+                <div class="filter-bar">
+                  <div class="form-group"><label>结算月份：</label><select class="form-control" id="wageHistMonth"><option value="">全部月份</option></select></div>
+                  <div class="form-group"><label>发放状态：</label><select class="form-control" id="wageHistStatus"><option value="">全部</option><option value="unpaid">待发放</option><option value="paid">已发放</option></select></div>
+                  <div class="form-group"><label>关键字：</label><input class="form-control" id="wageHistKw" placeholder="姓名/工号/编号" style="padding:8px 14px;border:1.5px solid var(--border-light);border-radius:20px;"/></div>
+                  <button class="btn btn-primary btn-sm" id="wageHistSearchBtn">🔍 筛选</button>
+                  <button class="btn btn-outline-dark btn-sm" id="wageHistExportBtn">📥 导出全部</button>
+                </div>
+
+                <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:20px;">
+                  <div class="wage-stat-card"><div class="label">📜 历史工资条总数</div><div class="value" id="wageHistTotalCount">0</div><div class="sub">条记录</div></div>
+                  <div class="wage-stat-card"><div class="label">💸 累计实发总额</div><div class="value" id="wageHistTotalNet">¥0</div><div class="sub">全员历史合计</div></div>
+                  <div class="wage-stat-card"><div class="label">✅ 已发放 / 待发</div><div class="value" id="wageHistPaidLabel">0 / 0</div><div class="sub"><span style="color:var(--text-light);">—</span> · <span style="color:#ff9800;">待发</span></div></div>
+                  <div class="wage-stat-card"><div class="label">🎭 累计演出补助</div><div class="value" id="wageHistPerform">¥0</div><div class="sub">本戏+折子+下乡等</div></div>
+                </div>
+
+                <div class="admin-card" style="padding:0;overflow:hidden;">
+                  <div class="table-wrapper" style="margin:0;">
+                    <table class="wage-payslip-table" id="wageHistTable">
+                      <thead>
+                        <tr>
+                          <th>月份</th>
+                          <th style="min-width:150px;">工资条编号</th>
+                          <th>姓名</th>
+                          <th>行当·职级</th>
+                          <th class="amt-right">应发</th>
+                          <th class="amt-right">扣款</th>
+                          <th class="amt-right" style="background:linear-gradient(135deg,#B8860B,#DAA520);color:#fff;">实发</th>
+                          <th>发放状态</th>
+                          <th>发放时间</th>
+                          <th style="min-width:160px;">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody id="wageHistTbody">
+                        <tr><td colspan="10" style="padding:50px 20px;color:var(--text-light);font-size:0.9rem;">
+                          🈳 尚未生成任何工资条。请切换至「当月工资生成」Tab，选择月份后批量生成即可。
+                        </td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ===== 子Tab 4：天工资商议单（模板全部可自定义） ===== -->
+              <div class="wage-sub-panel" id="wtab-negotiate">
+                <div class="admin-card" style="padding:18px 22px;margin-bottom:18px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <div>
+                      <h3 style="margin:0 0 4px;font-size:1.08rem;color:var(--primary-dark);">📝 秦安县秦剧团文化演出有限公司 · 天工资商议单</h3>
+                      <div style="font-size:.82rem;color:var(--text-light);">抬头、A–E 等级工资、补贴、条款、甲乙方与签署信息全部可自定义；保存后全后台同步，可直接 A4 打印用于现场商议签订。</div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                      <button class="btn btn-outline-dark btn-sm" id="ngBtnReload" type="button">🔄 重新加载</button>
+                      <button class="btn btn-outline-dark btn-sm" id="ngBtnReset" type="button">↩ 恢复默认模板</button>
+                      <button class="btn btn-primary btn-sm" id="ngBtnPreview" type="button">👁 打印预览</button>
+                      <button class="btn btn-gold btn-sm" id="ngBtnSave" type="button">💾 保存模板</button>
+                    </div>
+                  </div>
+                  <div id="ngStatus" style="margin-top:10px;font-size:.8rem;color:var(--text-light);"></div>
+                </div>
+                <div id="ngEditor"></div>
+                <!-- A4 打印预览层 -->
+                <div id="ngPreviewMask" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99990;overflow:auto;padding:24px 12px;">
+                  <div style="max-width:860px;margin:0 auto;">
+                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:12px;" id="ngPreviewBar">
+                      <button class="btn btn-gold btn-sm" id="ngBtnPrint" type="button">🖨️ 打印 / 另存PDF</button>
+                      <button class="btn btn-secondary btn-sm" id="ngBtnClosePreview" type="button">✅ 完成预览</button>
+                    </div>
+                    <div id="ngSheet" class="ng-sheet"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ===== 子Tab 5：商议单存档 ===== -->
+              <div class="wage-sub-panel" id="wtab-archive">
+                <div class="admin-card" style="padding:18px 22px;margin-bottom:18px;">
+                  <h3 style="margin:0 0 4px;font-size:1.08rem;color:var(--primary-dark);">🗂 天工资商议单 · 历史存档</h3>
+                  <div style="font-size:.82rem;color:var(--text-light);">每次保存商议单模板时自动归档一份快照；支持按演员/编号/日期搜索，可再次预览、打印或删除。</div>
+                </div>
+                <div id="ngArchiveList" style="background:#fff;border:1px solid var(--border-light);border-radius:14px;padding:18px 22px;box-shadow:0 2px 10px rgba(0,0,0,.03);">
+                  <div style="text-align:center;padding:40px 20px;color:#999;font-size:.88rem;">正在加载存档…</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- ===== 请假管理 tab ===== -->
+            <div class="staff-tab-content" id="tab-leave">
+              <div class="filter-bar">
+                <div class="form-group">
+                  <label>状态：</label>
+                  <select class="form-control" id="leaveFilterStatus">
+                    <option value="">全部</option>
+                    <option value="pending">待审批</option>
+                    <option value="approved">已批准</option>
+                    <option value="rejected">已驳回</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>搜索：</label>
+                  <input type="text" class="form-control" id="leaveFilterKw" placeholder="姓名/关键字" />
+                </div>
+                <button class="btn btn-primary btn-sm" id="btnLeaveSearch" type="button">🔍 查询</button>
+                <button class="btn btn-secondary btn-sm" id="btnLeaveReset" type="button">重置</button>
+                <button class="btn btn-success btn-sm" id="btnLeaveCreate" type="button">➕ 新建请假</button>
+              </div>
+              <div id="leaveTableBox" style="background:#fff;border:1px solid var(--border-light);border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.03);">
+                <table class="data-table" id="leaveTable">
+                  <thead>
+                    <tr>
+                      <th>员工</th><th>类型</th><th>起止日期</th><th>天数</th><th>事由</th>
+                      <th>状态</th><th>审批人</th><th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="leaveTbody"></tbody>
+                </table>
+                <div id="leavePager" style="padding:12px 16px;text-align:right;"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div style="text-align:center;padding:30px 0 10px;color:#999;font-size:0.82rem;">
+          © {year} 秦安县秦剧团文化演出有限公司云端预约管理系统 · 版本 v2.0.0 · 戏曲文化传承者
+        </div>
+      </section>
+    </main>
+
+    <!-- 入职登记二维码弹窗 -->
+    <div id="onboardQrModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;align-items:center;justify-content:center;">
+      <div style="background:#fff;border-radius:16px;padding:28px 32px;max-width:420px;width:90%;text-align:center;box-shadow:0 12px 48px rgba(0,0,0,.25);">
+        <h3 style="margin:0 0 6px;color:#8b0000;font-size:1.2rem;">📱 新演员入职登记</h3>
+        <p style="margin:0 0 18px;color:#8a6d3b;font-size:.88rem;">扫描下方二维码，填写入职登记表单</p>
+        <div id="onboardQrCanvas" style="display:flex;justify-content:center;margin-bottom:14px;"></div>
+        <div id="onboardQrUrl" style="font-size:.78rem;color:#666;word-break:break-all;background:#f7f3ec;padding:8px 12px;border-radius:8px;margin-bottom:16px;user-select:text;"></div>
+        <div style="display:flex;gap:10px;justify-content:center;">
+          <button class="btn btn-secondary" onclick="document.getElementById('onboardQrModal').style.display='none'">关闭</button>
+          <button class="btn btn-primary" onclick="window.__copyOnboardUrl()">复制链接</button>
+        </div>
+        <p style="margin:14px 0 0;font-size:.76rem;color:#aaa;">提示：手机扫码后将打开入职登记表单，提交后等待管理员审核</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/year-lite.js?v=20260803"></script>
+    <script src="../js/api-config.js?v=20261010a"></script>
+    <script src="../js/admin-pages/staff.pre-2.js?v=20261005a"></script>
+  <script src="../js/api-request.js?v=20261008b"></script>
+  <script src="../js/qrcode.min.js?v=20260923"></script>
+  <script src="/js/xlsx-js-style.min.js?v=20260925"></script>
+<script src="../js/app.js?v=20261015a"></script>
+  <script src="../js/tooltip.js?v=20261010a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+<script src="../js/admin-wage-negotiate.js?v=20260930a"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
+  <script src="../js/admin-pages/staff.pre-3.js?v=20261012b"></script>
+  
+
+  <!-- V2 考勤与奖罚 UI 控制器 -->
+  
+  
+<!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
+
+
+
+<!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
+
+
+
+
+
+
+
+<!-- 🔧 演职人员花名册：编辑/查看弹窗（真实功能，保存后原地刷新列表 + localStorage 持久化） -->
+<div id="staffEditModal" class="modal-mask" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:99999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:14px;max-width:560px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(15,76,129,0.18);margin:auto;">
+    <div style="padding:20px 25px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">
+      <h3 id="staffEditTitle" style="margin:0;font-size:1.15rem;color:#0F4C81;">✏️ 编辑演职人员</h3>
+      <button type="button" onclick="closeStaffEditModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#999;padding:0 6px;">×</button>
+    </div>
+    <div style="padding:25px;">
+      <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">工号</label><input id="inp_stf_gh" type="text" readonly style="width:100%;padding:10px 14px;background:#f5f5f5;border:1px solid #ddd;border-radius:8px;color:#666;box-sizing:border-box;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">姓名 *</label><input id="inp_stf_name" type="text" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">性别</label><select id="inp_stf_gender" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option>男</option><option>女</option></select></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">年龄</label><input id="inp_stf_age" type="number" min="16" max="90" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">队别</label><select id="inp_stf_dept" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option>演员队</option><option>乐队</option><option>舞美队</option><option>服装道具</option><option>行政</option></select></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">行当/职务 *</label><select id="inp_stf_role" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option value="">— 请选择 —</option><optgroup label="生行"><option>文须生</option><option>武须生</option><option>小生</option></optgroup><optgroup label="丑行"><option>丑角</option></optgroup><optgroup label="净行"><option>大花脸</option><option>二花脸</option></optgroup><optgroup label="旦行"><option>正旦</option><option>小旦</option><option>彩旦</option><option>二架旦</option></optgroup><optgroup label="二架"><option>门官</option><option>家院</option><option>其他二架</option></optgroup><optgroup label="角子"><option>龙套</option><option>校尉</option><option>刀斧手</option><option>丫鬟</option><option>彩女</option><option>长随官</option></optgroup><optgroup label="后勤"><option>帽箱</option><option>电工</option><option>前场</option><option>衣箱</option><option>剧务</option></optgroup><optgroup label="武场（打击乐）"><option>司鼓</option><option>梆子</option><option>大锣</option><option>铙钹</option><option>武二手</option><option>打击乐</option></optgroup><optgroup label="文场（管弦）"><option>板胡</option><option>二胡</option><option>扬琴</option><option>琵琶</option><option>三弦</option><option>笛子</option><option>唢呐</option><option>文二手</option></optgroup><optgroup label="文乐队"><option>电子琴</option></optgroup><option value="其他">其他</option></select></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">入团年份</label><input id="inp_stf_year" type="number" min="1950" max="2100" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">联系电话 *</label><input id="inp_stf_phone" type="text" placeholder="138xxxxxxx" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">身份证号 *</label><input id="inp_stf_idcard" type="text" maxlength="18" placeholder="18位身份证号" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">职级（工资标准档）</label><select id="inp_stf_rank" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option value="">未定级</option><option value="A+">A+（领衔/主演）</option><option value="A">A（主要演员）</option><option value="B">B（一般演员）</option><option value="C">C（学员/辅助）</option></select></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">协议天工资（元/天） *</label><input id="inp_stf_rate" type="number" min="0" step="1" placeholder="如：200" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><small style="display:block;margin-top:3px;font-size:11px;color:#8a6d3b;">优先于职级标准参与工资核算</small></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">路费方式 *</label><select id="inp_stf_transport" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option value="">未约定</option><option value="单趟">单趟</option><option value="双趟">双趟</option></select></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">代表剧目</label><input id="inp_stf_rep" type="text" placeholder="如：《三滴血》《铡美案》" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+      </div>
+    </div>
+    <div style="padding:18px 25px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:10px;">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="closeStaffEditModal()">取消</button>
+      <button type="button" id="staffEditSaveBtn" class="btn btn-primary btn-sm" onclick="saveStaffEdit()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/admin-pages/staff.js?v=20261013a"></script>
+
+
+
+
+
+<!-- 入职审核面板逻辑 -->
+
+
+
+
+<!-- ===== 请假管理（attendance/leaves）前后端集成 ===== -->
+
+</body>
+</html>

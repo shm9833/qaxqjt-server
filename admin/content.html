@@ -999,8 +999,8 @@
                   </div>
                 </div>
                 <div style="margin-top:18px;display:flex;gap:14px;flex-wrap:wrap;">
-                  <button type="submit" class="btn btn-primary">✅ 提交并保存横幅（前端校验）</button>
-                  <button type="reset" class="btn btn-outline">🔄 清空重选</button>
+                  <button type="submit" class="btn btn-primary" id="adminBannerUploadSubmit">✅ 提交并保存横幅（前端校验）</button>
+                  <button type="reset" class="btn btn-outline" id="adminBannerUploadReset">🔄 清空重选</button>
                   <small style="margin-top:10px;color:#78350f;">💡 上传前会自动进行尺寸/格式/大小校验，并在下方显示预览图；点击提交后仅保存到浏览器 Storage，正式发布请对接后端对象存储 API。</small>
                 </div>
               </form>
@@ -1012,7 +1012,7 @@
               <h3>🖼️ 横幅列表管理</h3>
               <div style="display:flex;gap:10px;align-items:center;">
                 <span class="badge badge-info" id="bannerCountBadge">暂无横幅</span>
-                <button class="btn btn-primary btn-sm">➕ 新增横幅</button>
+                <button class="btn btn-primary btn-sm" id="contentBannerAddBtn">➕ 新增横幅</button>
               </div>
             </div>
             <div class="admin-card-body">
@@ -1217,8 +1217,8 @@
                   </div>
                 </div>
                 <div style="margin-top:18px;display:flex;gap:14px;flex-wrap:wrap;">
-                  <button type="submit" class="btn btn-primary">✅ 提交剧目海报</button>
-                  <button type="reset" class="btn btn-outline">🔄 清空</button>
+                  <button type="submit" class="btn btn-primary" id="adminOperaUploadSubmit">✅ 提交剧目海报</button>
+                  <button type="reset" class="btn btn-outline" id="adminOperaUploadReset">🔄 清空</button>
                   <small style="margin-top:10px;color:#78350f;">💡 上传后自动校验文件大小与图片格式，并在下方预览；发布到 EdgeOne Pages 后请另行对接后端上传 API 将海报保存到服务器。</small>
                 </div>
               </form>
@@ -1230,7 +1230,7 @@
               <h3>🎭 剧目展示管理（对应前台 operas.html）</h3>
               <div style="display:flex;gap:10px;align-items:center;">
                 <span class="badge badge-info" id="playMgmtBadge">正在统计真实剧目…</span>
-                <button class="btn btn-primary btn-sm">➕ 新增剧目</button>
+                <button class="btn btn-primary btn-sm" id="contentPlayAddBtn">➕ 新增剧目</button>
               </div>
             </div>
             <div class="admin-card-body" style="padding:0;">
@@ -1251,219 +1251,81 @@
                       <th>操作</th>
                     </tr>
                   </thead>
-                  <tbody data-paginate="list" data-page-size="10">
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td style="font-family:monospace;font-weight:600;color:var(--primary-dark);">OP001</td>
-                      <td><div class="poster-preview">周</div></td>
-                      <td style="font-weight:600;color:var(--primary-dark);font-family:'KaiTi','STKaiti',serif;font-size:1rem;">《周仁回府》</td>
-                      <td><span class="badge badge-danger">传统经典</span></td>
-                      <td><span class="badge badge-success">● 展示</span></td>
-                      <td>1</td>
-                      <td><span class="hot-tag">🔥 热门</span></td>
-                      <td><div class="adapt-tags"><span class="adapt-tag">庙会</span><span class="adapt-tag blue">节庆</span><span class="adapt-tag green">商演</span></div></td>
-                      <td>{year}-07-20</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-outline-dark btn-sm">🗑</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td style="font-family:monospace;font-weight:600;color:var(--primary-dark);">OP002</td>
-                      <td><div class="poster-preview gold">三</div></td>
-                      <td style="font-weight:600;color:var(--primary-dark);font-family:'KaiTi','STKaiti',serif;font-size:1rem;">《三滴血》</td>
-                      <td><span class="badge badge-danger">传统经典</span></td>
-                      <td><span class="badge badge-success">● 展示</span></td>
-                      <td>2</td>
-                      <td><span class="hot-tag">🔥 热门</span></td>
-                      <td><div class="adapt-tags"><span class="adapt-tag">庙会</span><span class="adapt-tag purple">下乡</span><span class="adapt-tag green">商演</span></div></td>
-                      <td>{year}-07-15</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-outline-dark btn-sm">🗑</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td style="font-family:monospace;font-weight:600;color:var(--primary-dark);">OP003</td>
-                      <td><div class="poster-preview teal">铡</div></td>
-                      <td style="font-weight:600;color:var(--primary-dark);font-family:'KaiTi','STKaiti',serif;font-size:1rem;">《铡美案》</td>
-                      <td><span class="badge badge-danger">传统经典</span></td>
-                      <td><span class="badge badge-success">● 展示</span></td>
-                      <td>3</td>
-                      <td><span class="hot-tag">🔥 热门</span></td>
-                      <td><div class="adapt-tags"><span class="adapt-tag">庙会</span><span class="adapt-tag blue">节庆</span><span class="adapt-tag purple">下乡</span></div></td>
-                      <td>{year}-07-10</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-outline-dark btn-sm">🗑</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td style="font-family:monospace;font-weight:600;color:var(--primary-dark);">OP004</td>
-                      <td><div class="poster-preview purple">窦</div></td>
-                      <td style="font-weight:600;color:var(--primary-dark);font-family:'KaiTi','STKaiti',serif;font-size:1rem;">《窦娥冤》</td>
-                      <td><span class="badge badge-danger">传统经典</span></td>
-                      <td><span class="badge badge-success">● 展示</span></td>
-                      <td>4</td>
-                      <td>—</td>
-                      <td><div class="adapt-tags"><span class="adapt-tag">庙会</span><span class="adapt-tag green">商演</span></div></td>
-                      <td>{year}-06-28</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-outline-dark btn-sm">🗑</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td style="font-family:monospace;font-weight:600;color:var(--primary-dark);">OP005</td>
-                      <td><div class="poster-preview">火</div></td>
-                      <td style="font-weight:600;color:var(--primary-dark);font-family:'KaiTi','STKaiti',serif;font-size:1rem;">《火焰驹》</td>
-                      <td><span class="badge badge-danger">传统经典</span></td>
-                      <td><span class="badge badge-success">● 展示</span></td>
-                      <td>5</td>
-                      <td><span class="hot-tag">🔥 热门</span></td>
-                      <td><div class="adapt-tags"><span class="adapt-tag">庙会</span><span class="adapt-tag blue">节庆</span><span class="adapt-tag green">商演</span></div></td>
-                      <td>{year}-06-25</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-outline-dark btn-sm">🗑</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td style="font-family:monospace;font-weight:600;color:var(--primary-dark);">OP006</td>
-                      <td><div class="poster-preview gold">打</div></td>
-                      <td style="font-weight:600;color:var(--primary-dark);font-family:'KaiTi','STKaiti',serif;font-size:1rem;">《打金枝》</td>
-                      <td><span class="badge badge-danger">传统经典</span></td>
-                      <td><span class="badge badge-success">● 展示</span></td>
-                      <td>6</td>
-                      <td>—</td>
-                      <td><div class="adapt-tags"><span class="adapt-tag blue">节庆</span><span class="adapt-tag green">商演</span></div></td>
-                      <td>{year}-06-20</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-outline-dark btn-sm">🗑</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td style="font-family:monospace;font-weight:600;color:var(--primary-dark);">OP007</td>
-                      <td><div class="poster-preview teal">花</div></td>
-                      <td style="font-weight:600;color:var(--primary-dark);font-family:'KaiTi','STKaiti',serif;font-size:1rem;">《花亭相会》</td>
-                      <td><span class="badge badge-primary">折戏精选</span></td>
-                      <td><span class="badge badge-success">● 展示</span></td>
-                      <td>7</td>
-                      <td>—</td>
-                      <td><div class="adapt-tags"><span class="adapt-tag purple">下乡</span><span class="adapt-tag blue">节庆</span></div></td>
-                      <td>{year}-06-18</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-outline-dark btn-sm">🗑</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td style="font-family:monospace;font-weight:600;color:var(--primary-dark);">OP008</td>
-                      <td><div class="poster-preview purple">贵</div></td>
-                      <td style="font-weight:600;color:var(--primary-dark);font-family:'KaiTi','STKaiti',serif;font-size:1rem;">《贵妃醉酒》</td>
-                      <td><span class="badge badge-primary">折戏精选</span></td>
-                      <td><span class="badge badge-success">● 展示</span></td>
-                      <td>8</td>
-                      <td>—</td>
-                      <td><div class="adapt-tags"><span class="adapt-tag green">商演</span><span class="adapt-tag blue">节庆</span></div></td>
-                      <td>{year}-06-12</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-outline-dark btn-sm">🗑</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td style="font-family:monospace;font-weight:600;color:var(--primary-dark);">OP009</td>
-                      <td><div class="poster-preview">秦</div></td>
-                      <td style="font-weight:600;color:var(--primary-dark);font-family:'KaiTi','STKaiti',serif;font-size:1rem;">《秦香莲》</td>
-                      <td><span class="badge badge-danger">传统经典</span></td>
-                      <td><span class="badge badge-success">● 展示</span></td>
-                      <td>9</td>
-                      <td>—</td>
-                      <td><div class="adapt-tags"><span class="adapt-tag">庙会</span><span class="adapt-tag purple">下乡</span></div></td>
-                      <td>{year}-06-08</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-outline-dark btn-sm">🗑</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>
-                      <td style="font-family:monospace;font-weight:600;color:var(--primary-dark);">OP010</td>
-                      <td><div class="poster-preview gold">乡</div></td>
-                      <td style="font-weight:600;color:var(--primary-dark);font-family:'KaiTi','STKaiti',serif;font-size:1rem;">《乡村新歌》</td>
-                      <td><span class="badge badge-success">现代戏</span></td>
-                      <td><span class="badge badge-success">● 展示</span></td>
-                      <td>10</td>
-                      <td><span class="hot-tag">🔥 热门</span></td>
-                      <td><div class="adapt-tags"><span class="adapt-tag purple">下乡</span><span class="adapt-tag blue">节庆</span><span class="adapt-tag green">惠民</span></div></td>
-                      <td>{year}-07-01</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-outline-dark btn-sm">🗑</button>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr style="background:rgba(0,0,0,0.02);">
-                      <td style="font-family:monospace;font-weight:600;color:#888;">OP027</td>
-                      <td><div class="poster-preview" style="opacity:0.5;">忠</div></td>
-                      <td style="font-weight:500;color:#666;font-family:'KaiTi','STKaiti',serif;font-size:1rem;opacity:0.8;">《忠义侠》（暂停展示）</td>
-                      <td><span class="badge badge-danger">传统经典</span></td>
-                      <td><span class="badge badge-secondary">● 隐藏</span></td>
-                      <td>—</td>
-                      <td>—</td>
-                      <td><div class="adapt-tags"><span class="adapt-tag">庙会</span><span class="adapt-tag green">商演</span></div></td>
-                      <td style="color:#999;">{year}-03-15</td>
-                      <td>
-                        <div class="admin-table-actions">
-                          <button class="btn btn-secondary btn-sm">👁</button>
-                          <button class="btn btn-primary btn-sm">✏️</button>
-                          <button class="btn btn-success btn-sm">启用</button>
-                        </div>
-                      </td>
-                    </tr>
+                  <tbody id="contentPlayTbody" data-paginate="list" data-page-size="10">
+                    <tr><td colspan="11" style="text-align:center;padding:28px;color:#94a3b8;">⏳ 正在加载真实剧目数据…（切换到本页签时自动从 /v1/plays 拉取）</td></tr>
                   </tbody>
                 </table>
               </div>
 </div>
+          </div>
+        </div>
+
+        <!-- 🎭 剧目 新增/编辑 模态框（__contentPlays 接 /v1/plays） -->
+        <div id="contentPlayModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1090;overflow-y:auto;padding:24px 12px;">
+          <div style="max-width:640px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,0.3);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:linear-gradient(135deg,#8b0000,#6b0000);color:#ffe8b0;">
+              <strong id="contentPlayModalTitle">➕ 新增剧目</strong>
+              <button type="button" id="contentPlayModalCloseX" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;">✕</button>
+            </div>
+            <div style="padding:20px;">
+              <div class="form-group">
+                <label>剧目名称 *</label>
+                <input type="text" class="form-control" id="contentPlayTitle" placeholder="例：《火焰驹》" />
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div class="form-group">
+                  <label>剧目分类</label>
+                  <select class="form-control" id="contentPlayGenre">
+                    <option>传统本戏</option><option>经典折子戏</option><option>现代秦腔剧</option><option>眉户/道情小戏</option><option>新创改编剧</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>时长（分钟）</label>
+                  <input type="number" class="form-control" id="contentPlayDuration" min="20" max="300" step="5" placeholder="例：180" />
+                </div>
+                <div class="form-group">
+                  <label>编剧/作者</label>
+                  <input type="text" class="form-control" id="contentPlayAuthor" placeholder="如：无名氏 / 王xx" />
+                </div>
+                <div class="form-group">
+                  <label>状态（上架=官网可见）</label>
+                  <select class="form-control" id="contentPlayStatus">
+                    <option value="active">✅ 上架（官网可见）</option>
+                    <option value="inactive">⏸ 下架（官网隐藏）</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>海报图 URL（可用上方「📤 剧目海报上传」表单先上传再填入）</label>
+                <input type="text" class="form-control" id="contentPlayPosterUrl" placeholder="/uploads/xxx.jpg 或 https://…" />
+              </div>
+              <div class="form-group">
+                <label>剧情简介</label>
+                <textarea class="form-control" id="contentPlaySynopsis" rows="3" placeholder="一句话剧情简介（前台剧目卡展示）"></textarea>
+              </div>
+              <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="contentPlayHot" style="width:18px;height:18px;accent-color:#ff4757;cursor:pointer;" />
+                <label for="contentPlayHot" style="cursor:pointer;">🔥 设为热门推荐（前台置顶展示）</label>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary" id="contentPlaySaveBtn" data-type-fixed="1">💾 保存剧目</button>
+                <button type="button" class="btn btn-outline" id="contentPlayCancelBtn" data-type-fixed="1">取消</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🎭 剧目详情 模态框（__contentPlays） -->
+        <div id="contentPlayDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1091;overflow-y:auto;padding:24px 12px;">
+          <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,0.3);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:linear-gradient(135deg,#0F4C81,#0a3558);color:#e0f2ff;">
+              <strong>👁 剧目详情</strong>
+              <button type="button" id="contentPlayDetailCloseX" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;">✕</button>
+            </div>
+            <div id="contentPlayDetailBody" style="padding:22px;color:#1f2937;"></div>
+            <div style="padding:0 20px 20px;text-align:right;">
+              <button type="button" class="btn btn-outline" id="contentPlayDetailCloseBtn" data-type-fixed="1">关闭</button>
+            </div>
           </div>
         </div>
 
@@ -1475,7 +1337,7 @@
             </div>
             <div class="admin-card-body" style="padding:0;">
 
-              <div class="content-block-section">
+              <div class="content-block-section" data-site-text-block="site.text.home_slogan">
                 <div class="block-number">1</div>
                 <div class="block-body">
                   <div class="block-header">
@@ -1491,7 +1353,7 @@
                 </div>
               </div>
 
-              <div class="content-block-section">
+              <div class="content-block-section" data-site-text-block="site.text.home_banner_text">
                 <div class="block-number">2</div>
                 <div class="block-body">
                   <div class="block-header">
@@ -1508,7 +1370,7 @@
                 </div>
               </div>
 
-              <div class="content-block-section">
+              <div class="content-block-section" data-site-text-block="site.text.home_about_p1">
                 <div class="block-number">3</div>
                 <div class="block-body">
                   <div class="block-header">
@@ -1527,7 +1389,7 @@
                 </div>
               </div>
 
-              <div class="content-block-section">
+              <div class="content-block-section" data-site-text-block="site.text.home_about_p2">
                 <div class="block-number">4</div>
                 <div class="block-body">
                   <div class="block-header">
@@ -1547,7 +1409,7 @@
                 </div>
               </div>
 
-              <div class="content-block-section">
+              <div class="content-block-section" data-site-text-block="site.text.home_services">
                 <div class="block-number">5</div>
                 <div class="block-body">
                   <div class="block-header">
@@ -1584,7 +1446,7 @@
                 </div>
               </div>
 
-              <div class="content-block-section">
+              <div class="content-block-section" data-site-text-block="site.text.home_advantages">
                 <div class="block-number">6</div>
                 <div class="block-body">
                   <div class="block-header">
@@ -1626,8 +1488,8 @@
                   ℹ️ 提示：点击各区块的「编辑」按钮可修改对应文案内容，修改完成后点击「保存」即可提交。点击顶部「🚀 一键发布」可将所有内容同步更新到官网前台。
                 </div>
                 <div>
-                  <button class="btn btn-secondary btn-sm">↺ 还原默认</button>
-                  <button class="btn btn-gold btn-sm" style="margin-left:8px;">💾 保存全部修改</button>
+                  <button class="btn btn-secondary btn-sm" id="contentTextRestoreAll">↺ 还原默认</button>
+                  <button class="btn btn-gold btn-sm" id="contentTextSaveAll" style="margin-left:8px;">💾 保存全部修改</button>
                 </div>
               </div>
 
@@ -1647,23 +1509,23 @@
 
                 <div class="form-group">
                   <label><span class="required">*</span> 剧团联系电话（座机/手机）</label>
-                  <input type="text" class="form-control" value="139-9383-9833" />
+                  <input type="text" class="form-control" data-contact-key="site.contact.phone" value="139-9383-9833" />
                 </div>
 
                 <div class="form-group">
                   <label>官方微信号 / 微信二维码</label>
-                  <input type="text" class="form-control" value="qaxqjt_{year}（微信搜索添加）" />
+                  <input type="text" class="form-control" data-contact-key="site.contact.wechat" value="qaxqjt_{year}（微信搜索添加）" />
                   <small style="color:var(--text-light);font-size:0.8rem;margin-top:4px;">💡 建议同时上传二维码图片，方便客户扫码</small>
                 </div>
 
                 <div class="form-group full">
                   <label><span class="required">*</span> 剧团办公地址（完整地址）</label>
-                  <input type="text" class="form-control" value="甘肃省天水市秦安县兴国镇文化街168号 · 秦安县文化广电和旅游局院内 · 秦安县秦剧团文化演出有限公司办公楼" />
+                  <input type="text" class="form-control" data-contact-key="site.contact.address" value="甘肃省天水市秦安县兴国镇文化街168号 · 秦安县文化广电和旅游局院内 · 秦安县秦剧团文化演出有限公司办公楼" />
                 </div>
 
                 <div class="form-group full">
                   <label>演出服务范围（地区覆盖）</label>
-                  <textarea class="form-control" rows="3">天水市各县区（秦安县、甘谷县、武山县、清水县、张家川县、麦积区、秦州区）
+                  <textarea class="form-control" data-contact-key="site.contact.service_area" rows="3">天水市各县区（秦安县、甘谷县、武山县、清水县、张家川县、麦积区、秦州区）
 平凉市部分区县（庄浪县、静宁县、华亭市）
 定西市部分区县（通渭县、陇西县）
 周边地区欢迎来电咨询洽谈</textarea>
@@ -1671,17 +1533,17 @@
 
                 <div class="form-group">
                   <label>日常工作时间</label>
-                  <input type="text" class="form-control" value="周一至周五 08:30 - 18:00（午休 12:00-14:00）" />
+                  <input type="text" class="form-control" data-contact-key="site.contact.work_hours" value="周一至周五 08:30 - 18:00（午休 12:00-14:00）" />
                 </div>
 
                 <div class="form-group">
                   <label>演出预约服务时间</label>
-                  <input type="text" class="form-control" value="全年无休 · 24小时预约咨询热线" />
+                  <input type="text" class="form-control" data-contact-key="site.contact.booking_hours" value="全年无休 · 24小时预约咨询热线" />
                 </div>
 
                 <div class="form-group full">
                   <label>🗺️ 地图嵌入代码（支持百度/高德/腾讯地图 iframe）</label>
-                  <textarea class="form-control" rows="4" placeholder="<iframe src='https://map.example.com/...' ...></iframe>"><!-- 示例占位：请替换为实际地图平台生成的嵌入代码 -->
+                  <textarea class="form-control" data-contact-key="site.contact.map_embed" rows="4" placeholder="<iframe src='https://map.example.com/...' ...></iframe>"><!-- 示例占位：请替换为实际地图平台生成的嵌入代码 -->
 &lt;iframe src="https://uri.amap.com/marker?position=105.685,34.891&name=秦安县秦剧团文化演出有限公司&src=qaxqjt&coordinate=gaode&callnative=0"
   width="100%" height="360" frameborder="0" style="border-radius:8px;"&gt;&lt;/iframe&gt;</textarea>
                   <small style="color:var(--text-light);font-size:0.8rem;margin-top:4px;">💡 访问高德/百度/腾讯地图开放平台 → 搜索地址 → 生成分享嵌入代码 → 粘贴到上方</small>
@@ -1689,12 +1551,12 @@
 
                 <div class="form-group">
                   <label>ICP备案号（页脚显示）</label>
-                  <input type="text" class="form-control" value="陇ICP备{year}XXXXXXX号-1" />
+                  <input type="text" class="form-control" data-contact-key="site.contact.icp" value="陇ICP备{year}XXXXXXX号-1" />
                 </div>
 
                 <div class="form-group">
                   <label>公安备案号（可选）</label>
-                  <input type="text" class="form-control" value="甘公网安备 620522XXXXXXXXXX号" />
+                  <input type="text" class="form-control" data-contact-key="site.contact.police_record" value="甘公网安备 620522XXXXXXXXXX号" />
                 </div>
 
                 <div class="form-group">
@@ -1705,17 +1567,17 @@
 
                 <div class="form-group">
                   <label>版权/运营主体名称</label>
-                  <input type="text" class="form-control" value="秦安县秦剧团文化演出有限公司（秦安县文化广电和旅游局主管）" />
+                  <input type="text" class="form-control" data-contact-key="site.contact.copyright_owner" value="秦安县秦剧团文化演出有限公司（秦安县文化广电和旅游局主管）" />
                 </div>
 
                 <div class="form-group">
                   <label>电子邮箱（可选）</label>
-                  <input type="text" class="form-control" value="qaxqjt_{year}@163.com" />
+                  <input type="text" class="form-control" data-contact-key="site.contact.email" value="qaxqjt_{year}@163.com" />
                 </div>
 
                 <div class="form-group">
                   <label>官方抖音/快手号（可选）</label>
-                  <input type="text" class="form-control" value="抖音：@秦安县秦剧团文化演出有限公司（qaxqjt_{year}）" />
+                  <input type="text" class="form-control" data-contact-key="site.contact.social" value="抖音：@秦安县秦剧团文化演出有限公司（qaxqjt_{year}）" />
                 </div>
 
               </div>
@@ -1728,9 +1590,9 @@
               </div>
 
               <div class="form-actions-bar">
-                <button class="btn btn-secondary">↺ 取消修改</button>
-                <button class="btn btn-outline-dark">📥 测试配置预览</button>
-                <button class="btn btn-gold">💾 保存配置并更新</button>
+                <button type="button" class="btn btn-secondary" id="contentContactCancel">↺ 取消修改</button>
+                <button type="button" class="btn btn-outline-dark" id="contentContactPreview">📥 测试配置预览</button>
+                <button type="button" class="btn btn-gold" id="contentContactSave">💾 保存配置并更新</button>
               </div>
 
             </div>
@@ -1747,11 +1609,11 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20261010a"></script>
   <script src="../js/api-request.js?v=20261008b"></script>
-<script src="../js/app.js?v=20261009a"></script>
+<script src="../js/app.js?v=20261027a"></script>
   <script src="../js/tooltip.js?v=20261010a"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
   <script src="../js/pagination.js?v=20261002a"></script>
-  <script src="../js/admin-pages/content.js?v=20261005a"></script>
+  <script src="../js/admin-pages/content.js?v=20261014g"></script>
 
   
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
@@ -1769,6 +1631,156 @@
 
 
 <script src="../js/admin-content-real.js?v=20260922"></script>
+
+<!-- 🏛️ 剧团简介区块接线：编辑/保存 ↔ site-assets 文本位（前台 index.html data-asset-text 自动生效，约5分钟缓存） -->
+<script>
+(function () {
+  'use strict';
+  if (window.__contentIntroWired) return;
+  window.__contentIntroWired = 1;
+
+  var YEAR = new Date().getFullYear();
+  var BLOCKS = {
+    'site.text.home_about_p1': '秦安县秦剧团文化演出有限公司，前身为陇城青年秦剧团，是秦安县本土老牌民营专业秦腔演出团体，注册成立于2014年，' + YEAR + '年服务全县，扎根秦安陇城镇，常年深耕天水本地乡村文化演出市场。剧团拥有成熟的演职团队、专业戏曲伴奏乐队、全套舞美灯光音响及戏曲行头道具，擅长演绎传统秦腔本戏、经典折子戏、民俗戏曲专场，适配乡村庙会、新春节庆、惠民下乡、集市汇演、企业公益演出等各类场景。',
+    'site.text.home_about_p2': '多年来，剧团始终坚守“传承秦腔文脉、服务基层群众”的初心，走遍秦安各乡镇、村落，常态化开展文化惠民演出，用接地气的戏曲表演丰富乡村文化生活，弘扬传统民俗文化与西北戏曲艺术，凭借扎实的演技、严谨的演出作风、地道的唱腔韵味，赢得了广大群众的一致认可与良好口碑。'
+  };
+
+  function api() { return window.QAXQJT_API || null; }
+  function markBtn(b) {
+    b.__superPatchBound = 1; b.__ts3Done = 1; b.__bindDone = 1; b.__ctE2Done = 1; b.__deadBtnChecked = 1;
+    return b;
+  }
+  function notify(msg, type) {
+    if (typeof window.showToast === 'function') { try { window.showToast(msg, type || 'success'); return; } catch (_) {} }
+    var el = document.createElement('div');
+    el.textContent = msg;
+    el.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:10000;padding:10px 22px;border-radius:10px;font-size:.88rem;color:#fff;background:' + (type === 'error' ? '#dc2626' : '#16a34a') + ';box-shadow:0 8px 24px rgba(0,0,0,.2);';
+    document.body.appendChild(el);
+    setTimeout(function () { try { el.remove(); } catch (_) {} }, 2600);
+  }
+
+  var state = {};
+
+  function effectiveText(key) {
+    return (state[key] && state[key].custom) ? state[key].custom : BLOCKS[key];
+  }
+
+  function renderPreview(key) {
+    var st = state[key];
+    if (!st) return;
+    st.previewP.textContent = effectiveText(key);
+    if (st.custom) {
+      if (!st.badge) {
+        var b = document.createElement('span');
+        b.style.cssText = 'margin-left:8px;font-size:.68rem;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#15803d;font-weight:600;vertical-align:middle;';
+        b.textContent = '已自定义';
+        st.nameEl.appendChild(b);
+        st.badge = b;
+      }
+    } else if (st.badge) {
+      try { st.badge.remove(); } catch (_) {}
+      st.badge = null;
+    }
+  }
+
+  function exitEdit(key) {
+    var st = state[key];
+    if (st && st.ta) { try { st.ta.wrap.remove(); } catch (_) {} st.ta = null; }
+    if (st) { st.editing = false; st.previewP.style.display = ''; st.editBtn.innerHTML = '✏️ 编辑'; }
+  }
+
+  function enterEdit(key) {
+    var st = state[key];
+    if (!st || st.editing) return;
+    st.editing = true;
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'margin-top:2px;';
+    var ta = document.createElement('textarea');
+    ta.className = 'form-control';
+    ta.rows = 7;
+    ta.maxLength = 2000;
+    ta.value = effectiveText(key);
+    ta.style.cssText = 'width:100%;line-height:1.7;';
+    var hint = document.createElement('div');
+    hint.style.cssText = 'font-size:.75rem;color:#9ca3af;margin-top:6px;';
+    hint.textContent = '💡 正在编辑前台「剧团简介」对应段落（最多2000字）。清空内容后保存 = 恢复默认文案；保存后前台约 5 分钟内自动生效。';
+    wrap.appendChild(ta);
+    wrap.appendChild(hint);
+    st.previewP.style.display = 'none';
+    st.previewP.parentNode.appendChild(wrap);
+    st.ta = { el: ta, wrap: wrap };
+    st.editBtn.innerHTML = '❌ 取消';
+    try { ta.focus(); } catch (_) {}
+  }
+
+  function save(key) {
+    var st = state[key];
+    if (!st) return;
+    if (!st.editing || !st.ta) { notify('请先点击「✏️ 编辑」修改文案，再点击保存', 'error'); return; }
+    var val = String(st.ta.el.value || '').trim();
+    if (val.length > 2000) { notify('文案过长（' + val.length + ' 字），请控制在 2000 字以内', 'error'); return; }
+    var A = api();
+    if (!A) { notify('API 未就绪，请刷新页面重试', 'error'); return; }
+    var btn = st.saveBtn;
+    btn.disabled = true;
+    var oldHtml = btn.innerHTML;
+    btn.innerHTML = '⏳ 保存中…';
+    A.put('/v1/site-assets/' + encodeURIComponent(key), { value: val, description: '' }, { timeoutMs: 12000 })
+      .then(function () {
+        st.custom = val;
+        exitEdit(key);
+        renderPreview(key);
+        notify(val ? '✅ 已保存，前台约 5 分钟内自动生效' : '✅ 已恢复默认文案，前台约 5 分钟内自动生效');
+      })
+      .catch(function (e) { notify('保存失败：' + (e && e.message || e), 'error'); })
+      .then(function () { btn.disabled = false; btn.innerHTML = oldHtml; });
+  }
+
+  function boot() {
+    var sections = document.querySelectorAll('[data-site-text-block]');
+    if (!sections.length) return;
+    for (var i = 0; i < sections.length; i++) {
+      (function (sec) {
+        var key = sec.getAttribute('data-site-text-block');
+        if (!BLOCKS[key]) return;
+        var previewP = sec.querySelector('.block-preview .block-preview-text');
+        var nameEl = sec.querySelector('.block-name');
+        var btns = sec.querySelectorAll('.block-actions button');
+        if (!previewP || !nameEl || !btns || btns.length < 2) return;
+        var st = state[key] = {
+          custom: '', editing: false, ta: null, badge: null,
+          previewP: previewP, nameEl: nameEl,
+          editBtn: markBtn(btns[0]), saveBtn: markBtn(btns[1])
+        };
+        st.editBtn.addEventListener('click', function (ev) {
+          ev.preventDefault(); ev.stopPropagation();
+          if (st.editing) { exitEdit(key); renderPreview(key); } else { enterEdit(key); }
+        });
+        st.saveBtn.addEventListener('click', function (ev) {
+          ev.preventDefault(); ev.stopPropagation();
+          save(key);
+        });
+        renderPreview(key);
+      })(sections[i]);
+    }
+    var A = api();
+    if (!A) return;
+    A.get('/v1/site-assets', { query: {}, showErrorToast: false, timeoutMs: 12000 }).then(function (rows) {
+      rows = Array.isArray(rows) ? rows : (rows && rows.rows) || [];
+      rows.forEach(function (r) {
+        if (r && Object.prototype.hasOwnProperty.call(state, r.key)) {
+          state[r.key].custom = String(r.value || '').trim();
+          if (!state[r.key].editing) renderPreview(r.key);
+        }
+      });
+    }).catch(function () { /* 列表失败不阻塞编辑 */ });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else { boot(); }
+})();
+</script>
 </body>
 
 </html>

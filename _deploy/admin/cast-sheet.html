@@ -11,7 +11,7 @@
 
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<title>演出演员表配置 - 秦安县秦剧团文化演出管理系统</title>
+<title>演出演员表配置 - 秦安县秦剧团文化演出有限公司文化演出管理系统</title>
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="stylesheet" href="../css/style.css?v=20260926p">
 <style>
@@ -702,6 +702,10 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         <button class="btn-action btn-orange" id="btnPrintSelected2" data-action="cast-print-selected" type="button">🎯 按勾选打印</button>
         <button class="btn-action btn-green" id="btnExport" data-action="cast-export" type="button">📤 导出 CSV</button>
         <button class="btn-action btn-emerald" id="btnXlsxAll" data-action="cast-xlsx-all" type="button" title="一键导出全表演出演员表Excel.xlsx（演出信息/主创/剧目/乐队/舞台/节目单/工资预算 各自独立Sheet+列宽+数字格式）">📊 整表导出XLSX</button>
+        <button class="btn-action btn-blue" id="btnImportXlsx" data-action="cast-import-xlsx" type="button" title="从已导出的XLSX文件批量导入演员表数据（演出信息/主创/剧目/乐队/舞台/节目单）">📥 批量导入XLSX</button>
+        <button class="btn-action btn-primary" id="btnRoleLink" data-action="cast-role-link" type="button" title="维护「角色→行当 / 角色→常用演员」关联库，并可一键应用到当前演出所有剧目">🔗 角色关联</button>
+        <button class="btn-action btn-gray" id="btnVersions" data-action="cast-versions" type="button" title="查看/回滚演员表历史版本（每次保存自动记录，最多保留30个）">🕘 版本历史</button>
+        <input type="file" id="castImportFile" accept=".xlsx,.xls,.csv" style="display:none;">
       </div>
 
       <!-- ===== 20260922 真实后端同步：关联排期 / 载入线上阵容 / 发布到官网 ===== -->
@@ -714,10 +718,41 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         <span id="rsMsg" style="color:#075985;"></span>
       </div>
 
+      <!-- ===== 20261016 已发布阵容管理：修改 / 删除 / 一键公开切换 ===== -->
+      <div id="castManagePanel" style="margin:10px 0;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px;">
+          <span style="font-weight:700;color:#9a3412;">🗂️ 已发布阵容管理（修改 / 删除 / 一键公开切换）</span>
+          <button id="cmRefresh" type="button" style="padding:4px 12px;border:1px solid #ea580c;background:#fff;color:#ea580c;border-radius:8px;cursor:pointer;">↻ 刷新列表</button>
+          <span id="cmBadge" style="font-size:.76rem;padding:3px 10px;border-radius:20px;background:#ffedd5;color:#9a3412;border:1px solid #fdba74;white-space:nowrap;">加载中…</span>
+          <span id="cmMsg" style="color:#9a3412;font-size:.82rem;"></span>
+        </div>
+        <div style="overflow:auto;max-height:340px;border:1px solid #fed7aa;border-radius:8px;background:#fff;">
+          <table id="cmTable" style="width:100%;border-collapse:collapse;font-size:.84rem;">
+            <thead>
+              <tr style="background:#ffedd5;color:#9a3412;">
+                <th style="padding:6px 8px;text-align:left;white-space:nowrap;">编号</th>
+                <th style="padding:6px 8px;text-align:left;">剧目</th>
+                <th style="padding:6px 8px;text-align:left;white-space:nowrap;">演出日期</th>
+                <th style="padding:6px 8px;text-align:left;white-space:nowrap;">状态</th>
+                <th style="padding:6px 8px;text-align:left;white-space:nowrap;">公开状态</th>
+                <th style="padding:6px 8px;text-align:right;white-space:nowrap;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="cmTbody"><tr><td colspan="6" style="padding:10px;color:#9a3412;">加载中…</td></tr></tbody>
+          </table>
+        </div>
+        <div id="cmCurBar" style="margin-top:10px;padding-top:8px;border-top:1px dashed #fdba74;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:.84rem;">
+          <span style="color:#9a3412;">当前阵容：<b id="cmCurName">（未选择）</b></span>
+          <button id="cmSaveDraft" type="button" style="padding:4px 12px;border:1px solid #64748b;background:#fff;color:#475569;border-radius:8px;cursor:pointer;">💾 保存为草稿</button>
+          <button id="cmToggle" type="button" style="padding:4px 12px;border:1px solid #ea580c;background:#fff;color:#ea580c;border-radius:8px;cursor:pointer;">⏸ 暂停公开</button>
+          <button id="cmDelete" type="button" style="padding:4px 12px;border:1px solid #b91c1c;background:#fff;color:#b91c1c;border-radius:8px;cursor:pointer;">🗑 删除当前阵容</button>
+        </div>
+      </div>
+
       <!-- 01 演出封面横幅 -->
       <div class="show-banner">
         <div class="qr-placeholder"><div class="qr-img"></div>扫码看电子阵容</div>
-        <div class="comp-name">秦安县秦剧团<em>文化演出有限公司</em></div>
+        <div class="comp-name">秦安县秦剧团文化演出有限公司<em>文化演出有限公司</em></div>
         <div class="show-title"><input type="text" id="inp-title" placeholder="例：{year} 文化惠民 · 秦腔经典传统剧目专场"></div>
         <div class="meta-grid">
           <div class="row"><b>📢 主办单位</b><input type="text" id="inp-host" placeholder="例：中共秦安县委宣传部"></div>
@@ -755,7 +790,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         </div>
         <div class="sec-body" id="sec-creative">
           <table class="cast-table">
-            <thead><tr><th class="seq">#</th><th style="width:170px;">职位</th><th style="width:130px;">姓名</th><th>备注 / 分工说明</th><th style="width:58px;" title="勾选=观众扫码可见，取消勾选=仅后台内部可见">公开</th><th style="width:52px;">操作</th></tr></thead>
+            <thead><tr><th class="seq">#</th><th style="width:170px;">职位</th><th style="width:130px;">姓名</th><th>备注 / 分工说明</th><th class="no-print" style="width:86px;">板块</th><th style="width:58px;" title="勾选=观众扫码可见，取消勾选=仅后台内部可见">公开</th><th style="width:52px;">操作</th></tr></thead>
             <tbody id="bodyCreative"></tbody>
           </table>
         </div>
@@ -803,7 +838,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         </div>
         <div class="sec-body" id="sec-stage">
           <table class="cast-table">
-            <thead><tr><th class="seq">#</th><th style="width:180px;">岗位 / 职责</th><th style="width:130px;">负责人</th><th>备注（后台/前台/巡检点）</th><th style="width:58px;" title="勾选=观众可见，取消=内部保密">公开</th><th style="width:52px;">操作</th></tr></thead>
+            <thead><tr><th class="seq">#</th><th style="width:180px;">岗位 / 职责</th><th style="width:130px;">负责人</th><th>备注（后台/前台/巡检点）</th><th class="no-print" style="width:86px;">板块</th><th style="width:58px;" title="勾选=观众可见，取消=内部保密">公开</th><th style="width:52px;">操作</th></tr></thead>
             <tbody id="bodyStage"></tbody>
           </table>
         </div>
@@ -841,7 +876,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         </div>
         <div class="sec-body" id="sec-wuchang">
           <table class="cast-table">
-            <thead><tr><th class="seq">#</th><th style="width:190px;">岗位 / 乐器</th><th style="width:120px;">演奏员</th><th>备注 / 常用曲牌</th><th style="width:58px;" title="勾选=观众可见，取消=内部保密">公开</th><th style="width:52px;">操作</th></tr></thead>
+            <thead><tr><th class="seq">#</th><th style="width:190px;">岗位 / 乐器</th><th style="width:120px;">演奏员</th><th>备注 / 常用曲牌</th><th class="no-print" style="width:86px;">板块</th><th style="width:58px;" title="勾选=观众可见，取消=内部保密">公开</th><th style="width:52px;">操作</th></tr></thead>
             <tbody id="bodyWuchang"></tbody>
           </table>
         </div>
@@ -859,7 +894,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
         </div>
         <div class="sec-body" id="sec-wenchang">
           <table class="cast-table">
-            <thead><tr><th class="seq">#</th><th style="width:190px;">岗位 / 乐器</th><th style="width:120px;">演奏员</th><th>备注 / 常用曲牌</th><th style="width:58px;" title="勾选=观众可见，取消=内部保密">公开</th><th style="width:52px;">操作</th></tr></thead>
+            <thead><tr><th class="seq">#</th><th style="width:190px;">岗位 / 乐器</th><th style="width:120px;">演奏员</th><th>备注 / 常用曲牌</th><th class="no-print" style="width:86px;">板块</th><th style="width:58px;" title="勾选=观众可见，取消=内部保密">公开</th><th style="width:52px;">操作</th></tr></thead>
             <tbody id="bodyWenchang"></tbody>
           </table>
         </div>
@@ -943,11 +978,14 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
 <script src="../js/year-lite.js?v=20260803"></script>
   <script src="../js/api-config.js?v=20261010a"></script>
   <script src="../js/api-request.js?v=20261008b"></script>
-<script src="../js/app.js?v=20261009a"></script>
+<script src="../js/app.js?v=20261027a"></script>
   <script src="../js/tooltip.js?v=20261010a"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
 <!-- ===== 2026-09-30 P3 懒加载：xlsx.min.js（SheetJS 0.18.5 full）四路径按需加载（导出时才拉，首屏不占带宽），失败清缓存可重试 ===== -->
-<script src="../js/admin-pages/cast-sheet.pre-2.js?v=20261005a"></script>
+<script src="../js/admin-pages/cast-sheet-common-patches.js?v=20261016a"></script>
+<script src="../js/admin-pages/cast-sheet.pre-2.js?v=20261016b"></script>
+<script src="../js/admin-pages/cast-sheet-performers.js?v=20261017e"></script>
+<script src="../js/admin-pages/cast-sheet-business.js?v=20261017e"></script>
 
 
 
@@ -971,7 +1009,7 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     </div>
     <div style="padding:20px 24px;">
       <div style="margin-bottom:16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;font-size:0.85rem;color:#1e40af;">
-        💡 民营剧团标配建议 <b>≥30人</b>（演员约占50%、乐队约22%、前场+服装+电工约28%）。填写各组人数后自动生成样板。
+        💡 打开时已按<b>花名册各队人数</b>预填（总人数=花名册人数）；生成后岗位对齐每人实际行当、日薪取每人协议日工资；未填协议工资者按 <b>0元</b> 计并在商议单中标 ⚠请核对，核对修正后可一键写回花名册。
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <label style="display:flex;flex-direction:column;gap:6px;">
@@ -1012,9 +1050,10 @@ body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-
     </div>
   </div>
 </div>
-<script src="../js/cast-sheet-real.js?v=20260924"></script>
+<script src="../js/cast-sheet-real.js?v=20261016a"></script>
 <script src="../js/troupe-cloud-store.js?v=20260928i"></script>
 <script src="../js/admin-pages/cast-sheet.js?v=20261005a"></script>
+<script src="../js/admin-pages/cast-sheet-manage.js?v=20261016a"></script>
 <script src="../js/admin-mobile-sidebar.js?v=20260926m"></script>
 </body>
 </html>

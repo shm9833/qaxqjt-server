@@ -274,35 +274,65 @@
     };
   }
 
-  function publish() {
+  /* ---------- 提交（发布 / 保存为草稿 共用） ---------- */
+  function _save(status, mode) {
     var A = api();
-    if (!A) { alert('接口模块未就绪，请确认已通过正式环境登录管理员账号。'); return; }
+    if (!A) { alert('接口模块未就绪，请确认已通过正式环境登录管理员账号。'); return Promise.reject(new Error('接口模块未就绪')); }
     var scheduleId = $('rsSchedule').value;
     if (!scheduleId) {
       alert('请先选择"关联排期"。演出阵容必须挂接一条真实排期；如暂无排期，请先到【演出排期】页面创建。');
-      return;
+      return Promise.reject(new Error('缺少关联排期'));
     }
     var p = buildPayload();
-    if (!p.playTitle) { alert('请先在"主场本戏"中填写或从剧库选择剧目名称。'); return; }
-    if (!p.performanceDate && !window.confirm('封面尚未填写演出日期，仍要发布吗？')) return;
-    if (!p.crew.length && !window.confirm('当前没有任何演职人员，确定发布空阵容？')) return;
+    p.status = status;
+    if (!p.playTitle) { alert('请先在"主场本戏"中填写或从剧库选择剧目名称。'); return Promise.reject(new Error('缺少剧目名称')); }
+    if (mode === 'publish') {
+      if (!p.performanceDate && !window.confirm('封面尚未填写演出日期，仍要发布吗？')) return Promise.reject(new Error('取消发布'));
+      if (!p.crew.length && !window.confirm('当前没有任何演职人员，确定发布空阵容？')) return Promise.reject(new Error('取消发布'));
+    }
 
     var id = _sheetId || $('rsSheet').value;
     var body = Object.assign({ scheduleId: scheduleId }, p);
-    msg(id ? '正在更新线上阵容…' : '正在发布新阵容…');
+    msg(mode === 'publish' ? (id ? '正在更新线上阵容…' : '正在发布新阵容…') : '正在保存为草稿…');
 
     var req = id ? A.patch('/v1/cast-sheets/' + encodeURIComponent(id), body)
                  : A.post('/v1/cast-sheets', body);
-    req.then(function (res) {
+    return req.then(function (res) {
       window.__castSheetHook.saveLocal();
       var newId = (res && res.id) || id;
       _sheetId = newId;
-      msg('✅ 已发布到官网（' + ((res && res.sheetNo) || '') + '），观众端阵容页可查看', 'ok');
-      return fillSheets(newId);
+      msg(mode === 'publish'
+        ? ('✅ 已发布到官网（' + ((res && res.sheetNo) || '') + '），观众端阵容页可查看')
+        : ('✅ 已保存为草稿（' + ((res && res.sheetNo) || '') + '），未公开到官网'), 'ok');
+      return fillSheets(newId).then(function () { return res; });
     }).catch(function (e) {
-      msg('发布失败：' + ((e && e.message) || '请检查登录状态与必填项'), 'err');
+      msg((mode === 'publish' ? '发布失败：' : '保存草稿失败：') + ((e && e.message) || '请检查登录状态与必填项'), 'err');
+      throw e;
     });
   }
+
+  function publish() { return _save('confirmed', 'publish'); }
+  function saveAsDraft() { return _save('draft', 'draft'); }
+
+  /* ---------- 按 id 载入（供管理面板"编辑"调用） ---------- */
+  function loadById(id) {
+    if (!id) return Promise.resolve();
+    var sel = $('rsSheet');
+    if (sel) sel.value = id;
+    _sheetId = id;
+    syncScheduleFromSheet();
+    return fillSheets(id).then(function () { return loadSheet(); });
+  }
+
+  /* ---------- 暴露给管理面板 ---------- */
+  window.__castSheetReal = {
+    loadById: loadById,
+    refreshList: fillSheets,
+    publish: publish,
+    saveAsDraft: saveAsDraft,
+    getSheetId: function () { return _sheetId || ($('rsSheet') && $('rsSheet').value) || ''; },
+    setMessage: msg
+  };
 
   /* ---------- init ---------- */
   function init() {

@@ -684,6 +684,9 @@ function __pLog(module,event,extra){
         var el = e.target;
         // 内容管理：编辑弹窗/预览弹窗自带完整事件处理（保存草稿/发布/预览/关闭），跳过全局关闭拦截
         if(el && el.closest && el.closest('#contentPreviewModal,#contentNewsModal')) return;
+        // 已由业务模块绑定的按钮（__superPatchBound/__deadBtnChecked/__bindDone）跳过全局关闭拦截，避免「取消修改」等被误吞
+        var _boundBtn = el && el.closest ? el.closest('button,a,[role=button],[data-action]') : null;
+        if(_boundBtn && (_boundBtn.__superPatchBound || _boundBtn.__deadBtnChecked || _boundBtn.__bindDone)) return;
         var txt = (el.textContent||'').trim();
         if(!txt&&el.closest){ txt = (el.closest('button,a,[role=button],span,div')||{}).textContent||''; txt=txt.trim(); }
         var isClose = false;
@@ -1411,7 +1414,7 @@ function __pLog(module,event,extra){
         '<h1 style="font-size:26px;line-height:1.4;margin:0 0 10px;color:#111827;">' + _escape(body.title) + '</h1>' +
         (body.subtitle ? '<p style="font-size:15px;color:#6b7280;margin:0 0 14px;">' + _escape(body.subtitle) + '</p>' : '') +
         '<div style="display:flex;gap:14px;align-items:center;color:#9ca3af;font-size:13px;border-bottom:1px solid #f0f0f0;padding-bottom:14px;margin-bottom:20px;flex-wrap:wrap;">' +
-          '<span>✍️ ' + _escape(body.authorName || '秦安县秦剧团') + '</span>' +
+          '<span>✍️ ' + _escape(body.authorName || '秦安县秦剧团文化演出有限公司') + '</span>' +
           '<span>📅 ' + _escape(dateStr) + '</span>' +
         '</div>' +
         (body.coverImage ? '<img src="' + _escape(body.coverImage) + '" alt="封面" style="width:100%;border-radius:12px;margin-bottom:20px;display:block;" onerror="this.style.display=\'none\'" />' : '') +
@@ -1667,5 +1670,913 @@ function __pLog(module,event,extra){
     _initOnTabSwitch();
     var activeNews = document.querySelector('.tab-content.active#tab-news');
     if (activeNews) window.__contentApi.load();
+  }
+})();
+
+/* ========================================================
+ * content.html 剧目展示 tab 真实化（接 /v1/plays + /v1/upload API）
+ * 命名空间 __contentPlays；行按钮用 data-act 委托 + MutationObserver 打标豁免 DBF
+ * 创建：2026-10-14（修复：tbody 无 id 导致 admin-content-real.js 静默 return、
+ *       新增/编辑/查看/删除/上传按钮全部被死按钮兜底拦截）
+ * ======================================================== */
+(function(){
+  'use strict';
+  if (window.__contentPlays) return;
+  var API = window.QAXQJT_API;
+
+  function _toast(msg, type){
+    try { if (window.QinApp && QinApp.Utils && QinApp.Utils.toast) return QinApp.Utils.toast(msg, type || 'info', 3200); } catch(_){}
+    try { console.log('[contentPlays]', type, msg); } catch(_){}
+  }
+  function _escape(s){ if (s === null || s === undefined) return ''; return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function _val(id){ var el = document.getElementById(id); return el ? (el.value || '').trim() : ''; }
+  function _setVal(id, v){ var el = document.getElementById(id); if (el) el.value = (v === null || v === undefined) ? '' : v; }
+  function _showModal(id, show){ var el = document.getElementById(id); if (el) el.style.display = show ? 'flex' : 'none'; }
+  function _mark(btn){
+    if (!btn) return;
+    btn.__superPatchBound = 1; btn.__ts3Done = 1; btn.__bindDone = 1; btn.__deadBtnChecked = 1; btn.__playBound = 1;
+  }
+  function _byIdPath(id){ return (window.QAXQJT_PATHS && QAXQJT_PATHS.PLAYS_BY_ID) ? QAXQJT_PATHS.PLAYS_BY_ID(encodeURIComponent(id)) : ('/v1/plays/' + encodeURIComponent(id)); }
+  function _listPath(){ return (window.QAXQJT_PATHS && QAXQJT_PATHS.PLAYS) || '/v1/plays'; }
+
+  window.__contentPlays = {
+    state: { items: [], editingId: null, loaded: false },
+
+    load: async function(){
+      var tb = document.getElementById('contentPlayTbody');
+      try {
+        var resp = await API.get(_listPath(), { query: { page: 1, pageSize: 200 } });
+        var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
+        this.state.items = rows;
+        this._render(rows);
+        this.state.loaded = true;
+      } catch(e) {
+        console.warn('[__contentPlays.load] 失败', e);
+        _toast('⚠️ 加载剧目列表失败：' + (e && e.message ? e.message : e), 'error');
+        if (tb) tb.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:#dc2626;">❌ 加载失败：' + _escape(e && e.message ? e.message : String(e)) + '</td></tr>';
+        var badge0 = document.getElementById('playMgmtBadge');
+        if (badge0) badge0.textContent = '❌ 剧目加载失败';
+      }
+    },
+
+    _render: function(rows){
+      var tb = document.getElementById('contentPlayTbody');
+      if (!tb) return;
+      var badge = document.getElementById('playMgmtBadge');
+      if (badge) badge.textContent = '✅ 已加载真实剧目 ' + rows.length + ' 部';
+      if (!rows.length) {
+        tb.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:#94a3b8;">📭 暂无剧目，点击「➕ 新增剧目」或用上方海报上传表单创建</td></tr>';
+        return;
+      }
+      tb.innerHTML = rows.map(function(p){
+        var id = String(p.id || '');
+        var code = _escape(p.playCode || id);
+        var title = String(p.title || '');
+        var titleShow = _escape(title);
+        var firstChar = _escape(title.replace(/[《》\s]/g, '').charAt(0) || '剧');
+        var poster = p.posterUrl
+          ? '<img src="' + _escape(p.posterUrl) + '" alt="" style="width:52px;height:38px;object-fit:cover;border-radius:6px;" onerror="this.style.display=\'none\'" />'
+          : '<div class="poster-preview">' + firstChar + '</div>';
+        var genre = _escape(p.genre || '未分类');
+        var active = (p.status || 'active') === 'active';
+        var showBadge = active ? '<span class="badge badge-success">● 展示</span>' : '<span class="badge badge-secondary">● 隐藏</span>';
+        var hot = !!(p.isHot || p.is_hot);
+        var hotShow = hot ? '<span class="hot-tag">🔥 热门</span>' : '—';
+        var tags = '—';
+        if (p.subtitle) {
+          tags = '<div class="adapt-tags">' + String(p.subtitle).split(/[\/、,，\s]+/).filter(Boolean).slice(0, 3).map(function(t){ return '<span class="adapt-tag">' + _escape(t) + '</span>'; }).join('') + '</div>';
+        }
+        var upd = (p.updatedAt || p.createdAt) ? String(p.updatedAt || p.createdAt).slice(0, 10) : '—';
+        return '<tr data-row-id="' + _escape(id) + '">' +
+          '<td style="text-align:center;vertical-align:middle;"><input type="checkbox" class="batch-row-check" data-id="' + _escape(id) + '" style="width:17px;height:17px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></td>' +
+          '<td style="font-family:monospace;font-weight:600;color:var(--primary-dark);">' + code + '</td>' +
+          '<td>' + poster + '</td>' +
+          '<td style="font-weight:600;color:var(--primary-dark);font-family:\'KaiTi\',\'STKaiti\',serif;font-size:1rem;">' + titleShow + '</td>' +
+          '<td><span class="badge badge-danger">' + genre + '</span></td>' +
+          '<td>' + showBadge + '</td>' +
+          '<td>—</td>' +
+          '<td>' + hotShow + '</td>' +
+          '<td>' + tags + '</td>' +
+          '<td>' + upd + '</td>' +
+          '<td><div class="admin-table-actions">' +
+            '<button class="btn btn-secondary btn-sm" data-act="view" data-id="' + _escape(id) + '" title="查看详情">👁</button>' +
+            '<button class="btn btn-primary btn-sm" data-act="edit" data-id="' + _escape(id) + '" title="编辑剧目">✏️</button>' +
+            '<button class="btn btn-outline-dark btn-sm" data-act="del" data-id="' + _escape(id) + '" title="删除剧目">🗑</button>' +
+          '</div></td>' +
+        '</tr>';
+      }).join('');
+    },
+
+    openAdd: function(){
+      this.state.editingId = null;
+      var t = document.getElementById('contentPlayModalTitle'); if (t) t.textContent = '➕ 新增剧目';
+      _setVal('contentPlayTitle', ''); _setVal('contentPlayGenre', '传统本戏');
+      _setVal('contentPlayDuration', ''); _setVal('contentPlayAuthor', '');
+      _setVal('contentPlayStatus', 'active'); _setVal('contentPlayPosterUrl', '');
+      _setVal('contentPlaySynopsis', '');
+      var hot = document.getElementById('contentPlayHot'); if (hot) hot.checked = false;
+      _showModal('contentPlayModal', true);
+    },
+
+    openEdit: function(id){
+      var p = null;
+      for (var i = 0; i < this.state.items.length; i++) { if (String(this.state.items[i].id) === String(id)) { p = this.state.items[i]; break; } }
+      if (!p) { _toast('⚠️ 未找到该剧目，请刷新列表', 'error'); return; }
+      this.state.editingId = String(id);
+      var t = document.getElementById('contentPlayModalTitle'); if (t) t.textContent = '✏️ 编辑剧目（' + (p.playCode || id) + '）';
+      _setVal('contentPlayTitle', p.title || '');
+      _setVal('contentPlayGenre', p.genre || '传统本戏');
+      _setVal('contentPlayDuration', p.durationMinutes || '');
+      _setVal('contentPlayAuthor', p.author || '');
+      _setVal('contentPlayStatus', p.status || 'active');
+      _setVal('contentPlayPosterUrl', p.posterUrl || '');
+      _setVal('contentPlaySynopsis', p.synopsis || '');
+      var hot = document.getElementById('contentPlayHot'); if (hot) hot.checked = !!(p.isHot || p.is_hot);
+      _showModal('contentPlayModal', true);
+    },
+
+    save: async function(){
+      var title = _val('contentPlayTitle');
+      if (!title) { _toast('⚠️ 剧目名称必填', 'error'); return; }
+      var dur = parseInt(_val('contentPlayDuration'), 10);
+      // 注意：POST /v1/plays 有 Joi 严格校验（string().allow('') 不接受 null），空值键必须省略
+      var body = { title: title, status: _val('contentPlayStatus') || 'active' };
+      var genre = _val('contentPlayGenre'); if (genre) body.genre = genre;
+      if (!isNaN(dur)) body.durationMinutes = dur;
+      var author = _val('contentPlayAuthor'); if (author) body.author = author;
+      var poster = _val('contentPlayPosterUrl'); if (poster) body.posterUrl = poster;
+      var syn = _val('contentPlaySynopsis'); if (syn) body.synopsis = syn;
+      var hot = !!(document.getElementById('contentPlayHot') || {}).checked;
+      var editId = this.state.editingId;
+      try {
+        if (editId) {
+          body.is_hot = hot; // update 控制器支持 is_hot
+          await API.patch(_byIdPath(editId), body);
+          _toast('✅ 剧目《' + title + '》已更新', 'success');
+        } else {
+          var created = await API.post(_listPath(), body);
+          var newId = created && (created.id || created.playCode);
+          if (hot && newId) { try { await API.patch(_byIdPath(newId), { is_hot: true }); } catch(_h){} }
+          _toast('✅ 剧目《' + title + '》已创建' + (newId ? '（ID: ' + newId + '）' : ''), 'success');
+        }
+        _showModal('contentPlayModal', false);
+        this.state.editingId = null;
+        await this.load();
+      } catch(e) {
+        console.warn('[__contentPlays.save] 失败', e);
+        _toast('❌ 保存失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    view: async function(id){
+      var body = document.getElementById('contentPlayDetailBody');
+      if (!body) return;
+      body.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;">⏳ 加载中…</div>';
+      _showModal('contentPlayDetailModal', true);
+      try {
+        var p = await API.get(_byIdPath(id));
+        var hot = !!(p.isHot || p.is_hot);
+        var active = (p.status || 'active') === 'active';
+        var poster = p.posterUrl ? '<div style="text-align:center;margin-bottom:16px;"><img src="' + _escape(p.posterUrl) + '" alt="海报" style="max-width:100%;max-height:220px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.15);" onerror="this.parentElement.style.display=\'none\'" /></div>' : '';
+        function row(k, v){ return '<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px dashed #f1f5f9;font-size:0.92rem;"><span style="min-width:84px;color:#64748b;font-weight:600;">' + k + '</span><span style="flex:1;color:#1f2937;">' + v + '</span></div>'; }
+        body.innerHTML = poster +
+          '<div style="font-size:1.15rem;font-weight:700;color:#8b0000;font-family:\'KaiTi\',\'STKaiti\',serif;margin-bottom:12px;">' + _escape(p.title || '') + (hot ? ' <span class="hot-tag">🔥 热门</span>' : '') + '</div>' +
+          row('剧目ID', _escape(p.playCode || p.id || id)) +
+          row('分类', _escape(p.genre || '—')) +
+          row('时长', (p.durationMinutes ? p.durationMinutes + ' 分钟' : '—')) +
+          row('编剧/作者', _escape(p.author || '—')) +
+          row('状态', active ? '✅ 上架（官网可见）' : '⏸ 下架（官网隐藏）') +
+          row('适配场景', _escape(p.subtitle || '—')) +
+          row('主要演员', _escape(p.castSummary || '—')) +
+          row('难度等级', _escape(p.difficultyLevel || '—')) +
+          row('更新时间', _escape(String(p.updatedAt || p.createdAt || '').slice(0, 19).replace('T', ' ') || '—')) +
+          (p.synopsis ? '<div style="margin-top:12px;padding:12px;background:#f8fafc;border-radius:8px;font-size:0.9rem;line-height:1.7;color:#374151;"><strong>剧情简介：</strong>' + _escape(p.synopsis) + '</div>' : '');
+      } catch(e) {
+        body.innerHTML = '<div style="color:#dc2626;padding:12px;">❌ 加载详情失败：' + _escape(e && e.message ? e.message : String(e)) + '</div>';
+      }
+    },
+
+    remove: async function(id){
+      var p = null;
+      for (var i = 0; i < this.state.items.length; i++) { if (String(this.state.items[i].id) === String(id)) { p = this.state.items[i]; break; } }
+      var name = p ? (p.title || id) : id;
+      if (!confirm('确认删除剧目《' + name + '》？此操作不可恢复。')) return;
+      try {
+        await API.del(_byIdPath(id));
+        _toast('✅ 剧目《' + name + '》已删除', 'success');
+        await this.load();
+      } catch(e) {
+        console.warn('[__contentPlays.remove] 失败', e);
+        _toast('❌ 删除失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    // 📤 海报上传表单：校验 → POST /v1/upload → POST /v1/plays（含海报）
+    _uploadCreate: async function(){
+      var form = document.getElementById('adminOperaUploadForm');
+      if (!form) return;
+      var name = (form.operaName && form.operaName.value || '').trim();
+      var cat = (form.operaCategory && form.operaCategory.value || '').trim();
+      var dur = parseInt((form.operaDuration && form.operaDuration.value) || '', 10);
+      var file = form.operaImg && form.operaImg.files && form.operaImg.files[0];
+      if (!name) { _toast('⚠️ 请填写剧目名称', 'error'); return; }
+      if (!cat) { _toast('⚠️ 请选择剧目分类', 'error'); return; }
+      if (!file) { _toast('⚠️ 请选择剧目海报图片', 'error'); return; }
+      var allowExts = ['jpg','jpeg','png','gif','webp','svg'];
+      var ext = (file.name.split('.').pop() || '').toLowerCase();
+      if (allowExts.indexOf(ext) < 0) { _toast('❌ 不支持的文件类型 .' + ext, 'error'); return; }
+      if (file.size > 10 * 1024 * 1024) { _toast('❌ 海报超过 10MB 限制', 'error'); return; }
+      try {
+        _toast('⏳ 正在上传海报 ' + file.name + '…', 'info');
+        var fd = new FormData();
+        fd.append('file', file, file.name);
+        var up = await API.post('/v1/upload', fd, { timeoutMs: 60000 });
+        var url = up && up.url;
+        if (!url) { _toast('❌ 上传返回异常：' + JSON.stringify(up).slice(0, 100), 'error'); return; }
+        var body = { title: name, genre: cat, status: 'active', posterUrl: url };
+        if (!isNaN(dur)) body.durationMinutes = dur;
+        var created = await API.post(_listPath(), body);
+        var newId = created && (created.id || created.playCode);
+        _toast('✅ 剧目《' + name + '》已随海报创建' + (newId ? '（ID: ' + newId + '）' : ''), 'success');
+        try { form.reset(); } catch(_r){} // 触发 app.js reset 监听清除本地预览
+        if (this.state.loaded) await this.load();
+      } catch(e) {
+        console.warn('[__contentPlays._uploadCreate] 失败', e);
+        _toast('❌ 提交失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    bind: function(){
+      var self = this;
+      // 静态按钮：显式打五标记（id 标记器也会补，但双保险）
+      ['contentPlayAddBtn','contentPlaySaveBtn','contentPlayCancelBtn','contentPlayModalCloseX',
+       'contentPlayDetailCloseBtn','contentPlayDetailCloseX',
+       'adminOperaUploadSubmit','adminOperaUploadReset'].forEach(function(id){ _mark(document.getElementById(id)); });
+
+      var addBtn = document.getElementById('contentPlayAddBtn');
+      if (addBtn) addBtn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); self.openAdd(); }, true);
+
+      var saveBtn = document.getElementById('contentPlaySaveBtn');
+      if (saveBtn) saveBtn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); self.save(); }, true);
+
+      var closeFns = ['contentPlayCancelBtn','contentPlayModalCloseX'];
+      closeFns.forEach(function(id){
+        var b = document.getElementById(id);
+        if (b) b.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); _showModal('contentPlayModal', false); }, true);
+      });
+      ['contentPlayDetailCloseBtn','contentPlayDetailCloseX'].forEach(function(id){
+        var b = document.getElementById(id);
+        if (b) b.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); _showModal('contentPlayDetailModal', false); }, true);
+      });
+
+      // 海报上传提交：按钮点击期 preventDefault → 不触发 form submit（避开 app.js 静态站兜底拦截）
+      var upBtn = document.getElementById('adminOperaUploadSubmit');
+      if (upBtn) upBtn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); self._uploadCreate(); }, true);
+
+      // 行按钮：tbody 捕获期委托（与新闻模块同模式）
+      var tb = document.getElementById('contentPlayTbody');
+      if (tb) {
+        tb.addEventListener('click', function(ev){
+          var btn = ev.target && ev.target.closest ? ev.target.closest('button[data-act]') : null;
+          if (!btn) return;
+          ev.preventDefault(); ev.stopPropagation();
+          var act = btn.getAttribute('data-act');
+          var id = btn.getAttribute('data-id');
+          if (act === 'view') self.view(id);
+          else if (act === 'edit') self.openEdit(id);
+          else if (act === 'del') self.remove(id);
+        }, true);
+        // 动态行按钮自动打标记，防 DBF 兜底（innerHTML 重建后 __xxx 标记丢失）
+        if (typeof MutationObserver !== 'undefined') {
+          var mo = new MutationObserver(function(){
+            var btns = tb.querySelectorAll('button[data-act]');
+            for (var i = 0; i < btns.length; i++) _mark(btns[i]);
+          });
+          mo.observe(tb, { childList: true, subtree: true });
+        }
+      }
+    }
+  };
+
+  function _initPlaysOnTabSwitch(){
+    var tabItems = document.querySelectorAll('.tab-item[data-tab]');
+    for (var i = 0; i < tabItems.length; i++) {
+      tabItems[i].addEventListener('click', function(){
+        var tab = this.getAttribute('data-tab');
+        if (tab === 'operas' && window.__contentPlays && !window.__contentPlays.state.loaded) {
+          setTimeout(function(){ window.__contentPlays.load(); }, 100);
+        }
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){
+      window.__contentPlays.bind();
+      _initPlaysOnTabSwitch();
+      var activeOperas = document.querySelector('.tab-content.active#tab-operas');
+      if (activeOperas) window.__contentPlays.load();
+    });
+  } else {
+    window.__contentPlays.bind();
+    _initPlaysOnTabSwitch();
+    var activeOperas = document.querySelector('.tab-content.active#tab-operas');
+    if (activeOperas) window.__contentPlays.load();
+  }
+})();
+
+/* ==========================================================================
+ * content.html ✏️ 页面文案可视化区块编辑（__contentTextBlocks）
+ * 复用 Setting 表 group=site_assets，key = data-site-text-block 属性值，
+ * PUT /v1/site-assets/:key {value} 持久化（value 为空串 = 恢复默认）。
+ * 6 个区块全部接线：编辑（textarea 内联）/ 保存 / 还原默认 / 保存全部。
+ * ========================================================================== */
+(function () {
+  'use strict';
+  if (window.__contentTextBlocks) return;
+  var API = window.QAXQJT_API;
+  var Q = window.QinApp && window.QinApp.Utils;
+  function _toast(m, t) { try { (Q && Q.toast) ? Q.toast(m, t) : console.log('[toast]', m); } catch (e) { console.log('[toast]', m); } }
+  function _listPath() { return (window.QAXQJT_PATHS && window.QAXQJT_PATHS.SITE_ASSETS) || '/v1/site-assets'; }
+  function _byKey(key) { return (window.QAXQJT_PATHS && window.QAXQJT_PATHS.SITE_ASSETS_BY_KEY && window.QAXQJT_PATHS.SITE_ASSETS_BY_KEY(encodeURIComponent(key))) || ('/v1/site-assets/' + encodeURIComponent(key)); }
+  function _mark(btn) {
+    if (!btn) return;
+    btn.__superPatchBound = 1; btn.__ts3Done = 1; btn.__bindDone = 1; btn.__deadBtnChecked = 1; btn.__textBlockBound = 1;
+  }
+  function _sel(section, sel) { return section.querySelector(sel); }
+
+  var state = { loaded: false, blocks: {} }; // key -> {section, preview, defaultHtml, editing, editBtn, saveBtn}
+
+  window.__contentTextBlocks = {
+    state: state,
+    load: function () {
+      var self = this;
+      var sections = document.querySelectorAll('#tab-text .content-block-section[data-site-text-block]');
+      var map = {};
+      sections.forEach(function (sec) {
+        var key = sec.getAttribute('data-site-text-block');
+        var preview = _sel(sec, '.block-preview');
+        if (!state.blocks[key]) {
+          var actions = _sel(sec, '.block-actions');
+          var btns = actions ? actions.querySelectorAll('button') : [];
+          state.blocks[key] = {
+            section: sec, preview: preview,
+            defaultHtml: preview ? preview.innerHTML : '',
+            editing: false,
+            editBtn: btns[0], saveBtn: btns[1]
+          };
+        } else {
+          // 已存在则刷新 defaultHtml 取当前显示（可能是上次保存的覆盖值，保留为默认快照不合适；
+          // 但 defaultHtml 仅用于「还原默认」，应始终是页面原始静态值——首次绑定已存，这里不动）
+        }
+      });
+      try {
+        API.get(_listPath()).then(function (rows) {
+          var arr = rows && (rows.data || rows.items || rows.list || rows) || [];
+          if (Array.isArray(arr)) {
+            arr.forEach(function (r) { if (r && r.key && r.value) map[r.key] = r.value; });
+          }
+          sections.forEach(function (sec) {
+            var key = sec.getAttribute('data-site-text-block');
+            var b = state.blocks[key]; if (!b || !b.preview) return;
+            var v = map[key];
+            if (v) b.preview.innerHTML = v;
+          });
+          state.loaded = true;
+          _toast('✅ 已加载页面文案覆盖值（' + Object.keys(map).length + ' 项）', 'success');
+        }).catch(function (e) {
+          console.warn('[__contentTextBlocks.load] 失败', e);
+          _toast('⚠️ 文案配置加载失败，使用默认文案', 'error');
+          state.loaded = true;
+        });
+      } catch (e) {
+        console.warn('[__contentTextBlocks.load] 异常', e);
+        state.loaded = true;
+      }
+    },
+
+    _enterEdit: function (key) {
+      var b = state.blocks[key]; if (!b || !b.preview) return;
+      var cur = b.preview.innerHTML;
+      b._editOrig = cur;
+      var ta = document.createElement('textarea');
+      ta.value = cur;
+      ta.style.cssText = 'width:100%;min-height:120px;padding:10px 12px;border:1.5px solid #d97706;border-radius:8px;font-family:inherit;font-size:0.9rem;line-height:1.6;resize:vertical;';
+      b.preview.innerHTML = '';
+      b.preview.appendChild(ta);
+      b.editing = true;
+      if (b.editBtn) b.editBtn.textContent = '↩ 取消';
+      setTimeout(function () { ta.focus(); }, 50);
+    },
+
+    _exitEdit: function (key, keep) {
+      var b = state.blocks[key]; if (!b || !b.preview) return;
+      if (keep) {
+        var ta = b.preview.querySelector('textarea');
+        if (ta) b.preview.innerHTML = ta.value;
+      } else {
+        b.preview.innerHTML = b._editOrig || b.defaultHtml;
+      }
+      b.editing = false;
+      if (b.editBtn) b.editBtn.textContent = '✏️ 编辑';
+    },
+
+    save: function (key) {
+      var self = this, b = state.blocks[key];
+      if (!b || !b.preview) return;
+      if (!b.editing) { _toast('ℹ️ 请先点击「编辑」再保存', 'info'); return; }
+      var ta = b.preview.querySelector('textarea');
+      if (!ta) return;
+      var val = ta.value;
+      try {
+        API.put(_byKey(key), { value: val }).then(function () {
+          b.preview.innerHTML = val;
+          b.editing = false;
+          if (b.editBtn) b.editBtn.textContent = '✏️ 编辑';
+          _toast('✅ 区块已保存', 'success');
+        }).catch(function (e) {
+          console.warn('[__contentTextBlocks.save] 失败', e);
+          _toast('❌ 保存失败：' + (e && e.message ? e.message : e), 'error');
+        });
+      } catch (e) {
+        _toast('❌ 保存失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    saveAll: function () {
+      var self = this, keys = Object.keys(state.blocks);
+      var dirty = keys.filter(function (k) { return state.blocks[k].editing; });
+      if (!dirty.length) { _toast('ℹ️ 没有待保存的修改（请先编辑某个区块）', 'info'); return; }
+      var done = 0, fail = 0;
+      dirty.forEach(function (k) {
+        var b = state.blocks[k];
+        var ta = b.preview.querySelector('textarea');
+        if (!ta) { done++; return; }
+        var val = ta.value;
+        API.put(_byKey(k), { value: val }).then(function () {
+          b.preview.innerHTML = val; b.editing = false;
+          if (b.editBtn) b.editBtn.textContent = '✏️ 编辑';
+          done++; if (done + fail === dirty.length) _allDone();
+        }).catch(function (e) {
+          fail++; console.warn('[saveAll] ' + k, e);
+          if (done + fail === dirty.length) _allDone();
+        });
+      });
+      function _allDone() { _toast('✅ 已保存 ' + done + ' 项' + (fail ? '，失败 ' + fail + ' 项' : ''), fail ? 'error' : 'success'); }
+    },
+
+    restoreAll: function () {
+      var self = this;
+      if (!confirm('确认将全部 6 个文案区块恢复为系统默认值？此操作不可撤销。')) return;
+      var keys = Object.keys(state.blocks);
+      var done = 0, fail = 0;
+      keys.forEach(function (k) {
+        API.put(_byKey(k), { value: '' }).then(function () { done++; if (done + fail === keys.length) _done(); })
+          .catch(function (e) { fail++; console.warn('[restoreAll] ' + k, e); if (done + fail === keys.length) _done(); });
+      });
+      function _done() {
+        keys.forEach(function (k) {
+          var b = state.blocks[k];
+          if (b && b.preview) { b.preview.innerHTML = b.defaultHtml; b.editing = false; if (b.editBtn) b.editBtn.textContent = '✏️ 编辑'; }
+        });
+        _toast('✅ 已恢复默认文案（' + done + ' 项）' + (fail ? '，失败 ' + fail + ' 项' : ''), fail ? 'error' : 'success');
+      }
+    },
+
+    bind: function () {
+      var self = this;
+      var sections = document.querySelectorAll('#tab-text .content-block-section[data-site-text-block]');
+      sections.forEach(function (sec) {
+        var key = sec.getAttribute('data-site-text-block');
+        var actions = _sel(sec, '.block-actions');
+        if (!actions) return;
+        var btns = actions.querySelectorAll('button');
+        var editBtn = btns[0], saveBtn = btns[1];
+        _mark(editBtn); _mark(saveBtn);
+        if (!state.blocks[key]) state.blocks[key] = { section: sec, preview: _sel(sec, '.block-preview'), defaultHtml: '', editing: false, editBtn: editBtn, saveBtn: saveBtn };
+        else { state.blocks[key].editBtn = editBtn; state.blocks[key].saveBtn = saveBtn; }
+        if (editBtn) editBtn.addEventListener('click', function (ev) {
+          ev.preventDefault(); ev.stopPropagation();
+          if (state.blocks[key].editing) self._exitEdit(key, false); else self._enterEdit(key);
+        }, true);
+        if (saveBtn) saveBtn.addEventListener('click', function (ev) {
+          ev.preventDefault(); ev.stopPropagation(); self.save(key);
+        }, true);
+      });
+      ['contentTextRestoreAll', 'contentTextSaveAll'].forEach(function (id) { _mark(document.getElementById(id)); });
+      var restore = document.getElementById('contentTextRestoreAll');
+      if (restore) restore.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); self.restoreAll(); }, true);
+      var saveAll = document.getElementById('contentTextSaveAll');
+      if (saveAll) saveAll.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); self.saveAll(); }, true);
+    }
+  };
+
+  function _initTextOnTabSwitch() {
+    document.addEventListener('click', function (ev) {
+      var t = ev.target.closest && ev.target.closest('.tab-item[data-tab="text"]');
+      if (t && window.__contentTextBlocks && !window.__contentTextBlocks.state.loaded) {
+        setTimeout(function () { window.__contentTextBlocks.load(); }, 100);
+      }
+    }, true);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      window.__contentTextBlocks.bind();
+      _initTextOnTabSwitch();
+      var active = document.querySelector('.tab-content.active#tab-text');
+      if (active) window.__contentTextBlocks.load();
+    });
+  } else {
+    window.__contentTextBlocks.bind();
+    _initTextOnTabSwitch();
+    var active = document.querySelector('.tab-content.active#tab-text');
+    if (active) window.__contentTextBlocks.load();
+  }
+})();
+
+/* ==========================================================================
+ * content.html 🖼️ 横幅管理（__contentBanners）
+ * 横幅以 content 表 type='banner' 存储，复用 /v1/contents CRUD。
+ * 上传走 /v1/upload（FormData file），返回 url 写入 coverImage，
+ * position/link 存 extraJson。列表 GET /v1/contents?type=banner。
+ * 3 个死按钮全部接线：提交横幅 / 清空重选 / ➕ 新增横幅。
+ * ========================================================================== */
+(function () {
+  'use strict';
+  if (window.__contentBanners) return;
+  var API = window.QAXQJT_API;
+  var Q = window.QinApp && window.QinApp.Utils;
+  function _toast(m, t) { try { (Q && Q.toast) ? Q.toast(m, t) : console.log('[toast]', m); } catch (e) { console.log('[toast]', m); } }
+  function _mark(btn) { if (!btn) return; btn.__superPatchBound = 1; btn.__ts3Done = 1; btn.__bindDone = 1; btn.__deadBtnChecked = 1; btn.__bannerBound = 1; }
+  function _escape(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function _posLabel(v) {
+    var m = { 'home-1': '🏠 首页 #1 主视觉', 'home-2': '🏠 首页 #2 惠民下乡', 'home-3': '🏠 首页 #3 活动专场', 'home-4': '🏠 首页 #4 剧目推荐', 'inner-news': '📰 内页·新闻', 'inner-operas': '🎭 内页·剧目', 'inner-booking': '🎫 内页·预约' };
+    return m[v] || v || '—';
+  }
+  function _parseExtra(r) {
+    if (!r) return {};
+    var s = r.extraJson || r.extra_json;
+    if (!s) return {};
+    try { return JSON.parse(s); } catch (e) { return {}; }
+  }
+
+  var state = { loaded: false, items: [] };
+  window.__contentBanners = {
+    state: state,
+
+    load: function () {
+      var self = this;
+      try {
+        API.get('/v1/contents', { query: { type: 'banner', page: 1, pageSize: 200 } }).then(function (resp) {
+          var rows = Array.isArray(resp) ? resp : (resp && (resp.items || resp.list || resp.rows)) || [];
+          state.items = rows;
+          self._render(rows);
+          var badge = document.getElementById('bannerCountBadge');
+          if (badge) badge.textContent = '✅ 已加载横幅 ' + rows.length + ' 条';
+          state.loaded = true;
+        }).catch(function (e) {
+          console.warn('[__contentBanners.load] 失败', e);
+          _toast('⚠️ 加载横幅列表失败：' + (e && e.message ? e.message : e), 'error');
+          var list = document.querySelector('.banner-list');
+          if (list) list.innerHTML = '<div style="grid-column:1/-1;padding:40px 16px;text-align:center;color:#dc2626;">❌ 加载失败：' + _escape(e && e.message ? e.message : String(e)) + '</div>';
+          state.loaded = true;
+        });
+      } catch (e) {
+        console.warn('[__contentBanners.load] 异常', e);
+        state.loaded = true;
+      }
+    },
+
+    _render: function (rows) {
+      var list = document.querySelector('.banner-list');
+      if (!list) return;
+      if (!rows.length) {
+        list.innerHTML = '<div style="grid-column:1/-1;padding:40px 16px;text-align:center;color:var(--text-light,#888);">📭 暂无横幅配置，点击右上角「➕ 新增横幅」创建</div>';
+        return;
+      }
+      var self = this;
+      list.innerHTML = rows.map(function (r) {
+        var id = String(r.id || '');
+        var cover = r.coverImage || '';
+        var extra = _parseExtra(r);
+        var pos = extra.position || '';
+        var link = extra.link || '';
+        var statusBadge = r.publishStatus === 'published'
+          ? '<span style="display:inline-block;padding:2px 10px;border-radius:12px;background:#dcfce7;color:#166534;font-size:0.78rem;">● 已发布</span>'
+          : '<span style="display:inline-block;padding:2px 10px;border-radius:12px;background:#fef3c7;color:#92400e;font-size:0.78rem;">○ 草稿</span>';
+        var img = cover ? '<img src="' + _escape(cover) + '" alt="banner" style="width:100%;height:140px;object-fit:cover;border-radius:8px;display:block;" onerror="this.style.display=\'none\';this.parentNode.querySelector(\'.no-img\').style.display=\'flex\'" />' : '';
+        return '<div style="border:1.5px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column;">' +
+          '<div style="position:relative;background:#f3f4f6;">' +
+          img +
+          '<div class="no-img" style="display:' + (cover ? 'none' : 'flex') + ';align-items:center;justify-content:center;height:140px;color:#9ca3af;font-size:1.2rem;">🖼️ 无图</div>' +
+          '<div style="position:absolute;top:8px;left:8px;">' + statusBadge + '</div>' +
+          '</div>' +
+          '<div style="padding:12px 14px;flex:1;display:flex;flex-direction:column;gap:6px;">' +
+          '<div style="font-weight:700;color:#1f2937;font-size:0.95rem;line-height:1.4;">' + _escape(r.title) + '</div>' +
+          '<div style="font-size:0.82rem;color:#6b7280;">📍 ' + _posLabel(pos) + '</div>' +
+          (link ? '<div style="font-size:0.78rem;color:#2563eb;word-break:break-all;">🔗 ' + _escape(link) + '</div>' : '') +
+          '<div style="margin-top:auto;display:flex;gap:6px;padding-top:8px;">' +
+          '<button data-act="up" data-id="' + id + '" class="btn btn-secondary btn-sm" style="flex:1;padding:5px;">↑</button>' +
+          '<button data-act="down" data-id="' + id + '" class="btn btn-secondary btn-sm" style="flex:1;padding:5px;">↓</button>' +
+          '<button data-act="del" data-id="' + id + '" class="btn btn-outline btn-sm" style="flex:1;padding:5px;color:#dc2626;">🗑</button>' +
+          '</div>' +
+          '</div>' +
+          '</div>';
+      }).join('');
+    },
+
+    uploadCreate: function () {
+      var self = this;
+      var form = document.getElementById('adminBannerUploadForm');
+      if (!form) return;
+      var name = form.bannerName.value.trim();
+      var pos = form.bannerPosition.value;
+      var link = form.bannerLink.value.trim();
+      var file = form.bannerImg.files && form.bannerImg.files[0];
+      if (!name) { _toast('⚠️ 请填写横幅名称', 'error'); return; }
+      if (!pos) { _toast('⚠️ 请选择投放位置', 'error'); return; }
+      if (!file) { _toast('⚠️ 请选择横幅图片', 'error'); return; }
+      var extOk = /\.(jpe?g|png|webp)$/i.test(file.name);
+      if (!extOk) { _toast('⚠️ 仅支持 JPG/PNG/WebP 格式', 'error'); return; }
+      if (file.size > 10 * 1024 * 1024) { _toast('⚠️ 图片大小不能超过 10MB', 'error'); return; }
+      try {
+        var fd = new FormData();
+        fd.append('file', file);
+        API.post('/v1/upload', fd, { timeoutMs: 60000 }).then(function (up) {
+          var url = (up && (up.url || up.data && up.data.url)) || '';
+          if (!url) throw new Error('上传响应缺少 url');
+          var extra = JSON.stringify({ position: pos, link: link });
+          return API.post('/v1/contents', {
+            type: 'banner', title: name, coverImage: url, publishStatus: 'published', extraJson: extra
+          });
+        }).then(function () {
+          _toast('✅ 横幅已创建并发布', 'success');
+          form.reset();
+          if (state.loaded) self.load();
+        }).catch(function (e) {
+          console.warn('[__contentBanners.uploadCreate] 失败', e);
+          _toast('❌ 创建失败：' + (e && e.message ? e.message : e), 'error');
+        });
+      } catch (e) {
+        _toast('❌ 创建失败：' + (e && e.message ? e.message : e), 'error');
+      }
+    },
+
+    remove: function (id) {
+      var self = this;
+      var r = state.items.find(function (x) { return String(x.id) === String(id); });
+      if (!confirm('确认删除横幅「' + (r ? r.title : id) + '」？此操作不可恢复。')) return;
+      API.del('/v1/contents/' + encodeURIComponent(id)).then(function () {
+        _toast('🗑 已删除', 'success');
+        self.load();
+      }).catch(function (e) {
+        _toast('❌ 删除失败：' + (e && e.message ? e.message : e), 'error');
+      });
+    },
+
+    move: function (id, dir) {
+      var self = this;
+      var idx = state.items.findIndex(function (x) { return String(x.id) === String(id); });
+      if (idx < 0) return;
+      var cur = state.items[idx];
+      var target = dir > 0 ? state.items[idx + 1] : state.items[idx - 1];
+      if (!target) return;
+      var curW = cur.sortWeight != null ? cur.sortWeight : idx;
+      var tgtW = target.sortWeight != null ? target.sortWeight : (idx + (dir > 0 ? 1 : -1));
+      API.patch('/v1/contents/' + encodeURIComponent(id), { sortWeight: tgtW }).then(function () {
+        return API.patch('/v1/contents/' + encodeURIComponent(target.id), { sortWeight: curW });
+      }).then(function () {
+        self.load();
+      }).catch(function (e) {
+        _toast('❌ 排序失败：' + (e && e.message ? e.message : e), 'error');
+      });
+    },
+
+    bind: function () {
+      var self = this;
+      var submitBtn = document.getElementById('adminBannerUploadSubmit');
+      var resetBtn = document.getElementById('adminBannerUploadReset');
+      var addBtn = document.getElementById('contentBannerAddBtn');
+      var form = document.getElementById('adminBannerUploadForm');
+      _mark(submitBtn); _mark(resetBtn); _mark(addBtn);
+      if (submitBtn) submitBtn.addEventListener('click', function (ev) {
+        ev.preventDefault(); ev.stopPropagation(); self.uploadCreate();
+      }, true);
+      if (form) form.addEventListener('submit', function (ev) { ev.preventDefault(); }, true);
+      if (addBtn) addBtn.addEventListener('click', function (ev) {
+        ev.preventDefault(); ev.stopPropagation();
+        if (form) { form.scrollIntoView({ behavior: 'smooth', block: 'start' }); form.bannerName && form.bannerName.focus(); }
+      }, true);
+      // 行按钮委托
+      var list = document.querySelector('.banner-list');
+      if (list) {
+        list.addEventListener('click', function (ev) {
+          var btn = ev.target.closest('button[data-act]');
+          if (!btn) return;
+          ev.preventDefault(); ev.stopPropagation();
+          var act = btn.getAttribute('data-act'), id = btn.getAttribute('data-id');
+          if (act === 'del') self.remove(id);
+          else if (act === 'up') self.move(id, -1);
+          else if (act === 'down') self.move(id, 1);
+        }, true);
+        // tbody 重建后给行按钮打标（横幅用 .banner-list，不是 tbody）
+        var mo = new MutationObserver(function () {
+          list.querySelectorAll('button[data-act]').forEach(function (b) { _mark(b); });
+        });
+        mo.observe(list, { childList: true, subtree: true });
+      }
+    }
+  };
+
+  function _initBannerOnTabSwitch() {
+    document.addEventListener('click', function (ev) {
+      var t = ev.target.closest && ev.target.closest('.tab-item[data-tab="banner"]');
+      if (t && window.__contentBanners && !window.__contentBanners.state.loaded) {
+        setTimeout(function () { window.__contentBanners.load(); }, 100);
+      }
+    }, true);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      window.__contentBanners.bind();
+      _initBannerOnTabSwitch();
+      var active = document.querySelector('.tab-content.active#tab-banner');
+      if (active) window.__contentBanners.load();
+    });
+  } else {
+    window.__contentBanners.bind();
+    _initBannerOnTabSwitch();
+    var active = document.querySelector('.tab-content.active#tab-banner');
+    if (active) window.__contentBanners.load();
+  }
+})();
+
+/* ==========================================================================
+ * content.html 📞 联系信息全局配置（__contentContact）
+ * 12 个字段存 Setting 表 group=site_assets，key = data-contact-key 属性值。
+ * PUT /v1/site-assets/:key {value} 持久化（value 为空串 = 恢复默认）。
+ * 3 个死按钮全部接线：取消修改 / 测试配置预览 / 保存配置并更新。
+ * ========================================================================== */
+(function () {
+  'use strict';
+  if (window.__contentContact) return;
+  var API = window.QAXQJT_API;
+  var Q = window.QinApp && window.QinApp.Utils;
+  function _toast(m, t) { try { (Q && Q.toast) ? Q.toast(m, t) : console.log('[toast]', m); } catch (e) { console.log('[toast]', m); } }
+  function _mark(btn) { if (!btn) return; btn.__superPatchBound = 1; btn.__ts3Done = 1; btn.__bindDone = 1; btn.__deadBtnChecked = 1; btn.__contactBound = 1; if (!btn.getAttribute('onclick')) btn.setAttribute('onclick', 'return false'); }
+  function _byKey(key) { return (window.QAXQJT_PATHS && window.QAXQJT_PATHS.SITE_ASSETS_BY_KEY && window.QAXQJT_PATHS.SITE_ASSETS_BY_KEY(encodeURIComponent(key))) || ('/v1/site-assets/' + encodeURIComponent(key)); }
+  function _listPath() { return (window.QAXQJT_PATHS && window.QAXQJT_PATHS.SITE_ASSETS) || '/v1/site-assets'; }
+
+  var KEYS = ['site.contact.phone', 'site.contact.wechat', 'site.contact.address', 'site.contact.service_area',
+    'site.contact.work_hours', 'site.contact.booking_hours', 'site.contact.map_embed',
+    'site.contact.icp', 'site.contact.police_record', 'site.contact.copyright_owner', 'site.contact.email', 'site.contact.social'];
+  var LABELS = {
+    'site.contact.phone': '剧团联系电话', 'site.contact.wechat': '官方微信号', 'site.contact.address': '办公地址',
+    'site.contact.service_area': '演出服务范围', 'site.contact.work_hours': '日常工作时间', 'site.contact.booking_hours': '演出预约服务时间',
+    'site.contact.map_embed': '地图嵌入代码', 'site.contact.icp': 'ICP备案号', 'site.contact.police_record': '公安备案号',
+    'site.contact.copyright_owner': '版权/运营主体', 'site.contact.email': '电子邮箱', 'site.contact.social': '官方抖音/快手号'
+  };
+
+  var state = { loaded: false, snapshot: {} };
+  window.__contentContact = {
+    state: state,
+
+    load: function () {
+      var self = this;
+      try {
+        API.get(_listPath()).then(function (rows) {
+          var arr = rows && (rows.data || rows.items || rows.list || rows) || [];
+          var map = {};
+          if (Array.isArray(arr)) arr.forEach(function (r) { if (r && r.key) map[r.key] = r.value; });
+          KEYS.forEach(function (k) {
+            var el = document.querySelector('[data-contact-key="' + k + '"]');
+            if (!el) return;
+            if (map[k] != null && map[k] !== '') el.value = map[k];
+            state.snapshot[k] = el.value;
+          });
+          state.loaded = true;
+          _toast('✅ 已加载联系信息配置', 'success');
+        }).catch(function (e) {
+          console.warn('[__contentContact.load] 失败', e);
+          _toast('⚠️ 联系信息加载失败，使用默认值', 'error');
+          KEYS.forEach(function (k) { var el = document.querySelector('[data-contact-key="' + k + '"]'); if (el) state.snapshot[k] = el.value; });
+          state.loaded = true;
+        });
+      } catch (e) {
+        console.warn('[__contentContact.load] 异常', e);
+        state.loaded = true;
+      }
+    },
+
+    _collect: function () {
+      var data = {};
+      KEYS.forEach(function (k) { var el = document.querySelector('[data-contact-key="' + k + '"]'); if (el) data[k] = el.value; });
+      return data;
+    },
+
+    save: function () {
+      var self = this;
+      var data = self._collect();
+      // 必填校验
+      if (!data['site.contact.phone'] || !data['site.contact.phone'].trim()) { _toast('⚠️ 请填写剧团联系电话', 'error'); return; }
+      if (!data['site.contact.address'] || !data['site.contact.address'].trim()) { _toast('⚠️ 请填写剧团办公地址', 'error'); return; }
+      var done = 0, fail = 0;
+      KEYS.forEach(function (k) {
+        var val = data[k] == null ? '' : data[k];
+        API.put(_byKey(k), { value: val }).then(function () {
+          state.snapshot[k] = val;
+          done++;
+          if (done + fail === KEYS.length) _finish();
+        }).catch(function (e) {
+          fail++; console.warn('[__contentContact.save] ' + k, e);
+          if (done + fail === KEYS.length) _finish();
+        });
+      });
+      function _finish() {
+        _toast('✅ 已保存 ' + done + ' 项' + (fail ? '，失败 ' + fail + ' 项' : '') + '，全站同步生效', fail ? 'error' : 'success');
+      }
+    },
+
+    cancel: function () {
+      KEYS.forEach(function (k) {
+        var el = document.querySelector('[data-contact-key="' + k + '"]');
+        if (el && state.snapshot[k] != null) el.value = state.snapshot[k];
+      });
+      _toast('↺ 已还原为上次保存的配置', 'info');
+    },
+
+    preview: function () {
+      var data = this._collect();
+      var year = String(new Date().getFullYear());
+      var sub = function (s) { return String(s == null ? '' : s).replace(/\{year\}/g, year); };
+      var html = '<div style="max-width:560px;margin:0 auto;font-family:inherit;line-height:1.9;color:#374151;">' +
+        '<h3 style="text-align:center;color:#7c2d12;margin-bottom:18px;">📞 联系信息预览</h3>' +
+        '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:18px 20px;">' +
+        '<p><strong>联系电话：</strong>' + sub(data['site.contact.phone']) + '</p>' +
+        '<p><strong>官方微信：</strong>' + sub(data['site.contact.wechat']) + '</p>' +
+        '<p><strong>办公地址：</strong>' + sub(data['site.contact.address']) + '</p>' +
+        '<p><strong>服务范围：</strong></p><pre style="white-space:pre-wrap;margin:4px 0 12px;">' + sub(data['site.contact.service_area']) + '</pre>' +
+        '<p><strong>日常工作时间：</strong>' + sub(data['site.contact.work_hours']) + '</p>' +
+        '<p><strong>预约服务时间：</strong>' + sub(data['site.contact.booking_hours']) + '</p>' +
+        '<p><strong>ICP备案号：</strong>' + sub(data['site.contact.icp']) + '</p>' +
+        '<p><strong>公安备案号：</strong>' + sub(data['site.contact.police_record']) + '</p>' +
+        '<p><strong>版权主体：</strong>' + sub(data['site.contact.copyright_owner']) + '</p>' +
+        '<p><strong>电子邮箱：</strong>' + sub(data['site.contact.email']) + '</p>' +
+        '<p><strong>抖音/快手：</strong>' + sub(data['site.contact.social']) + '</p>' +
+        '</div>' +
+        '<p style="margin-top:14px;font-size:0.82rem;color:#6b7280;">💡 此为当前表单输入的即时预览，点击「保存配置并更新」后全站生效。</p>' +
+        '</div>';
+      var m = document.getElementById('contentContactPreviewModal');
+      if (!m) {
+        m = document.createElement('div');
+        m.id = 'contentContactPreviewModal';
+        m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+        m.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:24px 26px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.3);">' +
+          '<button id="contentContactPreviewClose" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#6b7280;">✕</button>' +
+          '<div id="contentContactPreviewBody"></div></div>';
+        document.body.appendChild(m);
+        m.addEventListener('click', function (e) { if (e.target === m) m.style.display = 'none'; });
+      }
+      document.getElementById('contentContactPreviewBody').innerHTML = html;
+      m.style.display = 'flex';
+      var closeBtn = document.getElementById('contentContactPreviewClose');
+      if (closeBtn) closeBtn.onclick = function () { m.style.display = 'none'; };
+    },
+
+    bind: function () {
+      var self = this;
+      var saveBtn = document.getElementById('contentContactSave');
+      var cancelBtn = document.getElementById('contentContactCancel');
+      var previewBtn = document.getElementById('contentContactPreview');
+      _mark(saveBtn); _mark(cancelBtn); _mark(previewBtn);
+      if (saveBtn) saveBtn.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); self.save(); }, true);
+      if (cancelBtn) cancelBtn.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); self.cancel(); }, true);
+      if (previewBtn) previewBtn.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); self.preview(); }, true);
+    }
+  };
+
+  function _initContactOnTabSwitch() {
+    document.addEventListener('click', function (ev) {
+      var t = ev.target.closest && ev.target.closest('.tab-item[data-tab="contact"]');
+      if (t && window.__contentContact && !window.__contentContact.state.loaded) {
+        setTimeout(function () { window.__contentContact.load(); }, 100);
+      }
+    }, true);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      window.__contentContact.bind();
+      _initContactOnTabSwitch();
+      var active = document.querySelector('.tab-content.active#tab-contact');
+      if (active) window.__contentContact.load();
+    });
+  } else {
+    window.__contentContact.bind();
+    _initContactOnTabSwitch();
+    var active = document.querySelector('.tab-content.active#tab-contact');
+    if (active) window.__contentContact.load();
   }
 })();

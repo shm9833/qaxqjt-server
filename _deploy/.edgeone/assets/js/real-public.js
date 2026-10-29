@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
  * js/real-public.js —— 前台公共页真实数据渲染层（v20260922）
  * ----------------------------------------------------------------------------
  * 数据来源：后端公开只读接口（/v1 下各 public 端点，无鉴权）
@@ -56,7 +56,7 @@
     var s = String((p && (p.synopsis || p.castSummary)) || '').replace(/\s+/g, ' ').trim();
     if (s && s !== '待定') return s;
     var g = p && p.genre ? p.genre : '传统剧目';
-    return '秦安县秦剧团常演' + g + '，适配庙会、惠民下乡、节庆庆典等演出场景，欢迎预约。';
+    return '秦安县秦剧团文化演出有限公司常演' + g + '，适配庙会、惠民下乡、节庆庆典等演出场景，欢迎预约。';
   }
 
   function fmtDate(d) {
@@ -166,6 +166,16 @@
         showMsg('📭', '暂无在册剧目', '剧目信息正在整理中，欢迎致电 <a href="tel:13993839833" style="color:var(--primary,#b91c1c);font-weight:600;">13993839833</a> 咨询演出剧目单。');
         return;
       }
+
+      // 传统本戏置顶：稳定排序，传统本戏排在最前，同组内保持接口原顺序
+      var PRIOR_GENRE = '传统本戏';
+      rows = rows.map(function (p, i) { return { p: p, i: i }; })
+        .sort(function (a, b) {
+          var ap = (a.p && a.p.genre === PRIOR_GENRE) ? 0 : 1;
+          var bp = (b.p && b.p.genre === PRIOR_GENRE) ? 0 : 1;
+          return (ap - bp) || (a.i - b.i);
+        })
+        .map(function (w) { return w.p; });
 
       // 1) 渲染卡片（data-category 使用真实 genre）
       grid.innerHTML = rows.map(function (p) {

@@ -1,5 +1,5 @@
 /**
- * app.js - 秦安县秦剧团云端预约系统主业务逻辑
+ * app.js - 秦安县秦剧团文化演出有限公司云端预约系统主业务逻辑
  *
  * 功能模块：
  * 1. 阶梯优惠计算引擎
@@ -671,10 +671,10 @@
   var PricingEngine = (function () {
     // ====== 维度14：FALLBACK_TIER（常量，防止 TIERS 被污染/清空导致全部 NaN）======
     var FALLBACK_TIER = {
-      min: 1, max: 3,
-      name: '基础档',
+      min: 1, max: 6,
+      name: '一档（1-3天）',
       discount: 1.0,
-      waiveMisc: false,
+      miscFactor: 1,
       priority: false,
       exclusive: false,
       desc: '标准定价，无折扣'
@@ -686,45 +686,70 @@
 
     return {
       /**
-       * 标准单场定价（可根据实际业务调整）
+       * 标准单场定价（20261017c：锚定 6天12场=66000 → 每场5500，杂费另收）
        */
-      STANDARD_PRICE_PER_SHOW: 6800,
+      STANDARD_PRICE_PER_SHOW: 5500,
 
       /**
-       * 杂费标准（交通费、设备费等）
+       * 运输费/生活费参考价（协商定价；自动计入预估总价，实际金额协商后在订单/凭证中填写）
+       */
+      TRANSPORT_FEE: 2000,        // 运输费：按次包干
+      LIVING_FEE_PER_DAY: 1000,   // 生活费：每天 1000（天数=场次÷2 向上取整，1天2场）
+
+      /**
+       * 杂费旧口径常量（1天2场制下杂费=运输费+生活费动态计算，保留仅为兼容旧引用）
        */
       MISCELLANEOUS_FEE: 1200,
 
       /**
-       * 阶梯配置
+       * 阶梯配置（1天2场，按天逐档）
+       * miscFactor：杂费（运输费+生活费）收取比例，1=全额，0.5=减免50%
        */
       TIERS: [
         {
-          min: 1, max: 3,
-          name: '基础档',
+          min: 1, max: 6,
+          name: '一档（1-3天）',
           discount: 1.0,
-          waiveMisc: false,
+          miscFactor: 1,
           priority: false,
           exclusive: false,
-          desc: '标准定价，无折扣'
+          desc: '5500/场 · 1天2场，1-3天（2-6场），运输费/生活费另计'
         },
         {
-          min: 4, max: 8,
-          name: '合作档',
-          discount: 0.9,
-          waiveMisc: true,
+          min: 7, max: 8,
+          name: '二档（4天）',
+          discount: 1.0,
+          miscFactor: 1,
           priority: false,
           exclusive: false,
-          desc: '9折优惠 + 杂费全免'
+          desc: '5500/场 · 4天8场，运输费/生活费另计'
         },
         {
-          min: 9, max: Infinity,
-          name: '战略档',
-          discount: 0.8,
-          waiveMisc: true,
-          priority: true,
-          exclusive: true,
-          desc: '8折 + 优先排期 + 专属对接'
+          min: 9, max: 10,
+          name: '三档（5天）',
+          discount: 1.0,
+          miscFactor: 1,
+          priority: false,
+          exclusive: false,
+          desc: '5500/场 · 5天10场，运输费/生活费另计'
+        },
+        {
+          min: 11, max: 12,
+          name: '四档（6天）',
+          discount: 1.0,
+          miscFactor: 0.5,
+          priority: false,
+          exclusive: false,
+          desc: '5500/场 · 11-12场（6天）=66000，运输费/生活费减免50%'
+        },
+        {
+          min: 13, max: Infinity,
+          name: '五档（6天以上）',
+          discount: 101 / 110,   // 每场 5050（每天10100）：13场=70150 ≥ 12场70000，消除倒挂
+          miscFactor: 0.5,
+          priority: false,
+          exclusive: false,
+          desc: '5050/场（每天10100） · 6天以上，运输费/生活费减免50%'
         }
       ],
 
@@ -750,9 +775,13 @@
        * 计算完整价格方案
        * @param {number} shows 场次
        * @param {number} customPrice 自定义单场价格（可选）
+       * @param {Object} miscOverride 杂费约定覆盖（可选）：{ transportFee, livingFee, livingWaived }
+       *        - transportFee/livingFee：双方约定的实付金额（元），不乘档位 miscFactor
+       *        - livingWaived=true：生活费由甲方包干，不计入总金额
+       *        - 任一字段为 null/undefined 时该项回落到档位自动估算
        * @returns {Object}
        */
-      calculate: function (shows, customPrice) {
+      calculate: function (shows, customPrice, miscOverride) {
         // ====== 维度14：场次安全钳制 ======
         var n = parseInt(shows, 10);
         if (!isFinite(n) || isNaN(n)) n = 1;
@@ -761,7 +790,7 @@
         // ====== 维度14：customPrice 清洗（NaN / 负数 / 爆表 都兜底）======
         var rawCustomPrice = Number(customPrice);
         var stdPrice = Number(this.STANDARD_PRICE_PER_SHOW);
-        if (!isFinite(stdPrice) || stdPrice <= 0) stdPrice = 6800;
+        if (!isFinite(stdPrice) || stdPrice <= 0) stdPrice = 5500;
         var pricePerShow;
         if (customPrice === undefined || customPrice === null || customPrice === '') {
           pricePerShow = stdPrice;
@@ -795,15 +824,21 @@
           name: (rawTier.name && typeof rawTier.name === 'string') ? rawTier.name : FALLBACK_TIER.name,
           discount: tierDiscount,
           discountText: toDiscountText(tierDiscount),
-          waiveMisc: !!rawTier.waiveMisc,
+          // miscFactor：杂费（运输费+生活费）收取比例 1=全额 0.5=减免50%；waiveMisc 保留兼容旧引用
+          miscFactor: (isFinite(rawTier.miscFactor) && rawTier.miscFactor !== null) ? Math.max(0, Math.min(1, Number(rawTier.miscFactor))) : 1,
           priority: !!rawTier.priority,
           exclusive: !!rawTier.exclusive,
           desc: (rawTier.desc && typeof rawTier.desc === 'string') ? rawTier.desc : ''
         };
+        tierInfo.waiveMisc = tierInfo.miscFactor < 1;
 
-        // ====== 维度14：杂费 NaN 清洗 ======
-        var miscFeeStd = Number(this.MISCELLANEOUS_FEE);
-        if (!isFinite(miscFeeStd) || isNaN(miscFeeStd) || miscFeeStd < 0) miscFeeStd = 1200;
+        // ====== 杂费动态计算：运输费（按次包干）+ 生活费（每天1000，1天2场）======
+        var days = Math.max(1, Math.ceil(n / 2));  // 天数=场次÷2 向上取整，至少1天
+        var transportFeeStd = Number(this.TRANSPORT_FEE);
+        if (!isFinite(transportFeeStd) || isNaN(transportFeeStd) || transportFeeStd < 0) transportFeeStd = 2000;
+        var livingPerDayStd = Number(this.LIVING_FEE_PER_DAY);
+        if (!isFinite(livingPerDayStd) || isNaN(livingPerDayStd) || livingPerDayStd < 0) livingPerDayStd = 1000;
+        var livingFeeStd = livingPerDayStd * days;
 
         // B9：金额统一用「分」整数运算累加，最后 /100 防浮点漂移
         var pricePerShowCents = Utils.toCents(pricePerShow);
@@ -812,7 +847,22 @@
         }
         var standardCents = pricePerShowCents * n;
         if (!isFinite(standardCents)) standardCents = pricePerShowCents;   // 乘法溢出兜底
-        var miscCents = tierInfo.waiveMisc ? 0 : Utils.toCents(miscFeeStd);
+        // ====== 杂费约定覆盖（运费/生活费两栏按约定填写）======
+        var agm = (miscOverride && typeof miscOverride === 'object') ? miscOverride : null;
+        var agmTransport = (agm && agm.transportFee !== undefined && agm.transportFee !== null && agm.transportFee !== '' && isFinite(Number(agm.transportFee)) && Number(agm.transportFee) >= 0) ? Number(agm.transportFee) : null;
+        var agmLiving = (agm && !agm.livingWaived && agm.livingFee !== undefined && agm.livingFee !== null && agm.livingFee !== '' && isFinite(Number(agm.livingFee)) && Number(agm.livingFee) >= 0) ? Number(agm.livingFee) : null;
+        var agmWaived = !!(agm && agm.livingWaived);
+        var manualMisc = !!(agm && (agmTransport !== null || agmWaived || agmLiving !== null));
+
+        // 杂费全额（分）：运输2000 + 生活费1000×天数；再按档位 miscFactor 收取（五档=50%）
+        var miscFullCents = Utils.toCents(transportFeeStd) + Utils.toCents(livingPerDayStd) * days;
+        if (!isFinite(miscFullCents) || isNaN(miscFullCents) || miscFullCents < 0) miscFullCents = 0;
+        // 手填约定值优先（按约定实付，不再乘 miscFactor）；未填项回落档位自动估算
+        var agmTransportCents = agmTransport !== null ? Utils.toCents(agmTransport) : Math.round(Utils.toCents(transportFeeStd) * tierInfo.miscFactor);
+        var agmLivingCents = agmWaived ? 0 : (agmLiving !== null ? Utils.toCents(agmLiving) : Math.round(Utils.toCents(livingFeeStd) * tierInfo.miscFactor));
+        if (!isFinite(agmTransportCents) || isNaN(agmTransportCents) || agmTransportCents < 0) agmTransportCents = 0;
+        if (!isFinite(agmLivingCents) || isNaN(agmLivingCents) || agmLivingCents < 0) agmLivingCents = 0;
+        var miscCents = agmTransportCents + agmLivingCents;
         if (!isFinite(miscCents) || isNaN(miscCents) || miscCents < 0) miscCents = 0;
         var standardTotalCents = standardCents;
         // ====== 维度14：折扣金额 NaN 清洗 ======
@@ -826,13 +876,15 @@
         if (!isFinite(discountedCents) || discountedCents < 0) discountedCents = standardCents;
         var finalCents = discountedCents + miscCents;
         if (!isFinite(finalCents) || finalCents < 0) finalCents = discountedCents;
-        var baseWithMiscCents = standardCents + Utils.toCents(miscFeeStd);
+        var baseWithMiscCents = standardCents + miscFullCents;
         if (!isFinite(baseWithMiscCents)) baseWithMiscCents = standardCents;
         var savedCents = baseWithMiscCents - finalCents;
         if (!isFinite(savedCents)) savedCents = 0;
 
         var standardTotal = Utils.centRound((standardTotalCents || 0) / 100);
         var miscFee = Utils.centRound((miscCents || 0) / 100);
+        var transportFee = Utils.centRound((agmTransportCents || 0) / 100);
+        var livingFee = Utils.centRound((agmLivingCents || 0) / 100);
         var discountAmount = Utils.centRound((discountCents || 0) / 100);
         var discountedTotal = Utils.centRound((discountedCents || 0) / 100);
         var finalTotal = Utils.centRound(Math.max(0, (finalCents || 0) / 100));
@@ -840,11 +892,16 @@
 
       return {
         shows: n,
+        days: days,
         tier: tierInfo,
         pricePerShow: pricePerShow,
         standardTotal: standardTotal,
+        transportFee: transportFee,
+        livingFee: livingFee,
+        livingWaived: agmWaived,
+        manualMisc: manualMisc,
         miscFee: miscFee,
-        miscFeeText: tierInfo.waiveMisc ? '已减免' : Utils.formatMoney(miscFee),
+        miscFeeText: agmWaived ? '甲方包干（不计入）' : (tierInfo.miscFactor < 1 ? '已减免50%' : Utils.formatMoney(miscFee)),
         discountAmount: discountAmount,
         discountedTotal: discountedTotal,
         finalTotal: finalTotal,
@@ -859,12 +916,29 @@
           saved: Math.round(savedCents)
         },
         breakdown: [
-          { label: '场次', value: n + ' 场' },
+          { label: '场次', value: n + ' 场（' + days + ' 天）' },
           { label: '单场标准价', value: '¥' + Utils.formatMoney(pricePerShow) },
           { label: '标准总价', value: '¥' + Utils.formatMoney(standardTotal) },
           // 修复：用 tierInfo.discountText 替换 rawTier.discountText undefined
           { label: '阶梯折扣', value: tierInfo.discountText + ' (-¥' + Utils.formatMoney(discountAmount) + ')' },
-          { label: '杂费', value: tierInfo.waiveMisc ? '¥0.00 (' + tierInfo.name + '减免)' : '¥' + Utils.formatMoney(miscFee) },
+          {
+            label: '运输费（按次·按约定填写）',
+            value: agmTransport !== null
+              ? '¥' + Utils.formatMoney(transportFee) + '（按约定）'
+              : (tierInfo.miscFactor < 1
+                ? '¥' + Utils.formatMoney(transportFee) + '（' + tierInfo.name + '减免50%）'
+                : '¥' + Utils.formatMoney(transportFeeStd) + ' / 次')
+          },
+          {
+            label: '生活费（按约定·承担方可选）',
+            value: agmWaived
+              ? '甲方包干（不计入总金额）'
+              : (agmLiving !== null
+                ? '¥' + Utils.formatMoney(livingFee) + '（按约定·剧团承担）'
+                : (tierInfo.miscFactor < 1
+                  ? '¥' + Utils.formatMoney(livingFee) + '（¥' + Utils.formatMoney(livingPerDayStd) + '×' + days + '天，减免50%）'
+                  : '¥' + Utils.formatMoney(livingPerDayStd) + '×' + days + '天=' + '¥' + Utils.formatMoney(livingFeeStd)))
+          },
           { label: '最终合计', value: '¥' + Utils.formatMoney(finalTotal), highlight: true }
         ]
       };
@@ -889,7 +963,8 @@
           range: tMax === Infinity ? (tMin + '+ 场') : (tMin + '-' + tMax + ' 场'),
           name: (t.name && typeof t.name === 'string') ? t.name : FALLBACK_TIER.name,
           discountText: timesTen.toFixed(1) + '折',
-          waiveMisc: !!t.waiveMisc,
+          miscFactor: (isFinite(t.miscFactor) && t.miscFactor !== null) ? Math.max(0, Math.min(1, Number(t.miscFactor))) : 1,
+          waiveMisc: (isFinite(t.miscFactor) && Number(t.miscFactor) < 1) || !!t.waiveMisc,
           priority: !!t.priority,
           exclusive: !!t.exclusive,
           desc: (t.desc && typeof t.desc === 'string') ? t.desc : ''
@@ -1512,10 +1587,10 @@
 
       var pricing = null;
       try {
-        pricing = PricingEngine.calculate(data.shows);
+        pricing = PricingEngine.calculate(data.shows, undefined, global.__readMiscAgreementFromDom ? global.__readMiscAgreementFromDom() : null);
       } catch (_calcErr) {
         console.warn('[submitAppointment] PricingEngine 计算失败，降级为标准价：', _calcErr && _calcErr.message);
-        pricing = PricingEngine.calculate(parseInt(data.shows, 10) || 1);
+        pricing = PricingEngine.calculate(parseInt(data.shows, 10) || 1, undefined, global.__readMiscAgreementFromDom ? global.__readMiscAgreementFromDom() : null);
       }
 
       var now = new Date();
@@ -1691,7 +1766,7 @@
         if (dm) { apiVenueDistrict = dm[1]; }
       } catch (_eAddr) {}
       var pricingObj = appointment.pricing || {};
-      var estBudget = (pricingObj && typeof pricingObj.finalTotal === 'number') ? pricingObj.finalTotal : (6800 * showsNum2);
+      var estBudget = (pricingObj && typeof pricingObj.finalTotal === 'number') ? pricingObj.finalTotal : (5500 * showsNum2);
       var apiPayload = {
         customerName: appointment.customerName,
         phone: appointment.phone,
@@ -2657,7 +2732,7 @@
       }
 
       toggle.addEventListener('click', function () {
-        var isOpen = menu.classList.toggle('nav-open');
+        var isOpen = menu.classList.toggle('open');
         toggle.classList.toggle('nav-active', isOpen);
         toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         menu.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
@@ -2667,8 +2742,8 @@
       var links = menu.querySelectorAll('a[href^="#"]');
       for (var i = 0; i < links.length; i++) {
         links[i].addEventListener('click', function () {
-          if (menu.classList.contains('nav-open')) {
-            menu.classList.remove('nav-open');
+          if (menu.classList.contains('open')) {
+            menu.classList.remove('open');
             toggle.classList.remove('nav-active');
             toggle.setAttribute('aria-expanded', 'false');
             document.body.classList.remove('nav-locked');
@@ -2721,9 +2796,9 @@
      */
     initFooterActions: function () {
       var wechatPhone = '13993839833';
-      var mpAccount = '秦安县秦剧团';
+      var mpAccount = '秦安县秦剧团文化演出有限公司';
       var mpFullName = '秦安县秦剧团文化演出有限公司';
-      var shipinhaoName = '秦安县秦剧团官方';
+      var shipinhaoName = '秦安县秦剧团文化演出有限公司官方';
       // 后台可维护项（admin/assets.html「微信客服信息」）：site.text.* 与客服二维码
       var wechatId = '';
       var wechatQrUrl = '';
@@ -3330,7 +3405,8 @@
 
       var render = function () {
         var shows = parseInt(showInput.value, 10) || 1;
-        var pricing = PricingEngine.calculate(shows);
+        var miscAgree = global.__readMiscAgreementFromDom ? global.__readMiscAgreementFromDom() : null;
+        var pricing = PricingEngine.calculate(shows, undefined, miscAgree);
         var html = '';
         html += '<div style="margin-bottom:12px;">';
         html +=   '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
@@ -3361,6 +3437,21 @@
       };
 
       showInput.addEventListener('input', Utils.debounce(render, 100));
+      // 费用约定两栏（运费/生活费手填+承担方）联动刷新预览
+      var agmEls = document.querySelectorAll('[data-transport-input], [data-living-payer], [data-living-input]');
+      for (var ai = 0; ai < agmEls.length; ai++) {
+        agmEls[ai].addEventListener('input', render);
+        agmEls[ai].addEventListener('change', render);
+      }
+      // 承担方=甲方包干时禁用生活费输入（不计入总金额）
+      var payerSel = document.querySelector('[data-living-payer]');
+      var livingInput = document.querySelector('[data-living-input]');
+      if (payerSel && livingInput) {
+        payerSel.addEventListener('change', function () {
+          livingInput.disabled = payerSel.value === 'client';
+          if (livingInput.disabled) livingInput.value = '';
+        });
+      }
       var serviceSel = document.querySelector('[data-service-type], #serviceType, select[name="serviceType"]');
       if (serviceSel) {
         serviceSel.addEventListener('change', render);
@@ -3999,16 +4090,25 @@
 
       var bindFooter = function (root) {
         if (!root) return;
+        // v20261027b 修复：可重绑 handler（复用弹窗时重绑当前回调，避免执行首次打开时的旧闭包导致审核错人）
         var conf = root.querySelector('[data-modal-act="confirm"]');
-        if (conf) conf.addEventListener('click', function (e) {
-          if (typeof c.onConfirm === 'function') { try { var r = c.onConfirm(e, closeIt); if (r === false) return; } catch (_err) {} }
-          closeIt();
-        });
+        if (conf) {
+          if (conf.__modalActHandler) conf.removeEventListener('click', conf.__modalActHandler);
+          conf.__modalActHandler = function (e) {
+            if (typeof c.onConfirm === 'function') { try { var r = c.onConfirm(e, closeIt); if (r === false) return; } catch (_err) {} }
+            closeIt();
+          };
+          conf.addEventListener('click', conf.__modalActHandler);
+        }
         var canc = root.querySelector('[data-modal-act="cancel"]');
-        if (canc) canc.addEventListener('click', function () {
-          if (typeof c.onCancel === 'function') { try { c.onCancel(); } catch (_err) {} }
-          closeIt();
-        });
+        if (canc) {
+          if (canc.__modalActHandler) canc.removeEventListener('click', canc.__modalActHandler);
+          canc.__modalActHandler = function () {
+            if (typeof c.onCancel === 'function') { try { c.onCancel(); } catch (_err) {} }
+            closeIt();
+          };
+          canc.addEventListener('click', canc.__modalActHandler);
+        }
       };
 
       if (oldModal && oldOverlay) {
@@ -4031,6 +4131,7 @@
         oldModal.classList.remove('modal-wrap-hide');
         oldModal.setAttribute('aria-hidden', 'false');
         try { document.body.classList.add('body-modal-locked'); } catch (_e) {}
+        bindFooter(oldModal); // v20261027b 复用时重绑当前 onConfirm/onCancel（修旧闭包 bug）
         return { close: closeIt, el: oldModal };
       }
 
@@ -4802,68 +4903,69 @@
   // ============================================================
   var DEFAULT_WAGE_RULES = {
     version: '20260730',
+    effectiveDate: '2026-07-30',
     updatedAt: null,
     // 基准日工资（行当 × 职级矩阵，单位：元/天，分精度存储）
     baseDailyWage: {
       // 演员队 - 行当
-      '青衣':   { '一级演员': 88000, '二级演员': 68000, '三级演员': 52000, '优秀青年': 42000, '学员': 28000 },
-      '老生':   { '一级演员': 86000, '二级演员': 66000, '三级演员': 50000, '优秀青年': 40000, '学员': 28000 },
-      '须生':   { '一级演员': 86000, '二级演员': 66000, '三级演员': 50000, '优秀青年': 40000, '学员': 28000 },
-      '花脸':   { '一级演员': 90000, '二级演员': 70000, '三级演员': 54000, '优秀青年': 44000, '学员': 30000 },
-      '小生':   { '一级演员': 82000, '二级演员': 64000, '三级演员': 48000, '优秀青年': 38000, '学员': 26000 },
-      '老旦':   { '一级演员': 80000, '二级演员': 62000, '三级演员': 46000, '优秀青年': 36000, '学员': 25000 },
-      '花旦':   { '一级演员': 84000, '二级演员': 66000, '三级演员': 50000, '优秀青年': 40000, '学员': 27000 },
-      '丑角':   { '一级演员': 78000, '二级演员': 60000, '三级演员': 46000, '优秀青年': 36000, '学员': 25000 },
-      '龙套':   { '一级演员': 40000, '二级演员': 32000, '三级演员': 26000, '优秀青年': 22000, '学员': 16000 },
+      '青衣':   { '一级演员': 0, '二级演员': 0, '三级演员': 0, '优秀青年': 0, '学员': 0 },
+      '老生':   { '一级演员': 0, '二级演员': 0, '三级演员': 0, '优秀青年': 0, '学员': 0 },
+      '须生':   { '一级演员': 0, '二级演员': 0, '三级演员': 0, '优秀青年': 0, '学员': 0 },
+      '花脸':   { '一级演员': 0, '二级演员': 0, '三级演员': 0, '优秀青年': 0, '学员': 0 },
+      '小生':   { '一级演员': 0, '二级演员': 0, '三级演员': 0, '优秀青年': 0, '学员': 0 },
+      '老旦':   { '一级演员': 0, '二级演员': 0, '三级演员': 0, '优秀青年': 0, '学员': 0 },
+      '花旦':   { '一级演员': 0, '二级演员': 0, '三级演员': 0, '优秀青年': 0, '学员': 0 },
+      '丑角':   { '一级演员': 0, '二级演员': 0, '三级演员': 0, '优秀青年': 0, '学员': 0 },
+      '龙套':   { '一级演员': 0, '二级演员': 0, '三级演员': 0, '优秀青年': 0, '学员': 0 },
       // 乐队 - 行当
-      '板胡':   { '一级演奏员': 80000, '二级演奏员': 62000, '三级演奏员': 48000, '首席': 92000, '学员': 26000 },
-      '司鼓':   { '一级演奏员': 82000, '二级演奏员': 64000, '三级演奏员': 50000, '队长': 90000, '学员': 27000 },
-      '二胡':   { '一级演奏员': 56000, '二级演奏员': 44000, '三级演奏员': 34000, '演奏员': 30000, '学员': 18000 },
-      '板胡伴奏':{ '一级演奏员': 54000, '二级演奏员': 42000, '三级演奏员': 32000, '演奏员': 28000, '学员': 17000 },
-      '扬琴':   { '一级演奏员': 52000, '二级演奏员': 40000, '三级演奏员': 30000, '演奏员': 26000, '学员': 16000 },
-      '笛子':   { '一级演奏员': 50000, '二级演奏员': 38000, '三级演奏员': 28000, '演奏员': 24000, '学员': 15000 },
-      '唢呐':   { '一级演奏员': 50000, '二级演奏员': 38000, '三级演奏员': 28000, '演奏员': 24000, '学员': 15000 },
-      '打击乐': { '一级演奏员': 48000, '二级演奏员': 36000, '三级演奏员': 26000, '演奏员': 22000, '学员': 14000 },
+      '板胡':   { '一级演奏员': 0, '二级演奏员': 0, '三级演奏员': 0, '首席': 0, '学员': 0 },
+      '司鼓':   { '一级演奏员': 0, '二级演奏员': 0, '三级演奏员': 0, '队长': 0, '学员': 0 },
+      '二胡':   { '一级演奏员': 0, '二级演奏员': 0, '三级演奏员': 0, '演奏员': 0, '学员': 0 },
+      '板胡伴奏':{ '一级演奏员': 0, '二级演奏员': 0, '三级演奏员': 0, '演奏员': 0, '学员': 0 },
+      '扬琴':   { '一级演奏员': 0, '二级演奏员': 0, '三级演奏员': 0, '演奏员': 0, '学员': 0 },
+      '笛子':   { '一级演奏员': 0, '二级演奏员': 0, '三级演奏员': 0, '演奏员': 0, '学员': 0 },
+      '唢呐':   { '一级演奏员': 0, '二级演奏员': 0, '三级演奏员': 0, '演奏员': 0, '学员': 0 },
+      '打击乐': { '一级演奏员': 0, '二级演奏员': 0, '三级演奏员': 0, '演奏员': 0, '学员': 0 },
       // 舞美队 - 行当
-      '灯光':   { '高级舞美': 56000, '舞美师': 42000, '舞美员': 32000, '技术员': 28000, '学员': 16000 },
-      '音响':   { '高级舞美': 54000, '舞美师': 40000, '舞美员': 30000, '技术员': 26000, '学员': 15000 },
-      '服装':   { '高级舞美': 48000, '舞美师': 36000, '舞美员': 28000, '技术员': 24000, '学员': 14000 },
-      '道具':   { '高级舞美': 46000, '舞美师': 34000, '舞美员': 26000, '技术员': 22000, '学员': 13000 },
-      '化妆':   { '高级舞美': 50000, '舞美师': 38000, '舞美员': 28000, '技术员': 24000, '学员': 14000 },
-      '布景':   { '高级舞美': 52000, '舞美师': 40000, '舞美员': 30000, '技术员': 26000, '学员': 15000 },
+      '灯光':   { '高级舞美': 0, '舞美师': 0, '舞美员': 0, '技术员': 0, '学员': 0 },
+      '音响':   { '高级舞美': 0, '舞美师': 0, '舞美员': 0, '技术员': 0, '学员': 0 },
+      '服装':   { '高级舞美': 0, '舞美师': 0, '舞美员': 0, '技术员': 0, '学员': 0 },
+      '道具':   { '高级舞美': 0, '舞美师': 0, '舞美员': 0, '技术员': 0, '学员': 0 },
+      '化妆':   { '高级舞美': 0, '舞美师': 0, '舞美员': 0, '技术员': 0, '学员': 0 },
+      '布景':   { '高级舞美': 0, '舞美师': 0, '舞美员': 0, '技术员': 0, '学员': 0 },
       // 通用兜底
-      '其他':   { '高级职称': 60000, '中级职称': 44000, '初级职称': 32000, '普通员工': 26000, '学员': 16000 }
+      '其他':   { '高级职称': 0, '中级职称': 0, '初级职称': 0, '普通员工': 0, '学员': 0 }
     },
     // 演出补助（本戏/折子戏/下乡，单位：分/场）
     performanceAllowance: {
-      benxi:        12000,  // 本戏 120元/场
-      zhezi:         6000,  // 折子戏 60元/场
-      xiaxiang:      8000,  // 下乡演出 80元/场
-      festival:     15000,  // 节庆专场 150元/场
-      live_broadcast: 5000  // 直播/录像 50元/场
+      benxi:        0,  // 本戏 0元/场
+      zhezi:         0,  // 折子戏 0元/场
+      xiaxiang:      0,  // 下乡演出 0元/场
+      festival:     0,  // 节庆专场 0元/场
+      live_broadcast: 0  // 直播/录像 0元/场
     },
     // 全勤奖：当月无缺勤/迟到≥3次 单位：分
-    perfectAttendanceBonus: 80000,  // 800元/月
+    perfectAttendanceBonus: 0,  // 0元/月
     // 工龄补贴：每年工龄 单位：分/天
-    seniorityPerYear: 200,  // 2元/天·年
+    seniorityPerYear: 0,  // 0元/天·年
     // 扣款规则（单位：分或百分比；默认口径与《员工管理条例》第二条一致）
     deductions: {
-      lateUnder30min:    2000,   // 迟到/早退<30分钟：20元/次
-      lateOver30min:    '50%',   // 迟到/早退≥30分钟：按旷工半天，扣当日50%工资
-      absentHalfDay:   '100%',   // 旷工半天：扣当日100%工资
-      absentFullDay:   '200%',   // 旷工全天：扣两日工资（当日200%）
-      absentFine:          0,    // 旷工不再另收固定罚款（已含在200%扣薪内）
-      leavePersonal:   '100%',   // 事假：当日不计薪（扣当日100%）
-      leaveSick:        '30%',   // 病假：扣当日30%
-      socialInsurance:  '10.5%', // 社保个人：10.5%（养老8%+医疗2%+失业0.5%）
-      housingFund:       '12%'   // 公积金个人：12%
+      lateUnder30min:    0,   // 迟到/早退<30分钟：0元/次
+      lateOver30min:    '0%',   // 迟到/早退≥30分钟：按旷工半天，扣当日0%工资
+      absentHalfDay:   '0%',   // 旷工半天：扣当日0%工资
+      absentFullDay:   '0%',   // 旷工全天：扣两日工资（当日0%）
+      absentFine:          0,    // 旷工不再另收固定罚款（已含在0%扣薪内）
+      leavePersonal:   '0%',   // 事假：当日不计薪（扣当日0%）
+      leaveSick:        '0%',   // 病假：扣当日0%
+      socialInsurance:  '0%', // 社保个人：0%（养老0%+医疗0%+失业0%）
+      housingFund:       '0%'   // 公积金个人：0%
     },
-    // 计薪日：默认21.75天（法定标准）
+    // 计薪日：默认0天（法定标准）
     standardWorkDays: 21.75,
     // 餐补/交通补：每日出勤补贴（单位：分/天）
     dailySubsidy: {
-      meal:    3000,   // 餐补 30元/天
-      traffic: 2000    // 交通补 20元/天
+      meal:    0,   // 餐补 0元/天
+      traffic: 0    // 交通补 0元/天
     },
     // ==== 重构# 方案二 V2 专用规则（海康/腾讯云 ISAPI 对接）====
     v2: {
@@ -4871,15 +4973,15 @@
         afternoonIn: { start: '13:30', end: '14:00', base: '13:30' },
         nightIn:     { start: '19:30', end: '20:00', base: '19:30' }
       },
-      // 迟到罚金：1元/分钟（100分/分钟）
-      lateFinePerMinCents: 100,
-      // 单场迟到上限：30元（3000分）；迟到≥30分钟 → 本场打卡失效（不计场次）
-      lateFineCapCents:    3000,
+      // 迟到罚金：0元/分钟（0分/分钟）
+      lateFinePerMinCents: 0,
+      // 单场迟到上限：0元（0分）；迟到≥30分钟 → 本场打卡失效（不计场次）
+      lateFineCapCents:    0,
       lateInvalidMinutes:  30,
       // 演出事故级罚款（元 → 分）
-      accidentFineCents: { 1: 1000, 2: 3000, 3: 5000 },  // 一/二/三级：10/30/50元
-      // 表现突出奖励：5元/天（500分）
-      outstandingRewardCents: 500,
+      accidentFineCents: { 1: 0, 2: 0, 3: 0 },  // 一/二/三级：0/0/0元
+      // 表现突出奖励：0元/天（0分）
+      outstandingRewardCents: 0,
       // 管理员人工标记类型
       manualTagTypes: ['常规', '装台', '卸台'],
       // 装台/卸台专项：不计薪资、不计迟到、不发奖励
@@ -4889,25 +4991,134 @@
 
   var WageEngine = {
     // ---------- 规则存取 ----------
+    // 当前是否已到达默认标准生效日（日期节点判断；测试可注入 window.__WAGE_TEST_NOW 覆盖当前时间）
+    _isAtOrAfterEffective: function (effectiveDate) {
+      try {
+        var nowStr = (typeof window !== 'undefined' && window.__WAGE_TEST_NOW) ? window.__WAGE_TEST_NOW : null;
+        var now = nowStr ? new Date(nowStr) : new Date();
+        return new Date(effectiveDate + 'T00:00:00') <= now;
+      } catch (_e) { return true; }
+    },
+    // 将存档规则与当前默认标准对账合并（递归深合并）：存档显式值优先，缺失键继承默认标准，未知键剔除
+    mergeRulesWithDefaults: function (saved, def) {
+      def = def || JSON.parse(JSON.stringify(DEFAULT_WAGE_RULES));
+      var out = def;
+      var deepInto = function (dst, src) {
+        Object.keys(dst).forEach(function (k) {
+          var d = dst[k], s = src ? src[k] : undefined;
+          if (s === undefined || s === null) return;
+          if (d && typeof d === 'object' && !Array.isArray(d) && s && typeof s === 'object' && !Array.isArray(s)) deepInto(d, s);
+          else dst[k] = s;
+        });
+      };
+      deepInto(out, saved || {});
+      return out;
+    },
     getDefaultRules: function () {
+      var DEF = JSON.parse(JSON.stringify(DEFAULT_WAGE_RULES));
+      DEF.defaultsVersion = DEF.version; // 默认规则自洽：基于自身标准
       try {
         var saved = Storage._get(Storage.KEYS.WAGE_RULES);
-        if (saved && saved.baseDailyWage) return saved;
-      } catch (e) { console.warn('[WageEngine] 读取自定义规则失败，回退默认规则', e.message); }
-      return JSON.parse(JSON.stringify(DEFAULT_WAGE_RULES));
+        if (saved && saved.baseDailyWage) {
+          // 日期节点对账：默认标准生效日后，首次读到未对账存档 → 迁移（补全缺失键/剔除未知键/记录迁移元数据）
+          if (saved.defaultsVersion !== DEFAULT_WAGE_RULES.version && this._isAtOrAfterEffective(DEFAULT_WAGE_RULES.effectiveDate)) {
+            var merged = this.mergeRulesWithDefaults(saved, DEF);
+            merged.defaultsVersion = DEFAULT_WAGE_RULES.version;
+            merged.migratedAt = Date.now();
+            merged.migratedFrom = saved.defaultsVersion || 'legacy';
+            merged.effectiveDate = DEFAULT_WAGE_RULES.effectiveDate;
+            try { Storage._set(Storage.KEYS.WAGE_RULES, merged); console.info('[WageEngine] 默认标准 v' + DEFAULT_WAGE_RULES.version + '（生效 ' + DEFAULT_WAGE_RULES.effectiveDate + '）已对账迁移存档规则（来自 ' + merged.migratedFrom + '）'); } catch (_w) {}
+            return merged;
+          }
+          return saved;
+        }
+      } catch (e) { console.warn('[WageEngine] 读取自定义规则失败，回退默认规则', e && e.message); }
+      return DEF;
+    },
+    // 更新状态校验（防复发）：存档/默认规则是否完整、是否对账到当前标准、与标准差异项
+    verifyRulesIntegrity: function () {
+      var issues = [];
+      var deviations = 0;
+      var R;
+      try { R = this.getDefaultRules(); } catch (e) { return { ok: false, issues: ['规则读取异常: ' + (e && e.message)] }; }
+      if (!R.version) issues.push('缺少版本标识 version');
+      if (!R.effectiveDate) issues.push('缺少生效日期 effectiveDate');
+      if (R.defaultsVersion !== DEFAULT_WAGE_RULES.version) issues.push('存档基于旧标准 ' + (R.defaultsVersion || 'legacy') + '，未对账到 v' + DEFAULT_WAGE_RULES.version);
+      ['baseDailyWage', 'performanceAllowance', 'deductions', 'dailySubsidy'].forEach(function (k) {
+        if (!R[k] || typeof R[k] !== 'object') issues.push('缺少关键配置块 ' + k);
+      });
+      if (R.performanceAllowance && R.performanceAllowance.benxi == null) issues.push('本戏补助缺失');
+      if (R.dailySubsidy && R.dailySubsidy.meal == null) issues.push('餐补缺失');
+      if (R.baseDailyWage && !R.baseDailyWage['青衣']) issues.push('行当日薪矩阵不完整（缺青衣）');
+      // 与默认标准的差异项统计（显式自定义值允许偏离，仅提示不告警）
+      try {
+        var DEF = DEFAULT_WAGE_RULES;
+        Object.keys(DEF).forEach(function (k) {
+          var d = DEF[k];
+          if (d && typeof d === 'object' && !Array.isArray(d) && R[k] && typeof R[k] === 'object') {
+            Object.keys(d).forEach(function (k2) {
+              var dv = d[k2], rv = R[k] ? R[k][k2] : undefined;
+              if (rv !== undefined && rv !== dv) deviations++;
+              if (rv === undefined || rv === null) { issues.push('配置块 ' + k + '.' + k2 + ' 缺失'); }
+            });
+          } else if (typeof d !== 'object') {
+            var rv2 = R[k];
+            if (rv2 !== undefined && k !== 'updatedAt' && k !== 'version' && k !== 'defaultsVersion' && k !== 'migratedAt' && k !== 'migratedFrom' && rv2 !== d) deviations++;
+          }
+        });
+      } catch (_d) {}
+      return { ok: issues.length === 0, issues: issues, deviations: deviations, version: R.version || null, defaultsVersion: R.defaultsVersion || null, effectiveDate: R.effectiveDate || null, migratedAt: R.migratedAt || null };
     },
     saveRules: function (rules) {
       try {
         if (!rules || !rules.baseDailyWage) throw new Error('规则缺少baseDailyWage字段');
         rules.updatedAt = Date.now();
         rules.version = 'custom_' + (rules.updatedAt);
+        rules.defaultsVersion = DEFAULT_WAGE_RULES.version;
+        rules.effectiveDate = DEFAULT_WAGE_RULES.effectiveDate;
         Storage._set(Storage.KEYS.WAGE_RULES, rules);
+        // 同步到后端 settings 持久化（多端共享）
+        try {
+          var A = window.QAXQJT_API;
+          if (A && A.post) {
+            A.post('/v1/system/settings/batch', {
+              items: [{
+                key: 'wage_rules_frontend',
+                value: JSON.stringify(rules),
+                group: 'wage_rules',
+                description: '日工资规则矩阵（行当×职级）及演出补助/扣款规则',
+                isPublic: true
+              }]
+            }, { showErrorToast: false, timeoutMs: 10000 }).catch(function (e) {
+              console.warn('[saveRules] 后端同步失败，已暂存本地：', e && e.message);
+            });
+          }
+        } catch (_syncErr) { console.warn('[saveRules] 后端同步异常：', _syncErr); }
         Utils.toast('✅ 日工资规则已保存并生效', 'success');
         return true;
       } catch (e) {
         Utils.toast('❌ 规则保存失败：' + (e.message || e), 'error');
         return false;
       }
+    },
+    // 从后端加载工资规则到本地缓存（多端共享）
+    syncRulesFromServer: function () {
+      var A = window.QAXQJT_API;
+      if (!A || !A.get) return Promise.resolve({ updated: false });
+      return A.get('/v1/system/settings/key/wage_rules_frontend', { showErrorToast: false, timeoutMs: 8000 })
+        .then(function (res) {
+          var val = res && res.value;
+          if (!val) return { updated: false };
+          try {
+            var parsed = typeof val === 'string' ? JSON.parse(val) : val;
+            if (parsed && parsed.baseDailyWage) {
+              Storage._set(Storage.KEYS.WAGE_RULES, parsed);
+              return { updated: true };
+            }
+          } catch (_) {}
+          return { updated: false };
+        })
+        .catch(function () { return { updated: false }; });
     },
     resetRules: function () {
       try {
@@ -6299,6 +6510,9 @@
         // 全局早退：页面脚本已打标的业务按钮（staff.html/schedule.html/cast-sheet.html 行内编辑/删除/导出等）
         // 由页面自己的事件委托处理，DBF 不抢开假弹窗（修 staff 编辑按钮被劫持打开"📋 操作窗口"假弹窗的 bug）
         if (btn.__superPatchBound || btn.__ts3Done || btn.__deadBtnChecked || btn.__stfBound) return;
+        // v20261028a 已接线委托按钮白名单：工资条审核/明细（tbody 委托）与弹窗 footer（bindFooter 绑定）
+        // 均有真实 handler，若不早退会被下方「审核」关键词分支劫持，叠加弹出「📋 审核确认」假表单
+        if (btn.hasAttribute && (btn.hasAttribute('data-wreview') || btn.hasAttribute('data-wdetail2') || btn.hasAttribute('data-modal-act') || btn.hasAttribute('data-modal-close'))) return;
         if (btn.hasAttribute('onclick') && !btn.classList.contains('needs-delegate')) return;
         var href = btn.getAttribute && btn.getAttribute('href');
         if (href && href !== '#' && href !== '' && href.indexOf('javascript:') !== 0) return;
@@ -7141,6 +7355,26 @@
   if (WageEngine.isapi) { global.WageISAPI = WageEngine.isapi; }
   global.Utils = Utils;
   global.Pricing = PricingEngine;
+
+  /**
+   * __readMiscAgreementFromDom —— 读取预约表单"费用约定"两栏（运费/生活费手填 + 甲方包干）
+   * 控件约定：[data-transport-input] 运费输入；[data-living-payer] 生活费承担方 select（troupe=剧团承担计入/client=甲方包干不计入）；[data-living-input] 生活费输入
+   * @returns {Object|null} miscOverride 或 null（全部留空走档位自动估算）
+   */
+  global.__readMiscAgreementFromDom = function () {
+    var tEl = document.querySelector('[data-transport-input]');
+    var pEl = document.querySelector('[data-living-payer]');
+    var lEl = document.querySelector('[data-living-input]');
+    var hasT = tEl && String(tEl.value).trim() !== '' && isFinite(Number(tEl.value)) && Number(tEl.value) >= 0;
+    var waived = !!(pEl && pEl.value === 'client');
+    var hasL = !waived && lEl && String(lEl.value).trim() !== '' && isFinite(Number(lEl.value)) && Number(lEl.value) >= 0;
+    if (!hasT && !waived && !hasL) return null;
+    return {
+      transportFee: hasT ? Number(tEl.value) : null,
+      livingFee: hasL ? Number(lEl.value) : null,
+      livingWaived: waived
+    };
+  };
   global.FormValidator = FormValidator;
   // —— ✅ 标准化引用入口（统一入口，任何页面需要用 WageEngine 都用这个函数拿，取不到直接 throw 明确错误，杜绝之前 QinApp.Wage=undefined 导致的静默失效 Not a function 问题）
   function getWageEngine() {
@@ -9062,20 +9296,20 @@
     function initCspInlinePatch() {
       // —— 兼容处理：若目标函数在当前作用域找不到，尝试在 window / QinApp.Admin / window 下逐级查找
       function _safeEvalWrap(code) {
+        // R23.1 预编译：绑定期即编译验证，编译失败的返回 null（调用方保留原生 on* 属性，不转绑不告警）
         try {
           // 构造一个 Function，用 this 绑定当前元素（模拟原生 on* 事件中 this === element 的语义）
-          // 包装在 try/catch 内避免单事件抛异常阻塞其他
+          var fn = new Function('event', 'evt', 'e', 'with(window){' + code + '}');
           return function (evt) {
             try {
-              var fn = new Function('event', 'evt', 'e', 'with(window){' + code + '}');
               fn.call(this, evt, evt, evt);
-            } catch (innerErr) {
-              try { if (console && console.warn) console.warn('[CSP-patch] 事件执行失败：', code.slice(0, 60), innerErr && innerErr.message ? innerErr.message : innerErr); } catch (_) {}
+            } catch (runErr) {
+              try { if (console && console.warn) console.warn('[CSP-patch] 事件执行失败：', code.slice(0, 60), runErr && runErr.message ? runErr.message : runErr); } catch (_) {}
             }
           };
         } catch (buildErr) {
-          try { if (console && console.warn) console.warn('[CSP-patch] 构建事件处理失败：', buildErr && buildErr.message ? buildErr.message : buildErr); } catch (_) {}
-          return function () {};
+          // 编译失败（如属性值含非法 token）：保留原生行为，静默跳过
+          return null;
         }
       }
       var CSP_ATTRS = ['onclick', 'onsubmit', 'onfocus', 'onblur', 'onchange', 'oninput', 'onkeydown', 'onkeyup', 'onmouseover', 'onmouseout', 'onscroll', 'onresize', 'onload', 'onerror', 'oncopy', 'onpaste', 'oncut', 'ondrag', 'ondrop'];
@@ -9093,7 +9327,9 @@
           // 提取事件名（去掉 on 前缀）
           var evtName = attrName.slice(2).toLowerCase();
           try {
-            elem.addEventListener(evtName, _safeEvalWrap(attrVal), false);
+            var wrapped = _safeEvalWrap(attrVal);
+            if (!wrapped) { skipped++; continue; } // R23.1 预编译失败：保留原生 on* 属性，回退原生行为
+            elem.addEventListener(evtName, wrapped, false);
             // 标记：告知 SuperPatch 该元素已绑定事件，避免被误拦截
             try { elem.__superPatchBound = 1; } catch (_mErr) {}
             // 关键：移除原内联属性，阻止CSP拦截

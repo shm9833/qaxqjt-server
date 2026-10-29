@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <!-- =========================================================== -->
+  <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
+  <!-- 无 session 时 0.5ms 内跳登录页，防白屏 / 越权一眼看 -->
+  <!-- =========================================================== -->
+  <script src="../js/admin-pages/content.pre-1.js?v=20261005a"></script>
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团文化演出有限公司云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <script src="../js/favicon-inject.js?v=20260803" defer></script>
+    <script src="../js/wechat-fallback.js?v=20260803" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>官网内容发布管理 - 秦安县秦剧团文化演出有限公司云端预约管理系统 {year}</title>
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
+  <style>
+    /* ============================================================
+       FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
+       ============================================================ */
+    html, body {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+      width: 100%;
+    }
+    * { box-sizing: border-box; }
+    table { table-layout: fixed; word-break: break-word; }
+    pre, code, textarea { white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+    .admin-main, .admin-content, main, .page-wrap { max-width: 100%; overflow-x: hidden; }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border-light);
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+    .tab-item {
+      padding: 14px 26px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      color: var(--text-light);
+      font-weight: 500;
+      position: relative;
+      transition: var(--transition);
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+    }
+    .tab-item:hover {
+      color: var(--primary);
+    }
+    .tab-item.active {
+      color: var(--primary);
+      border-bottom-color: var(--gold);
+      font-weight: 600;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    .admin-sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 90;
+    }
+    .admin-sidebar-overlay.active {
+      display: block;
+    }
+    @media (max-width: 900px) {
+      .admin-sidebar { transform: translateX(-100%); }
+      .admin-sidebar.mobile-open { transform: translateX(0); }
+      .admin-main { margin-left: 0 !important; }
+      .admin-sidebar-toggle { display: flex !important; }
+      .admin-content { padding: 20px 15px !important; }
+    }
+
+    .banner-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+      gap: 20px;
+    }
+    .banner-card {
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .banner-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+      border-color: var(--gold);
+    }
+    .banner-preview {
+      position: relative;
+      width: 100%;
+      height: 180px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      overflow: hidden;
+    }
+    .banner-preview.inner {
+      background: linear-gradient(135deg, var(--gold-dark) 0%, var(--primary) 100%);
+    }
+    .banner-preview::before {
+      content: '';
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 160px;
+      height: 160px;
+      background: radial-gradient(circle, rgba(212,175,55,0.35) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .banner-preview::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      left: 10%;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .banner-preview-content {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 20px 25px;
+      color: var(--cream);
+    }
+    .banner-preview-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      font-family: "KaiTi","STKaiti",serif;
+    }
+    .banner-preview-subtitle {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-bottom: 12px;
+    }
+    .banner-preview-btn {
+      display: inline-block;
+      padding: 5px 14px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--primary-dark);
+      border-radius: 18px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      align-self: flex-start;
+    }
+    .banner-page-tag {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 3;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: rgba(255,250,240,0.95);
+      color: var(--primary-dark);
+    }
+    .banner-info {
+      padding: 16px 20px;
+    }
+    .banner-info-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+    .banner-name {
+      font-weight: 600;
+      color: var(--primary-dark);
+      font-size: 0.98rem;
+    }
+    .banner-order {
+      font-size: 0.78rem;
+      color: var(--text-light);
+      background: rgba(0,0,0,0.04);
+      padding: 2px 8px;
+      border-radius: 8px;
+    }
+    .banner-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+      font-size: 0.82rem;
+      margin-bottom: 14px;
+    }
+    .banner-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .banner-meta-label {
+      color: var(--text-light);
+    }
+    .banner-meta-value {
+      color: var(--text-dark);
+      font-weight: 500;
+    }
+    .banner-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border-light);
+    }
+    .banner-actions .btn {
+      padding: 5px 10px;
+      font-size: 0.78rem;
+    }
+    .move-btns {
+      display: inline-flex;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border-light);
+    }
+    .move-btns button {
+      background: var(--cream);
+      border: none;
+      padding: 4px 10px;
+      cursor: pointer;
+      color: var(--text-light);
+      transition: var(--transition);
+      font-size: 0.85rem;
+    }
+    .move-btns button:hover {
+      background: var(--primary);
+      color: var(--cream);
+    }
+    .move-btns button:first-child {
+      border-right: 1px solid var(--border-light);
+    }
+
+    .news-cover-preview {
+      width: 80px;
+      height: 56px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cream);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .news-cover-preview.gold {
+      background: linear-gradient(135deg, var(--gold-dark), var(--primary));
+    }
+    .news-cover-preview.teal {
+      background: linear-gradient(135deg, #17a2b8, #0f6b77);
+    }
+    .news-summary-text {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .rich-editor-placeholder {
+      margin-top: 22px;
+      padding: 40px 30px;
+      border: 2px dashed var(--border-light);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, rgba(212,175,55,0.03), rgba(139,0,0,0.03));
+      text-align: center;
+    }
+    .rich-editor-icon {
+      font-size: 3rem;
+      margin-bottom: 14px;
+      opacity: 0.4;
+    }
+    .rich-editor-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+    }
+    .rich-editor-desc {
+      font-size: 0.88rem;
+      color: var(--text-light);
+      margin-bottom: 18px;
+    }
+    .rich-editor-toolbar-demo {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 20px;
+      padding: 14px;
+      background: var(--cream);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+    }
+    .rich-editor-toolbar-demo span {
+      padding: 4px 10px;
+      background: rgba(0,0,0,0.04);
+      border-radius: 5px;
+      font-size: 0.82rem;
+      color: var(--text-dark);
+    }
+    .rich-editor-toolbar-demo span.strong { font-weight: 700; }
+    .rich-editor-toolbar-demo span.em { font-style: italic; }
+    .rich-editor-toolbar-demo span.u { text-decoration: underline; }
+    .rich-editor-toolbar-demo span.color { color: var(--primary); font-weight: 600; }
+
+    .poster-preview {
+      width: 64px;
+      height: 88px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 50%, #4A0000 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      font-family: "KaiTi","STKaiti",serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      box-shadow: 0 3px 10px rgba(139,0,0,0.25);
+      position: relative;
+      overflow: hidden;
+    }
+    .poster-preview::before {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      right: 6px;
+      bottom: 6px;
+      border: 1.5px solid rgba(212,175,55,0.4);
+      border-radius: 4px;
+    }
+    .poster-preview.gold {
+      background: linear-gradient(180deg, var(--gold-dark) 0%, var(--primary) 50%, var(--primary-dark) 100%);
+    }
+    .poster-preview.purple {
+      background: linear-gradient(180deg, #6f42c1 0%, var(--primary) 100%);
+    }
+    .poster-preview.teal {
+      background: linear-gradient(180deg, #17a2b8 0%, #0c5d69 100%);
+    }
+    .hot-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      background: linear-gradient(135deg, #ff6b6b, var(--primary));
+      color: #fff;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .adapt-tags {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .adapt-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      background: rgba(212,175,55,0.12);
+      color: var(--gold-dark);
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 500;
+    }
+    .adapt-tag.blue {
+      background: rgba(23,162,184,0.1);
+      color: #0f6b77;
+    }
+    .adapt-tag.green {
+      background: rgba(40,167,69,0.1);
+      color: #1e7e34;
+    }
+    .adapt-tag.purple {
+      background: rgba(111,66,193,0.1);
+      color: #5a32a3;
+    }
+
+    .content-block-section {
+      display: flex;
+      gap: 18px;
+      padding: 22px 20px;
+      border-bottom: 1px dashed var(--border-light);
+      align-items: flex-start;
+      transition: var(--transition);
+    }
+    .content-block-section:last-child {
+      border-bottom: none;
+    }
+    .content-block-section:hover {
+      background: rgba(212,175,55,0.04);
+    }
+    .block-number {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+      font-size: 1.05rem;
+    }
+    .block-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .block-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .block-name {
+      font-weight: 600;
+      color: var(--primary-dark);
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .block-name .hint {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--text-light);
+      background: rgba(0,0,0,0.04);
+      padding: 2px 8px;
+      border-radius: 8px;
+    }
+    .block-preview {
+      background: rgba(0,0,0,0.03);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      border: 1px solid var(--border-light);
+      margin-bottom: 10px;
+    }
+    .block-preview-text {
+      font-size: 0.9rem;
+      color: var(--text-dark);
+      line-height: 1.7;
+      margin: 0;
+    }
+    .block-preview-text.title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      font-family: "KaiTi","STKaiti",serif;
+    }
+    .block-preview-text.slogan {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      font-family: "KaiTi","STKaiti",serif;
+      text-align: center;
+      padding: 8px 0;
+    }
+    .grid-preview-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 900px) {
+      .grid-preview-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+    .mini-card {
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+    .mini-card-icon {
+      font-size: 1.5rem;
+      margin-bottom: 6px;
+    }
+    .mini-card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 4px;
+    }
+    .mini-card-desc {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      line-height: 1.4;
+    }
+    .block-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .block-actions .btn {
+      padding: 6px 14px;
+      font-size: 0.82rem;
+    }
+
+    .contact-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px 28px;
+    }
+    @media (max-width: 900px) {
+      .contact-form-grid { grid-template-columns: 1fr; }
+    }
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+    .form-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .required {
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .placeholder-hint {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 2px 7px;
+      background: rgba(212,175,55,0.15);
+      color: var(--gold-dark);
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      font-family: monospace;
+    }
+    .config-note {
+      padding: 14px 18px;
+      background: linear-gradient(135deg, rgba(23,162,184,0.08), rgba(212,175,55,0.08));
+      border-radius: var(--radius);
+      border-left: 4px solid #17a2b8;
+      margin-top: 22px;
+      font-size: 0.88rem;
+      color: var(--text-dark);
+      line-height: 1.7;
+    }
+    .config-note strong {
+      color: var(--primary-dark);
+    }
+    .form-actions-bar {
+      margin-top: 28px;
+      padding-top: 22px;
+      border-top: 1px dashed var(--border-light);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .admin-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: flex-end;
+      margin-bottom: 20px;
+      padding: 20px;
+      background: rgba(212,175,55,0.05);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+    }
+    .admin-filter-bar .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 0;
+    }
+    .admin-filter-bar .form-group label {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      font-weight: 500;
+    }
+
+    .top-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--primary-dark);
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    /* S-通用后台补丁：页码圆角（原方形→10px圆角） + hover 上浮 */
+    .pagination .page-btn, button.page-btn, .page-btn,
+    .pagination button, .data-table-container .pagination button {
+      border-radius: 10px !important;
+      min-width: 38px;
+      padding: 6px 14px;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(15,76,129,0.18);
+    }
+    .s-modal-hide { display: none !important; }
+    .s-overlay-hide { display: none !important; }
+    a[href="#"]:not(.action-link):not(.sched-opera-link)::after { content: " ⚠"; color: #f59e0b; font-size: .72rem; opacity: .65; }
+    .btn-ghost { color: #64748b; }
+/* 🔧 H9后台总补CSS：页码圆角10px + 后台表格min-width:760px/720px/680px响应式断点 + 遮罩隐藏类 */
+.pagination .page-btn, button.page-btn, .page-btn,
+.pagination button, .page-number-item button, .pager button,
+.btn-pagination, [class*="pagination"] button,
+.btn, button.btn {
+  border-radius: 10px !important;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+.pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+}
+/* 后台表格最小宽度（768px以上 → 760px；480~767 →720px；<480 →680px） */
+.admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+.data-table-container, [class*="table-wrapper"], .admin-content table {
+  min-width: 760px !important;
+  overflow-x: auto !important;
+}
+@media (max-width: 768px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 720px !important;
+  }
+}
+@media (max-width: 480px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 680px !important;
+  }
+}
+.s-modal-hide { display: none !important; }
+.s-overlay-hide { display: none !important; }
+/* 侧边栏死链接视觉警告 */
+.admin-sidebar-menu li a:not([href]), .admin-sidebar-menu li a[href="#"] { cursor: pointer; position: relative; }
+.admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
+  content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
+}
+/* ====== 空卡片修复20260825：隐藏多余分页栏 + 约束表格高度 ====== */
+.pagination-bar, .pagination-toolbar, [class*="pagination-bar"], [class*="pg-toolbar"] {
+  display: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.table-wrapper, .table-wrap, .table-container, .data-table-container {
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+}
+  
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+  /* 后台表头覆盖：浅灰背景+深色文字+微软雅黑（避免继承前台蓝色渐变+楷体） */
+  table thead { background:#f1f5f9 !important; }
+  table thead th, table th { background:#f1f5f9 !important; color:#334155 !important; font-weight:600 !important; font-family:"Microsoft YaHei","PingFang SC",sans-serif !important; padding:10px 12px !important; text-align:left; border-bottom:2px solid #e2e8f0; white-space:nowrap; letter-spacing:.3px; font-size:.85rem; }
+
+</style>
+</head>
+<body>
+  <div class="admin-layout">
+    <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <div class="logo-text">秦安县秦剧团文化演出有限公司<br/>文化演出管理系统</div>
+      </div>
+
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <a href="index.html" data-role-level="100" class="admin-menu-item  ">
+            <span class="menu-icon">📊</span>
+            <span>数据看板</span>
+          </a>
+          <a href="accounts.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">👥</span>
+            <span>账号权限管理</span>
+          </a>
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
+            <span class="menu-icon">📅</span>
+            <span>演出档期排班</span>
+            <span class="menu-badge">8</span>
+          </a>
+          <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>演出演员表</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="orders.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>订单预约管理</span>
+            <span class="menu-badge">5</span>
+          </a>
+          <a href="operas.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>剧目资源管理</span>
+          </a>
+          <a href="staff.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">👨‍🎤</span>
+            <span>演职人员管理</span>
+          </a>
+          <a href="attendance.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">💵</span>
+            <span>考勤与薪酬</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="inventory.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>道具服装库存</span>
+            <span class="menu-badge">!</span>
+          </a>
+          <a href="finance.html" data-role-level="500" class="admin-menu-item">
+            <span class="menu-icon">💰</span>
+            <span>财务收支台账</span>
+          </a>
+          <a href="content.html" data-role-level="800" class="admin-menu-item active admin-menu-item">
+            <span class="menu-icon">📝</span>
+            <span>官网内容管理</span>
+          </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
+          </a>
+          <a href="reports.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">📈</span>
+            <span>数据统计报表</span>
+          </a>
+          <a href="system.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">🔧</span>
+            <span>系统日志备份</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
+          <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>架构验收报告</span>
+          </a>
+          <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>最终交付总结</span>
+          </a>
+          <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">🚀</span>
+            <span>EdgeOne Pages 部署教程</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
+          </a>
+          <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
+            <span>🚪</span><span>退出登录</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" id="sidebarToggle" aria-label="菜单">
+            <span>☰</span>
+          </button>
+          <div class="admin-breadcrumb">
+            <a href="index.html">首页</a>
+            <span class="separator">/</span>
+            <span>内容运营</span>
+            <span class="separator">/</span>
+            <span class="current">官网内容管理</span>
+          </div>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="搜索文章、剧目、横幅..." />
+          </div>
+          <button class="admin-header-btn" title="通知">
+            <span>🔔</span>
+            <span class="notify-dot"></span>
+          </button>
+          <button class="admin-header-btn" title="全屏" onclick="toggleFullscreen()">
+            <span>⛶</span>
+          </button>
+          <div class="admin-user-dropdown" id="userDropdown">
+            <div class="user-toggle" id="userToggle" style="display:flex;align-items:center;gap:10px;padding:6px 12px 6px 6px;border-radius:25px;background:var(--bg-light);cursor:pointer;">
+              <div class="user-avatar" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;color:var(--primary-dark);font-weight:700;">A</div>
+              <div>
+                <div style="font-size:0.88rem;font-weight:600;color:var(--text-dark);">管理员</div>
+                <div style="font-size:0.75rem;color:var(--gold-dark);">超级管理员</div>
+              </div>
+              <span style="font-size:0.7rem;color:var(--text-light);">▼</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="admin-content">
+        <div class="admin-page-header">
+          <div class="admin-page-title">
+            <h1>📝 官网内容发布管理</h1>
+            <p class="page-desc">统一管理官网横幅、新闻资讯、剧目展示、页面文案与联系信息等内容</p>
+          </div>
+          <div class="admin-page-actions">
+            <button class="btn btn-outline-dark" onclick="window.open('../index.html','_blank')">
+              👁 预览官网
+            </button>
+            <button class="btn btn-success">
+              ✅ 批量发布（上架）
+            </button>
+            <button class="btn btn-secondary">
+              🚫 批量下架（停用）
+            </button>
+            <button class="btn btn-danger">
+              🗑 批量删除
+            </button>
+            <button class="btn btn-gold">
+              🚀 一键发布（静态生成）
+            </button>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab-item active" data-tab="banner">
+            🖼️ 横幅管理
+          </div>
+          <div class="tab-item" data-tab="news">
+            📰 新闻资讯管理
+          </div>
+          <div class="tab-item" data-tab="operas">
+            🎭 剧目展示管理
+          </div>
+          <div class="tab-item" data-tab="text">
+            ✏️ 页面文案编辑
+          </div>
+          <div class="tab-item" data-tab="contact">
+            📞 联系信息配置
+          </div>
+        </div>
+
+        <div class="tab-content active" id="tab-banner">
+
+          <!-- 📸 新增/编辑 Banner：图片上传表单（前端校验预览层，部署后对接对象存储/后端上传接口） -->
+          <div class="admin-card" style="margin-bottom:20px;border:2px solid #f59e0b;background:linear-gradient(135deg,#fffbeb,#fef3c7);">
+            <div class="admin-card-header">
+              <h3>📤 宣传图片上传 · 横幅管理（前端校验+预览层）</h3>
+              <span class="badge badge-warning" style="font-size:0.78rem;">🔧 EdgeOne Pages 环境下需另行对接后端上传 API</span>
+            </div>
+            <div class="admin-card-body">
+              <form id="adminBannerUploadForm" autocomplete="off" data-upload-wrap="1" novalidate>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;">
+                  <div>
+                    <label style="font-weight:700;color:#78350f;margin-bottom:8px;display:block;">横幅名称 *</label>
+                    <input type="text" name="bannerName" placeholder="例：{year}春节演出季主视觉" required style="width:100%;padding:10px 14px;border:1.5px solid #d97706;border-radius:10px;background:#fff;">
+                  </div>
+                  <div>
+                    <label style="font-weight:700;color:#78350f;margin-bottom:8px;display:block;">投放位置 *</label>
+                    <select name="bannerPosition" required style="width:100%;padding:10px 14px;border:1.5px solid #d97706;border-radius:10px;background:#fff;">
+                      <option value="">请选择投放位置</option>
+                      <option value="home-1">🏠 首页横幅 #1（主视觉）</option>
+                      <option value="home-2">🏠 首页横幅 #2（惠民下乡）</option>
+                      <option value="home-3">🏠 首页横幅 #3（活动专場）</option>
+                      <option value="home-4">🏠 首页横幅 #4（剧目推荐）</option>
+                      <option value="inner-news">📰 内页横幅 · 新闻资讯</option>
+                      <option value="inner-operas">🎭 内页横幅 · 剧目展示</option>
+                      <option value="inner-booking">🎫 内页横幅 · 预约流程</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-weight:700;color:#78350f;margin-bottom:8px;display:block;">点击跳转链接</label>
+                    <input type="url" name="bannerLink" placeholder="https://... 例：booking.html 或外部链接" style="width:100%;padding:10px 14px;border:1.5px solid #d97706;border-radius:10px;background:#fff;">
+                  </div>
+                  <div>
+                    <label style="font-weight:700;color:#78350f;margin-bottom:8px;display:block;">宣传横幅图片上传 *（≤10MB，JPG/PNG/WebP）</label>
+                    <input type="file" name="bannerImg" accept="image/png,image/jpeg,image/webp,image/*" required style="width:100%;padding:8px;border:2px dashed #d97706;border-radius:10px;background:#fff;cursor:pointer;" title="选择本地横幅宣传图">
+                  </div>
+                </div>
+                <div style="margin-top:18px;display:flex;gap:14px;flex-wrap:wrap;">
+                  <button type="submit" class="btn btn-primary" id="adminBannerUploadSubmit">✅ 提交并保存横幅（前端校验）</button>
+                  <button type="reset" class="btn btn-outline" id="adminBannerUploadReset">🔄 清空重选</button>
+                  <small style="margin-top:10px;color:#78350f;">💡 上传前会自动进行尺寸/格式/大小校验，并在下方显示预览图；点击提交后仅保存到浏览器 Storage，正式发布请对接后端对象存储 API。</small>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3>🖼️ 横幅列表管理</h3>
+              <div style="display:flex;gap:10px;align-items:center;">
+                <span class="badge badge-info" id="bannerCountBadge">暂无横幅</span>
+                <button class="btn btn-primary btn-sm" id="contentBannerAddBtn">➕ 新增横幅</button>
+              </div>
+            </div>
+            <div class="admin-card-body">
+              <div class="banner-list" data-paginate="list" data-page-size="12">
+                <div style="grid-column:1/-1;padding:40px 16px;text-align:center;color:var(--text-light,#888);">📭 暂无横幅配置，点击右上角「➕ 新增横幅」创建</div>
+</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-news">
+
+          <!-- 📰 新闻资讯管理（接 /v1/contents API，对应前台 news.html） -->
+          <div class="admin-card" style="margin-bottom:20px;border:2px solid #0ea5e9;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);">
+            <div class="admin-card-header">
+              <h3>📰 新闻资讯管理</h3>
+              <div style="display:flex;gap:10px;align-items:center;">
+                <span class="badge badge-info" id="contentNewsCount">共 0 篇</span>
+                <button class="btn btn-primary btn-sm" id="contentNewsAddBtn">➕ 新增文章</button>
+              </div>
+            </div>
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group">
+                  <label>分类</label>
+                  <select class="form-control" id="contentNewsFilterType">
+                    <option value="">全部分类</option>
+                    <option value="剧团动态">剧团动态</option>
+                    <option value="演出公告">演出公告</option>
+                    <option value="文化资讯">文化资讯</option>
+                    <option value="获奖荣誉">获奖荣誉</option>
+                    <option value="惠民活动">惠民活动</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>状态</label>
+                  <select class="form-control" id="contentNewsFilterStatus">
+                    <option value="">全部状态</option>
+                    <option value="published">已发布</option>
+                    <option value="draft">草稿</option>
+                  </select>
+                </div>
+                <div class="form-group" style="min-width:220px;">
+                  <label>关键词</label>
+                  <input type="text" class="form-control" id="contentNewsFilterKw" placeholder="标题/副标题" />
+                </div>
+                <div class="form-group">
+                  <button class="btn btn-primary btn-sm" id="contentNewsSearchBtn">🔍 查询</button>
+                  <button class="btn btn-secondary btn-sm" id="contentNewsResetBtn" style="margin-left:8px;">↺ 重置</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:46px;text-align:center;"><input type="checkbox" id="contentNewsSelectAll" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></th>
+                      <th>ID</th>
+                      <th>封面</th>
+                      <th>标题</th>
+                      <th>分类</th>
+                      <th>摘要</th>
+                      <th>作者</th>
+                      <th>发布日期</th>
+                      <th>状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="contentNewsTbody" data-paginate="list" data-paginate-keep="1" data-page-size="10">
+<tr><td colspan="10" style="text-align:center;padding:30px 14px;color:var(--text-light,#999);">正在加载真实文章…</td></tr>
+</tbody>
+                </table>
+              </div>
+
+              <div class="pagination" id="contentNewsPagination"></div>
+            </div>
+          </div>
+
+          <!-- 新增/编辑文章模态框 -->
+          <div id="contentNewsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+            <div style="background:#fff;border-radius:12px;padding:24px;width:90%;max-width:640px;max-height:90vh;overflow:auto;">
+              <h3 id="contentNewsModalTitle" style="margin-top:0;">新增文章</h3>
+              <form id="contentNewsForm" autocomplete="off" novalidate>
+                <input type="hidden" id="contentNewsId" />
+                <div class="form-group">
+                  <label>标题 *</label>
+                  <input type="text" class="form-control" id="contentNewsTitle" required placeholder="文章标题" />
+                </div>
+                <div class="form-group">
+                  <label>副标题</label>
+                  <input type="text" class="form-control" id="contentNewsSubtitle" placeholder="副标题（可选）" />
+                </div>
+                <div class="form-group">
+                  <label>分类 *</label>
+                  <select class="form-control" id="contentNewsType" required>
+                    <option value="剧团动态">剧团动态</option>
+                    <option value="演出公告">演出公告</option>
+                    <option value="文化资讯">文化资讯</option>
+                    <option value="获奖荣誉">获奖荣誉</option>
+                    <option value="惠民活动">惠民活动</option>
+                  </select>
+                  <small style="color:#64748b;font-size:0.75rem;">分类元数据会存入 tagsJson，后端 type 固定为 news</small>
+                </div>
+                <div class="form-group">
+                  <label>作者</label>
+                  <input type="text" class="form-control" id="contentNewsAuthor" placeholder="作者名" />
+                </div>
+                <div class="form-group">
+                  <label>封面图URL（可直接上传文件，自动回填地址）</label>
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <input type="text" class="form-control" id="contentNewsCover" placeholder="https://... 或上传后自动填充 /uploads/..." style="flex:1;min-width:220px;" />
+                    <button type="button" class="btn btn-outline" id="contentNewsCoverUploadBtn" data-type-fixed="1" style="white-space:nowrap;">📤 上传图片</button>
+                    <input type="file" id="contentNewsCoverFile" accept=".jpg,.jpeg,.png,.gif,.webp,.svg" style="display:none;" />
+                  </div>
+                  <div id="contentNewsCoverHint" style="display:none;margin-top:6px;font-size:0.78rem;color:#64748b;"></div>
+                  <div id="contentNewsCoverPreviewWrap" style="display:none;margin-top:8px;">
+                    <img id="contentNewsCoverPreview" alt="封面预览" style="max-width:240px;max-height:140px;border-radius:10px;border:1px solid #e2e8f0;" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>图集图片（可一次多选批量上传，最多 9 张；点缩略图右上角 ✕ 会同时删除服务器文件）</label>
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <button type="button" class="btn btn-outline" id="contentGalleryAddBtn" data-type-fixed="1" style="white-space:nowrap;">🖼️ 多选并批量上传</button>
+                    <input type="file" id="contentGalleryFile" accept=".jpg,.jpeg,.png,.gif,.webp,.svg" multiple style="display:none;" />
+                    <span id="contentGalleryHint" style="font-size:0.78rem;color:#64748b;"></span>
+                  </div>
+                  <div id="contentGalleryList" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
+                </div>
+                <div class="form-group">
+                  <label>摘要</label>
+                  <textarea class="form-control" id="contentNewsSummary" rows="2" placeholder="一句话摘要"></textarea>
+                </div>
+                <div class="form-group">
+                  <label>正文</label>
+                  <textarea class="form-control" id="contentNewsBody" rows="5" placeholder="文章正文（纯文本或HTML）"></textarea>
+                </div>
+                <div class="form-group">
+                  <label>发布日期</label>
+                  <input type="date" class="form-control" id="contentNewsPubDate" />
+                </div>
+                <div class="form-group">
+                  <label>排序权重</label>
+                  <input type="number" class="form-control" id="contentNewsSort" value="0" />
+                </div>
+                <div class="form-group">
+                  <label>状态（「保存并发布」会自动切为已发布；「保存草稿」可随时下线）</label>
+                  <select class="form-control" id="contentNewsStatus">
+                    <option value="draft">草稿</option>
+                    <option value="published">已发布</option>
+                  </select>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+                  <button type="button" class="btn btn-outline" id="contentNewsDraftBtn" data-type-fixed="1">💾 保存草稿</button>
+                  <button type="button" class="btn btn-success" id="contentNewsPublishBtn" data-type-fixed="1">🚀 保存并发布</button>
+                  <button type="button" class="btn btn-secondary" id="contentNewsPreviewBtn" data-type-fixed="1">👁 预览效果</button>
+                  <button type="button" class="btn btn-outline" id="contentNewsCancelBtn" data-type-fixed="1">取消</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- 文章预览遮罩（v20260927）：按前台文章样式渲染当前表单内容，无需先保存 -->
+          <div id="contentPreviewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1100;overflow-y:auto;padding:24px 12px;">
+            <div style="max-width:760px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);">
+              <div style="position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:linear-gradient(135deg,#8b0000,#6b0000);color:#ffe8b0;z-index:2;">
+                <strong>👁 文章预览（与官网展示一致）</strong>
+                <button type="button" id="contentPreviewCloseBtn" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;">✕ 关闭预览</button>
+              </div>
+              <div id="contentPreviewBody" style="padding:28px 24px 40px;color:#1f2937;"></div>
+            </div>
+          </div>
+
+        </div>
+        <div class="tab-content" id="tab-operas">
+          <!-- 🎭 剧目海报/宣传图上传表单 -->
+          <div class="admin-card" style="margin-bottom:20px;border:2px solid #d97706;background:linear-gradient(135deg,#fff7ed,#ffedd5);">
+            <div class="admin-card-header">
+              <h3>📤 剧目海报/宣传图上传（前端校验+预览层）</h3>
+              <span class="badge badge-warning" style="font-size:0.78rem;">🎭 前台 operas.html 剧目卡缩略图</span>
+            </div>
+            <div class="admin-card-body">
+              <form id="adminOperaUploadForm" autocomplete="off" data-upload-wrap="1" novalidate>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;">
+                  <div>
+                    <label style="font-weight:700;color:#78350f;margin-bottom:8px;display:block;">剧目名称 *（例：《火焰驹》）</label>
+                    <input type="text" name="operaName" required placeholder="例：《火焰驹》" style="width:100%;padding:10px 14px;border:1.5px solid #d97706;border-radius:10px;">
+                  </div>
+                  <div>
+                    <label style="font-weight:700;color:#78350f;margin-bottom:8px;display:block;">剧目分类 *</label>
+                    <select name="operaCategory" required style="width:100%;padding:10px 14px;border:1.5px solid #d97706;border-radius:10px;">
+                      <option value="">请选择分类</option>
+                      <option>传统本戏</option><option>经典折子戏</option><option>现代秦腔剧</option><option>眉户/道情小戏</option><option>新创改编剧</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-weight:700;color:#78350f;margin-bottom:8px;display:block;">时长（分钟）</label>
+                    <input type="number" name="operaDuration" min="20" max="300" step="5" placeholder="例：180" style="width:100%;padding:10px 14px;border:1.5px solid #d97706;border-radius:10px;">
+                  </div>
+                  <div>
+                    <label style="font-weight:700;color:#78350f;margin-bottom:8px;display:block;">剧目海报图 *（≤10MB，横版 4:3 最佳）</label>
+                    <input type="file" name="operaImg" accept="image/*" required style="width:100%;padding:8px;border:2px dashed #d97706;border-radius:10px;background:#fff;cursor:pointer;">
+                  </div>
+                </div>
+                <div style="margin-top:18px;display:flex;gap:14px;flex-wrap:wrap;">
+                  <button type="submit" class="btn btn-primary" id="adminOperaUploadSubmit">✅ 提交剧目海报</button>
+                  <button type="reset" class="btn btn-outline" id="adminOperaUploadReset">🔄 清空</button>
+                  <small style="margin-top:10px;color:#78350f;">💡 上传后自动校验文件大小与图片格式，并在下方预览；发布到 EdgeOne Pages 后请另行对接后端上传 API 将海报保存到服务器。</small>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3>🎭 剧目展示管理（对应前台 operas.html）</h3>
+              <div style="display:flex;gap:10px;align-items:center;">
+                <span class="badge badge-info" id="playMgmtBadge">正在统计真实剧目…</span>
+                <button class="btn btn-primary btn-sm" id="contentPlayAddBtn">➕ 新增剧目</button>
+              </div>
+            </div>
+            <div class="admin-card-body" style="padding:0;">
+              <div class="table-wrapper" style="border:none;box-shadow:none;border-radius:0;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:46px;text-align:center;"><input type="checkbox" onclick="var c=this.checked,tb=this.closest('table');if(tb){tb.querySelectorAll('tbody tr').forEach(function(r){var cb=r.querySelector('td:first-child input[type=checkbox]');if(cb)cb.checked=c;})}" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></th>
+                      <th>剧目ID</th>
+                      <th>海报</th>
+                      <th>剧目名称</th>
+                      <th>分类</th>
+                      <th>前台展示</th>
+                      <th>排序</th>
+                      <th>热门标记</th>
+                      <th>适配标签</th>
+                      <th>更新时间</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="contentPlayTbody" data-paginate="list" data-page-size="10">
+                    <tr><td colspan="11" style="text-align:center;padding:28px;color:#94a3b8;">⏳ 正在加载真实剧目数据…（切换到本页签时自动从 /v1/plays 拉取）</td></tr>
+                  </tbody>
+                </table>
+              </div>
+</div>
+          </div>
+        </div>
+
+        <!-- 🎭 剧目 新增/编辑 模态框（__contentPlays 接 /v1/plays） -->
+        <div id="contentPlayModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1090;overflow-y:auto;padding:24px 12px;">
+          <div style="max-width:640px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,0.3);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:linear-gradient(135deg,#8b0000,#6b0000);color:#ffe8b0;">
+              <strong id="contentPlayModalTitle">➕ 新增剧目</strong>
+              <button type="button" id="contentPlayModalCloseX" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;">✕</button>
+            </div>
+            <div style="padding:20px;">
+              <div class="form-group">
+                <label>剧目名称 *</label>
+                <input type="text" class="form-control" id="contentPlayTitle" placeholder="例：《火焰驹》" />
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div class="form-group">
+                  <label>剧目分类</label>
+                  <select class="form-control" id="contentPlayGenre">
+                    <option>传统本戏</option><option>经典折子戏</option><option>现代秦腔剧</option><option>眉户/道情小戏</option><option>新创改编剧</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>时长（分钟）</label>
+                  <input type="number" class="form-control" id="contentPlayDuration" min="20" max="300" step="5" placeholder="例：180" />
+                </div>
+                <div class="form-group">
+                  <label>编剧/作者</label>
+                  <input type="text" class="form-control" id="contentPlayAuthor" placeholder="如：无名氏 / 王xx" />
+                </div>
+                <div class="form-group">
+                  <label>状态（上架=官网可见）</label>
+                  <select class="form-control" id="contentPlayStatus">
+                    <option value="active">✅ 上架（官网可见）</option>
+                    <option value="inactive">⏸ 下架（官网隐藏）</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>海报图 URL（可用上方「📤 剧目海报上传」表单先上传再填入）</label>
+                <input type="text" class="form-control" id="contentPlayPosterUrl" placeholder="/uploads/xxx.jpg 或 https://…" />
+              </div>
+              <div class="form-group">
+                <label>剧情简介</label>
+                <textarea class="form-control" id="contentPlaySynopsis" rows="3" placeholder="一句话剧情简介（前台剧目卡展示）"></textarea>
+              </div>
+              <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="contentPlayHot" style="width:18px;height:18px;accent-color:#ff4757;cursor:pointer;" />
+                <label for="contentPlayHot" style="cursor:pointer;">🔥 设为热门推荐（前台置顶展示）</label>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary" id="contentPlaySaveBtn" data-type-fixed="1">💾 保存剧目</button>
+                <button type="button" class="btn btn-outline" id="contentPlayCancelBtn" data-type-fixed="1">取消</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🎭 剧目详情 模态框（__contentPlays） -->
+        <div id="contentPlayDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1091;overflow-y:auto;padding:24px 12px;">
+          <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,0.3);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:linear-gradient(135deg,#0F4C81,#0a3558);color:#e0f2ff;">
+              <strong>👁 剧目详情</strong>
+              <button type="button" id="contentPlayDetailCloseX" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;">✕</button>
+            </div>
+            <div id="contentPlayDetailBody" style="padding:22px;color:#1f2937;"></div>
+            <div style="padding:0 20px 20px;text-align:right;">
+              <button type="button" class="btn btn-outline" id="contentPlayDetailCloseBtn" data-type-fixed="1">关闭</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-text">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3>✏️ 页面文案可视化区块编辑</h3>
+              <span class="badge badge-info">共 14 个可编辑区块</span>
+            </div>
+            <div class="admin-card-body" style="padding:0;">
+
+              <div class="content-block-section" data-site-text-block="site.text.home_slogan">
+                <div class="block-number">1</div>
+                <div class="block-body">
+                  <div class="block-header">
+                    <div class="block-name">🏷️ 首页Slogan标语 <span class="hint">位置：首页导航栏下方</span></div>
+                    <div class="block-actions">
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-success btn-sm">💾 保存</button>
+                    </div>
+                  </div>
+                  <div class="block-preview">
+                    <p class="block-preview-text slogan">「 千年秦韵 · 百年传承 · 唱响陇原大地 」</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="content-block-section" data-site-text-block="site.text.home_banner_text">
+                <div class="block-number">2</div>
+                <div class="block-body">
+                  <div class="block-header">
+                    <div class="block-name">📢 首页横幅宣传文案 <span class="hint">配合横幅图展示</span></div>
+                    <div class="block-actions">
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-success btn-sm">💾 保存</button>
+                    </div>
+                  </div>
+                  <div class="block-preview">
+                    <p class="block-preview-text title">秦安县秦剧团文化演出有限公司 · {year}年度演出季</p>
+                    <p class="block-preview-text">专业秦腔艺术表演团体 | 32名资深演职人员 | 28部经典传统与现代剧目 | 承接庙会、节庆、惠民下乡等各类演出预约</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="content-block-section" data-site-text-block="site.text.home_about_p1">
+                <div class="block-number">3</div>
+                <div class="block-body">
+                  <div class="block-header">
+                    <div class="block-name">🏛️ 剧团简介 · 第一段 <span class="hint">关于我们板块</span></div>
+                    <div class="block-actions">
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-success btn-sm">💾 保存</button>
+                    </div>
+                  </div>
+                  <div class="block-preview">
+                    <p class="block-preview-text">
+                      秦安县秦剧团文化演出有限公司成立于1956年，是甘肃省历史悠久、实力雄厚的县级专业秦腔艺术表演团体之一。六十余年来，剧团始终秉承"传承秦腔艺术、服务基层群众"的宗旨，
+                      扎根陇原沃土，坚守戏曲舞台，创作和演出了一大批深受人民群众喜爱的优秀剧目，为弘扬地方传统文化、丰富基层群众精神文化生活作出了积极贡献。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="content-block-section" data-site-text-block="site.text.home_about_p2">
+                <div class="block-number">4</div>
+                <div class="block-body">
+                  <div class="block-header">
+                    <div class="block-name">🏛️ 剧团简介 · 第二段 <span class="hint">关于我们板块</span></div>
+                    <div class="block-actions">
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-success btn-sm">💾 保存</button>
+                    </div>
+                  </div>
+                  <div class="block-preview">
+                    <p class="block-preview-text">
+                      剧团现有演职人员32人，其中国家一级演员2人、国家二级演员5人、三级演员及演奏员18人，行当齐全、阵容整齐。
+                      拥有《破宁国》《金沙滩》《五典坡》《铡美案》《窦娥冤》《火焰驹》《清风亭》等传统经典剧目20部，以及历史剧与经典折子戏专场。
+                      年平均演出120余场次，观众累计达30万人次以上，足迹遍及天水、平凉、定西等地，是陇东南地区具有广泛影响力的秦腔专业院团。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="content-block-section" data-site-text-block="site.text.home_services">
+                <div class="block-number">5</div>
+                <div class="block-body">
+                  <div class="block-header">
+                    <div class="block-name">🎯 核心业务板块 · 4项特色服务 <span class="hint">首页4个服务卡片</span></div>
+                    <div class="block-actions">
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-success btn-sm">💾 保存</button>
+                    </div>
+                  </div>
+                  <div class="block-preview">
+                    <div class="grid-preview-4" data-paginate="list" data-page-size="12">
+                      <div class="mini-card">
+                        <div class="mini-card-icon">🎪</div>
+                        <div class="mini-card-title">庙会演出</div>
+                        <div class="mini-card-desc">传统剧目演出<br>乡村庙会首选</div>
+                      </div>
+                      <div class="mini-card">
+                        <div class="mini-card-icon">🎉</div>
+                        <div class="mini-card-title">节庆专场</div>
+                        <div class="mini-card-desc">节日庆典晚会<br>定制主题剧目</div>
+                      </div>
+                      <div class="mini-card">
+                        <div class="mini-card-icon">🏡</div>
+                        <div class="mini-card-title">惠民下乡</div>
+                        <div class="mini-card-desc">文化扶贫演出<br>基层群众服务</div>
+                      </div>
+                      <div class="mini-card">
+                        <div class="mini-card-icon">💼</div>
+                        <div class="mini-card-title">企业商演</div>
+                        <div class="mini-card-desc">年会开业庆典<br>商务文化活动</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="content-block-section" data-site-text-block="site.text.home_advantages">
+                <div class="block-number">6</div>
+                <div class="block-body">
+                  <div class="block-header">
+                    <div class="block-name">⭐ 服务优势 · 4大核心优势 <span class="hint">首页底部优势板块</span></div>
+                    <div class="block-actions">
+                      <button class="btn btn-primary btn-sm">✏️ 编辑</button>
+                      <button class="btn btn-success btn-sm">💾 保存</button>
+                    </div>
+                  </div>
+                  <div class="block-preview">
+                    <div class="grid-preview-4" data-paginate="list" data-page-size="12">
+                      <div class="mini-card">
+                        <div class="mini-card-icon">🏆</div>
+                        <div class="mini-card-title">68年专业沉淀</div>
+                        <div class="mini-card-desc">1956年建团<br>经验丰富底蕴深厚</div>
+                      </div>
+                      <div class="mini-card">
+                        <div class="mini-card-icon">🎭</div>
+                        <div class="mini-card-title">名家名角云集</div>
+                        <div class="mini-card-desc">国家一级演员领衔<br>32人专业团队</div>
+                      </div>
+                      <div class="mini-card">
+                        <div class="mini-card-icon">📜</div>
+                        <div class="mini-card-title">28部经典剧目</div>
+                        <div class="mini-card-desc">传统+现代剧目<br>满足不同需求</div>
+                      </div>
+                      <div class="mini-card">
+                        <div class="mini-card-icon">🎯</div>
+                        <div class="mini-card-title">一站式服务</div>
+                        <div class="mini-card-desc">档期选角排演<br>全包贴心服务</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="padding:18px 20px;border-top:1px dashed var(--border-light);background:linear-gradient(135deg,rgba(212,175,55,0.05),rgba(139,0,0,0.05));border-radius:0 0 var(--radius-lg) var(--radius-lg);display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;">
+                <div style="font-size:0.88rem;color:var(--text-light);">
+                  ℹ️ 提示：点击各区块的「编辑」按钮可修改对应文案内容，修改完成后点击「保存」即可提交。点击顶部「🚀 一键发布」可将所有内容同步更新到官网前台。
+                </div>
+                <div>
+                  <button class="btn btn-secondary btn-sm" id="contentTextRestoreAll">↺ 还原默认</button>
+                  <button class="btn btn-gold btn-sm" id="contentTextSaveAll" style="margin-left:8px;">💾 保存全部修改</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-contact">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3>📞 联系信息全局配置</h3>
+              <span class="badge badge-info">全站生效 · 修改后需发布</span>
+            </div>
+            <div class="admin-card-body">
+
+              <div class="contact-form-grid" data-paginate="list" data-page-size="12">
+
+                <div class="form-group">
+                  <label><span class="required">*</span> 剧团联系电话（座机/手机）</label>
+                  <input type="text" class="form-control" data-contact-key="site.contact.phone" value="139-9383-9833" />
+                </div>
+
+                <div class="form-group">
+                  <label>官方微信号 / 微信二维码</label>
+                  <input type="text" class="form-control" data-contact-key="site.contact.wechat" value="qaxqjt_{year}（微信搜索添加）" />
+                  <small style="color:var(--text-light);font-size:0.8rem;margin-top:4px;">💡 建议同时上传二维码图片，方便客户扫码</small>
+                </div>
+
+                <div class="form-group full">
+                  <label><span class="required">*</span> 剧团办公地址（完整地址）</label>
+                  <input type="text" class="form-control" data-contact-key="site.contact.address" value="甘肃省天水市秦安县兴国镇文化街168号 · 秦安县文化广电和旅游局院内 · 秦安县秦剧团文化演出有限公司办公楼" />
+                </div>
+
+                <div class="form-group full">
+                  <label>演出服务范围（地区覆盖）</label>
+                  <textarea class="form-control" data-contact-key="site.contact.service_area" rows="3">天水市各县区（秦安县、甘谷县、武山县、清水县、张家川县、麦积区、秦州区）
+平凉市部分区县（庄浪县、静宁县、华亭市）
+定西市部分区县（通渭县、陇西县）
+周边地区欢迎来电咨询洽谈</textarea>
+                </div>
+
+                <div class="form-group">
+                  <label>日常工作时间</label>
+                  <input type="text" class="form-control" data-contact-key="site.contact.work_hours" value="周一至周五 08:30 - 18:00（午休 12:00-14:00）" />
+                </div>
+
+                <div class="form-group">
+                  <label>演出预约服务时间</label>
+                  <input type="text" class="form-control" data-contact-key="site.contact.booking_hours" value="全年无休 · 24小时预约咨询热线" />
+                </div>
+
+                <div class="form-group full">
+                  <label>🗺️ 地图嵌入代码（支持百度/高德/腾讯地图 iframe）</label>
+                  <textarea class="form-control" data-contact-key="site.contact.map_embed" rows="4" placeholder="<iframe src='https://map.example.com/...' ...></iframe>"><!-- 示例占位：请替换为实际地图平台生成的嵌入代码 -->
+&lt;iframe src="https://uri.amap.com/marker?position=105.685,34.891&name=秦安县秦剧团文化演出有限公司&src=qaxqjt&coordinate=gaode&callnative=0"
+  width="100%" height="360" frameborder="0" style="border-radius:8px;"&gt;&lt;/iframe&gt;</textarea>
+                  <small style="color:var(--text-light);font-size:0.8rem;margin-top:4px;">💡 访问高德/百度/腾讯地图开放平台 → 搜索地址 → 生成分享嵌入代码 → 粘贴到上方</small>
+                </div>
+
+                <div class="form-group">
+                  <label>ICP备案号（页脚显示）</label>
+                  <input type="text" class="form-control" data-contact-key="site.contact.icp" value="陇ICP备{year}XXXXXXX号-1" />
+                </div>
+
+                <div class="form-group">
+                  <label>公安备案号（可选）</label>
+                  <input type="text" class="form-control" data-contact-key="site.contact.police_record" value="甘公网安备 620522XXXXXXXXXX号" />
+                </div>
+
+                <div class="form-group">
+                  <label>网站版权年份 <span class="placeholder-hint">{year}</span> 占位符提示</label>
+                  <input type="text" class="form-control" readonly value="© {year} 秦安县秦剧团文化演出有限公司（会自动替换为当前年份）" style="background:rgba(0,0,0,0.04);" />
+                  <small style="color:var(--text-light);font-size:0.8rem;margin-top:4px;">✅ 使用 <code style="background:rgba(212,175,55,0.15);padding:1px 6px;border-radius:4px;">{year}</code> 占位符，系统会自动更新为当年年份，无需每年手动修改</small>
+                </div>
+
+                <div class="form-group">
+                  <label>版权/运营主体名称</label>
+                  <input type="text" class="form-control" data-contact-key="site.contact.copyright_owner" value="秦安县秦剧团文化演出有限公司（秦安县文化广电和旅游局主管）" />
+                </div>
+
+                <div class="form-group">
+                  <label>电子邮箱（可选）</label>
+                  <input type="text" class="form-control" data-contact-key="site.contact.email" value="qaxqjt_{year}@163.com" />
+                </div>
+
+                <div class="form-group">
+                  <label>官方抖音/快手号（可选）</label>
+                  <input type="text" class="form-control" data-contact-key="site.contact.social" value="抖音：@秦安县秦剧团文化演出有限公司（qaxqjt_{year}）" />
+                </div>
+
+              </div>
+
+              <div class="config-note">
+                <strong>📋 配置说明：</strong>
+                以上联系信息为全局配置，修改后会同步显示在官网的「联系我们」页面、页脚、预约页面侧边栏、横幅客服按钮等多个位置。
+                建议优先确保「联系电话」「办公地址」「地图代码」「备案信息」四项信息准确无误。
+                版权声明中建议使用 <code style="background:rgba(212,175,55,0.2);padding:1px 6px;border-radius:4px;">{year}</code> 占位符，系统会在页面加载时自动替换为当年实际年份，无需跨年手动修改。
+              </div>
+
+              <div class="form-actions-bar">
+                <button type="button" class="btn btn-secondary" id="contentContactCancel">↺ 取消修改</button>
+                <button type="button" class="btn btn-outline-dark" id="contentContactPreview">📥 测试配置预览</button>
+                <button type="button" class="btn btn-gold" id="contentContactSave">💾 保存配置并更新</button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center;padding:30px 0 10px;color:#999;font-size:0.82rem;">
+          © {year} 秦安县秦剧团文化演出有限公司云端预约管理系统 · 内容版本 v{year}.07 · 戏曲文化传承者
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../js/year-lite.js?v=20260803"></script>
+    <script src="../js/api-config.js?v=20261010a"></script>
+  <script src="../js/api-request.js?v=20261008b"></script>
+<script src="../js/app.js?v=20261015a"></script>
+  <script src="../js/tooltip.js?v=20261010a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
+  <script src="../js/admin-pages/content.js?v=20261014g"></script>
+
+  
+<!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
+
+
+
+<!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
+
+
+
+
+
+
+
+
+
+<script src="../js/admin-content-real.js?v=20260922"></script>
+
+<!-- 🏛️ 剧团简介区块接线：编辑/保存 ↔ site-assets 文本位（前台 index.html data-asset-text 自动生效，约5分钟缓存） -->
+<script>
+(function () {
+  'use strict';
+  if (window.__contentIntroWired) return;
+  window.__contentIntroWired = 1;
+
+  var YEAR = new Date().getFullYear();
+  var BLOCKS = {
+    'site.text.home_about_p1': '秦安县秦剧团文化演出有限公司，前身为陇城青年秦剧团，是秦安县本土老牌民营专业秦腔演出团体，注册成立于2014年，' + YEAR + '年服务全县，扎根秦安陇城镇，常年深耕天水本地乡村文化演出市场。剧团拥有成熟的演职团队、专业戏曲伴奏乐队、全套舞美灯光音响及戏曲行头道具，擅长演绎传统秦腔本戏、经典折子戏、民俗戏曲专场，适配乡村庙会、新春节庆、惠民下乡、集市汇演、企业公益演出等各类场景。',
+    'site.text.home_about_p2': '多年来，剧团始终坚守“传承秦腔文脉、服务基层群众”的初心，走遍秦安各乡镇、村落，常态化开展文化惠民演出，用接地气的戏曲表演丰富乡村文化生活，弘扬传统民俗文化与西北戏曲艺术，凭借扎实的演技、严谨的演出作风、地道的唱腔韵味，赢得了广大群众的一致认可与良好口碑。'
+  };
+
+  function api() { return window.QAXQJT_API || null; }
+  function markBtn(b) {
+    b.__superPatchBound = 1; b.__ts3Done = 1; b.__bindDone = 1; b.__ctE2Done = 1; b.__deadBtnChecked = 1;
+    return b;
+  }
+  function notify(msg, type) {
+    if (typeof window.showToast === 'function') { try { window.showToast(msg, type || 'success'); return; } catch (_) {} }
+    var el = document.createElement('div');
+    el.textContent = msg;
+    el.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:10000;padding:10px 22px;border-radius:10px;font-size:.88rem;color:#fff;background:' + (type === 'error' ? '#dc2626' : '#16a34a') + ';box-shadow:0 8px 24px rgba(0,0,0,.2);';
+    document.body.appendChild(el);
+    setTimeout(function () { try { el.remove(); } catch (_) {} }, 2600);
+  }
+
+  var state = {};
+
+  function effectiveText(key) {
+    return (state[key] && state[key].custom) ? state[key].custom : BLOCKS[key];
+  }
+
+  function renderPreview(key) {
+    var st = state[key];
+    if (!st) return;
+    st.previewP.textContent = effectiveText(key);
+    if (st.custom) {
+      if (!st.badge) {
+        var b = document.createElement('span');
+        b.style.cssText = 'margin-left:8px;font-size:.68rem;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#15803d;font-weight:600;vertical-align:middle;';
+        b.textContent = '已自定义';
+        st.nameEl.appendChild(b);
+        st.badge = b;
+      }
+    } else if (st.badge) {
+      try { st.badge.remove(); } catch (_) {}
+      st.badge = null;
+    }
+  }
+
+  function exitEdit(key) {
+    var st = state[key];
+    if (st && st.ta) { try { st.ta.wrap.remove(); } catch (_) {} st.ta = null; }
+    if (st) { st.editing = false; st.previewP.style.display = ''; st.editBtn.innerHTML = '✏️ 编辑'; }
+  }
+
+  function enterEdit(key) {
+    var st = state[key];
+    if (!st || st.editing) return;
+    st.editing = true;
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'margin-top:2px;';
+    var ta = document.createElement('textarea');
+    ta.className = 'form-control';
+    ta.rows = 7;
+    ta.maxLength = 2000;
+    ta.value = effectiveText(key);
+    ta.style.cssText = 'width:100%;line-height:1.7;';
+    var hint = document.createElement('div');
+    hint.style.cssText = 'font-size:.75rem;color:#9ca3af;margin-top:6px;';
+    hint.textContent = '💡 正在编辑前台「剧团简介」对应段落（最多2000字）。清空内容后保存 = 恢复默认文案；保存后前台约 5 分钟内自动生效。';
+    wrap.appendChild(ta);
+    wrap.appendChild(hint);
+    st.previewP.style.display = 'none';
+    st.previewP.parentNode.appendChild(wrap);
+    st.ta = { el: ta, wrap: wrap };
+    st.editBtn.innerHTML = '❌ 取消';
+    try { ta.focus(); } catch (_) {}
+  }
+
+  function save(key) {
+    var st = state[key];
+    if (!st) return;
+    if (!st.editing || !st.ta) { notify('请先点击「✏️ 编辑」修改文案，再点击保存', 'error'); return; }
+    var val = String(st.ta.el.value || '').trim();
+    if (val.length > 2000) { notify('文案过长（' + val.length + ' 字），请控制在 2000 字以内', 'error'); return; }
+    var A = api();
+    if (!A) { notify('API 未就绪，请刷新页面重试', 'error'); return; }
+    var btn = st.saveBtn;
+    btn.disabled = true;
+    var oldHtml = btn.innerHTML;
+    btn.innerHTML = '⏳ 保存中…';
+    A.put('/v1/site-assets/' + encodeURIComponent(key), { value: val, description: '' }, { timeoutMs: 12000 })
+      .then(function () {
+        st.custom = val;
+        exitEdit(key);
+        renderPreview(key);
+        notify(val ? '✅ 已保存，前台约 5 分钟内自动生效' : '✅ 已恢复默认文案，前台约 5 分钟内自动生效');
+      })
+      .catch(function (e) { notify('保存失败：' + (e && e.message || e), 'error'); })
+      .then(function () { btn.disabled = false; btn.innerHTML = oldHtml; });
+  }
+
+  function boot() {
+    var sections = document.querySelectorAll('[data-site-text-block]');
+    if (!sections.length) return;
+    for (var i = 0; i < sections.length; i++) {
+      (function (sec) {
+        var key = sec.getAttribute('data-site-text-block');
+        if (!BLOCKS[key]) return;
+        var previewP = sec.querySelector('.block-preview .block-preview-text');
+        var nameEl = sec.querySelector('.block-name');
+        var btns = sec.querySelectorAll('.block-actions button');
+        if (!previewP || !nameEl || !btns || btns.length < 2) return;
+        var st = state[key] = {
+          custom: '', editing: false, ta: null, badge: null,
+          previewP: previewP, nameEl: nameEl,
+          editBtn: markBtn(btns[0]), saveBtn: markBtn(btns[1])
+        };
+        st.editBtn.addEventListener('click', function (ev) {
+          ev.preventDefault(); ev.stopPropagation();
+          if (st.editing) { exitEdit(key); renderPreview(key); } else { enterEdit(key); }
+        });
+        st.saveBtn.addEventListener('click', function (ev) {
+          ev.preventDefault(); ev.stopPropagation();
+          save(key);
+        });
+        renderPreview(key);
+      })(sections[i]);
+    }
+    var A = api();
+    if (!A) return;
+    A.get('/v1/site-assets', { query: {}, showErrorToast: false, timeoutMs: 12000 }).then(function (rows) {
+      rows = Array.isArray(rows) ? rows : (rows && rows.rows) || [];
+      rows.forEach(function (r) {
+        if (r && Object.prototype.hasOwnProperty.call(state, r.key)) {
+          state[r.key].custom = String(r.value || '').trim();
+          if (!state[r.key].editing) renderPreview(r.key);
+        }
+      });
+    }).catch(function () { /* 列表失败不阻塞编辑 */ });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else { boot(); }
+})();
+</script>
+</body>
+
+</html>

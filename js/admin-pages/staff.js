@@ -199,6 +199,8 @@
       }
       closeStaffEditModal();
       toast('✅ 已保存：'+data.name+'（'+data.dept+(data.role ? ' · '+data.role : '')+'），已同步后端 /v1/performers','success', 3500);
+      // Fix-20261012：保存后刷新列表与统计，确保新增人员立即可见、编辑字段（工号/状态等）同步
+      try { load(); loadStats(); } catch(_){}
     }).catch(function(err){
       console.warn('[saveStaffEdit] API fail:', err);
       // 降级 localStorage
@@ -246,6 +248,16 @@
         if (!curOff && !confirm('确定要停用 '+name+'（'+gh+'）吗？停用后该员工将无法接单/排班。')) return;
         syncStatus(tr, next);
         patchUpsert(gh, { status: next });
+      }
+      else if (idx === 6){                                               // 🗓 补卡（单人·实际出勤起止日期）
+        var pid6 = tr.getAttribute('data-performer-id') || '';
+        var p6 = null;
+        var all6 = window.__PF_ROWS__ || [];
+        for (var k6 = 0; k6 < all6.length; k6++){ if (String(all6[k6].id) === pid6){ p6 = all6[k6]; break; } }
+        if ((!p6 || !p6.id) && window.__PF_MAP__) p6 = window.__PF_MAP__[tr.getAttribute('data-staff-no')] || p6;
+        if (!p6 || !p6.id){ toast('⚠️ 未找到该人员最新数据，请刷新页面后重试','warning'); return; }
+        if (typeof window.__STF_SINGLE_MAKEUP__ === 'function') window.__STF_SINGLE_MAKEUP__(p6);
+        else toast('⚠️ 补卡模块未就绪，请稍后重试','warning');
       }
     });
   }
@@ -323,6 +335,7 @@
       +'<button class="btn btn-outline-dark btn-sm" style="color:#17a2b8;border-color:#17a2b8;padding:6px 10px;" title="排班">📅</button>'
       +'<button class="btn btn-sm" style="background:rgba(220,53,69,0.1);color:#dc3545;padding:6px 10px;" title="'+(on?'禁用（禁用后才可删除）':'启用')+'">'+(on?'🚫':'✅')+'</button>'
       +'<button class="btn btn-sm" style="background:'+(dis?'rgba(220,53,69,0.85);color:#fff;':'rgba(220,53,69,0.05);color:#d9b3b8;')+'padding:6px 10px;" title="'+(dis?'删除该人员（软删除，记录审计日志）':'删除（需先将该人员禁用）')+'">🗑</button>'
+      +'<button class="btn btn-sm" style="background:rgba(46,125,50,0.08);color:#2e7d32;padding:6px 10px;" title="补卡（单人·选实际出勤起止日期）">🗓</button>'
       +'</div></td></tr>';
   }
   function render(rows){
@@ -345,21 +358,53 @@
   /* 暴露给筛选补丁复用（v20260908m）*/
   window.__STF_RENDER__ = render;
   window.__STF_ROW_HTML__ = rowHtml;
+  var STF_LOAD_RETRIES = 0;
+  function syncWageStaff(n){
+    if (typeof window.__refreshWageStaff === 'function'){ try { window.__refreshWageStaff(); }catch(_){} return; }
+    if (n < 12) setTimeout(function(){ syncWageStaff(n+1); }, 500);
+  }
   function load(){
-    return API.get((QAXQJT_PATHS.PERFORMERS || '/v1/performers'), { query:{page:1,pageSize:500}, showErrorToast:false, timeoutMs:8000, fallbackRead:function(){return null;} })
+    return API.get((QAXQJT_PATHS.PERFORMERS || '/v1/performers'), { query:{page:1,pageSize:500}, showErrorToast:false, timeoutMs:12000, fallbackRead:function(){return null;} })
       .then(function(res){
-        var rows = Array.isArray(res) ? res : (res && res.items) || [];
+        var allRows = Array.isArray(res) ? res : (res && res.items) || [];
+        // Fix-20261012b：待审核(pending)人员统一只在顶部「待入职审核」面板展示与处理，
+        // 不进入主花名册表格，避免本人退回重填/补充完善后同一人信息两处重复显示
+        var rows = allRows.filter(function(p){ return p.status !== 'pending'; });
         MAP = {}; window.__PF_MAP__ = MAP;
-        rows.forEach(function(p){ if(p.staffNo) MAP[p.staffNo]=p; });
+        // 工号 + 无工号兜底键(PF+id前6位，与 rowHtml 的 gh 规则一致)双索引，
+        // 防止待审批/无工号人员行点击静默失效 Fix-20261011c
+        rows.forEach(function(p){
+          if (p.staffNo) MAP[p.staffNo] = p;
+          if (p.id) MAP['PF' + String(p.id).slice(0,6)] = p;
+        });
         window.__PF_ROWS__ = rows;
         render(rows);
         bindToggle();
         var badge = document.getElementById('rosterBadge');
         if (badge) badge.textContent = rows.length;
         console.info('[staffApi] 已渲染真实演职人员 '+rows.length+' 条');
-        // 同步刷新薪酬模块人员数和估算
-        if (typeof window.__refreshWageStaff === 'function') window.__refreshWageStaff();
-        }).catch(function(){ try { render([]); } catch(_){} var b0=document.getElementById('rosterBadge'); if(b0) b0.textContent='0'; });
+        if (rows.length) STF_LOAD_RETRIES = 0;
+        // Fix-20261014：空结果（含网络抖动走 fallbackRead 返回 null）自动重试，
+        // 避免瞬时抖动把花名册清零且永不恢复
+        if (!rows.length && STF_LOAD_RETRIES < 2){
+          STF_LOAD_RETRIES++;
+          try { var C=window.QAXQJT_API_CONFIG; if (C && C.isFallbackMode && C.isFallbackMode() && STF_LOAD_RETRIES===1 && C.setFallbackMode) C.setFallbackMode(false); }catch(_e){}
+          var bz = document.getElementById('rosterBadge'); if (bz) bz.textContent='…';
+          setTimeout(function(){ try { load(); }catch(_){} }, 3000);
+          return;
+        }
+        // 同步刷新薪酬模块人员数和估算（等 staff.pre-3 工资模块完成绑定，最长 6s）
+        syncWageStaff(0);
+        }).catch(function(){
+          try { render([]); } catch(_){}
+          var b0=document.getElementById('rosterBadge');
+          // Fix-20261014：瞬时异常自动重试（最多2次），重试期间徽标显示 …，不直接清零
+          if (STF_LOAD_RETRIES < 2){
+            STF_LOAD_RETRIES++;
+            if (b0) b0.textContent='…';
+            setTimeout(function(){ try { load(); }catch(_){} }, 3000);
+          } else if (b0) b0.textContent='0';
+        });
   }
   window.__STF_LOAD__ = load;
 
@@ -414,19 +459,62 @@
         if ($('inp_stf_rank')) $('inp_stf_rank').value = p.rankGrade || '';
         if ($('inp_stf_rate')) $('inp_stf_rate').value = (p.dailyRate != null && p.dailyRate !== '') ? p.dailyRate : '';
         if ($('inp_stf_transport')) $('inp_stf_transport').value = p.transportType || '';
+        if ($('inp_stf_transport_amt')) $('inp_stf_transport_amt').value = (p.travelFeeAmount != null && p.travelFeeAmount !== '') ? p.travelFeeAmount : '';
+        if ($('inp_stf_lu')){
+          $('inp_stf_lu').value = (p.loadUnloadParticipate === false) ? 'false' : 'true';
+          try { $('inp_stf_lu').dispatchEvent(new Event('change')); } catch(_e2){}
+        }
+        if ($('inp_stf_lu_deduct')) $('inp_stf_lu_deduct').value = (p.loadUnloadDeduct != null && p.loadUnloadDeduct !== '') ? p.loadUnloadDeduct : '';
       }
     }catch(_){}
+    // 打开弹窗即按行当对齐队别，保证回显二者一致（列 6 展示的是 stdRole 归一化名，可能与下拉 option 值不同，故回填原值）
+    try {
+      var sel = $('inp_stf_role');
+      var rv = sel ? String(sel.value || '').trim() : '';
+      var pr = MAP[gh];
+      if (!rv && pr && pr.primaryRole && PF_DEPTS.indexOf(pr.primaryRole) < 0) { rv = pr.primaryRole; if (sel) sel.value = rv; }
+      var md = deptOfRole(rv);
+      if (md && $('inp_stf_dept')) $('inp_stf_dept').value = md;
+    } catch(_){}
+    // 打开编辑弹窗后拉取当月 salary-preview：演出天数（演出期间天工资合计）+ 未关联订单收入
+    try {
+      var _pid = window.__PF_EDIT__ && window.__PF_EDIT__.id;
+      if (_pid && typeof window.__stfSetPerformanceDays === 'function'){
+        window.__stfSetPerformanceDays(0);
+        if (typeof window.__stfSetUnlinkedIncome === 'function') window.__stfSetUnlinkedIncome(0);
+        if (typeof window.__stfSetTravel === 'function') window.__stfSetTravel(0, 0, []);
+        var _m = new Date();
+        var _ym = _m.getFullYear() + '-' + String(_m.getMonth() + 1).padStart(2, '0');
+        API.get((QAXQJT_PATHS.PERFORMERS || '/v1/performers') + '/' + _pid + '/salary-preview', { query:{ month:_ym }, showErrorToast:false, timeoutMs:8000, fallbackRead:function(){return null;} })
+          .then(function(d){
+            if (!d) return;
+            window.__stfSetPerformanceDays(d.performanceDays || 0);
+            if (typeof window.__stfSetUnlinkedIncome === 'function') window.__stfSetUnlinkedIncome(d.unlinkedIncome || 0);
+            // v20261028b：未关联订单收入明细（逐笔可点「关联订单」选场次）
+            if (typeof window.__stfSetUnlinkedItems === 'function') window.__stfSetUnlinkedItems(d.unlinkedItems || [], _pid);
+            // v20261028j：差旅合计（含挂场次）+ 待审核 + 全明细
+            if (typeof window.__stfSetTravel === 'function') window.__stfSetTravel(d.travelTotal || 0, d.pendingTotal || 0, d.travelItems || []);
+          })
+          .catch(function(){});
+      }
+    } catch(_pe){}
   };
 
   /* ---- 新增人员：接「➕ 新增人员」演示按钮 ---- */
   function openNew(){
     window.__PF_EDIT__ = { mode:'new' };
-    ['inp_stf_gh','inp_stf_name','inp_stf_age','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_idcard','inp_stf_rep','inp_stf_rank','inp_stf_rate','inp_stf_transport'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
+    ['inp_stf_gh','inp_stf_name','inp_stf_age','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_idcard','inp_stf_rep','inp_stf_rank','inp_stf_rate','inp_stf_transport','inp_stf_lu_deduct'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
     if ($('inp_stf_gender')) $('inp_stf_gender').value='男';
     if ($('inp_stf_dept')) $('inp_stf_dept').value='演员队';
+    if ($('inp_stf_lu')) $('inp_stf_lu').value='true';
+    if ($('inp_stf_lu_deduct')) $('inp_stf_lu_deduct').disabled=true;
+    if (typeof window.__stfSetPerformanceDays === 'function') window.__stfSetPerformanceDays(0);
+    if (typeof window.__stfSetUnlinkedIncome === 'function') window.__stfSetUnlinkedIncome(0);
+    if (typeof window.__stfSetUnlinkedItems === 'function') window.__stfSetUnlinkedItems([], '');
+    if (typeof window.__stfSetTravel === 'function') window.__stfSetTravel(0, 0, []);
     if ($('staffEditTitle')) $('staffEditTitle').innerText='➕ 新增演职人员';
     if ($('staffEditSaveBtn')) $('staffEditSaveBtn').style.display='';
-    ['inp_stf_name','inp_stf_gender','inp_stf_age','inp_stf_dept','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_idcard','inp_stf_rep','inp_stf_rank','inp_stf_rate','inp_stf_transport'].forEach(function(id){ var el=$(id); if(el){ el.disabled=false; el.style.background='#fff'; } });
+    ['inp_stf_name','inp_stf_gender','inp_stf_age','inp_stf_dept','inp_stf_role','inp_stf_year','inp_stf_phone','inp_stf_idcard','inp_stf_rep','inp_stf_rank','inp_stf_rate','inp_stf_transport','inp_stf_lu'].forEach(function(id){ var el=$(id); if(el){ el.disabled=false; el.style.background='#fff'; } });
     if ($('inp_stf_gh')) $('inp_stf_gh').value='（保存后自动生成）';
     if ($('staffEditModal')) $('staffEditModal').style.display='flex';
     document.body.style.overflow='hidden';
@@ -437,44 +525,112 @@
     if (btn && (btn.textContent||'').indexOf('新增人员')>=0){ e.preventDefault(); e.stopPropagation(); openNew(); }
   }, true);
 
-  /* ---- 保存：新增 POST / 编辑 PATCH ---- */
-  var _origSave = window.saveStaffEdit;
+  /* ---- 行当 ↔ 队别 关联映射：由弹窗行当 select 的 optgroup 推导，保证二者一致 ---- */
+  var PF_DEPTS = ['演员队','乐队','舞美队','服装道具','行政'];
+  function roleOptgroup(role){
+    var sel = $('inp_stf_role'); if(!sel || !role || !sel.options) return '';
+    for (var i=0;i<sel.options.length;i++){
+      var o = sel.options[i];
+      if (String(o.value) === String(role) || String(o.text) === String(role)){
+        var og = o.parentNode;
+        return (og && og.tagName === 'OPTGROUP') ? String(og.label||'') : '';
+      }
+    }
+    return '';
+  }
+  // 行当 → 队别：生/丑/净/旦/二架/角子→演员队；武场/文场/文乐队→乐队；后勤→舞美队
+  // 未归类（如"其他"）返回空串，保留用户已选队别，不做强制对齐
+  function deptOfRole(role){
+    var g = roleOptgroup(role);
+    if (!g) return '';
+    if (/武场|文场|文乐队/.test(g)) return '乐队';
+    if (/后勤/.test(g)) return '舞美队';
+    if (/生行|丑行|净行|旦行|二架|角子/.test(g)) return '演员队';
+    return '';
+  }
+  // 行当变更时自动对齐队别（查看态 disabled 时不触发）
+  document.addEventListener('change', function(e){
+    var el = e.target;
+    if (!el || el.id !== 'inp_stf_role' || el.disabled) return;
+    var d = deptOfRole(el.value);
+    if (d && $('inp_stf_dept')) $('inp_stf_dept').value = d;
+  }, true);
+
+  /* ---- 保存：新增 POST / 编辑 PATCH（唯一写入路径，行当/部门字段固定映射）---- */
   window.saveStaffEdit = function(){
     var ed = window.__PF_EDIT__;
-    var name = ($('inp_stf_name').value||'').trim();
+    var name = ($('inp_stf_name') ? $('inp_stf_name').value : '').trim();
     if(!name){ toast('❌ 姓名不能为空','error'); return; }
-    var phone = ($('inp_stf_phone').value||'').trim();
+    // 存量数据兼容：编辑时表单未填的必填项，若库中已有值则沿用，避免"保存被静默拦截、页面无变化"
+    var _orig = (ed && ed.staffNo && MAP[ed.staffNo]) ? MAP[ed.staffNo] : null;
+    var phone = ($('inp_stf_phone') ? $('inp_stf_phone').value : '').trim();
     if(phone && /[*＊]/.test(phone)) phone='';
-    if(phone && !/^1[3-9]\d{9}$/.test(phone)){ toast('❌ 手机号格式不正确（11 位中国大陆手机号）','error'); return; }
-    var idCard = ($('inp_stf_idcard')?$('inp_stf_idcard').value:'').trim().toUpperCase();
-    if(idCard && !/^\d{17}[\dX]$/.test(idCard)){ toast('❌ 身份证号格式不正确（应为18位）','error'); return; }
-    var age = ($('inp_stf_age').value||'').trim();
+    if(!phone && _orig && _orig.phone) phone = String(_orig.phone);
+    if(!phone){ toast('❌ 联系电话不能为空','error'); return; }
+    if(!/^1[3-9]\d{9}$/.test(phone)){ toast('❌ 手机号格式不正确（11 位中国大陆手机号）','error'); return; }
+    var idCard = (($('inp_stf_idcard') ? $('inp_stf_idcard').value : '') || '').trim().toUpperCase();
+    if(!idCard && _orig && _orig.idCardNo) idCard = String(_orig.idCardNo).toUpperCase();
+    if(!idCard){ toast('❌ 身份证号不能为空','error'); return; }
+    if(!/^\d{17}[\dX]$/.test(idCard)){ toast('❌ 身份证号格式不正确（应为18位）','error'); return; }
+    var role = ($('inp_stf_role') ? $('inp_stf_role').value : '').trim();
+    // 边界校验：行当不得填成部门名，避免"行当列显示部门"的字段错乱
+    if(role && PF_DEPTS.indexOf(role) >= 0){ toast('❌ 行当/职务不能填写部门名称，请选择真实行当','error'); return; }
+    // 兼容旧数据：存量行当不在下拉选项中（select 显示为空）时回填原值并同步选中
+    if(!role && _orig && _orig.primaryRole && PF_DEPTS.indexOf(_orig.primaryRole) < 0){
+      role = _orig.primaryRole;
+      try { if ($('inp_stf_role')) $('inp_stf_role').value = role; } catch(_e){}
+    }
+    // 存量"无行当"记录（如已清洗脏数据的行）允许保持为空；新增或原本有行当时必须选择，避免误清
+    if(!role && !(ed && ed.mode==='edit' && _orig && !_orig.primaryRole)){ toast('❌ 请选择行当/职务','error'); return; }
+    var rateRaw = $('inp_stf_rate') ? ($('inp_stf_rate').value||'').trim() : '';
+    if(rateRaw==='' && _orig && _orig.dailyRate != null && _orig.dailyRate !== '') rateRaw = String(_orig.dailyRate);
+    if(rateRaw==='' || !isFinite(Number(rateRaw)) || Number(rateRaw)<=0){ toast('❌ 请填写协议天工资（元/天，需大于0）','error'); return; }
+    var transport = $('inp_stf_transport') ? ($('inp_stf_transport').value||'') : '';
+    if(!transport && _orig && _orig.transportType) transport = _orig.transportType;
+    if(!transport){ toast('❌ 请选择路费方式','error'); return; }
+    var age = ($('inp_stf_age') ? $('inp_stf_age').value : '').trim();
     if(age!=='' && (parseInt(age,10)<16||parseInt(age,10)>90)){ toast('❌ 年龄需在 16~90 之间','error'); return; }
-    var year = ($('inp_stf_year').value||'').trim();
+    var year = ($('inp_stf_year') ? $('inp_stf_year').value : '').trim();
+    // 队别与行当对齐：行当可判定所属队别时以行当为准，从源头消除二者不匹配
+    var dept = $('inp_stf_dept') ? ($('inp_stf_dept').value||'') : '';
+    var mappedDept = deptOfRole(role);
+    if (mappedDept && dept && dept !== mappedDept) dept = mappedDept;
+    if (!dept) dept = mappedDept || '演员队';
     var body = {
       name: name,
-      gender: $('inp_stf_gender').value || '男',
-      primaryRole: ($('inp_stf_role').value||'').trim(),
-      employmentType: $('inp_stf_dept').value || '演员队',
+      gender: ($('inp_stf_gender') ? $('inp_stf_gender').value : '') || '男',
+      primaryRole: role,
+      employmentType: dept,
       rankGrade: $('inp_stf_rank') ? ($('inp_stf_rank').value||'') : '',
-      dailyRate: $('inp_stf_rate') ? ($('inp_stf_rate').value==='' ? '' : Number($('inp_stf_rate').value)) : '',
-      transportType: $('inp_stf_transport') ? ($('inp_stf_transport').value||'') : '',
-      remark: ($('inp_stf_rep').value||'').trim()
+      dailyRate: Number(rateRaw),
+      transportType: transport,
+      loadUnloadParticipate: ($('inp_stf_lu') ? $('inp_stf_lu').value !== 'false' : true),
+      loadUnloadDeduct: ($('inp_stf_lu_deduct') && $('inp_stf_lu_deduct').value !== '' && isFinite(Number($('inp_stf_lu_deduct').value))) ? Number($('inp_stf_lu_deduct').value) : 0,
+      remark: ($('inp_stf_rep') ? ($('inp_stf_rep').value||'') : '').trim(),
+      phone: phone,
+      idCardNo: idCard
     };
-    if (phone) body.phone = phone;
-    if (idCard) body.idCardNo = idCard;
     if (age !== '') body.birthDate = (new Date().getFullYear()-parseInt(age,10))+'-01-01';
     if (year && /^\d{4}$/.test(year)) body.hireDate = year+'-06-01';
-    var done = function(d){ try{ window.closeStaffEditModal && window.closeStaffEditModal(); }catch(_){} var sn=d&&(d.staffNo||(d.data&&d.data.staffNo)); toast('✅ 已保存：'+name+(sn?('（工号 '+sn+'）'):''),'success'); load(); loadStats(); };
+    if ($('inp_stf_transport_amt')) body.travelFeeAmount = ($('inp_stf_transport_amt').value !== '' && isFinite(Number($('inp_stf_transport_amt').value))) ? Number($('inp_stf_transport_amt').value) : '';
+    var done = function(d){ try{ window.closeStaffEditModal && window.closeStaffEditModal(); }catch(_){} var sn=d&&(d.staffNo||(d.data&&d.data.staffNo)); toast('✅ 已保存：'+name+'（'+dept+(role?(' · '+role):'')+'）'+(sn?(' 工号 '+sn):''),'success'); load(); loadStats(); };
     var fail = function(err){ toast('❌ 保存失败：'+((err&&err.message)||'网络/服务异常'),'error'); };
     if (ed && ed.mode==='new'){
       // 工号由后端统一分配（全表含停用记录取号，避免与已占用/已删除号冲突）
-      API.post((QAXQJT_PATHS.PERFORMERS || (QAXQJT_PATHS.PERFORMERS || '/v1/performers')), body, { showErrorToast:false }).then(done).catch(fail);
-    } else if (ed && ed.id){
-      API.patch((QAXQJT_PATHS.PERFORMERS_BY_ID || function (i) { return '/v1/performers/' + i; })(ed.id), body, { showErrorToast:false }).then(done).catch(fail);
-    } else if (_origSave){
-      _origSave();
+      API.post((QAXQJT_PATHS.PERFORMERS || '/v1/performers'), body, { showErrorToast:false }).then(done).catch(fail);
+      return;
     }
+    // 编辑：稳健解析记录ID，避免翻页/引用失效导致 id 缺失时字段错写
+    var pid = (ed && ed.id) || (ed && ed.staffNo && MAP[ed.staffNo] && MAP[ed.staffNo].id) || null;
+    if (!pid && ed && ed.staffNo && window.__PF_ROWS__){
+      var rows = window.__PF_ROWS__;
+      for (var i=0;i<rows.length;i++){
+        var r = rows[i];
+        if (String(r.staffNo) === String(ed.staffNo) || ('PF'+String(r.id).slice(0,6)) === String(ed.staffNo)){ pid = r.id; break; }
+      }
+    }
+    if (!pid){ toast('⚠️ 未定位到该人员的记录ID，请刷新页面后重试','warning'); return; }
+    API.patch((QAXQJT_PATHS.PERFORMERS_BY_ID || function (i) { return '/v1/performers/' + i; })(pid), body, { showErrorToast:false }).then(done).catch(fail);
   };
 
   /* ---- 禁用/启用 + 删除：捕获阶段接管 API 行（旧本地逻辑处理不到 API 行） ---- */
@@ -488,7 +644,13 @@
       var idx=-1; for(var i=0;i<acts.length;i++){ if(acts[i]===btn){idx=i;break;} }
       if(idx!==4 && idx!==5) return;
       var p = MAP[tr.getAttribute('data-staff-no')];
-      if(!p || !p.id) return;
+      /* 兜底：MAP 未命中（翻页/筛选旧引用等）时按行 data-performer-id 从最新行集查找 */
+      if((!p || !p.id) && tr.getAttribute('data-performer-id')){
+        var all = window.__PF_ROWS__ || [];
+        var wantId = String(tr.getAttribute('data-performer-id'));
+        for(var k2=0;k2<all.length;k2++){ if(String(all[k2].id)===wantId){ p = all[k2]; break; } }
+      }
+      if(!p || !p.id){ toast('⚠️ 未找到该人员的最新数据，请刷新页面后重试','warning'); return; }
       e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
       var base = (QAXQJT_PATHS.PERFORMERS_BY_ID || function (i) { return '/v1/performers/' + i; })(p.id);
       /* 删除（仅已禁用；二次确认；软删除+审计） */
@@ -710,19 +872,163 @@
     })();
   }
 
-  /* —— 批量补卡：跳转到考勤 tab 并提示（仅当前页可见行） —— */
-  function batchMakeup(){
-    var t = tb(); if (!t){ toast('❌ 找不到花名册表','error'); return; }
-    var checks = t.querySelectorAll('tr:not(.pg-hidden) input[type=checkbox].batch-row-check:checked');
-    if (!checks.length){ toast('⚠️ 请先勾选要补卡的人员行','warning'); return; }
-    var names = [];
-    checks.forEach(function(cb){ var tr = cb.closest('tr'); if (tr) { var td = tr.querySelector('td:nth-child(3)'); if (td) names.push(td.textContent.trim()); } });
-    /* 切到考勤 tab */
-    var tabBtn = document.querySelector('[data-tab="attendance"], [onclick*="attendance"], a[href="#tab-attendance"]');
-    if (tabBtn) { try { tabBtn.click(); }catch(_){} }
-    var tabPanel = $('tab-attendance'); if (tabPanel) { try { document.querySelectorAll('.staff-tab-content').forEach(function(p){ p.classList.remove('active'); }); tabPanel.classList.add('active'); }catch(_){} }
-    toast('📅 已切到考勤录入 tab，可对勾选的 '+names.length+' 人补卡：'+names.slice(0,5).join('、')+(names.length>5?' 等':''),'info', 4000);
+  /* —— 批量补卡：弹窗（人员多选 + 起止日期 + 考勤类型 + 备注）→ /v1/attendance/batch-entry 分批提交 —— */
+  var BMK_TYPES = [
+    ['full','全天班'],['night','夜班'],['double','双班'],['half','半天班'],['rest','公休'],
+    ['late','迟到(30分钟内)'],['late_over','迟到超30分钟'],['absent','旷工'],
+    ['PL','事假'],['SL','病假'],['BL','丧假'],['ML','婚假'],['AL','年假'],
+    ['leave','请假'],['outing','外出'],['study','学习'],['business','出差'],['injury','工伤'],['rainout','雨休']
+  ];
+  function bmkEsc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function bmkDstr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function batchMakeup(single){
+    /* v20261026：支持单人模式 batchMakeup(person) —— 花名册行「补卡」按钮固定该人，只选实际出勤起止日期 */
+    var isSingle = !!(single && single.id && single.name);
+    var rows = isSingle ? [single] : (window.__PF_ROWS__ || []).filter(function(p){
+      return p && p.id && p.name && p.status !== 'disabled' && p.status !== 'pending' && p.status !== '离职';
+    });
+    if (!rows.length){ toast('⚠️ 暂无在职人员数据，请先刷新花名册','warning'); return; }
+    /* 预勾选花名册当前勾选行 */
+    var preset = {};
+    try {
+      var t = tb();
+      if (t) t.querySelectorAll('tr input[type=checkbox].batch-row-check:checked').forEach(function(cb){
+        var tr = cb.closest('tr');
+        var pid = tr && (tr.getAttribute('data-performer-id') || '');
+        if (pid) preset[pid] = 1;
+      });
+    } catch (_e){}
+    var todayStr = bmkDstr(new Date());
+    var listHtml = isSingle ? '' : rows.map(function(p){
+      var gh = p.staffNo || ('PF'+String(p.id).slice(0,6));
+      var role = p.primaryRole ? (window.QaxRoles ? window.QaxRoles.stdRole(p.primaryRole) : p.primaryRole) : '';
+      return '<label style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-bottom:1px solid #f2f2f2;cursor:pointer;font-size:13px;" data-bmk-name="'+bmkEsc((p.name||'')+' '+gh+' '+role).toLowerCase()+'">'
+        + '<input type="checkbox" class="bmk-person" value="'+bmkEsc(p.id)+'"'+(preset[p.id]?' checked':'')+' style="width:16px;height:16px;accent-color:var(--primary,#0F4C81);cursor:pointer;flex:none;">'
+        + '<span style="font-weight:600;color:#333;">'+bmkEsc(p.name)+'</span>'
+        + '<span style="color:#888;font-size:12px;">'+bmkEsc(gh)+'</span>'
+        + (role ? '<span style="color:#8a6d3b;font-size:12px;">'+bmkEsc(role)+'</span>' : '')
+        + '</label>';
+    }).join('');
+    var typeOpts = BMK_TYPES.map(function(t){ return '<option value="'+t[0]+'"'+(t[0]==='full'?' selected':'')+'>'+t[1]+'</option>'; }).join('');
+    /* 人员区：单人=固定人员条；批量=搜索+全选/清空+可勾选列表 */
+    var modeTxt = isSingle ? '单个' : '批量';
+    var defRemark = isSingle ? '补卡' : '批量补卡';
+    var peopleBlock = isSingle
+      ? '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px 12px;background:#fdf9ee;border:1.5px solid var(--gold,#c89b3c);border-radius:8px;font-size:13px;">'
+        + '<span style="font-weight:700;color:#8b0000;">👤 '+bmkEsc(single.name)+'</span>'
+        + '<span style="color:#888;">'+bmkEsc(single.staffNo || ('PF'+String(single.id).slice(0,6)))+'</span>'
+        + (single.primaryRole ? '<span style="color:#8a6d3b;">'+bmkEsc(window.QaxRoles?window.QaxRoles.stdRole(single.primaryRole):single.primaryRole)+'</span>' : '')
+        + '<span style="margin-left:auto;color:#999;font-size:12px;">人员已固定</span></div>'
+      : '<div style="margin-bottom:6px;display:flex;gap:8px;align-items:center;">'
+        + '<input id="bmkSearch" type="text" placeholder="🔍 搜索姓名/工号/行当…" style="flex:1;padding:7px 10px;border:1.5px solid #ddd;border-radius:6px;box-sizing:border-box;font-size:13px;">'
+        + '<button type="button" id="bmkAll" style="padding:5px 12px;border:1px solid #ccc;background:#f7f7f7;border-radius:6px;cursor:pointer;font-size:12px;flex:none;">全选</button>'
+        + '<button type="button" id="bmkNone" style="padding:5px 12px;border:1px solid #ccc;background:#f7f7f7;border-radius:6px;cursor:pointer;font-size:12px;flex:none;">清空</button>'
+        + '<span id="bmkCount" style="font-size:12px;color:#666;flex:none;">已选 0 人</span>'
+        + '</div>'
+        + '<div id="bmkList" style="max-height:230px;overflow-y:auto;border:1.5px solid #eee;border-radius:8px;margin-bottom:14px;">'+listHtml+'</div>';
+    /* 自包含模态（校验失败不关窗） */
+    var mask = document.createElement('div');
+    mask.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:99999;display:flex;align-items:center;justify-content:center;';
+    var box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:12px;padding:22px;width:580px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.25);';
+    box.innerHTML = '<h3 style="margin:0 0 14px;font-size:16px;color:#8b0000;">'+modeTxt+'补卡 · 考勤录入</h3>'
+      + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">'
+      + '<label style="font-size:13px;font-weight:600;color:#333;flex:none;">📅 实际出勤开始</label>'
+      + '<input id="bmkStart" type="date" value="'+todayStr+'" style="flex:1;min-width:130px;padding:7px 10px;border:1.5px solid var(--gold,#c89b3c);border-radius:6px;box-sizing:border-box;">'
+      + '<label style="font-size:13px;font-weight:600;color:#333;flex:none;">实际出勤结束</label>'
+      + '<input id="bmkEnd" type="date" value="'+todayStr+'" style="flex:1;min-width:130px;padding:7px 10px;border:1.5px solid #ddd;border-radius:6px;box-sizing:border-box;">'
+      + '</div>'
+      + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">'
+      + '<label style="font-size:13px;font-weight:600;color:#333;flex:none;">🏷 类型</label>'
+      + '<select id="bmkType" style="flex:1;min-width:130px;padding:7px 10px;border:1.5px solid #ddd;border-radius:6px;box-sizing:border-box;">'+typeOpts+'</select>'
+      + '<input id="bmkRemark" type="text" maxlength="60" placeholder="备注（可选，默认「'+defRemark+'」）" style="flex:1.2;min-width:150px;padding:7px 10px;border:1.5px solid #ddd;border-radius:6px;box-sizing:border-box;">'
+      + '</div>'
+      + peopleBlock
+      + '<div style="display:flex;gap:10px;justify-content:flex-end;">'
+      + '<button type="button" id="bmkCancel" style="padding:8px 20px;border:1px solid #ccc;background:#fff;border-radius:6px;cursor:pointer;">取消</button>'
+      + '<button type="button" id="bmkSubmit" style="padding:8px 20px;background:#2e7d32;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">📤 提交补卡</button>'
+      + '</div>';
+    mask.appendChild(box);
+    document.body.appendChild(mask);
+    function close(){ try { document.body.removeChild(mask); } catch(_){} }
+    mask.addEventListener('click', function(e){ if (e.target === mask) close(); });
+    var list = box.querySelector('#bmkList');
+    var search = box.querySelector('#bmkSearch');
+    var cnt = box.querySelector('#bmkCount');
+    function refreshCount(){
+      if (cnt) cnt.textContent = '已选 ' + box.querySelectorAll('.bmk-person:checked').length + ' 人';
+    }
+    if (search) search.addEventListener('input', function(){
+      var kw = search.value.trim().toLowerCase();
+      list.querySelectorAll('[data-bmk-name]').forEach(function(lb){
+        lb.style.display = (!kw || (lb.getAttribute('data-bmk-name')||'').indexOf(kw) >= 0) ? '' : 'none';
+      });
+    });
+    function setAll(on){
+      list.querySelectorAll('.bmk-person').forEach(function(cb){
+        var lb = cb.closest('label');
+        if (lb && lb.style.display !== 'none') cb.checked = on;
+      });
+      refreshCount();
+    }
+    var allBtn = box.querySelector('#bmkAll'), noneBtn = box.querySelector('#bmkNone');
+    if (allBtn) allBtn.addEventListener('click', function(){ setAll(true); });
+    if (noneBtn) noneBtn.addEventListener('click', function(){ setAll(false); });
+    if (list) list.addEventListener('change', refreshCount);
+    refreshCount();
+    box.querySelector('#bmkCancel').addEventListener('click', close);
+    box.querySelector('#bmkSubmit').addEventListener('click', function(){
+      var startV = (box.querySelector('#bmkStart')||{}).value || '';
+      var endV = (box.querySelector('#bmkEnd')||{}).value || '';
+      var typeV = (box.querySelector('#bmkType')||{}).value || 'full';
+      var remarkV = ((box.querySelector('#bmkRemark')||{}).value || '').trim();
+      var ids = isSingle ? [String(single.id)] : Array.prototype.map.call(box.querySelectorAll('.bmk-person:checked'), function(cb){ return cb.value; });
+      if (!ids.length){ toast('⚠️ 请至少选择 1 名人员','error'); return; }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(startV) || !/^\d{4}-\d{2}-\d{2}$/.test(endV)){ toast('⚠️ 请选择开始/结束日期','error'); return; }
+      var s = new Date(startV+'T00:00:00'), e = new Date(endV+'T00:00:00');
+      if (isNaN(s.getTime()) || isNaN(e.getTime())){ toast('⚠️ 日期不合法','error'); return; }
+      if (s > e){ toast('⚠️ 开始日期不能晚于结束日期','error'); return; }
+      var days = Math.floor((e - s) / 86400000) + 1;
+      if (days > 62){ toast('⚠️ 日期跨度过大（'+days+' 天），单次最多 62 天','error'); return; }
+      if (ids.length * days > 5000){ toast('⚠️ 本次将写入 '+(ids.length*days)+' 条，数量过大，请缩小范围分批提交','error'); return; }
+      /* 展开 人 × 日期 */
+      var dates = [];
+      for (var d = new Date(s); d <= e; d.setDate(d.getDate()+1)) dates.push(bmkDstr(d));
+      var items = [];
+      ids.forEach(function(pid){ dates.forEach(function(dt){ items.push({ staffId: pid, date: dt, type: typeV, remark: remarkV || defRemark }); }); });
+      var chunks = [];
+      for (var i = 0; i < items.length; i += 500) chunks.push(items.slice(i, i + 500));
+      close();
+      var API = window.QAXQJT_API || (window.parent && window.parent.QAXQJT_API);
+      if (!API || typeof API.post !== 'function'){ toast('❌ API 未就绪，请刷新页面重试','error'); return; }
+      var created = 0, skipped = 0, failed = [];
+      toast('📤 正在提交 '+items.length+' 条补卡记录（'+chunks.length+' 批）…','info', 3000);
+      (function next(ci){
+        if (ci >= chunks.length){
+          toast('✅ '+modeTxt+'补卡完成：成功写入 '+created+' 条'
+            + (skipped ? ('，跳过已存在 '+skipped+' 条') : '')
+            + (failed.length ? ('，失败 '+failed.length+' 条（详见控制台）') : ''),
+            failed.length ? 'warning' : 'success', 6000);
+          if (failed.length) console.warn('[batchMakeup] failed:', failed.slice(0, 20));
+          try { window.__STF_LOAD__ && window.__STF_LOAD__(); }catch(_){}
+          return;
+        }
+        API.post('/v1/attendance/batch-entry', { items: chunks[ci] }, { showErrorToast: false, timeoutMs: 30000 })
+          .then(function(res){
+            var d2 = (res && res.data) || res || {};
+            created += (d2.created || 0); skipped += (d2.skipped || 0);
+            if (Array.isArray(d2.failed)) failed = failed.concat(d2.failed);
+            next(ci + 1);
+          })
+          .catch(function(err){
+            failed.push({ reason: '第 '+(ci+1)+' 批提交失败: '+((err&&err.message)||'网络/服务异常') });
+            next(ci + 1);
+          });
+      })(0);
+    });
   }
+  /* v20261026：暴露单人补卡入口（花名册行「补卡」按钮经行委托调用，固定该人） */
+  window.__STF_SINGLE_MAKEUP__ = function(p){ try { batchMakeup(p); } catch(_e){ toast('⚠️ 补卡弹窗打开失败：'+((_e&&_e.message)||''),'error'); } };
 
   /* —— 考勤统计导出：CSV 兜底（基于本月花名册状态估算） —— */
   function exportAttendanceStats(){
@@ -863,7 +1169,7 @@
       if(p.phone) info.push('📱 ' + esc(p.phone));
       if(p.dailyRate != null && p.dailyRate !== '') info.push('💰 协议天工资 ¥' + esc(p.dailyRate) + '/天');
       else if(p.agreedSalary) info.push('💰 ' + esc(p.agreedSalary));
-      if(p.transportType) info.push('🚌 路费' + esc(p.transportType));
+      if(p.transportType) info.push('🚌 路费' + esc(p.transportType) + (p.travelFeeAmount != null && p.travelFeeAmount !== '' ? ' ¥' + esc(p.travelFeeAmount) + '/趟' : ''));
       if(info.length) html += '<div style="font-size:13px;color:#555;margin-top:6px;">' + info.join('　') + '</div>';
       if(p.remark) html += '<div style="font-size:12px;color:#888;margin-top:4px;">备注：' + esc(p.remark) + '</div>';
       if(p.reviewFeedback) html += '<div style="font-size:12px;color:#c62828;margin-top:6px;background:#ffebee;padding:6px 8px;border-radius:4px;">退回原因：' + esc(p.reviewFeedback) + '</div>';
@@ -895,6 +1201,9 @@
         else if (Array.isArray(res && res.data)) rows = res.data;
         else if (Array.isArray(res && res.items)) rows = res.items;
         else if (res && res.data && Array.isArray(res.data.items)) rows = res.data.items;
+        /* 缓存 pending 行数据（审核通过后自动关联天工资商议单存档用） */
+        window.__PENDING_ROWS__ = window.__PENDING_ROWS__ || {};
+        rows.forEach(function(p){ if (p && p.id) window.__PENDING_ROWS__[p.id] = p; });
         renderPending(rows);
       })
       .catch(function(){ renderPending([]); });
@@ -924,7 +1233,14 @@
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">' +
       '<div><label style="display:block;margin-bottom:4px;font-size:13px;font-weight:600;color:#333;">💰 协议日工资（元/天）</label><input id="approveRate" type="number" min="0" step="1" placeholder="如：200" style="width:100%;padding:8px 10px;border:1.5px solid var(--gold,#c89b3c);border-radius:6px;box-sizing:border-box;"></div>' +
       '<div><label style="display:block;margin-bottom:4px;font-size:13px;font-weight:600;color:#333;">🎖 职级</label><select id="approveRank" style="width:100%;padding:8px 10px;border:1.5px solid #ddd;border-radius:6px;box-sizing:border-box;"><option value="">未定级</option><option value="一级">一级</option><option value="二级">二级</option><option value="三级">三级</option><option value="四级">四级</option><option value="五级">五级</option><option value="学徒">学徒</option></select></div>' +
-      '<div><label style="display:block;margin-bottom:4px;font-size:13px;font-weight:600;color:#333;">🚌 路费方式</label><select id="approveTransport" style="width:100%;padding:8px 10px;border:1.5px solid #ddd;border-radius:6px;box-sizing:border-box;"><option value="">未约定</option><option value="单趟">单趟</option><option value="双趟">双趟</option></select></div>' +
+      '<div><label style="display:block;margin-bottom:4px;font-size:13px;font-weight:600;color:#333;">🚌 路费方式（三选一，选中后其余禁用）</label>' +
+      '<div id="approveTransportWrap" style="border:1.5px solid #ddd;border-radius:6px;padding:8px 10px;box-sizing:border-box;">' +
+      '<label style="display:flex;align-items:center;gap:6px;margin:2px 0;font-size:13px;color:#333;"><input type="radio" name="trRadio" value="单趟"> 单趟</label>' +
+      '<label style="display:flex;align-items:center;gap:6px;margin:2px 0;font-size:13px;color:#333;"><input type="radio" name="trRadio" value="双趟"> 双趟</label>' +
+      '<label style="display:flex;align-items:center;gap:6px;margin:2px 0;font-size:13px;color:#333;"><input type="radio" name="trRadio" value="__custom"> 自定义</label>' +
+      '<input id="approveTransportCustom" type="text" maxlength="30" placeholder="自定义说明，如：来回¥80" style="display:none;width:100%;margin-top:4px;padding:6px 8px;border:1px solid #ddd;border-radius:4px;box-sizing:border-box;">' +
+      '<button type="button" id="approveTransportReset" style="margin-top:6px;padding:3px 10px;font-size:12px;border:1px solid #ccc;background:#f7f7f7;border-radius:4px;cursor:pointer;">重置选择</button>' +
+      '</div></div>' +
       '<div><label style="display:block;margin-bottom:4px;font-size:13px;font-weight:600;color:#333;">📋 工号（留空自动分配）</label><input id="approveStaffNo" type="text" placeholder="自动分配" style="width:100%;padding:8px 10px;border:1.5px solid #ddd;border-radius:6px;box-sizing:border-box;"></div>' +
       '</div>' +
       '<div style="display:flex;gap:10px;justify-content:flex-end;">' +
@@ -934,18 +1250,35 @@
       function(){
         var rate = document.getElementById('approveRate');
         var rank = document.getElementById('approveRank');
-        var transport = document.getElementById('approveTransport');
         var sno = document.getElementById('approveStaffNo');
+        var trSel = (document.querySelector('input[name="trRadio"]:checked') || {}).value || '';
+        var transportVal = '';
+        if (trSel === '__custom') {
+          transportVal = ((document.getElementById('approveTransportCustom') || {}).value || '').trim();
+          if (!transportVal) { toast('已选择自定义路费，请填写说明', 'error'); return; }
+        } else if (trSel) { transportVal = trSel; }
         var payload = { action:'approve' };
         if (rate && rate.value) payload.dailyRate = Number(rate.value);
         if (rank && rank.value) payload.rankGrade = rank.value;
-        if (transport && transport.value) payload.transportType = transport.value;
+        if (transportVal) payload.transportType = transportVal;
         if (sno && sno.value.trim()) payload.staffNo = sno.value.trim();
         API.patch((QAXQJT_PATHS.PERFORMERS_REVIEW || function (i) { return '/v1/performers/' + i + '/review'; })(id), payload)
           .then(function(r){
             var sn = r && (r.staffNo || (r.data && r.data.staffNo));
             var rateStr = payload.dailyRate ? ('，日工资 ¥' + payload.dailyRate) : '';
             toast('审核通过，已入职' + (sn ? ('，工号 ' + sn) : '') + rateStr, 'success');
+            /* 入职成功 → 自动与天工资商议单关联并存档（失败静默，不影响主流程） */
+            try {
+              var prow = (window.__PENDING_ROWS__ || {})[id];
+              if (prow && typeof window.__NgWageArchiveOnboard === 'function') {
+                var merged = {};
+                for (var k in prow) { if (Object.prototype.hasOwnProperty.call(prow, k)) merged[k] = prow[k]; }
+                if (payload.dailyRate != null && payload.dailyRate !== '') merged.dailyRate = payload.dailyRate;
+                if (payload.rankGrade) merged.rankGrade = payload.rankGrade;
+                if (sn) merged.staffNo = sn;
+                window.__NgWageArchiveOnboard(merged);
+              }
+            } catch (_eArc) {}
             loadPending();
             if(typeof loadStaffRoster === 'function') loadStaffRoster();
             else if(typeof __STF_LOAD__ === 'function') __STF_LOAD__();
@@ -953,6 +1286,23 @@
           })
           .catch(function(e){ toast('操作失败：' + (e&&e.message||''), 'error'); });
       });
+    // 路费三选一互斥：选中后其余禁用；重置可恢复（Fix-20261011b）
+    (function(){
+      var radios = Array.prototype.slice.call(document.querySelectorAll('input[name="trRadio"]'));
+      var cust = document.getElementById('approveTransportCustom');
+      var resetBtn = document.getElementById('approveTransportReset');
+      function applyLock() {
+        var checked = null;
+        for (var i = 0; i < radios.length; i++) { if (radios[i].checked) { checked = radios[i]; break; } }
+        for (var j = 0; j < radios.length; j++) { radios[j].disabled = !!checked && !radios[j].checked; }
+        if (cust) cust.style.display = (checked && checked.value === '__custom') ? 'block' : 'none';
+      }
+      radios.forEach(function(r){ r.addEventListener('change', applyLock); });
+      if (resetBtn) resetBtn.addEventListener('click', function(){
+        radios.forEach(function(r){ r.checked = false; r.disabled = false; });
+        if (cust) { cust.value = ''; cust.style.display = 'none'; }
+      });
+    })();
   };
 
   window.rejectPending = function(id){
@@ -969,6 +1319,9 @@
           .then(function(){
             toast('已退回，等待本人重新填写', 'success');
             loadPending();
+            if(typeof loadStaffRoster === 'function') loadStaffRoster();
+            else if(typeof __STF_LOAD__ === 'function') __STF_LOAD__();
+            else location.reload();
           })
           .catch(function(e){ toast('操作失败：' + (e&&e.message||''), 'error'); });
       });
@@ -1058,7 +1411,7 @@
   var CFG = window.QAXQJT_API_CONFIG || {};
   var PATHS = CFG.PATHS || {};
   var LEAVE_TYPES = { PL: '事假', SL: '病假', AL: '年假', OL: '调休', BL: '婚假', ML: '产假', RL: '丧假', OL2: '其他' };
-  var STATE_MAP = { pending: '待审批', approved: '已批准', rejected: '已驳回' };
+  var STATE_MAP = { pending: '待审批', approved: '已批准', rejected: '已驳回', cancelled: '已撤回' };
   var state = { page: 1, pageSize: 15, status: '', keyword: '', list: [], total: 0 };
 
   function $(id) { return document.getElementById(id); }
@@ -1072,7 +1425,7 @@
   async function loadLeaves() {
     var tbody = $('leaveTbody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#999;">加载中…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:#999;">加载中…</td></tr>';
     try {
       var q = { page: state.page, pageSize: state.pageSize };
       if (state.status) q.status = state.status;
@@ -1087,29 +1440,39 @@
       var badge = $('leaveTabBadge');
       if (badge) badge.textContent = String(meta.total || list.length);
     } catch (e) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#d9534f;">加载失败：' + (e.message || e) + '</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:#d9534f;">加载失败：' + (e.message || e) + '</td></tr>';
     }
   }
 
   function renderLeaves(list) {
     var tbody = $('leaveTbody');
-    if (!list.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#999;">暂无请假记录</td></tr>'; return; }
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:#999;">暂无请假记录</td></tr>'; return; }
     tbody.innerHTML = list.map(function (r) {
       var st = r.approveStatus || r.status || 'pending';
-      var stCls = st === 'approved' ? 'success' : (st === 'rejected' ? 'danger' : 'warning');
+      var stCls = st === 'approved' ? 'success' : (st === 'rejected' ? 'danger' : (st === 'cancelled' ? 'off' : 'warning'));
       var acts = '';
       if (st === 'pending') {
         acts = '<button class="btn btn-success btn-xs" data-act="approve" data-id="' + r.id + '">批准</button> ' +
                '<button class="btn btn-danger btn-xs" data-act="reject" data-id="' + r.id + '">驳回</button>';
+      } else if (st === 'approved') {
+        // v20261028b 补假：已批准可安排补假日期（自动生成 full 出勤考勤，按出勤计薪）；已安排可改期/取消
+        acts = r.makeupDate
+          ? '<button class="btn btn-secondary btn-xs" data-act="makeup" data-id="' + r.id + '">📅 改期</button> ' +
+            '<button class="btn btn-danger btn-xs" data-act="makeupCancel" data-id="' + r.id + '">取消补假</button>'
+          : '<button class="btn btn-primary btn-xs" data-act="makeup" data-id="' + r.id + '">📅 补假</button>';
       } else {
         acts = '<span style="color:#999;font-size:.8rem;">—</span>';
       }
+      var makeupHtml = r.makeupDate
+        ? '<span style="color:#155724;font-weight:600;">📅 ' + String(r.makeupDate).slice(0, 10) + '</span>'
+        : '<span style="color:#bbb;font-size:.8rem;">未安排</span>';
       return '<tr>' +
         '<td>' + (r.staffName || '') + (r.staffId ? '<br><span style="color:#999;font-size:.75rem;">' + r.staffId + '</span>' : '') + '</td>' +
         '<td>' + (LEAVE_TYPES[r.leaveType] || r.leaveType || '') + '</td>' +
         '<td>' + (r.dateFrom || '').slice(0, 10) + ' ~ ' + (r.dateTo || '').slice(0, 10) + '</td>' +
         '<td>' + (r.totalDays != null ? r.totalDays : (r.totalHours != null ? r.totalHours + 'h' : '1')) + '</td>' +
-        '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (r.reason || '') + '">' + (r.reason || '') + '</td>' +
+        '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (r.reason || '') + '">' + (r.reason || '') + '</td>' +
+        '<td>' + makeupHtml + '</td>' +
         '<td><span class="status-badge ' + stCls + '">' + (STATE_MAP[st] || st) + '</span>' + (r.rejectReason ? '<br><span style="color:#d9534f;font-size:.72rem;">' + r.rejectReason + '</span>' : '') + '</td>' +
         '<td>' + (r.approverName || '—') + '</td>' +
         '<td>' + acts + '</td>' +
@@ -1198,6 +1561,25 @@
       else if (act === 'reject') {
         var reason = prompt('请输入驳回原因：');
         if (reason !== null) approve(id, 'rejected', reason);
+      }
+      // v20261028b 补假：安排/改期/取消
+      else if (act === 'makeup') {
+        var rec = (state.list || []).filter(function (x) { return x.id === id; })[0] || {};
+        var defDate = rec.makeupDate ? String(rec.makeupDate).slice(0, 10)
+          : (function () { var t = new Date(Date.now() + 86400000); return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0'); })();
+        var d = prompt('补假日期（YYYY-MM-DD，该天将自动生成一条"出勤"考勤、按出勤计薪）：', defDate);
+        if (d === null) return;
+        d = String(d).trim();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { toast('日期格式应为 YYYY-MM-DD', 'error'); return; }
+        API.post((PATHS.ATTENDANCE_LEAVES || '/v1/attendance/leaves') + '/' + id + '/makeup', { makeupDate: d })
+          .then(function () { toast('✅ 已安排补假 ' + d + '，并生成出勤考勤（按出勤计薪）', 'success', 4000); loadLeaves(); })
+          .catch(function (e) { toast('补假失败：' + (e.message || e), 'error', 4000); });
+      }
+      else if (act === 'makeupCancel') {
+        if (!confirm('确认取消补假？\n将同时删除补假生成的出勤考勤记录。')) return;
+        API.del((PATHS.ATTENDANCE_LEAVES || '/v1/attendance/leaves') + '/' + id + '/makeup')
+          .then(function () { toast('已取消补假', 'success'); loadLeaves(); })
+          .catch(function (e) { toast('取消失败：' + (e.message || e), 'error', 4000); });
       }
     });
     document.addEventListener('click', function (e) {

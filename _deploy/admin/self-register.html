@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="format-detection" content="telephone=no" />
-  <title>演职人员入职登记 - 秦安县秦剧团</title>
+  <title>演职人员入职登记 - 秦安县秦剧团文化演出有限公司</title>
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
   <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <script src="../js/api-config.js"></script>
@@ -151,7 +151,7 @@
 <body>
   <div class="wrap">
     <div class="header">
-      <h1>秦安县秦剧团</h1>
+      <h1>秦安县秦剧团文化演出有限公司</h1>
       <p>演职人员入职登记表</p>
     </div>
 
@@ -230,12 +230,14 @@
           <small style="display:block;margin-top:4px;font-size:12px;color:#8a6d3b;">按天计酬，审核通过后自动作为工资核算项目基准</small>
         </div>
         <div class="field">
-          <label>路费方式</label>
-          <select id="transportType">
-            <option value="">请选择</option>
-            <option value="单趟">单趟</option>
-            <option value="双趟">双趟</option>
-          </select>
+          <label>路费方式（三选一，选中后其余禁用）</label>
+          <div id="transportWrap" style="border:1px solid #d8c9a3;border-radius:8px;padding:10px 12px;">
+            <label style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:14px;color:#333;"><input type="radio" name="trRadio" value="单趟"> 单趟</label>
+            <label style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:14px;color:#333;"><input type="radio" name="trRadio" value="双趟"> 双趟</label>
+            <label style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:14px;color:#333;"><input type="radio" name="trRadio" value="__custom"> 自定义</label>
+            <input type="text" id="transportCustom" maxlength="30" placeholder="自定义说明，如：来回¥80" style="display:none;width:100%;margin-top:6px;padding:8px 10px;border:1px solid #d8c9a3;border-radius:6px;box-sizing:border-box;">
+            <button type="button" id="transportReset" style="margin-top:8px;padding:4px 12px;font-size:12px;border:1px solid #ccc;background:#f7f4ec;border-radius:4px;cursor:pointer;">重置选择</button>
+          </div>
         </div>
       </div>
 
@@ -245,10 +247,10 @@
       </div>
 
       <details class="regulations">
-        <summary>📋 《秦安县秦剧团员工管理条例》（点击展开阅读）</summary>
+        <summary>📋 《秦安县秦剧团文化演出有限公司员工管理条例》（点击展开阅读）</summary>
         <div class="content">
           <p><strong>第一条 总则</strong></p>
-          <p>本条例适用于秦安县秦剧团全体演职人员，包括正式职工、聘用人员及临时参演人员。演职人员必须严格遵守国家法律法规、行业规章及剧团各项规章制度，恪守职业道德，自觉维护剧团声誉与利益。凡违反本条例者，一律依规依纪严肃追究，绝不姑息。</p>
+          <p>本条例适用于秦安县秦剧团文化演出有限公司全体演职人员，包括正式职工、聘用人员及临时参演人员。演职人员必须严格遵守国家法律法规、行业规章及剧团各项规章制度，恪守职业道德，自觉维护剧团声誉与利益。凡违反本条例者，一律依规依纪严肃追究，绝不姑息。</p>
           <p><strong>第二条 考勤与演出纪律</strong></p>
           <p>（一）演职人员必须严格遵守考勤纪律，按剧团通知准时参加排练、合成、彩排、演出及各项集体活动。迟到或早退30分钟以内的，每次罚款20元，当月罚款从本人工资或演出补贴中直接扣除；迟到或早退超过30分钟的，按旷工半天论处，扣减当日一半工资。</p>
           <p>（二）每人每月事假不得超过2次、累计不得超过2天，且必须事先按规定提交书面请假申请，经批准后方可休假；确因重病、婚丧等特殊情况超出限额的，须报经团长特批。凡未请假、请假未获批准或超假不归的，一律按旷工处理。</p>
@@ -282,13 +284,13 @@
           <p>（二）违反第八条规定（演出前 15 日内变更或退出）的，除扣减当月全部演出补贴外，还须赔偿剧团因此产生的实际损失，包括但不限于临时替角费用、排练返工费用、演出降级或取消造成的票房及补贴损失等。</p>
           <p>（三）因罢演、闹场、临阵退出、严重违反演出纪律等行为造成演出事故或经济损失的，赔偿全额损失并予以解聘；构成违法犯罪的，移交司法机关依法追究刑事责任。</p>
           <p>（四）违约人员未按期赔偿的，剧团有权从其尚未发放的工资、补贴中直接扣除；仍不足的，依法追偿。</p>
-          <p style="color:#8b0000;margin-top:8px;">本条例自发布之日起施行，最终解释权归秦安县秦剧团所有。</p>
+          <p style="color:#8b0000;margin-top:8px;">本条例自发布之日起施行，最终解释权归秦安县秦剧团文化演出有限公司所有。</p>
         </div>
       </details>
 
       <div class="confirm">
         <input type="checkbox" id="regulationsConfirmed" />
-        <label for="regulationsConfirmed">我已阅读并同意《秦安县秦剧团员工管理条例》，承诺如实填写以上信息。</label>
+        <label for="regulationsConfirmed">我已阅读并同意《秦安县秦剧团文化演出有限公司员工管理条例》，承诺如实填写以上信息。</label>
       </div>
 
       <button class="submit-btn" id="submitBtn" disabled>提交登记</button>
@@ -379,6 +381,24 @@
         btn.disabled = !cb.checked;
       });
 
+      // 路费三选一互斥：选中后其余禁用；重置可恢复（Fix-20261011b）
+      (function () {
+        var radios = Array.prototype.slice.call(document.querySelectorAll('input[name="trRadio"]'));
+        var cust = $('transportCustom');
+        var resetBtn = $('transportReset');
+        function applyLock() {
+          var checked = null;
+          for (var i = 0; i < radios.length; i++) { if (radios[i].checked) { checked = radios[i]; break; } }
+          for (var j = 0; j < radios.length; j++) { radios[j].disabled = !!checked && !radios[j].checked; }
+          if (cust) cust.style.display = (checked && checked.value === '__custom') ? 'block' : 'none';
+        }
+        radios.forEach(function (r) { r.addEventListener('change', applyLock); });
+        if (resetBtn) resetBtn.addEventListener('click', function () {
+          radios.forEach(function (r) { r.checked = false; r.disabled = false; });
+          if (cust) { cust.value = ''; cust.style.display = 'none'; }
+        });
+      })();
+
       function showToast(msg, type) {
         var t = $('toast');
         t.textContent = msg;
@@ -408,6 +428,12 @@
         btn.textContent = '提交中...';
 
         var dailyRateRaw = ($('dailyRate').value || '').trim();
+        var trSel = (document.querySelector('input[name="trRadio"]:checked') || {}).value || '';
+        var transportVal = '';
+        if (trSel === '__custom') {
+          transportVal = ($('transportCustom').value || '').trim();
+          if (!transportVal) { showToast('已选择自定义路费，请填写说明', 'error'); btn.disabled = false; btn.textContent = '提交登记'; return; }
+        } else if (trSel) { transportVal = trSel; }
         var payload = {
           name: name,
           idCardNo: idCardNo,
@@ -415,7 +441,7 @@
           phone: $('phone').value.trim() || '',
           primaryRole: $('primaryRole').value || '',
           dailyRate: dailyRateRaw === '' ? '' : Number(dailyRateRaw),
-          transportType: $('transportType').value || '',
+          transportType: transportVal,
           remark: $('remark').value.trim() || '',
           qrToken: window.__QrToken || '',
           regulationsConfirmed: true

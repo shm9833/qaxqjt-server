@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <!-- =========================================================== -->
+  <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
+  <!-- 无 session 时 0.5ms 内跳登录页，防白屏 / 越权一眼看 -->
+  <!-- =========================================================== -->
+  <script src="../js/admin-pages/finance.pre-1.js?v=20261005a"></script>
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团文化演出有限公司云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <script src="../js/favicon-inject.js?v=20260803" defer></script>
+    <script src="../js/wechat-fallback.js?v=20260803" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>财务收支台账管理 - 秦安县秦剧团文化演出有限公司云端预约管理系统 {year}</title>
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
+  <style>
+    /* ============================================================
+       FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
+       ============================================================ */
+    html, body {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+      width: 100%;
+    }
+    * { box-sizing: border-box; }
+    table { table-layout: fixed; word-break: break-word; }
+    pre, code, textarea { white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+    .admin-main, .admin-content, main, .page-wrap { max-width: 100%; overflow-x: hidden; }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border-light);
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+    .tab-item {
+      padding: 14px 28px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      color: var(--text-light);
+      font-weight: 500;
+      position: relative;
+      transition: var(--transition);
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+    }
+    .tab-item:hover {
+      color: var(--primary);
+    }
+    .tab-item.active {
+      color: var(--primary);
+      border-bottom-color: var(--gold);
+      font-weight: 600;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .finance-stat-card {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      border: 1px solid var(--border-light);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .finance-stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+      border-color: var(--gold);
+    }
+    .finance-stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+    .finance-stat-card.income::before { background: linear-gradient(180deg, #28a745, #5cb85c); }
+    .finance-stat-card.expense::before { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); }
+    .finance-stat-card.month-income::before { background: linear-gradient(180deg, var(--gold-dark), var(--gold)); }
+    .finance-stat-card.month-expense::before { background: linear-gradient(180deg, #fd7e14, #ff922b); }
+    .finance-stat-card.profit::before { background: linear-gradient(180deg, #17a2b8, #3ab0c3); }
+    .finance-stat-card.pending::before { background: linear-gradient(180deg, #6f42c1, #9b7bd6); }
+
+    .fsc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .fsc-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+    .finance-stat-card.income .fsc-icon { background: rgba(40,167,69,0.12); }
+    .finance-stat-card.expense .fsc-icon { background: rgba(139,0,0,0.1); }
+    .finance-stat-card.month-income .fsc-icon { background: rgba(212,175,55,0.15); }
+    .finance-stat-card.month-expense .fsc-icon { background: rgba(253,126,20,0.12); }
+    .finance-stat-card.profit .fsc-icon { background: rgba(23,162,184,0.12); }
+    .finance-stat-card.pending .fsc-icon { background: rgba(111,66,193,0.12); }
+
+    .fsc-trend {
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .fsc-trend.up { background: rgba(40,167,69,0.12); color: #28a745; }
+    .fsc-trend.down { background: rgba(139,0,0,0.1); color: var(--primary); }
+    .fsc-trend.flat { background: rgba(0,0,0,0.05); color: var(--text-light); }
+
+    .fsc-title {
+      font-size: 0.88rem;
+      color: var(--text-light);
+      margin-bottom: 6px;
+    }
+    .fsc-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+    .finance-stat-card.income .fsc-value { color: #28a745; }
+    .finance-stat-card.expense .fsc-value { color: var(--primary); }
+    .finance-stat-card.profit .fsc-value { color: #17a2b8; }
+    .fsc-sub {
+      font-size: 0.82rem;
+      color: var(--text-light);
+    }
+    .fsc-sub strong {
+      color: var(--primary-dark);
+      font-weight: 600;
+    }
+    .admin-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: flex-end;
+      margin-bottom: 20px;
+      padding: 20px;
+      background: rgba(212,175,55,0.05);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+    }
+    .admin-filter-bar .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 0;
+    }
+    .admin-filter-bar .form-group label {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      font-weight: 500;
+    }
+    .amount-income {
+      color: #28a745 !important;
+      font-weight: 700;
+    }
+    .amount-expense {
+      color: var(--primary) !important;
+      font-weight: 700;
+    }
+    .type-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .type-badge.income { background: rgba(40,167,69,0.12); color: #28a745; }
+    .type-badge.expense { background: rgba(139,0,0,0.1); color: var(--primary); }
+
+    .project-account-card {
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      transition: var(--transition);
+      margin-bottom: 18px;
+    }
+    .project-account-card:hover {
+      box-shadow: var(--shadow);
+      border-color: var(--gold);
+    }
+    .pac-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+      border-bottom: 1px dashed var(--border-light);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .pac-order-info h4 {
+      margin: 0 0 6px 0;
+      font-size: 1.05rem;
+      color: var(--primary-dark);
+    }
+    .pac-order-meta {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+    .pac-order-meta span strong {
+      color: var(--text-dark);
+    }
+    .pac-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 25px;
+    }
+    @media (max-width: 900px) {
+      .pac-body { grid-template-columns: 1fr; }
+    }
+    .pac-section-title {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-light);
+      font-weight: 600;
+    }
+    .pac-list-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 7px 0;
+      font-size: 0.88rem;
+    }
+    .pac-list-item .label {
+      color: var(--text-light);
+    }
+    .pac-list-item .value {
+      color: var(--text-dark);
+      font-weight: 500;
+    }
+    .pac-income .pac-list-item .value { color: #28a745; }
+    .pac-expense .pac-list-item .value { color: var(--primary); }
+    .pac-total-row {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 2px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .pac-profit .profit-amount {
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin: 15px 0;
+    }
+    .pac-profit .profit-amount.positive { color: #28a745; }
+    .pac-profit .profit-amount.negative { color: var(--primary); }
+    .pac-profit-info {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      text-align: center;
+    }
+
+    .yearly-chart-container {
+      padding: 25px 10px 15px 10px;
+    }
+    .yearly-chart-title {
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 25px;
+    }
+    .yearly-chart {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      height: 320px;
+      padding: 0 10px;
+      border-bottom: 2px solid var(--border-light);
+      position: relative;
+    }
+    .yearly-chart::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 25%;
+      border-top: 1px dashed rgba(0,0,0,0.06);
+    }
+    .yearly-chart::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      border-top: 1px dashed rgba(0,0,0,0.06);
+    }
+    .chart-bar-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      max-width: 70px;
+    }
+    .chart-bars {
+      display: flex;
+      gap: 4px;
+      align-items: flex-end;
+      height: 260px;
+    }
+    .chart-bar {
+      width: 24px;
+      border-radius: 6px 6px 0 0;
+      transition: all 0.4s ease;
+      position: relative;
+      cursor: pointer;
+    }
+    .chart-bar:hover {
+      filter: brightness(1.1);
+      transform: scaleY(1.02);
+      transform-origin: bottom;
+    }
+    .chart-bar.income {
+      background: linear-gradient(180deg, #5cb85c, #28a745);
+    }
+    .chart-bar.expense {
+      background: linear-gradient(180deg, var(--primary-light), var(--primary-dark));
+    }
+    .chart-bar-value {
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      font-weight: 600;
+      white-space: nowrap;
+      color: var(--text-dark);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .chart-bar:hover .chart-bar-value {
+      opacity: 1;
+    }
+    .chart-month-label {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      font-weight: 500;
+    }
+    .chart-legend {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+    .chart-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      color: var(--text-dark);
+    }
+    .chart-legend-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+    }
+    .chart-legend-dot.income { background: linear-gradient(180deg, #5cb85c, #28a745); }
+    .chart-legend-dot.expense { background: linear-gradient(180deg, var(--primary-light), var(--primary-dark)); }
+
+    .stat-voucher-id {
+      font-family: monospace;
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+    .admin-sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 90;
+    }
+    .admin-sidebar-overlay.active {
+      display: block;
+    }
+    @media (max-width: 900px) {
+      .admin-sidebar { transform: translateX(-100%); }
+      .admin-sidebar.mobile-open { transform: translateX(0); }
+      .admin-main { margin-left: 0 !important; }
+      .admin-sidebar-toggle { display: flex !important; }
+      .admin-content { padding: 20px 15px !important; }
+    }
+/* 🔧 H9后台总补CSS：页码圆角10px + 后台表格min-width:760px/720px/680px响应式断点 + 遮罩隐藏类 */
+.pagination .page-btn, button.page-btn, .page-btn,
+.pagination button, .page-number-item button, .pager button,
+.btn-pagination, [class*="pagination"] button,
+.btn, button.btn {
+  border-radius: 10px !important;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+.pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+}
+/* 后台表格最小宽度（768px以上 → 760px；480~767 →720px；<480 →680px） */
+.admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+.data-table-container, [class*="table-wrapper"], .admin-content table {
+  min-width: 760px !important;
+  overflow-x: auto !important;
+}
+@media (max-width: 768px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 720px !important;
+  }
+}
+@media (max-width: 480px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 680px !important;
+  }
+}
+.s-modal-hide { display: none !important; }
+.s-overlay-hide { display: none !important; }
+/* 侧边栏菜单项标准外观（防止死链接缺少视觉反馈） */
+.admin-sidebar-menu li a:not([href]), .admin-sidebar-menu li a[href="#"] { cursor: pointer; position: relative; }
+.admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
+  content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
+}
+/* ====== 未收欠款空态·响应式3格栅格（防止空态面板内局部style导致body暴高18倍） ====== */
+.debt-empty-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 980px) { .debt-empty-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+@media (max-width: 640px) { .debt-empty-grid { grid-template-columns: 1fr !important; } }
+/* ====== 经验100098522：滚动责任唯一化，收敛到#tab-欠款内部 ====== */
+#tab-欠款, [id*="tab-"][id*="欠款"] {
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+/* ====== 分页器toolbar暴高4690px元凶：加死上限 ====== */
+.pagination-toolbar, .sp-pg-toolbar-20260730, [class*="pagination-bar"], [class*="pg-toolbar"] {
+  max-height: 160px !important;
+  min-height: 48px !important;
+  overflow: hidden !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+}
+/* ====== 横向溢出联动纵向假高：收敛table-wrapper滚动 ====== */
+.table-wrapper, .data-table-container {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  box-sizing: border-box !important;
+}
+.admin-content table {
+  max-width: 100% !important;
+  width: 100% !important;
+  min-width: 680px !important;
+}
+/* ====== 最后防线：body/html高度暴增时的清除 ====== */
+html.fin-debt-protect, body.fin-debt-protect { height: auto !important; min-height: auto !important; overflow-x: hidden !important; }
+html.fin-debt-protect .admin-layout, body.fin-debt-protect .admin-layout { max-height: none !important; height: auto !important; }
+/* ====== 空卡片修复20260825：隐藏多余分页栏 + 约束表格高度 ====== */
+.pagination-bar, .pagination-toolbar, [class*="pagination-bar"], [class*="pg-toolbar"] {
+  display: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.table-wrapper, .table-wrap, .table-container, .data-table-container {
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+}
+  
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+  /* 后台表头覆盖：浅灰背景+深色文字+微软雅黑（避免继承前台蓝色渐变+楷体） */
+  table thead { background:#f1f5f9 !important; }
+  table thead th, table th { background:#f1f5f9 !important; color:#334155 !important; font-weight:600 !important; font-family:"Microsoft YaHei","PingFang SC",sans-serif !important; padding:10px 12px !important; text-align:left; border-bottom:2px solid #e2e8f0; white-space:nowrap; letter-spacing:.3px; font-size:.85rem; }
+
+</style>
+</head>
+<body>
+  <div class="admin-layout">
+    <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <div class="logo-text">秦安县秦剧团文化演出有限公司<br/>文化演出管理系统</div>
+      </div>
+
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <a href="index.html" data-role-level="100" class="admin-menu-item  ">
+            <span class="menu-icon">📊</span>
+            <span>数据看板</span>
+          </a>
+          <a href="accounts.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">👥</span>
+            <span>账号权限管理</span>
+          </a>
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
+            <span class="menu-icon">📅</span>
+            <span>演出档期排班</span>
+            <span class="menu-badge">8</span>
+          </a>
+          <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>演出演员表</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="orders.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>订单预约管理</span>
+            <span class="menu-badge">5</span>
+          </a>
+          <a href="operas.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>剧目资源管理</span>
+          </a>
+          <a href="staff.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">👨‍🎤</span>
+            <span>演职人员管理</span>
+          </a>
+          <a href="attendance.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">💵</span>
+            <span>考勤与薪酬</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="inventory.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>道具服装库存</span>
+            <span class="menu-badge">!</span>
+          </a>
+          <a href="finance.html" data-role-level="500" class="admin-menu-item active admin-menu-item">
+            <span class="menu-icon">💰</span>
+            <span>财务收支台账</span>
+          </a>
+          <a href="content.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📝</span>
+            <span>官网内容管理</span>
+          </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
+          </a>
+          <a href="reports.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">📈</span>
+            <span>数据统计报表</span>
+          </a>
+          <a href="system.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">🔧</span>
+            <span>系统日志备份</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
+          <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>架构验收报告</span>
+          </a>
+          <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>最终交付总结</span>
+          </a>
+          <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">🚀</span>
+            <span>EdgeOne Pages 部署教程</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
+          </a>
+          <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
+            <span>🚪</span><span>退出登录</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" id="sidebarToggle" aria-label="菜单">
+            <span>☰</span>
+          </button>
+          <div class="admin-breadcrumb">
+            <a href="index.html">首页</a>
+            <span class="separator">/</span>
+            <span>财务管理</span>
+            <span class="separator">/</span>
+            <span class="current">财务收支台账</span>
+          </div>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="搜索凭证号、订单、摘要..." />
+          </div>
+          <button class="admin-header-btn" title="通知">
+            <span>🔔</span>
+            <span class="notify-dot"></span>
+          </button>
+          <button class="admin-header-btn" title="全屏" onclick="toggleFullscreen()">
+            <span>⛶</span>
+          </button>
+          <div class="admin-user-dropdown" id="userDropdown">
+            <div class="user-toggle" id="userToggle" style="display:flex;align-items:center;gap:10px;padding:6px 12px 6px 6px;border-radius:25px;background:var(--bg-light);cursor:pointer;">
+              <div class="user-avatar" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;color:var(--primary-dark);font-weight:700;">A</div>
+              <div>
+                <div style="font-size:0.88rem;font-weight:600;color:var(--text-dark);">管理员</div>
+                <div style="font-size:0.75rem;color:var(--gold-dark);">超级管理员</div>
+              </div>
+              <span style="font-size:0.7rem;color:var(--text-light);">▼</span>
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+              <div class="dropdown-header">
+                <div class="dh-name" id="dhName">系统管理员</div>
+                <div class="dh-email">admin@qinxian-opera.com</div>
+              </div>
+              <div class="dropdown-item" onclick="location.href='accounts.html'">
+                <span class="di-icon">👤</span><span>个人资料</span>
+              </div>
+              <div class="dropdown-item" onclick="location.href='system.html'">
+                <span class="di-icon">⚙️</span><span>系统设置</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" id="logoutBtnDropdown" style="color:var(--primary);">
+                <span class="di-icon">🚪</span><span>退出登录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="admin-content">
+        <div class="admin-page-header">
+          <div class="admin-page-title">
+            <h1>💰 财务收支台账管理</h1>
+            <p class="page-desc">全面管理剧团财务收支记录、演出项目账目与月度年度统计分析</p>
+          </div>
+          <div class="admin-page-actions">
+            <button class="btn btn-success">
+              ➕ 新增收入
+            </button>
+            <button class="btn btn-primary">
+              ➕ 新增支出
+            </button>
+            <button class="btn btn-gold">
+              📊 月度对账
+            </button>
+            <button class="btn btn-secondary">
+              📥 导出Excel
+            </button>
+            <button class="btn btn-gold" style="background:linear-gradient(135deg,#b8860b,#8b6914);color:#fff;border-color:#8b6914;">
+              ✓ 批量核销
+            </button>
+            <button class="btn btn-danger">
+              🗑 批量删除
+            </button>
+            <button class="btn btn-outline-dark" id="finPrintBtn">
+              🖨️ 打印
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);" data-paginate="list" data-page-size="12">
+          <div class="finance-stat-card income">
+            <div class="fsc-header">
+              <div class="fsc-icon">📈</div>
+              <span class="fsc-trend">● 实时</span>
+            </div>
+            <div class="fsc-title">{year}年度总收入</div>
+            <div class="fsc-value">—</div>
+            <div class="fsc-sub">本年台账实时累计</div>
+          </div>
+          <div class="finance-stat-card expense">
+            <div class="fsc-header">
+              <div class="fsc-icon">📉</div>
+              <span class="fsc-trend">● 实时</span>
+            </div>
+            <div class="fsc-title">{year}年度总支出</div>
+            <div class="fsc-value">—</div>
+            <div class="fsc-sub">本年台账实时累计</div>
+          </div>
+          <div class="finance-stat-card month-income">
+            <div class="fsc-header">
+              <div class="fsc-icon">💵</div>
+              <span class="fsc-trend">● 实时</span>
+            </div>
+            <div class="fsc-title">当月营收</div>
+            <div class="fsc-value">—</div>
+            <div class="fsc-sub">当月收入实时统计</div>
+          </div>
+          <div class="finance-stat-card month-expense">
+            <div class="fsc-header">
+              <div class="fsc-icon">💸</div>
+              <span class="fsc-trend">● 实时</span>
+            </div>
+            <div class="fsc-title">当月支出</div>
+            <div class="fsc-value">—</div>
+            <div class="fsc-sub">当月支出实时统计</div>
+          </div>
+          <div class="finance-stat-card profit">
+            <div class="fsc-header">
+              <div class="fsc-icon">🎯</div>
+              <span class="fsc-trend">● 实时</span>
+            </div>
+            <div class="fsc-title">当月净利润</div>
+            <div class="fsc-value">—</div>
+            <div class="fsc-sub">当月收入-支出实时计算</div>
+          </div>
+          <div class="finance-stat-card pending">
+            <div class="fsc-header">
+              <div class="fsc-icon">⏳</div>
+              <span class="fsc-trend">● 实时</span>
+            </div>
+            <div class="fsc-title">待收账款</div>
+            <div class="fsc-value">—</div>
+            <div class="fsc-sub">按订单未付金额实时统计</div>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab-item active" data-tab="流水">
+            💳 收支流水
+          </div>
+          <div class="tab-item" data-tab="项目">
+            🎬 演出项目账目
+          </div>
+          <div class="tab-item" data-tab="统计">
+            📊 月度年度统计
+          </div>
+        </div>
+
+        <div class="tab-content active" id="tab-流水">
+          <!-- 批次9修复：财务凭证上传 -->
+          <div class="admin-card" style="margin:0 0 22px 0;border:2px solid #16a34a;background:linear-gradient(135deg,#f0fdf4,#dcfce7);box-shadow:none;" data-upload-wrap="1">
+            <div class="admin-card-header" style="padding-top:16px;">
+              <h3 style="color:#14532d;">💰 财务凭证票据上传（前端校验+预览层）</h3>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <span class="badge" style="font-size:0.78rem;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;">增值税发票·收据·银行回单·报销单据</span>
+                <button class="btn btn-sm" type="button" id="openFinanceUploadBtn" style="padding:6px 14px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;">📤 选择凭证</button>
+              </div>
+            </div>
+            <div class="admin-card-body" style="padding-top:6px;">
+              <form id="financeAttachForm" autocomplete="off" novalidate>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+                  <div>
+                    <label style="display:block;font-weight:700;color:#14532d;margin-bottom:6px;">凭证收支类型</label>
+                    <select name="financeType" style="width:100%;padding:10px 14px;border:1.5px solid #16a34a;border-radius:10px;background:#fff;">
+                      <option value="income_invoice">🟢 收入发票（商演·惠民·拨款）</option>
+                      <option value="expense_invoice">🔴 支出发票（采购·差旅·人员）</option>
+                      <option value="receipt">🧾 收款/付款收据</option>
+                      <option value="bank_slip">💳 银行回单/转账凭证</option>
+                      <option value="reimburse">📋 报销单据（差旅·餐饮·交通）</option>
+                      <option value="contract">📑 合同结算单/决算表</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display:block;font-weight:700;color:#14532d;margin-bottom:6px;">关联账目（凭证号/订单号）</label>
+                    <select name="financeRef" style="width:100%;padding:10px 14px;border:1.5px solid #16a34a;border-radius:10px;background:#fff;">
+                      <option value="">选择关联账目（可不选）</option>
+                      <option>FIN-{year}-J-00728 · 7月商演收入</option>
+                      <option>FIN-{year}-Z-00612 · 6月人员工资</option>
+                      <option>FIN-{year}-J-00518 · Q2惠民政府拨款</option>
+                      <option>关联订单: APPT-{year}-000143</option>
+                      <option>关联合同: HT-{year}-GL-021文旅</option>
+                    </select>
+                  </div>
+                  <div style="grid-column:1 / -1;">
+                    <label style="display:block;font-weight:700;color:#14532d;margin-bottom:6px;">凭证票据文件 *（≤10MB/个，支持JPG/PNG/PDF/Excel）</label>
+                    <input type="file" name="financeFiles" id="financeAttachFiles" accept="image/*,.pdf,.xls,.xlsx" multiple required style="width:100%;padding:10px;border:2px dashed #16a34a;border-radius:12px;background:#fff;cursor:pointer;">
+                  </div>
+                </div>
+                <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+                  <button type="submit" class="btn" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;">✅ 提交凭证</button>
+                  <button type="reset" class="btn btn-outline">🔄 清空</button>
+                  <small style="color:#166534;">💡 图片自动预览，多张连续发票可打包上传；正式发布对接财务系统接口。</small>
+                </div>
+                <!-- P1修复:新增上传结果真实回显区（/v1/upload 返回的 url 展示） -->
+                <div id="__finUploadResult" style="display:none;margin-top:10px;padding:10px 12px;border-radius:8px;background:#fff;border:1px dashed #16a34a;color:#14532d;font-size:0.8rem;word-break:break-all;"></div>
+              </form>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group">
+                  <label>开始日期</label>
+                  <input type="date" class="form-control" value="{year}-01-01" />
+                </div>
+                <div class="form-group">
+                  <label>结束日期</label>
+                  <input type="date" class="form-control" value="{year}-12-31" />
+                </div>
+                <div class="form-group">
+                  <label>收支类型</label>
+                  <select class="form-control">
+                    <option>全部类型</option>
+                    <option>收入</option>
+                    <option>支出</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>账目分类</label>
+                  <select class="form-control" id="finFilterCat">
+                    <option>全部分类</option>
+                    <option>商演收入</option>
+                    <option>惠民补贴</option>
+                    <option>政府拨款</option>
+                    <option>赞助捐赠</option>
+                    <option>人员工资</option>
+                    <option>道具采购</option>
+                    <option>差旅交通</option>
+                    <option>餐饮住宿</option>
+                    <option>场地租赁</option>
+                    <option>杂费</option>
+                  </select>
+                </div>
+                <div class="form-group" style="min-width:220px;">
+                  <label>关键词搜索</label>
+                  <input type="text" class="form-control" id="finFilterKw" placeholder="凭证号/摘要/经手人/关联订单" />
+                </div>
+                <div class="form-group">
+                  <button class="btn btn-primary btn-sm" id="finFilterBtn">🔍 查询</button>
+                  <button class="btn btn-secondary btn-sm" id="finFilterReset" style="margin-left:8px;">↺ 重置</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:46px;text-align:center;"><input type="checkbox" onclick="var c=this.checked,tb=this.closest('table');if(tb){tb.querySelectorAll('tbody tr').forEach(function(r){var cb=r.querySelector('td:first-child input[type=checkbox]');if(cb)cb.checked=c;})}" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary,#0F4C81);" /></th>
+                      <th>凭证号</th>
+                      <th>日期</th>
+                      <th>摘要</th>
+                      <th>收支类型</th>
+                      <th>分类</th>
+                      <th>关联订单</th>
+                      <th>金额</th>
+                      <th>支付方式</th>
+                      <th>状态</th>
+                      <th>经手人</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="finLedgerTbody" data-paginate="list" data-paginate-keep="1" data-page-size="10">
+                    <tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text-light);">正在加载真实年度汇总…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="pagination">
+                <button class="page-btn" disabled>« 上一页</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">4</button>
+                <span class="page-info">共 68 条 / 4 页</span>
+                <button class="page-btn">下一页 »</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-项目">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3>🎬 演出项目账目明细</h3>
+              <span class="badge badge-gold" id="finProjCount">项目加载中…</span>
+            </div>
+            <div class="admin-card-body">
+
+              <div id="finProjectBox" style="padding:40px 10px;text-align:center;color:var(--text-light);">正在加载真实项目账目…</div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-统计">
+          <div class="admin-card" style="margin-bottom:25px;">
+            <div class="admin-card-header">
+              <h3>📊 {year}年度收入支出对比（月度）</h3>
+              <span class="badge badge-info" id="finChartBadge">本年真实台账</span>
+            </div>
+            <div class="admin-card-body">
+              <div class="yearly-chart-container">
+                <div class="yearly-chart-title">{year}年度 1-12月 收入 vs 支出 对比分析图</div>
+                <div class="yearly-chart">
+                  <div id="finMonthChart" style="display:flex;gap:12px;align-items:flex-end;height:260px;padding:10px 4px 0;">正在加载真实月度数据…</div>
+                </div>
+                <div class="chart-legend">
+                  <div class="chart-legend-item"><div class="chart-legend-dot income"></div><span>演出收入（含补贴）</span></div>
+                  <div class="chart-legend-item"><div class="chart-legend-dot expense"></div><span>运营支出</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3>📋 {year}年度财务汇总表</h3>
+            </div>
+            <div class="admin-card-body" style="padding:0;">
+              <div class="table-wrapper" style="border:none;box-shadow:none;border-radius:0;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>月份</th>
+                      <th>演出场次</th>
+                      <th>总收入</th>
+                      <th>总支出</th>
+                      <th>人员成本</th>
+                      <th>道具设备</th>
+                      <th>差旅杂费</th>
+                      <th>净利润</th>
+                      <th>利润率</th>
+                      <th>备注</th>
+                    </tr>
+                  </thead>
+                  <tbody id="finSummaryTbody" data-paginate="list" data-paginate-keep="1" data-page-size="10">
+                    <tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text-light);">正在加载真实年度汇总…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center;padding:30px 0 10px;color:#999;font-size:0.82rem;">
+          © {year} 秦安县秦剧团文化演出有限公司云端预约管理系统 · 财务数据加密存储 · 戏曲文化传承者
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../js/year-lite.js?v=20260803"></script>
+    <script src="../js/api-config.js?v=20261010a"></script>
+    <script src="../js/admin-pages/finance.pre-2.js?v=20261005a"></script>
+  <script src="../js/api-request.js?v=20261008b"></script>
+<script src="../js/app.js?v=20261015a"></script>
+  <script src="../js/tooltip.js?v=20261010a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
+  <script src="/js/xlsx-js-style.min.js?v=20260925"></script>
+  <script src="../js/admin-pages/finance.js?v=20261007d"></script>
+  
+<!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
+
+
+
+<!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
+
+
+
+
+
+
+
+</body>
+</html>

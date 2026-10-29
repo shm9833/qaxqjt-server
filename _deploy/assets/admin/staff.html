@@ -16,7 +16,7 @@
     <meta name="format-detection" content="telephone=no,email=no,address=no">
     <meta name="applicable-device" content="pc,mobile">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:site_name" content="秦安县秦剧团文化演出有限公司云端预约系统">
     <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
     <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
     <meta property="og:image" content="favicon.svg">
@@ -25,7 +25,7 @@
     <script src="../js/favicon-inject.js?v=20260803" defer></script>
     <script src="../js/wechat-fallback.js?v=20260803" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>演职人员人事管理 - 秦安县秦剧团云端预约管理系统 {year}</title>
+  <title>演职人员人事管理 - 秦安县秦剧团文化演出有限公司云端预约管理系统 {year}</title>
   <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     /* ============================================================
@@ -53,7 +53,7 @@
     .table-wrapper > table { table-layout: auto !important; }
     .table-wrapper > table td,
     .table-wrapper > table th { word-break: normal !important; }
-    .table-wrapper > table.roster-table { table-layout: fixed !important; min-width: 1080px !important; }
+    .table-wrapper > table.roster-table { table-layout: fixed !important; min-width: 1240px !important; }
     .roster-table th:nth-child(1){width:42px}
     .roster-table th:nth-child(2){width:108px}  /* 工号加宽：容纳 PF018/ACC-2026-018 等 10+ 字符 */
     .roster-table th:nth-child(3){width:80px}
@@ -61,11 +61,12 @@
     .roster-table th:nth-child(5){width:48px}
     .roster-table th:nth-child(6){width:80px}
     .roster-table th:nth-child(7){width:88px}   /* 行当略加宽：容纳"靠须生""二架男"等 */
-    .roster-table th:nth-child(8){width:60px}
-    .roster-table th:nth-child(9){width:114px}
-    .roster-table th:nth-child(11){width:88px}
+    .roster-table th:nth-child(8){width:84px}    /* 入职年份加宽 */
+    .roster-table th:nth-child(9){width:120px}
+    .roster-table th:nth-child(10){width:150px}  /* 擅长剧目：补定义宽度（原未定义被挤至约42px） */
+    .roster-table th:nth-child(11){width:104px}
     .roster-table th:nth-child(12){width:60px}
-    .roster-table th:nth-child(13){width:184px}  /* 操作列缩窄：5 个图标按钮 ~184px 足够 */
+    .roster-table th:nth-child(13){width:222px}  /* 操作列：6 个图标按钮（含删除） */
     table.roster-table td { overflow: hidden; text-overflow: ellipsis; }
     table.roster-table td:nth-child(2),
     table.roster-table td:nth-child(3),
@@ -75,6 +76,16 @@
     table.roster-table td .dept-tag,
     table.roster-table td .role-tag,
     table.roster-table td .status-badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+
+    /* ========== 演职人员列表：全部文字水平+垂直居中（2026-10-10） ==========
+       覆盖 style.css thead th{text-align:left} 与浏览器默认（td 默认 middle，
+       th 默认 center 但全局被改左）；fixed 布局 + min-width:1080px + 容器横向
+       滚动保证任意屏幕尺寸下列宽一致，居中效果在各端一致。!important 压过
+       style.css 与 app.js 注入的 H9 补丁。 */
+    table.roster-table th,
+    table.roster-table td { text-align: center !important; vertical-align: middle !important; }
+    /* 操作列按钮组同样整体居中 */
+    table.roster-table td .admin-table-actions { justify-content: center !important; }
 
     .admin-sidebar-overlay {
       display: none;
@@ -194,6 +205,7 @@
     }
     .status-badge.on { background: rgba(40,167,69,0.12); color: #28a745; }
     .status-badge.off { background: rgba(108,117,125,0.12); color: #6c757d; }
+    .status-badge.disabled { background: rgba(220,53,69,0.14); color: #b02a37; border: 1px dashed rgba(220,53,69,0.45); }
     .status-badge.leave { background: rgba(255,193,7,0.18); color: #e6a800; }
     .status-badge.resigned { background: rgba(220,53,69,0.12); color: #dc3545; }
     .status-badge.late { background: rgba(255,152,0,0.15); color: #ff9800; }
@@ -415,6 +427,16 @@
   gap: 8px !important;
 }
 
+/* 月工资预估合计：金额更新动画 */
+@keyframes stfTotalFlash {
+  0%   { color: #52c41a; transform: scale(1); }
+  50%  { color: #faad14; transform: scale(1.08); }
+  100% { color: #52c41a; transform: scale(1); }
+}
+#stfSalaryTotalVal.updating {
+  animation: stfTotalFlash 0.3s ease;
+}
+
 </style>
 </head>
 <body>
@@ -461,7 +483,7 @@
     <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
   </g>
 </svg></div>
-        <div class="logo-text">秦安县秦剧团<br/>文化演出管理系统</div>
+        <div class="logo-text">秦安县秦剧团文化演出有限公司<br/>文化演出管理系统</div>
       </div>
 
       <nav class="admin-sidebar-menu">
@@ -655,6 +677,9 @@
             <button class="btn btn-secondary" id="btnStaffOnboardQr" data-stf-real="1" onclick="window.__showOnboardQr && window.__showOnboardQr()">
               📱 入职二维码
             </button>
+            <button class="btn btn-danger" id="btnStaffCleanupDisabled" data-stf-real="1" style="background:linear-gradient(135deg,#8b0000,#b02a37);" title="批量删除全部「已禁用」状态的演职人员（软删除+审计日志，仅超级管理员）">
+              🧹 清理已禁用
+            </button>
           </div>
         </div>
 
@@ -806,10 +831,11 @@
                     <optgroup label="丑行"><option>丑角</option></optgroup>
                     <optgroup label="净行"><option>大花脸</option><option>二花脸</option></optgroup>
                     <optgroup label="旦行"><option>正旦</option><option>小旦</option><option>彩旦</option><option>二架旦</option></optgroup>
-                    <optgroup label="二架"><option>门官</option><option>家院</option></optgroup>
+                    <optgroup label="二架"><option>门官</option><option>家院</option><option>其他二架</option></optgroup>
                     <optgroup label="角子"><option>龙套</option><option>校尉</option><option>刀斧手</option><option>丫鬟</option><option>彩女</option><option>长随官</option></optgroup>
                     <optgroup label="后勤"><option>帽箱</option><option>电工</option><option>前场</option><option>衣箱</option><option>剧务</option></optgroup>
                     <optgroup label="乐队"><option>武场</option><option>文场</option></optgroup>
+                    <optgroup label="文乐队"><option>电子琴</option></optgroup>
                   </select>
                 </div>
                 <div class="form-group">
@@ -818,6 +844,7 @@
                     <option value="">全部状态</option>
                     <option value="active">在岗</option>
                     <option value="inactive">停用</option>
+                    <option value="disabled">已禁用</option>
                   </select>
                 </div>
                 <div class="search-box">
@@ -1194,6 +1221,9 @@
                 <button class="wage-sub-tab active" data-wtab="rules" style="padding:12px 24px;cursor:pointer;background:transparent;border:none;border-bottom:3px solid transparent;font-size:0.9rem;font-weight:600;color:var(--text-light);transition:all 0.3s;">
                   📋 默认日工资规则
                 </button>
+                <button class="wage-sub-tab" data-wtab="monthly" style="padding:12px 24px;cursor:pointer;background:transparent;border:none;border-bottom:3px solid transparent;font-size:0.9rem;font-weight:600;color:var(--text-light);transition:all 0.3s;">
+                  💰 月工资规则
+                </button>
                 <button class="wage-sub-tab" data-wtab="generate" style="padding:12px 24px;cursor:pointer;background:transparent;border:none;border-bottom:3px solid transparent;font-size:0.9rem;font-weight:600;color:var(--text-light);transition:all 0.3s;">
                   ⚙️ 当月工资生成
                 </button>
@@ -1206,6 +1236,8 @@
                 <button class="wage-sub-tab" data-wtab="archive" style="padding:12px 24px;cursor:pointer;background:transparent;border:none;border-bottom:3px solid transparent;font-size:0.9rem;font-weight:600;color:var(--text-light);transition:all 0.3s;">
                   🗂 商议单存档
                 </button>
+                <button class="btn btn-primary btn-sm" id="btnTravelEntry" type="button" style="margin-left:auto;align-self:center;position:relative;">🚌 路费登记<span id="trvPendingBadge" style="display:none;position:absolute;top:-8px;right:-8px;background:#dc2626;color:#fff;font-size:0.68rem;min-width:18px;height:18px;line-height:18px;border-radius:9px;text-align:center;padding:0 4px;font-weight:700;">0</span></button>
+                <button class="btn btn-sm" id="btnLoanApprove" type="button" style="align-self:center;background:#f59e0b;color:#fff;border-color:#f59e0b;margin-left:6px;">🏦 借款审批</button>
               </div>
               <style>
                 .wage-sub-tab.active { color:var(--primary) !important; border-bottom-color:var(--primary) !important; }
@@ -1284,7 +1316,7 @@
                   <div>
                     <h3 style="margin:0 0 6px 0;font-size:1.15rem;color:var(--primary-dark);display:flex;align-items:center;gap:8px;">
                       📋 默认日工资规则矩阵（行当 × 职级）
-                      <span class="badge badge-gold" id="wageRuleVersionBadge">v20260730 · 默认</span>
+                      <span class="badge badge-gold" id="wageRuleVersionBadge">v20260730 · 标准生效 2026-07-30</span>
                     </h3>
                     <p style="margin:0;font-size:0.85rem;color:var(--text-light);">单位：<strong>元/天</strong>。所有金额后台以<strong>分精度整数</strong>存储，避免浮点误差。修改后点击「保存规则」即时生效。</p>
                   </div>
@@ -1337,8 +1369,11 @@
                       </table>
                     </div>
                   </div>
+                </div>
+
+                <div class="admin-card" style="padding:18px;margin-top:22px;">
                   <!-- 扣款/补助速调 -->
-                  <div class="admin-card" style="padding:18px;margin:0;">
+                  <div>
                     <h4 style="margin:0 0 14px 0;color:#dc3545;display:flex;align-items:center;gap:8px;">⚙️ 演出补助·扣款·速调参数</h4>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                       <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">本戏补助（元/场）</small><input type="number" id="wPaBenxi" class="wage-global-input" data-wkey="performanceAllowance.benxi" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
@@ -1354,15 +1389,31 @@
                       <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">迟到≥30分钟扣款（当日工资%，按旷工半天）</small><input type="text" id="wLate2" class="wage-global-input" data-wkey="deductions.lateOver30min" placeholder="如 50%" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
                       <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">旷工罚款（元/天）</small><input type="number" id="wAbsent" class="wage-global-input" data-wkey="deductions.absentFine" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
                       <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">旷工全天扣款比例</small><input type="text" id="wAbsentFull" class="wage-global-input" data-wkey="deductions.absentFullDay" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">社保个人缴纳比例（%）</small><input type="number" id="wSocial" class="wage-global-input" data-wkey="socialInsuranceRate" step="0.1" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
+                      <label style="display:flex;flex-direction:column;gap:4px;"><small style="font-size:0.8rem;color:var(--text-light);">公积金缴纳比例（%）</small><input type="number" id="wFund" class="wage-global-input" data-wkey="housingFundRate" step="0.1" style="padding:8px 10px;border:1.5px solid var(--border-light);border-radius:8px;"></label>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <!-- ===== 子Tab 1b：月工资规则（灵活薪资配置） ===== -->
+              <div class="wage-sub-panel" id="wtab-monthly">
+                <div class="admin-card" style="padding:0;margin-top:0;overflow:hidden;">
+                  <div style="padding:14px 18px;border-bottom:1px solid var(--border-light);background:#fafbfd;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                    <div>
+                      <h4 style="margin:0;font-size:1.05rem;color:var(--primary-dark);display:flex;align-items:center;gap:8px;">💰 月工资规则 · 灵活薪资配置</h4>
+                      <div style="font-size:.78rem;color:var(--text-light);margin-top:3px;">支持日/月工资双模式切换与独立缓存；编辑完成后点击右侧「同步到日工资规则表单」即可与「📋 默认日工资规则」页的保存按钮打通。</div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" id="syncSalaryWidgetBtn" type="button">⬆ 同步到日工资规则表单</button>
+                  </div>
+                  <iframe src="../components/salary-config-widget.html?v=20261016" id="salaryConfigFrame" style="width:100%;border:none;display:block;" onload="this.style.height=(this.contentDocument.body.scrollHeight+20)+'px'"></iframe>
                 </div>
               </div>
 
               <!-- ===== 子Tab 2：当月工资生成 ===== -->
               <div class="wage-sub-panel" id="wtab-generate">
                 <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:22px;">
-                  <div class="wage-stat-card"><div class="label">📅 当前选择月份</div><div class="value" id="wageGenMonthLabel" style="font-size:1.2rem;">—</div><div class="sub" id="wageGenExistHint">尚未生成</div></div>
+                  <div class="wage-stat-card"><div class="label">📅 归属月份（自动）</div><div class="value" id="wageGenMonthLabel" style="font-size:1.2rem;">—</div><div class="sub" id="wageGenExistHint">尚未生成</div></div>
                   <div class="wage-stat-card"><div class="label">👥 在职人数</div><div class="value" id="wageGenStaffCount">0</div><div class="sub">人员花名册总数</div></div>
                   <div class="wage-stat-card"><div class="label">💰 预计总应发</div><div class="value" id="wageGenGrossEst">¥0</div><div class="sub">按基准估算（未含实际考勤）</div></div>
                   <div class="wage-stat-card"><div class="label">💳 预计总实发</div><div class="value" id="wageGenNetEst">¥0</div><div class="sub">含社保/公积金估算</div></div>
@@ -1370,16 +1421,18 @@
 
                 <div class="admin-card" style="padding:22px;margin-bottom:22px;">
                   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;align-items:end;">
-                    <label style="display:flex;flex-direction:column;gap:6px;"><strong style="font-size:0.88rem;color:var(--primary-dark);">📅 结算月份 *</strong><input type="month" id="wageGenMonth" style="padding:10px 14px;border:2px solid var(--gold);border-radius:10px;background:var(--cream);font-family:inherit;font-size:0.95rem;font-weight:600;color:var(--primary-dark);" /></label>
+                    <label style="display:flex;flex-direction:column;gap:6px;"><strong style="font-size:0.88rem;color:var(--primary-dark);">📅 结算开始日期 *</strong><input type="date" id="wageGenStartDate" style="padding:10px 14px;border:2px solid var(--gold);border-radius:10px;background:var(--cream);font-family:inherit;font-size:0.95rem;font-weight:600;color:var(--primary-dark);" /></label>
+                    <label style="display:flex;flex-direction:column;gap:6px;"><strong style="font-size:0.88rem;color:var(--primary-dark);">📅 结算结束日期 *</strong><input type="date" id="wageGenEndDate" style="padding:10px 14px;border:2px solid var(--gold);border-radius:10px;background:var(--cream);font-family:inherit;font-size:0.95rem;font-weight:600;color:var(--primary-dark);" /></label>
                     <label style="display:flex;flex-direction:column;gap:6px;"><strong style="font-size:0.88rem;color:var(--primary-dark);">🧾 结算说明</strong><input type="text" id="wageGenRemark" placeholder="如：7月正常工资+下乡演出补助" style="padding:10px 14px;border:1.5px solid var(--border-light);border-radius:10px;background:#fff;font-family:inherit;" /></label>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;">
                       <button class="btn btn-primary" id="wageGenPreviewBtn" style="flex:1;min-width:120px;">🔍 预览核算</button>
-                      <button class="btn btn-gold" id="wageGenRunBtn" style="flex:1;min-width:120px;">⚙️ 生成当月工资条</button>
-                      <button class="btn btn-outline-dark btn-sm" id="wageGenDelMonthBtn" title="删除该月已生成工资条">🗑️ 清除该月</button>
+                      <button class="btn btn-gold" id="wageGenRunBtn" style="flex:1;min-width:120px;">⚙️ 生成工资条</button>
+                      <button class="btn btn-outline-dark btn-sm" id="wageGenDelMonthBtn" title="删除归属月已生成工资条">🗑️ 清除该月</button>
                     </div>
                   </div>
+                  <div id="wageGenPeriodHint" style="display:none;margin-top:14px;padding:12px 16px;border-radius:10px;font-size:0.82rem;line-height:1.7;"></div>
                   <div style="margin-top:14px;padding:12px 16px;background:rgba(24,105,173,0.05);border:1px solid rgba(24,105,173,0.15);border-radius:10px;font-size:0.82rem;color:#1e6fb5;line-height:1.7;">
-                    💡 <strong>说明：</strong>工资条严格依据「考勤管理」中的真实考勤流水与演出记录核算。当月尚无考勤记录时无法生成，请先完成打卡/考勤录入后再操作。
+                    💡 <strong>说明：</strong>按「开始~结束日期」区间结算，考勤/路费/扣款只统计区间内数据，可跨月（如 9-28~10-5 巡演），归属月份=开始日期所在月。已确认/已发放的结算区间不可重复核算，再次核算同一区间将覆盖未确认草稿。当区间内尚无考勤记录时无法生成，请先完成打卡/考勤录入后再操作。
                   </div>
                 </div>
 
@@ -1467,7 +1520,7 @@
                 <div class="admin-card" style="padding:18px 22px;margin-bottom:18px;">
                   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
                     <div>
-                      <h3 style="margin:0 0 4px;font-size:1.08rem;color:var(--primary-dark);">📝 秦安县秦剧团 · 天工资商议单</h3>
+                      <h3 style="margin:0 0 4px;font-size:1.08rem;color:var(--primary-dark);">📝 秦安县秦剧团文化演出有限公司 · 天工资商议单</h3>
                       <div style="font-size:.82rem;color:var(--text-light);">抬头、A–E 等级工资、补贴、条款、甲乙方与签署信息全部可自定义；保存后全后台同步，可直接 A4 打印用于现场商议签订。</div>
                     </div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -1515,6 +1568,7 @@
                     <option value="pending">待审批</option>
                     <option value="approved">已批准</option>
                     <option value="rejected">已驳回</option>
+                    <option value="cancelled">已撤回</option>
                   </select>
                 </div>
                 <div class="form-group">
@@ -1543,7 +1597,7 @@
         </div>
 
         <div style="text-align:center;padding:30px 0 10px;color:#999;font-size:0.82rem;">
-          © {year} 秦安县秦剧团云端预约管理系统 · 版本 v2.0.0 · 戏曲文化传承者
+          © {year} 秦安县秦剧团文化演出有限公司云端预约管理系统 · 版本 v2.0.0 · 戏曲文化传承者
         </div>
       </section>
     </main>
@@ -1565,16 +1619,17 @@
   </div>
 
   <script src="../js/year-lite.js?v=20260803"></script>
-    <script src="../js/api-config.js?v=20260803"></script>
+    <script src="../js/api-config.js?v=20261010a"></script>
     <script src="../js/admin-pages/staff.pre-2.js?v=20261005a"></script>
   <script src="../js/api-request.js?v=20261008b"></script>
   <script src="../js/qrcode.min.js?v=20260923"></script>
   <script src="/js/xlsx-js-style.min.js?v=20260925"></script>
-<script src="../js/app.js?v=20261009a"></script>
+<script src="../js/app.js?v=20261017c"></script>
+  <script src="../js/tooltip.js?v=20261010a"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
 <script src="../js/admin-wage-negotiate.js?v=20260930a"></script>
   <script src="../js/pagination.js?v=20261002a"></script>
-  <script src="../js/admin-pages/staff.pre-3.js?v=20261005b"></script>
+  <script src="../js/admin-pages/staff.pre-3.js?v=20261024d"></script>
   
 
   <!-- V2 考勤与奖罚 UI 控制器 -->
@@ -1610,19 +1665,69 @@
         <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">队别</label><select id="inp_stf_dept" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option>演员队</option><option>乐队</option><option>舞美队</option><option>服装道具</option><option>行政</option></select></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">行当/职务</label><select id="inp_stf_role" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option value="">— 请选择 —</option><optgroup label="生行"><option>文须生</option><option>武须生</option><option>小生</option></optgroup><optgroup label="丑行"><option>丑角</option></optgroup><optgroup label="净行"><option>大花脸</option><option>二花脸</option></optgroup><optgroup label="旦行"><option>正旦</option><option>小旦</option><option>彩旦</option><option>二架旦</option></optgroup><optgroup label="二架"><option>门官</option><option>家院</option></optgroup><optgroup label="角子"><option>龙套</option><option>校尉</option><option>刀斧手</option><option>丫鬟</option><option>彩女</option><option>长随官</option></optgroup><optgroup label="后勤"><option>帽箱</option><option>电工</option><option>前场</option><option>衣箱</option><option>剧务</option></optgroup><optgroup label="武场（打击乐）"><option>司鼓</option><option>梆子</option><option>大锣</option><option>铙钹</option><option>武二手</option><option>打击乐</option></optgroup><optgroup label="文场（管弦）"><option>板胡</option><option>二胡</option><option>扬琴</option><option>琵琶</option><option>三弦</option><option>笛子</option><option>唢呐</option><option>文二手</option></optgroup><option value="其他">其他</option></select></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">行当/职务 *</label><select id="inp_stf_role" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option value="">— 请选择 —</option><optgroup label="生行"><option>文须生</option><option>武须生</option><option>小生</option></optgroup><optgroup label="丑行"><option>丑角</option></optgroup><optgroup label="净行"><option>大花脸</option><option>二花脸</option></optgroup><optgroup label="旦行"><option>正旦</option><option>小旦</option><option>彩旦</option><option>二架旦</option></optgroup><optgroup label="二架"><option>门官</option><option>家院</option><option>其他二架</option></optgroup><optgroup label="角子"><option>龙套</option><option>校尉</option><option>刀斧手</option><option>丫鬟</option><option>彩女</option><option>长随官</option></optgroup><optgroup label="后勤"><option>帽箱</option><option>电工</option><option>前场</option><option>衣箱</option><option>剧务</option></optgroup><optgroup label="武场（打击乐）"><option>司鼓</option><option>梆子</option><option>大锣</option><option>铙钹</option><option>武二手</option><option>打击乐</option></optgroup><optgroup label="文场（管弦）"><option>板胡</option><option>二胡</option><option>扬琴</option><option>琵琶</option><option>三弦</option><option>笛子</option><option>唢呐</option><option>文二手</option></optgroup><optgroup label="文乐队"><option>电子琴</option></optgroup><option value="其他">其他</option></select></div>
         <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">入团年份</label><input id="inp_stf_year" type="number" min="1950" max="2100" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">联系电话</label><input id="inp_stf_phone" type="text" placeholder="138xxxxxxx" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
-        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">身份证号</label><input id="inp_stf_idcard" type="text" maxlength="18" placeholder="18位身份证号" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">联系电话 *</label><input id="inp_stf_phone" type="text" placeholder="138xxxxxxx" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">身份证号 *</label><input id="inp_stf_idcard" type="text" maxlength="18" placeholder="18位身份证号" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">职级（工资标准档）</label><select id="inp_stf_rank" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option value="">未定级</option><option value="A+">A+（领衔/主演）</option><option value="A">A（主要演员）</option><option value="B">B（一般演员）</option><option value="C">C（学员/辅助）</option></select></div>
-        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">协议天工资（元/天）</label><input id="inp_stf_rate" type="number" min="0" step="1" placeholder="如：200" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><small style="display:block;margin-top:3px;font-size:11px;color:#8a6d3b;">优先于职级标准参与工资核算</small></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">协议天工资（元/天） *</label><input id="inp_stf_rate" type="number" min="0" step="0.01" placeholder="如：200.50" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><small style="display:block;margin-top:3px;font-size:11px;color:#8a6d3b;">优先于职级标准参与工资核算（支持两位小数）</small></div>
       </div>
+      <!-- 月工资预估合计字段（自动计算，只读） -->
+      <div id="stfSalaryTotalBar" style="margin:8px 0 14px;padding:14px 18px;border-top:1px dashed #d9d9d9;background:#f6ffed;border-radius:0 0 8px 8px;display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:13px;color:#333;font-weight:500;">月工资预估合计（按 22 天/月）：</span>
+        <span id="stfSalaryTotalVal" style="font-size:20px;color:#52c41a;font-weight:700;font-family:'DIN Alternate','Roboto Mono',monospace;letter-spacing:0.5px;min-width:110px;text-align:right;">¥ 0.00</span>
+        <span style="font-size:11px;color:#8c8c8c;">（自动计算，不可编辑）</span>
+      </div>
+      <script>
+      /* 月工资预估合计：协议天工资 × 22 天，实时计算；输入校验：仅数字 + 两位小数 */
+      (function(){
+        var rateEl = document.getElementById('inp_stf_rate');
+        var totalEl = document.getElementById('stfSalaryTotalVal');
+        if (!rateEl || !totalEl) return;
+
+        /* 输入时实时过滤：只允许数字和一个小数点，小数最多两位 */
+        function sanitizeInput(el){
+          var v = el.value;
+          /* 移除非数字和非小数点字符 */
+          v = v.replace(/[^\d.]/g, '');
+          /* 只保留第一个小数点 */
+          var parts = v.split('.');
+          if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
+          /* 小数部分最多两位 */
+          var idx = v.indexOf('.');
+          if (idx >= 0 && v.length - idx - 1 > 2) v = v.substring(0, idx + 3);
+          /* 整数部分最多 6 位 */
+          var intPart = idx >= 0 ? v.substring(0, idx) : v;
+          if (intPart.length > 6) v = intPart.substring(0, 6) + (idx >= 0 ? v.substring(idx) : '');
+          if (el.value !== v) el.value = v;
+        }
+
+        /* 失焦时格式化为两位小数 */
+        function formatOnBlur(el){
+          var n = parseFloat(el.value);
+          if (isNaN(n) || n < 0) { el.value = ''; return; }
+          el.value = n.toFixed(2);
+        }
+
+        function calc(){
+          var v = parseFloat(rateEl.value) || 0;
+          var total = Math.round(v * 22 * 100) / 100;
+          totalEl.textContent = '¥ ' + total.toFixed(2);
+          totalEl.classList.add('updating');
+          setTimeout(function(){ totalEl.classList.remove('updating'); }, 300);
+        }
+
+        rateEl.addEventListener('input', function(){ sanitizeInput(rateEl); calc(); });
+        rateEl.addEventListener('blur', function(){ formatOnBlur(rateEl); calc(); });
+        calc();
+      })();
+      </script>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">路费方式</label><select id="inp_stf_transport" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option value="">未约定</option><option value="单趟">单趟</option><option value="双趟">双趟</option></select></div>
+        <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">路费方式 *</label><select id="inp_stf_transport" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"><option value="">未约定</option><option value="单趟">单趟</option><option value="双趟">双趟</option></select></div>
         <div style="margin-bottom:14px;"><label style="display:block;margin-bottom:6px;font-weight:500;">代表剧目</label><input id="inp_stf_rep" type="text" placeholder="如：《三滴血》《铡美案》" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;"></div>
       </div>
     </div>
@@ -1633,16 +1738,49 @@
   </div>
 </div>
 
-<script src="../js/admin-pages/staff.js?v=20261005a"></script>
+<script src="../js/admin-pages/staff.js?v=20261017f"></script>
 
-
-
-
+<script>
+/* ===== 灵活薪资配置组件同步脚本 ===== */
+(function () {
+  var btn = document.getElementById('syncSalaryWidgetBtn');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    var frame = document.getElementById('salaryConfigFrame');
+    if (!frame || !frame.contentWindow || !frame.contentWindow.SalaryConfigWidget) {
+      if (typeof showToast === 'function') showToast('组件尚未加载完成，请稍后重试', 'error');
+      else alert('组件尚未加载完成，请稍后重试');
+      return;
+    }
+    var errs = frame.contentWindow.SalaryConfigWidget.validate();
+    if (errs.length) {
+      if (typeof showToast === 'function') showToast('❌ ' + errs[0] + '，请修正后同步', 'error');
+      else alert('❌ ' + errs[0] + '，请修正后同步');
+      return;
+    }
+    var cfg = frame.contentWindow.SalaryConfigWidget.getValue();
+    var map = {
+      'wPaBenxi': cfg.extras.benxi,
+      'wPaZhezi': cfg.extras.zhezi,
+      'wPaXiaxiang': cfg.extras.xiaxiang,
+      'wPerfect': cfg.extras.perfect,
+      'wSeniority': cfg.extras.seniority,
+      'wMeal': cfg.extras.mealTraffic[0],
+      'wTraffic': cfg.extras.mealTraffic[1],
+      'wSocial': cfg.extras.socialFund[0],
+      'wFund': cfg.extras.socialFund[1]
+    };
+    Object.keys(map).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) { el.value = map[id]; el.dispatchEvent(new Event('input', { bubbles: true })); }
+    });
+    if (typeof showToast === 'function') showToast('✅ 已同步 ' + Object.keys(map).length + ' 项到上方表单，请点击「保存规则」提交', 'success');
+    else alert('已同步到上方表单，请点击「保存规则」提交');
+  });
+})();
+</script>
 
 <!-- 入职审核面板逻辑 -->
-
-
-
 
 <!-- ===== 请假管理（attendance/leaves）前后端集成 ===== -->
 

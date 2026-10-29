@@ -253,16 +253,36 @@ const _syncDispatchToCastSheet = async order => {
     });
     if (!sched) return 'NO_SCHEDULE';
 
-    const crewData = disp.people.map((p, idx) => ({
-      id: idByCtx('castCrew', 12, nanoid),
-      performerId: null,
-      performerName: String(p.name || ''),
-      category: _DISPATCH_CATEGORY[p.group] || '龙套',
-      roleName: p.role || null,
-      sortOrder: idx,
-      note: p.note || null,
-      ts: BigInt(nowMs())
-    }));
+    // v20261011 performerId 打通：落库 CastSheetCrew.performerId。
+    // 优先用前端携带的档案 id（候选来自 /v1/performers）；无携带时按姓名批量解析兜底
+    // （同名多条记录不落 id，防止串人；口径排除软删除，兼容历史派工单补建场景）
+    let byName = new Map();
+    try {
+      const _names = Array.from(new Set(disp.people.map(p => String(p.name || '').trim()).filter(Boolean)));
+      if (_names.length) {
+        const pfRows = await prisma.performersDbV1.findMany({
+          where: { name: { in: _names }, status: { not: 'deleted' } },
+          select: { id: true, name: true }
+        });
+        const cnt = new Map();
+        pfRows.forEach(r => cnt.set(r.name, (cnt.get(r.name) || 0) + 1));
+        pfRows.forEach(r => { if (cnt.get(r.name) === 1) byName.set(r.name, r.id); });
+      }
+    } catch (_) { /* 解析失败不阻断派工单同步 */ }
+
+    const crewData = disp.people.map((p, idx) => {
+      const nm = String(p.name || '').trim();
+      return {
+        id: idByCtx('castCrew', 12, nanoid),
+        performerId: (p.performerId && String(p.performerId)) || byName.get(nm) || null,
+        performerName: String(p.name || ''),
+        category: _DISPATCH_CATEGORY[p.group] || '龙套',
+        roleName: p.role || null,
+        sortOrder: idx,
+        note: p.note || null,
+        ts: BigInt(nowMs())
+      };
+    });
     const base = {
       playTitle: order.orderType || null,
       performanceDate: sched.scheduleDateStart,
@@ -321,6 +341,38 @@ const STATUS_FLOW = {
   refunded: []
 };
 
+// v20261029b 演出结束自动完结：performance 状态且演出结束日期已过（< 今天 0 点）→ completed
+// 修复「演出已结束，订单状态还在演出中」：此前状态机只能人工推进，演出结束后无自动流转。
+// 触发点：GET /orders 列表 / /orders/stats / /orders/:id 详情前惰性执行（幂等；无过期单时仅一次索引查询）。
+// completedDate 取演出结束日（业务口径准确）；逐单 try/catch，单单失败不影响其余（下次访问重试）。
+const _SYS_AUDIT_CTX = { state: { user: { sub: 'system', username: 'system', realName: '系统自动完结' } }, ip: null, get: () => '' };
+const autoCompleteExpiredOrders = async () => {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const expired = await prisma.order.findMany({
+    where: { status: 'performance', performanceEndDate: { lt: startOfToday } },
+    select: { id: true, orderNo: true, performanceEndDate: true }
+  });
+  let completed = 0;
+  for (const o of expired) {
+    try {
+      const row = await prisma.order.update({
+        where: { id: o.id },
+        data: {
+          status: 'completed',
+          completedDate: o.performanceEndDate || new Date(),
+          ts: BigInt(nowMs())
+        }
+      });
+      // 与人工 transition 口径一致：完成后同步排期状态
+      await _syncOrderSchedules(row);
+      await audit({ ctx: _SYS_AUDIT_CTX, module: 'order', action: 'ORDER_AUTO_COMPLETE', targetId: o.id, detail: { orderNo: o.orderNo, performanceEndDate: o.performanceEndDate } });
+      completed++;
+    } catch (_) { /* 单单失败跳过，下次访问重试 */ }
+  }
+  return { expired: expired.length, completed };
+};
+
 module.exports = {
   _checkFlow,
   MONEY_FIELDS,
@@ -334,4 +386,5 @@ module.exports = {
   _DISPATCH_CATEGORY,
   _syncDispatchToCastSheet,
   STATUS_FLOW,
+  autoCompleteExpiredOrders,
 };

@@ -81,7 +81,7 @@
           var dispRole = (grp.k==='wuchang'||grp.k==='wenchang') ? (p.role||'') : (p.stdRole||p.role||'');
           var label = dispRole ? (_hx_ord(p.name)+'<small style="color:#94a3b8;margin-left:6px;">'+_hx_ord(dispRole)+'</small>') : _hx_ord(p.name);
           return '<div class="dispatch-item">'
-            + '<input type="checkbox" class="dp-cb dispatch-cb" id="'+_hx_ord(sid)+'" name="dpCast['+_hx_ord(grp.k)+'][]" value="'+_hx_ord(pName)+'" data-dp-group="'+_hx_ord(grp.k)+'" data-cast-group="'+_hx_ord(grp.n)+'" data-cast-role="'+_hx_ord(dispRole)+'">'
+            + '<input type="checkbox" class="dp-cb dispatch-cb" id="'+_hx_ord(sid)+'" name="dpCast['+_hx_ord(grp.k)+'][]" value="'+_hx_ord(pName)+'" data-dp-group="'+_hx_ord(grp.k)+'" data-cast-group="'+_hx_ord(grp.n)+'" data-cast-role="'+_hx_ord(dispRole)+'" data-dp-pid="'+_hx_ord(p.pid||'')+'">'
             + '<label for="'+_hx_ord(sid)+'" class="dispatch-label">'+label+'</label>'
             + '<input type="text" class="dispatch-note" placeholder="饰演/角色/备注（如：艾千/黄桂英/前场）" data-dp-note="'+_hx_ord(grp.k)+'|'+idx+'">'
             + '</div>';
@@ -153,7 +153,8 @@
           var std = _ordStdRole(role);
           var k = ORD_GROUP_OF[std] || 'houqin';
           var g = ORD_GROUPS.filter(function(x){ return x.k===k; })[0];
-          if (g) g.ppl.push({ name:name, role:role, stdRole:std });
+          // v20261011 performerId 打通：候选携带演员档案 id，保存时随派工单提交，后端落库 CastSheetCrew.performerId
+          if (g) g.ppl.push({ name:name, role:role, stdRole:std, pid:p.id || '' });
         });
         _renderDispatch();
       }).catch(function(){ /* 未登录时保持空态，不造假数据 */ });
@@ -1923,10 +1924,12 @@ try{
         customerName: (document.getElementById('custEditName').value || '').trim(),
         phone: (document.getElementById('custEditPhone').value || '').trim(),
         customerType: document.getElementById('custEditType').value || 'personal',
-        level: document.getElementById('custEditLevel').value || null,
-        organization: (document.getElementById('custEditOrganization').value || '').trim() || null,
-        remark: (document.getElementById('custEditRemark').value || '').trim() || null
+        level: document.getElementById('custEditLevel').value || '',
+        organization: (document.getElementById('custEditOrganization').value || '').trim(),
+        remark: (document.getElementById('custEditRemark').value || '').trim()
       };
+      /* v20261026fix：Joi 校验不允许 null（level/organization/remark 仅 allow('')），空值发 ''/省略，修复客户编辑/新增 400 */
+      if (!body.level) delete body.level;
       if (!body.customerName || body.customerName.length < 2) { this._toast('⚠️ 请输入客户名称（≥2 字）', 'warning'); return; }
       if (!body.phone || body.phone.length < 7) { this._toast('⚠️ 请输入有效联系电话（≥7 位）', 'warning'); return; }
       try {
@@ -2195,6 +2198,9 @@ try{
       add('view', '👁 详情', 'btn btn-secondary btn-sm');
       if (st === 'draft' || st === 'confirmed' || st === 'partial_paid') {
         add('edit', '✏️ 编辑', 'btn btn-primary btn-sm');
+      }
+      // v20261027c：演出中/已完成可补收尾款（后端 registerPayment 仅拒 cancelled/refunded；补登记只写流水不改状态）
+      if (st === 'draft' || st === 'confirmed' || st === 'partial_paid' || st === 'performance' || st === 'completed') {
         add('pay', '💰 收款', 'btn btn-sm', '登记收款（流水+台账）');
       }
       if (st === 'paid' || st === 'confirmed' || st === 'partial_paid' || st === 'performance') {
@@ -2671,7 +2677,8 @@ try{
           var note = noteInput ? (noteInput.value || '').trim() : '';
           var stdRoleName = cb.getAttribute('data-cast-role') || '';
           var groupName = cb.getAttribute('data-cast-group') || '';
-          if (nm) people.push({ name: nm, group: grp, groupName: groupName, role: stdRoleName, note: note });
+          // v20261011 performerId 打通：携带 checkbox 上的演员档案 id，随派工 JSON 提交，后端落库 CastSheetCrew.performerId
+          if (nm) people.push({ name: nm, performerId: cb.getAttribute('data-dp-pid') || '', group: grp, groupName: groupName, role: stdRoleName, note: note });
         }
       } catch(_) {}
       if (people.length < 4) {

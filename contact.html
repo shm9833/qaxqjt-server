@@ -256,15 +256,87 @@
         </div>
         <div class="card" style="overflow:hidden;">
           <div style="position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,#f5e6cc,#fdf8f0);border-radius:var(--radius-lg);overflow:hidden;">
-            <img data-asset-key="site.contact.img2" src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=%E7%A7%A6%E5%AE%89%E5%8E%BF%E7%A7%A6%E5%89%A7%E5%9B%A2%E9%9D%9E%E9%81%97%E4%BC%A0%E6%89%BF%E5%9F%BA%E5%9C%B0%E5%8A%9E%E5%85%AC%E6%A5%BC%E5%A4%96%E6%99%AF%EF%BC%8C%E7%94%98%E8%82%83%E5%A4%A9%E6%B0%B4%E9%A3%8E%E6%A0%BC%E5%BB%BA%E7%AD%91%EF%BC%8C%E6%8C%82%E7%9D%80%E5%89%A7%E5%9B%A2%E6%8B%9B%E7%89%8C%EF%BC%8C%E9%97%A8%E5%8F%A3%E6%9C%89%E6%BC%94%E5%91%98%E5%87%BA%E5%85%A5%EF%BC%8C%E8%93%9D%E5%A4%A9%EF%BC%8C%E4%B8%93%E4%B8%9A%E6%9C%BA%E6%9E%84%E5%BD%A2%E8%B1%A1%EF%BC%8C%E9%AB%98%E6%B8%85&image_size=landscape_16_9" alt="秦安县秦剧团文化演出有限公司位置地图" 
-         style="width:100%;height:100%;object-fit:cover;">
+            <svg viewBox="0 0 800 450" role="img" aria-label="秦安县秦剧团位置示意图：甘肃省天水市秦安县陇城镇张沟村" style="width:100%;height:100%;display:block;" preserveAspectRatio="xMidYMid slice">
+              <defs>
+                <linearGradient id="mapBg" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#FDF6E9"/><stop offset="100%" stop-color="#F5E9CF"/>
+                </linearGradient>
+                <pattern id="mapGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M40 0H0V40" fill="none" stroke="#0F4C81" stroke-opacity="0.05"/>
+                </pattern>
+                <filter id="pinShadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#7c2d12" flood-opacity="0.35"/></filter>
+              </defs>
+              <rect width="800" height="450" fill="url(#mapBg)"/>
+              <rect width="800" height="450" fill="url(#mapGrid)"/>
+              <rect x="10" y="10" width="780" height="430" fill="none" stroke="#C9A962" stroke-width="2" rx="10"/>
+              <rect x="16" y="16" width="768" height="418" fill="none" stroke="#C9A962" stroke-opacity="0.4" rx="8"/>
+              <!-- 葫芦河 -->
+              <path d="M70,430 C100,360 70,320 110,260 C150,200 120,160 160,110 C175,85 170,55 185,35" fill="none" stroke="#7FB3D5" stroke-width="6" stroke-opacity="0.55" stroke-linecap="round"/>
+              <text x="105" y="300" font-size="13" fill="#4A7BA6" transform="rotate(-74 105 300)">葫芦河</text>
+              <!-- 秦安县界 -->
+              <path d="M210,90 Q320,40 430,70 Q560,60 620,140 Q660,220 600,300 Q540,390 420,380 Q300,420 230,340 Q170,260 200,170 Q205,120 210,90 Z" fill="rgba(15,76,129,0.07)" stroke="#0F4C81" stroke-width="1.6" stroke-dasharray="7 5"/>
+              <text x="330" y="118" font-size="15" fill="#0F4C81" opacity="0.55" letter-spacing="6">秦 安 县 境</text>
+              <!-- 周边县市 -->
+              <text x="56" y="140" font-size="14" fill="#8A6D3B" opacity="0.8">清水县</text>
+              <text x="505" y="48" font-size="14" fill="#8A6D3B" opacity="0.8">张家川回族自治县</text>
+              <text x="668" y="205" font-size="14" fill="#8A6D3B" opacity="0.8">庄浪县</text>
+              <text x="640" y="388" font-size="14" fill="#8A6D3B" opacity="0.8">麦积区</text>
+              <text x="76" y="410" font-size="14" fill="#8A6D3B" opacity="0.8">甘谷县</text>
+              <!-- 天巉公路 -->
+              <path id="tianchanRd" d="M60,420 C180,360 260,330 340,290 C440,240 520,190 600,120 C640,85 680,60 730,45" fill="none" stroke="#B5573C" stroke-width="4.5" stroke-opacity="0.85"/>
+              <path d="M60,420 C180,360 260,330 340,290 C440,240 520,190 600,120 C640,85 680,60 730,45" fill="none" stroke="#F5E6CC" stroke-width="1.2" stroke-dasharray="10 8"/>
+              <text font-size="13" fill="#B5573C" font-weight="600"><textPath href="#tianchanRd" startOffset="14%">天巉公路</textPath></text>
+              <text x="62" y="408" font-size="12" fill="#B5573C" opacity="0.85" transform="rotate(-13 62 408)">天水方向</text>
+              <text x="700" y="38" font-size="12" fill="#B5573C" opacity="0.85">定西方向</text>
+              <!-- 秦安县城 -->
+              <rect x="306" y="290" width="10" height="10" fill="#0F4C81" transform="rotate(45 311 295)"/>
+              <text x="322" y="300" font-size="14" fill="#0F4C81" font-weight="600">秦安县城</text>
+              <!-- 陇城镇 -->
+              <circle cx="565" cy="158" r="5" fill="#FDF6E9" stroke="#0F4C81" stroke-width="2.5"/>
+              <text x="536" y="138" font-size="14" fill="#0F4C81" font-weight="600">陇城镇</text>
+              <!-- 张沟村 · 剧团驻地 -->
+              <g transform="translate(600,178)">
+                <circle r="10" fill="none" stroke="#D4AF37" stroke-width="2">
+                  <animate attributeName="r" values="8;24" dur="1.8s" repeatCount="indefinite"/>
+                  <animate attributeName="stroke-opacity" values="0.9;0" dur="1.8s" repeatCount="indefinite"/>
+                </circle>
+                <path d="M0,-16 C-8,-16 -13,-10 -13,-4 C-13,4 0,14 0,14 C0,14 13,4 13,-4 C13,-10 8,-16 0,-16 Z" fill="#C0392B" filter="url(#pinShadow)"/>
+                <circle cy="-5" r="4.5" fill="#FDF6E9"/>
+              </g>
+              <rect x="614" y="166" width="158" height="30" rx="6" fill="#0F4C81" opacity="0.92"/>
+              <text x="624" y="186" font-size="14" fill="#F5E6CC" font-weight="600">张沟村 · 剧团驻地</text>
+              <!-- 指北针 -->
+              <g transform="translate(748,82)">
+                <circle r="21" fill="#FDF6E9" stroke="#C9A962" stroke-width="1.5"/>
+                <path d="M0,-13 L6,8 L0,4 L-6,8 Z" fill="#C0392B"/>
+                <text y="-27" font-size="12" text-anchor="middle" fill="#8A6D3B" font-weight="700">北</text>
+              </g>
+              <!-- 甘肃省 locator -->
+              <g transform="translate(660,300)">
+                <rect x="-14" y="-14" width="120" height="120" rx="8" fill="#FDF6E9" stroke="#C9A962"/>
+                <path d="M10,20 Q30,10 45,22 Q70,30 80,55 Q88,80 70,92 Q50,100 35,88 Q15,78 12,55 Q8,35 10,20 Z" fill="rgba(15,76,129,0.10)" stroke="#0F4C81" stroke-width="1.2"/>
+                <circle cx="58" cy="72" r="4" fill="#C0392B"/>
+                <text x="46" y="106" font-size="11" fill="#8A6D3B">甘肃 · 秦安</text>
+              </g>
+              <!-- 图例 -->
+              <g transform="translate(40,368)">
+                <rect x="-10" y="-18" width="216" height="64" rx="8" fill="#FDF6E9" opacity="0.92" stroke="#C9A962"/>
+                <path d="M0,0 C-5,0 -8,-4 -8,-7 C-8,-12 0,-18 0,-18 C0,-18 8,-12 8,-7 C8,-4 5,0 0,0" fill="#C0392B" transform="translate(8,10) scale(0.8)"/>
+                <text x="28" y="2" font-size="12" fill="#5B4A2E">剧团驻地</text>
+                <line x1="82" y1="-4" x2="112" y2="-4" stroke="#B5573C" stroke-width="3.5"/>
+                <text x="120" y="2" font-size="12" fill="#5B4A2E">公路</text>
+                <line x1="0" y1="26" x2="34" y2="26" stroke="#0F4C81" stroke-width="1.6" stroke-dasharray="6 4"/>
+                <text x="42" y="30" font-size="12" fill="#5B4A2E">秦安县界（示意）</text>
+              </g>
+              <text x="770" y="430" font-size="11" fill="#8A6D3B" text-anchor="end" opacity="0.7">示意图 · 非精确比例</text>
+            </svg>
             <div style="position:absolute;top:20px;left:20px;background:var(--primary);color:var(--cream);padding:12px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(139,0,0,0.3);">
               <div style="font-size:0.85rem;opacity:0.9;">📍 剧团地址</div>
               <div style="font-size:1.1rem;font-weight:600;margin-top:4px;">甘肃省天水市秦安县陇城镇张沟村</div>
             </div>
           </div>
           <div style="padding:25px;text-align:center;">
-            <p style="color:var(--text-light);margin:0 0 15px 0;">🚗 自驾：沿天巉公路至陇城镇，按导航前往张沟村</p>
+            <p style="color:var(--text-light);margin:0 0 15px 0;">🚗 自驾：沿天巉公路至陇城镇，按导航前往张沟村 · <a href="https://api.map.baidu.com/geocoder?address=%E7%94%98%E8%82%83%E7%9C%81%E5%A4%A9%E6%B0%B4%E5%B8%82%E7%A7%A6%E5%AE%89%E5%8E%BF%E9%99%87%E5%9F%8E%E9%95%87%E5%BC%A0%E6%B2%9F%E6%9D%91&output=html" target="_blank" rel="noopener noreferrer" style="color:var(--primary);font-weight:600;">🧭 百度地图打开</a> · <a href="https://www.amap.com/search?query=%E5%BC%A0%E6%B2%9F%E6%9D%91&city=620522" target="_blank" rel="noopener noreferrer" style="color:var(--primary);font-weight:600;">高德地图打开</a></p>
             <p style="color:var(--text-light);margin:0;">📞 来团前请致电 <a href="tel:13993839833" style="color:var(--primary);font-weight:600;">13993839833</a> 预约接待</p>
           </div>
         </div>
@@ -393,8 +465,7 @@
             <li><a href="news.html">新闻动态</a></li>
             <li><a href="booking.html">在线预约</a></li>
             <li><a href="live-api.html" style="color:var(--gold-dark);font-weight:600;">📡 直播观看</a></li>
-            <li><a href="contact.html">联系我们</a></li>
-          </ul>
+            <li><a href="contact.html">联系我们</a></li>          </ul>
         </div>
         <div class="footer-col">
           <h4>演出服务</h4>
@@ -471,7 +542,7 @@
   <script src="js/year-lite.js?v=20260803"></script>
   <script src="js/api-config.js?v=20261010a"></script>
   <script src="js/api-request.js?v=20260922"></script>
-  <script src="js/app.js?v=20261009a"></script>
+  <script src="js/app.js?v=20261015a"></script>
   <script>
     (function() {
       var form = document.getElementById('quickContactForm');

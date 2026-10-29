@@ -383,18 +383,45 @@
             if (tipsBox) tipsBox.style.display = 'none';
           }
           // 在登录按钮下方追加"生产/演示模式"状态条
+          // v20261010：生产模式仅在【后端鉴权不可达/未配置】时显示绿色提示条；
+          // 已接通后端（/api 同源反代或显式 API_BASE 可达）则完全不显示，避免公网暴露 demo 切换命令
           var form = document.getElementById('adminLoginForm');
-          if (form && !document.getElementById('loginModeBar')) {
+          var __showProdModeBar = function (reason) {
+            if (!form || document.getElementById('loginModeBar')) return;
             var bar = document.createElement('div');
             bar.id = 'loginModeBar';
+            bar.style.cssText = 'margin-top:10px;padding:8px 12px;border-radius:8px;background:#f0fdf4;color:#14532d;font-size:12px;border:1px solid #86efac;';
+            bar.innerHTML = '🟢 <b>生产模式（安全）</b>：' + (reason || '后端鉴权服务未连接') + '，本地演示账号已全部禁用。<br/>如需本地验收演示：<code style="background:#dcfce7;padding:2px 4px;border-radius:3px;">localStorage.setItem("qaxqjt_deploy_mode","demo")</code> → 刷新；正式部署请按《后端REST鉴权规范v1.0》接入后端。';
+            form.appendChild(bar);
+          };
+          if (form && !document.getElementById('loginModeBar')) {
             if (MODE === 'demo') {
+              var bar = document.createElement('div');
+              bar.id = 'loginModeBar';
               bar.style.cssText = 'margin-top:10px;padding:8px 12px;border-radius:8px;background:#fff7ed;color:#9a3412;font-size:12px;border:1px solid #fdba74;';
               bar.innerHTML = '🟡 <b>演示模式（仅本地测试）</b>：上线前请在 F12 执行<br/><code style="background:#ffedd5;padding:2px 4px;border-radius:3px;">localStorage.removeItem("qaxqjt_deploy_mode")</code> 并刷新。';
+              form.appendChild(bar);
             } else {
-              bar.style.cssText = 'margin-top:10px;padding:8px 12px;border-radius:8px;background:#f0fdf4;color:#14532d;font-size:12px;border:1px solid #86efac;';
-              bar.innerHTML = '🟢 <b>生产模式（安全）</b>：已禁用所有本地演示账号，需接入后端鉴权（详见《后端REST鉴权规范v1.0》）。<br/>如需本地验收演示：<code style="background:#dcfce7;padding:2px 4px;border-radius:3px;">localStorage.setItem("qaxqjt_deploy_mode","demo")</code> → 刷新。';
+              // 生产模式：轻量探测后端 /v1/healthz（2.5s 超时），可达 → 不显示；不可达 → 显示提示条
+              var _authUrl = '';
+              try { _authUrl = (typeof _getBackendAuthUrl === 'function') ? (_getBackendAuthUrl() || '') : ''; } catch (_beu0) {}
+              if (!_authUrl) {
+                __showProdModeBar('未检测到后端鉴权地址');
+              } else {
+                try {
+                  var _hzUrl = _authUrl.replace(/\/v1\/auth\/login\s*$/, '/v1/healthz');
+                  var _ctl = ('AbortController' in window) ? new AbortController() : null;
+                  var _timer = _ctl ? setTimeout(function () { try { _ctl.abort(); } catch (_t0) {} }, 2500) : null;
+                  fetch(_hzUrl, { method: 'GET', cache: 'no-store', signal: _ctl ? _ctl.signal : undefined })
+                    .then(function (r) {
+                      if (_timer) clearTimeout(_timer);
+                      var ct = ''; try { ct = (r && r.headers && r.headers.get('content-type')) || ''; } catch (_ct0) {}
+                      if (!r || !r.ok || ct.indexOf('json') === -1) __showProdModeBar('后端鉴权服务不可达');
+                    })
+                    .catch(function () { if (_timer) clearTimeout(_timer); __showProdModeBar('后端鉴权服务不可达'); });
+                } catch (_beu1) { __showProdModeBar(); }
+              }
             }
-            form.appendChild(bar);
           }
         } catch(_e) {}
       })();

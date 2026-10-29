@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <!-- =========================================================== -->
+  <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
+  <!-- 无 session 时 0.5ms 内跳登录页，防白屏 / 越权一眼看 -->
+  <!-- =========================================================== -->
+  <script src="../js/admin-pages/attendance.pre-1.js?v=20261005a"></script>
+
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团文化演出有限公司云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <script src="../js/favicon-inject.js?v=20260803" defer></script>
+    <script src="../js/wechat-fallback.js?v=20260803" defer></script>
+  <script src="../js/year-lite.js?v=20260803"></script>
+    <script src="../js/api-config.js?v=20261010a"></script>
+    <script src="../js/admin-pages/attendance.pre-2.js?v=20261005a"></script>
+  <script src="../js/api-request.js?v=20261008b"></script>
+<script src="../js/app.js?v=20261015a"></script>
+  <script src="../js/tooltip.js?v=20261010a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>考勤与薪酬管理 - 秦安县秦剧团文化演出有限公司云端预约管理系统 {year}</title>
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
+  <style>
+    /* ============================================================
+       FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
+       ============================================================ */
+    html, body {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+      width: 100%;
+    }
+    * { box-sizing: border-box; }
+    table { table-layout: fixed; word-break: break-word; }
+    pre, code, textarea { white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+    .admin-main, .admin-content, main, .page-wrap { max-width: 100%; overflow-x: hidden; }
+
+    .admin-sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 90;
+    }
+    .admin-sidebar-overlay.active { display: block; }
+    @media (max-width: 900px) {
+      .admin-sidebar { transform: translateX(-100%); }
+      .admin-sidebar.mobile-open { transform: translateX(0); }
+      .admin-main { margin-left: 0 !important; }
+      .admin-sidebar-toggle { display: flex !important; }
+      .admin-search { display: none; }
+      .admin-content { padding: 20px 15px !important; }
+    }
+    .admin-user-dropdown { position: relative; }
+    .admin-user-dropdown .user-toggle {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 12px 6px 6px; border-radius: 25px;
+      background: var(--bg-light); cursor: pointer;
+      transition: var(--transition); border: 1px solid transparent;
+    }
+    .admin-user-dropdown .user-toggle:hover { background: var(--cream); border-color: var(--gold); }
+    .admin-user-dropdown .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex; align-items: center; justify-content: center;
+      color: var(--primary-dark); font-weight: 700; font-size: 0.95rem; flex-shrink: 0;
+    }
+    .admin-user-dropdown .user-name-text { font-size: 0.88rem; font-weight: 600; color: var(--text-dark); }
+    .admin-user-dropdown .user-role-text { font-size: 0.75rem; color: var(--gold-dark); }
+    .admin-user-dropdown .dropdown-arrow { font-size: 0.7rem; color: var(--text-light); transition: transform 0.3s ease; }
+    .admin-user-dropdown.open .dropdown-arrow { transform: rotate(180deg); }
+    .admin-user-dropdown .dropdown-menu {
+      position: absolute; top: calc(100% + 8px); right: 0; min-width: 200px;
+      background: var(--cream); border: 1px solid var(--border-light);
+      border-radius: var(--radius); box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+      overflow: hidden; opacity: 0; visibility: hidden;
+      transform: translateY(-8px); transition: all 0.25s ease; z-index: 200;
+    }
+    .admin-user-dropdown.open .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-menu .dropdown-header { padding: 15px 18px; border-bottom: 1px solid var(--border-light);
+      background: linear-gradient(135deg, rgba(139,0,0,0.05), rgba(212,175,55,0.05)); }
+    .dropdown-menu .dh-name { font-weight: 600; color: var(--primary-dark); font-size: 0.95rem; margin-bottom: 3px; }
+    .dropdown-menu .dh-email { font-size: 0.8rem; color: var(--text-light); }
+    .dropdown-menu .dropdown-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 18px; font-size: 0.88rem; color: var(--text-dark);
+      cursor: pointer; transition: var(--transition);
+    }
+    .dropdown-menu .dropdown-item:hover { background: rgba(139,0,0,0.05); color: var(--primary); padding-left: 22px; }
+    .dropdown-menu .di-icon { width: 18px; text-align: center; color: var(--gold-dark); }
+    .dropdown-menu .dropdown-divider { height: 1px; background: var(--border-light); margin: 4px 0; }
+
+    .att-tabs {
+      display: flex; gap: 0; border-bottom: 2px solid var(--border-light);
+      background: var(--bg-light); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: 0 20px; overflow-x: auto;
+    }
+    .att-tab {
+      padding: 16px 28px; cursor: pointer; font-size: 0.95rem;
+      color: var(--text-light); font-weight: 500; position: relative;
+      white-space: nowrap; transition: var(--transition);
+      border-bottom: 3px solid transparent;
+    }
+    .att-tab:hover { color: var(--primary); }
+    .att-tab.active {
+      color: var(--primary); font-weight: 700;
+      border-bottom-color: var(--primary);
+    }
+    .att-tab .tab-badge {
+      display: inline-block; margin-left: 8px; padding: 2px 8px;
+      border-radius: 10px; font-size: 0.72rem; font-weight: 600;
+      background: rgba(139,0,0,0.08); color: var(--primary);
+    }
+    .att-tab.active .tab-badge { background: var(--primary); color: var(--cream); }
+    .att-tab-content { display: none; }
+    .att-tab-content.active { display: block; }
+
+    .filter-bar {
+      display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+      padding: 18px 22px; background: var(--bg-light);
+      border-radius: var(--radius); margin-bottom: 20px;
+      border: 1px solid var(--border-light);
+    }
+    .filter-bar .form-group { display: flex; align-items: center; gap: 8px; }
+    .filter-bar .form-group label {
+      font-size: 0.85rem; color: var(--text-light); font-weight: 500; white-space: nowrap;
+    }
+    .filter-bar .form-control {
+      padding: 8px 14px; border: 1.5px solid var(--border-light);
+      border-radius: 20px; font-size: 0.85rem; background: var(--cream);
+      color: var(--text-dark); font-family: inherit; outline: none;
+      transition: var(--transition);
+    }
+    .filter-bar .form-control:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.1); }
+    .filter-bar .search-box {
+      position: relative; flex: 1; min-width: 240px;
+    }
+    .filter-bar .search-box input {
+      width: 100%; padding: 9px 16px 9px 40px;
+      border: 1.5px solid var(--border-light); border-radius: 25px;
+      background: var(--cream); font-family: inherit; font-size: 0.88rem;
+      outline: none; transition: var(--transition);
+    }
+    .filter-bar .search-box input:focus { border-color: var(--gold); }
+    .filter-bar .search-box .search-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--text-light);
+    }
+
+    .status-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 12px;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    .status-badge.on { background: rgba(40,167,69,0.12); color: #28a745; }
+    .status-badge.off { background: rgba(108,117,125,0.12); color: #6c757d; }
+    .status-badge.leave { background: rgba(255,193,7,0.18); color: #e6a800; }
+    .status-badge.absent { background: rgba(220,53,69,0.12); color: #dc3545; }
+    .status-badge.normal { background: rgba(40,167,69,0.12); color: #28a745; }
+    .status-badge.night { background: rgba(111,66,193,0.15); color: #6f42c1; }
+
+    .att-stat-card {
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      border: 1px solid var(--border-light);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .att-stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+      border-color: var(--gold);
+    }
+    .att-stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+    .att-stat-card.total::before { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); }
+    .att-stat-card.full::before { background: linear-gradient(180deg, #28a745, #5cb85c); }
+    .att-stat-card.night::before { background: linear-gradient(180deg, #6f42c1, #9b7bd6); }
+    .att-stat-card.net::before { background: linear-gradient(180deg, var(--gold-dark), var(--gold)); }
+
+    .asc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .asc-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .att-stat-card.total .asc-icon { background: rgba(139,0,0,0.1); }
+    .att-stat-card.full .asc-icon { background: rgba(40,167,69,0.12); }
+    .att-stat-card.night .asc-icon { background: rgba(111,66,193,0.12); }
+    .att-stat-card.net .asc-icon { background: rgba(212,175,55,0.15); }
+
+    .asc-title { font-size: 0.85rem; color: var(--text-light); margin-bottom: 4px; }
+    .asc-value {
+      font-size: 1.6rem; font-weight: 700; color: var(--text-dark); line-height: 1.2;
+    }
+    .asc-sub { font-size: 0.78rem; color: var(--text-light); margin-top: 4px; }
+    .asc-sub strong { color: var(--primary-dark); font-weight: 600; }
+
+    .upload-zone {
+      border: 2.5px dashed var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 50px 30px;
+      text-align: center;
+      background: var(--bg-light);
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--gold);
+      background: linear-gradient(135deg, rgba(212,175,55,0.05), rgba(139,0,0,0.03));
+    }
+    .upload-zone .uz-icon {
+      font-size: 3.5rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .upload-zone h3 {
+      margin: 0 0 8px 0;
+      color: var(--primary-dark);
+      font-size: 1.2rem;
+    }
+    .upload-zone p {
+      margin: 0;
+      color: var(--text-light);
+      font-size: 0.88rem;
+    }
+    .upload-zone .uz-tips {
+      margin-top: 16px;
+      padding: 12px 18px;
+      background: var(--cream);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+      text-align: left;
+      font-size: 0.82rem;
+      color: var(--text-dark);
+    }
+    .upload-zone .uz-tips code {
+      background: rgba(212,175,55,0.15);
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: var(--primary-dark);
+      font-size: 0.8rem;
+    }
+    .upload-zone input[type=file] {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      opacity: 0; cursor: pointer;
+    }
+
+    .preview-card {
+      background: var(--cream);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+    }
+    .preview-header {
+      padding: 14px 20px;
+      background: linear-gradient(135deg, rgba(139,0,0,0.05), rgba(212,175,55,0.08));
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .preview-header h4 { margin: 0; color: var(--primary-dark); font-size: 1rem; }
+    .preview-body { padding: 16px 20px; overflow-x: auto; }
+
+    .param-card {
+      background: var(--cream);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+      padding: 22px;
+    }
+    .param-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px 22px;
+    }
+    .param-item label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-light);
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+    .param-item .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border-light);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      background: var(--bg-light);
+      font-family: inherit;
+    }
+    .param-item .form-control:focus {
+      border-color: var(--gold);
+      outline: none;
+      background: #fff;
+    }
+    .param-hint {
+      margin-top: 4px;
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+
+    .page-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1.5px solid transparent;
+      font-family: inherit;
+      text-decoration: none;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: var(--cream); border-color: var(--primary); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(139,0,0,0.25); }
+    .btn-gold { background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: var(--primary-dark); border-color: var(--gold-dark); }
+    .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(212,175,55,0.35); }
+    .btn-success { background: linear-gradient(135deg, #28a745, #1e7e34); color: #fff; border-color: #28a745; }
+    .btn-success:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(40,167,69,0.3); }
+    .btn-outline { background: var(--cream); color: var(--text-dark); border-color: var(--border-light); }
+    .btn-outline:hover { border-color: var(--gold); color: var(--primary-dark); background: rgba(212,175,55,0.05); }
+    .btn-danger { background: linear-gradient(135deg, #dc3545, #b02a37); color: #fff; border-color: #dc3545; }
+    .btn-danger:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(220,53,69,0.25); }
+    .btn-sm { padding: 5px 12px; font-size: 0.78rem; border-radius: 8px; }
+    .btn-ghost { background: transparent; border: none; color: var(--text-light); padding: 4px 8px; }
+    .btn-ghost:hover { color: var(--primary); background: rgba(139,0,0,0.05); border-radius: 6px; }
+
+    .wage-table-wrap {
+      background: var(--cream);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+    }
+    .wage-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      min-width: 1200px;
+    }
+    .wage-table thead {
+      background: linear-gradient(135deg, rgba(139,0,0,0.06), rgba(212,175,55,0.1));
+    }
+    .wage-table thead th {
+      padding: 12px 14px;
+      text-align: left;
+      font-weight: 700;
+      color: var(--primary-dark);
+      border-bottom: 2px solid var(--gold);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+    }
+    .wage-table tbody td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-dark);
+    }
+    .wage-table tbody tr:hover {
+      background: rgba(212,175,55,0.06);
+    }
+    .wage-table tbody tr:last-child td { border-bottom: none; }
+    .wage-table .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+    .wage-table .num.total-net {
+      font-weight: 800;
+      color: var(--primary-dark);
+    }
+    .wage-table .num.deduct { color: #dc3545; }
+    .wage-table .num.add { color: #28a745; }
+    .wage-table tfoot td {
+      padding: 14px;
+      background: rgba(139,0,0,0.03);
+      font-weight: 700;
+      color: var(--primary-dark);
+      border-top: 2px solid var(--gold);
+    }
+    .wage-table .actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+
+    /* ====== 扣款规则编辑表布局修复（20261002）======
+       style.css 全局 .data-table-container>table{table-layout:auto!important}
+       会让规则表按文本输入框固有宽度计算列宽，表格被撑到 ~2000px、
+       远超声明的 1580px。规则编辑表恢复固定布局，列宽严格按表头分配，
+       输入框在单元格内自适应不溢出。id 作用域压过全局 auto !important。 */
+    #tabRules .wage-table { table-layout: fixed !important; }
+    #tabRules .wage-table td input,
+    #tabRules .wage-table td select {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .wage-formula-box {
+      padding: 18px 22px;
+      background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(139,0,0,0.04));
+      border-radius: var(--radius);
+      border: 1px solid rgba(212,175,55,0.3);
+      margin-bottom: 18px;
+    }
+    .wage-formula-box h4 {
+      margin: 0 0 10px 0;
+      color: var(--primary-dark);
+      font-size: 0.95rem;
+    }
+    .wage-formula-box .formula {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.88rem;
+      color: var(--text-dark);
+      background: var(--cream);
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      line-height: 1.8;
+    }
+    .wage-formula-box .formula .var { color: var(--primary); font-weight: 700; }
+    .wage-formula-box .formula .op { color: var(--gold-dark); font-weight: 700; }
+    .wage-formula-box .formula .num { color: #17a2b8; font-weight: 600; }
+
+    .checkbox-cell {
+      width: 40px;
+      text-align: center;
+    }
+    .checkbox-cell input[type=checkbox] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+
+    .night-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: rgba(111,66,193,0.12);
+      color: #6f42c1;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    /* 打印样式 */
+    @media print {
+      /* A4考勤表/考勤汇总打印：上下12mm，左右2mm紧凑 */
+      @page { size: A4 portrait; margin: 12mm 2mm 12mm 2mm; }
+      .admin-sidebar, .admin-sidebar-overlay, .admin-header,
+      .page-actions, .filter-bar, .att-tabs, .no-print,
+      .toast-container, .modal-overlay {
+        display: none !important;
+      }
+      .admin-main { margin: 0 !important; padding: 0 !important; }
+      .admin-content { padding: 0 !important; overflow: visible !important; }
+      body { background: #fff !important; }
+    }
+
+    .admin-sidebar-menu li a:not([href]), .admin-sidebar-menu li a[href="#"] { cursor: pointer; position: relative; }
+    .admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
+      content: '';
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(212,175,55,0.5);
+    }
+  
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+</style>
+</head>
+<body>
+  <div class="admin-layout">
+    <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <div class="logo-text">秦安县秦剧团文化演出有限公司<br/>文化演出管理系统</div>
+      </div>
+
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <a href="index.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📊</span>
+            <span>数据看板</span>
+          </a>
+          <a href="accounts.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">👥</span>
+            <span>账号权限管理</span>
+          </a>
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
+            <span class="menu-icon">📅</span>
+            <span>演出档期排班</span>
+          </a>
+          <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>演出演员表</span>
+          </a>
+          <a href="orders.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>订单预约管理</span>
+          </a>
+          <a href="operas.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>剧目资源管理</span>
+          </a>
+          <a href="staff.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">👨‍🎤</span>
+            <span>演职人员管理</span>
+          </a>
+          <a href="attendance.html" data-role-level="700" class="admin-menu-item active admin-menu-item">
+            <span class="menu-icon">💵</span>
+            <span>考勤与薪酬</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="inventory.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>道具服装库存</span>
+          </a>
+          <a href="finance.html" data-role-level="500" class="admin-menu-item">
+            <span class="menu-icon">💰</span>
+            <span>财务收支台账</span>
+          </a>
+          <a href="content.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📝</span>
+            <span>官网内容管理</span>
+          </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
+          </a>
+          <a href="reports.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">📈</span>
+            <span>数据统计报表</span>
+          </a>
+          <a href="system.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">🔧</span>
+            <span>系统日志备份</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
+          <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>架构验收报告</span>
+          </a>
+          <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>最终交付总结</span>
+          </a>
+          <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">🚀</span>
+            <span>EdgeOne Pages 部署教程</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
+          </a>
+          <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
+            <span>🚪</span><span>退出登录</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" id="sidebarToggle" aria-label="菜单">
+            <span>☰</span>
+          </button>
+          <div class="admin-breadcrumb">
+            <a href="index.html">首页</a>
+            <span class="separator">/</span>
+            <span class="current">考勤与薪酬</span>
+            <span class="separator">/</span>
+            <span class="current">考勤与薪酬管理</span>
+          </div>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="搜索工资条、姓名、工号..." />
+          </div>
+          <button class="admin-header-btn" title="通知">
+            <span>🔔</span>
+            <span class="notify-dot"></span>
+          </button>
+          <button class="admin-header-btn" title="消息">
+            <span>✉️</span>
+          </button>
+          <button class="admin-header-btn" title="全屏" onclick="toggleFullscreen()">
+            <span>⛶</span>
+          </button>
+          <div class="admin-user-dropdown" id="userDropdown">
+            <div class="user-toggle" id="userToggle">
+              <div class="user-avatar" id="userAvatar">A</div>
+              <div>
+                <div class="user-name-text" id="userName">管理员</div>
+                <div class="user-role-text" id="userRole">超级管理员</div>
+              </div>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu">
+              <div class="dropdown-header">
+                <div class="dh-name" id="dhName">系统管理员</div>
+                <div class="dh-email">admin@qinxian-opera.com</div>
+              </div>
+              <div class="dropdown-item" onclick="location.href='accounts.html'">
+                <span class="di-icon">👤</span><span>个人资料</span>
+              </div>
+              <div class="dropdown-item" onclick="location.href='system.html'">
+                <span class="di-icon">⚙️</span><span>系统设置</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" id="logoutBtnDropdown" style="color:var(--primary);">
+                <span class="di-icon">🚪</span><span>退出登录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <div class="page-header" style="margin-bottom:20px;">
+          <div class="page-header-left" style="display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap;">
+            <div>
+              <h1 style="margin:0 0 6px 0;color:var(--primary-dark);font-size:1.6rem;">💵 考勤与薪酬管理</h1>
+              <p class="page-desc" style="margin:0;color:var(--text-light);font-size:0.9rem;">上传考勤表 CSV → 自动核算底薪/全勤/夜场补贴/事假扣款/社保/个税 → 生成当月工资条 → 单条/批量打印 A5 工资密封条</p>
+            </div>
+          </div>
+          <div class="page-header-right">
+            <div class="page-actions">
+              <button class="btn btn-outline btn-sm" id="attBtnDemoCsv">📥 下载示例 CSV</button>
+              <button class="btn btn-gold btn-sm" id="attBtnUploadCsv">📤 上传考勤 CSV</button>
+              <button class="btn btn-success btn-sm" id="attBtnCalcAll">🧮 核算当月工资</button>
+              <button class="btn btn-warning btn-sm" id="attBtnBatchConfirm">✅ 确认批次</button>
+              <button class="btn btn-danger btn-sm" id="attBtnBatchPost">📤 过账批次</button>
+              <button class="btn btn-primary btn-sm" id="attBtnExportCsv">📊 导出工资表 CSV</button>
+              <button class="btn btn-gold btn-sm" id="attBtnBatchPrint" onclick="window.print()">🖨️ 批量打印工资条</button>
+              <button class="btn btn-danger btn-sm" id="attBtnFinanceAll">💼 整月工资→财务台账</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 切换 -->
+        <div class="att-tabs no-print" id="attTabs">
+          <div class="att-tab active" data-tab="wage">
+            <span>📊 工资条列表</span>
+            <span class="tab-badge" id="tabWageBadge">0</span>
+          </div>
+          <div class="att-tab" data-tab="upload">
+            <span>📥 考勤导入</span>
+            <span class="tab-badge" id="tabUploadBadge">NEW</span>
+          </div>
+          <div class="att-tab" data-tab="bpunch">
+            <span>✍️ 批量补打卡</span>
+          </div>
+          <div class="att-tab" data-tab="params">
+            <span>⚙️ 薪资参数</span>
+          </div>
+          <div class="att-tab" data-tab="rules">
+            <span>🎯 扣款规则引擎</span>
+            <span class="tab-badge" style="background:#7c3aed;">自定义</span>
+          </div>
+          <div class="att-tab" data-tab="history">
+            <span>📋 打印历史</span>
+          </div>
+        </div>
+
+        <!-- ========================== Tab 1: 工资条列表 ========================== -->
+        <div class="att-tab-content active" id="tabWage">
+
+          <!-- 统计卡片 -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-bottom:20px;">
+            <div class="att-stat-card total">
+              <div class="asc-header">
+                <div>
+                  <div class="asc-title">员工人数</div>
+                  <div class="asc-value" id="statTotal">0</div>
+                </div>
+                <div class="asc-icon">👥</div>
+              </div>
+              <div class="asc-sub">本月 <strong id="statMonth">—</strong> 在册工资核算</div>
+            </div>
+            <div class="att-stat-card full">
+              <div class="asc-header">
+                <div>
+                  <div class="asc-title">全勤人数</div>
+                  <div class="asc-value" id="statFull" style="color:#28a745;">0</div>
+                </div>
+                <div class="asc-icon">✅</div>
+              </div>
+              <div class="asc-sub">全勤奖 +<strong id="statFullBonus">¥0</strong></div>
+            </div>
+            <div class="att-stat-card night">
+              <div class="asc-header">
+                <div>
+                  <div class="asc-title">夜场总场次</div>
+                  <div class="asc-value" id="statNight" style="color:#6f42c1;">0</div>
+                </div>
+                <div class="asc-icon">🌙</div>
+              </div>
+              <div class="asc-sub">夜场补贴 +<strong id="statNightSubsidy">¥0</strong></div>
+            </div>
+            <div class="att-stat-card net">
+              <div class="asc-header">
+                <div>
+                  <div class="asc-title">实发工资总计</div>
+                  <div class="asc-value" id="statNet" style="color:#b8860b;">¥0</div>
+                </div>
+                <div class="asc-icon">💴</div>
+              </div>
+              <div class="asc-sub">应发 <strong id="statGross">¥0</strong> 扣除 <strong id="statDeduct">¥0</strong></div>
+            </div>
+          </div>
+
+          <!-- 公式说明 -->
+          <div class="wage-formula-box no-print">
+            <h4>🧮 工资计算公式（可在「薪资参数」Tab 修改）</h4>
+            <div class="formula">
+              <span class="var">实发</span> <span class="op">=</span>
+              <span class="var">底薪</span>(<span class="num">默认 ¥3,800</span>)
+              <span class="op"> + </span>
+              <span class="var">全勤奖</span>(<span class="num">整月无缺勤 +¥200</span>)
+              <span class="op"> + </span>
+              <span class="var">夜场补贴</span>(<span class="num">每场 × ¥80</span>)
+              <span class="op"> - </span>
+              <span class="var">事假扣款</span>(<span class="num">日均底薪 × 事假天数</span>)
+              <span class="op"> - </span>
+              <span class="var">社保代扣</span>(<span class="num">固定 ¥420</span>)
+              <span class="op"> - </span>
+              <span class="var">个税</span>(<span class="num">累进税率，起征点 ¥5,000</span>)
+            </div>
+            <div class="formula" style="margin-top:8px;border-top:1px dashed var(--border-light);padding-top:8px;">
+              <span class="var">按天·纯日结</span> <span class="op">=</span> 协议天工资（或职级日薪）<span class="op">×</span> 出勤天 + 夜场/全勤 − 条例扣罚（现有默认口径）；
+              <span class="var">按天·月薪折算</span> <span class="op">=</span>（底薪 <span class="op">÷</span> 应勤天）<span class="op">×</span> 出勤天 + 全勤/夜场 − 迟到/早退/旷工 − 社保 − 个税；
+              <span class="var">按月结算</span> <span class="op">=</span> 底薪全额 + 全勤/夜场 − 事假/旷工/迟到/早退 − 社保 − 个税。
+              <span style="color:var(--text-light);">每人结算模式可在「薪资参数」Tab 底部「按天结算·人员模式设置」中单独指定。</span>
+            </div>
+          </div>
+
+          <!-- 筛选栏 -->
+          <div class="filter-bar no-print">
+            <div class="form-group">
+              <label>📅 核算月份：</label>
+              <input type="month" id="filterMonth" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>🏢 部门：</label>
+              <select id="filterDept" class="form-control">
+                <option value="">全部部门</option>
+                <option value="演员队">演员队</option>
+                <option value="乐队">乐队</option>
+                <option value="舞美队">舞美队</option>
+                <option value="行政后勤">行政后勤</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>⭐ 全勤：</label>
+              <select id="filterFull" class="form-control">
+                <option value="">全部</option>
+                <option value="1">全勤（¥+200）</option>
+                <option value="0">非全勤</option>
+              </select>
+            </div>
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="filterKw" placeholder="搜索姓名、工号、岗位..." />
+            </div>
+            <button class="btn btn-outline btn-sm" id="attBtnFilterReset">↺ 重置筛选</button>
+          </div>
+
+          <!-- 工资条表格 -->
+          <div class="wage-table-wrap">
+            <div style="padding:14px 18px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+              <div style="font-size:0.88rem;color:var(--text-light);">
+                共 <strong id="wageCount" style="color:var(--primary-dark);">0</strong> 条工资条
+                <span class="no-print">｜选中 <strong id="wageSelected" style="color:var(--gold-dark);">0</strong> 条</span>
+              </div>
+              <div class="page-actions no-print">
+                <button class="btn btn-outline btn-sm" id="attBtnSelectAll">☑️ 全选本页</button>
+                <button class="btn btn-gold btn-sm" id="attBtnPrintSelected" onclick="window.print()">🖨️ 打印已选</button>
+              </div>
+            </div>
+            <div class="table-wrapper data-table-container" style="overflow-x:auto;">
+              <table class="wage-table" id="wageTable" style="min-width:760px;">
+                <thead>
+                  <tr>
+                    <th class="checkbox-cell no-print"><input type="checkbox" id="chkAllHeader" /></th>
+                    <th style="width:60px;">序号</th>
+                    <th>姓名</th>
+                    <th>岗位 / 行当</th>
+                    <th>结算模式</th>
+                    <th class="num">出勤天</th>
+                    <th class="num">夜场数</th>
+                    <th class="num">底薪</th>
+                    <th class="num add">全勤奖</th>
+                    <th class="num add">夜场补</th>
+                    <th class="num deduct">事假扣</th>
+                    <th class="num deduct">旷工扣</th>
+                    <th class="num deduct">迟到扣</th>
+                    <th class="num deduct">早退扣</th>
+                    <th class="num deduct">社保</th>
+                    <th class="num deduct">个税</th>
+                    <th class="num">应发</th>
+                    <th class="num total-net">实发</th>
+                    <th style="width:160px;" class="no-print">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="wageTbody" data-paginate="list" data-paginate-keep="1" data-page-size="10">
+                  <!-- 工资条动态渲染 -->
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td class="checkbox-cell no-print"></td>
+                    <td colspan="2" style="text-align:right;"><strong>合计</strong></td>
+                    <td id="tfCount">—</td>
+                    <td></td>
+                    <td class="num" id="tfAttDays">0</td>
+                    <td class="num" id="tfNights">0</td>
+                    <td class="num" id="tfBase">¥0</td>
+                    <td class="num" id="tfFull">¥0</td>
+                    <td class="num" id="tfNightSub">¥0</td>
+                    <td class="num" id="tfLeave">¥0</td>
+                    <td class="num" id="tfAbsent">¥0</td>
+                    <td class="num" id="tfLate">¥0</td>
+                    <td class="num" id="tfEarly">¥0</td>
+                    <td class="num" id="tfSocial">¥0</td>
+                    <td class="num" id="tfTax">¥0</td>
+                    <td class="num" id="tfGross">¥0</td>
+                    <td class="num" id="tfNet" style="color:var(--primary-dark);font-size:1rem;">¥0</td>
+                    <td class="no-print"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================== Tab 2: 考勤导入 ========================== -->
+        <div class="att-tab-content" id="tabUpload">
+          <div style="display:grid;grid-template-columns:1fr;gap:18px;">
+            <!-- 上传区域（v20261004a：真实接入 POST /v1/attendance/import，点击打开导入面板） -->
+            <div class="upload-zone no-print" id="uploadZone" style="cursor:pointer;" title="点击打开批量导入面板">
+              <span class="uz-icon">📂</span>
+              <h3>点击打开考勤批量导入面板（粘贴 CSV/制表符文本 或 选择 .csv 文件）</h3>
+              <p>解析后预览前 20 条 · 确认后批量入库 · 同人同日已有记录自动跳过</p>
+              <div class="uz-tips">
+                <strong>📌 CSV 列（任意顺序，表头模糊匹配）：</strong>
+                <div style="margin-top:8px;">
+                  <code>工号</code> <code>姓名</code> <code>日期</code> <code>状态</code> <code>工时</code> <code>备注</code>
+                </div>
+                <div style="margin-top:8px;">状态可用中文（出勤/夜班/双班/半天班/公休/事假/病假/年假/婚假/丧假/迟到/早退/旷工/请假/雨休/外出/学习/出差/工伤）或编码（full/PL/SL/late…）；日期 YYYY-MM-DD；单次上限 500 条。</div>
+              </div>
+              <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none;" />
+            </div>
+
+            <!-- 预览区域 -->
+            <div class="preview-card" id="previewCard" style="display:none;">
+              <div class="preview-header no-print">
+                <h4>✅ 考勤表解析预览（共 <span id="previewCount">0</span> 条记录 · <span id="previewMonth">—</span>，仅展示前 20 条）</h4>
+                <div class="page-actions">
+                  <button class="btn btn-outline btn-sm" id="previewCancelBtn">✕ 取消</button>
+                  <button class="btn btn-success btn-sm" id="previewConfirmBtn">💾 确认导入入库</button>
+                </div>
+              </div>
+              <div class="preview-body">
+                <div class="table-wrapper data-table-container" style="overflow-x:auto;">
+                  <table class="wage-table" id="previewTable" style="min-width:760px;">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>工号</th>
+                      <th>姓名</th>
+                      <th>日期</th>
+                      <th>状态</th>
+                      <th class="num">工时</th>
+                      <th>备注</th>
+                      <th>校验</th>
+                    </tr>
+                  </thead>
+                  <tbody id="previewTbody"></tbody>
+                </table>
+              </div>
+            </div>
+            </div><!-- /#previewCard 修复：预览卡在此闭合，人工补录/记录管理为其兄弟节点（原嵌套其中导致未上传CSV时不可见） -->
+
+            <!-- 人工补录（无需CSV） -->
+            <div class="param-card no-print">
+              <h4 style="margin:0 0 14px 0;color:var(--primary-dark);">✍️ 或者人工补录考勤（无需上传 CSV）</h4>
+              <div class="param-grid">
+                <div class="param-item">
+                  <label>选择员工</label>
+                  <select class="form-control" id="manualStaff"></select>
+                </div>
+                <div class="param-item">
+                  <label>出勤天数（例：26）</label>
+                  <input type="number" min="0" max="31" step="1" class="form-control" id="manualAttDays" value="26" />
+                </div>
+                <div class="param-item">
+                  <label>夜场场次（例：8）</label>
+                  <input type="number" min="0" step="1" class="form-control" id="manualNights" value="0" />
+                </div>
+                <div class="param-item">
+                  <label>事假天数（例：2）</label>
+                  <input type="number" min="0" step="0.5" class="form-control" id="manualLeave" value="0" />
+                </div>
+                <div class="param-item">
+                  <label>旷工天数</label>
+                  <input type="number" min="0" step="0.5" class="form-control" id="manualAbsent" value="0" />
+                </div>
+                <div class="param-item">
+                  <label style="visibility:hidden;">——</label>
+                  <button class="btn btn-success" id="manualAddBtn" style="width:100%;">➕ 添加该员工本月考勤</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 🗂️ 考勤记录管理（v20261002b：批量录入 / 批量改类型 / 批量删除） -->
+            <div class="param-card no-print" id="attManageCard">
+              <h4 style="margin:0 0 10px 0;color:var(--primary-dark);">🗂️ 考勤记录管理（<span id="attRecMonthLabel">—</span> · 共 <span id="attRecCount">0</span> 条）</h4>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+                <button class="btn btn-outline btn-sm" id="attRecReloadBtn">↻ 刷新</button>
+                <select class="form-control" id="attRecNewType" style="width:auto;min-width:150px;"></select>
+                <button class="btn btn-primary btn-sm" id="attRecTypeBtn">✏️ 批量改类型（已选 <span id="attRecSelCount">0</span>）</button>
+                <button class="btn btn-danger btn-sm" id="attRecDelBtn">🗑️ 批量删除（已选 <span id="attRecSelCount2">0</span>）</button>
+                <span id="attRecHint" style="font-size:.8rem;color:var(--text-light);">勾选记录后批量修改类型或删除（批量删除仅超级管理员可用）</span>
+              </div>
+              <div class="table-wrapper data-table-container" style="max-height:320px;overflow-y:auto;border:1px solid var(--border-light);border-radius:10px;">
+                <table class="wage-table" style="min-width:640px;">
+                  <thead>
+                    <tr>
+                      <th style="width:44px;"><input type="checkbox" id="attRecAll" title="全选/取消全选" /></th>
+                      <th style="width:110px;">日期</th>
+                      <th>人员</th>
+                      <th style="width:140px;">类型</th>
+                      <th>备注</th>
+                    </tr>
+                  </thead>
+                  <tbody id="attRecTbody">
+                    <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-light);">正在载入考勤记录…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style="border-top:1px dashed var(--border-light);margin-top:14px;padding-top:12px;">
+                <h5 style="margin:0 0 10px 0;color:var(--primary-dark);">📅 按人员 + 日期范围批量录入考勤</h5>
+                <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr auto auto;gap:10px;align-items:end;">
+                  <div>
+                    <label style="font-size:.82rem;font-weight:600;">选择员工</label>
+                    <select class="form-control" id="baStaff"></select>
+                  </div>
+                  <div>
+                    <label style="font-size:.82rem;font-weight:600;">开始日期</label>
+                    <input type="date" class="form-control" id="baDateFrom" />
+                  </div>
+                  <div>
+                    <label style="font-size:.82rem;font-weight:600;">结束日期</label>
+                    <input type="date" class="form-control" id="baDateTo" />
+                  </div>
+                  <div>
+                    <label style="font-size:.82rem;font-weight:600;">考勤类型</label>
+                    <select class="form-control" id="baType"></select>
+                  </div>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;padding-bottom:8px;cursor:pointer;"><input type="checkbox" id="baSkipExist" checked /> 跳过已有</label>
+                  <button class="btn btn-success" id="baAddBtn">➕ 批量录入</button>
+                </div>
+                <div style="margin-top:8px;font-size:.8rem;color:var(--text-light);">起止日期范围内每天生成一条考勤；同一员工同一天已有记录时自动跳过（可取消勾选强制录入）。事假每月超 2 次需团长特批，超限的会提交失败并在结果中逐条报告。</div>
+              </div>
+            </div>
+          </div>
+        </div><!-- /#tabUpload -->
+
+        <!-- ========================== Tab 2b: 批量补打卡 ========================== -->
+        <div class="att-tab-content" id="tabBpunch">
+          <div style="display:grid;grid-template-columns:1fr;gap:18px;">
+            <!-- 操作栏 -->
+            <div class="param-card no-print">
+              <h4 style="margin:0 0 12px 0;color:var(--primary-dark);">✍️ 批量补打卡（管理员为员工补录上下班打卡，无需 GPS）</h4>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">
+                <div>
+                  <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">打卡日期</label>
+                  <input type="date" class="form-control" id="bpDate" style="width:160px;" />
+                </div>
+                <div>
+                  <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">打卡时间</label>
+                  <input type="time" class="form-control" id="bpTime" style="width:120px;" value="09:00" />
+                </div>
+                <div>
+                  <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">补卡类型</label>
+                  <select class="form-control" id="bpPunchType" style="width:auto;min-width:120px;">
+                    <option value="both">上班+下班</option>
+                    <option value="in">仅上班</option>
+                    <option value="out">仅下班</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">上班状态</label>
+                  <select class="form-control" id="bpInStatus" style="width:auto;min-width:110px;">
+                    <option value="normal" selected>正常</option>
+                    <option value="late">迟到</option>
+                    <option value="early">早退</option>
+                    <option value="absent">缺勤</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">下班状态</label>
+                  <select class="form-control" id="bpOutStatus" style="width:auto;min-width:110px;">
+                    <option value="normal" selected>正常</option>
+                    <option value="late">迟到</option>
+                    <option value="early">早退</option>
+                    <option value="absent">缺勤</option>
+                  </select>
+                </div>
+                <div style="flex:1;min-width:200px;">
+                  <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">备注（可选）</label>
+                  <input type="text" class="form-control" id="bpRemark" placeholder="如：管理员补录" style="max-width:240px;" />
+                </div>
+                <button class="btn btn-success" id="bpSubmitBtn">✍️ 批量补打卡（已选 <span id="bpSelCount">0</span> 人）</button>
+              </div>
+              <div style="font-size:.8rem;color:var(--text-light);">勾选员工后选择补卡类型和状态，点击「批量补打卡」。状态需手动选择（正常/迟到/早退/缺勤），默认正常。同人同日已存在的打卡类型自动跳过。</div>
+            </div>
+
+            <!-- 员工列表（按行当分组） -->
+            <div class="param-card no-print">
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+                <input type="text" class="form-control" id="bpSearch" placeholder="搜索姓名/工号…" style="width:240px;" />
+                <button class="btn btn-outline btn-sm" id="bpLoadBtn">↻ 加载员工</button>
+                <span id="bpLoadHint" style="font-size:.8rem;color:var(--text-light);"></span>
+              </div>
+              <div id="bpPerfList" style="max-height:420px;overflow-y:auto;border:1px solid var(--border-light);border-radius:10px;padding:10px;">
+                <p style="color:var(--text-light);text-align:center;padding:20px;">点击「加载员工」按钮加载演职人员列表</p>
+              </div>
+            </div>
+          </div>
+        </div><!-- /#tabBpunch -->
+
+        <!-- ========================== Tab 3: 薪资参数 ========================== -->
+        <div class="att-tab-content" id="tabParams">
+          <!-- ⏰ 打卡参数（v20261012 新规：窗口/基准/迟到1元每分封顶30/事故分级10·30·50，存后端 Setting，员工端同步展示） -->
+          <div class="param-card" style="margin-bottom:16px;">
+            <div class="wage-formula-box" style="margin-bottom:12px;">
+              <h4 style="margin:0 0 6px 0;">⏰ 打卡参数（v20261012 新规·保存到服务器，员工打卡/工资核算即时生效）</h4>
+              <p style="margin:0;font-size:.84rem;color:#64748b;">
+                打卡窗口内打卡有效；迟到罚款 = 迟到分钟 × 单价（单场封顶），迟到满「失效分钟」本场不计薪；
+                事故分级按天扣款（代打卡查实按三级登记）；装台/卸台日不计薪资、不计迟到、不计奖励；不设任何奖励项。
+              </p>
+            </div>
+            <div class="param-grid">
+              <div class="param-item">
+                <label>🌅 日场打卡窗口</label>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <input type="time" class="form-control" id="ppDayStart" value="13:30" style="flex:1;" />
+                  <span>~</span>
+                  <input type="time" class="form-control" id="ppDayEnd" value="14:00" style="flex:1;" />
+                </div>
+                <div class="param-hint">窗口内打卡有效，基准取「日场基准」</div>
+              </div>
+              <div class="param-item">
+                <label>🎯 日场基准时间</label>
+                <input type="time" class="form-control" id="ppDayBase" value="13:30" />
+                <div class="param-hint">晚于基准 = 迟到，按分钟计罚</div>
+              </div>
+              <div class="param-item">
+                <label>🌆 晚场打卡窗口</label>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <input type="time" class="form-control" id="ppNightStart" value="19:30" style="flex:1;" />
+                  <span>~</span>
+                  <input type="time" class="form-control" id="ppNightEnd" value="20:00" style="flex:1;" />
+                </div>
+                <div class="param-hint">窗口内打卡有效，基准取「晚场基准」</div>
+              </div>
+              <div class="param-item">
+                <label>🎯 晚场基准时间</label>
+                <input type="time" class="form-control" id="ppNightBase" value="19:30" />
+                <div class="param-hint">晚于基准 = 迟到，按分钟计罚</div>
+              </div>
+              <div class="param-item">
+                <label>⏱️ 迟到罚款（元 / 分钟）</label>
+                <input type="number" min="0" max="100" step="1" class="form-control" id="ppLatePerMin" value="1" />
+                <div class="param-hint">按打卡记录迟到分钟计算</div>
+              </div>
+              <div class="param-item">
+                <label>💰 单场罚款封顶（元）</label>
+                <input type="number" min="0" step="5" class="form-control" id="ppLateCap" value="30" />
+                <div class="param-hint">单场迟到罚款不超过此金额</div>
+              </div>
+              <div class="param-item">
+                <label>🚫 本场失效分钟（≥ 不计薪）</label>
+                <input type="number" min="1" step="5" class="form-control" id="ppLateInvalid" value="30" />
+                <div class="param-hint">迟到达此分钟数，本场出勤不计薪</div>
+              </div>
+              <div class="param-item">
+                <label>🥇 事故一级扣款（元 / 天）</label>
+                <input type="number" min="0" step="5" class="form-control" id="ppAcc1" value="10" />
+                <div class="param-hint">按天登记 accident_l1 考勤即计</div>
+              </div>
+              <div class="param-item">
+                <label>🥈 事故二级扣款（元 / 天）</label>
+                <input type="number" min="0" step="5" class="form-control" id="ppAcc2" value="30" />
+                <div class="param-hint">按天登记 accident_l2 考勤即计</div>
+              </div>
+              <div class="param-item">
+                <label>🥉 事故三级扣款（元 / 天）</label>
+                <input type="number" min="0" step="5" class="form-control" id="ppAcc3" value="50" />
+                <div class="param-hint">代打卡查实按三级登记扣款</div>
+              </div>
+              <div class="param-item">
+                <label>🎁 奖励项</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;padding:9px 12px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;">
+                  <input type="checkbox" id="ppRewardEnabled" disabled /> 启用奖励（新规固定关闭）
+                </label>
+                <div class="param-hint">新规：不设任何奖励</div>
+              </div>
+              <div class="param-item">
+                <label>🏗️ 装台 / 卸台日</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;padding:9px 12px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;">
+                  <input type="checkbox" id="ppStageNoPay" disabled checked /> 不计薪资/迟到/奖励（新规固定开启）
+                </label>
+                <div class="param-hint">stage_in / stage_out 考勤不进工资桶</div>
+              </div>
+              <div class="param-item" style="grid-column:1/-1;">
+                <div class="page-actions" style="align-items:center;">
+                  <button class="btn btn-outline" id="ppReloadBtn">↺ 重新加载</button>
+                  <button class="btn btn-primary" id="ppSaveBtn">💾 保存打卡参数（服务器）</button>
+                  <span id="ppHint" style="font-size:.84rem;color:var(--text-light);"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="wage-formula-box">
+            <h4>🔧 薪资参数配置（修改后点击「保存参数」生效，下次核算自动采用）</h4>
+            <div class="formula" style="background:transparent;border:none;padding:0;">
+              修改参数仅影响 <span class="var">新的核算</span>，<span class="op">已生成的历史工资条不变</span>（保证数据一致性）
+            </div>
+          </div>
+          <div class="param-card">
+            <div class="param-grid">
+              <div class="param-item">
+                <label>💰 底薪（元 / 月）<span style="color:#dc3545;">*</span></label>
+                <input type="number" min="0" step="100" class="form-control" id="paramBase" value="3800" />
+                <div class="param-hint">默认 ¥3,800，可按员工个别调整（工资条列表可单行改）</div>
+              </div>
+              <div class="param-item">
+                <label>🏆 全勤奖金（元）<span style="color:#dc3545;">*</span></label>
+                <input type="number" min="0" step="10" class="form-control" id="paramFullBonus" value="200" />
+                <div class="param-hint">整月无请假 / 无旷工 / 出勤≥应出勤天 → 发放</div>
+              </div>
+              <div class="param-item">
+                <label>🌙 夜场补贴（元 / 场）<span style="color:#dc3545;">*</span></label>
+                <input type="number" min="0" step="10" class="form-control" id="paramNightSub" value="80" />
+                <div class="param-hint">夜场总补贴 = 夜场场数 × 单场补贴</div>
+              </div>
+              <div class="param-item">
+                <label>🏥 社保代扣（元 / 月）<span style="color:#dc3545;">*</span></label>
+                <input type="number" min="0" step="10" class="form-control" id="paramSocial" value="420" />
+                <div class="param-hint">固定扣除（五险一金个人部分，默认 ¥420）</div>
+              </div>
+              <div class="param-item">
+                <label>📅 每月应出勤天数（天）</label>
+                <input type="number" min="20" max="31" step="1" class="form-control" id="paramShouldWork" value="26" />
+                <div class="param-hint">用于日均工资计算 & 全勤判断基准</div>
+              </div>
+              <div class="param-item">
+                <label>📊 个税起征点（元）</label>
+                <input type="number" min="0" step="500" class="form-control" id="paramTaxThreshold" value="5000" />
+                <div class="param-hint">应纳税所得额 = 应发工资 - 起征点</div>
+              </div>
+              <div class="param-item" style="grid-column:1/-1;">
+                <label>📈 个税税率档位（累进税率，按月计算）</label>
+                <div style="background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;padding:14px 16px;margin-top:4px;font-size:0.85rem;">
+                  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;font-weight:700;color:var(--primary-dark);padding-bottom:8px;border-bottom:1px solid var(--border-light);">
+                    <div>档位</div><div>应纳税所得额（月）</div><div>税率</div><div>速算扣除数</div><div>说明</div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:8px 0;border-bottom:1px dashed var(--border-light);">
+                    <div>1 档</div><div>≤ ¥3,000</div><div>3%</div><div>0</div><div style="color:#28a745;">低税率</div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:8px 0;border-bottom:1px dashed var(--border-light);">
+                    <div>2 档</div><div>¥3,000 ~ ¥12,000</div><div>10%</div><div>210</div><div>大部分员工</div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:8px 0;border-bottom:1px dashed var(--border-light);">
+                    <div>3 档</div><div>¥12,000 ~ ¥25,000</div><div>20%</div><div>1,410</div><div style="color:#e6a800;">高薪档</div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:8px 0;">
+                    <div>4+ 档</div><div>> ¥25,000</div><div>25%~45%</div><div>按国标</div><div style="color:#dc3545;">极少触发</div>
+                  </div>
+                </div>
+              </div>
+              <div class="param-item">
+                <label>⏰ 迟到扣款（元 / 次）</label>
+                <input type="number" min="0" step="5" class="form-control" id="paramLateDeduct" value="30" />
+                <div class="param-hint">单次迟到固定扣款；若下方「累进模式」开启：第4次起每次翻倍</div>
+              </div>
+              <div class="param-item">
+                <label>🏃 早退扣款（元 / 次）</label>
+                <input type="number" min="0" step="5" class="form-control" id="paramEarlyDeduct" value="30" />
+                <div class="param-hint">单次早退固定扣款（不触发累进，保持简单）</div>
+              </div>
+              <div class="param-item">
+                <label>⛔ 旷工扣款倍率（× 日均底薪）</label>
+                <input type="number" min="0.5" max="5" step="0.5" class="form-control" id="paramAbsentMult" value="2" />
+                <div class="param-hint">旷工扣款 = 旷工天数 × 日均底薪 × 本倍率（行业惯例 2~3 倍）</div>
+              </div>
+              <div class="param-item">
+                <label>🔢 迟到累进扣款（第4次起每次翻倍）</label>
+                <select class="form-control" id="paramLateProgressive">
+                  <option value="1">✅ 开启（推荐，避免故意小迟到）</option>
+                  <option value="0">❌ 关闭（统一单价）</option>
+                </select>
+                <div class="param-hint">示例：30元×（3次正常=90，第4次=60，第5次=120，上限500/次）</div>
+              </div>
+              <div class="param-item" style="grid-column:1/-1;">
+                <div class="page-actions">
+                  <button class="btn btn-outline" id="paramResetBtn">↺ 恢复默认参数</button>
+                  <button class="btn btn-primary" id="paramSaveBtn">💾 保存参数到本地</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 🧩 核算项开关（v20261002b 自定义结算选项）：随薪资参数保存到本地，核算时随 monthlyParams 提交后端 -->
+          <div class="param-card" style="margin-top:16px;">
+            <div class="wage-formula-box" style="margin-bottom:12px;">
+              <h4 style="margin:0 0 6px 0;">🧩 核算项开关（自定义结算选项）</h4>
+              <p style="margin:0;font-size:.84rem;color:#64748b;">
+                勾选 = 启用、取消勾选 = 停用。点击上方「💾 保存参数到本地」随参数一并保存，下次「🧮 核算当月工资」时生效：
+                <b>按月结算</b>的全部核算项（含底薪、事假/病假扣回）受开关控制；<b>按天·月薪折算</b>的底薪折算受「底薪」开关控制（关闭后折算为 0）；
+                <b>按天·纯日结</b>取协议天工资/职级日薪，不走底薪，其<b>迟到/早退/旷工扣罚</b>同样受对应开关控制（关闭即不扣）。
+              </p>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;cursor:pointer;padding:9px 12px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;"><input type="checkbox" id="tgBase" checked /> 💰 底薪</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;cursor:pointer;padding:9px 12px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;"><input type="checkbox" id="tgFullBonus" checked /> 🏆 全勤奖</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;cursor:pointer;padding:9px 12px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;"><input type="checkbox" id="tgNightSub" checked /> 🌙 夜场补贴</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;cursor:pointer;padding:9px 12px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;"><input type="checkbox" id="tgLateDeduct" checked /> ⏰ 迟到扣款</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;cursor:pointer;padding:9px 12px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;"><input type="checkbox" id="tgEarlyDeduct" checked /> 🏃 早退扣款</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;cursor:pointer;padding:9px 12px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;"><input type="checkbox" id="tgAbsentDeduct" checked /> ⛔ 旷工扣款</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;cursor:pointer;padding:9px 12px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;"><input type="checkbox" id="tgLeaveDeduct" checked /> 📄 事假/病假扣款</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;cursor:pointer;padding:9px 12px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;"><input type="checkbox" id="tgSocial" checked /> 🏥 社保公积金</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;cursor:pointer;padding:9px 12px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:10px;"><input type="checkbox" id="tgTax" checked /> 📊 个税</label>
+            </div>
+          </div>
+
+          <!-- 👥 按天结算·人员模式设置（v20261002）：全员默认 + 按人覆盖，存 localStorage，核算时随参数提交后端 -->
+          <div class="param-card" style="margin-top:16px;">
+            <div class="wage-formula-box" style="margin-bottom:12px;">
+              <h4 style="margin:0 0 6px 0;">👥 按天结算 · 人员模式设置</h4>
+              <p style="margin:0;font-size:.84rem;color:#64748b;">
+                三种结算模式：<b>按月结算</b>（底薪、全勤奖/夜场补贴/各项扣款/社保/个税，全部受上方「核算项开关」控制）｜
+                <b>按天·纯日结</b>（协议天工资或职级日薪 × 出勤天 − 扣罚，纯日薪口径：不发全勤奖/夜场补贴等福利项，默认）｜
+                <b>按天·月薪折算</b>（底薪 ÷ 应勤天数 = 日薪，× 实际出勤天 − 扣款；同纯日薪口径，不发福利项；底薪可用开关停用）。
+                每人可用下拉单独覆盖全员默认；点击「🧮 核算当月工资」时随薪资参数一并提交，结算结果与模式存入后端工资条。
+              </p>
+              <!-- v20261003：三模式违纪扣罚口径差异提示（P2-4），避免同一违纪在不同模式下扣款不同造成误解 -->
+              <p style="margin:10px 0 0 0;font-size:.8rem;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;line-height:1.7;">
+                ⚠️ <b>违纪扣罚口径随模式不同</b>，同一违纪记录在不同模式下扣款金额不同：<br>
+                ・<b>按天·纯日结</b>（《员工管理条例》第二条）：迟到/早退 30 分钟内 <b>20 元/次</b>；超 30 分钟按旷工半天，扣 <b>本人日薪 × 0.5</b>；旷工 1 天扣 <b>本人日薪 × 2</b>；事假入扣款桶按本人日薪扣回、病假按 50% 扣回。<br>
+                ・<b>按天·月薪折算 / 按月结算</b>：迟到/早退按上方参数 <b>30 元/次</b>（可在薪资参数中调整）；旷工按 <b>折算日薪（底薪÷应勤天数）× 旷工倍数</b>；按月结算另按折算日薪扣事假、按 50% 扣病假。<br>
+                同一人改换结算模式后，违纪扣款会按新口径重算，请以工资条备注中的逐项明细为准。
+              </p>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+              <label for="settleDefaultMode" style="font-weight:600;">🧭 全员默认模式：</label>
+              <select id="settleDefaultMode" class="form-control" style="width:auto;min-width:220px;">
+                <option value="daily_pure">按天·纯日结（现有口径，默认）</option>
+                <option value="daily_prorated">按天·月薪折算</option>
+                <option value="monthly">按月结算</option>
+              </select>
+              <button class="btn btn-primary btn-sm" id="settleModeSaveBtn">💾 保存模式设置</button>
+              <button class="btn btn-outline btn-sm" id="settleModeReloadBtn">↻ 重新载入人员</button>
+              <span id="settleModeHint" style="font-size:.8rem;color:var(--text-light);"></span>
+            </div>
+            <div class="table-wrapper" style="max-height:380px;overflow-y:auto;">
+              <table class="wage-table" style="min-width:680px;">
+                <thead>
+                  <tr>
+                    <th style="width:56px;">#</th>
+                    <th>姓名</th>
+                    <th>工号</th>
+                    <th>职级</th>
+                    <th class="num">协议天工资</th>
+                    <th style="width:230px;">结算模式</th>
+                  </tr>
+                </thead>
+                <tbody id="settleModeTbody">
+                  <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-light);">正在载入人员…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================== Tab 5: 扣款规则引擎（自定义 · 优先级匹配） ========================== -->
+        <div class="att-tab-content" id="tabRules">
+          <div class="wage-formula-box" style="margin-bottom:14px;">
+            <h4 style="margin:0 0 6px 0;color:#6d28d9;">🎯 扣款规则引擎（完全自定义 · 按优先级顺序匹配）</h4>
+            <p style="margin:0;font-size:.84rem;color:#64748b;">
+              原理：每条规则 = <b>条件（范围）+ 动作（加减金额）</b>。每月工资核算时，<b>按优先级从大到小</b>依次匹配每条规则，命中则叠加扣/加。
+              <br>• 条件类型：迟到分钟 / 早退分钟 / 迟到次数 / 早退次数 / 旷工天数 / 事假天数 / 病假天数 / 夜场次数 / 出勤天数 / 事故次数
+              <br>• 动作类型：扣固定元 / 扣「×日均底薪」 / 扣「%月薪」 / 加固定元（奖励类） / 加「×日均」（全勤类）
+              <br>• 支持「仅一次」：整月最多命中 1 次（如全勤奖）；不勾选则按命中次数累加（如迟到每次 30）
+            </p>
+            <div class="page-actions" style="margin-top:10px;">
+              <button class="btn btn-sm btn-outline" id="ruleResetBtn">↺ 恢复行业默认 10 条</button>
+              <button class="btn btn-sm btn-success" id="ruleAddBtn">➕ 新增规则</button>
+              <button class="btn btn-sm btn-primary" id="ruleSaveBtn">💾 保存全部规则</button>
+              <button class="btn btn-sm btn-gold" id="ruleTestBtn" title="输入示例考勤情况，测试引擎匹配结果">🧪 测试匹配结果</button>
+            </div>
+          </div>
+          <div class="param-card" style="padding:10px 8px;">
+            <div class="table-wrapper data-table-container" style="overflow-x:auto;">
+              <table class="wage-table" style="min-width:1580px;">
+                <thead>
+                  <tr>
+                    <th style="width:52px;">优先级<br><small>大→小</small></th>
+                    <th style="width:230px;">规则名称</th>
+                    <th style="width:72px;">启用</th>
+                    <th style="width:150px;">条件类型</th>
+                    <th style="width:96px;">下限 ≥</th>
+                    <th style="width:96px;">上限 ≤</th>
+                    <th style="width:130px;">动作类型</th>
+                    <th style="width:110px;">动作金额/系数</th>
+                    <th style="width:88px;">仅 1 次</th>
+                    <th style="width:120px;">适用范围</th>
+                    <th style="width:120px;">分组/部门限制</th>
+                    <th>备注说明</th>
+                    <th style="width:170px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="rulesTbody"></tbody>
+              </table>
+            </div>
+            <div id="rulesTestPanel" class="param-card no-print" style="display:none;margin-top:14px;border:2px dashed #c4b5fd;background:#faf5ff;">
+              <h5 style="margin:0 0 10px 0;color:#6d28d9;">🧪 测试匹配结果（不改实际数据）</h5>
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;font-size:.82rem;">
+                <div><label>迟到 分钟</label><input type="number" class="form-control" id="rtLateMin" value="35"></div>
+                <div><label>迟到 次数</label><input type="number" class="form-control" id="rtLateCnt" value="4"></div>
+                <div><label>早退 分钟</label><input type="number" class="form-control" id="rtEarlyMin" value="10"></div>
+                <div><label>早退 次数</label><input type="number" class="form-control" id="rtEarlyCnt" value="1"></div>
+                <div><label>旷工 天</label><input type="number" step="0.5" class="form-control" id="rtAbsent" value="1"></div>
+                <div><label>事假 天</label><input type="number" step="0.5" class="form-control" id="rtLeave" value="2"></div>
+                <div><label>病假 天</label><input type="number" step="0.5" class="form-control" id="rtSick" value="0"></div>
+                <div><label>夜场 次</label><input type="number" class="form-control" id="rtNights" value="8"></div>
+                <div><label>出勤 天</label><input type="number" class="form-control" id="rtAtt" value="22"></div>
+                <div><label>应出勤 天</label><input type="number" class="form-control" id="rtSwd" value="26"></div>
+                <div><label>事故 次</label><input type="number" class="form-control" id="rtAcc" value="0"></div>
+                <div><label>底薪 元/月</label><input type="number" class="form-control" id="rtBase" value="3800"></div>
+              </div>
+              <div style="margin-top:12px;"><button class="btn btn-sm btn-gold" id="ruleRunTestBtn">▶ 运行匹配</button></div>
+              <pre id="rulesTestResult" style="margin:10px 0 0 0;padding:12px;background:#0f172a;color:#e2e8f0;border-radius:8px;white-space:pre-wrap;font-size:.8rem;line-height:1.55;"></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================== Tab 4: 打印历史 ========================== -->
+        <div class="att-tab-content" id="tabHistory">
+          <div class="wage-table-wrap">
+            <div style="padding:14px 18px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+              <div style="font-size:0.88rem;color:var(--text-light);">
+                打印历史共 <strong id="historyCount" style="color:var(--primary-dark);">0</strong> 条（LocalStorage 持久化，最多保留 200 条）
+              </div>
+              <div class="page-actions no-print">
+                <button class="btn btn-danger btn-sm" id="historyClearBtn">🗑️ 清空打印历史</button>
+              </div>
+            </div>
+            <div class="table-wrapper data-table-container" style="overflow-x:auto;">
+              <table class="wage-table" style="min-width:760px;">
+                <thead>
+                  <tr>
+                    <th style="width:60px;">序号</th>
+                    <th>打印时间</th>
+                    <th>月份</th>
+                    <th>类型</th>
+                    <th>人员数量</th>
+                    <th>打印人</th>
+                    <th>工资条编号（部分）</th>
+                    <th style="width:100px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="historyTbody">
+                  <tr><td colspan="8" style="text-align:center;padding:60px 20px;color:var(--text-light);">暂无打印记录，点击「打印工资条」后会记录在此</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  
+<!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
+<script src="../js/admin-pages/attendance.js?v=20261012b"></script>
+
+
+<!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
+
+
+
+
+<script src="../js/admin-mobile-sidebar.js?v=20260926m"></script>
+</body>
+</html>
+

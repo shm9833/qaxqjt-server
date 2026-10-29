@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>灵活薪资配置组件 - 浏览器功能验证</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #f5f7fa;
+    color: #2d3748;
+    padding: 20px;
+    line-height: 1.6;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  
+  h1 {
+    color: #0f4c81;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .version-badge {
+    background: #e8f1f8;
+    color: #0f4c81;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  
+  .subtitle {
+    color: #718096;
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+  }
+  
+  /* 测试控制面板 */
+  .control-panel {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(15,76,129,0.08);
+    border: 1px solid #e2e8f0;
+  }
+  
+  .control-panel h2 {
+    color: #0f4c81;
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .btn-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  
+  .btn-primary {
+    background: #0f4c81;
+    color: #fff;
+  }
+  .btn-primary:hover { background: #0a3558; transform: translateY(-1px); }
+  
+  .btn-success {
+    background: #38a169;
+    color: #fff;
+  }
+  .btn-success:hover { background: #2f855a; }
+  
+  .btn-secondary {
+    background: #edf2f7;
+    color: #4a5568;
+  }
+  .btn-secondary:hover { background: #e2e8f0; }
+  
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  /* 统计面板 */
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .stat-card {
+    flex: 1;
+    background: #fff;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(15,76,129,0.06);
+    border: 1px solid #e2e8f0;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .stat-number.pass { color: #38a169; }
+  .stat-number.fail { color: #e53e3e; }
+  .stat-number.total { color: #0f4c81; }
+  
+  .stat-label {
+    font-size: 0.85rem;
+    color: #718096;
+  }
+  
+  /* 测试列表 */
+  .test-list {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(15,76,129,0.08);
+    border: 1px solid #e2e8f0;
+  }
+  
+  .test-item {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    transition: background 0.2s;
+  }
+  .test-item:last-child { border-bottom: none; }
+  .test-item:hover { background: #f7fafc; }
+  
+  .test-status {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .test-status.pending { background: #edf2f7; color: #a0aec0; }
+  .test-status.pass { background: #c6f6d5; color: #22543d; }
+  .test-status.fail { background: #fed7d7; color: #742a2a; }
+  .test-status.running { background: #bee3f8; color: #2a4365; animation: pulse 1.5s infinite; }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
+  .test-content { flex: 1; }
+  .test-title {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .test-desc {
+    font-size: 0.85rem;
+    color: #718096;
+    margin-bottom: 8px;
+  }
+  .test-detail {
+    font-size: 0.82rem;
+    color: #4a5568;
+    background: #f7fafc;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    display: none;
+  }
+  .test-detail.show { display: block; }
+  .test-detail code {
+    background: #edf2f7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "Courier New", monospace;
+    font-size: 0.8rem;
+  }
+  
+  .test-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  
+  .btn-small {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+  }
+  
+  /* 日志区域 */
+  .log-panel {
+    background: #1a202c;
+    color: #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 20px;
+    font-family: "Courier New", monospace;
+    font-size: 0.85rem;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
+  .log-panel h3 {
+    color: #63b3ed;
+    margin-bottom: 12px;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  
+  .log-entry {
+    margin-bottom: 6px;
+    padding: 4px 0;
+    border-bottom: 1px solid #2d3748;
+  }
+  .log-entry:last-child { border-bottom: none; }
+  .log-time { color: #a0aec0; font-size: 0.75rem; }
+  .log-pass { color: #68d391; }
+  .log-fail { color: #fc8181; }
+  .log-info { color: #63b3ed; }
+  
+  /* 组件预览区域 */
+  .preview-panel {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(15,76,129,0.08);
+    border: 1px solid #e2e8f0;
+  }
+  .preview-panel h2 {
+    color: #0f4c81;
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+  }
+  
+  .component-wrapper {
+    border: 2px dashed #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .component-wrapper iframe {
+    width: 100%;
+    height: 600px;
+    border: none;
+    border-radius: 8px;
+  }
+  
+  /* 响应式 */
+  @media (max-width: 768px) {
+    .stats-bar { flex-direction: column; }
+    .btn-group { justify-content: center; }
+    .test-item { flex-direction: column; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>
+    <span>🧪</span>
+    灵活薪资配置组件 - 浏览器功能验证
+    <span class="version-badge">v1.0.0-20261016</span>
+  </h1>
+  <p class="subtitle">在浏览器中直接验证组件功能，无需 Node.js 或 Playwright 环境</p>
+  
+  <!-- 统计面板 -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-number total" id="statTotal">11</div>
+      <div class="stat-label">总测试数</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number pass" id="statPass">0</div>
+      <div class="stat-label">通过</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number fail" id="statFail">0</div>
+      <div class="stat-label">失败</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="statRate" style="color: #0f4c81;">0%</div>
+      <div class="stat-label">通过率</div>
+    </div>
+  </div>
+  
+  <!-- 控制面板 -->
+  <div class="control-panel">
+    <h2>⚙️ 测试控制</h2>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="runAllTests()">▶ 运行全部测试</button>
+      <button class="btn btn-success" onclick="runApiTests()">🔌 运行 API 测试</button>
+      <button class="btn btn-success" onclick="runLogicTests()">🔄 运行逻辑测试</button>
+      <button class="btn btn-secondary" onclick="clearResults()">🗑 清除结果</button>
+    </div>
+  </div>
+  
+  <!-- 组件预览 -->
+  <div class="preview-panel">
+    <h2>👁️ 组件预览</h2>
+    <div class="component-wrapper">
+      <iframe id="componentFrame" src="../components/salary-config-widget.html" title="薪资配置组件"></iframe>
+    </div>
+  </div>
+  
+  <!-- 测试列表 -->
+  <div class="test-list" id="testList">
+    <!-- 测试项将通过 JavaScript 动态生成 -->
+  </div>
+  
+  <!-- 日志面板 -->
+  <div class="log-panel">
+    <h3>📋 测试日志</h3>
+    <div id="logContainer">
+      <div class="log-entry log-info">
+        <span class="log-time">[系统]</span> 等待测试开始...
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== 测试配置 ====================
+const TESTS = [
+  {
+    id: 'T1',
+    name: '组件初始化',
+    desc: '验证组件正确加载并暴露 API',
+    category: 'api',
+    fn: testInit
+  },
+  {
+    id: 'T2',
+    name: 'getValue() 初始状态',
+    desc: '验证组件初始化后的默认值',
+    category: 'api',
+    fn: testInitialState
+  },
+  {
+    id: 'T3',
+    name: 'validate() 初始状态',
+    desc: '验证初始状态下输入合法',
+    category: 'api',
+    fn: testValidateInitial
+  },
+  {
+    id: 'T4',
+    name: '设置日工资',
+    desc: '验证日工资输入和验证逻辑',
+    category: 'logic',
+    fn: testSetDaily
+  },
+  {
+    id: 'T5',
+    name: '日→月自动换算',
+    desc: '验证日工资切换到月工资时的自动换算',
+    category: 'logic',
+    fn: testDailyToMonthly
+  },
+  {
+    id: 'T6',
+    name: '月→日自动换算',
+    desc: '验证月工资切换到日工资时的自动换算',
+    category: 'logic',
+    fn: testMonthlyToDaily
+  },
+  {
+    id: 'T7',
+    name: '手动修改月工资',
+    desc: '验证月工资可手动编辑',
+    category: 'logic',
+    fn: testSetMonthly
+  },
+  {
+    id: 'T8',
+    name: '缓存恢复机制',
+    desc: '验证切换模式时保留已输入值',
+    category: 'logic',
+    fn: testCacheRestore
+  },
+  {
+    id: 'T9',
+    name: '附加配置项完整性',
+    desc: '验证所有附加配置项完整存在',
+    category: 'api',
+    fn: testExtras
+  },
+  {
+    id: 'T10',
+    name: '非法输入验证',
+    desc: '验证非法输入被拦截或修正',
+    category: 'logic',
+    fn: testInvalidInput
+  },
+  {
+    id: 'T11',
+    name: '两位小数限制',
+    desc: '验证小数位数限制',
+    category: 'logic',
+    fn: testDecimalLimit
+  }
+];
+
+// ==================== 状态管理 ====================
+let testResults = {};
+let isRunning = false;
+
+// ==================== 工具函数 ====================
+function log(message, type = 'info') {
+  const container = document.getElementById('logContainer');
+  const time = new Date().toLocaleTimeString('zh-CN');
+  const entry = document.createElement('div');
+  entry.className = `log-entry log-${type}`;
+  entry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
+  container.appendChild(entry);
+  container.scrollTop = container.scrollHeight;
+}
+
+function updateStats() {
+  const passed = Object.values(testResults).filter(r => r === 'pass').length;
+  const failed = Object.values(testResults).filter(r => r === 'fail').length;
+  const total = TESTS.length;
+  const rate = total > 0 ? Math.round((passed / total) * 100) : 0;
+  
+  document.getElementById('statPass').textContent = passed;
+  document.getElementById('statFail').textContent = failed;
+  document.getElementById('statRate').textContent = rate + '%';
+}
+
+function getWidget() {
+  const iframe = document.getElementById('componentFrame');
+  return iframe.contentWindow?.SalaryConfigWidget;
+}
+
+function getIframeDoc() {
+  const iframe = document.getElementById('componentFrame');
+  return iframe.contentDocument || iframe.contentWindow?.document;
+}
+
+// ==================== 测试函数 ====================
+
+async function testInit() {
+  const widget = getWidget();
+  if (!widget) throw new Error('组件未加载');
+  if (!widget.version) throw new Error('version 属性不存在');
+  if (typeof widget.getValue !== 'function') throw new Error('getValue 方法不存在');
+  if (typeof widget.validate !== 'function') throw new Error('validate 方法不存在');
+  return { version: widget.version };
+}
+
+async function testInitialState() {
+  const widget = getWidget();
+  const value = widget.getValue();
+  if (value.workdays <= 0) throw new Error('workdays 必须大于 0');
+  if (value.mode !== '按日工资计算') throw new Error('初始模式应为按日工资计算');
+  if (value.dailyWage !== 0) throw new Error('初始日工资应为 0');
+  if (value.monthlyWage !== 0) throw new Error('初始月工资应为 0');
+  return { workdays: value.workdays, mode: value.mode };
+}
+
+async function testValidateInitial() {
+  const widget = getWidget();
+  const errors = widget.validate();
+  if (errors.length > 0) throw new Error('初始状态应无错误: ' + JSON.stringify(errors));
+  return { errors: errors.length };
+}
+
+async function testSetDaily() {
+  const doc = getIframeDoc();
+  const widget = getWidget();
+  
+  const input = doc.querySelector('.scw-field:first-child input');
+  if (!input) throw new Error('未找到日工资输入框');
+  
+  input.value = '100.50';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  
+  await sleep(300);
+  
+  const value = widget.getValue();
+  const errors = widget.validate();
+  
+  if (value.dailyWage !== 100.5) throw new Error('日工资应为 100.5，实际: ' + value.dailyWage);
+  if (errors.length > 0) throw new Error('验证应通过');
+  
+  return { dailyWage: value.dailyWage };
+}
+
+async function testDailyToMonthly() {
+  const doc = getIframeDoc();
+  const widget = getWidget();
+  
+  // 确保日工资已设置
+  const dailyInput = doc.querySelector('.scw-field:first-child input');
+  dailyInput.value = '100.50';
+  dailyInput.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(300);
+  
+  // 切换到月度模式
+  const monthlyBtn = doc.querySelector('button[data-mode="monthly"]');
+  if (!monthlyBtn) throw new Error('未找到月度切换按钮');
+  monthlyBtn.click();
+  await sleep(500);
+  
+  const value = widget.getValue();
+  const expected = 100.50 * value.workdays;
+  
+  if (value.mode !== '按月工资计算') throw new Error('模式应为按月工资计算');
+  if (Math.abs(value.monthlyWage - expected) > 0.01) {
+    throw new Error(`月工资应为 ${expected.toFixed(2)}，实际: ${value.monthlyWage}`);
+  }
+  
+  return { monthlyWage: value.monthlyWage, expected: expected.toFixed(2) };
+}
+
+async function testMonthlyToDaily() {
+  const doc = getIframeDoc();
+  const widget = getWidget();
+  
+  // 先清除日工资缓存（设置为 0）
+  const dailyBtn = doc.querySelector('button[data-mode="daily"]');
+  dailyBtn.click();
+  await sleep(300);
+  
+  const dailyInput = doc.querySelector('.scw-field:first-child input');
+  dailyInput.value = '0';
+  dailyInput.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(300);
+  
+  // 切换到月度模式
+  const monthlyBtn = doc.querySelector('button[data-mode="monthly"]');
+  monthlyBtn.click();
+  await sleep(300);
+  
+  // 设置月工资
+  const monthlyInput = doc.querySelector('.scw-field:last-child input');
+  monthlyInput.value = '4400.00';
+  monthlyInput.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(300);
+  
+  // 切换到日度模式
+  dailyBtn.click();
+  await sleep(500);
+  
+  const value = widget.getValue();
+  const expected = 4400.00 / value.workdays;
+  
+  if (value.mode !== '按日工资计算') throw new Error('模式应为按日工资计算');
+  // 由于缓存机制，日工资可能保持为 0 或重新计算
+  // 我们验证的是：如果日工资被重新计算，应该等于预期值
+  if (value.dailyWage > 0 && Math.abs(value.dailyWage - expected) > 0.01) {
+    throw new Error(`日工资应为 ${expected.toFixed(2)} 或 0（缓存），实际: ${value.dailyWage}`);
+  }
+  
+  return { dailyWage: value.dailyWage, expected: expected.toFixed(2) };
+}
+
+async function testSetMonthly() {
+  const doc = getIframeDoc();
+  const widget = getWidget();
+  
+  // 切换到月度模式
+  const monthlyBtn = doc.querySelector('button[data-mode="monthly"]');
+  monthlyBtn.click();
+  await sleep(300);
+  
+  // 设置月工资
+  const input = doc.querySelector('.scw-field:last-child input');
+  input.value = '5000';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(300);
+  
+  const value = widget.getValue();
+  if (value.monthlyWage !== 5000) throw new Error('月工资应为 5000');
+  
+  return { monthlyWage: value.monthlyWage };
+}
+
+async function testCacheRestore() {
+  const doc = getIframeDoc();
+  const widget = getWidget();
+  
+  // 设置日工资
+  const dailyBtn = doc.querySelector('button[data-mode="daily"]');
+  dailyBtn.click();
+  await sleep(300);
+  
+  const dailyInput = doc.querySelector('.scw-field:first-child input');
+  dailyInput.value = '100.50';
+  dailyInput.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(300);
+  
+  // 切换到月度并设置月工资
+  const monthlyBtn = doc.querySelector('button[data-mode="monthly"]');
+  monthlyBtn.click();
+  await sleep(300);
+  
+  const monthlyInput = doc.querySelector('.scw-field:last-child input');
+  monthlyInput.value = '5000';
+  monthlyInput.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(300);
+  
+  // 切换回日度
+  dailyBtn.click();
+  await sleep(500);
+  
+  const value1 = widget.getValue();
+  if (value1.dailyWage !== 100.5) throw new Error('日工资应恢复为 100.5');
+  
+  // 再次切换到月度
+  monthlyBtn.click();
+  await sleep(500);
+  
+  const value2 = widget.getValue();
+  if (value2.monthlyWage !== 5000) throw new Error('月工资应恢复为 5000');
+  
+  return { dailyWage: value1.dailyWage, monthlyWage: value2.monthlyWage };
+}
+
+async function testExtras() {
+  const widget = getWidget();
+  const value = widget.getValue();
+  const extras = value.extras || {};
+  
+  const required = ['benxi', 'zhezi', 'xiaxiang', 'perfect', 'seniority', 'mealTraffic', 'socialFund', 'stdDays'];
+  const missing = required.filter(key => !(key in extras));
+  
+  if (missing.length > 0) throw new Error('缺少配置项: ' + missing.join(', '));
+  
+  return { 
+    benxi: extras.benxi, 
+    mealTraffic: extras.mealTraffic,
+    socialFund: extras.socialFund
+  };
+}
+
+async function testInvalidInput() {
+  const doc = getIframeDoc();
+  const widget = getWidget();
+  
+  const input = doc.querySelector('.scw-field:first-child input');
+  input.value = '-100';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(300);
+  
+  const value = widget.getValue();
+  // 组件自动过滤负号
+  if (value.dailyWage < 0) throw new Error('日工资不应为负数');
+  
+  return { dailyWage: value.dailyWage };
+}
+
+async function testDecimalLimit() {
+  const doc = getIframeDoc();
+  const widget = getWidget();
+  
+  const input = doc.querySelector('.scw-field:first-child input');
+  input.value = '100.999';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(300);
+  
+  const value = widget.getValue();
+  // 组件自动截断到两位小数
+  const strValue = value.dailyWage.toFixed(2);
+  if (strValue !== '100.99') throw new Error('日工资应为 100.99，实际: ' + strValue);
+  
+  return { dailyWage: strValue };
+}
+
+// ==================== 辅助函数 ====================
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ==================== 测试执行 ====================
+async function runTest(testId) {
+  const test = TESTS.find(t => t.id === testId);
+  if (!test) {
+    log(`测试 ${testId} 不存在`, 'fail');
+    return;
+  }
+  
+  updateTestStatus(testId, 'running');
+  log(`开始执行: ${test.name}`, 'info');
+  
+  try {
+    const result = await test.fn();
+    testResults[testId] = 'pass';
+    updateTestStatus(testId, 'pass', result);
+    log(`✅ 通过: ${test.name}`, 'pass');
+  } catch (error) {
+    testResults[testId] = 'fail';
+    updateTestStatus(testId, 'fail', null, error.message);
+    log(`❌ 失败: ${test.name} - ${error.message}`, 'fail');
+  }
+  
+  updateStats();
+}
+
+async function runAllTests() {
+  console.log('runAllTests 被调用');
+  clearResults();
+  log('开始执行全部测试...', 'info');
+  
+  for (const test of TESTS) {
+    console.log('执行测试:', test.id);
+    await runTest(test.id);
+    await sleep(500);
+  }
+  
+  log('全部测试执行完成', 'info');
+}
+
+async function runApiTests() {
+  if (isRunning) return;
+  const apiTests = TESTS.filter(t => t.category === 'api');
+  
+  clearResults();
+  log('开始执行 API 测试...', 'info');
+  
+  for (const test of apiTests) {
+    await runTest(test.id);
+    await sleep(200);
+  }
+  
+  log('API 测试执行完成', 'info');
+}
+
+async function runLogicTests() {
+  if (isRunning) return;
+  const logicTests = TESTS.filter(t => t.category === 'logic');
+  
+  clearResults();
+  log('开始执行逻辑测试...', 'info');
+  
+  for (const test of logicTests) {
+    await runTest(test.id);
+    await sleep(200);
+  }
+  
+  log('逻辑测试执行完成', 'info');
+}
+
+function clearResults() {
+  testResults = {};
+  updateStats();
+  
+  document.querySelectorAll('.test-status').forEach(el => {
+    el.className = 'test-status pending';
+    el.textContent = '○';
+  });
+  
+  document.querySelectorAll('.test-detail').forEach(el => {
+    el.classList.remove('show');
+    el.innerHTML = '';
+  });
+  
+  document.getElementById('logContainer').innerHTML = '';
+  log('结果已清除', 'info');
+}
+
+function updateTestStatus(testId, status, result = null, error = null) {
+  const testEl = document.querySelector(`[data-test-id="${testId}"]`);
+  if (!testEl) return;
+  
+  const statusEl = testEl.querySelector('.test-status');
+  const detailEl = testEl.querySelector('.test-detail');
+  
+  statusEl.className = 'test-status ' + status;
+  
+  if (status === 'pass') {
+    statusEl.textContent = '✓';
+    if (result) {
+      detailEl.innerHTML = '<code>' + JSON.stringify(result, null, 2) + '</code>';
+      detailEl.classList.add('show');
+    }
+  } else if (status === 'fail') {
+    statusEl.textContent = '✗';
+    if (error) {
+      detailEl.innerHTML = '<span style="color:#e53e3e;">错误: ' + error + '</span>';
+      detailEl.classList.add('show');
+    }
+  } else if (status === 'running') {
+    statusEl.textContent = '⟳';
+  }
+}
+
+// ==================== 初始化 ====================
+function init() {
+  const listEl = document.getElementById('testList');
+  
+  TESTS.forEach(test => {
+    const item = document.createElement('div');
+    item.className = 'test-item';
+    item.setAttribute('data-test-id', test.id);
+    item.innerHTML = `
+      <div class="test-status pending">○</div>
+      <div class="test-content">
+        <div class="test-title">
+          <span>${test.id}</span>
+          ${test.name}
+          <span style="font-size:0.75rem;color:#a0aec0;background:#edf2f7;padding:2px 8px;border-radius:4px;">${test.category === 'api' ? 'API' : '逻辑'}</span>
+        </div>
+        <div class="test-desc">${test.desc}</div>
+        <div class="test-detail"></div>
+        <div class="test-actions">
+          <button class="btn btn-primary btn-small" onclick="runTest('${test.id}')">运行</button>
+        </div>
+      </div>
+    `;
+    listEl.appendChild(item);
+  });
+  
+  log('页面加载完成，等待测试开始...', 'info');
+}
+
+// 等待 iframe 加载完成
+window.addEventListener('load', () => {
+  setTimeout(init, 1000);
+});
+</script>
+</body>
+</html>

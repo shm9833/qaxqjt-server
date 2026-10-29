@@ -54,10 +54,10 @@ const upsert = async ctx => {
   const b = ctx.request.body || {};
   if (b.value === undefined) throw new BusinessError('VALIDATION_ERROR', 'value 必填（空串=恢复默认）');
   const value = String(b.value || '').trim();
-  // site.text.* 为纯文本配置位（如客服微信号/公众号名），其余 key 仍要求图片 URL
-  const isTextKey = key.indexOf('site.text.') === 0;
+  // site.text.* / site.contact.* 为纯文本配置位，其余 key 仍要求图片 URL
+  const isTextKey = key.indexOf('site.text.') === 0 || key.indexOf('site.contact.') === 0;
   if (isTextKey) {
-    if (value.length > 200) throw new BusinessError('VALIDATION_ERROR', '文本值不能超过 200 字');
+    if (value.length > 2000) throw new BusinessError('VALIDATION_ERROR', '文本值不能超过 2000 字');
   } else if (value && !/^(https?:\/\/|\/|data:image\/)/i.test(value)) {
     throw new BusinessError('VALIDATION_ERROR', 'value 必须是图片 URL');
   }

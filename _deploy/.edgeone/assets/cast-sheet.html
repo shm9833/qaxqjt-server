@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+  <!-- =========================================================== -->
+  <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
+  <!-- 无 session 时 0.5ms 内跳登录页，防白屏 / 越权一眼看 -->
+  <!-- =========================================================== -->
+  <script src="../js/admin-pages/cast-sheet.pre-1.js?v=20261005a"></script>
+
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>演出演员表配置 - 秦安县秦剧团文化演出有限公司文化演出管理系统</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../css/style.css?v=20260926p">
+<style>
+/* ============================================================
+   FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
+   ============================================================ */
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  width: 100%;
+}
+* { box-sizing: border-box; }
+table { table-layout: fixed; word-break: break-word; }
+pre, code, textarea { white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+.admin-main, .admin-content, main, .page-wrap { max-width: 100%; overflow-x: hidden; }
+
+.cast-page-wrap{padding:20px 28px 40px;max-width:1480px;margin:0 auto;}
+.page-title{font-size:1.45rem;font-weight:800;color:#7c2d12;margin:0 0 6px;display:flex;align-items:center;gap:10px;}
+.page-title small{font-size:.8rem;font-weight:500;color:#64748b;}
+.page-actions{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 22px;padding:14px 16px;background:#fff;border-radius:15px;border:1.5px solid #f1f5f9;box-shadow:0 3px 12px rgba(15,23,42,0.05);position:sticky;top:54px;z-index:20;}
+.btn-action{padding:9px 15px;border:none;border-radius:11px;font-weight:700;cursor:pointer;font-size:.86rem;transition:all .18s;letter-spacing:.3px;display:inline-flex;align-items:center;gap:6px;}
+.btn-action:hover{transform:translateY(-1.5px);box-shadow:0 6px 16px rgba(0,0,0,0.11);}
+.btn-action.btn-red{background:linear-gradient(135deg,#fee2e2,#fecaca);color:#991b1b;border:1.5px solid #fca5a5;}
+.btn-action.btn-gold{background:linear-gradient(135deg,#fef9c3,#fde68a);color:#854d0e;border:1.5px solid #fcd34d;}
+.btn-action.btn-green{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#166534;border:1.5px solid #86efac;}
+.btn-action.btn-primary{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e40af;border:1.5px solid #93c5fd;}
+.btn-action.btn-gray{background:linear-gradient(135deg,#f1f5f9,#e2e8f0);color:#334155;border:1.5px solid #cbd5e1;}
+.btn-action.btn-orange{background:linear-gradient(135deg,#ffedd5,#fed7aa);color:#9a3412;border:1.5px solid #fdba74;}
+.btn-action.btn-emerald{background:linear-gradient(135deg,#a7f3d0,#6ee7b7);color:#064e3b;border:1.5px solid #34d399;font-weight:800;}
+.btn-action.btn-emerald:hover{background:linear-gradient(135deg,#6ee7b7,#34d399);color:#fff;}
+.mode-preview{display:none;}
+body[data-mode="preview"] .mode-edit{display:none !important;}
+body[data-mode="preview"] .mode-preview{display:inline-flex !important;}
+.show-banner{padding:28px 28px 24px;background:linear-gradient(135deg,#7f1d1d 0%,#991b1b 45%,#b91c1c 100%);color:#fff;border-radius:20px;margin-bottom:24px;box-shadow:0 12px 34px rgba(127,29,29,0.25);position:relative;overflow:hidden;border:2px solid #fbbf24;}
+.show-banner::before{content:"";position:absolute;right:-40px;top:-40px;width:220px;height:220px;background:radial-gradient(circle,rgba(251,191,36,0.28),transparent 70%);border-radius:50%;}
+.show-banner::after{content:"";position:absolute;left:-30px;bottom:-50px;width:200px;height:200px;background:radial-gradient(circle,rgba(254,240,138,0.2),transparent 70%);border-radius:50%;}
+.show-banner .comp-name{font-size:1.85rem;font-weight:900;letter-spacing:2.5px;margin-bottom:6px;text-shadow:0 2px 8px rgba(0,0,0,0.3);}
+.show-banner .comp-name em{color:#fde047;font-style:normal;}
+.show-banner .show-title{font-size:2.5rem;font-weight:900;margin:10px 0 16px;color:#fef9c3;text-shadow:0 3px 12px rgba(0,0,0,0.35);letter-spacing:3px;}
+.show-banner .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 22px;position:relative;z-index:2;}
+.show-banner .meta-grid .row{display:flex;gap:8px;font-size:.92rem;}
+.show-banner .meta-grid .row b{min-width:86px;color:#fde68a;display:inline-block;font-weight:700;}
+.show-banner .meta-grid .row input{background:rgba(255,255,255,0.12);border:1px solid rgba(251,191,36,0.45);color:#fff;padding:5px 9px;border-radius:7px;flex:1;font-size:.9rem;}
+.show-banner .meta-grid .row input::placeholder{color:rgba(254,249,195,0.55);}
+.date-field-wrap{position:relative;display:flex;flex:1;}
+.section-block{background:#fff;border-radius:18px;box-shadow:0 6px 22px rgba(15,23,42,0.08);margin-bottom:22px;overflow:hidden;border:1.5px solid #e5e7eb;}
+.section-block .sec-head{display:flex;align-items:center;gap:12px;padding:15px 22px;border-bottom:1.5px solid #f1f5f9;background:linear-gradient(135deg,#f8fafc,#f1f5f9);}
+.section-block .sec-head.creative{background:linear-gradient(135deg,#f5f3ff,#ede9fe);}
+.section-block .sec-head.main{background:linear-gradient(135deg,#fff7ed,#ffedd5);border-bottom-color:#fed7aa;}
+.section-block .sec-head.add{background:linear-gradient(135deg,#ecfeff,#cffafe);border-bottom-color:#a5f3fc;}
+.section-block .sec-head.wuchang{background:linear-gradient(135deg,#fef2f2,#fee2e2);border-bottom-color:#fecaca;}
+.section-block .sec-head.wenchang{background:linear-gradient(135deg,#fefce8,#fef9c3);border-bottom-color:#fde68a;}
+.section-block .sec-head.stage{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-bottom-color:#bbf7d0;}
+.section-block .sec-head.program{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-bottom-color:#bfdbfe;}
+.section-block .sec-head .sec-badge{display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:40px;border-radius:11px;color:#fff;font-weight:800;font-size:1.05rem;padding:0 10px;}
+.badge-creative{background:linear-gradient(135deg,#8b5cf6,#7c3aed);box-shadow:0 4px 10px rgba(124,58,237,0.35);}
+.badge-main{background:linear-gradient(135deg,#f97316,#ea580c);box-shadow:0 4px 10px rgba(234,88,12,0.35);}
+.badge-add{background:linear-gradient(135deg,#06b6d4,#0891b2);box-shadow:0 4px 10px rgba(8,145,178,0.35);}
+.badge-wuchang{background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 10px rgba(220,38,38,0.35);}
+.badge-wenchang{background:linear-gradient(135deg,#eab308,#ca8a04);box-shadow:0 4px 10px rgba(202,138,4,0.35);}
+.badge-stage{background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 4px 10px rgba(22,163,74,0.35);}
+.badge-program{background:linear-gradient(135deg,#3b82f6,#2563eb);box-shadow:0 4px 10px rgba(37,99,235,0.35);}
+.section-block .sec-head h3{margin:0;font-size:1.1rem;font-weight:800;color:#0f172a;letter-spacing:.5px;}
+.section-block .sec-head .sec-sub{font-size:.8rem;color:#64748b;font-weight:500;margin-left:auto;}
+.section-block .sec-body{padding:18px 22px 16px;}
+.mobile-fold-btn{display:none;background:transparent;border:none;font-size:1.4rem;font-weight:800;color:#475569;cursor:pointer;}
+.cast-table{width:100%;border-collapse:separate;border-spacing:0;margin-bottom:0;}
+.cast-table th{background:#f8fafc;color:#334155;font-size:.82rem;font-weight:700;padding:9px 11px;text-align:left;border-bottom:2px solid #e2e8f0;white-space:nowrap;letter-spacing:.3px;}
+.cast-table td{padding:8px 10px;border-bottom:1px dashed #e5e7eb;font-size:.88rem;vertical-align:middle;}
+.cast-table tr:hover td{background:#f8fafc;}
+.cast-table input,.cast-table select,.cast-table textarea{width:100%;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:.86rem;box-sizing:border-box;background:#fff;transition:border .15s;}
+.cast-table textarea{min-height:52px;resize:vertical;font-family:inherit;}
+.cast-table input:focus,.cast-table select:focus,.cast-table textarea:focus{outline:none;border-color:#f59e0b;background:#fffbeb;box-shadow:0 0 0 3px rgba(245,158,11,0.15);}
+.cast-table .seq{width:46px;color:#94a3b8;font-weight:700;text-align:center;}
+.cast-opera-card{padding:18px;border:1.5px solid #e5e7eb;border-radius:15px;margin-bottom:18px;background:linear-gradient(180deg,#fff,#fafafa);box-shadow:0 4px 14px rgba(15,23,42,0.05);}
+.cast-opera-card:last-child{margin-bottom:0;}
+.cast-opera-card.add-op{border-color:#a5f3fc;background:linear-gradient(180deg,#ecfeff,#fff);}
+.cast-opera-card .oper-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.cast-opera-card .oper-head .oh-title{font-size:1.08rem;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:7px;}
+.cast-opera-card .oper-head .oh-title input{font-weight:800;font-size:1.08rem;padding:6px 10px;border:2px dashed #cbd5e1;border-radius:9px;background:#fefce8;}
+.cast-opera-card .oper-head .oh-title input:focus{background:#fffbeb;border-color:#f59e0b;outline:none;}
+.cast-opera-card .oper-head .oh-meta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+.cast-opera-card .oper-head .oh-meta .chip{background:#f1f5f9;padding:4px 10px;border-radius:20px;font-size:.8rem;font-weight:600;color:#475569;border:1px solid #e2e8f0;}
+.cast-opera-card .oper-head .oh-meta .chip input,.cast-opera-card .oper-head .oh-meta .chip select{background:transparent;border:none;padding:2px 4px;font-size:.8rem;font-weight:600;color:#475569;width:auto;min-width:60px;}
+.cast-opera-card .oper-head .oh-actions{margin-left:auto;display:flex;gap:8px;}
+.cast-opera-card .btn-op-del,.cast-opera-card .btn-op-cast{background:transparent;border:none;padding:6px 10px;border-radius:8px;font-weight:700;font-size:.8rem;cursor:pointer;transition:all .15s;}
+.cast-opera-card .btn-op-del{background:#fff1f2;color:#be123c;border:1.5px solid #fecdd3;}
+.cast-opera-card .btn-op-del:hover{background:#ffe4e6;}
+.cast-opera-card .btn-op-cast{background:#ede9fe;color:#6d28d9;border:1.5px solid #ddd6fe;}
+.cast-opera-card .btn-op-cast:hover{background:#ddd6fe;}
+.cast-opera-card .oper-intro-row{margin-bottom:14px;}
+.cast-opera-card .oper-intro-row label{display:block;font-size:.8rem;font-weight:600;color:#475569;margin-bottom:4px;}
+.cast-opera-card .oper-intro-row textarea{width:100%;padding:8px 11px;border:1.5px solid #e2e8f0;border-radius:9px;min-height:54px;resize:vertical;font-family:inherit;font-size:.88rem;box-sizing:border-box;}
+.cast-opera-card .oper-intro-row textarea:focus{border-color:#c4b5fd;outline:none;background:#faf5ff;}
+.btn-add-row{width:100%;padding:12px;border:none;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border-top:1px dashed #bae6fd;color:#0369a1;font-weight:700;cursor:pointer;transition:all .2s;border-radius:0 0 14px 14px;letter-spacing:.5px;}
+.btn-add-row:hover{background:linear-gradient(135deg,#e0f2fe,#bae6fd);color:#075985;}
+.btn-add-row::before{content:"＋ ";font-size:1.1rem;font-weight:900;}
+.btn-del-row{background:#fff;border:1.5px solid #fecaca;color:#b91c1c;padding:3px 7px;border-radius:7px;font-weight:700;font-size:.78rem;cursor:pointer;}
+.btn-del-row:hover{background:#fee2e2;}
+.btn-add-cast{background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#5b21b6;border:1.5px dashed #a78bfa;padding:6px 12px;border-radius:10px;font-weight:700;cursor:pointer;font-size:.82rem;}
+.btn-add-cast:hover{background:linear-gradient(135deg,#ddd6fe,#c4b5fd);}
+body[data-mode="preview"] .cast-table input,
+body[data-mode="preview"] .cast-table select,
+body[data-mode="preview"] .cast-table textarea,
+body[data-mode="preview"] .show-banner input,
+body[data-mode="preview"] .date-field-wrap input{pointer-events:none;background:#f8fafc;border-color:#e5e7eb !important;color:#111827;}
+body[data-mode="preview"] .btn-del-row,
+body[data-mode="preview"] .btn-add-row,
+body[data-mode="preview"] .cast-picker-open,
+body[data-mode="preview"] .btn-op-del,
+body[data-mode="preview"] .btn-op-cast,
+body[data-mode="preview"] .btn-add-cast,
+body[data-mode="preview"] .mobile-fold-btn,
+body[data-mode="preview"] .mobile-fab-bar{display:none !important;}
+@media print{
+  body{background:#fff;}
+  .admin-sidebar,.admin-topbar,.page-actions,.btn-del-row,.btn-add-row,.no-print,.mobile-fab-bar,.op-overlay,.op-modal,.cp-overlay,.cp-modal{display:none !important;}
+  body[data-mode="preview"] .cast-table input,
+  body[data-mode="preview"] .cast-table textarea,
+  body[data-mode="preview"] .cast-table select,
+  body[data-mode="preview"] .show-banner input{background:#fff !important;color:#0f172a !important;border:none !important;box-shadow:none !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  input::placeholder{color:transparent !important;}
+  textarea::placeholder{color:transparent !important;}
+  .cast-page-wrap{padding:0;margin:0;max-width:100%;}
+  .show-banner{background:#7f1d1d !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;box-shadow:none;border:none;border-radius:0;padding:20px;margin-bottom:14px;}
+  .show-banner .meta-grid .row input{background:#fff !important;color:#0f172a !important;border:1px solid #cbd5e1 !important;}
+  .section-block{box-shadow:none;border:1px solid #d1d5db;break-inside:avoid;margin-bottom:10px;border-radius:6px;}
+  .section-block .sec-head{padding:8px 12px;}
+  .section-block .sec-body{padding:8px 12px 6px;}
+  .cast-opera-card{box-shadow:none;border:1px solid #e5e7eb;margin-bottom:10px;break-inside:avoid;}
+  .cast-table th{background:#f1f5f9 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .cast-opera-card .oper-head .oh-title{font-size:1rem;}
+  @page {size:A4;margin:12mm 2mm 12mm 2mm;}
+  .print-header{display:block !important;padding:4px 0 10px;margin-bottom:8px;border-bottom:1.5px dashed #fbbf24;}
+  .print-footer{display:block !important;padding-top:10px;margin-top:12px;border-top:1.5px dashed #cbd5e1;font-size:.7rem;color:#64748b;text-align:center;}
+  /* ===== 2026-08-02 按勾选打印：未勾选的板块/剧目打印时隐藏 ===== */
+  .section-block.__ps_hide__,
+  .cast-opera-card.__ps_hide__{display:none !important;}
+  /* ===== 2026-08-03 A② 单场A4横版卡式打印（card-mode） ===== */
+  body.__card_print_mode__ .show-banner,
+  body.__card_print_mode__ .section-block:not([data-card-section]),
+  body.__card_print_mode__ .troupe-bar,
+  body.__card_print_mode__ .cast-sheet-manager-bar,
+  body.__card_print_mode__ .op-print-scope-bar,
+  body.__card_print_mode__ .page-title,
+  body.__card_print_mode__ .print-header,
+  body.__card_print_mode__ .print-footer,
+  body.__card_print_mode__ .cast-opera-card:not(.__card_active__){display:none !important;}
+  @page card-landscape {size:A4 landscape;margin:10mm 2mm 10mm 2mm;}
+  body.__card_print_mode__{page:card-landscape;background:#fff;}
+  body.__card_print_mode__ .cast-page-wrap{padding:0;margin:0;max-width:100%;}
+  body.__card_print_mode__ .cast-opera-card.__card_active__{
+    border:2.5px solid #0f4c81;border-radius:14px;padding:18px 20px 16px;
+    background:#fff !important;box-shadow:none !important;margin:0;break-inside:avoid;
+  }
+  body.__card_print_mode__ .cast-opera-card.__card_active__ .oper-head .oh-title{font-size:1.35rem;color:#0f4c81;}
+  body.__card_print_mode__ .cast-opera-card.__card_active__ .oper-head .oh-title input{font-size:1.35rem;border:none;background:transparent;padding:0;}
+  body.__card_print_mode__ .cast-opera-card.__card_active__ .cast-table th{background:#e0f2fe !important;font-size:.92rem;}
+  body.__card_print_mode__ .cast-opera-card.__card_active__ .cast-table th,
+  body.__card_print_mode__ .cast-opera-card.__card_active__ .cast-table td{padding:7px 8px;font-size:.92rem;}
+  body.__card_print_mode__ .cast-opera-card.__card_active__ .cast-table input,
+  body.__card_print_mode__ .cast-opera-card.__card_active__ .cast-table select{
+    border:none;background:transparent;padding:3px 2px;font-size:.92rem;color:#0f172a;font-weight:600;
+  }
+  body.__card_print_mode__ .cast-opera-card.__card_active__ .cast-table .cast-col-center{display:none;}
+  body.__card_print_mode__ .cast-opera-card.__card_active__ .cast-table th:last-child,
+  body.__card_print_mode__ .cast-opera-card.__card_active__ .cast-table td:last-child{display:none;}
+}
+/* ===== 2026-08-03 A② 剧目卡片级按钮（单场CSV / A4卡打印） ===== */
+.cast-opera-card .btn-op-csv{background:#ecfdf5;color:#047857;border:1.5px solid #a7f3d0;}
+.cast-opera-card .btn-op-csv:hover{background:#d1fae5;}
+.cast-opera-card .btn-op-cardprint{background:#eff6ff;color:#1d4ed8;border:1.5px solid #bfdbfe;}
+.cast-opera-card .btn-op-cardprint:hover{background:#dbeafe;}
+.cast-opera-card .btn-op-del,.cast-opera-card .btn-op-cast,.cast-opera-card .btn-op-csv,.cast-opera-card .btn-op-cardprint{
+  background:transparent;border:none;padding:6px 10px;border-radius:8px;font-weight:700;font-size:.8rem;cursor:pointer;transition:all .15s;
+}
+/* ===== 2026-08-03 A② 签字盖章栏（每张剧目卡底部，仅在卡式打印或预览模式显示） ===== */
+.opera-sign-bar{
+  display:none;margin-top:18px;padding-top:14px;border-top:1.5px dashed #cbd5e1;
+}
+body[data-mode="preview"] .opera-sign-bar, body.__card_print_mode__ .opera-sign-bar{display:block;}
+.opera-sign-bar .sb-title{font-weight:800;color:#374151;font-size:.92rem;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.opera-sign-bar .sb-title::before{content:"";display:inline-block;width:4px;height:18px;background:linear-gradient(180deg,#f59e0b,#b45309);border-radius:2px;}
+.opera-sign-bar .sb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.opera-sign-bar .sb-cell{
+  border:1.5px solid #9ca3af;border-radius:8px;padding:10px 12px 16px;min-height:96px;
+  display:flex;flex-direction:column;justify-content:space-between;background:#fff;
+}
+.opera-sign-bar .sb-cell .sb-label{font-weight:800;color:#1f2937;font-size:.9rem;text-align:center;margin-bottom:6px;letter-spacing:1px;}
+.opera-sign-bar .sb-cell .sb-line{flex:1;border-bottom:1.5px solid #6b7280;display:block;margin-bottom:4px;}
+.opera-sign-bar .sb-cell .sb-hint{font-size:.72rem;color:#6b7280;text-align:center;}
+.opera-sign-bar .sb-cell.stamp .sb-line{border-bottom:none;display:flex;align-items:center;justify-content:center;color:#b91c1c;font-weight:900;}
+.opera-sign-bar .sb-cell.stamp .sb-stamp-box{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  border:2.5px dashed #dc2626;border-radius:50%;width:76px;height:76px;margin:0 auto;
+  color:#b91c1c;font-weight:900;font-size:.72rem;text-align:center;line-height:1.2;padding:4px;
+}
+@media (max-width:640px){
+  .opera-sign-bar .sb-grid{grid-template-columns:1fr 1fr;gap:8px;}
+  .opera-sign-bar .sb-cell{min-height:78px;padding:7px 8px 12px;}
+}
+.print-header{display:none;}
+.print-footer{display:none;}
+.print-page-break{page-break-before:always;break-before:page;}
+/* ===== 2026-08-02 按场勾选打印 UI 样式 ===== */
+.print-scope-check{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:8px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #fbbf24;font-size:.78rem;font-weight:700;color:#92400e;cursor:pointer;user-select:none;}
+.print-scope-check input{width:15px;height:15px;cursor:pointer;accent-color:#b91c1c;}
+.op-print-check{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:8px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #fbbf24;font-size:.78rem;font-weight:700;color:#92400e;cursor:pointer;user-select:none;margin-right:4px;}
+.op-print-check input{width:15px;height:15px;cursor:pointer;accent-color:#b91c1c;}
+.section-block.selected-for-print{box-shadow:0 0 0 2px #fbbf24, 0 6px 22px rgba(15,23,42,0.08) !important;transition:all .15s;}
+.cast-opera-card.selected-for-print{box-shadow:0 0 0 2px #fbbf24, 0 4px 14px rgba(15,23,42,0.05) !important;transition:all .15s;}
+.op-print-scope-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 12px;background:linear-gradient(135deg,#fff7ed,#fef9c3);border:1.5px solid #fed7aa;border-radius:10px;margin-bottom:10px;font-size:.84rem;}
+.op-print-scope-bar .ps-label{font-weight:800;color:#9a3412;}
+.op-print-scope-bar .ps-stat{color:#64748b;font-weight:600;}
+.op-print-scope-bar .ps-btn{padding:5px 11px;border-radius:7px;border:1.5px solid #fb923c;background:#fff;color:#9a3412;font-weight:700;cursor:pointer;font-size:.82rem;}
+.op-print-scope-bar .ps-btn:hover{background:linear-gradient(135deg,#ffedd5,#fed7aa);}
+.op-print-scope-bar .ps-btn.primary{background:linear-gradient(135deg,#ea580c,#c2410c);color:#fff;border-color:#9a3412;}
+.op-print-scope-bar .ps-btn.primary:hover{background:linear-gradient(135deg,#c2410c,#9a3412);}
+.op-print-scope-bar .ps-btn.emerald{background:linear-gradient(135deg,#059669,#047857);color:#fff;border-color:#047857;box-shadow:0 3px 10px rgba(5,150,105,0.25);}
+.op-print-scope-bar .ps-btn.emerald:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(5,150,105,0.35);}
+/* ===================== P4：手机端快速配置（<640px） ===================== */
+@media (max-width: 640px){
+  /* v20260926m 侧边栏改由 style.css 抽屉统一控制（.mobile-open），不再强隐 */
+  .cast-page-wrap{padding:10px 10px 90px 10px;}
+  .show-banner{padding:18px 15px 16px;border-radius:14px;margin-bottom:14px;}
+  .show-banner .comp-name{font-size:1.25rem;letter-spacing:1px;}
+  .show-banner .show-title{font-size:1.6rem;letter-spacing:1px;margin:6px 0 10px;}
+  .show-banner .meta-grid{grid-template-columns:1fr;gap:7px;}
+  .show-banner .meta-grid .row b{min-width:72px;font-size:.8rem;}
+  .page-title{font-size:1.1rem;padding:4px 6px;}
+  .page-title small{display:block;margin-top:2px;}
+  .page-actions{position:fixed;bottom:0;left:0;right:0;z-index:50;margin:0;padding:6px 8px;border-radius:0;border-top:2px solid #fbbf24;background:rgba(255,255,255,0.97);display:flex;overflow-x:auto;gap:6px;justify-content:flex-start;scrollbar-width:none;}
+  .page-actions::-webkit-scrollbar{display:none;}
+  .btn-action{padding:7px 9px;font-size:.74rem;gap:3px;letter-spacing:0;flex:0 0 auto;}
+  .section-block{border-radius:12px;margin-bottom:10px;border:1.5px solid #f1f5f9;}
+  .section-block .sec-head{padding:10px 12px;}
+  .section-block .sec-head h3{font-size:.94rem;flex:1;}
+  .section-block .sec-head .sec-sub{display:none;}
+  .section-block .sec-body{padding:10px;}
+  .mobile-fold-btn{display:inline-block !important;}
+  .section-block.folded .sec-body{display:none !important;}
+  .section-block.folded .mobile-fold-btn{transform:rotate(-90deg);transition:transform .2s;}
+  .cast-table th,.cast-table td{padding:5px 5px;font-size:.78rem;}
+  .cast-table th{font-size:.7rem;padding:5px 4px;}
+  .cast-table .seq{width:30px;font-size:.72rem;}
+  .cast-table input,.cast-table select,.cast-table textarea{padding:7px 6px;font-size:.84rem;}
+  .cast-opera-card{padding:10px;border-radius:10px;margin-bottom:10px;}
+  .cast-opera-card .oper-head{flex-direction:column;align-items:flex-start;gap:7px;}
+  .cast-opera-card .oper-head .oh-actions{margin-left:0;width:100%;justify-content:space-between;}
+  .cast-opera-card .oper-head .oh-title{font-size:1rem;}
+  .cast-opera-card .oper-head .oh-title input{font-size:1rem;}
+  .cast-opera-card .btn-op-cast,.cast-opera-card .btn-op-del{padding:6px 8px;font-size:.76rem;}
+  .cast-opera-card .oper-intro-row textarea{min-height:54px;padding:7px 8px;font-size:.84rem;}
+  .cast-opera-card .oper-intro-row label{font-size:.76rem;}
+  .btn-add-row{padding:10px;font-size:.84rem;border-radius:0 0 10px 10px;}
+  .btn-add-cast{width:100%;margin-top:6px;text-align:center;padding:8px;}
+  .cast-table{display:block;width:100%;overflow-x:auto;}
+  body:not([data-mode="preview"]) .mobile-fab-bar{display:flex !important;position:fixed;bottom:58px;right:10px;flex-direction:column;gap:6px;z-index:40;}
+  .mobile-fab-bar .mfab{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:900;border:2px solid #fff;box-shadow:0 6px 16px rgba(0,0,0,0.22);cursor:pointer;}
+  .mfab-save{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;}
+  .mfab-preview{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;}
+  .mfab-export{background:linear-gradient(135deg,#ea580c,#c2410c);color:#fff;}
+  .op-modal{top:40%;width:98vw;max-height:85vh;border-radius:14px;}
+  .op-modal .op-head{padding:12px 14px;}
+  .op-modal .op-head h3{font-size:1rem;}
+  .op-modal .op-search{padding:10px 12px;}
+  .op-modal .op-search input{min-width:150px;padding:8px 10px;font-size:.86rem;}
+  .op-modal .op-body{padding:10px 12px;}
+  .op-grid{grid-template-columns:1fr;gap:10px;}
+  .op-modal .op-foot{padding:10px 12px;}
+  .cp-modal{width:98vw;max-height:85vh;}
+  .qr-placeholder{display:none;}
+  .stage-wrap{display:block;}
+}
+.mobile-fab-bar{display:none;}
+/* ===================== P5：舞台平板横屏（1024~1440 landscape） ===================== */
+@media (min-width: 1024px) and (max-width: 1440px) and (orientation: landscape){
+  .cast-page-wrap{padding:16px 20px;max-width:100%;}
+  .stage-wrap{display:grid;grid-template-columns:1.15fr 1fr;gap:18px;}
+  .stage-wrap .col-left .section-block,
+  .stage-wrap .col-right .section-block{margin-bottom:14px;}
+  .section-block{border-radius:14px;}
+  .section-block .sec-head{padding:11px 16px;}
+  .section-block .sec-head h3{font-size:1rem;}
+  .section-block .sec-body{padding:14px 16px;}
+  .cast-table th,.cast-table td{padding:8px 10px;font-size:.96rem;}
+  .cast-table th{font-size:.9rem;padding:8px 10px;}
+  .cast-table input,.cast-table select,.cast-table textarea{font-size:.96rem;padding:8px 10px;}
+  .show-banner .comp-name{font-size:1.65rem;}
+  .show-banner .show-title{font-size:2.2rem;margin:8px 0 12px;}
+  .show-banner{padding:22px 26px;margin-bottom:16px;}
+  .cast-opera-card{padding:16px;}
+  .cast-opera-card .oper-head .oh-title{font-size:1.18rem;}
+  .cast-opera-card .oper-head .oh-title input{font-size:1.18rem;}
+  .cast-opera-card .btn-op-cast,.cast-opera-card .btn-op-del,.btn-add-cast{font-size:.9rem;padding:7px 11px;}
+  .btn-action{font-size:.94rem;padding:10px 14px;}
+  .page-actions{padding:11px 14px;margin-bottom:16px;top:50px;}
+  .cast-opera-card .oper-intro-row textarea{min-height:62px;font-size:.96rem;}
+  .cast-opera-card .cast-tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+  .cast-opera-card .cast-tabs .tab{padding:4px 10px;border-radius:16px;background:#f1f5f9;color:#475569;font-size:.84rem;font-weight:700;border:1.5px solid #e2e8f0;cursor:pointer;}
+  .cast-opera-card .cast-tabs .tab.active{background:linear-gradient(135deg,#fef9c3,#fde68a);color:#92400e;border-color:#fbbf24;}
+}
+.stage-wrap{display:block;}
+/* ===================== 剧库Picker Modal（X1） ===================== */
+.op-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(4px);z-index:2000;}
+.op-overlay.show{display:block;}
+.op-modal{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(960px,96vw);max-height:90vh;background:#fff;border-radius:18px;z-index:2001;box-shadow:0 25px 60px rgba(0,0,0,0.35);overflow:hidden;flex-direction:column;border:2px solid #fbbf24;}
+.op-modal.show{display:flex;}
+.op-modal .op-head{padding:16px 24px;background:linear-gradient(135deg,#7f1d1d,#991b1b);color:#fff;display:flex;align-items:center;gap:14px;border-bottom:3px solid #fbbf24;}
+.op-modal .op-head h3{margin:0;font-size:1.2rem;font-weight:800;flex:1;letter-spacing:.8px;}
+.op-modal .op-head h3 em{color:#fde047;font-style:normal;}
+.op-modal .op-head .op-close{background:rgba(255,255,255,0.18);border:1.5px solid rgba(251,191,36,0.55);color:#fff;width:38px;height:38px;border-radius:10px;font-size:1.3rem;font-weight:800;cursor:pointer;}
+.op-modal .op-search{padding:14px 24px;background:linear-gradient(135deg,#fffbeb,#fef9c3);border-bottom:1.5px solid #fde68a;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.op-modal .op-search input{flex:1;min-width:220px;padding:10px 14px;border:2px solid #fcd34d;border-radius:10px;background:#fff;font-size:.96rem;font-weight:500;}
+.op-modal .op-search input:focus{outline:none;box-shadow:0 0 0 3px rgba(251,191,36,0.3);border-color:#f59e0b;}
+.op-modal .op-search .cat-filter{padding:10px 14px;border:2px solid #fcd34d;border-radius:10px;background:#fff;font-weight:600;font-size:.9rem;}
+.op-modal .op-body{flex:1;overflow-y:auto;padding:16px 24px 10px;}
+.op-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.op-card{background:#fff;border:2px solid #e5e7eb;border-radius:14px;padding:14px 15px;cursor:pointer;transition:all .18s;position:relative;}
+.op-card:hover{border-color:#f59e0b;box-shadow:0 8px 20px rgba(245,158,11,0.18);transform:translateY(-2px);}
+.op-card.selected{border-color:#b91c1c;background:linear-gradient(180deg,#fff1f2,#fff);box-shadow:0 0 0 3px rgba(185,28,28,0.12);}
+.op-card.selected::after{content:"✅";position:absolute;top:10px;right:10px;font-size:1.2rem;}
+.op-card .opc-name{font-size:1.08rem;font-weight:800;color:#0f172a;margin-bottom:6px;}
+.op-card .opc-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
+.op-card .opc-tags .t{padding:2px 9px;border-radius:12px;font-size:.74rem;font-weight:700;}
+.op-card .opc-tags .t-benxi{background:linear-gradient(135deg,#fed7aa,#fdba74);color:#9a3412;}
+.op-card .opc-tags .t-zhezi{background:linear-gradient(135deg,#a5f3fc,#67e8f9);color:#155e75;}
+.op-card .opc-tags .t-hongse{background:linear-gradient(135deg,#fecaca,#fca5a5);color:#991b1b;}
+.op-card .opc-tags .t-xinbian{background:linear-gradient(135deg,#ddd6fe,#c4b5fd);color:#5b21b6;}
+.op-card .opc-meta{font-size:.82rem;color:#475569;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;}
+.op-card .opc-meta b{color:#b91c1c;font-weight:800;}
+.op-card .opc-cast-preview{background:#fafafa;padding:7px 9px;border-radius:9px;border:1px dashed #e2e8f0;}
+.op-card .opc-cast-preview .cast-mini{font-size:.78rem;color:#334155;line-height:1.6;max-height:72px;overflow:hidden;}
+.op-card .opc-cast-preview .cast-mini b{color:#6d28d9;}
+.op-modal .op-foot{padding:14px 24px;background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-top:1.5px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px;}
+.op-modal .op-foot .op-empty{margin-right:auto;color:#64748b;font-size:.82rem;font-weight:600;align-self:center;}
+/* ===================== 选角Modal ===================== */
+.cp-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(4px);z-index:1000;}
+.cp-overlay.show{display:block;}
+.cp-modal{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(960px,96vw);max-height:90vh;background:#fff;border-radius:18px;z-index:1001;box-shadow:0 25px 60px rgba(0,0,0,0.35);overflow:hidden;flex-direction:column;}
+.cp-modal.show{display:flex;}
+.cp-head{padding:16px 24px;background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff;display:flex;align-items:center;gap:14px;}
+.cp-head h3{margin:0;font-size:1.15rem;font-weight:800;flex:1;}
+.cp-close{background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);color:#fff;width:36px;height:36px;border-radius:9px;font-size:1.25rem;font-weight:800;cursor:pointer;}
+.cp-body{flex:1;overflow-y:auto;padding:18px 22px;}
+.cp-cat{margin-bottom:16px;}
+.cp-cat h4{margin:0 0 9px;font-size:.95rem;color:#475569;font-weight:800;padding-bottom:6px;border-bottom:2px dashed #e5e7eb;display:flex;align-items:center;gap:7px;}
+.cp-cat h4 em{font-style:normal;background:#fef9c3;color:#854d0e;padding:2px 9px;border-radius:10px;font-size:.74rem;}
+.cp-cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:9px;}
+.cp-item{display:flex;align-items:center;gap:9px;padding:7px 11px;background:#fafafa;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:all .15s;font-size:.86rem;}
+.cp-item:hover{background:#fffbeb;border-color:#fcd34d;}
+.cp-item input[type="checkbox"]{width:18px;height:18px;accent-color:#7c3aed;}
+.cp-item.cp-selected{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-color:#a78bfa;font-weight:600;color:#4c1d95;}
+.cp-item .cpi-type{margin-left:auto;font-size:.72rem;background:#f1f5f9;color:#475569;padding:1px 7px;border-radius:10px;}
+.cp-foot{padding:14px 24px;background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-top:1.5px solid #e2e8f0;display:flex;gap:10px;justify-content:flex-end;}
+.qr-placeholder{position:absolute;right:18px;bottom:14px;width:86px;height:86px;background:rgba(255,255,255,0.9);border:2px solid #fbbf24;border-radius:10px;padding:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#92400e;font-size:.62rem;text-align:center;font-weight:700;z-index:3;}
+.qr-placeholder .qr-img{width:60px;height:60px;background:repeating-conic-gradient(#78350f 0 25%, #fff 0 50%) 50%/6px 6px;border-radius:4px;margin-bottom:3px;}
+
+    /* S-通用后台补丁：页码圆角（原方形→10px圆角） + hover 上浮 */
+    .pagination .page-btn, button.page-btn, .page-btn,
+    .pagination button, .data-table-container .pagination button {
+      border-radius: 10px !important;
+      min-width: 38px;
+      padding: 6px 14px;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(15,76,129,0.18);
+    }
+    /* 弹窗显示/隐藏通用 class（CSP友好，不写 style.display） */
+    .s-modal-hide { display: none !important; }
+    .s-overlay-hide { display: none !important; }
+    /* 侧边栏死链兜底颜色 + href=# 伪链接视觉提示 */
+    a[href="#"]:not(.action-link):not(.sched-opera-link)::after { content: " ⚠"; color: #f59e0b; font-size: .72rem; opacity: .65; }
+    /* 查询按钮行内提示色 */
+    .btn-ghost { color: #64748b; }
+/* 🔧 H9后台总补CSS：页码圆角10px + 后台表格min-width:760px/720px/680px响应式断点 + 遮罩隐藏类 */
+.pagination .page-btn, button.page-btn, .page-btn,
+.pagination button, .page-number-item button, .pager button,
+.btn-pagination, [class*="pagination"] button,
+.btn, button.btn {
+  border-radius: 10px !important;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+.pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+}
+/* 后台表格最小宽度（768px以上 → 760px；480~767 →720px；<480 →680px） */
+.admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+.data-table-container, [class*="table-wrapper"], .admin-content table {
+  min-width: 760px !important;
+  overflow-x: auto !important;
+}
+@media (max-width: 768px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 720px !important;
+  }
+}
+@media (max-width: 480px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 680px !important;
+  }
+}
+.s-modal-hide { display: none !important; }
+.s-overlay-hide { display: none !important; }
+/* 侧边栏死链接视觉警告 */
+.admin-sidebar-menu li a:not([href]), .admin-sidebar-menu li a[href="#"] { cursor: pointer; position: relative; }
+.admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
+  content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
+}
+/* ===== 2026-08-02 民营剧团组团模板 · 新增强制样式 ===== */
+.troupe-bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:6px 0 14px;padding:12px 16px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:14px;border:2px solid #93c5fd;box-shadow:0 3px 10px rgba(37,99,235,0.08);}
+.troupe-bar .tb-title{font-weight:900;color:#1e3a8a;font-size:.98rem;display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.troupe-bar .tb-title::before{content:"🎭";}
+.troupe-bar .tb-stat{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #bfdbfe;border-radius:10px;padding:6px 12px;font-size:.86rem;font-weight:700;color:#1e40af;}
+.troupe-bar .tb-stat .n{font-size:1.12rem;color:#1d4ed8;font-weight:900;}
+.troupe-bar .tb-stat.ok{border-color:#86efac;background:#f0fdf4;color:#166534;} .tb-stat.ok .n{color:#15803d;}
+.troupe-bar .tb-stat.warn{border-color:#fcd34d;background:#fffbeb;color:#92400e;} .tb-stat.warn .n{color:#b45309;}
+.troupe-bar .tb-stat.bad{border-color:#fca5a5;background:#fef2f2;color:#991b1b;} .tb-stat.bad .n{color:#b91c1c;}
+.troupe-bar .tb-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
+.troupe-bar .tb-btn{border:none;border-radius:10px;padding:8px 14px;font-weight:800;font-size:.88rem;cursor:pointer;transition:all .15s;user-select:none;white-space:nowrap;}
+.troupe-bar .tb-btn-blue{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;box-shadow:0 3px 10px rgba(37,99,235,0.25);}
+.troupe-bar .tb-btn-blue:hover{transform:translateY(-1px);box-shadow:0 5px 15px rgba(37,99,235,0.35);}
+.troupe-bar .tb-btn-amber{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 3px 10px rgba(245,158,11,0.25);}
+.troupe-bar .tb-btn-amber:hover{transform:translateY(-1px);}
+.troupe-bar .tb-btn-rose{background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;box-shadow:0 3px 10px rgba(225,29,72,0.25);}
+.troupe-bar .tb-btn-rose:hover{transform:translateY(-1px);}
+.troupe-bar .tb-btn-gray{background:linear-gradient(135deg,#64748b,#475569);color:#fff;}
+.troupe-bar .tb-btn-emerald{background:linear-gradient(135deg,#059669,#047857);color:#fff;box-shadow:0 3px 10px rgba(5,150,105,0.25);}
+.troupe-bar .tb-btn-emerald:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(5,150,105,0.35);}
+.troupe-bar .tb-btn-green{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;}
+.troupe-bar .tb-btn-purple{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;}
+.troupe-bar .tb-btn-indigo{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;}
+.troupe-bar .tb-btn-indigo:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(99,102,241,0.35);}
+.tp-group{margin-bottom:14px;border:2px solid #e2e8f0;border-radius:14px;overflow:hidden;}
+.tp-group .tp-g-head{padding:10px 16px;background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-bottom:2px solid #e2e8f0;display:flex;align-items:center;gap:10px;font-weight:800;color:#0f172a;}
+.tp-group .tp-g-head .tp-g-count{margin-left:auto;background:#fff;border:1.5px solid #cbd5e1;border-radius:20px;padding:3px 12px;font-size:.82rem;font-weight:900;color:#334155;}
+.tp-group.tpg-actor{border-color:#fecaca;} .tp-group.tpg-actor .tp-g-head{background:linear-gradient(135deg,#fff1f2,#fee2e2);color:#991b1b;}
+.tp-group.tpg-band{border-color:#fed7aa;}  .tp-group.tpg-band  .tp-g-head{background:linear-gradient(135deg,#fff7ed,#ffedd5);color:#9a3412;}
+.tp-group.tpg-front{border-color:#bfdbfe;} .tp-group.tpg-front .tp-g-head{background:linear-gradient(135deg,#eff6ff,#dbeafe);color:#1e40af;}
+.tp-group.tpg-costume{border-color:#c7d2fe;} .tp-group.tpg-costume .tp-g-head{background:linear-gradient(135deg,#eef2ff,#e0e7ff);color:#3730a3;}
+.tp-group.tpg-electric{border-color:#bbf7d0;} .tp-group.tpg-electric .tp-g-head{background:linear-gradient(135deg,#f0fdf4,#dcfce7);color:#166534;}
+.tp-row{display:flex;gap:6px;align-items:center;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:6px 8px;}
+.tp-row input{flex:1;min-width:0;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:.88rem;background:#fafafa;}
+.tp-row input[type="number"]{max-width:90px;text-align:right;font-weight:800;color:#b45309;}
+.tp-row input.tp-wage{max-width:86px;text-align:right;font-weight:900;color:#9a3412;background:#fffbeb;border-color:#fcd34d;}
+.tp-row input:focus{outline:none;border-color:#fbbf24;background:#fffbeb;}
+.tp-row .tp-wage-label{font-size:.72rem;color:#92400e;font-weight:900;white-space:nowrap;user-select:none;}
+.tp-row .tp-del{background:#fee2e2;color:#b91c1c;border:1.5px solid #fecaca;border-radius:7px;padding:4px 8px;cursor:pointer;font-weight:900;}
+.tp-row .tp-del:hover{background:#fecaca;}
+.tp-group .tp-g-body{padding:10px 14px;display:grid;grid-template-columns:1fr;gap:10px;}
+.tp-group .tp-g-head .tp-g-wage{margin-right:6px;background:linear-gradient(135deg,#fef9c3,#fde68a);color:#78350f;border:1.5px solid #fcd34d;border-radius:18px;padding:3px 12px;font-size:.8rem;font-weight:900;}
+.tp-form-row{display:grid;grid-template-columns:1fr 2fr;gap:12px;align-items:center;margin-bottom:12px;}
+.tp-form-row > label{font-weight:800;color:#0f172a;}
+.tp-form-row input,.tp-form-row textarea{padding:9px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:.94rem;}
+.tp-form-row input[type="number"]{max-width:160px;text-align:right;font-weight:800;color:#b45309;background:#fffbeb;border-color:#fcd34d;}
+.tp-form-row.tp-wage-row{background:linear-gradient(135deg,#fffbeb,#fef3c7);padding:10px 14px;border-radius:12px;border:2px solid #fde68a;}
+.tp-add-btn{display:block;width:100%;margin-top:6px;padding:6px 10px;border:1.5px dashed #94a3b8;color:#475569;border-radius:8px;background:#f8fafc;cursor:pointer;font-weight:700;font-size:.84rem;}
+.tp-add-btn:hover{background:#eff6ff;color:#1d4ed8;border-color:#93c5fd;}
+.tp-list-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid #e2e8f0;border-radius:12px;margin-bottom:8px;background:#fff;transition:all .15s;}
+.tp-list-item:hover{border-color:#3b82f6;box-shadow:0 4px 14px rgba(59,130,246,0.1);}
+.tp-list-item .tp-info{flex:1;min-width:0;}
+.tp-list-item .tp-info .tp-name{font-weight:900;color:#0f172a;font-size:1rem;}
+.tp-list-item .tp-info .tp-meta{font-size:.78rem;color:#64748b;margin-top:3px;display:flex;flex-wrap:wrap;gap:8px;}
+.tp-list-item .tp-info .tp-meta span{background:#f1f5f9;padding:2px 8px;border-radius:10px;border:1px solid #e2e8f0;}
+.tp-list-item .tp-ops{display:flex;gap:6px;}
+.tp-list-item .tp-ops button{border:none;border-radius:8px;padding:6px 11px;cursor:pointer;font-weight:800;font-size:.82rem;}
+.tp-ops .tp-load{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;}
+.tp-ops .tp-edit{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;}
+.tp-ops .tp-del{background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;}
+.tp-ops .tp-dup{background:#fff;color:#334155;border:1.5px solid #cbd5e1 !important;}
+@media print{
+  .troupe-bar{display:none !important;}
+}
+
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+</style>
+</head>
+<body>
+
+<div class="admin-layout">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-header">秦安县<br>秦剧团管理后台</div>
+    <nav class="admin-sidebar-menu">
+      <div class="admin-menu-group">
+        <a href="index.html" data-role-level="100" class="admin-menu-item">
+          <span class="menu-icon">📊</span><span>数据看板</span>
+        </a>
+        <a href="accounts.html" data-role-level="999" class="admin-menu-item">
+          <span class="menu-icon">👥</span><span>账号权限管理</span>
+        </a>
+        <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
+          <span class="menu-icon">📅</span><span>演出档期排班</span>
+          <span class="menu-badge">8</span>
+        </a>
+        <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item active">
+          <span class="menu-icon">🎭</span><span>演出演员表</span>
+          <span class="menu-badge">NEW</span>
+        </a>
+        <a href="orders.html" data-role-level="800" class="admin-menu-item">
+          <span class="menu-icon">📋</span><span>订单预约管理</span>
+          <span class="menu-badge">5</span>
+        </a>
+        <a href="operas.html" data-role-level="800" class="admin-menu-item">
+          <span class="menu-icon">🎭</span><span>剧目资源管理</span>
+        </a>
+        <a href="staff.html" data-role-level="800" class="admin-menu-item">
+          <span class="menu-icon">👨‍🎤</span><span>演职人员管理</span>
+        </a>
+        <a href="attendance.html" data-role-level="700" class="admin-menu-item">
+          <span class="menu-icon">💵</span><span>考勤与薪酬</span>
+          <span class="menu-badge">NEW</span>
+        </a>
+        <a href="inventory.html" data-role-level="800" class="admin-menu-item">
+          <span class="menu-icon">📦</span><span>道具服装库存</span>
+          <span class="menu-badge">!</span>
+        </a>
+        <a href="finance.html" data-role-level="500" class="admin-menu-item">
+          <span class="menu-icon">💰</span><span>财务收支台账</span>
+        </a>
+        <a href="content.html" data-role-level="800" class="admin-menu-item">
+          <span class="menu-icon">📝</span><span>官网内容管理</span>
+        </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
+          </a>
+        <a href="reports.html" data-role-level="700" class="admin-menu-item">
+          <span class="menu-icon">📈</span><span>数据统计报表</span>
+        </a>
+        <a href="system.html" data-role-level="999" class="admin-menu-item">
+          <span class="menu-icon">🔧</span><span>系统日志备份</span>
+        </a>
+      </div>
+      <div class="admin-menu-group">
+        <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
+        <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
+          <span class="menu-icon">📋</span><span>架构验收报告</span>
+        </a>
+        <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
+          <span class="menu-icon">📦</span><span>最终交付总结</span>
+        </a>
+        <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
+          <span class="menu-icon">🚀</span><span>EdgeOne Pages 部署教程</span>
+        </a>
+      </div>
+    </nav>
+    <div class="admin-sidebar-footer">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+          <span>🏠</span><span>返回前台首页</span>
+        </a>
+        <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+          <span>📖</span><span>操作手册</span>
+        </a>
+        <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
+          <span>🚪</span><span>退出登录</span>
+        </a>
+      </div>
+    </div>
+  </aside>
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <button class="topbar-toggle" id="sidebarToggle" type="button">☰ 切换侧边栏</button>
+      <div class="admin-breadcrumb">
+        <a href="index.html">首页</a>
+        <span class="separator">/</span>
+        <span class="current">演出演员表</span>
+      </div>
+      <div class="topbar-user">👨‍💼 秦剧团管理员 / <a href="#" id="logoutLink2" data-toggle="logout" class="action-link">退出</a></div>
+    </div>
+    <div class="cast-page-wrap">
+      <div class="print-header">
+        <div style="font-weight:800;font-size:1.1rem;color:#7f1d1d;text-align:center;">秦安县秦剧团文化演出有限公司 · 演出演员表（打印版）</div>
+        <div style="font-size:.78rem;color:#64748b;text-align:center;margin-top:2px;">打印时间：<span id="printDate"></span>　|　本文件为内部演出资料，请妥善保管　|　观众扫码看电子阵容：cast-public.html</div>
+      </div>
+      <h2 class="page-title">🎭 演出演员表配置<small>· 秦腔专业增强版V3 · 8大板块 · 剧库+演职库双联动 · 手机/平板/打印三端适配</small></h2>
+      <!-- 2026-08-02 新增：多场演出存档管理栏（支持新建/切换/另存为/删除 多场演出阵容） -->
+      <div id="castSheetManagerBar" class="no-print" style="background:linear-gradient(135deg,#fef9ef,#f0f7ff);border:1px solid #e5d9b8;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
+        <span style="font-weight:800;color:#0f4c81;font-size:0.92rem;">📁 演出阵容存档：</span>
+        <select id="csSheetSelect" data-action="cast-sheet-switch" style="padding:7px 10px;border:1px solid #c9a962;border-radius:6px;background:#fff;font-size:0.9rem;min-width:240px;max-width:360px;"></select>
+        <button class="btn-action btn-primary" id="csBtnNew" data-action="cast-sheet-new" type="button" style="padding:6px 12px;font-size:0.85rem;">✨ 新建演出</button>
+        <button class="btn-action btn-gold" id="csBtnSaveAs" data-action="cast-sheet-saveas" type="button" style="padding:6px 12px;font-size:0.85rem;">💾 另存为新存档</button>
+        <button class="btn-action btn-red" id="csBtnDelete" data-action="cast-sheet-delete" type="button" style="padding:6px 12px;font-size:0.85rem;">🗑️ 删除当前存档</button>
+        <span id="csSheetInfo" style="margin-left:auto;font-size:0.82rem;color:#64748b;"></span>
+      </div>
+      <!-- 2026-08-02 新增：按场勾选打印 范围控制条（全选/清空/统计/按勾选打印） -->
+      <div class="op-print-scope-bar no-print" id="printScopeBar">
+        <span class="ps-label">🎯 打印范围：</span>
+        <span class="ps-stat" id="printScopeStat">未勾选</span>
+        <button class="ps-btn" id="psSelectAll" data-action="cast-ps-selectall" type="button">☑️ 全选所有</button>
+        <button class="ps-btn" id="psClearAll" data-action="cast-ps-clearall" type="button">❌ 清空勾选</button>
+        <button class="ps-btn" id="psSelectOperaOnly" data-action="cast-ps-operaonly" type="button">🎭 仅选场次剧目</button>
+        <button class="ps-btn primary" id="btnPrintSelected" data-action="cast-print-selected" type="button">🖨 按勾选打印</button>
+        <button class="ps-btn emerald" id="btnXlsxSelected" data-action="cast-xlsx-selected" type="button" title="按勾选的板块/场次剧目 → 一键导出多Sheet Excel（A4阵容卡格式）">📊 按勾选导出XLSX</button>
+        <span style="margin-left:auto;color:#64748b;font-size:.78rem;">提示：在每个板块标题、每个剧目卡片左上角勾选要打印的内容</span>
+      </div>
+      <!-- ===== 2026-08-02 ✅ 民营剧团组团模板（30-40人标配 + 天工资商议） ===== -->
+      <div class="troupe-bar" id="troupeBar">
+        <span class="tb-title">民营剧团组团模板 · 天工资商议</span>
+        <span class="tb-stat" id="tp-total" title="组团总人数（含替补）">总人数 <em class="n">0</em></span>
+        <span class="tb-stat" id="tp-actor" title="演员组：生行(文须生/武须生/小生)+旦行(正旦/小旦/彩旦/二架旦)+净行(大花脸/二花脸)+丑角+二架(门官/家院)+角子(龙套/校尉/刀斧手/丫鬟/彩女)">演员 <em class="n">0</em></span>
+        <span class="tb-stat" id="tp-band"  title="乐队组：武场(打击)+文场(管弦)">乐队 <em class="n">0</em></span>
+        <span class="tb-stat" id="tp-front" title="前场（后勤）：舞台监督/前台/检票/引导/字幕/催场">前场 <em class="n">0</em></span>
+        <span class="tb-stat" id="tp-costume" title="衣箱/帽箱（后勤）：行头/盔帽/化妆/勾脸/道具管理">服装 <em class="n">0</em></span>
+        <span class="tb-stat" id="tp-electric" title="电工（后勤）：灯光师/音响师/配电/设备">电工 <em class="n">0</em></span>
+        <span class="tb-stat" id="tp-status" title="民营团标配需≥30人，建议30-40人" style="min-width:110px;text-align:center;">标配检测 <em class="n">-</em></span>
+        <span class="tb-stat ok" id="tp-wage-day" title="单日所有人员日薪合计（不含食宿路费等）" style="background:linear-gradient(135deg,#fef9c3,#fde68a);border-color:#fcd34d;color:#78350f;">日工资合计 <em class="n">¥0</em></span>
+        <span class="tb-stat bad" id="tp-wage-total" title="演出天数 × 日工资合计 = 本场演出人工成本预算" style="min-width:200px;">
+          <span>演出 <input type="number" id="tpDays" min="1" max="60" value="3" title="商议本次演出天数（庙会通常3-5天）" style="width:58px;height:28px;border:1.5px solid #fcd34d;border-radius:6px;font-weight:900;text-align:center;font-size:.88rem;color:#7c2d12;background:#fffbeb;">天 × 日薪 = 人工预算 <em class="n" style="font-size:1.08rem;">¥0</em></span>
+        </span>
+        <div class="tb-actions">
+          <button class="tb-btn tb-btn-blue"   id="tpBtnSync2Cast" data-action="troupe-sync-cast"  type="button" title="把人员名单写入实际演员表7大板块（武场/文场/角色/舞台保障/节目单）">🧩 同步到演员表</button>
+          <button class="tb-btn tb-btn-amber"  id="tpBtnWagePrint" data-action="troupe-wage-print"  type="button" title="打印「天工资商议单」用于给甲方报价/跟演员结算">💰 打印工资单</button>
+          <button class="tb-btn tb-btn-rose"   id="tpBtnWage2Fin"  data-action="troupe-wage-fin"   type="button" title="本次演出×天数的工资合计生成财务台账「应付工资」草稿凭证">📒 转财务待发工资</button>
+          <button class="tb-btn tb-btn-amber"  id="tpBtnWage2FinRetry" data-action="troupe-wage-fin-retry" type="button" style="display:none;" title="上次转财务失败，点击按当前工资预算数据重新提交（网络/服务端故障最多可重试3次；登录过期、无权限、数据校验、重复凭证等问题请按提示处理）">🔄 重试</button>
+          <button class="tb-btn tb-btn-green"  id="tpBtnWageCsv"   data-action="troupe-wage-csv"    type="button" title="导出工资预算评估CSV（每人日薪×天数+分项汇总，方便发给甲方/演员）">📊 预算评估CSV</button>
+          <button class="tb-btn tb-btn-emerald" id="tpBtnWageXlsx"  data-action="troupe-wage-xlsx"   type="button" title="导出工资预算评估Excel.xlsx（多Sheet+列宽+数字格式，发给甲方/演员/会计）">📘 预算评估XLSX</button>
+          <span style="margin:0 2px;display:inline-block;align-self:stretch;width:2px;background:#bfdbfe;border-radius:2px;"></span>
+          <button class="tb-btn tb-btn-blue"   id="tpBtnLoad"      data-action="troupe-load-list"  type="button">📋 从模板载入</button>
+          <button class="tb-btn tb-btn-amber"  id="tpBtnSaveAs"    data-action="troupe-save-as"   type="button">💾 另存为组团模板</button>
+          <button class="tb-btn tb-btn-rose"   id="tpBtnManage"    data-action="troupe-manage"    type="button">⚙️ 组团模板管理</button>
+          <button class="tb-btn tb-btn-purple" id="tpBtnWgEdit"    data-action="troupe-wg-edit"    type="button" title="编辑7档天工资等级（W1实习～W7主A角），影响所有样板/模板默认档位">🎚️ 工资等级</button>
+          <button class="tb-btn tb-btn-gray"   id="tpBtnSeed"      data-action="troupe-seed-36"   type="button">✨ 一键生成36人标配样板</button>
+          <button class="tb-btn tb-btn-indigo" id="tpBtnCustom"    data-action="troupe-custom"     type="button" title="自定义各组人数，生成专属组团样板">🛠 自定义组团</button>
+        </div>
+      </div>
+      <!-- ===== 组团模板 · End ===== -->
+      <div class="page-actions">
+        <button class="btn-action btn-red" id="btnReset" data-action="cast-reset" type="button">🧹 重置空白</button>
+        <button class="btn-action btn-blue" id="btnSyncRoster" data-action="cast-sync-roster" type="button" title="从花名册API同步所有演职人员到姓名补全列表">🔄 同步花名册</button>
+        <button class="btn-action btn-gold" id="btnSave" data-action="cast-save" type="button">💾 保存本地</button>
+        <button class="btn-action btn-green" id="btnLoad" data-action="cast-load" type="button">📂 读取上次</button>
+        <button class="btn-action btn-primary mode-edit" id="btnPreview" data-action="cast-preview" type="button">👁 预览模式</button>
+        <button class="btn-action btn-primary mode-preview" id="btnEdit" data-action="cast-edit" type="button">✏ 编辑模式</button>
+        <button class="btn-action btn-gray" id="btnPrint" data-action="cast-print" type="button">🖨 整页打印</button>
+        <button class="btn-action btn-orange" id="btnPrintSelected2" data-action="cast-print-selected" type="button">🎯 按勾选打印</button>
+        <button class="btn-action btn-green" id="btnExport" data-action="cast-export" type="button">📤 导出 CSV</button>
+        <button class="btn-action btn-emerald" id="btnXlsxAll" data-action="cast-xlsx-all" type="button" title="一键导出全表演出演员表Excel.xlsx（演出信息/主创/剧目/乐队/舞台/节目单/工资预算 各自独立Sheet+列宽+数字格式）">📊 整表导出XLSX</button>
+      </div>
+
+      <!-- ===== 20260922 真实后端同步：关联排期 / 载入线上阵容 / 发布到官网 ===== -->
+      <div id="realSyncBar" style="margin:10px 0;padding:10px 14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px;">
+        <span style="font-weight:700;color:#0369a1;">🌐 官网阵容同步</span>
+        <label>关联排期：<select id="rsSchedule" style="min-width:240px;padding:4px 8px;"><option value="">正在加载…</option></select></label>
+        <label>线上阵容：<select id="rsSheet" style="min-width:220px;padding:4px 8px;"><option value="">（本次新建）</option></select></label>
+        <button id="rsLoad" type="button" style="padding:5px 14px;border:1px solid #0284c7;background:#fff;color:#0284c7;border-radius:8px;cursor:pointer;">📥 载入选中阵容</button>
+        <button id="rsPublish" type="button" style="padding:5px 16px;border:none;background:#0284c7;color:#fff;border-radius:8px;cursor:pointer;font-weight:700;">💾 保存并发布到官网</button>
+        <span id="rsMsg" style="color:#075985;"></span>
+      </div>
+
+      <!-- 01 演出封面横幅 -->
+      <div class="show-banner">
+        <div class="qr-placeholder"><div class="qr-img"></div>扫码看电子阵容</div>
+        <div class="comp-name">秦安县秦剧团文化演出有限公司<em>文化演出有限公司</em></div>
+        <div class="show-title"><input type="text" id="inp-title" placeholder="例：{year} 文化惠民 · 秦腔经典传统剧目专场"></div>
+        <div class="meta-grid">
+          <div class="row"><b>📢 主办单位</b><input type="text" id="inp-host" placeholder="例：中共秦安县委宣传部"></div>
+          <div class="row"><b>🎬 承办单位</b><input type="text" id="inp-organizer" placeholder="例：秦安县文体广电和旅游局"></div>
+          <div class="row"><b>🤝 协办单位</b><input type="text" id="inp-coorganizer" placeholder="例：秦安县文化馆 / 陇城镇人民政府"></div>
+          <div class="row"><b>💝 赞助单位</b><input type="text" id="inp-sponsor" placeholder="例：甘肃秦安农村商业银行（冠名）"></div>
+          <div class="row"><b>📅 演出日期</b>
+            <div class="date-field-wrap">
+              <input type="date" id="inp-date">
+            </div>
+          </div>
+          <div class="row"><b>⏰ 开演时间</b><input type="text" id="inp-time" placeholder='例：下午 14:00 / 晚间 19:30'></div>
+          <div class="row"><b>📍 演出地点</b><input type="text" id="inp-venue" placeholder="例：秦安县陇城镇张沟村文化广场大舞台"></div>
+          <div class="row"><b>📜 温馨提示</b><input type="text" id="inp-notice" placeholder="例：本场演出免费观看；严禁录音录像；1.2米以下儿童请家长陪同…"></div>
+          <div class="row" style="grid-column:1/-1;border-top:1px dashed rgba(15,76,129,0.18);padding-top:12px;margin-top:6px;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;color:#0f4c81;font-size:0.95rem;user-select:none;">
+              <input type="checkbox" id="inp-isPublic" style="width:20px;height:20px;accent-color:#b91c1c;cursor:pointer;">
+              ☑️ 公开此阵容到 <b style="color:#7f1d1d;">cast-public.html</b>（观众扫码可看）
+            </label>
+            <div id="publicStatusBar" class="pubstatus-wrap" style="margin-top:10px;font-size:0.85rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-wrap">
+        <div class="col-left">
+      <!-- 02 主创 -->
+      <div class="section-block" data-ps-sec="creative">
+        <div class="sec-head creative">
+          <span class="sec-badge badge-creative">01</span>
+          <h3>主创 &amp; 艺术指导团队</h3>
+          <label class="print-scope-check no-print" data-ps-label="sec"><input type="checkbox" data-ps-cb-sec="creative"> 打印此板块</label>
+          <button class="mobile-fold-btn" type="button" data-fold="sec-creative">▼</button>
+          <span class="sec-sub">出品人 / 编剧 / 导演 / 艺术总监 / 唱腔设计 / 舞美</span>
+        </div>
+        <div class="sec-body" id="sec-creative">
+          <table class="cast-table">
+            <thead><tr><th class="seq">#</th><th style="width:170px;">职位</th><th style="width:130px;">姓名</th><th>备注 / 分工说明</th><th style="width:58px;" title="勾选=观众扫码可见，取消勾选=仅后台内部可见">公开</th><th style="width:52px;">操作</th></tr></thead>
+            <tbody id="bodyCreative"></tbody>
+          </table>
+        </div>
+        <button class="btn-add-row no-print" type="button" data-add="creative">追加主创/职位行（自动新增）</button>
+      </div>
+
+      <!-- 03 主场本戏 -->
+      <div class="section-block" data-ps-sec="mainOpera">
+        <div class="sec-head main">
+          <span class="sec-badge badge-main">02</span>
+          <h3>主场演出剧目（大本戏）</h3>
+          <label class="print-scope-check no-print" data-ps-label="sec"><input type="checkbox" data-ps-cb-sec="mainOpera"> 打印此板块</label>
+          <button class="mobile-fold-btn" type="button" data-fold="sec-mainOpera">▼</button>
+          <span class="sec-sub">传统本戏 / 红色现代戏 / 新编历史剧 → A★角主演 / B角替补 / C角实习</span>
+        </div>
+        <div class="sec-body" id="sec-mainOpera">
+          <div id="blkMainOpera"></div>
+        </div>
+        <button class="btn-add-row no-print" type="button" data-add="mainOpera" style="border-radius:0;">🎫 从剧库选择主场本戏…</button>
+      </div>
+
+      <!-- 04 加演 -->
+      <div class="section-block" data-ps-sec="addOpera">
+        <div class="sec-head add">
+          <span class="sec-badge badge-add">03</span>
+          <h3>加演演出剧目（折子戏 · 清唱 · 曲艺）</h3>
+          <label class="print-scope-check no-print" data-ps-label="sec"><input type="checkbox" data-ps-cb-sec="addOpera"> 打印此板块</label>
+          <button class="mobile-fold-btn" type="button" data-fold="sec-addOpera">▼</button>
+          <span class="sec-sub">经典折子戏 / 秦腔清唱 / 小曲 · 演出时长 15~35 分钟</span>
+        </div>
+        <div class="sec-body" id="sec-addOpera">
+          <div id="blkAddOpera"></div>
+        </div>
+        <button class="btn-add-row no-print" type="button" data-add="addOpera" style="border-radius:0;">🎫 从剧库选择加演折戏…</button>
+      </div>
+
+      <!-- 07 舞台保障 -->
+      <div class="section-block" data-ps-sec="stage">
+        <div class="sec-head stage">
+          <span class="sec-badge badge-stage">06</span>
+          <h3>舞台技术保障 &amp; 后勤（后台/前台）</h3>
+          <label class="print-scope-check no-print" data-ps-label="sec"><input type="checkbox" data-ps-cb-sec="stage"> 打印此板块</label>
+          <button class="mobile-fold-btn" type="button" data-fold="sec-stage">▼</button>
+          <span class="sec-sub">舞台监督 ★★ · 帽箱/盔箱（秦腔特色岗）★ · 灯光 · 音响 · 服装 · 化妆 · 道具</span>
+        </div>
+        <div class="sec-body" id="sec-stage">
+          <table class="cast-table">
+            <thead><tr><th class="seq">#</th><th style="width:180px;">岗位 / 职责</th><th style="width:130px;">负责人</th><th>备注（后台/前台/巡检点）</th><th style="width:58px;" title="勾选=观众可见，取消=内部保密">公开</th><th style="width:52px;">操作</th></tr></thead>
+            <tbody id="bodyStage"></tbody>
+          </table>
+        </div>
+        <button class="btn-add-row no-print" type="button" data-add="stage">追加保障岗位行（自动新增）</button>
+      </div>
+
+      <!-- 08 节目单 -->
+      <div class="section-block print-page-break" data-ps-sec="program">
+        <div class="sec-head program">
+          <span class="sec-badge badge-program">07</span>
+          <h3>演出节目单总览（按上台顺序）</h3>
+          <label class="print-scope-check no-print" data-ps-label="sec"><input type="checkbox" data-ps-cb-sec="program"> 打印此板块</label>
+          <button class="mobile-fold-btn" type="button" data-fold="sec-program">▼</button>
+          <span class="sec-sub">开场锣鼓 → 加演折子戏 → 幕间休息 → 主场大本戏 → 谢幕加唱</span>
+        </div>
+        <div class="sec-body" id="sec-program">
+          <table class="cast-table">
+            <thead><tr><th class="seq">#</th><th style="width:110px;">分类</th><th>节目名称 / 章节</th><th style="width:86px;">时长(分)</th><th style="width:180px;">参演人员 / 负责人</th><th>备注 / 说明</th><th style="width:58px;" title="勾选=观众可见，取消=内部保密">公开</th><th style="width:52px;">操作</th></tr></thead>
+            <tbody id="bodyProgram"></tbody>
+          </table>
+        </div>
+        <button class="btn-add-row no-print" type="button" data-add="program">＋ 追加节目行（自动新增）</button>
+      </div>
+      </div>
+
+      <div class="col-right">
+      <!-- 05 武场 -->
+      <div class="section-block" data-ps-sec="wuchang">
+        <div class="sec-head wuchang">
+          <span class="sec-badge badge-wuchang">04</span>
+          <h3>秦腔打击乐 · 武场乐队（秦腔"骨架"节奏）</h3>
+          <label class="print-scope-check no-print" data-ps-label="sec"><input type="checkbox" data-ps-cb-sec="wuchang"> 打印此板块</label>
+          <button class="mobile-fold-btn" type="button" data-fold="sec-wuchang">▼</button>
+          <span class="sec-sub">★★司鼓(板鼓指挥) · ★梆子(240bpm) · 大锣 · 铙钹 · 京镲 · 手锣</span>
+        </div>
+        <div class="sec-body" id="sec-wuchang">
+          <table class="cast-table">
+            <thead><tr><th class="seq">#</th><th style="width:190px;">岗位 / 乐器</th><th style="width:120px;">演奏员</th><th>备注 / 常用曲牌</th><th style="width:58px;" title="勾选=观众可见，取消=内部保密">公开</th><th style="width:52px;">操作</th></tr></thead>
+            <tbody id="bodyWuchang"></tbody>
+          </table>
+        </div>
+        <button class="btn-add-row no-print" type="button" data-add="wuchang">追加武场岗位行（自动新增）</button>
+      </div>
+
+      <!-- 06 文场 -->
+      <div class="section-block" data-ps-sec="wenchang">
+        <div class="sec-head wenchang">
+          <span class="sec-badge badge-wenchang">05</span>
+          <h3>秦腔管弦乐 · 文场乐队（主奏伴奏）</h3>
+          <label class="print-scope-check no-print" data-ps-label="sec"><input type="checkbox" data-ps-cb-sec="wenchang"> 打印此板块</label>
+          <button class="mobile-fold-btn" type="button" data-fold="sec-wenchang">▼</button>
+          <span class="sec-sub">★★板胡主奏（托腔保调） · 二胡ⅠⅡ · 扬琴 · 琵琶 · 三弦 · 竹笛 · 唢呐</span>
+        </div>
+        <div class="sec-body" id="sec-wenchang">
+          <table class="cast-table">
+            <thead><tr><th class="seq">#</th><th style="width:190px;">岗位 / 乐器</th><th style="width:120px;">演奏员</th><th>备注 / 常用曲牌</th><th style="width:58px;" title="勾选=观众可见，取消=内部保密">公开</th><th style="width:52px;">操作</th></tr></thead>
+            <tbody id="bodyWenchang"></tbody>
+          </table>
+        </div>
+        <button class="btn-add-row no-print" type="button" data-add="wenchang">追加文场岗位行（自动新增）</button>
+      </div>
+      </div>
+      </div>
+
+      <div class="print-footer">
+        秦安县秦剧团文化演出有限公司 · 演出演员表 ｜ 本文件打印后需经舞台监督签字生效 · 观众扫码查看电子阵容：cast-public.html
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 手机端浮动快速按钮(FAB) -->
+<div class="mobile-fab-bar no-print">
+  <button class="mfab mfab-save" id="mFabSave" type="button" title="保存到本地">💾</button>
+  <button class="mfab mfab-preview" id="mFabPreview" type="button" title="预览模式">👁</button>
+  <button class="mfab mfab-export" id="mFabExport" type="button" title="导出CSV">📤</button>
+</div>
+
+<!-- 选角Modal -->
+<div class="cp-overlay" id="cpOverlay"></div>
+<div class="cp-modal" id="cpModal">
+  <div class="cp-head">
+    <h3 id="cpTitle">选择本剧目演员阵容</h3>
+    <button class="cp-close" id="cpClose" type="button" aria-label="关闭">×</button>
+  </div>
+  <div class="cp-body" id="cpBody"></div>
+  <div class="cp-foot no-print">
+    <button class="btn-action btn-gray" id="cpClear" type="button">🧹 清空选择</button>
+    <button class="btn-action btn-gold" id="cpCommon" type="button">⚡ 一键套用常用班底</button>
+    <button class="btn-action btn-primary" id="cpOk" type="button">✅ 确认阵容</button>
+  </div>
+</div>
+
+<!-- 剧库Picker Modal（X1新增） -->
+<div class="op-overlay" id="opOverlay"></div>
+<div class="op-modal" id="opModal">
+  <div class="op-head">
+    <h3>🎫 秦腔剧目资源库 · <em id="opPickTarget">主场本戏</em>选择</h3>
+    <button class="op-close" id="opClose" type="button">×</button>
+  </div>
+  <div class="op-search">
+    <input type="text" id="opSearch" placeholder="🔍 搜索剧目名称、剧情关键词、角色行当…">
+    <select class="cat-filter" id="opCatFilter">
+      <option value="">全部分类</option>
+      <option value="传统本戏">传统本戏</option>
+      <option value="传统折子戏">传统折子戏</option>
+      <option value="红色现代戏">红色现代戏</option>
+      <option value="新编历史剧">新编历史剧</option>
+    </select>
+  </div>
+  <div class="op-body">
+    <div class="op-grid" id="opGrid"></div>
+  </div>
+  <div class="op-foot">
+    <span class="op-empty" id="opEmptyHint">💡 提示：剧库内置10部经典秦腔（标准角色行当），并自动联动【剧目资源管理】用户新增剧目</span>
+    <button class="btn-action btn-gray" id="opBtnCancel" type="button">取消</button>
+    <button class="btn-action btn-primary" id="opBtnConfirm" type="button">✅ 选择该剧并配置角色</button>
+  </div>
+</div>
+
+<!-- 演职人员 datalist（X2新增：下拉自动补全） -->
+<datalist id="datalist-performers-all"></datalist>
+<datalist id="datalist-wuchang"></datalist>
+<datalist id="datalist-wenchang"></datalist>
+<datalist id="datalist-stage"></datalist>
+<datalist id="datalist-creative-pos">
+  <option value="出品人"><option value="总策划"><option value="监制"><option value="艺术总监">
+  <option value="编剧"><option value="总导演"><option value="副导演"><option value="场记">
+  <option value="唱腔设计"><option value="作曲"><option value="配器"><option value="指挥">
+  <option value="舞美设计"><option value="灯光设计"><option value="服装设计"><option value="化妆造型设计">
+  <option value="道具设计"><option value="字幕设计"><option value="舞台监督"><option value="剧务主任">
+  <option value="宣传"><option value="统筹"><option value="策划"><option value="艺术指导">
+</datalist>
+
+<script src="../js/favicon-inject.js?v=20260803"></script>
+<script src="../js/wechat-fallback.js?v=20260803"></script>
+<script src="../js/year-lite.js?v=20260803"></script>
+  <script src="../js/api-config.js?v=20261010a"></script>
+  <script src="../js/api-request.js?v=20261008b"></script>
+<script src="../js/app.js?v=20261015a"></script>
+  <script src="../js/tooltip.js?v=20261010a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+<!-- ===== 2026-09-30 P3 懒加载：xlsx.min.js（SheetJS 0.18.5 full）四路径按需加载（导出时才拉，首屏不占带宽），失败清缓存可重试 ===== -->
+<script src="../js/admin-pages/cast-sheet.pre-2.js?v=20261005a"></script>
+
+
+
+  <!-- S-通用后台补丁：去抖锁 + __closeAnyModal + 查询重置真重置 + ESC 关弹窗 + 侧边栏死链修复 + 空 a[href=#] 禁跳 -->
+
+<!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
+
+
+
+<!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
+
+
+
+
+<!-- ===== 自定义组团模态框 ===== -->
+<div id="customGroupModal" class="generic-modal-root" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);align-items:flex-start;justify-content:center;padding-top:8vh;overflow-y:auto;transform:none!important;top:0!important;left:0!important;right:0!important;bottom:0!important;">
+  <div class="modal-overlay-root" style="background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:min(640px,94vw);max-height:84vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+      <h3 style="margin:0;font-size:1.15rem;font-weight:700;color:#0f4c81;">🛠 自定义组团配置</h3>
+      <button type="button" id="cgCloseBtn" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;line-height:1;">✕</button>
+    </div>
+    <div style="padding:20px 24px;">
+      <div style="margin-bottom:16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;font-size:0.85rem;color:#1e40af;">
+        💡 民营剧团标配建议 <b>≥30人</b>（演员约占50%、乐队约22%、前场+服装+电工约28%）。填写各组人数后自动生成样板。
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-weight:600;color:#334155;font-size:0.9rem;">🎭 演员组人数</span>
+          <input type="number" id="cgActor" min="0" max="60" value="18" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-weight:600;color:#334155;font-size:0.9rem;">🎵 乐队组人数</span>
+          <input type="number" id="cgBand" min="0" max="40" value="8" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-weight:600;color:#334155;font-size:0.9rem;">🎟 前场人数</span>
+          <input type="number" id="cgFront" min="0" max="20" value="4" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-weight:600;color:#334155;font-size:0.9rem;">👘 服装化妆人数</span>
+          <input type="number" id="cgCostume" min="0" max="20" value="3" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-weight:600;color:#334155;font-size:0.9rem;">💡 电工人数</span>
+          <input type="number" id="cgElectric" min="0" max="20" value="3" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-weight:600;color:#334155;font-size:0.9rem;">📅 演出天数</span>
+          <input type="number" id="cgDays" min="1" max="60" value="3" style="padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.95rem;">
+        </label>
+      </div>
+      <div style="margin-top:16px;padding:12px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:0.88rem;color:#475569;">
+          <span>合计人数：<b id="cgTotal" style="color:#0f4c81;">36</b> 人</span>
+          <span>日工资预算：<b id="cgWage" style="color:#dc2626;">¥0</b></span>
+        </div>
+      </div>
+    </div>
+    <div style="padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" id="cgCancelBtn" style="padding:8px 18px;border:1.5px solid #cbd5e1;background:#fff;color:#475569;border-radius:8px;cursor:pointer;font-weight:600;">取消</button>
+      <button type="button" id="cgGenBtn" style="padding:8px 20px;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-radius:8px;cursor:pointer;font-weight:700;">✨ 生成自定义样板</button>
+    </div>
+  </div>
+</div>
+<script src="../js/cast-sheet-real.js?v=20260924"></script>
+<script src="../js/troupe-cloud-store.js?v=20260928i"></script>
+<script src="../js/admin-pages/cast-sheet.js?v=20261005a"></script>
+<script src="../js/admin-mobile-sidebar.js?v=20260926m"></script>
+</body>
+</html>

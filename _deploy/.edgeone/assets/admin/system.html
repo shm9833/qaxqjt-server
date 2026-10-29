@@ -16,7 +16,7 @@
     <meta name="format-detection" content="telephone=no,email=no,address=no">
     <meta name="applicable-device" content="pc,mobile">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="秦安县秦剧团云端预约系统">
+    <meta property="og:site_name" content="秦安县秦剧团文化演出有限公司云端预约系统">
     <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
     <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
     <meta property="og:image" content="favicon.svg">
@@ -27,12 +27,12 @@
   <script src="../js/year-lite.js?v=20260803"></script>
     <script src="../js/api-config.js?v=20261010a"></script>
   <script src="../js/api-request.js?v=20261008b"></script>
-<script src="../js/app.js?v=20261009a"></script>
+<script src="../js/app.js?v=20261027a"></script>
   <script src="../js/tooltip.js?v=20261010a"></script>
 <script src="../js/admin-notifications.js?v=20260928b"></script>
   <script src="../js/pagination.js?v=20261002a"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>系统日志与数据备份 - 秦安县秦剧团云端预约管理系统 {year}</title>
+  <title>系统日志与数据备份 - 秦安县秦剧团文化演出有限公司云端预约管理系统 {year}</title>
   <link rel="stylesheet" href="../css/style.css?v=20260926p">
   <style>
     /* ============================================================
@@ -1226,7 +1226,7 @@
     <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
   </g>
 </svg></div>
-        <div class="logo-text">秦安县秦剧团<br/>文化演出管理系统</div>
+        <div class="logo-text">秦安县秦剧团文化演出有限公司<br/>文化演出管理系统</div>
       </div>
 
       <nav class="admin-sidebar-menu">
@@ -1465,6 +1465,61 @@
           </div>
         </div>
 
+        <!-- ====== 演职操作开放时限（v20261014a · 入职登记/打卡窗口全局配置，对接 GET/PUT /v1/system/perf-ops-window）====== -->
+        <div class="admin-card" id="powCard" style="margin-bottom:22px;">
+          <div class="settings-section" style="margin-bottom:0;border:none;box-shadow:none;">
+            <div class="settings-title">⏰ 演职操作开放时限
+              <span style="flex:1;"></span>
+              <button class="btn-action btn-action-outline btn-action-sm" id="powRefreshBtn" type="button">🔄 刷新状态</button>
+              <button class="btn-action btn-action-primary btn-action-sm" id="powSaveBtn" type="button">💾 保存参数</button>
+            </div>
+            <div id="powStatus" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:12px 16px;background:var(--bg-light);border:1px solid var(--border-light);border-radius:var(--radius);font-size:.85rem;margin-bottom:6px;">
+              <span style="color:var(--text-light);">正在加载窗口状态…</span>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-name">启用开放时限</div>
+                <div class="setting-desc">开启后按演出排期自动开闭；关闭 = 入职登记与演职打卡全部常开（临时放行用，用完请恢复）</div>
+              </div>
+              <div class="setting-controls">
+                <label class="toggle-switch"><input type="checkbox" id="powEnabled"><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-name">入职登记提前开放（天）</div>
+                <div class="setting-desc">演出前 N 天开放自助入职登记（0–90，默认 10）</div>
+              </div>
+              <div class="setting-controls"><input type="number" class="setting-input" id="powOpenDays" min="0" max="90" step="1" style="width:90px;"></div>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-name">演职打卡提前开放（天）</div>
+                <div class="setting-desc">演出前 N 天开放打卡等操作（0–30，默认 0 = 演出当天 00:00）</div>
+              </div>
+              <div class="setting-controls"><input type="number" class="setting-input" id="powOpsDays" min="0" max="30" step="1" style="width:90px;"></div>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <div class="setting-name">演出结束后关闭（小时）</div>
+                <div class="setting-desc">演出结束后多少小时自动关闭全部通道（1–720，默认 24）</div>
+              </div>
+              <div class="setting-controls"><input type="number" class="setting-input" id="powCloseHours" min="1" max="720" step="1" style="width:90px;"></div>
+            </div>
+            <div class="setting-item" style="align-items:center;">
+              <div class="setting-info">
+                <div class="setting-name">临时放行快捷操作</div>
+                <div class="setting-desc">人员错过窗口期时一键常开；事毕一键恢复按排期自动开闭。仅超级管理员/团长可修改，修改立即生效</div>
+              </div>
+              <div class="setting-controls">
+                <button class="btn-action btn-action-gold btn-action-sm" id="powOpenAllBtn" type="button">🔓 临时常开</button>
+                <button class="btn-action btn-action-outline btn-action-sm" id="powAutoBtn" type="button">🔒 恢复自动开闭</button>
+              </div>
+            </div>
+            <div id="powMeta" style="font-size:.78rem;color:var(--text-light);margin-top:10px;"></div>
+          </div>
+        </div>
+
         <div class="sys-status-grid" data-paginate="list" data-page-size="12">
           <div class="status-card status-card--success" id="scRuntime">
             <div class="status-card-top">
@@ -1571,6 +1626,7 @@
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
 <script src="../js/admin-pages/system.js?v=20261005a"></script>
 <script src="../js/admin-pages/system-init.js?v=20261008a"></script>
+<script src="../js/admin-pages/system-ops-window.js?v=20261014c"></script>
 
 
 <!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->

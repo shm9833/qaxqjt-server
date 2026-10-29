@@ -52,7 +52,7 @@
 
 /* ===== [2/11] js/wechat-fallback.js (8791 bytes) ===== */
 /**
- * 秦安县秦剧团云端预约系统 - 微信内置浏览器友好降级引导
+ * 秦安县秦剧团文化演出有限公司云端预约系统 - 微信内置浏览器友好降级引导
  * -------------------------------------------------------------
  * 功能：
  *   0. 【优先执行】在 <meta charset> 后注入 WeChat/移动端专属 meta 标签
@@ -87,7 +87,7 @@
       // iOS WebApp 模式
       { name: 'apple-mobile-web-app-capable', content: 'yes' },
       { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-      { name: 'apple-mobile-web-app-title', content: '秦安县秦剧团' },
+      { name: 'apple-mobile-web-app-title', content: '秦安县秦剧团文化演出有限公司' },
       // 禁止自动识别
       { name: 'format-detection', content: 'telephone=no,email=no,address=no,date=no' },
       // 顶栏主题色（蓝色国风主色 #0F4C81）
@@ -376,10 +376,8 @@
     if (global.location && /\.edgeone\.(app|dev)$/i.test(global.location.hostname)) {
       return '';
     }
-    // 免备案部署：HTTPS 页面(GitHub Pages)用 HTTPS API；HTTP 页面(服务器直访)用同源 /api
-    if (global.location && global.location.protocol === 'https:') {
-      return 'https://1.14.106.173';
-    }
+    // 生产统一走同源 /api 反代（Nginx location /api → node:3001；
+    // Cloudflare Tunnel / EdgeOne Pages / HTTP 直访均适用，禁止裸 IP 硬编码）Fix-20261011
     return '';
   }
 
@@ -720,7 +718,7 @@
   // 行当口径（20261003 修订）：6 大行 23 角色 + 武场/文场，与 cast-sheet.html _bucketOf 完全一致
   var ROLE_RULES = [
     ['武场', /武场|司鼓|板鼓|梆子|大锣|小锣|马锣|铙|钹|镲|堂鼓|战鼓|木鱼|打击|鼓师|武二手|鼓/],
-    ['文场', /文场|板胡|二胡|高胡|椰胡|扬琴|琵琶|三弦|古筝|竹笛|梅管|唢呐|海笛|笙|大提琴|贝司|提琴|电子琴|文二手|琴/],
+    ['文场', /文场|板胡|二胡|高胡|椰胡|扬琴|琵琶|三弦|古筝|竹笛|笛子|梅管|唢呐|海笛|笙|大提琴|贝司|提琴|电子琴|文二手|琴/],
     ['帽箱', /帽箱|盔箱|盔头|盔|戏帽|帽倌|王帽|纱帽|扎巾|额子|凤冠|驸马套/],
     ['衣箱', /衣箱|箱倌|行头|服装|跟包|化妆|大头|勾脸|脸谱|道具/],
     ['电工', /电工|灯光|音响|话筒|耳麦|麦|配电|设备/],
@@ -736,7 +734,7 @@
     ['小旦', /小旦|花旦|闺门旦|武旦|刀马旦/],
     ['彩旦', /彩旦|丑婆|丑旦/],
     ['二架旦', /二架旦|二路旦|二架女/],
-    ['门官', /门官|二架男/],
+    ['门官', /门官|其他二架|二架男/],
     ['家院', /家院|老管家|老仆/],
     ['校尉', /校尉/],
     ['刀斧手', /刀斧手|刽子手/],
@@ -749,6 +747,7 @@
   function stdRole(role) {
     var s = String(role || '');
     for (var i = 0; i < ROLE_RULES.length; i++) { if (ROLE_RULES[i][1].test(s)) return ROLE_RULES[i][0]; }
+    if (s.indexOf('其他') === 0) return s; // "其他"未细分时原样显示，不再兜底为前场
     return '前场';
   }
   var GROUP_OF = {

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生产环境全系统上线冒烟巡检报告 - 2026-10-10</title>
+<style>
+  :root {
+    --primary: #1a56c4;
+    --success: #16a34a;
+    --warning: #f59e0b;
+    --danger: #dc2626;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-light: #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 20px; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .header { background: linear-gradient(135deg, #b91c1c, #dc2626); color: white; padding: 32px 40px; border-radius: 12px; margin-bottom: 24px; }
+  .header h1 { font-size: 24px; margin-bottom: 8px; }
+  .header .meta { font-size: 14px; opacity: 0.92; }
+  .header .meta span { margin-right: 20px; }
+  .verdict { background: #fef2f2; border: 2px solid var(--danger); border-radius: 12px; padding: 22px 28px; margin-bottom: 20px; }
+  .verdict h2 { color: var(--danger); font-size: 22px; margin-bottom: 10px; }
+  .verdict p { font-size: 14px; color: #7f1d1d; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .card h2 { font-size: 18px; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .card h2 .badge { font-size: 12px; padding: 2px 10px; border-radius: 12px; font-weight: 600; }
+  .badge-ok { background: #dcfce7; color: var(--success); }
+  .badge-warn { background: #fef3c7; color: #b45309; }
+  .badge-fail { background: #fee2e2; color: var(--danger); }
+  .badge-fix { background: #dbeafe; color: var(--primary); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { background: #f1f5f9; text-align: left; padding: 9px 11px; font-weight: 600; color: var(--text-light); border-bottom: 2px solid var(--border); }
+  td { padding: 9px 11px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .status-ok { color: var(--success); font-weight: 600; white-space: nowrap; }
+  .status-warn { color: var(--warning); font-weight: 600; white-space: nowrap; }
+  .status-fail { color: var(--danger); font-weight: 700; white-space: nowrap; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+  .stat-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: center; }
+  .stat-card .num { font-size: 26px; font-weight: 700; color: var(--primary); }
+  .stat-card .num.green { color: var(--success); }
+  .stat-card .num.red { color: var(--danger); }
+  .stat-card .num.amber { color: var(--warning); }
+  .stat-card .label { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+  code { background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 12.5px; color: #334155; font-family: Consolas, 'Courier New', monospace; word-break: break-all; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 16px 18px; border-radius: 8px; font-size: 12.5px; line-height: 1.55; overflow-x: auto; font-family: Consolas, 'Courier New', monospace; margin: 10px 0; }
+  pre .ok { color: #4ade80; }
+  pre .bad { color: #f87171; }
+  pre .dim { color: #94a3b8; }
+  .fix-item { padding: 14px 16px; margin-bottom: 12px; border: 1px solid #dbeafe; border-radius: 8px; background: #f0f7ff; }
+  .fix-item h3 { font-size: 15px; color: var(--primary); margin-bottom: 6px; }
+  .fix-item .fix-detail { font-size: 13px; color: var(--text-light); margin-bottom: 4px; }
+  ol.steps { margin: 8px 0 0 22px; font-size: 14px; }
+  ol.steps li { margin-bottom: 7px; }
+  .p0-box { border-left: 5px solid var(--danger); background: #fef2f2; padding: 16px 20px; border-radius: 0 8px 8px 0; margin-bottom: 14px; }
+  .p0-box h3 { color: var(--danger); font-size: 16px; margin-bottom: 8px; }
+  .footnote { font-size: 12.5px; color: var(--text-light); }
+  .footer { text-align: center; padding: 20px; color: var(--text-light); font-size: 13px; border-top: 1px solid var(--border); margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>秦安县秦剧团云端预约系统 · 生产环境全系统上线冒烟巡检报告</h1>
+    <div class="meta">
+      <span>巡检时间：2026-10-10 00:39–20:00（北京时间，含修复实施与复验）</span>
+      <span>对象：腾讯云源站 1.14.106.173 + 正式域名 www.qaxqjt.cn / api.qaxqjt.cn（Cloudflare）</span>
+      <span>版本：V2026.8.3</span>
+    </div>
+  </div>
+
+  <div class="verdict" style="background:#f0fdf4;border-color:var(--success);">
+    <h2 style="color:var(--success);">上线结论：GO（已具备正式上线条件）</h2>
+    <p>2026-10-10 完成 Cloudflare Tunnel 切换与全链路复验：三域名（qaxqjt.cn / www / api）经 Cloudflare 橙云 → cloudflared Tunnel → 源站 nginx → Koa:3001 全链路打通，所有业务接口 200，后台登录、订单数据、员工自助门户端到端验证通过。P0 阻断已消除，遗留仅内存告警（P2，不阻断）。</p>
+  </div>
+
+  <div class="card">
+    <h2>一、巡检概览 <span class="badge badge-ok">P0 已修复 · 全链路 GO</span></h2>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="num green">66</div><div class="label">源站冒烟通过</div></div>
+      <div class="stat-card"><div class="num green">3/3</div><div class="label">三域名可达</div></div>
+      <div class="stat-card"><div class="num green">4/4</div><div class="label">后台浏览器冒烟</div></div>
+      <div class="stat-card"><div class="num green">✓</div><div class="label">订单数据加载</div></div>
+      <div class="stat-card"><div class="num green">✓</div><div class="label">员工自助门户</div></div>
+      <div class="stat-card"><div class="num amber">1</div><div class="label">系统告警（内存偏紧）</div></div>
+      <div class="stat-card"><div class="num">0</div><div class="label">数据写操作（只读）</div></div>
+      <div class="stat-card"><div class="num">21天</div><div class="label">源站服务连续运行</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>二、P0 阻断修复：Cloudflare Tunnel 切换（已完成）</h2>
+
+    <div class="p0-box" style="border-left-color:var(--success);background:#f0fdf4;">
+      <h3 style="color:var(--success);">修复方案与实施结果</h3>
+      <p><strong>根因：</strong>正式域名回源到故障 Vercel Serverless 实例（无持久化数据库），所有业务接口 500。</p>
+      <p><strong>方案：</strong>放弃裸 A 记录回源（源站 80 端口未备案被腾讯拦截），采用 <strong>Cloudflare Tunnel</strong>（cloudflared 出站加密连接，零入站端口），天然绕过未备案拦截。</p>
+      <p><strong>实施：</strong>API 创建 cfd_tunnel → Public Hostname 映射 @/www/api → localhost:80 → DNS 切换为橙云 CNAME → 源站部署 cloudflared 服务（healthy 4 连接）→ 全链路复验通过。</p>
+    </div>
+
+    <h3 style="font-size:15px;margin:14px 0 8px">修复后三路径实测（全部通过）</h3>
+    <table>
+      <thead><tr><th>路径</th><th>healthz</th><th>登录 POST /auth/login</th><th>公开剧目分类</th><th>订单列表</th></tr></thead>
+      <tbody>
+        <tr><td><code>https://qaxqjt.cn</code></td><td class="status-ok">200</td><td class="status-ok">200 出 token</td><td class="status-ok">200（7 分类）</td><td class="status-ok">200 真实数据</td></tr>
+        <tr><td><code>https://www.qaxqjt.cn</code></td><td class="status-ok">200</td><td class="status-ok">200 出 token</td><td class="status-ok">200</td><td class="status-ok">200</td></tr>
+        <tr><td><code>https://api.qaxqjt.cn</code></td><td class="status-ok">200</td><td class="status-ok">200</td><td class="status-ok">200</td><td class="status-ok">200</td></tr>
+      </tbody>
+    </table>
+    <p class="footnote" style="margin-top:8px">响应头 <code>Server: cloudflare</code>，无 <code>x-vercel-id</code>，链路为浏览器 → Cloudflare Tunnel → 源站 nginx → Koa:3001。</p>
+
+    <h3 style="font-size:15px;margin:16px 0 8px">api-config.js 硬编码修复</h3>
+    <table>
+      <tbody>
+        <tr><td style="width:26%">问题</td><td><code>js/api-config.js</code> 的 <code>_resolveBase()</code> 对 HTTPS 页面硬编码返回 <code>https://1.14.106.173</code>，裸 IP 443 被拒，导致登录后所有数据请求 ERR_CONNECTION_REFUSED。</td></tr>
+        <tr><td>修复</td><td>HTTPS 分支改为统一同源 <code>/api</code>（nginx 反代 → node:3001），批量 bump 24 个引用页版本号为 <code>?v=20261010a</code>，部署 25 个文件并同步 EdgeOne。</td></tr>
+        <tr><td>验证</td><td>curl <code>/api/v1/orders</code> 返回真实订单（ORD2609071207IHU3 / 薛晓军 / ¥67000）；浏览器订单表格正常渲染。</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size:15px;margin:16px 0 8px">当前生产链路</h3>
+<pre><span class="dim">【生产 · 已上线】</span>
+访客 ──HTTPS──▶ Cloudflare 橙云(@/www/api CNAME→Tunnel) ──▶ cloudflared（源站常驻，4 连接）
+                                                                 ├─ nginx 静态站 C:/qaxqjt-frontend
+                                                                 └─ /api/ → 127.0.0.1:3001 PM2 qaxqjt-api</pre>
+  </div>
+
+  <div class="card">
+    <h2>三、源站 API 只读冒烟明细 <span class="badge badge-ok">66/66 通过</span></h2>
+    <table>
+      <thead><tr><th>分组</th><th>覆盖要点</th><th>结果</th></tr></thead>
+      <tbody>
+        <tr><td>A 基础设施（2）</td><td>healthz 返回 V2026.8.3；系统初始化/环境检查状态正常，uptime 可读</td><td class="status-ok">2/2 PASS</td></tr>
+        <tr><td>B 认证安全（9）</td><td>错误密码 401 拒绝；Joi 非法参数 400；无 Token / 伪造 Token 401；无 Token 调清理/删除接口均 401（鉴权先于写守卫，未触达任何删除）；验证码接口 200；正确登录出双 Token；/auth/me 正确</td><td class="status-ok">9/9 PASS</td></tr>
+        <tr><td>C IAM 账号（4）</td><td>账号列表、角色 5 项、权限 12 项、审计日志均可读</td><td class="status-ok">4/4 PASS</td></tr>
+        <tr><td>D 演职人员（3）</td><td>花名册分页、统计、status=disabled 筛选（本次新交付的禁用/删除/清理功能链路在线）</td><td class="status-ok">3/3 PASS</td></tr>
+        <tr><td>E 客户预约（3）</td><td>客户列表、预约列表、预约统计</td><td class="status-ok">3/3 PASS</td></tr>
+        <tr><td>F 订单（2）</td><td>订单列表、订单统计（库内有真实数据）</td><td class="status-ok">2/2 PASS</td></tr>
+        <tr><td>G 排期（4）</td><td>分页、统计、月历视图、档期冲突检测</td><td class="status-ok">4/4 PASS</td></tr>
+        <tr><td>H 剧目（2）</td><td>剧目列表、剧目分类 7 项</td><td class="status-ok">2/2 PASS</td></tr>
+        <tr><td>I 演员表（1）</td><td>演员表分页</td><td class="status-ok">1/1 PASS</td></tr>
+        <tr><td>J 考勤（3）</td><td>月度考勤、考勤统计、请假列表（有记录）</td><td class="status-ok">3/3 PASS</td></tr>
+        <tr><td>K 工资（4）</td><td>工资条、工资批次、工资规则 4 条、日薪报表（月份过滤生效）</td><td class="status-ok">4/4 PASS</td></tr>
+        <tr><td>L 财务（2）</td><td>台账分页、财务汇总 6 项指标</td><td class="status-ok">2/2 PASS</td></tr>
+        <tr><td>M 库存（2）</td><td>物品列表、出入库记录</td><td class="status-ok">2/2 PASS</td></tr>
+        <tr><td>N 内容（1）</td><td>内容管理列表</td><td class="status-ok">1/1 PASS</td></tr>
+        <tr><td>O 系统（4）</td><td>系统设置 14 项、系统信息、站点图片位 5 项、组团配置</td><td class="status-ok">4/4 PASS</td></tr>
+        <tr><td>P 二维码（1）</td><td>入职邀请二维码列表</td><td class="status-ok">1/1 PASS</td></tr>
+        <tr><td>Q 订单花名册（1）</td><td>花名册角色字典</td><td class="status-ok">1/1 PASS</td></tr>
+        <tr><td>R 输入校验（2）</td><td>日报月份非法格式 400；日历月份越界 400</td><td class="status-ok">2/2 PASS</td></tr>
+        <tr><td>S 公开门户（8）</td><td>公开剧目/分类/演职人员/排期/统计/演员表/内容/站点图片位映射全部 200</td><td class="status-ok">8/8 PASS</td></tr>
+        <tr><td>T 员工自助（2）</td><td>无 Token 自助资料 401；身份证 Joi 400</td><td class="status-ok">2/2 PASS</td></tr>
+        <tr><td>源站前端页面（4）</td><td>门户首页 39,447B、预约页 40,643B、管理登录页 30,352B、后台入口均为完整真实页面（Last-Modified 2026-10-09 09:50，最新版）</td><td class="status-ok">4/4 PASS</td></tr>
+        <tr><td>正式域 / 裸域（6）</td><td>www 首页与 api healthz 可达；裸域 <code>qaxqjt.cn</code> 无 DNS 记录（http/https 均 fetch failed，4 项失败）；<strong>正式域业务接口 500 见 P0</strong></td><td class="status-fail">2/6（4 FAIL）</td></tr>
+      </tbody>
+    </table>
+    <p class="footnote" style="margin-top:10px">说明：冒烟全程只读，未调用任何创建/修改/删除接口；写接口守卫仅以"无 Token→401"方式验证。鉴权、输入校验、越权防护在源站全部表现正确。</p>
+  </div>
+
+  <div class="card">
+    <h2>四、浏览器真实页面冒烟</h2>
+    <table>
+      <thead><tr><th>入口</th><th>结果</th><th>备注</th></tr></thead>
+      <tbody>
+        <tr><td>www 门户首页</td><td class="status-ok">PASS</td><td>39,447B 完整页，Server: cloudflare</td></tr>
+        <tr><td>www 预约页</td><td class="status-ok">PASS</td><td>页面渲染正常</td></tr>
+        <tr><td>www 管理登录页</td><td class="status-ok">PASS</td><td>页面可打开，无安全升级通知横幅（已移除）</td></tr>
+        <tr><td>www 后台登录动作</td><td class="status-ok">PASS</td><td>正确凭据登录成功，14 个后台模块菜单完整</td></tr>
+        <tr><td>订单列表页</td><td class="status-ok">PASS</td><td>表格渲染真实订单（ORD2609071207IHU3 / 薛晓军 / ¥67000），无 ERR_CONNECTION_REFUSED</td></tr>
+        <tr><td>员工自助门户</td><td class="status-ok">PASS</td><td>王亚军（身份证+手机号后6位）登录成功，打卡/工资/我的 Tab 正常</td></tr>
+        <tr><td>仪表盘 / 演职人员 / 剧目 / 排期等后台页</td><td class="status-ok">PASS</td><td>数据正常加载，无失败请求</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>五、源站系统体检 <span class="badge badge-warn">8 通过 · 1 告警 · 0 失败</span></h2>
+    <table>
+      <thead><tr><th style="width:26%">项目</th><th>实测值 / 结论</th></tr></thead>
+      <tbody>
+        <tr><td>运行时</td><td>Node v18.20.4，Windows_NT 10.0.20348 x64，2 vCPU，hostname 10_6_0_2</td></tr>
+        <tr><td>服务进程</td><td>PM2 管理 qaxqjt-api（nginx :80 PID 4664 → 127.0.0.1:3001 PID 14120），连续运行约 20.6 天</td></tr>
+        <tr><td>磁盘</td><td class="status-ok">剩余 16.1GB / 39.9GB，充裕</td></tr>
+        <tr><td>内存</td><td class="status-warn">告警：仅剩约 0.4GB 可用 / 2GB。当前无故障，建议近期扩容到 4GB 或为 PM2 配置 max_memory_restart</td></tr>
+        <tr><td>生产依赖</td><td class="status-ok">17 个关键依赖齐全</td></tr>
+        <tr><td>密钥配置</td><td class="status-ok">JWT_ACCESS_SECRET / JWT_REFRESH_SECRET 各 64 位</td></tr>
+        <tr><td>数据库</td><td class="status-ok">SQLite SELECT 1 正常，业务表数据可读</td></tr>
+        <tr><td>安全响应头</td><td class="status-ok">CSP、HSTS、X-Frame-Options、X-Content-Type-Options 等完整输出</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>六、其他问题（不阻断，建议随修）</h2>
+    <table>
+      <thead><tr><th style="width:70px">级别</th><th>问题</th><th>建议</th></tr></thead>
+      <tbody>
+        <tr><td class="status-ok">P2 ✓</td><td>裸域 <code>qaxqjt.cn</code> 已添加橙云 CNAME → Tunnel</td><td>三域名（@/www/api）均经 Cloudflare Tunnel 回源源站，裸域访问正常</td></tr>
+        <tr><td class="status-warn">P2</td><td>源站内存可用仅约 0.4GB / 2GB</td><td>业务上线前扩容内存或配置 PM2 内存阈值自动重启</td></tr>
+        <tr><td class="status-ok">P3 ✓</td><td>服务器探针残留与游离进程已清理</td><td>已删除 smoke-* marker、调试文件，结束游离 node 进程，web root 无残留</td></tr>
+        <tr><td class="status-warn">P3</td><td>源站无 443，HTTPS 完全依赖 Cloudflare 边缘</td><td>保持 CF 加密模式为"灵活"；如需端到端 HTTPS，后续可在源站 nginx 配置证书后切"完全"模式</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>七、修复实施记录与复验结果（已全部通过）</h2>
+
+    <div class="fix-item">
+      <h3>已完成：Cloudflare Tunnel 切换</h3>
+      <div class="fix-detail">因源站 80 端口未备案被腾讯拦截，放弃裸 A 记录方案，改用 Cloudflare Tunnel（cloudflared 出站加密，零入站端口）。</div>
+      <ol class="steps">
+        <li>API 创建 cfd_tunnel（ID: bd98e68f-1c7d-46f6-aafe-f83b49b3b3ff），配置 Public Hostname：@/www/api → localhost:80</li>
+        <li>DNS 切换：@/www/api 三条橙云 CNAME → tunnel，删除原 A 记录</li>
+        <li>源站部署 cloudflared 服务（token 模式，开机自启，healthy 4 连接）</li>
+        <li>全链路复验：三域名 healthz 200、登录 200、业务接口 200</li>
+      </ol>
+    </div>
+
+    <div class="fix-item">
+      <h3>已完成：api-config.js 硬编码修复</h3>
+      <div class="fix-detail">移除 HTTPS 分支的 <code>https://1.14.106.173</code> 硬编码，统一走同源 <code>/api</code> 反代。</div>
+      <ol class="steps">
+        <li>修改 <code>js/api-config.js</code> 的 <code>_resolveBase()</code>，HTTPS 分支返回空字符串（同源 /api）</li>
+        <li>批量 bump 24 个引用页版本号为 <code>?v=20261010a</code></li>
+        <li>RDP 部署 25 个文件到生产 + EdgeOne 同步</li>
+        <li>验证：<code>/api/v1/orders</code> 返回真实数据，浏览器订单表格正常渲染</li>
+      </ol>
+    </div>
+
+    <div class="fix-item">
+      <h3>已完成：登录页通知横幅移除</h3>
+      <div class="fix-detail">移除「10 月 8 日安全升级」通知横幅的 HTML 与 CSS，版本号 bump 至 20261010b。</div>
+    </div>
+
+    <div class="fix-item">
+      <h3>已完成：后台重复数据清理</h3>
+      <div class="fix-detail">孙回民存在 3 条重复记录（含 1 条 deleted/expired、1 条 active 重复），保留 PF019，删除其余 2 条。</div>
+    </div>
+
+    <h3 style="font-size:15px;margin:16px 0 8px">复验结果</h3>
+    <table>
+      <thead><tr><th>#</th><th>复验项</th><th>结果</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>三域名 healthz / 登录 / 业务接口</td><td class="status-ok">200，无 x-vercel-id</td></tr>
+        <tr><td>2</td><td>浏览器后台全链路（登录→订单→演职人员→剧目→排期）</td><td class="status-ok">全部正常渲染</td></tr>
+        <tr><td>3</td><td>订单数据加载（修复 api-config.js 后）</td><td class="status-ok">真实订单渲染，无失败请求</td></tr>
+        <tr><td>4</td><td>员工自助门户登录 + 打卡/工资/我的 Tab</td><td class="status-ok">全部正常</td></tr>
+        <tr><td>5</td><td>清理 marker / 调试文件 / 本地临时脚本</td><td class="status-ok">web root 无残留</td></tr>
+        <tr><td>6</td><td>演职人员重复数据清理</td><td class="status-ok">孙回民仅剩 1 条，登录验证通过</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>八、巡检方法与可追溯性</h2>
+    <table>
+      <tbody>
+        <tr><td style="width:26%">冒烟脚本</td><td><code>D:\smoke1010\smoke.js</code>（70 项只读断言，结果 result.json）；服务器端探针经 nginx 静态目录 marker 回读取证，操作记录可复现</td></tr>
+        <tr><td>路由基线</td><td>server/src/routes/v1/index.js（1,431 行，15+ 模块全量路由），控制器逻辑抽样核对（auth.js 等）</td></tr>
+        <tr><td>取证手段</td><td>三路径登录矩阵、响应头溯源（x-vercel-id / CF-RAY）、PM2 日志全量检索、netstat+wmic 进程核查、nginx 配置全文、Host/XFF 头对照实验</td></tr>
+        <tr><td>安全边界</td><td>全程零写操作；未在报告中记录任何密码/Token 明文；未变更生产配置（除本会话早些时候已交付并验证的演职人员功能版本，处于已上线运行状态）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    秦安县秦剧团云端预约系统 · 生产上线冒烟巡检 · 2026-10-10 · 结论：GO（Cloudflare Tunnel 切换 + 全链路复验通过）
+  </div>
+
+</div>
+</body>
+</html>

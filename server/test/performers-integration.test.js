@@ -5,6 +5,14 @@
  * 覆盖：鉴权守卫（401/403）、列表分页、create 校验+成功、detail 404、
  *       update、remove 软删、self-register 公开接口校验+成功、review
  * 桩：prisma（performersDbV1 及工资同步相关 model）+ audit-service
+ *
+ * 修复记录（2026-10-26）：
+ *   「POST /v1/performers 成功返回 201」与「self-register 成功返回 201」两个用例
+ *   因 payload 未跟上 v20261013 必填新规（身份证号 idCardNo、联系电话 phone、
+ *   协议天工资 dailyRate、路费方式 transportType）而被路由 Joi 校验拒绝返回 400，
+ *   与用例预期的 201 断言冲突。修复方式：按 routes/v1/index.js 中两个接口的
+ *   Joi schema 补齐必填字段（非放宽断言），32/32 恢复全绿。
+ *   教训：控制器/路由增强必填校验后，需同步检查既有成功路径用例的 payload。
  */
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://stub:stub@stub.neon.db/stub';
@@ -126,7 +134,8 @@ test('POST /v1/performers 成功返回 201 + 自动分配工号 PF001', async ()
   const res = await request(handler)
     .post('/v1/performers')
     .set(auth('super_admin'))
-    .send({ name: '张三', primaryRole: '生角', dailyRate: 300 });
+    // v20261013 必填新规：身份证号/联系电话/协议天工资/路费方式
+    .send({ name: '张三', primaryRole: '生角', dailyRate: 300, idCardNo: '110101199001011234', phone: '13800000000', transportType: '单趟' });
   assert.strictEqual(res.status, 201);
   assert.strictEqual(res.body.data.name, '张三');
   assert.strictEqual(res.body.data.staffNo, 'PF001', '无 staffNo 时应自动分配 PF001');
@@ -341,7 +350,8 @@ test('POST /v1/performers/self-register 成功返回 201 + status=pending', asyn
   reset();
   const res = await request(handler)
     .post('/v1/performers/self-register')
-    .send({ name: '李四', idCardNo: '110101199001011234', regulationsConfirmed: true, primaryRole: '旦角' });
+    // v20261013 必填新规：联系电话/协议天工资/路费方式
+    .send({ name: '李四', idCardNo: '110101199001011234', regulationsConfirmed: true, primaryRole: '旦角', phone: '13800000000', dailyRate: 300, transportType: '单趟' });
   assert.strictEqual(res.status, 201);
   assert.strictEqual(res.body.data.status, 'pending');
   assert.strictEqual(res.body.data.name, '李四');

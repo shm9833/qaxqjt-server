@@ -522,6 +522,10 @@
       e.preventDefault(); e.stopPropagation();
       viewArchive(hit.getAttribute('data-ng-arch-view')); return;
     }
+    if ((hit = t.closest && t.closest('[data-ng-arch-edit]'))) {
+      e.preventDefault(); e.stopPropagation();
+      editArchive(hit.getAttribute('data-ng-arch-edit')); return;
+    }
     if ((hit = t.closest && t.closest('[data-ng-arch-print]'))) {
       e.preventDefault(); e.stopPropagation();
       printArchive(hit.getAttribute('data-ng-arch-print')); return;
@@ -816,18 +820,20 @@
       var s = a.snapshot || {};
       var kid = a.key + '|' + a.index;
       var name = s.partyB && s.partyB.name ? s.partyB.name : '—';
+      var srcBadge = (s._source === 'onboard') ? ' <span style="background:#fff7e6;color:#b45309;border:1px solid #f3d9a4;border-radius:4px;padding:0 5px;font-size:.68rem;white-space:nowrap;">📥入职</span>' : '';
       var no = s.docNo || '—';
       var grade = s._matchedGrade ? escHtml(s._matchedGrade.code + '级 ' + (s._matchedGrade.name || '')) : '—';
       var rate = s._matchedGrade ? '¥' + escHtml(s._matchedGrade.dailyRate || '') + '/天' : '—';
       var time = s._savedAt ? new Date(s._savedAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
       h += '<tr style="border-bottom:1px solid #eee;" data-arch-row data-arch-name="' + escAttr(name) + '" data-arch-no="' + escAttr(no) + '" data-arch-time="' + escAttr(time) + '">'
-        + '<td style="padding:8px 10px;">' + escHtml(name) + '</td>'
+        + '<td style="padding:8px 10px;">' + escHtml(name) + srcBadge + '</td>'
         + '<td style="padding:8px 10px;text-align:center;color:#666;">' + escHtml(no) + '</td>'
         + '<td style="padding:8px 10px;text-align:center;">' + grade + '</td>'
         + '<td style="padding:8px 10px;text-align:center;color:#8b0000;font-weight:600;">' + rate + '</td>'
         + '<td style="padding:8px 10px;text-align:center;color:#888;font-size:.78rem;">' + escHtml(time) + '</td>'
         + '<td style="padding:8px 10px;text-align:center;white-space:nowrap;">'
         + '<button type="button" data-ng-arch-view="' + escAttr(kid) + '" style="padding:4px 10px;border:1px solid #c9a962;background:#fffdf6;color:#8a6d3b;border-radius:5px;font-size:.78rem;cursor:pointer;margin-right:4px;">查看</button>'
+        + '<button type="button" data-ng-arch-edit="' + escAttr(kid) + '" style="padding:4px 10px;border:1px solid #2563eb;background:#eff6ff;color:#2563eb;border-radius:5px;font-size:.78rem;cursor:pointer;margin-right:4px;">编辑</button>'
         + '<button type="button" data-ng-arch-print="' + escAttr(kid) + '" style="padding:4px 10px;border:1px solid #16a34a;background:#f0fdf4;color:#16a34a;border-radius:5px;font-size:.78rem;cursor:pointer;margin-right:4px;">打印</button>'
         + '<button type="button" data-ng-arch-del="' + escAttr(kid) + '" style="padding:4px 10px;border:1px solid #dc2626;background:#fee2e2;color:#dc2626;border-radius:5px;font-size:.78rem;cursor:pointer;">删除</button>'
         + '</td></tr>';
@@ -943,6 +949,65 @@
       })
       .catch(function () { toast('删除失败', 'error'); });
   }
+
+  /* ---------------- 编辑存档：载入编辑器，保存后归档新版本 ---------------- */
+  function editArchive(kid) {
+    var A = window.QAXQJT_API;
+    if (!A) { toast('API 未就绪', 'error'); return; }
+    var k = parseKid(kid);
+    fetchArchiveList(k.key)
+      .then(function (list) {
+        var snap = (k.index >= 0 && k.index < list.length) ? list[k.index] : list[list.length - 1];
+        if (!snap) { toast('存档不存在或已删除', 'error'); return; }
+        var cloned;
+        try { cloned = JSON.parse(JSON.stringify(snap)); } catch (_) { cloned = snap; }
+        tpl = mergeDefaults(cloned);
+        renderEditor();
+        try {
+          var sub = document.querySelector('.wage-sub-tab[data-wtab="negotiate"]');
+          if (sub) sub.click();
+        } catch (_) {}
+        try { var ed = $('ngEditor'); if (ed) ed.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_) {}
+        status('✏️ 正在编辑存档：' + ((cloned.partyB && cloned.partyB.name) || '') + ' —— 修改后点「保存模板」更新模板并归档新版本');
+        toast('已载入存档到编辑器，修改后保存即可', 'success');
+      })
+      .catch(function () { toast('加载存档失败', 'error'); });
+  }
+
+  /* ---------------- 入职成功自动关联商议单并存档（staff.js 审核通过后调用） ---------------- */
+  function archiveOnboard(p) {
+    try {
+      p = p || {};
+      if (!p.name) return Promise.resolve(null);
+      var snap;
+      try { snap = JSON.parse(JSON.stringify(tpl)); } catch (_) { snap = Object.assign({}, tpl); }
+      var pb = snap.partyB = (snap.partyB && typeof snap.partyB === 'object') ? snap.partyB : {};
+      pb.name = p.name || '';
+      pb.idCard = p.idCardNo || p.idCard || '';
+      pb.phone = p.phone || '';
+      pb.address = p.address || pb.address || '';
+      pb.role = p.primaryRole ? ((window.QaxRoles && typeof window.QaxRoles.stdRole === 'function') ? window.QaxRoles.stdRole(p.primaryRole) : p.primaryRole) : (pb.role || '');
+      snap.performerId = p.id || '';
+      var day = new Date();
+      var dayStr = day.getFullYear() + String(day.getMonth() + 1).padStart(2, '0') + String(day.getDate()).padStart(2, '0');
+      snap.docNo = 'RZ' + (p.staffNo || String(p.id || '').slice(-6)) + '-' + dayStr;
+      snap._savedAt = Date.now();
+      snap._source = 'onboard';
+      snap._staffNo = p.staffNo || '';
+      snap._performerName = p.name;
+      snap._matchedGrade = null;
+      try {
+        var gm = findGradeByRankGrade(p.rankGrade) || findGradeByDailyRate(p.dailyRate);
+        if (gm) snap._matchedGrade = { code: gm.code, name: gm.name, dailyRate: gm.dailyRate };
+      } catch (_) {}
+      return saveArchive(snap).then(function () {
+        toast('📥 已自动生成「' + p.name + '」的天工资商议单并存档（天工资商议单 · 存档 中可查看/编辑/打印）', 'success', 5000);
+        refreshArchiveList();
+        return snap;
+      }).catch(function () { return null; });
+    } catch (_) { return Promise.resolve(null); }
+  }
+  window.__NgWageArchiveOnboard = archiveOnboard;
 
   /* ---------------- 存档子Tab ---------------- */
   function initArchiveTab() {

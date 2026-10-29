@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>入职信息填写 - 工资合计字段 UI 原型</title>
+  <style>
+    :root {
+      --green-bg: #f6ffed;
+      --green-primary: #52c41a;
+      --green-hover: #73d13d;
+      --border-color: #d9d9d9;
+      --text-primary: #333;
+      --text-secondary: #8c8c8c;
+      --warning-red: #ff4d4f;
+      --warning-yellow: #faad14;
+      --card-bg: #ffffff;
+      --input-border: #d9d9d9;
+      --input-focus: #40a9ff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+        'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #f0f2f5;
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .prototype-container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .prototype-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 24px 32px;
+    }
+
+    .prototype-header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .prototype-header p {
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    .prototype-body {
+      padding: 32px;
+    }
+
+    /* 步骤指示器 */
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      position: relative;
+    }
+
+    .step-indicator::before {
+      content: '';
+      position: absolute;
+      top: 16px;
+      left: 40px;
+      right: 40px;
+      height: 2px;
+      background: #e8e8e8;
+      z-index: 1;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .step-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e8e8e8;
+      color: #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      transition: all 0.3s;
+    }
+
+    .step.active .step-circle {
+      background: var(--green-primary);
+      color: white;
+      box-shadow: 0 0 0 4px rgba(82, 196, 26, 0.15);
+    }
+
+    .step.completed .step-circle {
+      background: var(--green-primary);
+      color: white;
+    }
+
+    .step-label {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .step.active .step-label {
+      color: var(--green-primary);
+      font-weight: 600;
+    }
+
+    /* 表单区块 */
+    .form-section {
+      margin-bottom: 28px;
+      border: 1px solid #f0f0f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      background: #fafafa;
+      padding: 12px 20px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: white;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .section-body {
+      padding: 20px;
+    }
+
+    /* 表单行 */
+    .form-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+
+    .form-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      width: 140px;
+      font-size: 14px;
+      color: var(--text-primary);
+      flex-shrink: 0;
+    }
+
+    .form-label.required::before {
+      content: '*';
+      color: var(--warning-red);
+      margin-right: 4px;
+    }
+
+    .form-input {
+      flex: 1;
+      max-width: 320px;
+      height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--input-focus);
+      box-shadow: 0 0 0 2px rgba(64, 169, 255, 0.1);
+    }
+
+    .form-input::placeholder {
+      color: #bfbfbf;
+    }
+
+    /* 工资合计栏 —— 核心原型 */
+    .salary-total-bar {
+      margin-top: 24px;
+      padding: 16px 20px;
+      border-top: 1px dashed var(--border-color);
+      border-radius: 0 0 6px 6px;
+      background: var(--green-bg);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      transition: background 0.3s;
+    }
+
+    .salary-total-bar .total-label {
+      font-size: 14px;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .salary-total-bar .total-value {
+      font-size: 22px;
+      color: var(--green-primary);
+      font-weight: 700;
+      font-family: 'DIN Alternate', 'Roboto Mono', monospace;
+      letter-spacing: 0.5px;
+      min-width: 120px;
+      text-align: right;
+    }
+
+    .salary-total-bar .total-hint {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* 警告状态 */
+    .salary-total-bar.warning-negative {
+      background: #fff2f0;
+      border-top-color: #ffccc7;
+    }
+
+    .salary-total-bar.warning-negative .total-value {
+      color: var(--warning-red);
+    }
+
+    .salary-total-bar.warning-negative .total-warning {
+      display: block;
+      color: var(--warning-red);
+      font-size: 12px;
+      width: 100%;
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    .salary-total-bar .total-warning {
+      display: none;
+    }
+
+    /* 金额更新动画 */
+    .salary-total-bar .total-value.updating {
+      animation: totalFlash 0.3s ease;
+    }
+
+    @keyframes totalFlash {
+      0%   { color: var(--green-primary); transform: scale(1); }
+      50%  { color: var(--warning-yellow); transform: scale(1.08); }
+      100% { color: var(--green-primary); transform: scale(1); }
+    }
+
+    /* 按钮组 */
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .btn {
+      padding: 8px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 1px solid transparent;
+    }
+
+    .btn-secondary {
+      background: white;
+      border-color: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--input-focus);
+      color: var(--input-focus);
+    }
+
+    .btn-primary {
+      background: var(--green-primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--green-hover);
+    }
+
+    /* 状态切换面板 */
+    .state-panel {
+      margin-top: 32px;
+      padding: 20px;
+      background: #fafafa;
+      border-radius: 8px;
+      border: 1px solid #f0f0f0;
+    }
+
+    .state-panel h3 {
+      font-size: 14px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .state-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .state-btn {
+      padding: 6px 16px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .state-btn:hover {
+      border-color: var(--green-primary);
+      color: var(--green-primary);
+    }
+
+    .state-btn.active {
+      background: var(--green-primary);
+      color: white;
+      border-color: var(--green-primary);
+    }
+
+    /* 查看态样式 */
+    .view-mode .form-input {
+      border: none;
+      background: #fafafa;
+      pointer-events: none;
+    }
+
+    .view-mode .salary-total-bar {
+      background: white;
+      border-top: 1px solid #f0f0f0;
+      border-left: 3px solid var(--green-primary);
+      border-radius: 0;
+    }
+
+    /* 预览态样式 */
+    .preview-mode .salary-total-bar {
+      background: var(--green-bg);
+      border-top: 1px dashed var(--border-color);
+    }
+
+    .preview-mode .total-value {
+      font-size: 24px;
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 767px) {
+      .prototype-body {
+        padding: 20px;
+      }
+
+      .form-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      .form-label {
+        width: auto;
+      }
+
+      .form-input {
+        max-width: 100%;
+        width: 100%;
+      }
+
+      .salary-total-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 12px 16px;
+      }
+
+      .salary-total-bar .total-value {
+        font-size: 20px;
+        text-align: left;
+      }
+
+      .step-indicator {
+        overflow-x: auto;
+        padding-bottom: 8px;
+      }
+    }
+
+    /* 注释标注 */
+    .annotation {
+      position: relative;
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: #fffbe6;
+      border-left: 3px solid #ffe58f;
+      font-size: 12px;
+      color: #874d00;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .annotation code {
+      background: #fff1b8;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+
+    /* 高亮框 */
+    .highlight-box {
+      position: relative;
+    }
+
+    .highlight-box::after {
+      content: '工资合计字段';
+      position: absolute;
+      top: -10px;
+      right: 10px;
+      background: var(--green-primary);
+      color: white;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="prototype-container">
+    <div class="prototype-header">
+      <h1>入职信息填写表单 — 工资合计字段 UI 原型</h1>
+      <p>依据《入职信息填写模块-工资合计字段展示规范》v1.0 设计</p>
+    </div>
+
+    <div class="prototype-body">
+      <!-- 步骤指示器 -->
+      <div class="step-indicator">
+        <div class="step completed">
+          <div class="step-circle">1</div>
+          <div class="step-label">基础信息</div>
+        </div>
+        <div class="step completed">
+          <div class="step-circle">2</div>
+          <div class="step-label">岗位信息</div>
+        </div>
+        <div class="step active">
+          <div class="step-circle">3</div>
+          <div class="step-label">薪资信息</div>
+        </div>
+        <div class="step">
+          <div class="step-circle">4</div>
+          <div class="step-label">银行账户</div>
+        </div>
+        <div class="step">
+          <div class="step-circle">5</div>
+          <div class="step-label">紧急联系人</div>
+        </div>
+      </div>
+
+      <!-- 区块三：薪资信息 -->
+      <div class="form-section">
+        <div class="section-header">
+          <div class="section-icon" style="background: var(--green-primary);">¥</div>
+          <div class="section-title">薪资信息</div>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <label class="form-label required">底薪（元）</label>
+            <input type="number" class="form-input salary-input" id="baseSalary" min="0" step="0.01" placeholder="请输入底薪" value="3000">
+          </div>
+          <div class="form-row">
+            <label class="form-label">岗位津贴（元）</label>
+            <input type="number" class="form-input salary-input" id="allowance" min="0" step="0.01" placeholder="请输入岗位津贴" value="800">
+          </div>
+          <div class="form-row">
+            <label class="form-label">绩效奖金（元）</label>
+            <input type="number" class="form-input salary-input" id="performance" min="0" step="0.01" placeholder="请输入绩效奖金" value="1200">
+          </div>
+          <div class="form-row">
+            <label class="form-label">交通补贴（元）</label>
+            <input type="number" class="form-input salary-input" id="transport" min="0" step="0.01" placeholder="请输入交通补贴" value="200">
+          </div>
+          <div class="form-row">
+            <label class="form-label">餐补（元）</label>
+            <input type="number" class="form-input salary-input" id="meal" min="0" step="0.01" placeholder="请输入餐补" value="300">
+          </div>
+          <div class="form-row">
+            <label class="form-label">社保个人扣款（元）</label>
+            <input type="number" class="form-input salary-input" id="socialDeduct" min="0" step="0.01" placeholder="请输入社保个人扣款" value="450">
+          </div>
+          <div class="form-row">
+            <label class="form-label">公积金个人扣款（元）</label>
+            <input type="number" class="form-input salary-input" id="fundDeduct" min="0" step="0.01" placeholder="请输入公积金个人扣款" value="360">
+          </div>
+
+          <!-- 工资合计字段 —— 核心展示区域 -->
+          <div class="salary-total-bar highlight-box">
+            <span class="total-label">工资合计（实发）：</span>
+            <span class="total-value" id="salaryTotal">¥ 0.00</span>
+            <span class="total-hint">（自动计算，不可编辑）</span>
+            <span class="total-warning" id="totalWarning">工资合计为负数，请检查扣款金额</span>
+          </div>
+
+          <div class="annotation">
+            <strong>规范要点：</strong>
+            位于薪资区块<code>底部</code>，虚线分隔，浅绿背景<code>#f6ffed</code>，
+            绿色高亮<code>#52c41a</code>，22px 等宽字体，右对齐，
+            实时计算（修改任意分项后 300ms 内更新），
+            显示<code>（自动计算，不可编辑）</code>提示
+          </div>
+        </div>
+      </div>
+
+      <!-- 状态切换面板 -->
+      <div class="state-panel">
+        <h3>原型状态切换（点击体验不同状态）</h3>
+        <div class="state-buttons">
+          <button class="state-btn active" onclick="switchState('edit')">填写态（默认）</button>
+          <button class="state-btn" onclick="switchState('preview')">预览态</button>
+          <button class="state-btn" onclick="switchState('view')">查看态</button>
+          <button class="state-btn" onclick="switchState('negative')">负值警告</button>
+          <button class="state-btn" onclick="switchState('empty')">空值状态</button>
+        </div>
+      </div>
+
+      <!-- 表单操作按钮 -->
+      <div class="form-actions">
+        <button class="btn btn-secondary">保存草稿</button>
+        <button class="btn btn-primary">提交审核</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 工资合计实时计算
+    const fields = ['baseSalary','allowance','performance','transport','meal','socialDeduct','fundDeduct'];
+    const totalEl = document.getElementById('salaryTotal');
+    const totalBar = document.querySelector('.salary-total-bar');
+    const totalWarning = document.getElementById('totalWarning');
+
+    function calcTotal() {
+      let income = 0, deduct = 0;
+      ['baseSalary','allowance','performance','transport','meal'].forEach(id => {
+        const v = parseFloat(document.getElementById(id)?.value || 0);
+        if (!isNaN(v)) income += v;
+      });
+      ['socialDeduct','fundDeduct'].forEach(id => {
+        const v = parseFloat(document.getElementById(id)?.value || 0);
+        if (!isNaN(v)) deduct += v;
+      });
+      const total = income - deduct;
+
+      totalEl.textContent = '¥ ' + total.toFixed(2);
+
+      // 动画
+      totalEl.classList.add('updating');
+      setTimeout(() => totalEl.classList.remove('updating'), 300);
+
+      // 负值警告
+      if (total < 0) {
+        totalBar.classList.add('warning-negative');
+      } else {
+        totalBar.classList.remove('warning-negative');
+      }
+    }
+
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', calcTotal);
+    });
+
+    // 初始化计算
+    calcTotal();
+
+    // 状态切换
+    function switchState(state) {
+      const body = document.querySelector('.prototype-body');
+      const btns = document.querySelectorAll('.state-btn');
+      btns.forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      body.classList.remove('view-mode', 'preview-mode');
+
+      switch(state) {
+        case 'view':
+          body.classList.add('view-mode');
+          break;
+        case 'preview':
+          body.classList.add('preview-mode');
+          break;
+        case 'negative':
+          document.getElementById('socialDeduct').value = '6000';
+          calcTotal();
+          break;
+        case 'empty':
+          fields.forEach(id => {
+            document.getElementById(id).value = '';
+          });
+          calcTotal();
+          break;
+      }
+    }
+  </script>
+</body>
+</html>

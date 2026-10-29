@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>灵活薪资配置组件 · 秦安县秦剧团</title>
+<style>
+  /* ============ 基础重置与主题变量 ============ */
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root {
+    --primary:#0f4c81; --primary-dark:#0a3558; --primary-light:#e8f1f8;
+    --gold:#c9a063; --danger:#e53e3e; --success:#38a169;
+    --text:#2d3748; --text-light:#718096; --border:#e2e8f0;
+    --bg:#f5f7fa; --card:#ffffff; --radius:10px;
+    --shadow:0 2px 12px rgba(15,76,129,0.08);
+    --tr:all .25s ease;
+  }
+  html { font-size:16px; }
+  body { font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif; background:var(--bg); color:var(--text); padding:16px; -webkit-text-size-adjust:100%; }
+  .scw { max-width:760px; margin:0 auto; }
+  .scw-card { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px; margin-bottom:16px; border:1px solid var(--border); }
+  .scw-title { font-size:1.15rem; font-weight:700; color:var(--primary-dark); display:flex; align-items:center; gap:8px; }
+  .scw-sub { font-size:.82rem; color:var(--text-light); margin-top:6px; line-height:1.6; }
+
+  /* ============ 模式切换控件（分段滑块 + 当前态标识） ============ */
+  .scw-toggle-wrap { margin:16px 0 6px; }
+  .scw-toggle { position:relative; display:flex; background:#edf2f7; border-radius:999px; padding:4px; user-select:none; }
+  .scw-toggle .pill { position:absolute; top:4px; bottom:4px; left:4px; width:calc(50% - 4px); background:var(--primary); border-radius:999px; transition:transform .3s cubic-bezier(.4,0,.2,1); box-shadow:0 2px 8px rgba(15,76,129,.35); z-index:0; }
+  .scw-toggle[data-mode="monthly"] .pill { -webkit-transform:translateX(100%); transform:translateX(100%); }
+  .scw-toggle button { position:relative; z-index:1; flex:1; min-height:44px; border:none; background:transparent; border-radius:999px; font-size:.95rem; font-weight:600; color:var(--text-light); cursor:pointer; transition:color .25s; font-family:inherit; }
+  .scw-toggle button.active { color:#fff; }
+  .scw-toggle button .dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#cbd5e0; margin-right:6px; vertical-align:middle; transition:background .25s; }
+  .scw-toggle button.active .dot { background:#ffd700; }
+  .scw-toggle button:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+
+  /* ============ 双薪资输入卡 ============ */
+  .scw-inputs { display:flex; gap:14px; margin-top:14px; }
+  .scw-field { flex:1; border:2px solid var(--border); border-radius:var(--radius); padding:14px 14px 12px; transition:var(--tr); background:#fbfcfe; position:relative; }
+  .scw-field.active { border-color:var(--primary); background:#fff; box-shadow:0 0 0 4px rgba(15,76,129,.10); }
+  .scw-field.invalid { border-color:var(--danger); box-shadow:0 0 0 4px rgba(229,62,62,.10); }
+  .scw-field .fld-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .scw-field .fld-label { font-size:.88rem; font-weight:700; color:var(--text); }
+  .scw-field .fld-badges { display:flex; gap:5px; align-items:center; }
+  .scw-badge { font-size:.68rem; padding:2px 8px; border-radius:999px; font-weight:600; white-space:nowrap; }
+  .scw-badge.cur { background:var(--primary); color:#fff; }
+  .scw-badge.cached { background:var(--primary-light); color:var(--primary); }
+  .scw-badge.derived { background:#fef3e2; color:#b7791f; animation:scwFade .3s ease; }
+  @keyframes scwFade { from { opacity:0; transform:translateY(-3px);} to { opacity:1; transform:none;} }
+  .scw-input-row { display:flex; align-items:baseline; gap:6px; }
+  .scw-input-row .cur-sym { font-size:1.05rem; color:var(--text-light); font-weight:700; }
+  .scw-input-row input { flex:1; min-width:0; font-size:1.5rem; font-weight:700; color:var(--primary-dark); border:none; outline:none; background:transparent; font-family:inherit; padding:4px 0; -webkit-appearance:none; -moz-appearance:textfield; appearance:textfield; }
+  .scw-input-row input::-webkit-outer-spin-button,.scw-input-row input::-webkit-inner-spin-button { -webkit-appearance:none; }
+  .scw-input-row .unit { font-size:.82rem; color:var(--text-light); white-space:nowrap; }
+  .scw-err { display:none; font-size:.75rem; color:var(--danger); margin-top:6px; font-weight:600; }
+  .scw-field.invalid .scw-err { display:block; animation:scwFade .2s ease; }
+  .scw-hint { font-size:.72rem; color:var(--text-light); margin-top:6px; line-height:1.5; }
+
+  /* ============ 换算信息条 ============ */
+  .scw-conv { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:14px; padding:10px 12px; background:var(--primary-light); border-radius:8px; font-size:.78rem; color:var(--primary-dark); line-height:1.6; }
+  .scw-conv strong { color:var(--primary); font-size:.9rem; }
+
+  /* ============ 附加配置项 ============ */
+  .scw-items { display:flex; flex-direction:column; gap:0; }
+  .scw-item { display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px dashed var(--border); flex-wrap:wrap; }
+  .scw-item:last-child { border-bottom:none; }
+  .scw-item .it-label { flex:0 0 150px; font-size:.88rem; font-weight:600; }
+  .scw-item .it-label .it-note { display:block; font-size:.7rem; color:var(--text-light); font-weight:400; margin-top:2px; }
+  .scw-item .it-inputs { flex:1; display:flex; gap:8px; align-items:center; flex-wrap:wrap; min-width:180px; }
+  .scw-item .it-box { display:flex; align-items:center; gap:4px; }
+  .scw-item input { width:88px; min-height:40px; border:1px solid var(--border); border-radius:6px; padding:6px 8px; font-size:1rem; font-family:inherit; color:var(--text); transition:var(--tr); -webkit-appearance:none; -moz-appearance:textfield; appearance:textfield; }
+  .scw-item input:focus { border-color:var(--primary); outline:none; box-shadow:0 0 0 3px rgba(15,76,129,.12); }
+  .scw-item input.invalid { border-color:var(--danger); background:#fff5f5; }
+  .scw-item input::-webkit-outer-spin-button,.scw-item input::-webkit-inner-spin-button { -webkit-appearance:none; }
+  .scw-item .it-unit { font-size:.75rem; color:var(--text-light); }
+  .scw-item .it-fixed { font-size:1rem; font-weight:700; color:var(--primary-dark); background:var(--primary-light); padding:8px 14px; border-radius:6px; }
+  .scw-item .it-def { font-size:.7rem; color:var(--gold); }
+
+  /* ============ 操作与预览 ============ */
+  .scw-actions { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  .scw-btn { flex:1; min-width:140px; min-height:44px; border:none; border-radius:8px; font-size:.95rem; font-weight:700; cursor:pointer; transition:var(--tr); font-family:inherit; }
+  .scw-btn.primary { background:var(--primary); color:#fff; }
+  .scw-btn.primary:hover { background:var(--primary-dark); }
+  .scw-btn.primary:disabled { background:#a0aec0; cursor:not-allowed; }
+  .scw-btn.ghost { background:#fff; color:var(--text-light); border:1px solid var(--border); }
+  .scw-btn.ghost:hover { border-color:var(--primary); color:var(--primary); }
+  .scw-preview { margin-top:14px; background:#1a202c; color:#9ae6b4; font-family:Consolas,Menlo,monospace; font-size:.74rem; padding:14px; border-radius:8px; white-space:pre-wrap; word-break:break-all; line-height:1.7; max-height:240px; overflow:auto; }
+  .scw-toast { position:fixed; left:50%; top:18px; -webkit-transform:translateX(-50%); transform:translateX(-50%); background:#2d3748; color:#fff; padding:10px 20px; border-radius:8px; font-size:.85rem; opacity:0; pointer-events:none; transition:opacity .25s; z-index:99; max-width:90vw; }
+  .scw-toast.show { opacity:1; }
+  .scw-toast.err { background:var(--danger); }
+  .scw-toast.ok { background:var(--success); }
+
+  /* ============ 响应式（移动端） ============ */
+  @media (max-width:600px) {
+    body { padding:10px; }
+    .scw-card { padding:14px; }
+    .scw-inputs { flex-direction:column; }
+    .scw-item .it-label { flex:0 0 100%; }
+    .scw-toggle button { font-size:.85rem; }
+  }
+</style>
+</head>
+<body>
+<div class="scw" id="scwRoot">
+  <!-- ====== 头部 + 模式切换 ====== -->
+  <div class="scw-card">
+    <div class="scw-title">💰 灵活薪资配置</div>
+    <div class="scw-sub">支持「按日工资 / 按月工资」两种模式；切换时按<strong>当月实际工作日天数</strong>自动换算回填，各模式已填数值独立缓存、互不覆盖。</div>
+
+    <div class="scw-toggle-wrap">
+      <div class="scw-toggle" id="scwToggle" data-mode="daily" role="radiogroup" aria-label="薪资计算模式">
+        <div class="pill" aria-hidden="true"></div>
+        <button type="button" class="active" data-mode="daily" role="radio" aria-checked="true"><span class="dot"></span>按日工资计算</button>
+        <button type="button" data-mode="monthly" role="radio" aria-checked="false"><span class="dot"></span>按月工资计算</button>
+      </div>
+    </div>
+
+    <div class="scw-conv" id="scwConv">
+      <span>📅 当前月份：<strong id="scwMonth">—</strong></span>
+      <span>实际工作日（周一至周五）：<strong id="scwWorkdays">—</strong> 天</span>
+      <span>换算口径：月工资 = 日工资 × 实际工作日</span>
+    </div>
+
+    <div class="scw-inputs">
+      <!-- 日工资 -->
+      <div class="scw-field active" id="fldDaily">
+        <div class="fld-head">
+          <span class="fld-label">日工资</span>
+          <span class="fld-badges">
+            <span class="scw-badge cur" id="bdgDailyCur">当前模式</span>
+            <span class="scw-badge cached" id="bdgDailyCache" style="display:none;">已缓存</span>
+            <span class="scw-badge derived" id="bdgDailyDerived" style="display:none;">已自动换算</span>
+          </span>
+        </div>
+        <div class="scw-input-row">
+          <span class="cur-sym">¥</span>
+          <input id="inpDaily" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="0" aria-label="日工资金额">
+          <span class="unit">元/天</span>
+        </div>
+        <div class="scw-err" id="errDaily">请输入非负数字，最多两位小数</div>
+        <div class="scw-hint">手动编辑实时生效；切换模式后原数值保留</div>
+      </div>
+      <!-- 月工资 -->
+      <div class="scw-field" id="fldMonthly">
+        <div class="fld-head">
+          <span class="fld-label">月工资</span>
+          <span class="fld-badges">
+            <span class="scw-badge cur" id="bdgMonthlyCur" style="display:none;">当前模式</span>
+            <span class="scw-badge cached" id="bdgMonthlyCache" style="display:none;">已缓存</span>
+            <span class="scw-badge derived" id="bdgMonthlyDerived" style="display:none;">已自动换算</span>
+          </span>
+        </div>
+        <div class="scw-input-row">
+          <span class="cur-sym">¥</span>
+          <input id="inpMonthly" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="0" aria-label="月工资金额">
+          <span class="unit">元/月</span>
+        </div>
+        <div class="scw-err" id="errMonthly">请输入非负数字，最多两位小数</div>
+        <div class="scw-hint">手动编辑实时生效；切换模式后原数值保留</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 附加薪资配置项 ====== -->
+  <div class="scw-card">
+    <div class="scw-title" style="font-size:1rem;">⚙️ 附加薪资配置项</div>
+    <div class="scw-sub">默认值可手动调整；「标准计薪日」为法定固定值，不可编辑。</div>
+    <div class="scw-items" id="scwItems"></div>
+  </div>
+
+  <!-- ====== 操作 + 实时预览 ====== -->
+  <div class="scw-card">
+    <div class="scw-actions">
+      <button class="scw-btn primary" id="btnSubmit" type="button">✔ 提交配置</button>
+      <button class="scw-btn ghost" id="btnReset" type="button">↺ 全部重置</button>
+    </div>
+    <div class="scw-preview" id="scwPreview">{}</div>
+  </div>
+</div>
+<div class="scw-toast" id="scwToast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============ 状态模型（含双模式独立缓存） ============ */
+  function computeWorkdays(ref) {
+    var y = ref.getFullYear(), m = ref.getMonth();
+    var days = new Date(y, m + 1, 0).getDate();
+    var n = 0;
+    for (var i = 1; i <= days; i++) { var w = new Date(y, m, i).getDay(); if (w >= 1 && w <= 5) n++; }
+    return n;
+  }
+  function round2(v) { return Math.round(v * 100) / 100; }
+
+  var now = new Date();
+  var state = {
+    mode: 'daily',                                  // 'daily' | 'monthly'
+    workdays: computeWorkdays(now),
+    daily:   { value: '0', dirty: false, derived: false },  // 日工资模式缓存
+    monthly: { value: '0', dirty: false, derived: false },  // 月工资模式缓存
+    extras:  {}                                     // 附加项当前值
+  };
+
+  /* 附加薪资配置项定义（默认值 / 单位 / 备注） */
+  var EXTRA_ITEMS = [
+    { key: 'benxi',      label: '演出补助·本戏',    def: '120',      unit: '元/场',      editable: true },
+    { key: 'zhezi',      label: '演出补助·折子戏',  def: '60',       unit: '元/场',      editable: true },
+    { key: 'xiaxiang',   label: '演出补助·下乡',    def: '80',       unit: '元/场',      editable: true },
+    { key: 'perfect',    label: '全勤奖',           def: '800',      unit: '元/月',      editable: true, note: '无缺勤且迟到<3次' },
+    { key: 'seniority',  label: '工龄补贴',         def: '2',        unit: '元/天·每年', editable: true },
+    { key: 'mealTraffic',label: '餐补 / 交通补',    def: ['30','20'],unit: '元/天',      editable: true, pair: true },
+    { key: 'socialFund', label: '社保个人 / 公积金',def: ['10.5','12'], unit: '%',       editable: true, pair: true, note: '按折算月基数' },
+    { key: 'stdDays',    label: '标准计薪日',       def: '21.75',    unit: '天/月（法定）', editable: false }
+  ];
+  EXTRA_ITEMS.forEach(function (it) {
+    state.extras[it.key] = it.pair ? it.def.slice() : it.def;
+  });
+
+  /* ============ DOM 引用 ============ */
+  function $(id) { return document.getElementById(id); }
+  var els = {
+    toggle: $('scwToggle'), month: $('scwMonth'), workdays: $('scwWorkdays'),
+    fldDaily: $('fldDaily'), fldMonthly: $('fldMonthly'),
+    inpDaily: $('inpDaily'), inpMonthly: $('inpMonthly'),
+    errDaily: $('errDaily'), errMonthly: $('errMonthly'),
+    bdgDailyCur: $('bdgDailyCur'), bdgMonthlyCur: $('bdgMonthlyCur'),
+    bdgDailyCache: $('bdgDailyCache'), bdgMonthlyCache: $('bdgMonthlyCache'),
+    bdgDailyDerived: $('bdgDailyDerived'), bdgMonthlyDerived: $('bdgMonthlyDerived'),
+    items: $('scwItems'), preview: $('scwPreview'),
+    btnSubmit: $('btnSubmit'), btnReset: $('btnReset'), toast: $('scwToast')
+  };
+
+  /* ============ 校验规则（非负数字，最多两位小数） ============ */
+  var RE_INFLIGHT = /^\d*\.?\d{0,2}$/;   // 输入过程允许 "12." 等中间态
+  var RE_FINAL    = /^\d+(\.\d{1,2})?$/; // 提交态必须是完整数字
+  function validate(str, final) {
+    str = String(str == null ? '' : str).trim();
+    if (str === '') return false;
+    return (final ? RE_FINAL : RE_INFLIGHT).test(str);
+  }
+
+  /* ============ Toast ============ */
+  var toastTimer = null;
+  function toast(msg, type) {
+    els.toast.textContent = msg;
+    els.toast.className = 'scw-toast show ' + (type || '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { els.toast.className = 'scw-toast'; }, 2200);
+  }
+
+  /* ============ 模式切换（缓存 + 自动换算回填） ============ */
+  function switchMode(target) {
+    if (target === state.mode) return;
+    var src = state[state.mode], dst = state[target];
+
+    /* 规则1（要求3）：目标模式无用户输入记录 → 按当月实际工作日自动换算回填 */
+    if (!dst.dirty && validate(src.value, true)) {
+      var v = parseFloat(src.value);
+      var conv = target === 'monthly' ? v * state.workdays : v / state.workdays;
+      dst.value = round2(conv).toFixed(2);
+      dst.derived = true;
+    } else {
+      dst.derived = false; /* 规则2（要求5）：目标有缓存记录 → 原值恢复，不覆盖 */
+    }
+    state.mode = target;
+    render();
+  }
+
+  /* ============ 输入处理（实时过滤 + 校验 + 缓存写入） ============ */
+  function bindMainInput(mode, inp, errEl) {
+    inp.addEventListener('input', function () {
+      var raw = inp.value.replace(/[^\d.]/g, '');           // 实时剔除非数字字符
+      var parts = raw.split('.');
+      if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+      if (parts.length === 2 && parts[1].length > 2) raw = parts[0] + '.' + parts[1].slice(0, 2);
+      if (raw !== inp.value) inp.value = raw;
+      var ok = raw === '' || validate(raw, false);
+      errEl.style.display = ok ? '' : '';
+      var fld = mode === 'daily' ? els.fldDaily : els.fldMonthly;
+      if (!ok) { fld.classList.add('invalid'); } else { fld.classList.remove('invalid'); }
+      var rec = state[mode];
+      rec.value = raw === '' ? '0' : raw;
+      rec.dirty = true;                                      // 用户编辑 → 写入缓存
+      rec.derived = false;
+      renderBadges();
+      renderPreview();
+    });
+    inp.addEventListener('blur', function () {
+      var raw = inp.value;
+      if (raw !== '' && !validate(raw, true)) {
+        var fld = mode === 'daily' ? els.fldDaily : els.fldMonthly;
+        fld.classList.add('invalid');
+      } else if (raw !== '') {
+        inp.value = String(round2(parseFloat(raw)));         // 失焦归一化
+        state[mode].value = inp.value;
+        renderPreview();
+      }
+    });
+  }
+
+  /* ============ 渲染 ============ */
+  function renderBadges() {
+    var d = state.daily, m = state.monthly;
+    els.bdgDailyCur.style.display = state.mode === 'daily' ? '' : 'none';
+    els.bdgMonthlyCur.style.display = state.mode === 'monthly' ? '' : 'none';
+    els.bdgDailyCache.style.display = d.dirty ? '' : 'none';
+    els.bdgMonthlyCache.style.display = m.dirty ? '' : 'none';
+    els.bdgDailyDerived.style.display = d.derived ? '' : 'none';
+    els.bdgMonthlyDerived.style.display = m.derived ? '' : 'none';
+  }
+  function render() {
+    els.toggle.setAttribute('data-mode', state.mode);
+    var btns = els.toggle.querySelectorAll('button');
+    for (var i = 0; i < btns.length; i++) {
+      var on = btns[i].getAttribute('data-mode') === state.mode;
+      btns[i].className = on ? 'active' : '';
+      btns[i].setAttribute('aria-checked', on ? 'true' : 'false');
+    }
+    els.fldDaily.classList.toggle('active', state.mode === 'daily');
+    els.fldMonthly.classList.toggle('active', state.mode === 'monthly');
+    els.inpDaily.value = state.daily.value;     // 从缓存回填，保证完整恢复
+    els.inpMonthly.value = state.monthly.value;
+    renderBadges();
+    renderPreview();
+  }
+  function buildSummary() {
+    var daily = parseFloat(state.daily.value) || 0;
+    var monthly = parseFloat(state.monthly.value) || 0;
+    return {
+      mode: state.mode === 'daily' ? '按日工资计算' : '按月工资计算',
+      dailyWage: daily, monthlyWage: monthly,
+      workdays: state.workdays,
+      month: now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2),
+      derived: { daily: state.daily.derived, monthly: state.monthly.derived },
+      extras: JSON.parse(JSON.stringify(state.extras))
+    };
+  }
+  function renderPreview() {
+    els.preview.textContent = JSON.stringify(buildSummary(), null, 2);
+  }
+
+  /* ============ 附加配置项渲染与绑定 ============ */
+  function renderItems() {
+    var html = '';
+    EXTRA_ITEMS.forEach(function (it) {
+      html += '<div class="scw-item" data-key="' + it.key + '">';
+      html += '<div class="it-label">' + it.label + (it.note ? '<span class="it-note">' + it.note + '</span>' : '') + '</div>';
+      html += '<div class="it-inputs">';
+      if (!it.editable) {
+        html += '<span class="it-fixed">' + it.def + ' ' + it.unit + '</span>';
+      } else if (it.pair) {
+        html += '<span class="it-box"><input type="text" inputmode="decimal" data-k="' + it.key + '" data-i="0" value="' + it.def[0] + '" aria-label="' + it.label + ' 其一"><span class="it-unit">' + it.unit + '</span></span>';
+        html += '<span class="it-box"><input type="text" inputmode="decimal" data-k="' + it.key + '" data-i="1" value="' + it.def[1] + '" aria-label="' + it.label + ' 其二"><span class="it-unit">' + it.unit + '</span></span>';
+      } else {
+        html += '<span class="it-box"><input type="text" inputmode="decimal" data-k="' + it.key + '" value="' + it.def + '" aria-label="' + it.label + '"><span class="it-unit">' + it.unit + '</span></span>';
+      }
+      html += '<span class="it-def">默认 ' + (it.pair ? it.def[0] + '/' + it.def[1] : it.def) + '</span>';
+      html += '</div></div>';
+    });
+    els.items.innerHTML = html;
+    els.items.querySelectorAll('input').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        var raw = inp.value.replace(/[^\d.]/g, '');
+        var parts = raw.split('.');
+        if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+        if (parts.length === 2 && parts[1].length > 2) raw = parts[0] + '.' + parts[1].slice(0, 2);
+        if (raw !== inp.value) inp.value = raw;
+        var ok = raw === '' || validate(raw, false);
+        inp.classList.toggle('invalid', !ok);
+        var k = inp.getAttribute('data-k'), idx = inp.getAttribute('data-i');
+        if (idx !== null) { state.extras[k][parseInt(idx, 10)] = raw === '' ? '0' : raw; }
+        else { state.extras[k] = raw === '' ? '0' : raw; }
+        renderPreview();
+      });
+    });
+  }
+
+  /* ============ 提交（严格终验，非法阻止） ============ */
+  function collectErrors() {
+    var errs = [];
+    [['daily', '日工资'], ['monthly', '月工资']].forEach(function (p) {
+      if (!validate(state[p[0]].value, true)) errs.push(p[1] + '数值非法');
+    });
+    EXTRA_ITEMS.forEach(function (it) {
+      if (!it.editable) return;
+      if (it.pair) {
+        state.extras[it.key].forEach(function (v, i) { if (!validate(v, true)) errs.push(it.label + '（第' + (i + 1) + '项）非法'); });
+      } else if (!validate(state.extras[it.key], true)) {
+        errs.push(it.label + '数值非法');
+      }
+    });
+    return errs;
+  }
+  els.btnSubmit.addEventListener('click', function () {
+    var errs = collectErrors();
+    if (errs.length) { toast('❌ ' + errs[0] + '，请修正后提交', 'err'); return; }
+    var s = buildSummary();
+    toast('✅ 配置已提交：' + s.mode + ' · 日¥' + s.dailyWage + ' / 月¥' + s.monthlyWage, 'ok');
+    if (window.console) console.log('[SalaryConfig] submitted', s);
+  });
+  els.btnReset.addEventListener('click', function () {
+    state.daily = { value: '0', dirty: false, derived: false };
+    state.monthly = { value: '0', dirty: false, derived: false };
+    EXTRA_ITEMS.forEach(function (it) { state.extras[it.key] = it.pair ? it.def.slice() : it.def; });
+    els.fldDaily.classList.remove('invalid');
+    els.fldMonthly.classList.remove('invalid');
+    renderItems();
+    render();
+    toast('已重置为初始状态（薪资 0 · 附加项恢复默认）', 'ok');
+  });
+
+  /* ============ 初始化 ============ */
+  els.month.textContent = now.getFullYear() + ' 年 ' + (now.getMonth() + 1) + ' 月';
+  els.workdays.textContent = state.workdays;
+  els.toggle.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (b) switchMode(b.getAttribute('data-mode'));
+  });
+  bindMainInput('daily', els.inpDaily, els.errDaily);
+  bindMainInput('monthly', els.inpMonthly, els.errMonthly);
+  renderItems();
+  render();
+
+  /* 暴露只读取值 API（供宿主页面集成） */
+  window.SalaryConfigWidget = {
+    getValue: buildSummary,
+    validate: function () { return collectErrors(); },
+    version: 'v1.0.0-20261016'
+  };
+})();
+</script>
+</body>
+</html>

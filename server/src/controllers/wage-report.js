@@ -5,10 +5,11 @@
  * GET /v1/reports/daily-wage
  *
  * 口径与工资核算 daily_pure（wages.js）完全一致，保证"报表数 = 工资数"：
- *   出勤天：full/night/double=1，half=0.5
- *   日薪取价：本人协议天工资 dailyRate > 职级规则 baseDailyStandard 兜底
+ *   出勤天：full/night/double=1，half=0.5；迟到满30分钟本场失效的场次不计薪（出勤天扣减）
+ *   日薪取价：本人协议天工资 dailyRate（按日薪结算不使用等级工资兜底）
  *   应发日薪合计 = 日薪 × 出勤天（round2）
- *   扣罚 = 迟到20元/次 + 迟到超30分钟按旷工半天 + 旷工1天扣2日（computeAttendancePenalty 唯一口径）
+ *   扣罚 = 迟到按打卡分钟1元/分（单场封顶30元，≥30分本场失效不计薪）+ 早退/旷工按条例 + 事故分级10/30/50元/天
+ *          （computeAttendancePenalty 唯一口径，迟到罚款来自打卡记录重算）
  *   实发 = 应发 − min(扣罚, 应发)（不为负，超出部分另行追缴）
  *
  * 维度：date=按日期 / performer=按人员 / empType=按用工类型 / rank=按职级
@@ -17,7 +18,8 @@
 const prisma = require('../utils/prisma');
 const { success } = require('../utils/response');
 const { BusinessError } = require('../middleware/error-handler');
-const { computeAttendancePenalty } = require('./wages');
+const { computeAttendancePenalty, _punchLateStatsByStaff } = require('./wages');
+const punchParamsSvc = require('../services/punch-params');
 
 const WORK_DAY_TYPES = { full: 1, night: 1, double: 1, half: 0.5 }; // 与 wages.js WORK_DAY_TYPES 一致
 const LEAVE_TYPES = ['leave', 'outing', 'study', 'business', 'injury'];
@@ -72,6 +74,10 @@ const dailyWage = async ctx => {
     select: { staffId: true, attendanceType: true, attendanceDate: true }
   });
 
+  // v20261012 打卡新规：打卡参数 + 按打卡记录重算迟到分钟/罚款/本场失效
+  const punchP = await punchParamsSvc.getPunchParams();
+  const punchMap = await _punchLateStatsByStaff(month, punchP);
+
   // 3) 逐人聚合：出勤天/应发/异常计数 + 按日明细
   const perPerson = {};
   for (const r of attRows) {
@@ -82,6 +88,7 @@ const dailyWage = async ctx => {
       : (ruleMap[p.rankGrade] || 0);
     const m = perPerson[p.id] || {
       p, rate, workDays: 0, late: 0, lateOver: 0, absent: 0, leave: 0,
+      accident1: 0, accident2: 0, accident3: 0,
       byDate: {}
     };
     const t = r.attendanceType;
@@ -105,22 +112,38 @@ const dailyWage = async ctx => {
     else if (t === 'late') m.late += 1;
     else if (t === 'late_over') { m.lateOver += 1; m.late += 1; } // 与 wages.js 一致：同时计入迟到次数
     else if (LEAVE_TYPES.indexOf(t) >= 0) m.leave += 1;
+    else if (t === 'stage_in' || t === 'stage_out') { /* 装台/卸台日：不计薪资、不计迟到、不计奖励 */ }
+    else if (t === 'accident_l1') m.accident1 += 1;
+    else if (t === 'accident_l2') m.accident2 += 1;
+    else if (t === 'accident_l3') m.accident3 += 1;
     perPerson[p.id] = m;
   }
 
-  // 4) 逐人结算：应发/扣罚/实发（computeAttendancePenalty 唯一口径）
+  // 4) 逐人结算：应发/扣罚/实发（computeAttendancePenalty 唯一口径；迟到罚款按打卡分钟）
   const persons = Object.keys(perPerson).map(id => {
     const m = perPerson[id];
-    const gross = round2(m.rate * m.workDays);
+    const ps = punchMap[id];
+    const invalidShows = ps ? ps.invalidShows : 0;
+    // 迟到满30分钟本场失效的场次不计薪：出勤天扣减（与 wages.generate 口径一致）
+    const effDays = Math.max(0, round2(m.workDays - invalidShows));
+    const gross = round2(m.rate * effDays);
     const penalty = computeAttendancePenalty(
-      { workDays: m.workDays, nightShows: 0, absent: m.absent, leave: m.leave, late: m.late, lateOver: m.lateOver },
-      m.rate
+      {
+        workDays: effDays, nightShows: 0, absent: m.absent, leave: m.leave,
+        late: m.late, lateOver: m.lateOver,
+        accident1: m.accident1, accident2: m.accident2, accident3: m.accident3,
+        lateFinePunch: ps ? ps.lateFine : 0,
+        lateMinutes: ps ? ps.lateMinutes : 0,
+        lateShows: ps ? ps.lateShows : 0
+      },
+      m.rate, null, punchP
     );
     const deduction = round2(Math.min(penalty.total, gross));
     const net = round2(gross - deduction);
     return {
-      p: m.p, rate: m.rate, workDays: round2(m.workDays), gross,
+      p: m.p, rate: m.rate, workDays: effDays, gross,
       late: m.late, lateOver: m.lateOver, absent: m.absent, leave: m.leave,
+      invalidShows, lateMinutes: ps ? ps.lateMinutes : 0,
       penalty, deduction, net, byDate: m.byDate
     };
   });

@@ -75,6 +75,7 @@ const db = {
   appointmentAudits: [],
   castSheets: [],
   castCrew: [],
+  castSheetVersions: [],
   schedules: [],
   performers: [],
   wageItems: [],
@@ -265,6 +266,11 @@ prisma.castSheetsV1 = {
 prisma.castSheetCrew = {
   createMany: async ({ data }) => { db.castCrew.push(...data); return { count: data.length }; },
   deleteMany: async ({ where } = {}) => delRows(db.castCrew, where)
+};
+prisma.castSheetVersions = {
+  create: async ({ data }) => { db.castSheetVersions.push(data); return data; },
+  findMany: async ({ where } = {}) => db.castSheetVersions.filter(v => matchWhere(v, where)),
+  findUnique: async ({ where } = {}) => findRow(db.castSheetVersions, { id: where.id })
 };
 prisma.auditLog = { create: async ({ data }) => data };
 prisma.scheduleV2 = {
@@ -1296,17 +1302,76 @@ const mkAccount = (over = {}) => Object.assign({
     await assert.rejects(() => castCtl.update(makeCtx({ params: { id: 'nope' }, body: {} })), e => e.key === 'NOT_FOUND');
   });
 
-  await t('cast-sheets.remove：级联删 crew 后删 sheet → 204；不存在 → NOT_FOUND', async () => {
+  await t('cast-sheets.remove：软删除（置 deletedAt、保留 crew/版本痕迹）→ 204；被排期关联 → CONFLICT；不存在 → NOT_FOUND', async () => {
     resetState();
     db.castSheets.push({ id: 'cs_1', sheetNo: 'CS001', status: 'draft' });
     db.castCrew.push({ id: 'cr_1', castSheetId: 'cs_1' }, { id: 'cr_2', castSheetId: 'cs_1' });
     const ctx = makeCtx({ params: { id: 'cs_1' } });
     await castCtl.remove(ctx);
     assert.strictEqual(ctx.status, 204);
-    assert.strictEqual(db.castSheets.length, 0);
-    assert.strictEqual(db.castCrew.length, 0);
-    assert.ok(auditCalls.some(a => a.action === 'CAST_SHEET_DELETE' && a.detail.sheetNo === 'CS001'));
+    // 软删除：sheet 行保留但置 deletedAt，crew 明细保留
+    assert.strictEqual(db.castSheets.length, 1);
+    assert.ok(db.castSheets[0].deletedAt instanceof Date);
+    assert.strictEqual(db.castSheets[0].deletedBy, 'acc_1');
+    assert.strictEqual(db.castCrew.length, 2);
+    assert.strictEqual(db.castSheetVersions.length, 1);
+    assert.strictEqual(db.castSheetVersions[0].changeType, 'delete');
+    assert.ok(auditCalls.some(a => a.action === 'CAST_SHEET_SOFT_DELETE' && a.detail.sheetNo === 'CS001'));
+    // 已软删除 → 再次删除视同不存在
     await assert.rejects(() => castCtl.remove(makeCtx({ params: { id: 'cs_1' } })), e => e.key === 'NOT_FOUND');
+
+    // 关联校验：被排期引用 → CONFLICT
+    resetState();
+    db.castSheets.push({ id: 'cs_2', sheetNo: 'CS002', status: 'confirmed' });
+    db.schedules.push({ id: 'sch_1', castSheetId: 'cs_2' });
+    await assert.rejects(() => castCtl.remove(makeCtx({ params: { id: 'cs_2' } })), e => e.key === 'CONFLICT');
+    assert.strictEqual(db.castSheets[0].deletedAt, undefined); // 未被动过
+  });
+
+  await t('cast-sheets.visibility：一键暂停/恢复公开（status↔draft/confirmed、版本+1、审计、幂等）', async () => {
+    resetState();
+    db.castSheets.push({ id: 'cs_1', sheetNo: 'CS001', status: 'confirmed', versionNumber: 1, confirmedAt: new Date() });
+    const off = makeCtx({ params: { id: 'cs_1' }, body: { public: false } });
+    await castCtl.setVisibility(off);
+    assert.strictEqual(off.body.data.status, 'draft');
+    assert.strictEqual(off.body.data.statusText, '草稿');
+    assert.ok(auditCalls.some(a => a.action === 'CAST_SHEET_UNPUBLISH'));
+    const on = makeCtx({ params: { id: 'cs_1' }, body: { public: true } });
+    await castCtl.setVisibility(on);
+    assert.strictEqual(on.body.data.status, 'confirmed');
+    assert.ok(auditCalls.some(a => a.action === 'CAST_SHEET_PUBLISH'));
+    assert.strictEqual(db.castSheetVersions.length, 2);
+    // 幂等：已公开再置公开 → 不重复写版本
+    const again = makeCtx({ params: { id: 'cs_1' }, body: { public: true } });
+    await castCtl.setVisibility(again);
+    assert.strictEqual(db.castSheetVersions.length, 2);
+    // 参数缺失 → VALIDATION_ERROR
+    await assert.rejects(() => castCtl.setVisibility(makeCtx({ params: { id: 'cs_1' }, body: {} })), e => e.key === 'VALIDATION_ERROR');
+  });
+
+  await t('cast-sheets.versions：列表/明细/回滚（快照恢复 sheet+crew，回滚前留痕）', async () => {
+    resetState();
+    db.castSheets.push({ id: 'cs_1', sheetNo: 'CS001', status: 'confirmed', versionNumber: 3 });
+    db.castCrew.push({ id: 'cr_1', castSheetId: 'cs_1', performerName: '现演员', sortOrder: 0 });
+    const snap = { id: 'cs_1', sheetNo: 'CS001', status: 'draft', versionNumber: 1, lockFlag: false, crew: [{ id: 'cr_old', performerName: '旧演员', category: '主演', sortOrder: 0 }] };
+    db.castSheetVersions.push({ id: 'ver_1', castSheetId: 'cs_1', versionNumber: 1, changeType: 'create', snapshotJson: JSON.stringify(snap) });
+    // 列表
+    const lv = makeCtx({ params: { id: 'cs_1' } });
+    await castCtl.listVersions(lv);
+    assert.strictEqual(lv.body.data.length, 1);
+    assert.strictEqual(lv.body.data[0].versionNumber, 1);
+    // 明细
+    const gv = makeCtx({ params: { id: 'cs_1', vid: 'ver_1' } });
+    await castCtl.getVersion(gv);
+    assert.strictEqual(gv.body.data.snapshot.status, 'draft');
+    // 回滚 → sheet 回到 draft、crew 换回旧演员、写 2 条 rollback 版本
+    const rb = makeCtx({ params: { id: 'cs_1', vid: 'ver_1' } });
+    await castCtl.rollback(rb);
+    assert.strictEqual(db.castSheets[0].status, 'draft');
+    assert.strictEqual(db.castCrew.length, 1);
+    assert.strictEqual(db.castCrew[0].performerName, '旧演员');
+    assert.strictEqual(db.castSheetVersions.length, 3);
+    assert.ok(auditCalls.some(a => a.action === 'CAST_SHEET_ROLLBACK' && a.detail.toVersion === 1));
   });
 
   /* ==================== wages：考勤扣罚纯函数 ==================== */

@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <!-- =========================================================== -->
+  <!-- Lightning pre-auth check: redirect before CSS/JS loads -->
+  <!-- 无 session 时 0.5ms 内跳登录页，防白屏 / 越权一眼看 -->
+  <!-- =========================================================== -->
+  <script src="../js/admin-pages/orders.pre-1.js?v=20261005a"></script>
+  
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta name="referrer" content="never">
+    <meta name="format-detection" content="telephone=no,email=no,address=no">
+    <meta name="applicable-device" content="pc,mobile">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="秦安县秦剧团文化演出有限公司云端预约系统">
+    <meta property="og:title" content="秦安县秦剧团文化演出有限公司 · 云端预约">
+    <meta property="og:description" content="秦安县秦剧团文化演出有限公司——天水市秦腔、眉户、民俗演出官方云端预约平台，涵盖庙会、文旅、节庆、校园、数字直播八大服务板块。">
+    <meta property="og:image" content="favicon.svg">
+
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <script src="../js/favicon-inject.js?v=20260803" defer></script>
+    <script src="../js/wechat-fallback.js?v=20260803" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>订单预约与客户管理 - 秦安县秦剧团文化演出有限公司云端预约系统 | {year}</title>
+  <link rel="stylesheet" href="../css/style.css?v=20260926p">
+  <style>
+    /* ============================================================
+       FIX: 后台所有空白处无限加宽 Bug（横向滚动条/内容撑破视口）
+       ============================================================ */
+    html, body {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+      width: 100%;
+    }
+    * { box-sizing: border-box; }
+    table { table-layout: fixed; word-break: break-word; }
+    pre, code, textarea { white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+    .admin-main, .admin-content, main, .page-wrap { max-width: 100%; overflow-x: hidden; }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border-light);
+      margin-bottom: 25px;
+    }
+    .tab-item {
+      padding: 14px 28px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      color: var(--text-light);
+      font-weight: 500;
+      position: relative;
+      transition: var(--transition);
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+    }
+    .tab-item:hover {
+      color: var(--primary);
+    }
+    .tab-item.active {
+      color: var(--primary);
+      border-bottom-color: var(--gold);
+      font-weight: 600;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .customer-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+    }
+    .customer-card {
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      transition: var(--transition);
+    }
+    .customer-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+      border-color: var(--gold);
+    }
+    .customer-card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px dashed var(--border-light);
+    }
+    .customer-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cream);
+      font-size: 1.2rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .customer-avatar.gov { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+    .customer-avatar.ent { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+    .customer-avatar.vil { background: linear-gradient(135deg, #059669, #10b981); }
+    .customer-name {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 4px;
+    }
+    .customer-type {
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+    .customer-level-badge {
+      margin-left: auto;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .customer-level-badge.vip {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: var(--primary-dark);
+    }
+    .customer-level-badge.normal {
+      background: rgba(139, 0, 0, 0.08);
+      color: var(--primary);
+    }
+    .customer-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 16px;
+      font-size: 0.88rem;
+    }
+    .customer-info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .customer-info-label {
+      color: var(--text-light);
+      font-size: 0.78rem;
+    }
+    .customer-info-value {
+      color: var(--text-dark);
+      font-weight: 500;
+    }
+    .customer-actions {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border-light);
+      display: flex;
+      gap: 8px;
+    }
+    .customer-actions .btn {
+      padding: 6px 12px;
+      font-size: 0.82rem;
+    }
+    .view-toggle {
+      display: inline-flex;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1.5px solid var(--border-light);
+    }
+    .view-toggle button {
+      padding: 7px 14px;
+      border: none;
+      background: var(--cream);
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text-light);
+      font-family: inherit;
+      transition: var(--transition);
+    }
+    .view-toggle button.active {
+      background: var(--primary);
+      color: var(--cream);
+    }
+    .action-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .action-dropdown-btn {
+      padding: 6px 12px;
+      font-size: 0.82rem;
+    }
+    .action-dropdown-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      min-width: 160px;
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      z-index: 10;
+      display: none;
+      overflow: hidden;
+    }
+    .action-dropdown:hover .action-dropdown-menu {
+      display: block;
+    }
+    .action-dropdown-menu a {
+      display: block;
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      color: var(--text-dark);
+      transition: var(--transition);
+    }
+    .action-dropdown-menu a:hover {
+      background: rgba(212, 175, 55, 0.1);
+      color: var(--primary);
+    }
+    .action-dropdown-menu a .icon {
+      margin-right: 8px;
+      color: var(--gold-dark);
+    }
+    @media (max-width: 768px) {
+      .customer-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  
+    .admin-sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 90;
+    }
+
+    .admin-sidebar-overlay.active {
+      display: block;
+    }
+
+    @media (max-width: 900px) {
+      .admin-sidebar {
+        transform: translateX(-100%);
+      }
+
+      .admin-sidebar.mobile-open {
+        transform: translateX(0);
+      }
+
+      .admin-main {
+        margin-left: 0 !important;
+      }
+
+      .admin-sidebar-toggle {
+        display: flex !important;
+      }
+
+      .admin-search {
+        display: none;
+      }
+
+      .welcome-banner {
+        padding: 25px 20px;
+      }
+
+      .welcome-text h2 {
+        font-size: 1.3rem;
+      }
+
+      .admin-content {
+        padding: 20px 15px !important;
+      }
+    }
+    /* B7 CSP：通用 display:none 类，替代 JS 写 style.display='none'（CSP style-src-elem 严格模式友好） */
+    .csp-hide { display: none !important; }
+
+    /* S-通用后台补丁：页码圆角（原方形→10px圆角） + hover 上浮 */
+    .pagination .page-btn, button.page-btn, .page-btn,
+    .pagination button, .data-table-container .pagination button {
+      border-radius: 10px !important;
+      min-width: 38px;
+      padding: 6px 14px;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(15,76,129,0.18);
+    }
+    /* 弹窗显示/隐藏通用 class（CSP友好，不写 style.display） */
+    .s-modal-hide { display: none !important; }
+    .s-overlay-hide { display: none !important; }
+    /* 侧边栏死链兜底颜色 + href=# 伪链接视觉提示 */
+    a[href="#"]:not(.action-link):not(.sched-opera-link)::after { content: " ⚠"; color: #f59e0b; font-size: .72rem; opacity: .65; }
+    /* 查询按钮行内提示色 */
+    .btn-ghost { color: #64748b; }
+
+/* 🔧 H9后台总补CSS：页码圆角10px + 后台表格min-width:760px/720px/680px响应式断点 + 遮罩隐藏类 */
+.pagination .page-btn, button.page-btn, .page-btn,
+.pagination button, .page-number-item button, .pager button,
+.btn-pagination, [class*="pagination"] button,
+.btn, button.btn {
+  border-radius: 10px !important;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.pagination .page-btn:hover:not(:disabled), button.page-btn:hover:not(:disabled),
+.pager button:hover:not(:disabled), .btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15,76,129,0.15);
+}
+/* 后台表格最小宽度（768px以上 → 760px；480~767 →720px；<480 →680px） */
+.admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+.data-table-container, [class*="table-wrapper"], .admin-content table {
+  min-width: 760px !important;
+  overflow-x: auto !important;
+}
+@media (max-width: 768px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 720px !important;
+  }
+}
+@media (max-width: 480px) {
+  .admin-card .data-table-container, .table-wrapper, .admin-card .table-wrapper,
+  .data-table-container, [class*="table-wrapper"], .admin-content table {
+    min-width: 680px !important;
+  }
+}
+.s-modal-hide { display: none !important; }
+.s-overlay-hide { display: none !important; }
+/* 侧边栏死链接视觉警告 */
+.admin-sidebar-menu li a:not([href]), .admin-sidebar-menu li a[href="#"] { cursor: pointer; position: relative; }
+.admin-sidebar-menu li a:not([href])::after, .admin-sidebar-menu li a[href="#"]::after {
+  content: " ⚠"; color: #f59e0b; font-size: .78rem; opacity: .75;
+}
+
+/* ============================================================
+   A4 订单/预约单/客户清单 打印样式
+   单一权威边距：上下12mm，左右2mm（紧凑）
+   ============================================================ */
+@media print {
+  @page { size: A4 portrait; margin: 12mm 2mm 12mm 2mm; }
+  @page :first { margin: 12mm 2mm 12mm 2mm; }
+  * { box-shadow: none !important; text-shadow: none !important;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { margin: 0; padding: 0; width: auto; height: auto; overflow: visible; background: #fff !important; }
+  /* 隐藏所有非打印元素 */
+  .admin-sidebar, .admin-sidebar-overlay, .admin-header, .admin-logout,
+  .tabs, .filter-bar, .search-box, .page-actions, .btn,
+  .pagination, .no-print, .modal-overlay, .toast-container,
+  header, footer, nav, .back-to-top, .menu-toggle {
+    display: none !important;
+  }
+  .admin-main { margin: 0 !important; padding: 0 !important; overflow: visible !important; }
+  .admin-content { padding: 0 !important; margin: 0 !important; width: 100% !important;
+                   max-width: 100% !important; overflow: visible !important; }
+  .a4-container, .customer-cards, .tab-content { width: 100% !important; padding: 0 !important; margin: 0 !important; }
+  .customer-card, .order-card, .stat-card { break-inside: avoid; page-break-inside: avoid;
+                                              box-shadow: none !important; border: 1px solid #d1d5db !important;
+                                              border-radius: 6px !important; }
+  table { width: 100% !important; border-collapse: collapse; }
+  th, td { border: 1px solid #9ca3af !important; padding: 6px 8px !important; font-size: 10pt !important; }
+  th { background: #f1f5f9 !important; font-weight: 600; }
+  h1, h2, h3, h4 { color: #0f4c81 !important; }
+  .section { padding: 10px 0 !important; page-break-inside: avoid; }
+}
+/* ====== 空卡片修复20260825：隐藏多余分页栏 + 约束表格高度 ====== */
+.pagination-bar, .pagination-toolbar, [class*="pagination-bar"], [class*="pg-toolbar"] {
+  display: none !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.table-wrapper, .table-wrap, .table-container, .data-table-container {
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+}
+
+
+
+
+
+
+
+/* ====== 按钮层级/溢出修复 20260828 ====== */
+.admin-page-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.admin-table-actions, .action-btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  max-width: 100% !important;
+}
+.admin-table-actions .btn, .action-btn-group .btn {
+  padding: 3px 6px !important;
+  font-size: 0.7rem !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+}
+.action-dropdown-btn {
+  padding: 3px 6px !important;
+  font-size: 0.72rem !important;
+  box-sizing: border-box !important;
+}
+/* 筛选区按钮组防溢出 */
+.admin-filter-actions, .filter-actions, .search-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+</style>
+</head>
+<body>
+  <div class="admin-layout">
+    <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-header">
+        <div class="logo-icon"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-label="秦安县秦剧团文化演出有限公司Logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1869AD"/>
+      <stop offset="100%" stop-color="#0F4C81"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8C989"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#A9883F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#logoBgGrad)" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,169,98,0.4)" stroke-width="1"/>
+  <!-- 四角祥云装饰 -->
+  <path d="M18,20 Q22,14 28,16 Q24,20 22,26 Q16,26 18,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,20 Q78,14 72,16 Q76,20 78,26 Q84,26 82,20 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M18,80 Q22,86 28,84 Q24,80 22,74 Q16,74 18,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <path d="M82,80 Q78,86 72,84 Q76,80 78,74 Q84,74 82,80 Z" fill="url(#goldGrad)" opacity="0.85"/>
+  <!-- 两侧水袖飘带 -->
+  <path d="M16,50 Q10,44 8,36 Q14,42 16,48 Q14,54 8,64 Q12,58 16,52 Q18,56 22,54 Q20,52 16,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <path d="M84,50 Q90,44 92,36 Q86,42 84,48 Q86,54 92,64 Q88,58 84,52 Q82,56 78,54 Q80,52 84,50 Z" fill="url(#goldGrad)" opacity="0.75"/>
+  <!-- 中心"秦"字（篆书风格） -->
+  <g transform="translate(50,52)" font-family="'STXingkai','华文行楷','KaiTi','STKaiti',serif;" font-weight="900" text-anchor="middle" fill="url(#goldGrad)">
+    <!-- 秦字上半：三横 -->
+    <rect x="-20" y="-22" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-24" y="-13" width="48" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <rect x="-20" y="-4" width="40" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+    <!-- 秦字中竖 + 人字头撇捺 -->
+    <rect x="-1.8" y="-22" width="3.6" height="26" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,-12 Q-14,-6 -22,4 Q-16,0 -10,-2 Q-6,-6 -1.8,-12 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,-12 Q14,-6 22,4 Q16,0 10,-2 Q6,-6 1.8,-12 Z" fill="url(#goldGrad)"/>
+    <!-- 秦字下半：禾 -->
+    <rect x="-1.8" y="6" width="3.6" height="22" rx="1.5" fill="url(#goldGrad)"/>
+    <path d="M-1.8,10 Q-14,14 -20,22 Q-14,18 -10,16 Q-6,13 -1.8,10 Z" fill="url(#goldGrad)"/>
+    <path d="M1.8,10 Q14,14 20,22 Q14,18 10,16 Q6,13 1.8,10 Z" fill="url(#goldGrad)"/>
+    <rect x="-16" y="26" width="32" height="3.2" rx="1.5" fill="url(#goldGrad)"/>
+  </g>
+</svg></div>
+        <div class="logo-text">秦安县秦剧团文化演出有限公司<br/>文化演出管理系统</div>
+      </div>
+
+      <nav class="admin-sidebar-menu">
+        <div class="admin-menu-group">
+          <a href="index.html" data-role-level="100" class="admin-menu-item  ">
+            <span class="menu-icon">📊</span>
+            <span>数据看板</span>
+          </a>
+          <a href="accounts.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">👥</span>
+            <span>账号权限管理</span>
+          </a>
+          <a href="schedule.html" data-role-level=" 100" class="admin-menu-item">
+            <span class="menu-icon">📅</span>
+            <span>演出档期排班</span>
+            <span class="menu-badge">8</span>
+          </a>
+          <a href="cast-sheet.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>演出演员表</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="orders.html" data-role-level="800" class="admin-menu-item active admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>订单预约管理</span>
+            <span class="menu-badge">5</span>
+          </a>
+          <a href="operas.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🎭</span>
+            <span>剧目资源管理</span>
+          </a>
+          <a href="staff.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">👨‍🎤</span>
+            <span>演职人员管理</span>
+          </a>
+          <a href="attendance.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">💵</span>
+            <span>考勤与薪酬</span>
+            <span class="menu-badge">NEW</span>
+          </a>
+          <a href="inventory.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>道具服装库存</span>
+            <span class="menu-badge">!</span>
+          </a>
+          <a href="finance.html" data-role-level="500" class="admin-menu-item">
+            <span class="menu-icon">💰</span>
+            <span>财务收支台账</span>
+          </a>
+          <a href="content.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">📝</span>
+            <span>官网内容管理</span>
+          </a>
+          <a href="assets.html" data-role-level="800" class="admin-menu-item">
+            <span class="menu-icon">🖼️</span>
+            <span>站点图片投放</span>
+          </a>
+          <a href="reports.html" data-role-level="700" class="admin-menu-item">
+            <span class="menu-icon">📈</span>
+            <span>数据统计报表</span>
+          </a>
+          <a href="system.html" data-role-level="999" class="admin-menu-item">
+            <span class="menu-icon">🔧</span>
+            <span>系统日志备份</span>
+          </a>
+        </div>
+        <div class="admin-menu-group">
+          <div class="admin-menu-group-title" style="padding:12px 16px 6px;font-size:0.72rem;color:rgba(255,250,240,0.55);letter-spacing:1.5px;text-transform:uppercase;">📜 项目文档（仅后台可见）</div>
+          <a href="../architecture.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📋</span>
+            <span>架构验收报告</span>
+          </a>
+          <a href="../delivery.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">📦</span>
+            <span>最终交付总结</span>
+          </a>
+          <a href="../deploy.html" data-role-level="100" class="admin-menu-item">
+            <span class="menu-icon">🚀</span>
+            <span>EdgeOne Pages 部署教程</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="../index.html" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>🏠</span><span>返回前台首页</span>
+          </a>
+          <a href="docs/admin-manual.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(255,250,240,0.05);border:1px solid rgba(212,175,55,0.2);">
+            <span>📖</span><span>操作手册</span>
+          </a>
+          <a href="javascript:;" id="logoutBtnSidebar" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;color:rgba(255,250,240,0.8);font-size:0.88rem;text-decoration:none;transition:all 0.3s ease;background:rgba(139,0,0,0.3);border:1px solid rgba(212,175,55,0.15);">
+            <span>🚪</span><span>退出登录</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="admin-sidebar-toggle" aria-label="切换菜单">☰</button>
+          <nav class="admin-breadcrumb">
+            <a href="index.html">首页</a>
+            <span class="separator">/</span>
+            <span class="current">订单预约管理</span>
+            <span class="separator">/</span>
+            <span class="current">订单预约与客户管理</span>
+          </nav>
+        </div>
+        <div class="admin-header-right">
+          <div class="admin-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="全局搜索...">
+          </div>
+          <button class="admin-header-btn" title="通知">
+            🔔<span class="notify-dot"></span>
+          </button>
+          <button class="admin-header-btn" title="消息">
+            💬
+          </button>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <div class="admin-page-header">
+          <div class="admin-page-title">
+            <h1>订单预约与客户管理</h1>
+            <p class="page-desc">管理所有演出订单预约记录与客户档案信息</p>
+          </div>
+          <div class="admin-page-actions">
+            <button class="btn btn-primary" id="spNewOrderBtn" data-action="create-order" style="position:relative;">
+              ➕ 新建订单
+            </button>
+            <button class="btn btn-secondary" id="spExportOrdersBtn">
+              📥 导出Excel
+            </button>
+            <button class="btn btn-gold" id="spPrintDispatchBtn" onclick="window.print()">
+              🖨️ 打印派工单
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-grid" id="ordersStatsGrid">
+          <div class="stat-card stat-card--primary">
+            <div class="stat-card-header">
+              <div class="stat-card-icon">📋</div>
+              <div class="stat-card-trend" id="statTrendTotal" style="display:none;"></div>
+            </div>
+            <div class="stat-card-title">{year}年总订单</div>
+            <div class="stat-card-value" id="statTotalOrders">—<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
+            <div class="stat-card-sub">
+              <span id="statTotalAmount">¥ —</span>
+              <span class="divider"></span>
+              <span id="statPaidAmount">已付 ¥ —</span>
+            </div>
+          </div>
+          <div class="stat-card stat-card--warning">
+            <div class="stat-card-header">
+              <div class="stat-card-icon">⏳</div>
+              <div class="stat-card-trend" id="statTrendPending" style="display:none;"></div>
+            </div>
+            <div class="stat-card-title">待确认</div>
+            <div class="stat-card-value" id="statPendingOrders">—<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
+            <div class="stat-card-sub">
+              <span id="statPendingSub">待处理订单</span>
+            </div>
+          </div>
+          <div class="stat-card stat-card--success">
+            <div class="stat-card-header">
+              <div class="stat-card-icon">✅</div>
+              <div class="stat-card-trend" id="statTrendDone" style="display:none;"></div>
+            </div>
+            <div class="stat-card-title">已完成</div>
+            <div class="stat-card-value" id="statDoneOrders">—<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
+            <div class="stat-card-sub">
+              <span id="statDoneRate">完成率 —</span>
+              <span class="divider"></span>
+              <span id="statPaidRate">已收款 —</span>
+            </div>
+          </div>
+          <div class="stat-card stat-card--danger">
+            <div class="stat-card-header">
+              <div class="stat-card-icon">❌</div>
+              <div class="stat-card-trend" id="statTrendCancel" style="display:none;"></div>
+            </div>
+            <div class="stat-card-title">已取消</div>
+            <div class="stat-card-value" id="statCancelOrders">—<span style="font-size:1rem;color:var(--text-light);margin-left:4px;">单</span></div>
+            <div class="stat-card-sub">
+              <span id="statCancelRate">取消率 —</span>
+              <span class="divider"></span>
+              <span id="statRefundAmount">退款 ¥ —</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab-item active" data-tab="orders">
+            📋 订单列表
+          </div>
+          <div class="tab-item" data-tab="customers">
+            👥 客户档案
+          </div>
+          <div class="tab-item" data-tab="appointments">
+            🗓️ 预约管理
+          </div>
+          <div class="tab-item" data-tab="roster">
+            🧑‍🎤 演出花名册
+          </div>
+        </div>
+
+        <div class="tab-content active" id="tab-orders">
+          <div class="admin-card">
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group">
+                  <label>搜索订单</label>
+                  <input type="text" class="form-control" id="ordFilterKeyword" placeholder="订单号/客户名称/电话">
+                </div>
+                <div class="form-group">
+                  <label>订单状态</label>
+                  <select class="form-control" id="ordFilterStatus">
+                    <option value="">全部状态</option>
+                    <option value="draft">待确认</option>
+                    <option value="confirmed">已确认</option>
+                    <option value="performance">演出中</option>
+                    <option value="completed">已完成</option>
+                    <option value="cancelled">已取消</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>演出类型</label>
+                  <select class="form-control" id="ordFilterType">
+                    <option value="">全部类型</option>
+                    <option value="乡村庙会演出">乡村庙会演出</option>
+                    <option value="惠民下乡演出">惠民下乡演出</option>
+                    <option value="节庆专场演出">节庆专场演出</option>
+                    <option value="企业商演">企业商演</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>开始日期</label>
+                  <input type="date" class="form-control" id="ordFilterFrom" value="2026-01-01">
+                </div>
+                <div class="form-group">
+                  <label>结束日期</label>
+                  <input type="date" class="form-control" id="ordFilterTo" value="2026-12-31">
+                </div>
+                <div class="form-group">
+                  <button class="btn btn-primary btn-sm" id="ordFilterApplyBtn" type="button">🔍 查询</button>
+                  <button class="btn btn-secondary btn-sm" id="ordFilterResetBtn" type="button" style="margin-left:8px;">↺ 重置</button>
+                </div>
+              </div>
+
+              <!-- ✅ 批次9修复：预约订单附件上传（合同扫描件/演出现场照/结算发票/验收单）——修复 11 处 href="#" 上传合同死链 -->
+              <div class="admin-card" style="margin:0 0 22px 0;border:2px solid #3b82f6;background:linear-gradient(135deg,#eff6ff,#dbeafe);box-shadow:none;" data-upload-wrap="1">
+                <div class="admin-card-header" style="padding-top:16px;">
+                  <h3 style="color:#1e3a8a;">📎 订单附件批量上传（前端校验+预览层）</h3>
+                  <div style="display:flex;gap:10px;align-items:center;">
+                    <span class="badge badge-info" style="font-size:0.78rem;">合同扫描件 · 现场照 · 发票 · 验收单</span>
+                    <button class="btn btn-primary btn-sm" type="button" id="openOrdersUploadBtn" style="padding:6px 14px;">📤 选择附件</button>
+                  </div>
+                </div>
+                <div class="admin-card-body" style="padding-top:6px;">
+                  <form id="ordersAttachForm" autocomplete="off" novalidate>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+                      <div>
+                        <label style="display:block;font-weight:700;color:#1e3a8a;margin-bottom:6px;">关联订单编号</label>
+                        <select name="attachOrderId" style="width:100%;padding:10px 14px;border:1.5px solid #3b82f6;border-radius:10px;background:#fff;">
+                          <option value="">加载真实订单中…</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style="display:block;font-weight:700;color:#1e3a8a;margin-bottom:6px;">附件类型</label>
+                        <select name="attachType" style="width:100%;padding:10px 14px;border:1.5px solid #3b82f6;border-radius:10px;background:#fff;">
+                          <option value="contract">📄 演出合同扫描件（PDF/图片）</option>
+                          <option value="photo">📸 演出现场照片（多图打包）</option>
+                          <option value="invoice">🧾 结算发票 & 收款凭证</option>
+                          <option value="acceptance">✅ 甲方验收确认单</option>
+                          <option value="other">📁 其他补充材料</option>
+                        </select>
+                      </div>
+                      <div style="grid-column:1 / -1;">
+                        <label style="display:block;font-weight:700;color:#1e3a8a;margin-bottom:6px;">附件文件 *（≤10MB/个，支持 PDF/JPG/PNG/DOCX 多文件）</label>
+                        <input type="file" name="ordersFiles" id="ordersAttachFiles" accept="image/*,.pdf,.doc,.docx,.xlsx" multiple required style="width:100%;padding:10px;border:2px dashed #3b82f6;border-radius:12px;background:#fff;cursor:pointer;">
+                      </div>
+                    </div>
+                    <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+                      <button type="submit" class="btn btn-primary">✅ 提交附件（前端校验完成）</button>
+                      <button type="reset" class="btn btn-outline">🔄 清空</button>
+                      <small style="color:#1e40af;">💡 点击任意订单右侧「上传合同」也会打开此面板；选择文件后自动显示预览图，前端完成格式&大小校验，正式发布请对接 COS / 后端上传接口。</small>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>订单编号</th>
+                      <th>客户名称</th>
+                      <th>联系电话</th>
+                      <th>演出类型</th>
+                      <th>场次</th>
+                      <th>演出日期</th>
+                      <th>演出地点</th>
+                      <th>阶梯等级</th>
+                      <th>订单金额</th>
+                      <th>实付金额</th>
+                      <th>状态</th>
+                      <th>下单时间</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ordersMainTbody"><tr><td colspan="13" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实订单数据…</td></tr></tbody>
+                </table>
+              </div>
+
+              <!-- v20261004 P2-4：服务端分页（meta 驱动），替换原写死「共 128 条 / 13 页」的假分页条 -->
+              <div class="pagination" id="ordersPager"><span class="page-info">加载中…</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-customers">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3>👥 客户档案管理</h3>
+              <div style="display:flex;gap:15px;align-items:center;">
+                <button class="btn btn-primary btn-sm" id="custAddBtn" type="button">➕ 新增客户</button>
+                <div class="view-toggle">
+                  <button class="active" id="viewCardBtn" data-real-bound="1">🗂️ 卡片</button>
+                  <button id="viewTableBtn" data-real-bound="1">📊 表格</button>
+                </div>
+              </div>
+            </div>
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group" style="min-width:280px;">
+                  <label>搜索客户</label>
+                  <input type="text" id="custFilterKeyword" class="form-control" placeholder="客户名称/联系方式/组织名/客户ID">
+                </div>
+                <div class="form-group">
+                  <label>客户类型</label>
+                  <select id="custFilterType" class="form-control">
+                    <option value="">全部类型</option>
+                    <option value="personal">个人</option>
+                    <option value="organization">单位/组织</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>客户等级</label>
+                  <select id="custFilterLevel" class="form-control">
+                    <option value="">全部等级</option>
+                    <option value="VIP">VIP</option>
+                    <option value="A">A 级</option>
+                    <option value="B">B 级</option>
+                    <option value="C">C 级</option>
+                  </select>
+                </div>
+                <div class="form-group" style="display:flex;gap:8px;align-items:flex-end;">
+                  <button class="btn btn-primary btn-sm" id="custFilterApplyBtn" data-real-bound="1">🔍 搜索</button>
+                  <button class="btn btn-default btn-sm" id="custFilterResetBtn" data-real-bound="1">↺ 重置</button>
+                </div>
+              </div>
+
+              <div id="customerCardsView">
+                <div class="customer-cards" id="customersCardsTbody" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+                  <div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">正在加载真实客户数据…</div>
+                </div>
+              </div>
+
+              <div id="customerTableView" class="csp-hide">
+                <div class="table-wrapper">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>客户ID</th>
+                        <th>客户名称</th>
+                        <th>客户类型</th>
+                        <th>联系方式</th>
+                        <th>合作次数</th>
+                        <th>累计消费</th>
+                        <th>首次合作</th>
+                        <th>最近更新</th>
+                        <th>客户等级</th>
+                        <th>操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="customersMainTbody"><tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实客户数据…</td></tr></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- v20261004 P2-4：客户列表服务端分页（meta 驱动） -->
+              <div class="pagination" id="customersPager"><span class="page-info">加载中…</span></div>
+</div>
+          </div>
+        </div>
+
+        <!-- v20261004 P2-1：预约管理 tab（接通 GET /v1/appointments 列表 + POST /v1/appointments/:id/transition 状态流转） -->
+        <div class="tab-content" id="tab-appointments">
+          <div class="admin-card">
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group">
+                  <label>搜索预约</label>
+                  <input type="text" class="form-control" id="apptFilterKeyword" placeholder="预约编号/客户名称/电话">
+                </div>
+                <div class="form-group">
+                  <label>预约状态</label>
+                  <select class="form-control" id="apptFilterStatus">
+                    <option value="">全部状态</option>
+                    <option value="pending">待确认</option>
+                    <option value="confirmed">已确认</option>
+                    <option value="rejected">已驳回</option>
+                    <option value="cancelled">已取消</option>
+                    <option value="converted">已转订单</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>套餐类型</label>
+                  <select class="form-control" id="apptFilterType">
+                    <option value="">全部类型</option>
+                    <option value="temple_fair">庙会包场</option>
+                    <option value="cultural_tourism">文旅演出</option>
+                    <option value="campus_tour">校园巡演</option>
+                    <option value="custom">定制场次</option>
+                  </select>
+                </div>
+                <div class="form-group" style="display:flex;gap:8px;align-items:flex-end;">
+                  <button class="btn btn-primary btn-sm" id="apptFilterApplyBtn" type="button">🔍 查询</button>
+                  <button class="btn btn-secondary btn-sm" id="apptFilterResetBtn" type="button">↺ 重置</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>预约编号</th>
+                      <th>客户名称</th>
+                      <th>联系电话</th>
+                      <th>套餐类型</th>
+                      <th>期望开始</th>
+                      <th>场次</th>
+                      <th>预算/报价</th>
+                      <th>状态</th>
+                      <th>提交时间</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="apptsMainTbody"><tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">正在加载真实预约数据…</td></tr></tbody>
+                </table>
+              </div>
+
+              <!-- v20261004 P2-4：预约列表服务端分页（meta 驱动） -->
+              <div class="pagination" id="apptsPager"><span class="page-info">加载中…</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== 洛门演出订单花名册（v20261008a）====== -->
+        <div class="tab-content" id="tab-roster">
+          <style>
+            #tab-roster .ros-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0;}
+            #tab-roster .ros-stats{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 4px;}
+            #tab-roster .ros-stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:.85rem;color:#475569;}
+            #tab-roster .ros-stat b{font-size:1.05rem;color:#0f172a;margin-left:4px;}
+            #tab-roster .ros-stat.is-danger b{color:#dc2626;}
+            #tab-roster table{font-size:.86rem;}
+            #tab-roster .ros-role-sel,#tab-roster .ros-perf-sel,#tab-roster .ros-att-sel{padding:2px 4px;font-size:.82rem;}
+            #tab-roster .ros-failed{margin-top:12px;border:1px solid #fecaca;background:#fef2f2;border-radius:8px;padding:10px 14px;max-height:260px;overflow:auto;display:none;}
+            #tab-roster .ros-failed h4{margin:0 0 8px;color:#b91c1c;font-size:.9rem;}
+            #tab-roster .ros-failed table{font-size:.8rem;}
+            #tab-roster .ros-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9990;display:none;align-items:center;justify-content:center;}
+            #tab-roster .ros-modal{background:#fff;border-radius:12px;width:min(560px,94vw);max-height:92vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.25);}
+            #tab-roster .ros-modal-head{padding:16px 22px;border-bottom:1px solid #e2e8f0;font-weight:700;font-size:1.02rem;}
+            #tab-roster .ros-modal-body{padding:18px 22px;}
+            #tab-roster .ros-modal-foot{padding:12px 22px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;gap:10px;background:#f8fafc;border-radius:0 0 12px 12px;}
+            #tab-roster .ros-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;}
+            #tab-roster .ros-grid .full{grid-column:1 / -1;}
+            #tab-roster .ros-grid label{display:block;font-size:.82rem;color:#64748b;margin-bottom:4px;}
+            #tab-roster .ros-batch-date{display:flex;align-items:center;gap:6px;font-size:.85rem;color:#475569;}
+            #tab-roster .ros-hint{font-size:.78rem;color:#94a3b8;margin:4px 0 0;}
+          </style>
+
+          <div class="admin-card">
+            <div class="admin-card-body">
+              <div class="admin-filter-bar">
+                <div class="form-group">
+                  <label>选择订单</label>
+                  <select class="form-control" id="rosOrderSelect"><option value="">— 请先选择订单 —</option></select>
+                </div>
+                <div class="form-group">
+                  <label>关键词</label>
+                  <input type="text" class="form-control" id="rosFilterKeyword" placeholder="姓名/手机/身份证">
+                </div>
+                <div class="form-group">
+                  <label>参演状态</label>
+                  <select class="form-control" id="rosFilterPerf">
+                    <option value="">全部</option>
+                    <option value="unconfirmed">未确认</option>
+                    <option value="confirmed">已确认</option>
+                    <option value="cancelled">已取消</option>
+                    <option value="completed">已完成</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>考勤状态</label>
+                  <select class="form-control" id="rosFilterAtt">
+                    <option value="">全部</option>
+                    <option value="present">出勤</option>
+                    <option value="absent">缺勤</option>
+                    <option value="late">迟到</option>
+                    <option value="early">早退</option>
+                    <option value="leave">请假</option>
+                    <option value="rest">公休</option>
+                    <option value="null">未考勤</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <button class="btn btn-primary btn-sm" id="rosQueryBtn" type="button">🔍 查询</button>
+                </div>
+              </div>
+
+              <div class="ros-stats" id="rosStats" style="display:none;">
+                <span class="ros-stat">总人数<b id="rosStatTotal">0</b></span>
+                <span class="ros-stat">已确认<b id="rosStatConfirmed">0</b></span>
+                <span class="ros-stat">未确认<b id="rosStatUnconfirmed">0</b></span>
+                <span class="ros-stat">已取消<b id="rosStatCancelled">0</b></span>
+                <span class="ros-stat">已完成<b id="rosStatCompleted">0</b></span>
+                <span class="ros-stat is-danger">未考勤<b id="rosStatUnattended">0</b></span>
+              </div>
+
+              <div class="ros-toolbar">
+                <button class="btn btn-primary btn-sm" id="rosAddBtn" type="button" disabled>➕ 新增人员</button>
+                <button class="btn btn-secondary btn-sm" id="rosImportBtn" type="button" disabled>📥 Excel 导入</button>
+                <input type="file" id="rosImportFile" accept=".xlsx,.xls,.csv" style="display:none;">
+                <button class="btn btn-secondary btn-sm" id="rosTplBtn" type="button">📄 下载导入模板</button>
+                <span style="flex:1;"></span>
+                <span class="ros-batch-date">考勤日期
+                  <input type="date" class="form-control" id="rosBatchDate" style="width:150px;">
+                </span>
+                <button class="btn btn-sm" style="background:#16a34a;color:#fff;" data-ros-batch="present" type="button">✅ 出勤</button>
+                <button class="btn btn-sm" style="background:#dc2626;color:#fff;" data-ros-batch="absent" type="button">❌ 缺勤</button>
+                <button class="btn btn-sm" style="background:#d97706;color:#fff;" data-ros-batch="late" type="button">🕐 迟到</button>
+                <button class="btn btn-sm" style="background:#7c3aed;color:#fff;" data-ros-batch="early" type="button">🏃 早退</button>
+                <button class="btn btn-sm" style="background:#0891b2;color:#fff;" data-ros-batch="leave" type="button">📝 请假</button>
+                <button class="btn btn-sm" style="background:#64748b;color:#fff;" data-ros-batch="rest" type="button">☔ 公休</button>
+              </div>
+              <p class="ros-hint">支持 Excel(.xlsx/.xls)/CSV 导入（单批 ≤500 行）；表头：姓名/身份证号/联系方式/角色分配/参演状态/考勤状态；也可由外部系统直接调用 POST /v1/order-roster/import 对接。批量考勤默认对勾选人生效，未勾选则对整单人员生效。</p>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:34px;"><input type="checkbox" id="rosCheckAll"></th>
+                      <th style="width:40px;">#</th>
+                      <th>姓名</th>
+                      <th>身份证号</th>
+                      <th>联系方式</th>
+                      <th>角色分配</th>
+                      <th>参演状态</th>
+                      <th>考勤状态</th>
+                      <th>考勤日期</th>
+                      <th>备注</th>
+                      <th style="width:110px;">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rosTbody"><tr><td colspan="11" style="text-align:center;padding:30px;color:#94a3b8;">请先在上方选择一个订单</td></tr></tbody>
+                </table>
+              </div>
+
+              <div class="ros-failed" id="rosFailedPanel">
+                <h4>⚠️ 以下行未导入（已修正后可重新导入，合法行不受影响）</h4>
+                <table>
+                  <thead><tr><th style="width:60px;">行号</th><th style="width:120px;">姓名</th><th>原因</th></tr></thead>
+                  <tbody id="rosFailedTbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 新增/编辑弹窗 -->
+          <div class="ros-modal-overlay" id="rosModalOverlay">
+            <div class="ros-modal">
+              <div class="ros-modal-head" id="rosModalTitle">新增花名册人员</div>
+              <div class="ros-modal-body">
+                <div class="ros-grid">
+                  <div><label>姓名（2-50 字符）*</label><input type="text" class="form-control" id="rosFName" maxlength="50" placeholder="如：张三"></div>
+                  <div><label>联系方式（11 位手机号）*</label><input type="text" class="form-control" id="rosFPhone" maxlength="11" placeholder="如：13993839833"></div>
+                  <div class="full"><label>身份证号（18 位，含校验码）*</label><input type="text" class="form-control" id="rosFIdCard" maxlength="18" placeholder="如：620522199508124568"></div>
+                  <div><label>角色分配（可选自定义）*</label>
+                    <select class="form-control" id="rosFRole"></select>
+                    <button class="btn btn-secondary btn-sm" id="rosFRoleAdd" type="button" style="margin-top:6px;">＋ 自定义角色</button>
+                  </div>
+                  <div><label>参演状态 *</label>
+                    <select class="form-control" id="rosFPerf">
+                      <option value="unconfirmed">未确认</option>
+                      <option value="confirmed">已确认</option>
+                      <option value="cancelled">已取消</option>
+                      <option value="completed">已完成</option>
+                    </select>
+                  </div>
+                  <div><label>考勤状态</label>
+                    <select class="form-control" id="rosFAtt">
+                      <option value="">未考勤</option>
+                      <option value="present">出勤</option>
+                      <option value="absent">缺勤</option>
+                      <option value="late">迟到</option>
+                      <option value="early">早退</option>
+                      <option value="leave">请假</option>
+                      <option value="rest">公休</option>
+                    </select>
+                  </div>
+                  <div><label>考勤日期</label><input type="date" class="form-control" id="rosFAttDate"></div>
+                  <div class="full"><label>备注</label><input type="text" class="form-control" id="rosFRemark" maxlength="300" placeholder="饰演角色/特殊说明（≤300 字）"></div>
+                </div>
+              </div>
+              <div class="ros-modal-foot">
+                <button class="btn btn-danger btn-sm" id="rosFDelete" type="button" style="display:none;">🗑 删除</button>
+                <span style="flex:1;"></span>
+                <button class="btn btn-secondary btn-sm" id="rosFCancel" type="button">取消</button>
+                <button class="btn btn-primary btn-sm" id="rosFSave" type="button">💾 保存</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="../js/year-lite.js?v=20260803"></script>
+    <script src="../js/api-config.js?v=20261010a"></script>
+    <script src="../js/admin-pages/orders.pre-2.js?v=20261005a"></script>
+  <script src="../js/api-request.js?v=20261008b"></script>
+<script src="../js/app.js?v=20261015a"></script>
+  <script src="../js/tooltip.js?v=20261010a"></script>
+<script src="../js/admin-notifications.js?v=20260928b"></script>
+  <script src="../js/pagination.js?v=20261002a"></script>
+  <script src="../js/real-action-guard.js?v=20260922b"></script>
+  <script src="../js/admin-pages/orders.pre-3.js?v=20261005a"></script>
+
+  <div class="modal-overlay csp-hide" id="orderDetailOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="orderDetailModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:760px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,var(--primary),#1e5ba8);color:#fff;position:sticky;top:0;">
+      <h3 id="orderDetailTitle" style="margin:0;font-size:1.1rem;font-weight:600;">📋 订单详情</h3>
+      <button id="orderDetailClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1.2;">×</button>
+    </div>
+    <!-- v20261004 P2-2：详情内容全部由 viewDetail() 用 GET /v1/orders/:id 真实数据渲染（items/payments/refunds/schedules/customer/appointment + contractUrl） -->
+    <div id="orderDetailBody" style="padding:22px 26px;"><div style="text-align:center;padding:30px;color:#94a3b8;">正在加载订单详情…</div></div>
+    <div style="padding:16px 28px;border-top:1.5px solid var(--border-light);display:flex;justify-content:flex-end;gap:12px;background:var(--bg-light);">
+      <button id="orderDetailCancel" type="button" class="btn btn-secondary">关闭</button>
+    </div>
+  </div>
+
+  <!-- 编辑订单弹窗 -->
+  <div class="modal-overlay csp-hide" id="orderEditOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="orderEditModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:92%;max-width:720px;z-index:9999;padding:0;overflow:hidden;max-height:90vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#1d4ed8,#1e5ba8);color:#fff;position:sticky;top:0;">
+      <h3 style="margin:0;font-size:1.1rem;font-weight:600;">✏️ 编辑订单</h3>
+      <button id="orderEditClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1.2;">×</button>
+    </div>
+    <form id="orderEditForm" style="padding:24px 28px;display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;">
+      <input type="hidden" id="editOrderId">
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">客户名称 *</label>
+        <input type="text" id="editCustomerName" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">联系电话 *</label>
+        <input type="text" id="editPhone" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">甲方单位</label>
+        <input type="text" id="editOrganization" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">演出类型</label>
+        <input type="text" id="editOrderType" placeholder="如：庙会演出" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">场次</label>
+        <input type="number" id="editPerformanceCount" min="1" value="1" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">订单金额 (¥)</label>
+        <input type="number" id="editTotalAmount" min="0" step="0.01" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">折扣金额 (¥)</label>
+        <input type="number" id="editDiscountAmount" min="0" step="0.01" value="0" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">已付金额 (¥)</label>
+        <input type="number" id="editPaidAmount" min="0" step="0.01" value="0" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">演出开始日期</label>
+        <input type="date" id="editPerformanceStartDate" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">演出结束日期</label>
+        <input type="date" id="editPerformanceEndDate" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">演出地点</label>
+        <input type="text" id="editVenueFullAddress" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">特殊要求</label>
+        <textarea id="editSpecialRequirements" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;resize:vertical;"></textarea>
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">内部备注</label>
+        <textarea id="editInternalRemark" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;resize:vertical;"></textarea>
+        <div id="editRemarkHint" style="display:none;margin-top:4px;font-size:.75rem;color:#92400e;line-height:1.5;"></div>
+      </div>
+      <div style="grid-column:1 / span 2;display:flex;justify-content:flex-end;gap:12px;">
+        <button type="button" id="orderEditCancel" class="btn btn-secondary">取消</button>
+        <button type="submit" class="btn btn-primary" style="background:#1d4ed8;color:#fff;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:0.9rem;">💾 保存修改</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 批次9+：订单派工弹窗（修复11处派工安排死链 + 同行当选多人员+备注） -->
+  <div class="modal-overlay csp-hide" id="dispatchOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="dispatchModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:900px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#7c2d12,#9a3412);color:#fff;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <h3 style="margin:0;font-size:1.1rem;font-weight:600;">🎬 订单派工·演职人员分配</h3>
+        <span id="dispatchOrderBadge" class="badge" style="background:#fff3cd;color:#856404;font-weight:600;">未绑定订单</span>
+      </div>
+      <button id="dispatchClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1.2;">×</button>
+    </div>
+    <div style="padding:22px 28px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px 20px;margin-bottom:18px;padding:14px 16px;border:1.5px dashed #ea580c;border-radius:12px;background:linear-gradient(135deg,#fff7ed,#ffedd5);">
+        <div>
+          <div style="font-size:.78rem;color:#9a3412;margin-bottom:4px;">订单编号</div>
+          <div id="dpOrderNo" style="font-weight:700;color:#7c2d12;">—</div>
+        </div>
+        <div>
+          <div style="font-size:.78rem;color:#9a3412;margin-bottom:4px;">客户/演出地点</div>
+          <div id="dpCust" style="font-weight:600;color:#431407;">—</div>
+        </div>
+        <div>
+          <div style="font-size:.78rem;color:#9a3412;margin-bottom:4px;">演出日期/场次</div>
+          <div id="dpDate" style="font-weight:600;color:#431407;">—</div>
+        </div>
+      </div>
+
+      <div style="border:2px solid #0f4c81;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#f8fafc);padding:16px 18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+          <h4 style="margin:0;color:#0f4c81;font-size:1rem;font-weight:700;">🎭 按行当分配·多选人员·每人独立角色备注</h4>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="btn btn-sm" id="dpSelCommon" style="padding:5px 12px;background:#fff;border:1.5px solid #0f4c81;color:#0f4c81;">⚡ 一键派常用班底</button>
+            <button type="button" class="btn btn-sm" id="dpClearAll" style="padding:5px 12px;background:#fff;border:1.5px solid #dc2626;color:#dc2626;">🧹 清空派工</button>
+          </div>
+        </div>
+        <div id="dpCastBox" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;"></div>
+      </div>
+
+      <div style="margin-top:18px;">
+        <label style="display:block;font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:500;">派工综合备注 / 特殊说明</label>
+        <textarea id="dpRemark" class="form-control" rows="3" placeholder="如：A角赶场由B角替、龙套×5人全部到位、某演员不参与武戏段落、交通住宿安排、装车人员名单……" style="width:100%;box-sizing:border-box;resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div style="padding:16px 28px;border-top:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--bg-light);flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="dpSelCount" class="badge badge-info" style="font-size:.85rem;">已选 0 人</span>
+        <small style="color:var(--text-light);">💡 勾选即派出，每行可填写「饰演角色/前场后场/替补」说明</small>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <button id="dispatchCancel" type="button" class="btn btn-secondary">取消</button>
+        <button id="dispatchSave" type="button" class="btn btn-gold">✅ 保存派工单（打印版）</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- v20261003 P3-8：收款登记弹窗（真实收款流水+台账收入凭证，替代只能改 paidAmount 的粗糙方式） -->
+  <div class="modal-overlay csp-hide" id="paymentOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="paymentModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:520px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#b45309,#d97706);color:#fff;">
+      <h3 style="margin:0;font-size:1.1rem;font-weight:600;">💰 登记收款</h3>
+      <button id="paymentClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1.2;">×</button>
+    </div>
+    <div style="padding:24px 28px;">
+      <p id="payInfo" style="margin:0 0 16px 0;font-size:.85rem;color:var(--text-light);background:#f8fafc;border-radius:8px;padding:10px 12px;line-height:1.7;"></p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;">
+        <div style="grid-column:1 / span 2;">
+          <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">收款金额 (¥) *</label>
+          <input type="number" id="payAmount" min="0.01" step="0.01" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">收款渠道</label>
+          <select id="payChannel" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;">
+            <option value="cash">现金</option>
+            <option value="transfer" selected>银行转账</option>
+            <option value="wechat">微信</option>
+            <option value="alipay">支付宝</option>
+            <option value="cheque">支票</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">收款日期</label>
+          <input type="date" id="payDate" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+        </div>
+        <div style="grid-column:1 / span 2;">
+          <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">备注</label>
+          <input type="text" id="payRemark" maxlength="300" placeholder="如：庙会现场收取/转账尾号1234" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
+        <button id="paymentCancel" type="button" class="btn btn-secondary">取消</button>
+        <button id="paymentSave" type="button" class="btn" data-real-bound="1" style="background:#d97706;color:#fff;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:.9rem;">✅ 确认收款</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- v20261004 P2-3：客户新增/编辑弹窗（POST /v1/customers、PATCH /v1/customers/:id） -->
+  <div class="modal-overlay csp-hide" id="custEditOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="custEditModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:92%;max-width:560px;z-index:9999;padding:0;overflow:hidden;max-height:90vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff;">
+      <h3 id="custEditTitle" style="margin:0;font-size:1.1rem;font-weight:600;">➕ 新增客户</h3>
+      <button id="custEditClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1.2;">×</button>
+    </div>
+    <form id="custEditForm" style="padding:22px 26px;display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;">
+      <input type="hidden" id="custEditId">
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">客户名称 *</label>
+        <input type="text" id="custEditName" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">联系电话 *</label>
+        <input type="text" id="custEditPhone" required style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">客户类型</label>
+        <select id="custEditType" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+          <option value="personal">个人</option>
+          <option value="organization">单位/组织</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">客户等级</label>
+        <select id="custEditLevel" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+          <option value="">未评级</option>
+          <option value="VIP">VIP</option>
+          <option value="A">A 级</option>
+          <option value="B">B 级</option>
+          <option value="C">C 级</option>
+        </select>
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">单位/组织</label>
+        <input type="text" id="custEditOrganization" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;">
+      </div>
+      <div style="grid-column:1 / span 2;">
+        <label style="font-size:0.82rem;color:var(--text-light);display:block;margin-bottom:4px;">备注</label>
+        <textarea id="custEditRemark" rows="2" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
+      </div>
+      <div style="grid-column:1 / span 2;display:flex;justify-content:flex-end;gap:12px;">
+        <button type="button" id="custEditCancel" class="btn btn-secondary">取消</button>
+        <button type="submit" class="btn btn-primary" style="background:#0d9488;color:#fff;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:0.9rem;">💾 保存</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- v20261004 P2-3：客户详情弹窗（GET /v1/customers/:id，含近期订单/预约） -->
+  <div class="modal-overlay csp-hide" id="custDetailOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;"></div>
+  <div class="modal csp-hide" id="custDetailModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.2);width:94%;max-width:720px;z-index:9999;padding:0;overflow:hidden;max-height:92vh;overflow-y:auto;">
+    <div style="padding:20px 24px;border-bottom:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff;">
+      <h3 id="custDetailTitle" style="margin:0;font-size:1.1rem;font-weight:600;">👤 客户详情</h3>
+      <button id="custDetailClose" type="button" style="background:transparent;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:0 6px;line-height:1.2;">×</button>
+    </div>
+    <div id="custDetailBody" style="padding:22px 26px;"><div style="text-align:center;padding:30px;color:#94a3b8;">正在加载客户详情…</div></div>
+    <div style="padding:16px 28px;border-top:1.5px solid var(--border-light);display:flex;justify-content:flex-end;gap:12px;background:var(--bg-light);">
+      <button id="custDetailCancel" type="button" class="btn btn-secondary">关闭</button>
+    </div>
+  </div>
+
+  <script src="../js/admin-pages/orders.js?v=20261011a"></script>
+  <script src="../js/admin-pages/order-roster.js?v=20261008a"></script>
+
+  <!-- S-通用后台补丁：去抖锁 + __closeAnyModal + 查询重置真重置 + ESC 关弹窗 + 侧边栏死链修复 + 空 a[href=#] 禁跳 -->
+
+<!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
+
+
+
+<!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->
+
+<!-- ====== 刷新bug+弹窗修复20260825：阻止表单提交 + 绑定关闭按钮 ====== -->
+
+
+
+
+
+
+
+<script src="../js/admin-mobile-sidebar.js?v=20260926m"></script>
+</body>
+</html>

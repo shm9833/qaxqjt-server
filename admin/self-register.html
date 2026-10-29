@@ -188,20 +188,20 @@
           </select>
         </div>
         <div class="field">
-          <label>手机号</label>
-          <input type="tel" id="phone" placeholder="选填" maxlength="11" />
+          <label>手机号 <span class="req">*</span></label>
+          <input type="tel" id="phone" placeholder="请输入11位手机号" maxlength="11" />
         </div>
       </div>
 
       <div class="field">
-        <label>行当 / 岗位</label>
+        <label>行当 / 岗位 <span class="req">*</span></label>
         <select id="primaryRole">
-          <option value="">请选择（选填）</option>
+          <option value="">请选择</option>
           <optgroup label="生行"><option>文须生</option><option>武须生</option><option>小生</option></optgroup>
           <optgroup label="丑行"><option>丑角</option></optgroup>
           <optgroup label="净行"><option>大花脸</option><option>二花脸</option></optgroup>
           <optgroup label="旦行"><option>正旦</option><option>小旦</option><option>彩旦</option><option>二架旦</option></optgroup>
-          <optgroup label="二架"><option>门官</option><option>家院</option></optgroup>
+          <optgroup label="二架"><option>门官</option><option>家院</option><option>其他二架</option></optgroup>
           <optgroup label="角子">
             <option>龙套</option><option>校尉</option><option>刀斧手</option>
             <option>丫鬟</option><option>彩女</option><option>长随官</option>
@@ -219,23 +219,28 @@
             <option>琵琶</option><option>三弦</option><option>笛子</option>
             <option>唢呐</option><option>文二手</option>
           </optgroup>
+          <optgroup label="文乐队">
+            <option>电子琴</option>
+          </optgroup>
           <option value="其他">其他</option>
         </select>
       </div>
 
       <div class="row">
         <div class="field">
-          <label>协议天工资（元/天）</label>
+          <label>协议天工资（元/天） <span class="req">*</span></label>
           <input type="number" id="dailyRate" inputmode="decimal" min="0" step="1" placeholder="如：200" />
           <small style="display:block;margin-top:4px;font-size:12px;color:#8a6d3b;">按天计酬，审核通过后自动作为工资核算项目基准</small>
         </div>
         <div class="field">
-          <label>路费方式</label>
-          <select id="transportType">
-            <option value="">请选择</option>
-            <option value="单趟">单趟</option>
-            <option value="双趟">双趟</option>
-          </select>
+          <label>路费方式（必选；三选一，选中后其余禁用） <span class="req">*</span></label>
+          <div id="transportWrap" style="border:1px solid #d8c9a3;border-radius:8px;padding:10px 12px;">
+            <label style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:14px;color:#333;"><input type="radio" name="trRadio" value="单趟"> 单趟</label>
+            <label style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:14px;color:#333;"><input type="radio" name="trRadio" value="双趟"> 双趟</label>
+            <label style="display:flex;align-items:center;gap:8px;margin:4px 0;font-size:14px;color:#333;"><input type="radio" name="trRadio" value="__custom"> 自定义</label>
+            <input type="text" id="transportCustom" maxlength="30" placeholder="自定义说明，如：来回¥80" style="display:none;width:100%;margin-top:6px;padding:8px 10px;border:1px solid #d8c9a3;border-radius:6px;box-sizing:border-box;">
+            <button type="button" id="transportReset" style="margin-top:8px;padding:4px 12px;font-size:12px;border:1px solid #ccc;background:#f7f4ec;border-radius:4px;cursor:pointer;">重置选择</button>
+          </div>
         </div>
       </div>
 
@@ -379,6 +384,49 @@
         btn.disabled = !cb.checked;
       });
 
+      // ===== 演出入职登记开放时限（v20261013 新规）：演出前10天自动开放，演出结束后24小时关闭 =====
+      (function initWindow() {
+        var url = window.QAXQJT_API_CONFIG.resolveUrl('/v1/performers/self-register/window');
+        fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+          var w = d && d.ok && d.data;
+          if (!w || w.registerOpen !== false) return;
+          var banner = $('qrBanner');
+          banner.style.display = 'block';
+          banner.style.background = '#ffebee';
+          banner.style.border = '2px solid #c62828';
+          banner.style.color = '#c62828';
+          banner.style.fontSize = '14px';
+          banner.style.fontWeight = '600';
+          banner.style.textAlign = 'center';
+          banner.innerHTML = '⛔ ' + (w.message || '入职登记通道暂未开放') + (w.nextOpenDate ? '<br/>下次开放时间：<strong>' + w.nextOpenDate + '</strong> 起' : '');
+          var fc = $('formCard');
+          fc.style.opacity = '0.45';
+          fc.style.filter = 'grayscale(.4)';
+          fc.style.pointerEvents = 'none';
+          fc.style.userSelect = 'none';
+          btn.disabled = true;
+          $('tabRegister').disabled = true;
+        }).catch(function () { /* 网络异常不阻断登记 */ });
+      })();
+
+      // 路费三选一互斥：选中后其余禁用；重置可恢复（Fix-20261011b）
+      (function () {
+        var radios = Array.prototype.slice.call(document.querySelectorAll('input[name="trRadio"]'));
+        var cust = $('transportCustom');
+        var resetBtn = $('transportReset');
+        function applyLock() {
+          var checked = null;
+          for (var i = 0; i < radios.length; i++) { if (radios[i].checked) { checked = radios[i]; break; } }
+          for (var j = 0; j < radios.length; j++) { radios[j].disabled = !!checked && !radios[j].checked; }
+          if (cust) cust.style.display = (checked && checked.value === '__custom') ? 'block' : 'none';
+        }
+        radios.forEach(function (r) { r.addEventListener('change', applyLock); });
+        if (resetBtn) resetBtn.addEventListener('click', function () {
+          radios.forEach(function (r) { r.checked = false; r.disabled = false; });
+          if (cust) { cust.value = ''; cust.style.display = 'none'; }
+        });
+      })();
+
       function showToast(msg, type) {
         var t = $('toast');
         t.textContent = msg;
@@ -402,20 +450,36 @@
         if (!idCardNo) { showToast('请填写身份证号', 'error'); return; }
         if (!/^\d{17}[\dX]$/.test(idCardNo)) { showToast('身份证号格式不正确（应为18位）', 'error'); return; }
         if (!cb.checked) { showToast('请先确认已阅读管理条例', 'error'); return; }
+        // v20261013 必填校验：手机号/行当/协议天工资/路费方式 均为必填
+        var phone = $('phone').value.trim();
+        if (!phone) { showToast('请填写手机号', 'error'); return; }
+        if (!/^1[3-9]\d{9}$/.test(phone)) { showToast('手机号格式不正确（应为11位手机号）', 'error'); return; }
+        var primaryRole = $('primaryRole').value || '';
+        if (!primaryRole) { showToast('请选择行当/岗位', 'error'); return; }
+        var dailyRateRaw = ($('dailyRate').value || '').trim();
+        if (dailyRateRaw === '' || !isFinite(Number(dailyRateRaw)) || Number(dailyRateRaw) <= 0) {
+          showToast('请填写协议天工资（元/天，需大于0）', 'error'); return;
+        }
+        var trSel = (document.querySelector('input[name="trRadio"]:checked') || {}).value || '';
+        if (!trSel) { showToast('请选择路费方式', 'error'); return; }
+        var transportVal = '';
+        if (trSel === '__custom') {
+          transportVal = ($('transportCustom').value || '').trim();
+          if (!transportVal) { showToast('已选择自定义路费，请填写说明', 'error'); return; }
+        } else { transportVal = trSel; }
 
         hideFormError();
         btn.disabled = true;
         btn.textContent = '提交中...';
 
-        var dailyRateRaw = ($('dailyRate').value || '').trim();
         var payload = {
           name: name,
           idCardNo: idCardNo,
           gender: $('gender').value || '',
-          phone: $('phone').value.trim() || '',
-          primaryRole: $('primaryRole').value || '',
-          dailyRate: dailyRateRaw === '' ? '' : Number(dailyRateRaw),
-          transportType: $('transportType').value || '',
+          phone: phone,
+          primaryRole: primaryRole,
+          dailyRate: Number(dailyRateRaw),
+          transportType: transportVal,
           remark: $('remark').value.trim() || '',
           qrToken: window.__QrToken || '',
           regulationsConfirmed: true

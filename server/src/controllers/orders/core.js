@@ -234,6 +234,7 @@ const remove = async ctx => {
     if (__sheets.length) {
       const __sheetIds = __sheets.map(s => s.id);
       await prisma.castSheetCrew.deleteMany({ where: { castSheetId: { in: __sheetIds } } });
+      await prisma.castSheetVersions.deleteMany({ where: { castSheetId: { in: __sheetIds } } });
       await prisma.castSheetsV1.deleteMany({ where: { id: { in: __sheetIds } } });
     }
     await prisma.scheduleVenue.deleteMany({ where: { scheduleId: { in: __schedIds } } });

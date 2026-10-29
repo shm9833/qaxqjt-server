@@ -245,6 +245,9 @@ model PerformersDbV1 {
   agreedSalary         String?   @map("agreed_salary") // 协议工资（备注字段）
   dailyRate            Decimal?  @map("daily_rate") // 协议天工资（元/天），审核后作为工资核算项目基准
   transportType        String?   @map("transport_type") // 单趟/双趟路费
+  travelFeeAmount      Decimal?  @map("travel_fee_amount") // 路费金额（元/趟），配合 transportType 使用
+  loadUnloadParticipate Boolean  @default(true) @map("load_unload_participate") // 是否参加装卸车（true=参加不扣钱；false=不参加扣款）
+  loadUnloadDeduct     Decimal   @default(0) @map("load_unload_deduct") // 不参加装卸车时的扣除金额（元/次或按月，按业务约定）
   regulationsConfirmed Boolean   @default(false) @map("regulations_confirmed") // 是否已阅读员工管理条例
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
@@ -262,6 +265,7 @@ model Play {
   durationMinutes Int?     @map("duration_minutes")
   author          String?
   posterUrl       String?  @map("poster_url")
+  images          String?  // 轮播图 JSON（生产库已有数据，保留字段避免丢失）
   synopsis        String?
   castSummary     String?  @map("cast_summary")
   difficultyLevel String?  @map("difficulty_level")
@@ -749,13 +753,34 @@ model CastSheetsV1 {
   createdBy        String?   @map("created_by")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
+  deletedBy        String?   @map("deleted_by")
   ts               BigInt    @map("_ts")
 
   crew         CastSheetCrew[]
+  versions     CastSheetVersions[]
   schedule     ScheduleV2     @relation(fields: [scheduleId], references: [id])
 
   @@index([scheduleId], map: "idx_cs_schedule")
   @@map("cast_sheets_v1")
+}
+
+// 演员表（阵容）版本历史快照：每次保存/发布/暂停公开/回滚/软删除落一条
+model CastSheetVersions {
+  id            String   @id
+  castSheetId   String   @map("cast_sheet_id")
+  versionNumber Int      @map("version_number")
+  changeType    String   @map("change_type") // create/update/save_draft/republish/unpublish/rollback/delete
+  snapshotJson  String   @map("snapshot_json")
+  note          String?
+  createdBy     String?  @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  ts            BigInt   @map("_ts")
+
+  castSheet CastSheetsV1 @relation(fields: [castSheetId], references: [id])
+
+  @@index([castSheetId], map: "idx_csv_sheet")
+  @@map("cast_sheet_versions")
 }
 
 model CastSheetCrew {
@@ -842,6 +867,8 @@ model WageItemsV1 {
   staffNo               String?        @map("staff_no")
   rankGrade             String?        @map("rank_grade")
   attendanceDays        Decimal?       @map("attendance_days")
+  dailyRate             Decimal?       @map("daily_rate") // 协议天工资（元/天），生产库已有数据
+  wageMode              String?        @map("wage_mode") // 工资模式（daily_pure等），生产库已有数据
   baseWage              Decimal        @default(0) @map("base_wage")
   chiefRoleTotal        Decimal        @default(0) @map("chief_role_total")
   supportingRoleTotal   Decimal        @default(0) @map("supporting_role_total")
@@ -858,9 +885,14 @@ model WageItemsV1 {
   taxDeduct             Decimal        @default(0) @map("tax_deduct")
   otherDeduction        Decimal        @default(0) @map("other_deduction")
   otherDeductionNote    String?        @map("other_deduction_note")
+  orderBreakdown        String?        @map("order_breakdown") // v20261026 订单收入明细 JSON：[{orderId,orderNo,workDays,nightShows,baseShare}]，orderNo=非演出考勤 为无排期兜底桶
+  loanDeduction         Decimal        @default(0) @map("loan_deduction") // 借款抵扣
   grossPay              Decimal        @default(0) @map("gross_pay")
   totalDeduction        Decimal        @default(0) @map("total_deduction")
   netPay                Decimal        @default(0) @map("net_pay")
+  reviewStatus          String         @default("pending") @map("review_status") // pending/approved（v20261027c 批次确认前逐人强制审核）
+  reviewedBy            String?        @map("reviewed_by")
+  reviewedAt            DateTime?      @map("reviewed_at")
   payslipPublished      Boolean        @default(false) @map("payslip_published")
   payslipPublishedAt    DateTime?      @map("payslip_published_at")
   remark                String?
@@ -888,11 +920,14 @@ model FinLedgerV1 {
   offsetAccount       String?   @map("offset_account")
   cashFlowType        String?   @map("cash_flow_type")
   cashFlowAmount      Decimal?  @map("cash_flow_amount")
-  status              String    @default("draft")
+  status              String    @default("draft") // draft/checked/void（void=已作废终态，仅专用端点可达）
   makerAccountId      String?   @map("maker_account_id")
   madeAt              DateTime? @map("made_at")
   checkerAccountId    String?   @map("checker_account_id")
   checkedAt           DateTime? @map("checked_at")
+  voidReason          String?   @map("void_reason") // 作废原因（2-200 字，void 端点必填）
+  voidedAt            DateTime? @map("voided_at")
+  voidedBy            String?   @map("voided_by")
   doubleCheckRequired Boolean   @default(false) @map("double_check_required")
   isReconciled        Boolean   @default(false) @map("is_reconciled")
   reconciledAt        DateTime? @map("reconciled_at")
@@ -906,6 +941,79 @@ model FinLedgerV1 {
   @@index([voucherDate, voucherType], map: "idx_ledger_voucher_date")
   @@index([status, isReconciled], map: "idx_ledger_status_reconciled")
   @@map("fin_ledger_v1")
+}
+
+// 人员差旅路费（v20261015）：每笔路费单据归属到具体演出场次，用于工资条"演出周期路费"专项核算
+model TravelExpenseV1 {
+  id            String   @id
+  expenseNo     String   @unique(map: "idx_te_expenseno") @map("expense_no") // 单据编号
+  performerId   String   @map("performer_id") // 关联人员
+  performerName String   @map("performer_name") // 冗余姓名，便于展示
+  scheduleId    String?  @map("schedule_id") // 关联演出场次（ScheduleV2）
+  orderId       String?  @map("order_id") // 关联订单（冗余，便于追溯）
+  scheduleDate  DateTime? @map("schedule_date") // 演出日期（冗余，便于按周期查询）
+  expenseDate   DateTime @map("expense_date") // 费用发生日期
+  transportType String?  @map("transport_type") // 单趟/双趟/包车等
+  amount        Decimal  @map("amount") // 路费金额（元）
+  status        String   @default("draft") // draft/approved/paid
+  remark        String?
+  createdBy     String?  @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  ts            BigInt   @map("_ts")
+
+  @@index([performerId, expenseDate], map: "idx_te_performer_date")
+  @@index([scheduleId], map: "idx_te_schedule")
+  @@index([orderId], map: "idx_te_order")
+  @@index([expenseDate], map: "idx_te_date")
+  @@map("travel_expense_v1")
+}
+
+// 装卸车登记（v20261028f）：逐条手工登记装车/卸车实际参加情况
+// 扣款口径（用户确认）：不论场次，装车记一次、卸车记一次，按实际参加记录；
+// attend=false 计缺席，工资扣款 = 缺席次数 × 人员 loadUnloadDeduct 单价，仅同步草稿批次
+model LoadUnloadRecordV1 {
+  id            String   @id
+  performerId   String   @map("performer_id") // 关联人员
+  performerName String   @map("performer_name") // 冗余姓名，便于展示
+  recordDate    DateTime @map("record_date") // 装/卸车当天（存当日零点）
+  recordType    String   @map("record_type") // load=装车 / unload=卸车
+  attend        Boolean  @default(true) @map("attend") // true=参加（不扣）；false=缺席（按次扣款）
+  remark        String?
+  createdBy     String?  @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  ts            BigInt   @map("_ts")
+
+  @@unique([performerId, recordDate, recordType], map: "idx_lu_performer_date_type")
+  @@index([recordDate], map: "idx_lu_date")
+  @@map("load_unload_records_v1")
+}
+
+// 员工借款（v20261017）：员工端申请→后台审批→工资抵扣
+model EmployeeLoanV1 {
+  id            String    @id
+  loanNo        String    @unique(map: "idx_el_loanno") @map("loan_no") // 借款单号
+  performerId   String    @map("performer_id") // 借款人
+  performerName String    @map("performer_name") // 冗余姓名
+  amount        Decimal   @map("amount") // 借款金额（元）
+  loanDate      DateTime  @map("loan_date") // 借款日期
+  reason        String?   // 借款事由
+  status        String    @default("pending") // pending/approved/rejected/repaid
+  rejectReason  String?   @map("reject_reason") // 驳回原因
+  repaidAmount  Decimal   @default(0) @map("repaid_amount") // 已还金额
+  repaidDate    DateTime? @map("repaid_date") // 还清日期
+  approvedBy    String?   @map("approved_by") // 审批人
+  approvedAt    DateTime? @map("approved_at") // 审批时间
+  remark        String?
+  createdBy     String?   @map("created_by")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  ts            BigInt    @map("_ts")
+
+  @@index([performerId, loanDate], map: "idx_el_performer_date")
+  @@index([status], map: "idx_el_status")
+  @@map("employee_loans_v1")
 }
 
 model FinInvoicesV1 {
@@ -1046,6 +1154,9 @@ model LeaveApplication {
   approverName   String?   @map("approver_name")
   approvedAt     DateTime? @map("approved_at")
   rejectReason   String?   @map("reject_reason")
+  // v20261028b 补假：批准后可安排补假日期，并自动生成一条 attendanceType=full 的出勤考勤（按出勤计薪）
+  makeupDate     DateTime? @map("makeup_date")
+  makeupAttId    String?   @map("makeup_att_id")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
   ts             BigInt    @map("_ts")

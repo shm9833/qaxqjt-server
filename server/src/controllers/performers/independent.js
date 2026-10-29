@@ -12,7 +12,9 @@ const { BusinessError } = require('../../middleware/error-handler');
 const { audit } = require('../../services/audit-service');
 // 复用工资核算唯一扣罚口径（迟到20元/次、迟到超30分钟扣半日、旷工1天扣两日）
 const { computeAttendancePenalty } = require('../wages');
-const { DATE_FIELDS, toDailyRate, syncPerformerToWageItems, classifyCrew, PRESENT_TYPES } = require('./helpers');
+// 复用工资条订单溯源口径（v20261027c 演出日期天数）计算当月演出天数
+const { _orderBreakdownByStaff } = require('../wages/helpers');
+const { DATE_FIELDS, toDailyRate, syncPerformerToWageItems, classifyCrew, PRESENT_TYPES, normalizeRoleDept, deptOfRoleFull } = require('./helpers');
 
 const list = async ctx => {
   const { skip, take, page, pageSize } = parsePage(ctx.query);
@@ -57,6 +59,10 @@ const detail = async ctx => {
 const update = async ctx => {
   const b = ctx.request.body;
   const patch = {};
+  // 行当/部门任一被提交即整体归一化：修复"部门名写进行当"的历史脏数据，并保证二者一致
+  const roleProvided = b.primaryRole !== undefined;
+  const deptProvided = b.employmentType !== undefined || b.department !== undefined;
+  const nd = normalizeRoleDept(b);
   [
     'staffNo',
     'name',
@@ -64,8 +70,6 @@ const update = async ctx => {
     'phone',
     'idCardNo',
     'rankGrade',
-    'primaryRole',
-    'employmentType',
     'bankAccount',
     'bankName',
     'socialSecurityNo',
@@ -73,11 +77,19 @@ const update = async ctx => {
     'remark',
     'avatarUrl',
     'agreedSalary',
-    'transportType'
+    'transportType',
+    'travelFeeAmount',
+    'loadUnloadParticipate'
   ].forEach(k => {
     if (b[k] !== undefined) patch[k] = b[k];
   });
+  if (roleProvided) patch.primaryRole = nd.role || null;
+  if (deptProvided) patch.employmentType = nd.emp || null;
+  // v20261015：完全保留入职人员自行填写的内容，不做部门↔行当自动对齐/强制映射
   if (b.dailyRate !== undefined) patch.dailyRate = toDailyRate(b.dailyRate);
+  if (b.travelFeeAmount !== undefined) patch.travelFeeAmount = toDailyRate(b.travelFeeAmount);
+  // v20261028f 装卸车扣款单价（元/次）
+  if (b.loadUnloadDeduct !== undefined) patch.loadUnloadDeduct = toDailyRate(b.loadUnloadDeduct) == null ? 0 : toDailyRate(b.loadUnloadDeduct);
   DATE_FIELDS.forEach(k => {
     if (b[k] !== undefined) patch[k] = b[k] ? new Date(b[k]) : null;
   });
@@ -87,6 +99,10 @@ const update = async ctx => {
   await audit({ ctx, module: 'performers', action: 'PERFORMER_UPDATE', targetId: row.id });
   // 人员变更时刷新现有 draft 批次工资条（name/staffNo/rankGrade/dailyRate）
   await syncPerformerToWageItems(row.id, { name: row.name, staffNo: row.staffNo, rankGrade: row.rankGrade, dailyRate: row.dailyRate });
+  // v20261028f 装卸车单价变化后：重算该人员全部草稿工资条（缺席次数 × 新单价）
+  if (b.loadUnloadDeduct !== undefined) {
+    try { await require('../wages/helpers').syncDraftWagesForPerformerAll(row.id); } catch (_) {}
+  }
   return success(ctx, row);
 };
 
@@ -167,9 +183,89 @@ const stats = async ctx => {
 };
 
 
+// v20261028 员工编辑弹窗工资预览（GET /v1/performers/:id/salary-preview?month=YYYY-MM）：
+//   performanceDays = 当月演出天数（复用 _orderBreakdownByStaff 口径：Σ 参与订单演出段 showDays，
+//                     与工资 daily_pure 计薪天一致，弹窗「演出期间天工资合计 = 协议天工资 × 演出天数」）；
+//   unlinkedIncome  = 当月未挂演出订单的收入（已生效 active 且未挂场次 scheduleId 为空的差旅路费合计）。
+// v20261028j（travelgrace1028）修复「已挂场次的报销被排除、显示 ¥0.00 误导」：
+//   travelTotal  = 当月全部已生效（active）差旅报销合计（含挂场次+未挂场次）——与工资「差旅路费」口径一致；
+//   pendingTotal = 当月待审核（pending）报销合计（尚未计入工资，弹窗单独提示）；
+//   travelItems  = 全部报销明细（active+pending，含状态与场次标题）。
+const salaryPreview = async ctx => {
+  const { id } = ctx.params;
+  const month = /^\d{4}-\d{2}$/.test(String(ctx.query.month || '')) ? String(ctx.query.month) : new Date().toISOString().substring(0, 7);
+  const perf = await prisma.performersDbV1.findUnique({ where: { id }, select: { name: true, dailyRate: true } });
+  if (!perf) throw new BusinessError('NOT_FOUND', '人员不存在');
+  const ob = await _orderBreakdownByStaff(month);
+  const mine = ob[id];
+  let performanceDays = 0;
+  if (mine) Object.keys(mine.orders).forEach(oid => { performanceDays += mine.orders[oid].showDays || 0; });
+  const y = Number(month.substring(0, 4));
+  const m = Number(month.substring(5, 7));
+  // v20261028j：一次拉取当月该人员全部报销（active+pending），前端按状态分组展示
+  const allRows = await prisma.travelExpenseV1.findMany({
+    where: {
+      performerId: id,
+      expenseDate: { gte: new Date(Date.UTC(y, m - 1, 1)), lt: new Date(Date.UTC(y, m, 1)) },
+      status: { in: ['active', 'pending'] }
+    },
+    select: { id: true, expenseNo: true, expenseDate: true, amount: true, transportType: true, remark: true, status: true, scheduleId: true },
+    orderBy: { expenseDate: 'asc' }
+  });
+  const unlinkedRows = allRows.filter(r => r.status === 'active' && !r.scheduleId);
+  const unlinkedIncome = Math.round(unlinkedRows.reduce((s, r) => s + (Number(r.amount) || 0), 0) * 100) / 100;
+  // v20261028b：未关联明细行（供编辑弹窗逐笔关联订单）
+  const unlinkedItems = unlinkedRows.map(r => ({
+    id: r.id,
+    expenseNo: r.expenseNo,
+    expenseDate: r.expenseDate ? new Date(r.expenseDate).toISOString().substring(0, 10) : '',
+    amount: Number(r.amount) || 0,
+    transportType: r.transportType || '',
+    remark: r.remark || ''
+  }));
+  // v20261028j：差旅合计（active 含挂场次）+ 待审核合计 + 全明细（关联场次标题）
+  const travelTotal = Math.round(allRows.filter(r => r.status === 'active').reduce((s, r) => s + (Number(r.amount) || 0), 0) * 100) / 100;
+  const pendingTotal = Math.round(allRows.filter(r => r.status === 'pending').reduce((s, r) => s + (Number(r.amount) || 0), 0) * 100) / 100;
+  const schedIds = [...new Set(allRows.map(r => r.scheduleId).filter(Boolean))];
+  const schedMap = {};
+  if (schedIds.length) {
+    const scheds = await prisma.scheduleV2.findMany({
+      where: { id: { in: schedIds } },
+      select: { id: true, playTitle: true, scheduleDateStart: true, venueAddress: true }
+    });
+    for (const s of scheds) {
+      const d = s.scheduleDateStart ? new Date(s.scheduleDateStart).toISOString().substring(0, 10) : '';
+      schedMap[s.id] = `${s.playTitle || ''} ${d} ${s.venueAddress || ''}`.trim();
+    }
+  }
+  const travelItems = allRows.map(r => ({
+    id: r.id,
+    expenseNo: r.expenseNo,
+    expenseDate: r.expenseDate ? new Date(r.expenseDate).toISOString().substring(0, 10) : '',
+    amount: Number(r.amount) || 0,
+    transportType: r.transportType || '',
+    remark: r.remark || '',
+    status: r.status,
+    linkedToSchedule: !!r.scheduleId,
+    scheduleTitle: r.scheduleId ? (schedMap[r.scheduleId] || '（场次已删除）') : ''
+  }));
+  return success(ctx, {
+    performerId: id,
+    month,
+    performanceDays,
+    unlinkedIncome,
+    unlinkedItems,
+    travelTotal,
+    pendingTotal,
+    travelItems,
+    dailyRate: perf.dailyRate != null ? Number(perf.dailyRate) : null
+  });
+};
+
 module.exports = {
   list,
   detail,
   update,
   stats,
+  salaryPreview,
 };

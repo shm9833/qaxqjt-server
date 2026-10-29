@@ -10,6 +10,7 @@ const { success, created, noContent, parsePage, pagedSuccess } = require('../uti
 const { idByCtx, nowMs } = require('../config');
 const { BusinessError } = require('../middleware/error-handler');
 const { audit } = require('../services/audit-service');
+const punchParams = require('../services/punch-params');
 
 // ========== 工具：DB 行 -> API 字段 ==========
 function toApi(row) {
@@ -42,16 +43,9 @@ function _cnYMD(d) {
   return new Date(t + 8 * 3600 * 1000).toISOString().substring(0, 10);
 }
 
+// v20261012：类型映射统一走 services/punch-params（装台/卸台/事故分级新类型与员工端共用一份，避免漂移）
 function _typeText(t) {
-  var map = {
-    full: '全天班', night: '夜班', double: '双班', half: '半天班',
-    rest: '公休', SL: '病假', PL: '事假(限2次/2天)', BL: '丧假', ML: '婚假',
-    AL: '年假', absent: '旷工', rainout: '雨休', leave: '请假(其他)',
-    late: '迟到(30分钟内)', late_over: '迟到超30分钟',
-    early: '早退(30分钟内)', early_over: '早退超30分钟',
-    outing: '外出', study: '学习', business: '出差', injury: '工伤'
-  };
-  return map[t] || t || '';
+  return punchParams.ATT_TYPE_TEXT[t] || t || '';
 }
 
 function _leaveToApi(row) {
@@ -65,6 +59,7 @@ function _leaveToApi(row) {
     dateTo: row.dateTo ? new Date(row.dateTo).toISOString().substring(0, 10) : '',
     totalDays: row.totalDays ? Number(row.totalDays) : 0,
     reason: row.reason || '',
+    makeupDate: row.makeupDate ? new Date(row.makeupDate).toISOString().substring(0, 10) : '',
     approveStatus: row.approveStatus || 'pending',
     approverName: row.approverName || '',
     approvedAt: row.approvedAt ? new Date(row.approvedAt).toISOString() : '',
@@ -113,13 +108,25 @@ const create = async ctx => {
       throw new BusinessError('VALIDATION_ERROR', `${month} 事假已达上限（每月不超过2次且累计不超过2天）；如确有特殊情况，请报团长特批后勾选“超限特批”再提交`);
     }
   }
+  // v20261025 同人同日防重：考勤按天一条，重复录入会双算工资（存 UTC 零点口径，用当日范围查询兼容带时间分量的历史行）
+  const attDate = b.date ? new Date(b.date) : new Date(_cnYMD(new Date()) + 'T00:00:00.000Z');
+  const dup = await prisma.attendanceV1.findFirst({
+    where: {
+      staffId: b.staffId,
+      attendanceDate: { gte: attDate, lt: new Date(attDate.getTime() + 86400000) }
+    },
+    select: { attendanceType: true }
+  });
+  if (dup) {
+    throw new BusinessError('CONFLICT', `该员工已有 ${month} 当日考勤记录（类型：${_typeText(dup.attendanceType)}），不能重复录入`);
+  }
   const data = {
     id: b.id || idByCtx('att', 12, nanoid),
     staffId: b.staffId,
     staffName: b.staffName,
     attendanceMonth: month,
     // 未传日期时按东八区“今天”落库（存为该日 UTC 零点，与显式传 YYYY-MM-DD 的存储口径一致），避免凌晨录入归前一天
-    attendanceDate: b.date ? new Date(b.date) : new Date(_cnYMD(new Date()) + 'T00:00:00.000Z'),
+    attendanceDate: attDate,
     attendanceType: attType,
     scheduleId: b.scheduleId || null,
     checkInTime: b.checkInTime ? new Date(b.checkInTime) : null,
@@ -141,17 +148,46 @@ const update = async ctx => {
   const b = ctx.request.body;
   const exists = await prisma.attendanceV1.findUnique({ where: { id: ctx.params.id } });
   if (!exists) throw new BusinessError('NOT_FOUND', '考勤记录不存在');
-  // 修改为事假时同样校验月度上限（本条记录本身不计入）
-  if (b.type === 'PL' && exists.attendanceType !== 'PL' && b.overLimitApproved !== true) {
+  // v20261025：支持修改日期（重算 attendanceMonth，口径与 create 一致取 YYYY-MM）
+  let newDate = null;
+  let newMonth = exists.attendanceMonth;
+  if (b.date !== undefined && b.date !== null && b.date !== '') {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(b.date))) throw new BusinessError('VALIDATION_ERROR', '日期格式应为 YYYY-MM-DD');
+    newDate = new Date(b.date + 'T00:00:00.000Z');
+    if (isNaN(newDate.getTime())) throw new BusinessError('VALIDATION_ERROR', '日期不合法');
+    newMonth = String(b.date).substring(0, 7);
+  }
+  // v20261025：改日期 → 同人同日查重（排除自身）
+  if (newDate) {
+    const dup = await prisma.attendanceV1.findFirst({
+      where: {
+        id: { not: exists.id },
+        staffId: exists.staffId,
+        attendanceDate: { gte: newDate, lt: new Date(newDate.getTime() + 86400000) }
+      },
+      select: { attendanceType: true }
+    });
+    if (dup) {
+      throw new BusinessError('CONFLICT', `该员工已有 ${newMonth} 当日考勤记录（类型：${_typeText(dup.attendanceType)}），不能重复录入`);
+    }
+  }
+  // 修改为事假（或事假记录跨月移动）时校验月度上限（本条记录本身不计入）
+  const monthChanged = !!(newDate && newMonth !== exists.attendanceMonth);
+  const targetType = b.type || exists.attendanceType;
+  if (targetType === 'PL' && b.overLimitApproved !== true && (exists.attendanceType !== 'PL' || monthChanged)) {
     const cnt = await prisma.attendanceV1.count({
-      where: { staffId: exists.staffId, attendanceMonth: exists.attendanceMonth, attendanceType: 'PL' }
+      where: { id: { not: exists.id }, staffId: exists.staffId, attendanceMonth: newMonth, attendanceType: 'PL' }
     });
     if (cnt + 1 > 2) {
-      throw new BusinessError('VALIDATION_ERROR', `${exists.attendanceMonth} 事假已达上限（每月不超过2次且累计不超过2天）；如确有特殊情况，请报团长特批后勾选“超限特批”再提交`);
+      throw new BusinessError('VALIDATION_ERROR', `${newMonth} 事假已达上限（每月不超过2次且累计不超过2天）；如确有特殊情况，请报团长特批后勾选“超限特批”再提交`);
     }
   }
   const data = {};
   if (b.type) data.attendanceType = b.type;
+  if (newDate) {
+    data.attendanceDate = newDate;
+    data.attendanceMonth = newMonth;
+  }
   if (b.checkInTime) data.checkInTime = new Date(b.checkInTime);
   if (b.checkOutTime) data.checkOutTime = new Date(b.checkOutTime);
   if (b.workHours !== undefined) data.workHours = b.workHours ? Number(b.workHours) : null;
@@ -237,6 +273,8 @@ const leaveApprove = async ctx => {
   const b = ctx.request.body;
   const exists = await prisma.leaveApplication.findUnique({ where: { id: ctx.params.id } });
   if (!exists) throw new BusinessError('NOT_FOUND', '请假申请不存在');
+  // v20261017f：员工已撤回的请假单不允许再审批（避免管理侧列表残留导致误批）
+  if (exists.approveStatus === 'cancelled') throw new BusinessError('VALIDATION_ERROR', '该请假单已被申请人撤回，不能审批');
   const row = await prisma.leaveApplication.update({
     where: { id: ctx.params.id },
     data: {
@@ -248,6 +286,79 @@ const leaveApprove = async ctx => {
     }
   });
   try { await audit({ ctx, module: 'attendance', action: 'LEAVE_APPROVE', targetId: row.id, detail: { staffId: row.staffId, status: row.approveStatus } }); } catch (_) {}
+  return success(ctx, _leaveToApi(row));
+};
+
+// v20261017g：删除请假单（仅限已驳回/已撤回，供 E2E 测试数据自动清理及日常纠错）
+const leaveRemove = async ctx => {
+  const exists = await prisma.leaveApplication.findUnique({ where: { id: ctx.params.id } });
+  if (!exists) throw new BusinessError('NOT_FOUND', '请假申请不存在');
+  if (['rejected', 'cancelled'].indexOf(exists.approveStatus) < 0) {
+    throw new BusinessError('VALIDATION_ERROR', '仅已驳回/已撤回的请假单可删除');
+  }
+  await prisma.leaveApplication.delete({ where: { id: exists.id } });
+  try { await audit({ ctx, module: 'attendance', action: 'LEAVE_DELETE', targetId: exists.id, detail: { staffId: exists.staffId, status: exists.approveStatus, reason: exists.reason } }); } catch (_) {}
+  return success(ctx, { id: exists.id });
+};
+
+// ========== 补假（v20261028b）==========
+// 已批准的请假单可安排补假日期：自动生成一条 attendanceType=full 的出勤考勤（按出勤计薪，
+// 员工补上班一天拿一天天工资，弥补请假扣款；请假记录与扣款口径不变）。
+// 幂等：重复调用=改期（先删旧补假考勤再建新）；leaveMakeupCancel 取消补假并删考勤。
+const _makeupRemarkPrefix = '补假#';
+
+const leaveMakeup = async ctx => {
+  const b = ctx.request.body;
+  const exists = await prisma.leaveApplication.findUnique({ where: { id: ctx.params.id } });
+  if (!exists) throw new BusinessError('NOT_FOUND', '请假申请不存在');
+  if (exists.approveStatus !== 'approved') throw new BusinessError('VALIDATION_ERROR', '仅已批准的请假单可安排补假');
+  if (!b.makeupDate || !/^\d{4}-\d{2}-\d{2}$/.test(String(b.makeupDate))) throw new BusinessError('VALIDATION_ERROR', '补假日期格式应为 YYYY-MM-DD');
+  const makeupDay = new Date(String(b.makeupDate) + 'T00:00:00.000Z');
+  if (isNaN(makeupDay.getTime())) throw new BusinessError('VALIDATION_ERROR', '补假日期无效');
+  const dateFrom = exists.dateFrom ? new Date(exists.dateFrom).toISOString().substring(0, 10) : '';
+  const dateTo = exists.dateTo ? new Date(exists.dateTo).toISOString().substring(0, 10) : '';
+  // 改期：删除旧补假考勤（带补假#前缀防误删人工记录）
+  if (exists.makeupAttId) {
+    await prisma.attendanceV1.deleteMany({ where: { id: exists.makeupAttId, remark: { startsWith: _makeupRemarkPrefix } } });
+  }
+  // 同人同日防重：补假目标日已有其他考勤记录时拒绝（避免双份计薪）
+  const dup = await prisma.attendanceV1.findFirst({ where: { staffId: exists.staffId, attendanceDate: makeupDay, id: { not: exists.makeupAttId || '' } } });
+  if (dup) throw new BusinessError('CONFLICT', '该员工 ' + String(b.makeupDate) + ' 已有考勤记录（类型：' + dup.attendanceType + '），请选择其他补假日期');
+  const att = await prisma.attendanceV1.create({
+    data: {
+      id: idByCtx('att', 12, nanoid),
+      staffId: exists.staffId,
+      staffName: exists.staffName,
+      attendanceMonth: String(b.makeupDate).substring(0, 7),
+      attendanceDate: makeupDay,
+      attendanceType: 'full',
+      remark: _makeupRemarkPrefix + exists.id + '（原请假 ' + dateFrom + '~' + dateTo + '）',
+      approveStatus: 'approved',
+      approvedBy: ctx.state.user ? (ctx.state.user.username || null) : null,
+      ts: nowMs()
+    }
+  });
+  const row = await prisma.leaveApplication.update({
+    where: { id: exists.id },
+    data: { makeupDate: makeupDay, makeupAttId: att.id }
+  });
+  try { await audit({ ctx, module: 'attendance', action: 'LEAVE_MAKEUP', targetId: row.id, detail: { staffId: row.staffId, makeupDate: String(b.makeupDate), attId: att.id } }); } catch (_) {}
+  return success(ctx, _leaveToApi(row));
+};
+
+// 取消补假：删除补假考勤并清空补假日期（请假单恢复为未安排补假状态）
+const leaveMakeupCancel = async ctx => {
+  const exists = await prisma.leaveApplication.findUnique({ where: { id: ctx.params.id } });
+  if (!exists) throw new BusinessError('NOT_FOUND', '请假申请不存在');
+  if (!exists.makeupDate && !exists.makeupAttId) throw new BusinessError('VALIDATION_ERROR', '该请假单未安排补假');
+  if (exists.makeupAttId) {
+    await prisma.attendanceV1.deleteMany({ where: { id: exists.makeupAttId, remark: { startsWith: _makeupRemarkPrefix } } });
+  }
+  const row = await prisma.leaveApplication.update({
+    where: { id: exists.id },
+    data: { makeupDate: null, makeupAttId: null }
+  });
+  try { await audit({ ctx, module: 'attendance', action: 'LEAVE_MAKEUP_CANCEL', targetId: row.id, detail: { staffId: row.staffId } }); } catch (_) {}
   return success(ctx, _leaveToApi(row));
 };
 
@@ -281,11 +392,19 @@ const IMPORT_TYPE_ALIASES = {
   '事假': 'PL', '病假': 'SL', '丧假': 'BL', '婚假': 'ML', '年假': 'AL',
   '迟到': 'late', '迟到超30分钟': 'late_over', '早退': 'early', '早退超30分钟': 'early_over',
   '旷工': 'absent', '缺勤': 'absent', '请假': 'leave', '外出': 'outing',
-  '学习': 'study', '出差': 'business', '工伤': 'injury'
+  '学习': 'study', '出差': 'business', '工伤': 'injury',
+  // v20261012 打卡新规：装台/卸台日 + 事故分级（代打卡查实按三级）
+  '装台': 'stage_in', '装台日': 'stage_in',
+  '卸台': 'stage_out', '卸台日': 'stage_out',
+  '事故一级': 'accident_l1', '一级事故': 'accident_l1', '一级': 'accident_l1',
+  '事故二级': 'accident_l2', '二级事故': 'accident_l2', '二级': 'accident_l2',
+  '事故三级': 'accident_l3', '三级事故': 'accident_l3', '三级': 'accident_l3',
+  '代打卡': 'accident_l3', '代打卡查实': 'accident_l3'
 };
 const IMPORT_TYPES = ['full', 'night', 'double', 'half', 'rest', 'SL', 'PL', 'BL', 'ML', 'AL',
   'absent', 'rainout', 'leave', 'late', 'late_over', 'early', 'early_over',
-  'outing', 'study', 'business', 'injury'];
+  'outing', 'study', 'business', 'injury',
+  'stage_in', 'stage_out', 'accident_l1', 'accident_l2', 'accident_l3'];
 
 const importRecords = async ctx => {
   const b = ctx.request.body || {};
@@ -419,7 +538,7 @@ const batchPunch = async ctx => {
     throw new BusinessError('VALIDATION_ERROR', 'punchDate 日期不合法');
   }
 
-  // punchTime 可选，默认当前时间，格式 HH:MM
+  // punchTime 可选，默认当前时间，格式 HH:MM（东八区时间）
   let punchHour = 9, punchMin = 0;
   const pt = String(b.punchTime || '').trim();
   if (pt) {
@@ -428,6 +547,7 @@ const batchPunch = async ctx => {
     punchHour = Number(m[1]); punchMin = Number(m[2]);
     if (punchHour > 23 || punchMin > 59) throw new BusinessError('VALIDATION_ERROR', 'punchTime 时间不合法');
   }
+  // 管理员补打卡输入的是东八区时间，需转 UTC 存储（与员工端自助打卡口径一致）
 
   // 补卡类型：in=仅上班，out=仅下班，both=上班+下班（默认）
   const punchType = String(b.punchType || 'both').trim();
@@ -465,7 +585,7 @@ const batchPunch = async ctx => {
   });
   const existSet = new Set(existing.map(r => r.performerId + '|' + r.punchType));
 
-  const punchTime = new Date(punchDate + 'T' + String(punchHour).padStart(2, '0') + ':' + String(punchMin).padStart(2, '0') + ':00.000Z');
+  const punchTime = new Date(punchDate + 'T' + String(punchHour).padStart(2, '0') + ':' + String(punchMin).padStart(2, '0') + ':00+08:00');
   const ts = BigInt(nowMs());
   let created = 0, skipped = 0;
   const failed = [];
@@ -499,6 +619,127 @@ const batchPunch = async ctx => {
   return success(ctx, { created, skipped, failed });
 };
 
+// ========== 按结算区间多员工批量手工考勤（POST /v1/attendance/batch-entry，v20261025）==========
+// 前端把「多选员工 × 起止日期区间 × 统一类型」展开为 items 一次提交；≤500条/次。
+// 同人同日已有（库中或批内）→ skipped（无强制覆盖语义）；PL 月度上限超限 → failed 逐条报原因，不整批中断。
+const BATCH_ENTRY_LIMIT = 500;
+const batchEntry = async ctx => {
+  const b = ctx.request.body || {};
+  const items = Array.isArray(b.items) ? b.items : [];
+  if (!items.length) throw new BusinessError('VALIDATION_ERROR', 'items 必填（1-500 条）');
+  if (items.length > BATCH_ENTRY_LIMIT) {
+    throw new BusinessError('VALIDATION_ERROR', `单次最多 ${BATCH_ENTRY_LIMIT} 条（当前 ${items.length} 条），请分批提交`);
+  }
+
+  // 1) 逐条静态校验（staffId / 日期格式 / 类型枚举），失败计入 failed 不中断
+  const failed = [];
+  const valid = [];
+  const idRefs = new Set();
+  items.forEach((it, i) => {
+    it = it || {};
+    const sid = String(it.staffId || '').trim();
+    const wd = String(it.date || '').trim();
+    const type = String(it.type || '').trim();
+    if (!sid) { failed.push({ index: i, reason: '缺少 staffId' }); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(wd)) { failed.push({ index: i, reason: `日期非法（需 YYYY-MM-DD）: ${wd || '(空)'}` }); return; }
+    const d = new Date(wd + 'T00:00:00.000Z');
+    if (isNaN(d.getTime()) || d.toISOString().substring(0, 10) !== wd) { failed.push({ index: i, reason: `日期不存在: ${wd}` }); return; }
+    if (!IMPORT_TYPES.includes(type)) { failed.push({ index: i, reason: `状态非法: ${type || '(空)'}` }); return; }
+    idRefs.add(sid);
+    valid.push({ index: i, staffId: sid, workDate: wd, type, remark: String(it.remark || '').trim() || null });
+  });
+
+  // 2) 人员解析（staffId → 姓名）
+  const perfs = idRefs.size ? await prisma.performersDbV1.findMany({
+    where: { id: { in: Array.from(idRefs) } },
+    select: { id: true, name: true }
+  }) : [];
+  const perfMap = new Map(perfs.map(p => [p.id, p]));
+
+  // 3) 同人同日去重：库中已有 + 批内重复 → skipped
+  const existKeys = new Set();
+  if (valid.length) {
+    const existed = await prisma.attendanceV1.findMany({
+      where: {
+        staffId: { in: Array.from(new Set(valid.map(r => r.staffId))) },
+        attendanceDate: { in: Array.from(new Set(valid.map(r => new Date(r.workDate)))) }
+      },
+      select: { staffId: true, attendanceDate: true }
+    });
+    existed.forEach(e => existKeys.add(e.staffId + '|' + new Date(e.attendanceDate).toISOString().substring(0, 10)));
+  }
+
+  // 4) PL 月度上限预检（每员工每月 ≤2 条，含库中已有 PL 计数）
+  const plCounts = {};
+  const plReq = valid.filter(r => r.type === 'PL');
+  if (plReq.length) {
+    const plExist = await prisma.attendanceV1.findMany({
+      where: {
+        staffId: { in: Array.from(new Set(plReq.map(r => r.staffId))) },
+        attendanceType: 'PL',
+        attendanceMonth: { in: Array.from(new Set(plReq.map(r => r.workDate.substring(0, 7)))) }
+      },
+      select: { staffId: true, attendanceMonth: true }
+    });
+    plExist.forEach(e => { const k = e.staffId + '|' + e.attendanceMonth; plCounts[k] = (plCounts[k] || 0) + 1; });
+  }
+
+  // 5) 串行写入（与 importRecords 同模式）
+  const approvedBy = ctx.state.user ? ctx.state.user.username : null;
+  const ts = nowMs();
+  let created = 0;
+  let skipped = 0;
+  const batchKeys = new Set();
+  for (const r of valid) {
+    const p = perfMap.get(r.staffId);
+    if (!p) { failed.push({ index: r.index, reason: `人员不存在: ${r.staffId}` }); continue; }
+    const key = r.staffId + '|' + r.workDate;
+    if (existKeys.has(key) || batchKeys.has(key)) { skipped++; continue; }
+    if (r.type === 'PL') {
+      const mk = r.staffId + '|' + r.workDate.substring(0, 7);
+      const used = (plCounts[mk] || 0) + 1;
+      if (used > 2) {
+        failed.push({ index: r.index, reason: `${r.workDate.substring(0, 7)} 事假已达上限（每月不超过2次且累计不超过2天），需团长特批` });
+        continue;
+      }
+      plCounts[mk] = used;
+    }
+    batchKeys.add(key);
+    try {
+      await prisma.attendanceV1.create({
+        data: {
+          id: idByCtx('att', 12, nanoid),
+          staffId: r.staffId,
+          staffName: p.name,
+          attendanceMonth: r.workDate.substring(0, 7),
+          attendanceDate: new Date(r.workDate), // 与 create() 口径一致：YYYY-MM-DD 存 UTC 零点
+          attendanceType: r.type,
+          remark: r.remark,
+          approveStatus: 'approved',
+          approvedBy,
+          ts
+        }
+      });
+      created++;
+    } catch (e) {
+      failed.push({ index: r.index, reason: '写入失败: ' + ((e && e.message) || e) });
+    }
+  }
+  try { await audit({ ctx, module: 'attendance', action: 'ATTENDANCE_BATCH_ENTRY', detail: { created, skipped, failedCount: failed.length } }); } catch (_) {}
+  return success(ctx, { created, skipped, failed });
+};
+
+// ========== 打卡参数（v20261012 打卡新规：窗口/基准/迟到罚款/事故分级，存 Setting 表）==========
+const getPunchParamsCtrl = async ctx => {
+  return success(ctx, await punchParams.getPunchParams());
+};
+
+const savePunchParamsCtrl = async ctx => {
+  const saved = await punchParams.savePunchParams(ctx.request.body, ctx.state.user ? ctx.state.user.username : null);
+  try { await audit({ ctx, module: 'attendance', action: 'PUNCH_PARAMS_UPDATE', targetId: 'punch_params', detail: { params: saved } }); } catch (_) {}
+  return success(ctx, saved);
+};
+
 module.exports = {
   list,
   detail,
@@ -508,8 +749,14 @@ module.exports = {
   leaveList,
   leaveCreate,
   leaveApprove,
+  leaveRemove,
+  leaveMakeup,
+  leaveMakeupCancel,
   stats,
   importRecords,
   batchPunch,
+  batchEntry,
+  getPunchParamsCtrl,
+  savePunchParamsCtrl,
   toApi
 };
