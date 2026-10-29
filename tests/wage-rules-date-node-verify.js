@@ -22,7 +22,7 @@ async function freshPage(browser, testNow) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   if (testNow) await ctx.addInitScript(`window.__WAGE_TEST_NOW = '${testNow}';`);
   const page = await ctx.newPage();
-  const lr = await page.request.post(BASE + '/v1/auth/login', { data: { username: 'admin', password: '***REMOVED***', captcha: '', captchaId: '' } });
+  const lr = await page.request.post(BASE + '/v1/auth/login', { data: { username: 'admin', password: process.env.QAXQJT_ADMIN_PASS || '', captcha: '', captchaId: '' } });
   const tok = (await lr.json()).data.accessToken;
   await page.goto(BASE + '/admin/login.html', { waitUntil: 'domcontentloaded' });
   await page.evaluate(({ at }) => {

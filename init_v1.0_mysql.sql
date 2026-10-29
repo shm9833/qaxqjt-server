@@ -1202,7 +1202,8 @@ ON DUPLICATE KEY UPDATE
   _ts = UNIX_TIMESTAMP()*1000;
 
 -- 2.3.2 初始超级管理员（M-14 · P0-7 force_pwd_change=1）
--- password_hash 占位：上线前必改！生成方法：node -e "console.log(require('bcrypt').hashSync('***REMOVED***', 12))"
+-- password_hash 占位：上线前必改！生成方法（密码经环境变量传入，勿写入本文件）：
+-- node -e "console.log(require('bcrypt').hashSync(process.env.QAXQJT_ADMIN_PASS || '', 12))"
 INSERT INTO accounts_v2
   (id, username, password_hash, real_name, role, phone, email, status, force_pwd_change, created_by, _ts)
 VALUES

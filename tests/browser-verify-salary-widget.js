@@ -5,7 +5,7 @@ const { chromium } = require('playwright-core');
 
 const BASE = 'http://1.14.106.173';
 const USER = 'admin';
-const PASS = '***REMOVED***';
+const PASS = process.env.QAXQJT_ADMIN_PASS || (() => { console.error('缺少环境变量 QAXQJT_ADMIN_PASS（后台管理员密码）'); process.exit(1); })();
 
 async function main() {
   const browser = await chromium.launch({ 

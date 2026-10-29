@@ -23,7 +23,7 @@ const path = require('path');
 const HOST = '1.14.106.173';
 const PORT = 80;
 const USERNAME = 'admin';
-const PASSWORD = '***REMOVED***';
+const PASSWORD = process.env.QAXQJT_ADMIN_PASS || (() => { console.error('缺少环境变量 QAXQJT_ADMIN_PASS（后台管理员密码）'); process.exit(1); })();
 const ROUND = 2;
 const n2 = v => Math.round((Number(v) || 0) * 100) / 100;
 const eq = (a, b) => Math.abs(n2(a) - n2(b)) <= 0.01;

@@ -16,7 +16,7 @@ const HOST = '1.14.106.173';
 const FIN_URL = 'http://' + HOST + '/admin/finance.html';
 const CHROMIUM_EXE = 'c:\\Users\\hp\\AppData\\Local\\ms-playwright\\chromium-1187\\chrome-win\\chrome.exe';
 const USERNAME = 'admin';
-const PASSWORD = '***REMOVED***';
+const PASSWORD = process.env.QAXQJT_ADMIN_PASS || (() => { console.error('缺少环境变量 QAXQJT_ADMIN_PASS（后台管理员密码）'); process.exit(1); })();
 
 const CASES = [
   { role: 'super_admin',   expectBtn: true  },

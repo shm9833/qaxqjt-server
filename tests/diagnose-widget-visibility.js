@@ -17,7 +17,7 @@ const BASE = 'http://1.14.106.173';
     // 登录
     console.log('正在登录...');
     const lr = await page.request.post(BASE + '/v1/auth/login', { 
-      data: { username: 'admin', password: '***REMOVED***', captcha: '', captchaId: '' } 
+      data: { username: 'admin', password: process.env.QAXQJT_ADMIN_PASS || '', captcha: '', captchaId: '' }
     });
     const loginRes = await lr.json();
     const token = loginRes.data?.accessToken;
