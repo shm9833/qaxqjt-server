@@ -767,6 +767,7 @@
               <button class="btn btn-secondary btn-sm" id="attBtnLuReg" title="登记装车/卸车参加情况；缺席计次 × 人员单价 = 工资扣款，保存后草稿工资自动重算">🚚 装卸车登记</button>
               <button class="btn btn-warning btn-sm" id="attBtnBatchConfirm">✅ 确认批次</button>
               <button class="btn btn-danger btn-sm" id="attBtnBatchPost">📤 过账批次</button>
+              <button class="btn btn-secondary btn-sm" id="attBtnBatchUnpost" title="发放错误修正：已确认/已过账批次撤回为草稿（过账批次同步删除草稿态台账凭证），修正数据后重新审核→确认→过账">↩️ 撤回批次</button>
               <button class="btn btn-primary btn-sm" id="attBtnExportCsv">📊 导出工资表 CSV</button>
               <button class="btn btn-gold btn-sm" id="attBtnBatchPrint" onclick="window.print()">🖨️ 批量打印工资条</button>
               <button class="btn btn-danger btn-sm" id="attBtnFinanceAll">💼 整月工资→财务台账</button>
@@ -1040,6 +1041,7 @@
                 <div class="param-item">
                   <label>事假天数（例：2）</label>
                   <input type="number" min="0" step="0.5" class="form-control" id="manualLeave" value="0" />
+                  <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;margin-top:4px;cursor:pointer;"><input type="checkbox" id="manualSpecial" /> 🪪 团长特批（事假超 2 天时勾选豁免）</label>
                 </div>
                 <div class="param-item">
                   <label>旷工天数</label>
@@ -1098,6 +1100,7 @@
                     <select class="form-control" id="baType"></select>
                   </div>
                   <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;padding-bottom:8px;cursor:pointer;"><input type="checkbox" id="baSkipExist" checked /> 跳过已有</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;padding-bottom:8px;cursor:pointer;"><input type="checkbox" id="baSpecial" /> 🪪 特批</label>
                   <button class="btn btn-success" id="baAddBtn">➕ 批量录入</button>
                 </div>
                 <div style="margin-top:8px;font-size:.8rem;color:var(--text-light);">起止日期范围内每天生成一条考勤；同一员工同一天已有记录时自动跳过（可取消勾选强制录入）。事假每月超 2 次需团长特批，超限的会提交失败并在结果中逐条报告。</div>
@@ -1115,7 +1118,7 @@
                 <div id="bmePerfList" style="max-height:240px;overflow-y:auto;border:1px solid var(--border-light);border-radius:10px;padding:8px;">
                   <p style="color:var(--text-light);text-align:center;padding:12px;">点击「加载员工」按钮加载演职人员列表</p>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr auto;gap:10px;align-items:end;margin-top:10px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr auto auto;gap:10px;align-items:end;margin-top:10px;">
                   <div>
                     <label style="font-size:.82rem;font-weight:600;">结算开始日期</label>
                     <input type="date" class="form-control" id="bmeFrom" />
@@ -1128,6 +1131,7 @@
                     <label style="font-size:.82rem;font-weight:600;">统一考勤类型</label>
                     <select class="form-control" id="bmeType"></select>
                   </div>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;padding-bottom:8px;cursor:pointer;"><input type="checkbox" id="bmeSpecial" /> 🪪 特批</label>
                   <button class="btn btn-success" id="bmeSubmitBtn">➕ 批量录入（已选 <span id="bmeSelCount">0</span> 人）</button>
                 </div>
                 <div style="margin-top:8px;font-size:.8rem;color:var(--text-light);">为所选员工在结算区间内逐日生成同类型考勤；同一员工同一天已有记录自动跳过；事假每月超 2 次需团长特批（超限的逐条报失败，不影响其余提交）。区间×人数过大时自动分批提交。</div>
@@ -1597,6 +1601,7 @@
         <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">备注</label>
         <input type="text" class="form-control" id="attEditRemark" maxlength="200" placeholder="选填" />
       </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer;"><input type="checkbox" id="attEditSpecial" /> 🪪 团长特批（改事假且该月已超 2 次/2 天时勾选豁免）</label>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
       <button class="btn btn-outline btn-sm" id="attEditCancelBtn">✕ 取消</button>
@@ -1606,7 +1611,7 @@
 </div>
 
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
-<script src="../js/admin-pages/attendance.js?v=20261029c"></script>
+<script src="../js/admin-pages/attendance.js?v=20261030a"></script>
 
 
 <!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->

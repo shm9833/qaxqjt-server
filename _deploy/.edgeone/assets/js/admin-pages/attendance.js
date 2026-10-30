@@ -1309,7 +1309,7 @@ function __pLog(module,event,extra){
       var batches = await listBatches(month);
       var confirmed = batches.filter(function(b){ return b.status === 'confirmed'; });
       if(!confirmed.length){ __T('⚠️ '+month+' 无已确认批次可过账（请先「确认批次」）','info'); return; }
-      if(!confirm('确认过账 '+month+' 的 '+confirmed.length+' 个批次？\n过账后将生成财务台账凭证，不可撤销。')) return;
+      if(!confirm('确认过账 '+month+' 的 '+confirmed.length+' 个批次？\n过账后将生成财务台账凭证；如发放有误可后续「↩️ 撤回批次」修正后重新发放。')) return;
       var ok = 0, fail = 0;
       for(var i=0;i<confirmed.length;i++){
         try {
@@ -1321,7 +1321,31 @@ function __pLog(module,event,extra){
       await load(month);
     }
 
-    return { load: load, generate: generate, currentMonth: currentMonth, confirmBatch: confirmBatch, postBatch: postBatch, listBatches: listBatches };
+    // v20261029i 撤回批次：confirmed/posted → draft（发放错误修正闭环：撤回 → 修正 → 审核 → 重新发放）
+    // posted 撤回时后端同步删除本批次 draft 台账凭证（已复核凭证会被拒绝，交财务处理）
+    async function unpostBatch(month){
+      month = month || currentMonth();
+      var API = window.QAXQJT_API;
+      if(!API){ __T('⚠️ 接口未就绪','error'); return; }
+      var batches = await listBatches(month);
+      var locked = batches.filter(function(b){ return b.status === 'confirmed' || b.status === 'posted'; });
+      if(!locked.length){ __T('⚠️ '+month+' 无已确认/已过账批次可撤回','info'); return; }
+      var postedCnt = locked.filter(function(b){ return b.status === 'posted'; }).length;
+      if(!confirm('撤回 '+month+' 的 '+locked.length+' 个批次？\n'
+        + (postedCnt ? ('其中 '+postedCnt+' 个已过账批次将同步删除对应财务台账凭证（草稿态）。\n') : '')
+        + '撤回后批次回到草稿态，可修正工资数据后重新「✅ 审核 → 确认 → 过账」。')) return;
+      var ok = 0, fail = 0, errs = [];
+      for(var i=0;i<locked.length;i++){
+        try {
+          await API.post((QAXQJT_PATHS.WAGE_BATCH_UNPOST || function (i) { return '/v1/wage-batches/' + i + '/unpost'; })(locked[i].id), {});
+          ok++;
+        } catch(e){ fail++; errs.push((locked[i].batchNo||locked[i].id)+':'+((e&&e.message)||'')); }
+      }
+      __T((fail ? '⚠️ 部分撤回失败' : '↩️ 已撤回')+'：成功 '+ok+' 个'+(fail?',失败 '+fail+' 个（'+errs.slice(0,2).join(';')+'）':''), fail?'error':'success',6000);
+      await load(month);
+    }
+
+    return { load: load, generate: generate, currentMonth: currentMonth, confirmBatch: confirmBatch, postBatch: postBatch, unpostBatch: unpostBatch, listBatches: listBatches };
   })();
 
   // ====== 考勤记录管理（v20261002b：批量录入 / 批量改类型 / 批量删除，走 /v1/attendance 真实接口） ======
@@ -1463,7 +1487,7 @@ function __pLog(module,event,extra){
         var ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
         if(skipExist&&exist[ds]){ skip++; continue; }
         try{
-          await api.post((QAXQJT_PATHS.ATTENDANCE || '/v1/attendance'),{ staffId:sid, staffName:sname, month:ds.substring(0,7), date:ds, type:type, approveStatus:'approved' });
+          await api.post((QAXQJT_PATHS.ATTENDANCE || '/v1/attendance'),{ staffId:sid, staffName:sname, month:ds.substring(0,7), date:ds, type:type, approveStatus:'approved', overLimitApproved: (el('baSpecial')?el('baSpecial').checked:false) });
           ok++;
         }catch(e){ fail++; lastErr=(e&&e.message)||String(e); }
       }
@@ -1531,7 +1555,7 @@ function __pLog(module,event,extra){
       var days=Math.round((td-fd)/86400000)+1;
       if(!(days>0)||days>62){ __T('⚠️ 结算区间无效或过长（最长 62 天），请分段录入','warning'); return; }
       var total=ids.length*days;
-      if(!confirm('将为 '+ids.length+' 名员工在 '+from+' ~ '+to+'（共 '+days+' 天）逐日录入「'+(TYPE_NAMES[type]||type)+'」，合计 '+total+' 条。\n同一员工同一天已有记录自动跳过；事假每月超 2 次的逐条报失败。\n确认提交？')) return;
+      if(!confirm('将为 '+ids.length+' 名员工在 '+from+' ~ '+to+'（共 '+days+' 天）逐日录入「'+(TYPE_NAMES[type]||type)+'」，合计 '+total+' 条。\n同一员工同一天已有记录自动跳过；事假每月超 2 次需勾选「🪪 特批」豁免，否则超限条目逐条报失败。\n确认提交？')) return;
       var items=[];
       for(var d=new Date(fd); d<=td; d.setDate(d.getDate()+1)){
         var ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -1544,7 +1568,7 @@ function __pLog(module,event,extra){
         var CH=500;
         for(var off=0; off<items.length; off+=CH){
           var part=items.slice(off,off+CH);
-          var res=await api.post((QAXQJT_PATHS.ATTENDANCE||'/v1/attendance')+'/batch-entry',{ items:part });
+          var res=await api.post((QAXQJT_PATHS.ATTENDANCE||'/v1/attendance')+'/batch-entry',{ items:part, overLimitApproved: (el('bmeSpecial')?el('bmeSpecial').checked:false) });
           if(res&&res.data&&typeof res.data==='object'&&!Array.isArray(res.data)) res=res.data;
           if(res&&typeof res==='object'){
             created+=res.created||0; skipped+=res.skipped||0;
@@ -1589,7 +1613,7 @@ function __pLog(module,event,extra){
       var btn=el('attEditSaveBtn'); var old=btn?btn.innerHTML:'';
       if(btn){ btn.disabled=true; btn.innerHTML='⏳ 保存中...'; }
       try{
-        await api.patch((QAXQJT_PATHS.ATTENDANCE_BY_ID||function(i){ return '/v1/attendance/'+i; })(_editId),{ date:d, type:t, remark:rm });
+        await api.patch((QAXQJT_PATHS.ATTENDANCE_BY_ID||function(i){ return '/v1/attendance/'+i; })(_editId),{ date:d, type:t, remark:rm, overLimitApproved: (el('attEditSpecial')?el('attEditSpecial').checked:false) });
         __T('✅ 考勤记录已更新','success');
         closeAttEdit();
         await load();
@@ -1684,7 +1708,7 @@ function __pLog(module,event,extra){
         return;
       }
       if(!confirm('将为「'+sname+'」补录 '+month+' 考勤：\n全天班 '+fullDays+' 天、夜班 '+nights+' 天、事假 '+leaveDays+' 天、旷工 '+absentDays+
-        ' 天（共 '+total+' 条，自动跳过已有记录日期）。\n注意：事假每月不超过 2 天，超限将被后端拒绝（需团长特批）。\n确认提交？')) return;
+        ' 天（共 '+total+' 条，自动跳过已有记录日期）。\n注意：事假每月不超过 2 天，超限需勾选上方「🪪 团长特批」豁免，否则将被拒绝。\n确认提交？')) return;
       var btn=el('manualAddBtn'); var oldHtml=btn?btn.innerHTML:'';
       _manualBusy=true; if(btn){ btn.disabled=true; btn.innerHTML='⏳ 提交中...'; }
       var ok=0,fail=0,lastErr='';
@@ -1693,7 +1717,8 @@ function __pLog(module,event,extra){
           try{
             await api.post((QAXQJT_PATHS.ATTENDANCE || '/v1/attendance'),{
               staffId:sid, staffName:sname, month:month, date:dates[i], type:plan[i],
-              approveStatus:'approved', remark:'人工月补录'
+              approveStatus:'approved', remark:'人工月补录',
+              overLimitApproved: (el('manualSpecial')?el('manualSpecial').checked:false)
             });
             ok++;
           }catch(e){ fail++; lastErr=(e&&e.message)||String(e); }
@@ -2389,13 +2414,20 @@ function __pLog(module,event,extra){
     __attBind('attBtnLuReg', function(){ if (window.__attLuReg && window.__attLuReg.open) window.__attLuReg.open(); else __T('⚠️ 装卸车登记模块未加载，请刷新重试','error'); });
     __attBind('attBtnBatchConfirm', function(){ window.__wageNs.confirmBatch(); });
     __attBind('attBtnBatchPost', function(){ window.__wageNs.postBatch(); });
+    // v20261029i 批次撤回按钮（发放错误修正闭环）
+    __attBind('attBtnBatchUnpost', function(){ window.__wageNs.unpostBatch(); });
     __attBind('attBtnExportCsv', function(){
       var items = window.__lastWageItems || [];
       if(!items.length){ __T('⚠️ 请先核算当月工资再导出','warning'); return; }
-      var header = ['工号','姓名','职级','出勤天数','夜场数','底薪','全勤奖','夜场补','事假扣','旷工扣','迟到扣','早退扣','社保','个税','应发','实发'];
+      // v20261030a 表头与员工端工资条口径完全一致（各项补贴/扣款分列，社保与公积金拆分，含装卸车扣）
+      var N2 = function(v){ return (Number(v)||0).toFixed(2); };
+      var header = ['工号','姓名','职级','出勤天数','夜场数','基本工资','差旅路费','全勤奖','夜场补贴','节日福利','餐补','交通补','绩效奖金','主角津贴','配角津贴','其他补贴','事假扣','旷工扣','迟到扣','早退扣','装卸车扣','其他扣款','社保个人','公积金个人','个税','扣款合计','应发合计','实发工资','备注'];
       var lines = [header.join(',')];
       items.forEach(function(w){
-        lines.push([w.staffNo,w.name,w.rankGrade,w.attDays,w.nights,w.baseSalary,w.fullBonus,w.nightSubsidy,w.leaveDeduction,w.absentDeduction,w.lateDeduction,w.earlyDeduction,w.socialSecurity,w.tax,w.grossPay,w.netPay].map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(','));
+        var luN = 0; try { luN = JSON.parse(w.otherDeductionNote||'{}').loadUnloadDeduction; } catch(_e){}
+        luN = Number(luN)||0;
+        var si = Math.max(0, (Number(w.socialSecurity)||0) - (Number(w.housingFund)||0));
+        lines.push([w.staffNo,w.name,w.rankGrade,(Number(w.attDays)||0),(Number(w.nights)||0),N2(w.baseSalary),N2(w.travelExpenseTotal),N2(w.fullBonus),N2(w.nightSubsidy),N2(w.holidayBonus),N2(w.mealAllowance),N2(w.transportAllowance),N2(w.performanceBonus),N2(w.chiefRoleTotal),N2(w.supportingRoleTotal),N2(w.otherAllowance),N2(w.leaveDeduction),N2(w.absentDeduction),N2(w.lateDeduction),N2(w.earlyDeduction),N2(luN),N2(w.otherDeduction),N2(si),N2(w.housingFund),N2(w.tax),N2(w.totalDeduction),N2(w.grossPay),N2(w.netPay),w.remark].map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(','));
       });
       var blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
       var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='工资表_'+new Date().toISOString().slice(0,7)+'.csv'; a.click();
