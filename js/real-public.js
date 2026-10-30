@@ -345,6 +345,56 @@
     }
   }
 
+  /* ---------------- 首页横幅：后台"横幅管理"真实渲染（v20261030） ----------------
+   * 数据：GET /v1/contents/public?type=banner（published，extraJson.position 以 home- 开头或缺省视为首页位）
+   * 行为：有横幅 → 在 #home.banner 渐变之上注入图片层 + 品牌色可读性遮罩，多张时 6s 交叉淡播；
+   *       无横幅 / 接口失败 → 保持默认渐变主视觉，不影响现有布局。
+   */
+  function renderHomeBanners() {
+    var sec = document.getElementById('home');
+    if (!sec || sec.getAttribute('data-banner-loaded') === '1') return;
+    sec.setAttribute('data-banner-loaded', '1');
+    get('/v1/contents/public', { type: 'banner', page: 1, pageSize: 12 }).then(function (rows) {
+      rows = Array.isArray(rows) ? rows : (rows && (rows.items || rows.list || rows.rows)) || [];
+      var banners = rows.filter(function (r) {
+        if (!r || !r.coverImage) return false;
+        var pos = '';
+        try {
+          var ex = (typeof r.extraJson === 'string' && r.extraJson) ? JSON.parse(r.extraJson) : (r.extraJson || {});
+          pos = String((ex && ex.position) || '');
+        } catch (_) {}
+        return !pos || pos.indexOf('home-') === 0;
+      }).sort(function (a, b) { return (Number(a.sortWeight) || 0) - (Number(b.sortWeight) || 0); });
+      if (!banners.length) return; // 保留默认主视觉
+      var urlOf = function (u) {
+        u = String(u || '');
+        return u.replace(/^http:\/\/1\.14\.106\.173:3001\//, '/'); // 历史绝对地址归一同源
+      };
+      var frag = document.createDocumentFragment();
+      var layers = banners.slice(0, 4).map(function (b, i) {
+        var d = document.createElement('div');
+        d.className = 'rb-img-layer' + (i === 0 ? ' rb-active' : '');
+        d.style.backgroundImage = 'url("' + urlOf(b.coverImage) + '")';
+        d.setAttribute('role', 'img');
+        d.setAttribute('aria-label', esc(b.title || '官网横幅'));
+        frag.appendChild(d);
+        return d;
+      });
+      var overlay = document.createElement('div');
+      overlay.className = 'rb-overlay';
+      frag.appendChild(overlay);
+      sec.insertBefore(frag, sec.firstChild);
+      if (layers.length > 1) {
+        var cur = 0;
+        global.setInterval(function () {
+          layers[cur].classList.remove('rb-active');
+          cur = (cur + 1) % layers.length;
+          layers[cur].classList.add('rb-active');
+        }, 6000);
+      }
+    }).catch(function () { /* 保留默认主视觉 */ });
+  }
+
   function boot() {
     try { renderStats(); } catch (e) {}
     try { renderHomePlays(); } catch (e) {}
@@ -352,9 +402,10 @@
     try { renderOperasPage(); } catch (e) {}
     try { renderBookingPlays(); } catch (e) {}
     try { renderNewsSidebars(); } catch (e) {}
+    try { renderHomeBanners(); } catch (e) {}
   }
 
-  global.QinRealPublic = { renderStats: renderStats, renderHomePlays: renderHomePlays, renderHomeNews: renderHomeNews, renderOperasPage: renderOperasPage, renderBookingPlays: renderBookingPlays, renderNewsSidebars: renderNewsSidebars, get: get, posterUrl: posterUrl, fmtDate: fmtDate, esc: esc };
+  global.QinRealPublic = { renderStats: renderStats, renderHomePlays: renderHomePlays, renderHomeNews: renderHomeNews, renderOperasPage: renderOperasPage, renderBookingPlays: renderBookingPlays, renderNewsSidebars: renderNewsSidebars, renderHomeBanners: renderHomeBanners, get: get, posterUrl: posterUrl, fmtDate: fmtDate, esc: esc };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);

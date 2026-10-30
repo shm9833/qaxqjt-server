@@ -540,6 +540,36 @@ nav a.admin-link::after {
   background: linear-gradient(90deg, transparent, var(--gold), transparent);
 }
 
+/* 后台"横幅管理"真实渲染层（v20261030）：图片置于渐变之上、内容之下 */
+.rb-img-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.rb-img-layer.rb-active {
+  opacity: 1;
+}
+
+.rb-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(15, 76, 129, 0.82) 0%, rgba(30, 111, 181, 0.72) 50%, rgba(23, 68, 112, 0.66) 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+
 .banner-content {
   position: relative;
   z-index: 1;
