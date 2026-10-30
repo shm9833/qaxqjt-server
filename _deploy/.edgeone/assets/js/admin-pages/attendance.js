@@ -2419,15 +2419,16 @@ function __pLog(module,event,extra){
     __attBind('attBtnExportCsv', function(){
       var items = window.__lastWageItems || [];
       if(!items.length){ __T('⚠️ 请先核算当月工资再导出','warning'); return; }
-      // v20261030a 表头与员工端工资条口径完全一致（各项补贴/扣款分列，社保与公积金拆分，含装卸车扣）
+      // v20261030b 表头与员工端工资条口径完全一致；v20261030a+1 修正：去掉"交通补"列（transportAllowance 为旧字段残留，
+      // 与差旅路费双写同值，应发只计一次，双列展示会导致导出表收入合计大于实发）
       var N2 = function(v){ return (Number(v)||0).toFixed(2); };
-      var header = ['工号','姓名','职级','出勤天数','夜场数','基本工资','差旅路费','全勤奖','夜场补贴','节日福利','餐补','交通补','绩效奖金','主角津贴','配角津贴','其他补贴','事假扣','旷工扣','迟到扣','早退扣','装卸车扣','其他扣款','社保个人','公积金个人','个税','扣款合计','应发合计','实发工资','备注'];
+      var header = ['工号','姓名','职级','出勤天数','夜场数','基本工资','差旅路费','全勤奖','夜场补贴','节日福利','餐补','绩效奖金','主角津贴','配角津贴','其他补贴','事假扣','旷工扣','迟到扣','早退扣','装卸车扣','其他扣款','社保个人','公积金个人','个税','扣款合计','应发合计','实发工资','备注'];
       var lines = [header.join(',')];
       items.forEach(function(w){
         var luN = 0; try { luN = JSON.parse(w.otherDeductionNote||'{}').loadUnloadDeduction; } catch(_e){}
         luN = Number(luN)||0;
         var si = Math.max(0, (Number(w.socialSecurity)||0) - (Number(w.housingFund)||0));
-        lines.push([w.staffNo,w.name,w.rankGrade,(Number(w.attDays)||0),(Number(w.nights)||0),N2(w.baseSalary),N2(w.travelExpenseTotal),N2(w.fullBonus),N2(w.nightSubsidy),N2(w.holidayBonus),N2(w.mealAllowance),N2(w.transportAllowance),N2(w.performanceBonus),N2(w.chiefRoleTotal),N2(w.supportingRoleTotal),N2(w.otherAllowance),N2(w.leaveDeduction),N2(w.absentDeduction),N2(w.lateDeduction),N2(w.earlyDeduction),N2(luN),N2(w.otherDeduction),N2(si),N2(w.housingFund),N2(w.tax),N2(w.totalDeduction),N2(w.grossPay),N2(w.netPay),w.remark].map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(','));
+        lines.push([w.staffNo,w.name,w.rankGrade,(Number(w.attDays)||0),(Number(w.nights)||0),N2(w.baseSalary),N2(w.travelExpenseTotal),N2(w.fullBonus),N2(w.nightSubsidy),N2(w.holidayBonus),N2(w.mealAllowance),N2(w.performanceBonus),N2(w.chiefRoleTotal),N2(w.supportingRoleTotal),N2(w.otherAllowance),N2(w.leaveDeduction),N2(w.absentDeduction),N2(w.lateDeduction),N2(w.earlyDeduction),N2(luN),N2(w.otherDeduction),N2(si),N2(w.housingFund),N2(w.tax),N2(w.totalDeduction),N2(w.grossPay),N2(w.netPay),w.remark].map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}).join(','));
       });
       var blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
       var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='工资表_'+new Date().toISOString().slice(0,7)+'.csv'; a.click();
