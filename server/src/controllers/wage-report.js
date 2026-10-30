@@ -245,4 +245,190 @@ const dailyWage = async ctx => {
   });
 };
 
-module.exports = { dailyWage };
+/* ==============================================================================
+ * v20261030c 工资报表中心（批次口径，读 WageBatchesV1/WageItemsV1 快照，非实时现算）
+ *   GET /v1/reports/wage-monthly?year=YYYY   —— 月度工资对比 + 年度汇总
+ *   GET /v1/reports/wage-bank-transfer?month=YYYY-MM —— 银行代发表（联查花名册银行信息）
+ * 口径：仅统计 confirmed/posted 批次（draft 草稿不进报表）；金额直接取批次快照
+ *   grossPay(应发)/totalDeduction(扣款)/netPay(实发)，与工资条、CSV 导出口径完全一致
+ * ============================================================================== */
+const num = v => Number(v) || 0;
+
+const _itemKey = it => it.performerId || (it.staffNo ? 'SN:' + it.staffNo : 'NM:' + it.performerName);
+
+const wageMonthly = async ctx => {
+  const year = String(ctx.query.year || '');
+  if (!/^\d{4}$/.test(year)) {
+    throw new BusinessError('VALIDATION_ERROR', 'year 必填（YYYY）');
+  }
+
+  const batches = await prisma.wageBatchesV1.findMany({
+    where: { wageMonth: { startsWith: year + '-' }, status: { in: ['confirmed', 'posted'] } },
+    orderBy: { wageMonth: 'asc' },
+    select: {
+      id: true, batchNo: true, wageMonth: true, status: true, postedToLedger: true,
+      totalPerformers: true, totalNetPay: true,
+      items: {
+        select: {
+          performerId: true, performerName: true, staffNo: true, rankGrade: true,
+          grossPay: true, totalDeduction: true, netPay: true,
+          reviewStatus: true, payslipPublished: true
+        }
+      }
+    }
+  });
+
+  // 1) 按月聚合
+  const monthMap = {};
+  for (let m = 1; m <= 12; m++) {
+    const mm = (m < 10 ? '0' : '') + m;
+    monthMap[year + '-' + mm] = { month: year + '-' + mm, batches: [], headcountSet: {}, gross: 0, deduction: 0, net: 0, itemCount: 0, publishedCount: 0 };
+  }
+  // 2) 按人年度聚合（跨月明细）
+  const personMap = {};
+
+  batches.forEach(b => {
+    const mb = monthMap[b.wageMonth];
+    if (mb) {
+      mb.batches.push({ batchNo: b.batchNo, status: b.status, postedToLedger: b.postedToLedger });
+      b.items.forEach(it => {
+        const k = _itemKey(it);
+        mb.headcountSet[k] = 1;
+        mb.gross += num(it.grossPay);
+        mb.deduction += num(it.totalDeduction);
+        mb.net += num(it.netPay);
+        mb.itemCount += 1;
+        if (it.payslipPublished) mb.publishedCount += 1;
+
+        const pk = it.performerId || k;
+        const pp = personMap[pk] || {
+          performerId: it.performerId || null, staffNo: it.staffNo || '', name: it.performerName,
+          rankGrade: it.rankGrade || '', monthNets: {}, activeMonths: 0, gross: 0, deduction: 0, net: 0
+        };
+        if (!pp.monthNets[b.wageMonth]) { pp.monthNets[b.wageMonth] = num(it.netPay); pp.activeMonths += 1; }
+        else pp.monthNets[b.wageMonth] += num(it.netPay); // 同月多批次兜底合并
+        pp.gross += num(it.grossPay);
+        pp.deduction += num(it.totalDeduction);
+        pp.net += num(it.netPay);
+        personMap[pk] = pp;
+      });
+    }
+  });
+
+  const months = Object.keys(monthMap).sort().map(k => {
+    const mb = monthMap[k];
+    const posted = mb.batches.some(x => x.status === 'posted');
+    return {
+      month: mb.month,
+      batchCount: mb.batches.length,
+      posted,
+      headcount: Object.keys(mb.headcountSet).length,
+      itemCount: mb.itemCount,
+      publishedCount: mb.publishedCount,
+      gross: round2(mb.gross),
+      deduction: round2(mb.deduction),
+      net: round2(mb.net)
+    };
+  });
+
+  const persons = Object.keys(personMap).map(k => {
+    const pp = personMap[k];
+    return {
+      performerId: pp.performerId, staffNo: pp.staffNo, name: pp.name, rankGrade: pp.rankGrade,
+      activeMonths: pp.activeMonths, gross: round2(pp.gross), deduction: round2(pp.deduction), net: round2(pp.net),
+      monthNets: pp.monthNets
+    };
+  }).sort((a, b) => b.net - a.net);
+
+  const totals = {
+    gross: round2(months.reduce((s, m) => s + m.gross, 0)),
+    deduction: round2(months.reduce((s, m) => s + m.deduction, 0)),
+    net: round2(months.reduce((s, m) => s + m.net, 0)),
+    postedMonths: months.filter(m => m.posted).length,
+    batchMonths: months.filter(m => m.batchCount > 0).length,
+    activePersons: persons.length
+  };
+
+  return success(ctx, {
+    year, generatedAt: new Date().toISOString(), months, persons, totals,
+    count: batches.length,
+    note: '批次口径：仅含已确认/已过账批次的工资条快照；与工资条、CSV 导出、凭证过账同源'
+  });
+};
+
+const bankTransfer = async ctx => {
+  const month = String(ctx.query.month || '');
+  if (!/^\d{4}-\d{2}$/.test(month)) {
+    throw new BusinessError('VALIDATION_ERROR', 'month 必填（YYYY-MM）');
+  }
+
+  const batches = await prisma.wageBatchesV1.findMany({
+    where: { wageMonth: month, status: { in: ['confirmed', 'posted'] } },
+    orderBy: [{ status: 'desc' }, { updatedAt: 'desc' }], // posted 优先，其次最新
+    include: {
+      items: {
+        select: {
+          performerId: true, performerName: true, staffNo: true, rankGrade: true,
+          netPay: true, reviewStatus: true, payslipPublished: true
+        }
+      }
+    }
+  });
+  if (!batches.length) {
+    return success(ctx, { month, batch: null, rows: [], totals: { count: 0, totalNet: 0, missingBank: 0 }, note: '该月份暂无已确认/已过账批次' });
+  }
+  const batch = batches[0];
+
+  // 花名册银行信息：先按 performerId 精准联查，staffNo 兜底
+  const perfIds = batch.items.map(it => it.performerId).filter(Boolean);
+  const staffNos = batch.items.map(it => it.staffNo).filter(Boolean);
+  const [perfById, perfByNo] = await Promise.all([
+    perfIds.length ? prisma.performersDbV1.findMany({
+      where: { id: { in: perfIds }, status: { not: 'deleted' } },
+      select: { id: true, staffNo: true, name: true, idCardNo: true, bankName: true, bankAccount: true }
+    }) : Promise.resolve([]),
+    staffNos.length ? prisma.performersDbV1.findMany({
+      where: { staffNo: { in: staffNos }, status: { not: 'deleted' } },
+      select: { id: true, staffNo: true, name: true, idCardNo: true, bankName: true, bankAccount: true }
+    }) : Promise.resolve([])
+  ]);
+  const pMap = {};
+  perfById.forEach(p => { pMap['ID:' + p.id] = p; });
+  perfByNo.forEach(p => { if (!pMap['SN:' + p.staffNo]) pMap['SN:' + p.staffNo] = p; });
+
+  const rows = batch.items.map(it => {
+    const perf = (it.performerId && pMap['ID:' + it.performerId]) || (it.staffNo && pMap['SN:' + it.staffNo]) || null;
+    const bankAccount = perf ? (perf.bankAccount || '') : '';
+    const bankName = perf ? (perf.bankName || '') : '';
+    return {
+      performerId: it.performerId || null,
+      staffNo: it.staffNo || '',
+      name: it.performerName,
+      rankGrade: it.rankGrade || '',
+      bankName,
+      bankAccount,
+      idCardNo: perf ? (perf.idCardNo || '') : '',
+      netPay: round2(num(it.netPay)),
+      hasBank: !!(bankAccount && bankName),
+      reviewStatus: it.reviewStatus,
+      payslipPublished: !!it.payslipPublished
+    };
+  }).sort((a, b) => (a.staffNo < b.staffNo ? -1 : 1));
+
+  const missing = rows.filter(r => !r.hasBank);
+  return success(ctx, {
+    month,
+    batch: { batchNo: batch.batchNo, status: batch.status, postedToLedger: batch.postedToLedger, postedAt: batch.postedAt },
+    generatedAt: new Date().toISOString(),
+    rows,
+    totals: {
+      count: rows.length,
+      totalNet: round2(rows.reduce((s, r) => s + r.netPay, 0)),
+      missingBank: missing.length,
+      missingBankNames: missing.map(r => r.name + (r.staffNo ? '(' + r.staffNo + ')' : ''))
+    },
+    note: '银行账号/开户行取自花名册档案（员工自助端可维护）；缺卡人员需先补录档案再导出'
+  });
+};
+
+module.exports = { dailyWage, wageMonthly, bankTransfer };

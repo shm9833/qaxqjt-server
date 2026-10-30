@@ -1229,6 +1229,22 @@
             </div>
             <div id="pcHint" style="margin-top:8px;font-size:.8rem;color:var(--text-light);"></div>
           </div>
+          <!-- 🌙 深夜打卡人工复核（v20261030d：上班卡北京时间≥复核阈值自动转待复核，此处作废/记正常/确认迟到） -->
+          <div class="param-card" id="punchReviewCard" style="margin-bottom:16px;display:none;">
+            <div class="wage-formula-box" style="margin-bottom:12px;">
+              <h4 style="margin:0 0 6px 0;">🌙 深夜打卡人工复核（v20261030d）</h4>
+              <p style="margin:0;font-size:.84rem;color:#64748b;">
+                员工上班卡（北京时间）≥ 复核阈值（打卡参数「深夜复核阈值」，默认 21:00）时不自动判迟到，
+                转入下方待复核列表：<b>作废</b>=误打卡删除不计薪不扣款；<b>记正常</b>=有效出勤；<b>确认迟到</b>=按打卡基准重算罚款。
+              </p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+              <input type="month" class="form-control" id="prMonth" style="width:160px;" />
+              <button class="btn btn-outline btn-sm" id="prLoadBtn">🔍 加载待复核</button>
+              <span id="prHint" style="font-size:.8rem;color:var(--text-light);"></span>
+            </div>
+            <div id="prList" style="font-size:.85rem;"></div>
+          </div>
           <!-- ⏰ 打卡参数（v20261012 新规：窗口/基准/迟到1元每分封顶30/事故分级10·30·50，存后端 Setting，员工端同步展示） -->
           <div class="param-card" style="margin-bottom:16px;">
             <div class="wage-formula-box" style="margin-bottom:12px;">
@@ -1296,6 +1312,11 @@
                 <label>🥉 事故三级扣款（元 / 天）</label>
                 <input type="number" min="0" step="5" class="form-control" id="ppAcc3" value="50" />
                 <div class="param-hint">代打卡查实按三级登记扣款</div>
+              </div>
+              <div class="param-item">
+                <label>🌙 深夜复核阈值（v20261030d）</label>
+                <input type="time" class="form-control" id="ppNightReview" value="21:00" />
+                <div class="param-hint">上班卡晚于此时间不自动判迟到，转人工复核</div>
               </div>
               <div class="param-item">
                 <label>🎁 奖励项</label>
@@ -1611,7 +1632,7 @@
 </div>
 
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
-<script src="../js/admin-pages/attendance.js?v=20261030b"></script>
+<script src="../js/admin-pages/attendance.js?v=20261030d"></script>
 
 
 <!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->

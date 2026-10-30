@@ -1041,6 +1041,7 @@
                 <div class="param-item">
                   <label>事假天数（例：2）</label>
                   <input type="number" min="0" step="0.5" class="form-control" id="manualLeave" value="0" />
+                  <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;margin-top:4px;cursor:pointer;"><input type="checkbox" id="manualSpecial" /> 🪪 团长特批（事假超 2 天时勾选豁免）</label>
                 </div>
                 <div class="param-item">
                   <label>旷工天数</label>
@@ -1099,6 +1100,7 @@
                     <select class="form-control" id="baType"></select>
                   </div>
                   <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;padding-bottom:8px;cursor:pointer;"><input type="checkbox" id="baSkipExist" checked /> 跳过已有</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;padding-bottom:8px;cursor:pointer;"><input type="checkbox" id="baSpecial" /> 🪪 特批</label>
                   <button class="btn btn-success" id="baAddBtn">➕ 批量录入</button>
                 </div>
                 <div style="margin-top:8px;font-size:.8rem;color:var(--text-light);">起止日期范围内每天生成一条考勤；同一员工同一天已有记录时自动跳过（可取消勾选强制录入）。事假每月超 2 次需团长特批，超限的会提交失败并在结果中逐条报告。</div>
@@ -1116,7 +1118,7 @@
                 <div id="bmePerfList" style="max-height:240px;overflow-y:auto;border:1px solid var(--border-light);border-radius:10px;padding:8px;">
                   <p style="color:var(--text-light);text-align:center;padding:12px;">点击「加载员工」按钮加载演职人员列表</p>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr auto;gap:10px;align-items:end;margin-top:10px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr auto auto;gap:10px;align-items:end;margin-top:10px;">
                   <div>
                     <label style="font-size:.82rem;font-weight:600;">结算开始日期</label>
                     <input type="date" class="form-control" id="bmeFrom" />
@@ -1129,6 +1131,7 @@
                     <label style="font-size:.82rem;font-weight:600;">统一考勤类型</label>
                     <select class="form-control" id="bmeType"></select>
                   </div>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;padding-bottom:8px;cursor:pointer;"><input type="checkbox" id="bmeSpecial" /> 🪪 特批</label>
                   <button class="btn btn-success" id="bmeSubmitBtn">➕ 批量录入（已选 <span id="bmeSelCount">0</span> 人）</button>
                 </div>
                 <div style="margin-top:8px;font-size:.8rem;color:var(--text-light);">为所选员工在结算区间内逐日生成同类型考勤；同一员工同一天已有记录自动跳过；事假每月超 2 次需团长特批（超限的逐条报失败，不影响其余提交）。区间×人数过大时自动分批提交。</div>
@@ -1226,6 +1229,22 @@
             </div>
             <div id="pcHint" style="margin-top:8px;font-size:.8rem;color:var(--text-light);"></div>
           </div>
+          <!-- 🌙 深夜打卡人工复核（v20261030d：上班卡北京时间≥复核阈值自动转待复核，此处作废/记正常/确认迟到） -->
+          <div class="param-card" id="punchReviewCard" style="margin-bottom:16px;display:none;">
+            <div class="wage-formula-box" style="margin-bottom:12px;">
+              <h4 style="margin:0 0 6px 0;">🌙 深夜打卡人工复核（v20261030d）</h4>
+              <p style="margin:0;font-size:.84rem;color:#64748b;">
+                员工上班卡（北京时间）≥ 复核阈值（打卡参数「深夜复核阈值」，默认 21:00）时不自动判迟到，
+                转入下方待复核列表：<b>作废</b>=误打卡删除不计薪不扣款；<b>记正常</b>=有效出勤；<b>确认迟到</b>=按打卡基准重算罚款。
+              </p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+              <input type="month" class="form-control" id="prMonth" style="width:160px;" />
+              <button class="btn btn-outline btn-sm" id="prLoadBtn">🔍 加载待复核</button>
+              <span id="prHint" style="font-size:.8rem;color:var(--text-light);"></span>
+            </div>
+            <div id="prList" style="font-size:.85rem;"></div>
+          </div>
           <!-- ⏰ 打卡参数（v20261012 新规：窗口/基准/迟到1元每分封顶30/事故分级10·30·50，存后端 Setting，员工端同步展示） -->
           <div class="param-card" style="margin-bottom:16px;">
             <div class="wage-formula-box" style="margin-bottom:12px;">
@@ -1293,6 +1312,11 @@
                 <label>🥉 事故三级扣款（元 / 天）</label>
                 <input type="number" min="0" step="5" class="form-control" id="ppAcc3" value="50" />
                 <div class="param-hint">代打卡查实按三级登记扣款</div>
+              </div>
+              <div class="param-item">
+                <label>🌙 深夜复核阈值（v20261030d）</label>
+                <input type="time" class="form-control" id="ppNightReview" value="21:00" />
+                <div class="param-hint">上班卡晚于此时间不自动判迟到，转人工复核</div>
               </div>
               <div class="param-item">
                 <label>🎁 奖励项</label>
@@ -1598,6 +1622,7 @@
         <label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px;">备注</label>
         <input type="text" class="form-control" id="attEditRemark" maxlength="200" placeholder="选填" />
       </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer;"><input type="checkbox" id="attEditSpecial" /> 🪪 团长特批（改事假且该月已超 2 次/2 天时勾选豁免）</label>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
       <button class="btn btn-outline btn-sm" id="attEditCancelBtn">✕ 取消</button>
@@ -1607,7 +1632,7 @@
 </div>
 
 <!-- 🔧 E块死按钮兜底：document级委托 — 无onclick无data-action按钮 → 触发toast+基础行为（含PERF监控：__ENABLE_PERF_LOG__='true'） -->
-<script src="../js/admin-pages/attendance.js?v=20261029c"></script>
+<script src="../js/admin-pages/attendance.js?v=20261030d"></script>
 
 
 <!-- 🔚 按钮兜底双脚本块 结束（v20260804-2 · JSON Perf + 防重复粘贴） -->

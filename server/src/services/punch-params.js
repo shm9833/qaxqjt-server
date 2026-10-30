@@ -32,7 +32,8 @@ const DEFAULT_PUNCH_PARAMS = {
   accidentLevel2Fine: 30,       // 事故二级 元/天
   accidentLevel3Fine: 50,       // 事故三级 元/天
   proxyPunchLevel: 3,           // 代打卡查实按的事故级别（默认三级）
-  stageDayNoPay: true           // 装台/卸台日不计薪不计迟到不计奖励
+  stageDayNoPay: true,          // 装台/卸台日不计薪不计迟到不计奖励
+  nightReviewFrom: '21:00'      // v20261030d 深夜打卡复核阈值：上班卡（北京时间）≥此值不自动判迟到，转人工复核
 };
 
 // 考勤/打卡类型中文映射（shared：self-service 员工端展示与 attendance 管理端共用，避免两处漂移）
@@ -76,6 +77,7 @@ function sanitizeParams(raw) {
   p.accidentLevel3Fine = _num(src.accidentLevel3Fine, p.accidentLevel3Fine);
   p.proxyPunchLevel = [1, 2, 3].indexOf(Number(src.proxyPunchLevel)) >= 0 ? Number(src.proxyPunchLevel) : p.proxyPunchLevel;
   p.stageDayNoPay = src.stageDayNoPay === undefined ? p.stageDayNoPay : !!src.stageDayNoPay;
+  p.nightReviewFrom = _hm(src.nightReviewFrom, p.nightReviewFrom); // v20261030d 深夜复核阈值
   return p;
 }
 

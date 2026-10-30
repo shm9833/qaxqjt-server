@@ -728,6 +728,8 @@ const BATCH_ENTRY_LIMIT = 500;
 const batchEntry = async ctx => {
   const b = ctx.request.body || {};
   const items = Array.isArray(b.items) ? b.items : [];
+  // v20261029j：事假超限团长特批豁免（批量入口；单条 create/update 已支持 overLimitApproved）
+  const allowOver = b.overLimitApproved === true;
   if (!items.length) throw new BusinessError('VALIDATION_ERROR', 'items 必填（1-500 条）');
   if (items.length > BATCH_ENTRY_LIMIT) {
     throw new BusinessError('VALIDATION_ERROR', `单次最多 ${BATCH_ENTRY_LIMIT} 条（当前 ${items.length} 条），请分批提交`);
@@ -797,7 +799,7 @@ const batchEntry = async ctx => {
     if (!p) { failed.push({ index: r.index, reason: `人员不存在: ${r.staffId}` }); continue; }
     const key = r.staffId + '|' + r.workDate;
     if (existKeys.has(key) || batchKeys.has(key)) { skipped++; continue; }
-    if (r.type === 'PL') {
+    if (r.type === 'PL' && !allowOver) {
       const mk = r.staffId + '|' + r.workDate.substring(0, 7);
       const used = (plCounts[mk] || 0) + 1;
       if (used > 2) {

@@ -233,6 +233,20 @@ v1.get(
   wageReportCtrl.dailyWage
 );
 
+// ========== v20261030c 工资报表中心（批次口径：月度对比/年度汇总 + 银行代发表）==========
+v1.get(
+  '/reports/wage-monthly',
+  validate({ query: Joi.object({ year: Joi.string().pattern(/^\d{4}$/).required() }) }),
+  requireRole(['super_admin', 'admin', 'ops', 'director', 'finance_view']),
+  wageReportCtrl.wageMonthly
+);
+v1.get(
+  '/reports/wage-bank-transfer',
+  validate({ query: Joi.object({ month: Joi.string().pattern(/^\d{4}-\d{2}$/).required() }) }),
+  requireRole(['super_admin', 'admin', 'ops', 'director', 'finance_view']),
+  wageReportCtrl.bankTransfer
+);
+
 // ========== customers ==========
 v1.get(
   '/customers',
@@ -1289,6 +1303,20 @@ v1.post(
   punchControlCtrl.startCtrl
 );
 v1.post('/attendance/punch-control/stop', requireRole(['super_admin', 'ops']), punchControlCtrl.stopCtrl);
+// v20261030d 深夜打卡人工复核（上班卡北京时间≥复核阈值转 pending_review，管理端作废/记正常/确认迟到）：必须在 /attendance/:id 之前注册
+const punchReviewCtrl = require('../../controllers/punch-review');
+v1.get(
+  '/attendance/punch-review',
+  validate({ query: Joi.object({ month: Joi.string().pattern(/^\d{4}-\d{2}$/).allow('').optional() }) }),
+  requireRole(['super_admin', 'admin', 'ops', 'director', 'finance_view']),
+  punchReviewCtrl.list
+);
+v1.post(
+  '/attendance/punch-review/:id',
+  validate({ body: Joi.object({ action: Joi.string().valid('voided', 'normal', 'late').required(), note: Joi.string().allow('').max(200).optional() }) }),
+  requireRole(['super_admin', 'admin', 'ops']),
+  punchReviewCtrl.review
+);
 // v20261013：演出入职/演职操作开放时限参数（前10天开放登记·演出开始开放操作·结束后24小时关闭）
 v1.get('/system/perf-ops-window', requireRole(['super_admin', 'ops', 'director']), perfWindowCtrl.getParamsCtrl);
 v1.put('/system/perf-ops-window', requireRole(['super_admin', 'ops']), perfWindowCtrl.saveParamsCtrl);

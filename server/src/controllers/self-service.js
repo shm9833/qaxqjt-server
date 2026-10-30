@@ -230,14 +230,21 @@ const punch = async ctx => {
   } else {
     sessionType = punchParams.sessionForMinutes(mins, P);
     if (punchType === 'in') {
-      const r = punchParams.computeLateResult(mins, sessionType, P);
-      lateMinutes = r.lateMinutes; lateFine = r.fine; showInvalid = r.invalid;
-      status = r.status;
-      const sText = sessionType === 'night' ? '晚场' : '日场';
-      if (r.status === 'late') {
-        autoRemark = `迟到${r.lateMinutes}分钟，罚款${r.fine}元（${sText}·${P.lateFinePerMin}元/分钟，单场上限${P.lateFineCap}元）`;
-      } else if (r.status === 'late_invalid') {
-        autoRemark = `迟到${r.lateMinutes}分钟（满${P.lateInvalidMinutes}分钟）本场失效，罚款${r.fine}元`;
+      // v20261030d 深夜打卡人工复核：上班卡北京时间 ≥ nightReviewFrom（默认21:00）→ 不自动判迟到，转待复核
+      const reviewFrom = punchParams.hmToMin(P.nightReviewFrom || '21:00');
+      if (mins >= reviewFrom) {
+        status = 'pending_review';
+        autoRemark = `深夜打卡（北京时间 ${Math.floor(mins / 60)}:${String(mins % 60).padStart(2, '0')} ≥ ${P.nightReviewFrom}）待人工复核，暂不计迟到不计罚款`;
+      } else {
+        const r = punchParams.computeLateResult(mins, sessionType, P);
+        lateMinutes = r.lateMinutes; lateFine = r.fine; showInvalid = r.invalid;
+        status = r.status;
+        const sText = sessionType === 'night' ? '晚场' : '日场';
+        if (r.status === 'late') {
+          autoRemark = `迟到${r.lateMinutes}分钟，罚款${r.fine}元（${sText}·${P.lateFinePerMin}元/分钟，单场上限${P.lateFineCap}元）`;
+        } else if (r.status === 'late_invalid') {
+          autoRemark = `迟到${r.lateMinutes}分钟（满${P.lateInvalidMinutes}分钟）本场失效，罚款${r.fine}元`;
+        }
       }
     }
     // 下班卡：新规未定义晚场下班基准，不自动判早退，一律记正常
@@ -279,7 +286,9 @@ const punch = async ctx => {
 const _enrichPunchRow = (r, P) => {
   let sessionType = '';
   let lateMinutes = 0, lateFine = 0, showInvalid = r.status === 'late_invalid';
-  if (r.status === 'late' || r.status === 'late_invalid' || r.status === 'normal') {
+  if (r.status === 'pending_review') {
+    sessionType = punchParams.sessionForMinutes(punchParams.cnMinutesFromUtcDate(r.punchTime), P);
+  } else if (r.status === 'late' || r.status === 'late_invalid' || r.status === 'normal') {
     const mins = punchParams.cnMinutesFromUtcDate(r.punchTime);
     sessionType = punchParams.sessionForMinutes(mins, P);
     if (r.punchType === 'in') {
@@ -295,7 +304,7 @@ const _enrichPunchRow = (r, P) => {
     punchType: r.punchType,
     punchTime: r.punchTime.toISOString(),
     status: r.status,
-    statusText: r.status === 'late_invalid' ? '本场失效' : (r.status === 'late' ? '迟到' : (r.status === 'early' ? '早退' : '正常')),
+    statusText: r.status === 'pending_review' ? '待复核' : (r.status === 'late_invalid' ? '本场失效' : (r.status === 'late' ? '迟到' : (r.status === 'early' ? '早退' : (r.status === 'voided' ? '已作废' : '正常')))),
     sessionType,
     lateMinutes,
     lateFine,
