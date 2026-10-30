@@ -1043,7 +1043,7 @@ function __pLog(module,event,extra){
   
   // 功能按钮绑定（上传/新建/导出）
   try{
-    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.addEventListener("click", fn, true); } }
+    function __bindBtn(id, fn){ var el=document.getElementById(id); if(el&&!el.__ub){ el.__ub=1; el.__superPatchBound=1; el.__deadBtnChecked=1; el.addEventListener("click", fn, true); } }
     /* P1修复:假成功已移除 — "选择报表"改为打开下方真实上传表单的文件选择器，不再假提示已选择 */
     __bindBtn('openReportsUploadBtn', function(){ var real=document.getElementById('reportsAttachFiles'); if(real){ real.click(); return; } var inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.xls,.xlsx,.jpg,.png"; inp.onchange=function(){ console.warn('[P1] 未接线按钮: 动态报表文件选择（真实上传表单缺失）'); }; inp.click(); });
   }catch(_e){ console.warn("[upload-bind err]",_e); }
@@ -1599,4 +1599,251 @@ window.__dailyWageReport = (function(){
   else { init(); }
 
   return { load: load, reload: load, exportCsv: exportCsv };
+})();
+
+/* ===== v20261030c 工资报表中心（批次口径）：月度对比/统计图表 + 年度汇总 + 银行代发表 ===== */
+window.__wageReportCenter = (function(){
+  var API = window.QAXQJT_API;
+  var T = function(m,t){ try{ window.QinApp&&QinApp.Utils&&QinApp.Utils.toast(m,t||'info',3000); }catch(_){} };
+  var $ = function(id){ return document.getElementById(id); };
+  var ADMIN_KEY = 'qaxqjt_admin_session';
+  var _mState = null; // wage-monthly payload
+  var _bState = null; // wage-bank-transfer payload
+
+  function _bind(id, fn){
+    var b = $(id); if(!b) return;
+    b.__superPatchBound=1; b.__deadBtnChecked=1; b.__ts3Done=1; b.__bindDone=1;
+    b.addEventListener('click', function(e){ e.preventDefault(); fn(); });
+  }
+  function _money(v){ return (Number(v)||0).toFixed(2); }
+  function _esc(v){ v=(v===null||v===undefined)?'':String(v); return '"'+v.replace(/"/g,'""')+'"'; }
+  function _csvDownload(name, lines){
+    var blob = new Blob(['\ufeff'+lines.join('\r\n')], { type:'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click();
+    try{ document.body.removeChild(a); URL.revokeObjectURL(a.href); }catch(_e){}
+  }
+  function _th(t, extra){ return '<th style="padding:10px 12px;white-space:nowrap;text-align:left;'+(extra||'')+'">'+t+'</th>'; }
+  function _td(v, extra){ return '<td style="padding:10px 12px;white-space:nowrap;'+(extra||'')+'">'+((v===''||v===null||v===undefined)?'—':v)+'</td>'; }
+  function _statusBadge(posted){
+    return posted
+      ? '<span style="background:#dcfce7;color:#166534;border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:700;">已过账</span>'
+      : '<span style="background:#fef3c7;color:#92400e;border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:700;">已确认</span>';
+  }
+  function _pct(cur, prev){
+    if(!prev){ return '<span style="color:#999;">—</span>'; }
+    var p = ((cur - prev) / prev) * 100;
+    var up = p >= 0;
+    var col = Math.abs(p) < 0.005 ? '#6b7280' : (up ? '#16a34a' : '#dc2626');
+    return '<span style="color:'+col+';font-weight:700;">'+(up?'▲':'▼')+Math.abs(p).toFixed(1)+'%</span>';
+  }
+
+  /* ---- ① 年度月度对比：SVG 双柱图（应发/实发 12 月） ---- */
+  function renderChart(months){
+    var box = $('wrChartBox'); if(!box) return;
+    var W=1200, H=300, padL=10, padB=54, padT=26, plotH=H-padB-padT;
+    var max = 0;
+    months.forEach(function(m){ max = Math.max(max, m.gross, m.net); });
+    if(max<=0) max = 1;
+    var slot = (W - padL*2) / 12;
+    var bw = 30, gap = 6;
+    var bars = months.map(function(m, i){
+      var x0 = padL + i*slot + (slot - (bw*2+gap))/2;
+      var gh = Math.round(m.gross / max * plotH);
+      var nh = Math.round(m.net / max * plotH);
+      var gy = padT + plotH - gh, ny = padT + plotH - nh;
+      return '<g>'+
+        '<rect x="'+x0+'" y="'+gy+'" width="'+bw+'" height="'+gh+'" rx="4" fill="#fbbf24" opacity="0.85"><title>'+m.month+' 应发 ¥'+_money(m.gross)+'</title></rect>'+
+        '<rect x="'+(x0+bw+gap)+'" y="'+ny+'" width="'+bw+'" height="'+nh+'" rx="4" fill="#3b82f6" opacity="0.9"><title>'+m.month+' 实发 ¥'+_money(m.net)+' · '+m.headcount+'人</title></rect>'+
+        (m.net>0?'<text x="'+(x0+bw+gap/2)+'" y="'+(ny-6)+'" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">'+(m.net>=10000?(m.net/10000).toFixed(1)+'w':Math.round(m.net))+'</text>':'')+
+        '<text x="'+(x0+bw+gap/2)+'" y="'+(H-32)+'" text-anchor="middle" font-size="12" fill="#666" font-weight="600">'+m.month.substring(5)+'月</text>'+
+        '</g>';
+    }).join('');
+    box.innerHTML = '<div style="overflow:auto;border:1px solid var(--border-light);border-radius:12px;background:#fff;">'+
+      '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;min-width:760px;height:auto;display:block;">'+
+      '<line x1="'+padL+'" y1="'+(padT+plotH)+'" x2="'+(W-padL)+'" y2="'+(padT+plotH)+'" stroke="#e5e7eb" stroke-width="1"/>'+
+      bars+
+      '<rect x="'+(padL+4)+'" y="6" width="14" height="10" rx="2" fill="#fbbf24" opacity="0.85"/>'+
+      '<text x="'+(padL+23)+'" y="15" font-size="12" fill="#92400e">应发</text>'+
+      '<rect x="'+(padL+64)+'" y="6" width="14" height="10" rx="2" fill="#3b82f6" opacity="0.9"/>'+
+      '<text x="'+(padL+83)+'" y="15" font-size="12" fill="#1e40af">实发</text>'+
+      '</svg></div>'+
+      '<div style="margin-top:4px;font-size:.75rem;color:#999;">柱状图：每月应发（琥珀）与实发（蓝）对比 · 悬停查看明细 · 无批次月份无柱</div>';
+  }
+
+  function renderMonthly(months){
+    var box = $('wrMonthlyBox'); if(!box) return;
+    var th = _th('月份')+_th('批次')+_th('状态')+_th('发薪人数')+_th('工资条')+_th('已发工资条')+_th('应发(元)')+_th('扣款(元)')+_th('实发(元)')+_th('实发环比');
+    var trs = months.map(function(m, i){
+      var prev = i>0 ? months[i-1] : null;
+      var dim = m.batchCount===0 ? 'opacity:.45;' : '';
+      return '<tr style="background:'+(i%2?'#fafaf9':'#fff')+';">'+
+        _td(m.month, 'font-weight:600;'+dim)+
+        _td(m.batchCount||'—', dim)+
+        _td(m.batchCount?_statusBadge(m.posted):'—', dim)+
+        _td(m.headcount||0, dim)+
+        _td(m.itemCount||0, dim)+
+        _td(m.publishedCount||0, dim)+
+        _td(_money(m.gross), dim)+
+        _td(_money(m.deduction), dim)+
+        _td('<b>'+_money(m.net)+'</b>', dim)+
+        _td(m.batchCount?_pct(m.net, prev?prev.net:0):'—', dim)+
+        '</tr>';
+    }).join('');
+    box.innerHTML = '<div style="overflow:auto;max-height:420px;border:1px solid var(--border-light);border-radius:12px;">'+
+      '<table style="width:100%;border-collapse:collapse;font-size:.88rem;min-width:900px;">'+
+      '<thead><tr style="background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;position:sticky;top:0;">'+th+'</tr></thead>'+
+      '<tbody>'+trs+'</tbody></table></div>'+
+      '<div style="margin-top:4px;font-size:.75rem;color:#999;">环比 = 本月实发 ÷ 上月实发 − 1 · 「已确认」= 未过账凭证，「已过账」= 已入账</div>';
+  }
+
+  function renderKpi(t){
+    var set = function(id,v){ var el=$(id); if(el) el.textContent=v; };
+    set('wrKpiNet', '¥'+_money(t.net));
+    set('wrKpiGross', '¥'+_money(t.gross));
+    set('wrKpiDeduct', '-¥'+_money(t.deduction));
+    set('wrKpiPosted', (t.postedMonths||0)+'/'+(t.batchMonths||0)+' 月');
+    set('wrKpiPersons', (t.activePersons||0)+' 人');
+  }
+
+  /* ---- ② 年度按人汇总 ---- */
+  function renderAnnual(persons){
+    var box = $('wrAnnualBox'); if(!box) return;
+    if(!persons.length){ box.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">该年度暂无已确认/已过账工资批次</div>'; return; }
+    var th = _th('排名')+_th('工号')+_th('姓名')+_th('职级')+_th('发薪月数')+_th('应发合计(元)')+_th('扣款合计(元)')+_th('实发合计(元)')+_th('月均实发(元)');
+    var trs = persons.map(function(p, i){
+      var avg = p.activeMonths ? p.net / p.activeMonths : 0;
+      return '<tr style="background:'+(i%2?'#fafaf9':'#fff')+';">'+
+        _td(i+1)+
+        _td(p.staffNo||'—')+
+        _td(p.name, 'font-weight:600;')+
+        _td(p.rankGrade||'—')+
+        _td(p.activeMonths)+
+        _td(_money(p.gross))+
+        _td(_money(p.deduction))+
+        _td('<b style="color:#1d4ed8;">'+_money(p.net)+'</b>')+
+        _td(_money(avg))+
+        '</tr>';
+    }).join('');
+    box.innerHTML = '<div style="overflow:auto;max-height:420px;border:1px solid var(--border-light);border-radius:12px;">'+
+      '<table style="width:100%;border-collapse:collapse;font-size:.88rem;min-width:860px;">'+
+      '<thead><tr style="background:linear-gradient(135deg,#78350f,#b45309);color:#fff;position:sticky;top:0;">'+th+'</tr></thead>'+
+      '<tbody>'+trs+'</tbody></table></div>'+
+      '<div style="margin-top:4px;font-size:.78rem;color:#999;">共 '+persons.length+' 人 · 按年度实发降序 · 月均实发 = 实发合计 ÷ 发薪月数</div>';
+  }
+
+  async function loadMonthly(){
+    var yEl = $('wrYear'); var year = yEl ? String(yEl.value||'').trim() : '';
+    if(!/^\d{4}$/.test(year)){ T('请输入 4 位年份','warn'); return; }
+    var mb = $('wrMonthlyBox'), ab = $('wrAnnualBox');
+    if(mb) mb.innerHTML = '<div style="padding:24px;text-align:center;color:#999;">正在生成年度对比…</div>';
+    if(ab) ab.innerHTML = '';
+    try{
+      var d = await API.get('/v1/reports/wage-monthly', { query: { year: year } });
+      _mState = d;
+      renderKpi(d.totals||{});
+      renderChart(d.months||[]);
+      renderMonthly(d.months||[]);
+      renderAnnual(d.persons||[]);
+      var gen = $('wrGenAt');
+      if(gen) gen.textContent = '生成时间：'+new Date(d.generatedAt).toLocaleString('zh-CN');
+      T('📊 年度对比已生成','success');
+    }catch(e){
+      if(mb) mb.innerHTML = '<div style="padding:24px;text-align:center;color:#c00;">加载失败：'+((e&&e.message)||e)+'</div>';
+    }
+  }
+
+  function exportAnnual(){
+    var d = _mState;
+    if(!d || !(d.persons||[]).length){ T('请先生成年度对比','warn'); return; }
+    var lines = ['排名,工号,姓名,职级,发薪月数,应发合计(元),扣款合计(元),实发合计(元)'];
+    d.persons.forEach(function(p, i){
+      lines.push([i+1, p.staffNo||'', p.name, p.rankGrade||'', p.activeMonths, _money(p.gross), _money(p.deduction), _money(p.net)].map(_esc).join(','));
+    });
+    var t = d.totals||{};
+    lines.push(['合计','','','','', _money(t.gross), _money(t.deduction), _money(t.net)].map(_esc).join(','));
+    _csvDownload('年度工资汇总_'+d.year+'.csv', lines);
+    T('📤 年度汇总 CSV 已导出','success');
+  }
+
+  /* ---- ③ 银行代发表 ---- */
+  function renderBank(d){
+    var box = $('wrBankBox'); if(!box) return;
+    if(!d.batch){ box.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">该月份暂无已确认/已过账批次</div>'; return; }
+    var warn = $('btWarnBox');
+    if(warn){
+      if(d.totals.missingBank>0){
+        warn.innerHTML = '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 14px;color:#991b1b;font-size:.85rem;">⚠️ <b>'+d.totals.missingBank+'</b> 人缺少银行账号/开户行：'+d.totals.missingBankNames.join('、')+' —— 请先在「演职人员管理」补录档案后再导出代发表</div>';
+      } else {
+        warn.innerHTML = '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;color:#166534;font-size:.85rem;">✅ 全部 '+d.totals.count+' 人的银行信息完整，可直接导出代发</div>';
+      }
+    }
+    var th = _th('序号')+_th('工号')+_th('姓名')+_th('开户行')+_th('银行账号')+_th('代发金额(元)')+_th('工资条状态');
+    var trs = d.rows.map(function(r, i){
+      var acct = r.bankAccount ? String(r.bankAccount) : '<span style="color:#dc2626;font-weight:700;">缺卡</span>';
+      return '<tr style="background:'+(i%2?'#fafaf9':'#fff')+';">'+
+        _td(i+1)+
+        _td(r.staffNo||'—')+
+        _td(r.name, 'font-weight:600;')+
+        _td(r.bankName||'—')+
+        _td(acct)+
+        _td('<b>'+_money(r.netPay)+'</b>')+
+        _td(r.payslipPublished?'<span style="color:#16a34a;">已发放</span>':'<span style="color:#b45309;">未发放</span>')+
+        '</tr>';
+    }).join('');
+    box.innerHTML = '<div style="overflow:auto;max-height:460px;border:1px solid var(--border-light);border-radius:12px;">'+
+      '<table style="width:100%;border-collapse:collapse;font-size:.88rem;min-width:760px;">'+
+      '<thead><tr style="background:linear-gradient(135deg,#14532d,#22c55e);color:#fff;position:sticky;top:0;">'+th+'</tr></thead>'+
+      '<tbody>'+trs+'</tbody></table></div>'+
+      '<div style="margin-top:6px;font-size:.85rem;color:#333;">批次 <b>'+(d.batch.batchNo||'—')+'</b>（'+(d.batch.status==='posted'?'已过账':'已确认')+'）· 共 <b>'+d.totals.count+'</b> 人 · 代发总额 <b style="color:#166534;">¥'+_money(d.totals.totalNet)+'</b></div>';
+  }
+
+  async function loadBank(){
+    var mEl = $('btMonth'); var month = mEl ? mEl.value : '';
+    if(!/^\d{4}-\d{2}$/.test(month)){ T('请先选择代发月份','warn'); return; }
+    var box = $('wrBankBox');
+    if(box) box.innerHTML = '<div style="padding:24px;text-align:center;color:#999;">正在生成银行代发表…</div>';
+    try{
+      var d = await API.get('/v1/reports/wage-bank-transfer', { query: { month: month } });
+      _bState = d;
+      renderBank(d);
+      var note = $('btNote');
+      if(note&&d.note) note.textContent = '口径说明：'+d.note;
+      var gen = $('btGenAt');
+      if(gen) gen.textContent = '生成时间：'+new Date(d.generatedAt).toLocaleString('zh-CN');
+      T('🏦 银行代发表已生成','success');
+    }catch(e){
+      if(box) box.innerHTML = '<div style="padding:24px;text-align:center;color:#c00;">加载失败：'+((e&&e.message)||e)+'</div>';
+    }
+  }
+
+  function exportBank(){
+    var d = _bState;
+    if(!d || !(d.rows||[]).length){ T('请先生成银行代发表','warn'); return; }
+    if(d.totals.missingBank>0 && !window.confirm('仍有 '+d.totals.missingBank+' 人缺卡，导出的 CSV 将不含其账号（金额列保留），是否继续？')) return;
+    var lines = ['序号,工号,姓名,开户行,银行账号,身份证号,代发金额(元),用途,批次号'];
+    d.rows.forEach(function(r, i){
+      lines.push([i+1, r.staffNo||'', r.name, r.bankName||'', r.bankAccount||'', r.idCardNo||'', _money(r.netPay), '工资代发', (d.batch&&d.batch.batchNo)||''].map(_esc).join(','));
+    });
+    lines.push(['合计','','','','','', _money(d.totals.totalNet), '', ''].map(_esc).join(','));
+    _csvDownload('银行代发表_'+d.month+'.csv', lines);
+    T('📤 银行代发 CSV 已导出','success');
+  }
+
+  function init(){
+    var n = new Date();
+    var yEl = $('wrYear');
+    if(yEl && !yEl.value) yEl.value = n.getFullYear();
+    var bM = $('btMonth');
+    if(bM && !bM.value) bM.value = n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');
+    _bind('wrQueryBtn', loadMonthly);
+    _bind('wrAnnualExportBtn', exportAnnual);
+    _bind('btQueryBtn', loadBank);
+    _bind('btExportBtn', exportBank);
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', init); }
+  else { init(); }
+
+  return { loadMonthly: loadMonthly, loadBank: loadBank };
 })();
